@@ -16,14 +16,15 @@ package workload
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -129,11 +130,10 @@ func TestDeployWithForm(t *testing.T) {
 	// Create by form data
 	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(deployManifest4FormTest))
 	createReq := clusterRes.ResCreateReq{
-		ProjectID:   envs.TestProjectID,
-		ClusterID:   envs.TestClusterID,
-		Manifest:    nil,
-		FormData:    formData,
-		UseFormData: true,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		RawData:   formData,
+		Format:    action.FormDataFormat,
 	}
 	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -142,13 +142,12 @@ func TestDeployWithForm(t *testing.T) {
 	_ = mapx.SetItems(deployManifest4FormTest, "spec.replicas", int64(3))
 	formData, _ = pbstruct.Map2pbStruct(workload.ParseDeploy(deployManifest4FormTest))
 	updateReq := clusterRes.ResUpdateReq{
-		ProjectID:   envs.TestProjectID,
-		ClusterID:   envs.TestClusterID,
-		Namespace:   envs.TestNamespace,
-		Name:        resName.(string),
-		Manifest:    nil,
-		FormData:    formData,
-		UseFormData: true,
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+		RawData:   formData,
+		Format:    action.FormDataFormat,
 	}
 	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -187,7 +186,8 @@ func TestDeployInSharedCluster(t *testing.T) {
 	createReq := clusterRes.ResCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -207,7 +207,8 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
 		Name:      resName.(string),
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -245,7 +246,8 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	createReq := clusterRes.ResCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.NotNil(t, err)
@@ -265,7 +267,8 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestNamespace,
 		Name:      resName.(string),
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.NotNil(t, err)

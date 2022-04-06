@@ -405,11 +405,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -574,11 +574,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -916,11 +916,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -1128,11 +1128,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -1340,11 +1340,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -1552,11 +1552,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -1764,11 +1764,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -1976,11 +1976,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -2188,11 +2188,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -2400,11 +2400,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -2612,11 +2612,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -2824,11 +2824,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -3036,11 +3036,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -3248,11 +3248,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -3474,11 +3474,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -3635,11 +3635,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -3692,11 +3692,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -3807,11 +3807,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -4077,11 +4077,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -4611,11 +4611,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -4864,11 +4864,11 @@
             "type": "string"
           },
           {
-            "name": "asFormData",
-            "description": "以表单形式返回.",
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           }
         ],
         "tags": [
@@ -5374,17 +5374,13 @@
           "type": "string",
           "title": "CRD 名称"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
         },
-        "formData": {
-          "type": "object",
-          "title": "资源配置信息（表单）"
-        },
-        "useFormData": {
-          "type": "boolean",
-          "title": "是否使用表单数据"
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "创建单个自定义资源请求体",
@@ -5413,17 +5409,13 @@
           "type": "string",
           "title": "命名空间"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
         },
-        "formData": {
-          "type": "object",
-          "title": "资源配置信息（表单）"
-        },
-        "useFormData": {
-          "type": "boolean",
-          "title": "是否使用表单数据"
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "更新单个自定义资源请求体",
@@ -5595,17 +5587,13 @@
           "type": "string",
           "title": "集群 ID"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
         },
-        "formData": {
-          "type": "object",
-          "title": "资源配置信息（表单）"
-        },
-        "useFormData": {
-          "type": "boolean",
-          "title": "是否使用表单数据"
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "创建单个 k8s 资源请求体",
@@ -5630,17 +5618,13 @@
           "type": "string",
           "title": "资源名称"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
         },
-        "formData": {
-          "type": "object",
-          "title": "资源配置信息（表单）"
-        },
-        "useFormData": {
-          "type": "boolean",
-          "title": "是否使用表单数据"
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "更新单个 k8s 资源请求体",

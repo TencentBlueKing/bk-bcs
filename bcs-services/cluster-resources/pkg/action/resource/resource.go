@@ -21,6 +21,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -58,24 +59,24 @@ func (m *ResMgr) List(ctx context.Context, namespace string, opts metav1.ListOpt
 }
 
 // Get ...
-func (m *ResMgr) Get(ctx context.Context, namespace, name string, asFormData bool, opts metav1.GetOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Get(ctx context.Context, namespace, name string, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, asFormData, opts)
+	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format, opts)
 }
 
 // Create ...
 func (m *ResMgr) Create(
-	ctx context.Context, manifest *structpb.Struct, formData *structpb.Struct, useFormData bool, isNSScoped bool, opts metav1.CreateOptions,
+	ctx context.Context, rawData *structpb.Struct, format string, isNSScoped bool, opts metav1.CreateOptions,
 ) (ret *structpb.Struct, err error) {
 	var manifestMap map[string]interface{}
-	if useFormData {
-		if manifestMap, err = renderer.NewManifestRenderer(ctx, formData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
+	if format == action.FormDataFormat {
+		if manifestMap, err = renderer.NewManifestRenderer(ctx, rawData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
 			return nil, err
 		}
 	} else {
-		manifestMap = manifest.AsMap()
+		manifestMap = rawData.AsMap()
 	}
 	if err := m.checkAccess(ctx, "", manifestMap); err != nil {
 		return nil, err
@@ -85,15 +86,15 @@ func (m *ResMgr) Create(
 
 // Update ...
 func (m *ResMgr) Update(
-	ctx context.Context, namespace, name string, manifest *structpb.Struct, formData *structpb.Struct, useFormData bool, opts metav1.UpdateOptions,
+	ctx context.Context, namespace, name string, rawData *structpb.Struct, format string, opts metav1.UpdateOptions,
 ) (ret *structpb.Struct, err error) {
 	var manifestMap map[string]interface{}
-	if useFormData {
-		if manifestMap, err = renderer.NewManifestRenderer(ctx, formData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
+	if format == action.FormDataFormat {
+		if manifestMap, err = renderer.NewManifestRenderer(ctx, rawData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
 			return nil, err
 		}
 	} else {
-		manifestMap = manifest.AsMap()
+		manifestMap = rawData.AsMap()
 	}
 	if err := m.checkAccess(ctx, namespace, manifestMap); err != nil {
 		return nil, err

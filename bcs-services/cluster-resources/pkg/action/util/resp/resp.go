@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
@@ -53,7 +54,7 @@ func BuildListAPIResp(
 
 // BuildRetrieveAPIResp ...
 func BuildRetrieveAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, asFormData bool, opts metav1.GetOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name, format string, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
@@ -69,7 +70,7 @@ func BuildRetrieveAPIResp(
 
 	manifest := ret.UnstructuredContent()
 	respData := map[string]interface{}{}
-	if asFormData {
+	if format == action.FormDataFormat {
 		parseFunc, err := parser.GetResParseFunc(resKind)
 		if err != nil {
 			return nil, err

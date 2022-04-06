@@ -19,6 +19,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -67,7 +68,7 @@ func (h *Handler) GetCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.AsFormData, metav1.GetOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Format, metav1.GetOptions{},
 	)
 	return err
 }
@@ -84,12 +85,12 @@ func (h *Handler) CreateCObj(
 
 	var manifest map[string]interface{}
 	// 支持表单渲染 manifest 或直接取 manifest
-	if req.UseFormData {
-		if manifest, err = renderer.NewManifestRenderer(ctx, req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
+	if req.Format == action.FormDataFormat {
+		if manifest, err = renderer.NewManifestRenderer(ctx, req.RawData.AsMap(), req.ClusterID, kind).Render(); err != nil {
 			return err
 		}
 	} else {
-		manifest = req.Manifest.AsMap()
+		manifest = req.RawData.AsMap()
 	}
 	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
 
@@ -118,12 +119,12 @@ func (h *Handler) UpdateCObj(
 
 	var manifest map[string]interface{}
 	// 支持表单渲染 manifest 或直接取 manifest
-	if req.UseFormData {
-		if manifest, err = renderer.NewManifestRenderer(ctx, req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
+	if req.Format == action.FormDataFormat {
+		if manifest, err = renderer.NewManifestRenderer(ctx, req.RawData.AsMap(), req.ClusterID, kind).Render(); err != nil {
 			return err
 		}
 	} else {
-		manifest = req.Manifest.AsMap()
+		manifest = req.RawData.AsMap()
 	}
 
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
