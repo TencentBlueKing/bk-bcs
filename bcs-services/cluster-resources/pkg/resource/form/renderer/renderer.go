@@ -16,6 +16,7 @@ package renderer
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"strings"
 	"text/template"
@@ -33,6 +34,7 @@ import (
 
 // ManifestRenderer 渲染并加载资源配置模板
 type ManifestRenderer struct {
+	ctx        context.Context
 	FormData   map[string]interface{}
 	ClusterID  string
 	Kind       string
@@ -42,8 +44,8 @@ type ManifestRenderer struct {
 }
 
 // NewManifestRenderer ...
-func NewManifestRenderer(formData map[string]interface{}, clusterID, kind string) *ManifestRenderer {
-	return &ManifestRenderer{FormData: formData, ClusterID: clusterID, Kind: kind, Manifest: map[string]interface{}{}}
+func NewManifestRenderer(ctx context.Context, formData map[string]interface{}, clusterID, kind string) *ManifestRenderer {
+	return &ManifestRenderer{ctx: ctx, FormData: formData, ClusterID: clusterID, Kind: kind, Manifest: map[string]interface{}{}}
 }
 
 // Render 渲染表单数据，返回 Manifest
@@ -76,7 +78,7 @@ func (r *ManifestRenderer) setResAPIVersion() error {
 	case res.HPA:
 		r.APIVersion = res.DefaultHPAGroupVersion
 	default:
-		resInfo, err := res.GetGroupVersionResource(res.NewClusterConfig(r.ClusterID), r.Kind, "")
+		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
 		if err != nil {
 			return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
 		}

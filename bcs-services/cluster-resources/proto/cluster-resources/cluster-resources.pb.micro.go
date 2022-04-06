@@ -3419,14 +3419,14 @@ func NewResourceEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Resource.FormDataRenderPreview",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Resource.GetResFormSchema",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"},
 			Method:  []string{"GET"},

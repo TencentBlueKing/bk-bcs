@@ -58,47 +58,47 @@ func (m *ResMgr) List(ctx context.Context, namespace string, opts metav1.ListOpt
 }
 
 // Get ...
-func (m *ResMgr) Get(namespace, name string, asFormData bool, opts metav1.GetOptions) (*structpb.Struct, error) {
-	if err := m.checkAccess(namespace, nil); err != nil {
+func (m *ResMgr) Get(ctx context.Context, namespace, name string, asFormData bool, opts metav1.GetOptions) (*structpb.Struct, error) {
+	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildRetrieveAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, asFormData, opts)
+	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, asFormData, opts)
 }
 
 // Create ...
 func (m *ResMgr) Create(
-	manifest *structpb.Struct, formData *structpb.Struct, useFormData bool, isNSScoped bool, opts metav1.CreateOptions,
+	ctx context.Context, manifest *structpb.Struct, formData *structpb.Struct, useFormData bool, isNSScoped bool, opts metav1.CreateOptions,
 ) (ret *structpb.Struct, err error) {
 	var manifestMap map[string]interface{}
 	if useFormData {
-		if manifestMap, err = renderer.NewManifestRenderer(formData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
+		if manifestMap, err = renderer.NewManifestRenderer(ctx, formData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
 			return nil, err
 		}
 	} else {
 		manifestMap = manifest.AsMap()
 	}
-	if err := m.checkAccess("", manifestMap); err != nil {
+	if err := m.checkAccess(ctx, "", manifestMap); err != nil {
 		return nil, err
 	}
-	return resp.BuildCreateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, manifestMap, isNSScoped, opts)
+	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifestMap, isNSScoped, opts)
 }
 
 // Update ...
 func (m *ResMgr) Update(
-	namespace, name string, manifest *structpb.Struct, formData *structpb.Struct, useFormData bool, opts metav1.UpdateOptions,
+	ctx context.Context, namespace, name string, manifest *structpb.Struct, formData *structpb.Struct, useFormData bool, opts metav1.UpdateOptions,
 ) (ret *structpb.Struct, err error) {
 	var manifestMap map[string]interface{}
 	if useFormData {
-		if manifestMap, err = renderer.NewManifestRenderer(formData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
+		if manifestMap, err = renderer.NewManifestRenderer(ctx, formData.AsMap(), m.ClusterID, m.Kind).Render(); err != nil {
 			return nil, err
 		}
 	} else {
 		manifestMap = manifest.AsMap()
 	}
-	if err := m.checkAccess(namespace, manifestMap); err != nil {
+	if err := m.checkAccess(ctx, namespace, manifestMap); err != nil {
 		return nil, err
 	}
-	return resp.BuildUpdateAPIResp(m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifestMap, opts)
+	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifestMap, opts)
 }
 
 // Delete ...
@@ -110,7 +110,7 @@ func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1
 }
 
 // 访问权限检查（如共享集群禁用等）
-func (m *ResMgr) checkAccess(namespace string, manifest map[string]interface{}) error {
+func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map[string]interface{}) error {
 	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
 	if err != nil {
 		return err

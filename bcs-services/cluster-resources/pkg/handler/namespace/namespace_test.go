@@ -58,6 +58,6 @@ func TestNSInSharedCluster(t *testing.T) {
 	respData := listResp.Data.AsMap()
 	for _, ns := range respData["manifest"].(map[string]interface{})["items"].([]interface{}) {
 		name := mapx.Get(ns.(map[string]interface{}), "metadata.name", "")
-		assert.True(t, strings.HasPrefix(name.(string), envs.TestProjectCode))
+		assert.True(t, strings.Contains(name.(string), envs.TestProjectCode))
 	}
 }

@@ -400,8 +400,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -570,8 +569,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -637,7 +635,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -913,8 +911,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1126,8 +1123,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1339,8 +1335,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1552,8 +1547,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1765,8 +1759,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1978,8 +1971,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2191,8 +2183,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2404,8 +2395,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2617,8 +2607,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2830,8 +2819,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3043,8 +3031,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3256,8 +3243,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3483,8 +3469,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3645,8 +3630,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3703,8 +3687,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3819,8 +3802,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -4090,8 +4072,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -4400,7 +4381,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4625,8 +4606,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -4879,8 +4859,7 @@
             "description": "以表单形式返回.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -5396,7 +5375,6 @@
         },
         "useFormData": {
           "type": "boolean",
-          "format": "boolean",
           "title": "是否使用表单数据"
         }
       },
@@ -5436,7 +5414,6 @@
         },
         "useFormData": {
           "type": "boolean",
-          "format": "boolean",
           "title": "是否使用表单数据"
         }
       },
@@ -5619,7 +5596,6 @@
         },
         "useFormData": {
           "type": "boolean",
-          "format": "boolean",
           "title": "是否使用表单数据"
         }
       },
@@ -5655,7 +5631,6 @@
         },
         "useFormData": {
           "type": "boolean",
-          "format": "boolean",
           "title": "是否使用表单数据"
         }
       },

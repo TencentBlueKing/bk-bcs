@@ -24,9 +24,9 @@ import (
 
 // FormDataRenderPreview ...
 func (h *Handler) FormDataRenderPreview(
-	_ context.Context, req *clusterRes.FormRenderPreviewReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.FormRenderPreviewReq, resp *clusterRes.CommonResp,
 ) error {
-	manifest, err := renderer.NewManifestRenderer(req.FormData.AsMap(), req.ClusterID, req.Kind).Render()
+	manifest, err := renderer.NewManifestRenderer(ctx, req.FormData.AsMap(), req.ClusterID, req.Kind).Render()
 	if err != nil {
 		return err
 	}

@@ -75,10 +75,7 @@ func (h *Handler) GetCObj(
 // CreateCObj ...
 func (h *Handler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
-) error {
-	manifest := req.Manifest.AsMap()
-	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
-
+) (err error) {
 	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
@@ -88,15 +85,14 @@ func (h *Handler) CreateCObj(
 	var manifest map[string]interface{}
 	// 支持表单渲染 manifest 或直接取 manifest
 	if req.UseFormData {
-		if manifest, err = renderer.NewManifestRenderer(req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
+		if manifest, err = renderer.NewManifestRenderer(ctx, req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
 			return err
 		}
 	} else {
 		manifest = req.Manifest.AsMap()
 	}
-
-	// 检验指定资源是否需要命名空间
 	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
+
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err
 	}
@@ -104,7 +100,6 @@ func (h *Handler) CreateCObj(
 		return err
 	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
-	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildCreateAPIResp(
 		ctx, req.ClusterID, kind, apiVersion, manifest, namespace != "", metav1.CreateOptions{},
 	)
@@ -124,7 +119,7 @@ func (h *Handler) UpdateCObj(
 	var manifest map[string]interface{}
 	// 支持表单渲染 manifest 或直接取 manifest
 	if req.UseFormData {
-		if manifest, err = renderer.NewManifestRenderer(req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
+		if manifest, err = renderer.NewManifestRenderer(ctx, req.FormData.AsMap(), req.ClusterID, kind).Render(); err != nil {
 			return err
 		}
 	} else {
@@ -137,7 +132,6 @@ func (h *Handler) UpdateCObj(
 	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
-	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
 		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, manifest, metav1.UpdateOptions{},
 	)
