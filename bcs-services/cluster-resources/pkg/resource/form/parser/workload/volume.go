@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package parser
+package workload
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"

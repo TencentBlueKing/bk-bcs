@@ -199,195 +199,195 @@ func TestSetItemsFailCase(t *testing.T) {
 }
 
 var formData = map[string]interface{}{
-	"Metadata": map[string]interface{}{
-		"Annotations": []interface{}{},
-		"Labels": []interface{}{
+	"metadata": map[string]interface{}{
+		"annotations": []interface{}{},
+		"labels": []interface{}{
 			map[string]interface{}{
-				"Key":   "app",
-				"Value": "busybox",
+				"key":   "app",
+				"value": "busybox",
 			},
 		},
-		"Name":      "busybox-deployment-12345",
-		"Namespace": "default",
+		"name":      "busybox-deployment-12345",
+		"namespace": "default",
 	},
-	"Spec": map[string]interface{}{
-		"Affinity": map[string]interface{}{
-			"NodeAffinity": []interface{}{},
-			"PodAffinity":  []interface{}{},
+	"spec": map[string]interface{}{
+		"affinity": map[string]interface{}{
+			"nodeAffinity": []interface{}{},
+			"podAffinity":  []interface{}{},
 		},
-		"NodeSelect": map[string]interface{}{
-			"NodeName": "",
-			"Selector": []interface{}{},
-			"Type":     "anyAvailable",
+		"nodeSelect": map[string]interface{}{
+			"nodeName": "",
+			"selector": []interface{}{},
+			"type":     "anyAvailable",
 		},
-		"Other": map[string]interface{}{
-			"ImagePullSecrets":           []interface{}{},
-			"RestartPolicy":              "",
-			"SAName":                     "",
-			"TerminationGracePeriodSecs": 0,
+		"other": map[string]interface{}{
+			"imagePullSecrets":           []interface{}{},
+			"restartPolicy":              "",
+			"saName":                     "",
+			"terminationGracePeriodSecs": 0,
 		},
-		"Security": map[string]interface{}{
-			"RunAsUser":    1111,
-			"RunAsGroup":   2222,
-			"FSGroup":      3333,
-			"RunAsNonRoot": true,
-			"SELinuxOpt": map[string]interface{}{
-				"Level": "",
-				"Role":  "",
-				"Type":  "",
-				"User":  "",
+		"security": map[string]interface{}{
+			"runAsUser":    1111,
+			"runAsGroup":   2222,
+			"fsGroup":      3333,
+			"runAsNonRoot": true,
+			"seLinuxOpt": map[string]interface{}{
+				"level": "",
+				"role":  "",
+				"type":  "",
+				"user":  "",
 			},
 		},
-		"Toleration": map[string]interface{}{
-			"Rules": []interface{}{},
+		"toleration": map[string]interface{}{
+			"rules": []interface{}{},
 		},
 	},
-	"Volume": map[string]interface{}{
-		"HostPath": []interface{}{},
-		"NFS": []interface{}{
+	"volume": map[string]interface{}{
+		"hostPath": []interface{}{},
+		"nfs": []interface{}{
 			map[string]interface{}{
-				"Name":     "nfs",
-				"Path":     "/data",
-				"ReadOnly": false,
-				"Server":   "1.1.1.1",
+				"name":     "nfs",
+				"path":     "/data",
+				"readOnly": false,
+				"server":   "1.1.1.1",
 			},
 		},
 	},
-	"ContainerGroup": map[string]interface{}{
-		"Containers": []interface{}{
+	"containerGroup": map[string]interface{}{
+		"containers": []interface{}{
 			map[string]interface{}{
-				"Basic": map[string]interface{}{
-					"Image":      "busybox:latest",
-					"Name":       "busybox",
-					"PullPolicy": "IfNotPresent",
+				"basic": map[string]interface{}{
+					"image":      "busybox:latest",
+					"name":       "busybox",
+					"pullPolicy": "IfNotPresent",
 				},
-				"Command": map[string]interface{}{
-					"Args": []interface{}{
+				"command": map[string]interface{}{
+					"args": []interface{}{
 						"echo hello",
 					},
-					"Command": []interface{}{
+					"command": []interface{}{
 						"/bin/bash",
 						"-c",
 					},
 					"Stdin":      false,
-					"StdinOnce":  true,
-					"Tty":        false,
-					"WorkingDir": "/data/dev",
+					"stdinOnce":  true,
+					"tty":        false,
+					"workingDir": "/data/dev",
 				},
-				"Envs": map[string]interface{}{
-					"Vars": []interface{}{},
+				"envs": map[string]interface{}{
+					"vars": []interface{}{},
 				},
-				"Healthz": map[string]interface{}{
-					"LivenessProbe": map[string]interface{}{
-						"Command": []interface{}{
+				"healthz": map[string]interface{}{
+					"livenessProbe": map[string]interface{}{
+						"command": []interface{}{
 							"echo hello",
 						},
-						"FailureThreshold": 3,
-						"InitialDelaySecs": 0,
-						"Path":             "",
-						"PeriodSecs":       10,
-						"Port":             0,
-						"SuccessThreshold": 1,
-						"TimeoutSecs":      3,
-						"Type":             "exec",
+						"failureThreshold": 3,
+						"initialDelaySecs": 0,
+						"path":             "",
+						"periodSecs":       10,
+						"port":             0,
+						"successThreshold": 1,
+						"timeoutSecs":      3,
+						"type":             "exec",
 					},
-					"ReadinessProbe": map[string]interface{}{
-						"Command":          []interface{}{},
-						"FailureThreshold": 0,
-						"InitialDelaySecs": 0,
-						"Path":             "",
-						"PeriodSecs":       0,
-						"Port":             0,
-						"SuccessThreshold": 0,
-						"TimeoutSecs":      0,
-						"Type":             "",
+					"readinessProbe": map[string]interface{}{
+						"command":          []interface{}{},
+						"failureThreshold": 0,
+						"initialDelaySecs": 0,
+						"path":             "",
+						"periodSecs":       0,
+						"port":             0,
+						"successThreshold": 0,
+						"timeoutSecs":      0,
+						"type":             "",
 					},
 				},
-				"Mount": map[string]interface{}{
-					"Volumes": []interface{}{},
+				"mount": map[string]interface{}{
+					"volumes": []interface{}{},
 				},
-				"Resource": map[string]interface{}{
-					"Limits": map[string]interface{}{
-						"CPU":    500,
-						"Memory": 1024,
+				"resource": map[string]interface{}{
+					"limits": map[string]interface{}{
+						"cpu":    500,
+						"memory": 1024,
 					},
-					"Requests": map[string]interface{}{
-						"CPU":    0,
-						"Memory": 0,
+					"requests": map[string]interface{}{
+						"cpu":    0,
+						"memory": 0,
 					},
 				},
 			},
 		},
-		"InitContainers": []interface{}{},
+		"initContainers": []interface{}{},
 	},
 }
 
 var noZeroFormData = map[string]interface{}{
-	"Metadata": map[string]interface{}{
-		"Labels": []interface{}{
+	"metadata": map[string]interface{}{
+		"labels": []interface{}{
 			map[string]interface{}{
-				"Key":   "app",
-				"Value": "busybox",
+				"key":   "app",
+				"value": "busybox",
 			},
 		},
-		"Name":      "busybox-deployment-12345",
-		"Namespace": "default",
+		"name":      "busybox-deployment-12345",
+		"namespace": "default",
 	},
-	"Spec": map[string]interface{}{
-		"NodeSelect": map[string]interface{}{
-			"Type": "anyAvailable",
+	"spec": map[string]interface{}{
+		"nodeSelect": map[string]interface{}{
+			"type": "anyAvailable",
 		},
-		"Security": map[string]interface{}{
-			"RunAsUser":    1111,
-			"RunAsGroup":   2222,
-			"FSGroup":      3333,
-			"RunAsNonRoot": true,
+		"security": map[string]interface{}{
+			"runAsUser":    1111,
+			"runAsGroup":   2222,
+			"fsGroup":      3333,
+			"runAsNonRoot": true,
 		},
 	},
-	"Volume": map[string]interface{}{
-		"NFS": []interface{}{
+	"volume": map[string]interface{}{
+		"nfs": []interface{}{
 			map[string]interface{}{
-				"Name":   "nfs",
-				"Path":   "/data",
-				"Server": "1.1.1.1",
+				"name":   "nfs",
+				"path":   "/data",
+				"server": "1.1.1.1",
 			},
 		},
 	},
-	"ContainerGroup": map[string]interface{}{
-		"Containers": []interface{}{
+	"containerGroup": map[string]interface{}{
+		"containers": []interface{}{
 			map[string]interface{}{
-				"Basic": map[string]interface{}{
-					"Image":      "busybox:latest",
-					"Name":       "busybox",
-					"PullPolicy": "IfNotPresent",
+				"basic": map[string]interface{}{
+					"image":      "busybox:latest",
+					"name":       "busybox",
+					"pullPolicy": "IfNotPresent",
 				},
-				"Command": map[string]interface{}{
-					"Args": []interface{}{
+				"command": map[string]interface{}{
+					"args": []interface{}{
 						"echo hello",
 					},
-					"Command": []interface{}{
+					"command": []interface{}{
 						"/bin/bash",
 						"-c",
 					},
-					"StdinOnce":  true,
-					"WorkingDir": "/data/dev",
+					"stdinOnce":  true,
+					"workingDir": "/data/dev",
 				},
-				"Healthz": map[string]interface{}{
-					"LivenessProbe": map[string]interface{}{
-						"Command": []interface{}{
+				"healthz": map[string]interface{}{
+					"livenessProbe": map[string]interface{}{
+						"command": []interface{}{
 							"echo hello",
 						},
-						"FailureThreshold": 3,
-						"PeriodSecs":       10,
-						"SuccessThreshold": 1,
-						"TimeoutSecs":      3,
-						"Type":             "exec",
+						"failureThreshold": 3,
+						"periodSecs":       10,
+						"successThreshold": 1,
+						"timeoutSecs":      3,
+						"type":             "exec",
 					},
 				},
-				"Resource": map[string]interface{}{
-					"Limits": map[string]interface{}{
-						"CPU":    500,
-						"Memory": 1024,
+				"resource": map[string]interface{}{
+					"limits": map[string]interface{}{
+						"cpu":    500,
+						"memory": 1024,
 					},
 				},
 			},

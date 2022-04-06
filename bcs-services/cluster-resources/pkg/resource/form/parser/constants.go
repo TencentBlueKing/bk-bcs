@@ -16,62 +16,10 @@ package parser
 
 import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 )
 
 // Kind2ParseFuncMap 各资源类型对应 ParseFunc
 var Kind2ParseFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
-	res.Deploy: ParseDeploy,
+	res.Deploy: workload.ParseDeploy,
 }
-
-const (
-	// UnitCnt 单位：个
-	UnitCnt = "cnt"
-	// UnitPercent 单位：%
-	UnitPercent = "percent"
-)
-
-const (
-	// NodeSelectTypeAnyAvailable 节点选择类型 - 任意节点
-	NodeSelectTypeAnyAvailable = "anyAvailable"
-	// NodeSelectTypeSpecificNode 节点选择类型 - 指定节点
-	NodeSelectTypeSpecificNode = "specificNode"
-	// NodeSelectTypeSchedulingRule 节点选择类型 - 调度规则
-	NodeSelectTypeSchedulingRule = "schedulingRule"
-)
-
-const (
-	// AffinityTypeAffinity 亲和性类型 - 亲和性
-	AffinityTypeAffinity = "affinity"
-	// AffinityTypeAntiAffinity 亲和性类型 - 反亲和性
-	AffinityTypeAntiAffinity = "antiAffinity"
-	// AffinityPriorityRequired 亲和性优先级 - 必须
-	AffinityPriorityRequired = "required"
-	// AffinityPriorityPreferred 亲和性优先级 - 优先
-	AffinityPriorityPreferred = "preferred"
-)
-
-const (
-	// EnvVarTypeKeyVal ...
-	EnvVarTypeKeyVal = "keyValue"
-	// EnvVarTypePodField ...
-	EnvVarTypePodField = "podField"
-	// EnvVarTypeResource ...
-	EnvVarTypeResource = "resource"
-	// EnvVarTypeCMKey ...
-	EnvVarTypeCMKey = "configMapKey"
-	// EnvVarTypeSecretKey ...
-	EnvVarTypeSecretKey = "secretKey"
-	// EnvVarTypeCM ...
-	EnvVarTypeCM = "configMap"
-	// EnvVarTypeSecret ...
-	EnvVarTypeSecret = "secret"
-)
-
-const (
-	// ProbeTypeHTTPGet ...
-	ProbeTypeHTTPGet = "httpGet"
-	// ProbeTypeTCPSocket ...
-	ProbeTypeTCPSocket = "tcpSocket"
-	// ProbeTypeExec ...
-	ProbeTypeExec = "exec"
-)

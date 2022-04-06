@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package parser
+package util
 
 import (
 	"strconv"

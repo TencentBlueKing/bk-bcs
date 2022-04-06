@@ -16,6 +16,8 @@ package model
 
 // Deploy Deployment 表单化建模
 type Deploy struct {
+	APIVersion     string         `structs:"apiVersion"`
+	Kind           string         `structs:"kind"`
 	Metadata       Metadata       `structs:"metadata"`
 	Spec           DeploySpec     `structs:"spec"`
 	Volume         WorkloadVolume `structs:"volume"`
@@ -288,11 +290,11 @@ type ContainerPort struct {
 
 // ContainerEnvs ...
 type ContainerEnvs struct {
-	Vars []EnvVars `structs:"vars"`
+	Vars []EnvVar `structs:"vars"`
 }
 
-// EnvVars ...
-type EnvVars struct {
+// EnvVar ...
+type EnvVar struct {
 	Type   string `structs:"type"`
 	Name   string `structs:"name"`
 	Source string `structs:"source"`

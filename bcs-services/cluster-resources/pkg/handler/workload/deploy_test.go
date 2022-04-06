@@ -16,6 +16,7 @@ package workload
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -127,7 +127,7 @@ func TestDeployWithForm(t *testing.T) {
 	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
 
 	// Create by form data
-	formData, _ := pbstruct.Map2pbStruct(parser.ParseDeploy(deployManifest4FormTest))
+	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(deployManifest4FormTest))
 	createReq := clusterRes.ResCreateReq{
 		ProjectID:   envs.TestProjectID,
 		ClusterID:   envs.TestClusterID,
@@ -140,7 +140,7 @@ func TestDeployWithForm(t *testing.T) {
 
 	// Update
 	_ = mapx.SetItems(deployManifest4FormTest, "spec.replicas", int64(3))
-	formData, _ = pbstruct.Map2pbStruct(parser.ParseDeploy(deployManifest4FormTest))
+	formData, _ = pbstruct.Map2pbStruct(workload.ParseDeploy(deployManifest4FormTest))
 	updateReq := clusterRes.ResUpdateReq{
 		ProjectID:   envs.TestProjectID,
 		ClusterID:   envs.TestClusterID,

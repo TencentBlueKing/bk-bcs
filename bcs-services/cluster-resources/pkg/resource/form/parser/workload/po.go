@@ -12,53 +12,21 @@
  * limitations under the License.
  */
 
-package parser
+package workload
 
 import (
 	"strings"
 
-	"github.com/fatih/structs"
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseDeploy ...
-func ParseDeploy(manifest map[string]interface{}) map[string]interface{} {
-	deploy := model.Deploy{}
-	ParseMetadata(manifest, &deploy.Metadata)
-	ParseDeploySpec(manifest, &deploy.Spec)
-	ParseWorkloadVolume(manifest, &deploy.Volume)
-	ParseContainerGroup(manifest, &deploy.ContainerGroup)
-	return structs.Map(deploy)
-}
-
-// ParseDeploySpec ...
-func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
-	ParseDeployReplicas(manifest, &spec.Replicas)
-	ParseNodeSelect(manifest, &spec.NodeSelect)
-	ParseAffinity(manifest, &spec.Affinity)
-	ParseToleration(manifest, &spec.Toleration)
-	ParseNetworking(manifest, &spec.Networking)
-	ParsePodSecurityCtx(manifest, &spec.Security)
-	ParseSpecOther(manifest, &spec.Other)
-}
-
-// ParseDeployReplicas ...
-func ParseDeployReplicas(manifest map[string]interface{}, replicas *model.DeployReplicas) {
-	replicas.Cnt = mapx.Get(manifest, "spec.replicas", int64(0)).(int64)
-	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", "RollingUpdate").(string)
-	maxSurge, err := mapx.GetItems(manifest, "spec.strategy.rollingUpdate.maxSurge")
-	if err == nil {
-		replicas.MaxSurge, replicas.MSUnit = AnalyzeIntStr(maxSurge)
-	}
-	maxUnavailable, err := mapx.GetItems(manifest, "spec.strategy.rollingUpdate.maxUnavailable")
-	if err == nil {
-		replicas.MaxUnavailable, replicas.MUAUnit = AnalyzeIntStr(maxUnavailable)
-	}
-	replicas.MinReadySecs = mapx.Get(manifest, "spec.minReadySeconds", int64(0)).(int64)
-	replicas.ProgressDeadlineSecs = mapx.Get(manifest, "spec.progressDeadlineSeconds", int64(0)).(int64)
+// ParsePo ...
+func ParsePo(manifest map[string]interface{}) map[string]interface{} {
+	// TODO Pod 解析逻辑
+	return map[string]interface{}{}
 }
 
 // ParseNodeSelect ...

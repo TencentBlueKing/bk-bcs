@@ -16,13 +16,13 @@ package resource
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -34,7 +34,7 @@ func TestFormDataRenderPreview(t *testing.T) {
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
 	// 类型强制转换，确保解析器正确解析
 	res.ConvertInt2Int64(manifest)
-	formData, _ := pbstruct.Map2pbStruct(parser.ParseDeploy(manifest))
+	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(manifest))
 	req, resp := clusterRes.FormRenderPreviewReq{Kind: res.Deploy, FormData: formData}, clusterRes.CommonResp{}
 	err := hdlr.FormDataRenderPreview(ctx, &req, &resp)
 	assert.Nil(t, err)

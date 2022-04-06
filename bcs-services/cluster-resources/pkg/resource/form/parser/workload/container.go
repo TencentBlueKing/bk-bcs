@@ -12,12 +12,13 @@
  * limitations under the License.
  */
 
-package parser
+package workload
 
 import (
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
@@ -64,53 +65,66 @@ func parseContainerService(raw map[string]interface{}, service *model.ContainerS
 	_ = mapstructure.Decode(raw["ports"], &service.Ports)
 }
 
-func parseContainerEnvs(raw map[string]interface{}, cEnvs *model.ContainerEnvs) { // nolint:cyclop
+func parseContainerEnvs(raw map[string]interface{}, cEnvs *model.ContainerEnvs) {
 	// container.env
-	if envs, ok := raw["env"]; ok { // nolint:nestif
+	if envs, ok := raw["env"]; ok {
 		for _, env := range envs.([]interface{}) {
 			e, _ := env.(map[string]interface{})
-			envVar := model.EnvVars{Name: e["name"].(string)}
 			if value, ok := e["value"]; ok {
-				envVar.Type = EnvVarTypeKeyVal
-				envVar.Value = value.(string)
+				envVar := model.EnvVar{Name: e["name"].(string), Type: EnvVarTypeKeyVal, Value: value.(string)}
+				cEnvs.Vars = append(cEnvs.Vars, envVar)
 			} else if valFrom, ok := e["valueFrom"]; ok {
-				vf, _ := valFrom.(map[string]interface{})
-				if fieldRef, ok := vf["fieldRef"]; ok {
-					envVar.Type = EnvVarTypePodField
-					envVar.Value = fieldRef.(map[string]interface{})["fieldPath"].(string)
-				} else if resFieldRef, ok := vf["resourceFieldRef"]; ok {
-					envVar.Type = EnvVarTypeResource
-					envVar.Source = resFieldRef.(map[string]interface{})["containerName"].(string)
-					envVar.Value = resFieldRef.(map[string]interface{})["resource"].(string)
-				} else if cmKeyRef, ok := vf["configMapKeyRef"]; ok {
-					envVar.Type = EnvVarTypeCMKey
-					envVar.Source = cmKeyRef.(map[string]interface{})["name"].(string)
-					envVar.Value = cmKeyRef.(map[string]interface{})["key"].(string)
-				} else if secRef, ok := vf["secretKeyRef"]; ok {
-					envVar.Type = EnvVarTypeSecretKey
-					envVar.Source = secRef.(map[string]interface{})["name"].(string)
-					envVar.Value = secRef.(map[string]interface{})["key"].(string)
-				}
+				envVar := genValueFormEnvVar(valFrom.(map[string]interface{}), e["name"].(string))
+				cEnvs.Vars = append(cEnvs.Vars, envVar)
 			}
-			cEnvs.Vars = append(cEnvs.Vars, envVar)
 		}
 	}
-
 	// container.envFrom
 	if envFroms, ok := raw["envFrom"]; ok {
 		for _, envFrom := range envFroms.([]interface{}) {
-			ef, _ := envFrom.(map[string]interface{})
-			envVar := model.EnvVars{Name: ef["prefix"].(string)}
-			if cmRef, ok := ef["configMapRef"]; ok {
-				envVar.Type = EnvVarTypeCM
-				envVar.Source = cmRef.(map[string]interface{})["name"].(string)
-			} else if secRef, ok := ef["secretRef"]; ok {
-				envVar.Type = EnvVarTypeSecret
-				envVar.Source = secRef.(map[string]interface{})["name"].(string)
-			}
+			envVar := genEnvFromEnvVar(envFrom.(map[string]interface{}))
 			cEnvs.Vars = append(cEnvs.Vars, envVar)
 		}
 	}
+}
+
+func genValueFormEnvVar(valFrom map[string]interface{}, name string) model.EnvVar {
+	var varType, value, source string
+	if fieldRef, ok := valFrom["fieldRef"]; ok {
+		// 来源于 Pod 本身字段信息
+		varType = EnvVarTypePodField
+		value = fieldRef.(map[string]interface{})["fieldPath"].(string)
+	} else if resFieldRef, ok := valFrom["resourceFieldRef"]; ok {
+		// 来源于资源配额信息
+		varType = EnvVarTypeResource
+		source = resFieldRef.(map[string]interface{})["containerName"].(string)
+		value = resFieldRef.(map[string]interface{})["resource"].(string)
+	} else if cmKeyRef, ok := valFrom["configMapKeyRef"]; ok {
+		// 来源于 ConfigMap 键
+		varType = EnvVarTypeCMKey
+		source = cmKeyRef.(map[string]interface{})["name"].(string)
+		value = cmKeyRef.(map[string]interface{})["key"].(string)
+	} else if secRef, ok := valFrom["secretKeyRef"]; ok {
+		// 来源于 Secret 键
+		varType = EnvVarTypeSecretKey
+		source = secRef.(map[string]interface{})["name"].(string)
+		value = secRef.(map[string]interface{})["key"].(string)
+	}
+	return model.EnvVar{Name: name, Type: varType, Source: source, Value: value}
+}
+
+func genEnvFromEnvVar(envFrom map[string]interface{}) model.EnvVar {
+	envVar := model.EnvVar{Name: envFrom["prefix"].(string)}
+	if cmRef, ok := envFrom["configMapRef"]; ok {
+		// 来源于 ConfigMap
+		envVar.Type = EnvVarTypeCM
+		envVar.Source = cmRef.(map[string]interface{})["name"].(string)
+	} else if secRef, ok := envFrom["secretRef"]; ok {
+		// 来源于 Secret
+		envVar.Type = EnvVarTypeSecret
+		envVar.Source = secRef.(map[string]interface{})["name"].(string)
+	}
+	return envVar
 }
 
 func parseContainerHealthz(raw map[string]interface{}, healthz *model.ContainerHealthz) {
@@ -144,10 +158,10 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 }
 
 func parseContainerRes(raw map[string]interface{}, res *model.ContainerRes) {
-	res.Requests.CPU = ConvertCPUUnit(mapx.Get(raw, "resources.requests.cpu", "").(string))
-	res.Requests.Memory = ConvertMemoryUnit(mapx.Get(raw, "resources.requests.memory", "").(string))
-	res.Limits.CPU = ConvertCPUUnit(mapx.Get(raw, "resources.limits.cpu", "").(string))
-	res.Limits.Memory = ConvertMemoryUnit(mapx.Get(raw, "resources.limits.memory", "").(string))
+	res.Requests.CPU = util.ConvertCPUUnit(mapx.Get(raw, "resources.requests.cpu", "").(string))
+	res.Requests.Memory = util.ConvertMemoryUnit(mapx.Get(raw, "resources.requests.memory", "").(string))
+	res.Limits.CPU = util.ConvertCPUUnit(mapx.Get(raw, "resources.limits.cpu", "").(string))
+	res.Limits.Memory = util.ConvertMemoryUnit(mapx.Get(raw, "resources.limits.memory", "").(string))
 }
 
 func parseContainerSecurity(raw map[string]interface{}, security *model.SecurityCtx) {
