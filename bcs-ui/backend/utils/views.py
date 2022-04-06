@@ -279,7 +279,7 @@ def with_code_wrapper(func):
     return func
 
 
-def make_bkmonitor_url(self, project: dict) -> str:
+def make_bkmonitor_url(project: dict) -> str:
     """蓝鲸监控跳转链接"""
     if not project:
         return ""
@@ -288,12 +288,12 @@ def make_bkmonitor_url(self, project: dict) -> str:
     return url
 
 
-def make_bklog_url(self, project: dict) -> str:
+def make_bklog_url(project: dict) -> str:
     """蓝鲸日志平台跳转链接"""
     if not project:
         return ""
 
-    url = f'{settings.BKLOG_HOST}/?bizId={project["cc_app_id"]}#/k8s'
+    url = f'{settings.BKLOG_HOST}/#/retrieve/?bizId={project["cc_app_id"]}'
     return url
 
 
