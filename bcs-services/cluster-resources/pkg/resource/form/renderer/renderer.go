@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"strings"
 	"text/template"
 
@@ -52,9 +53,9 @@ func NewManifestRenderer(ctx context.Context, formData map[string]interface{}, c
 func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 	for _, f := range []func() error{
 		// 1. 自动获取资源对应版本
-		r.setResAPIVersion,
+		r.setAPIVersion,
 		// 2. 检查是否支持指定版本表单化
-		r.checkResFormRenderable,
+		r.checkRenderable,
 		// 3. 数据清洗，去除表单默认值等
 		r.cleanFormData,
 		// 4. 加载模板并初始化
@@ -62,7 +63,6 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 		// 5. 渲染模板并转换格式
 		r.renderToMap,
 	} {
-		// TODO 模板渲染失败需要补充日志，记录 requestID（需要 ctx）
 		if err := f(); err != nil {
 			return nil, err
 		}
@@ -71,7 +71,7 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 }
 
 // 获取资源对应 APIVersion 并更新 Renderer 配置
-func (r *ManifestRenderer) setResAPIVersion() error {
+func (r *ManifestRenderer) setAPIVersion() error {
 	switch r.Kind {
 	case res.CJ:
 		r.APIVersion = res.DefaultCJGroupVersion
@@ -89,7 +89,7 @@ func (r *ManifestRenderer) setResAPIVersion() error {
 }
 
 // 检查指定资源能否渲染为表单
-func (r *ManifestRenderer) checkResFormRenderable() error {
+func (r *ManifestRenderer) checkRenderable() error {
 	supportedAPIVersions, ok := FormRenderSupportedResAPIVersion[r.Kind]
 	if !ok {
 		return errorx.New(errcode.Unsupported, "资源类型 %s 不支持表单化", r.Kind)
@@ -125,6 +125,7 @@ func (r *ManifestRenderer) renderToMap() error {
 	var buf bytes.Buffer
 	err := r.Tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.FormData)
 	if err != nil {
+		log.Warn(r.ctx, "渲染模板失败：%v", err)
 		return errorx.New(errcode.General, "渲染模板失败：%v", err)
 	}
 	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
@@ -173,7 +174,7 @@ func initTemplate(tmplPattern string) (*template.Template, error) {
 		return nil, err
 	}
 
-	// Add the 'include' function here so we can close over t.
+	// Add the 'include' function here, so we can close over t.
 	// ref: https://github.com/helm/helm/blob/3d1bc72827e4edef273fb3d8d8ded2a25fa6f39d/pkg/engine/engine.go#L107
 	includedNames := map[string]int{}
 	funcMap["include"] = func(name string, data interface{}) (string, error) {

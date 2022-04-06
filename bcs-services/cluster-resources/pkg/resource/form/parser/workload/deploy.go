@@ -18,6 +18,7 @@ import (
 	"github.com/fatih/structs"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
@@ -25,8 +26,8 @@ import (
 // ParseDeploy ...
 func ParseDeploy(manifest map[string]interface{}) map[string]interface{} {
 	deploy := model.Deploy{}
-	deploy.APIVersion, deploy.Kind = util.ParseAPIVersionKind(manifest)
-	util.ParseMetadata(manifest, &deploy.Metadata)
+	deploy.APIVersion, deploy.Kind = common.ParseAPIVersionKind(manifest)
+	common.ParseMetadata(manifest, &deploy.Metadata)
 	ParseDeploySpec(manifest, &deploy.Spec)
 	ParseWorkloadVolume(manifest, &deploy.Volume)
 	ParseContainerGroup(manifest, &deploy.ContainerGroup)
@@ -36,12 +37,14 @@ func ParseDeploy(manifest map[string]interface{}) map[string]interface{} {
 // ParseDeploySpec ...
 func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
 	ParseDeployReplicas(manifest, &spec.Replicas)
-	ParseNodeSelect(manifest, &spec.NodeSelect)
-	ParseAffinity(manifest, &spec.Affinity)
-	ParseToleration(manifest, &spec.Toleration)
-	ParseNetworking(manifest, &spec.Networking)
-	ParsePodSecurityCtx(manifest, &spec.Security)
-	ParseSpecOther(manifest, &spec.Other)
+	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
+	podSpec, _ := tmplSpec.(map[string]interface{})
+	ParseNodeSelect(podSpec, &spec.NodeSelect)
+	ParseAffinity(podSpec, &spec.Affinity)
+	ParseToleration(podSpec, &spec.Toleration)
+	ParseNetworking(podSpec, &spec.Networking)
+	ParsePodSecurityCtx(podSpec, &spec.Security)
+	ParseSpecOther(podSpec, &spec.Other)
 }
 
 // ParseDeployReplicas ...

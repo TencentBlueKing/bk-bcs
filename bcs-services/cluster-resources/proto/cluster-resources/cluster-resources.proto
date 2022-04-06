@@ -1183,6 +1183,9 @@ message HealthzReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "HealthzReq", description: "Healthz API 请求（无需参数）"}
 	};
+	bool raiseErr = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "raiseErr", description: "存在依赖服务异常的情况，是否返回错误（默认只在响应体中标记）"
+	}];
 }
 
 message HealthzResp {

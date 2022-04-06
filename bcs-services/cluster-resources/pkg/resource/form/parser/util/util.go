@@ -19,6 +19,13 @@ import (
 	"strings"
 )
 
+const (
+	// UnitCnt 单位：个
+	UnitCnt = "cnt"
+	// UnitPercent 单位：%
+	UnitPercent = "percent"
+)
+
 // AnalyzeIntStr 分析可能是 int 或者 string 的字段，比如 spec.strategy.rollingUpdate.maxSurge，返回值与单位
 // 规则：以 % 为结尾的，单位是 %，否则单位为个数
 func AnalyzeIntStr(raw interface{}) (int64, string) {

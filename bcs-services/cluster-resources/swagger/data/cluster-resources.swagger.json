@@ -70,6 +70,15 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "raiseErr",
+            "description": "raiseErr. 存在依赖服务异常的情况，是否返回错误（默认只在响应体中标记）",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
         "tags": [
           "Basic"
         ]
