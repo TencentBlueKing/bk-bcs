@@ -32,6 +32,12 @@ var (
 	UnauthorizedError = errors.New("用户未登入")
 )
 
+func RequestIdGenerator() string {
+	uid := uuid.New().String()
+	requestId := strings.Replace(uid, "-", "", -1)
+	return requestId
+}
+
 // AuthContext :
 type AuthContext struct {
 	RequestId string      `json:"request_id"`
@@ -46,7 +52,7 @@ type AuthContext struct {
 func WebAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authCtx := &AuthContext{
-			RequestId: uuid.New().String(),
+			RequestId: RequestIdGenerator(),
 		}
 		c.Set("auth", authCtx)
 
