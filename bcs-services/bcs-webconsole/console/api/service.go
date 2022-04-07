@@ -105,6 +105,9 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	query := url.Values{}
 	query.Set("session_id", sessionId)
+	if consoleQuery.Lang != "" {
+		query.Set("lang", consoleQuery.Lang)
+	}
 
 	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
 		projectId, clusterId, query.Encode()))
