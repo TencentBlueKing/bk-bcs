@@ -46,3 +46,19 @@ type DeployReplicas struct {
 	MinReadySecs         int64  `structs:"minReadySecs"`
 	ProgressDeadlineSecs int64  `structs:"progressDeadlineSecs"`
 }
+
+// WorkloadVolume ...
+type WorkloadVolume struct {
+	PVC       []PVCVolume      `structs:"pvc"`
+	HostPath  []HostPathVolume `structs:"hostPath"`
+	ConfigMap []CMVolume       `structs:"configMap"`
+	Secret    []SecretVolume   `structs:"secret"`
+	EmptyDir  []EmptyDirVolume `structs:"emptyDir"`
+	NFS       []NFSVolume      `structs:"nfs"`
+}
+
+// ContainerGroup ...
+type ContainerGroup struct {
+	InitContainers []Container `structs:"initContainers"`
+	Containers     []Container `structs:"containers"`
+}

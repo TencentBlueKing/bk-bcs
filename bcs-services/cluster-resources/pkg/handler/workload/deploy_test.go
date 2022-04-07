@@ -152,8 +152,20 @@ func TestDeployWithForm(t *testing.T) {
 	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
-	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	// Get FormData
+	getReq := clusterRes.ResGetReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+		Format:    action.FormDataFormat,
+	}
+	getResp := clusterRes.CommonResp{}
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.Nil(t, err)
+
+	// Get Manifest
+	getReq, getResp = handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
 	err = h.GetDeploy(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
