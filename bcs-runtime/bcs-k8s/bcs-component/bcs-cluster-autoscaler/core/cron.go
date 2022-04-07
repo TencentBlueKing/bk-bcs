@@ -28,16 +28,6 @@ import (
 
 const TIME_LAYOUT = "2006-01-02 15:04:05"
 
-// TimeRange allow user to define a crontab regular
-type TimeRange struct {
-	// 存放 crontab 语句，如 "* 1-3 * * *"
-	Schedule string
-	// 指定时区，如 "Asia/Shanghai"
-	Zone string
-	// 期望节点数
-	DesiredNum int
-}
-
 // doCron set the minSize of nodegroups according to the rules
 func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
@@ -67,6 +57,10 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 			return errors.NewAutoscalerError(errors.ApiCallError,
 				"failed to get time ranges of nodegroup %v: %v", ng.Id(), err)
 		}
+		if len(timeRanges) == 0 {
+			klog.V(4).Infof("CronMode: there is no timerange definition for nodegroup %s", ng.Id())
+			return nil
+		}
 
 		// get desired num
 		desired, err := getDesiredNumForNodeGroupWithTime(ng, currentTime, timeRanges)
@@ -76,7 +70,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 		}
 		switch {
 		case desired < 0:
-			klog.V(4).Infof("CronMode: for nodegroup %v, now is not in the time ranges", ng.Id())
+			klog.V(4).Infof("CronMode: for nodegroup %v, now %v is not in any time ranges", ng.Id(), currentTime)
 			continue
 		case desired > maxSize:
 			klog.V(4).Infof("CronMode: for nodegroup %v, desiredNum %d is larger than MaxSize %d",
@@ -102,7 +96,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 			continue
 		}
 		info := nodegroupset.ScaleUpInfo{
-			Group:       ng,
+			Group:       group,
 			CurrentSize: targetSize,
 			NewSize:     desired,
 			MaxSize:     maxSize,
@@ -127,6 +121,8 @@ func getDesiredNumForNodeGroupWithTime(ng cloudprovider.NodeGroup,
 			return max, err
 		}
 		if finalMatch == nil {
+			klog.V(4).Infof("CronMode: Nodegroup %v, now %v is not in time range \"%v\"",
+				ng.Id(), currentTime, t.Schedule)
 			continue
 		}
 		if max < t.DesiredNum {
@@ -161,7 +157,7 @@ func getFinalMatchAndMisMatch(schedule string, currentTime time.Time, zone strin
 		match = t
 		break
 	}
-	if currentTime.Sub(misMatch).Minutes() <= 1 && match.Sub(currentTime).Minutes() <= 1 {
+	if currentTime.Sub(misMatch).Minutes() <= 1 {
 		return &misMatch, &match, nil
 	}
 

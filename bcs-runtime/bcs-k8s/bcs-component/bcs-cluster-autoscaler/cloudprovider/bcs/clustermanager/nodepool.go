@@ -178,7 +178,8 @@ func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) error {
 	res := UpdateGroupDesiredNodeResponse{}
 	err = json.Unmarshal(contents, &res)
 	if err != nil {
-		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents), res.Message)
+		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v",
+			string(contents), res.Message)
 	}
 	if res.Code != 0 {
 		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
