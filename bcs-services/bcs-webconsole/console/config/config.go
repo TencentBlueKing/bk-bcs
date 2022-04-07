@@ -47,6 +47,9 @@ func (c *Configurations) Init() error {
 	c.BkLogin = &BKLoginConf{}
 	c.BkLogin.Init()
 
+	c.BKAPIGW = &BKAPIGWConf{}
+	c.BKAPIGW.Init()
+
 	// logging
 	c.Logging = &LogConf{}
 	c.Logging.Init()
