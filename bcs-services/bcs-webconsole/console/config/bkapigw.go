@@ -11,30 +11,37 @@
  *
  */
 
-package storage
+package config
 
-// once synchronization
 import (
-	"sync"
+	"crypto/rsa"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
-// GLobals
-var (
-	GlobalRedisSession *RedisSession
-)
+// BKAPIGWConf :
+type BKAPIGWConf struct {
+	Host         string         `yaml:"host"`
+	JWTPubKey    string         `yaml:"jwt_public_key"`
+	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
+}
 
-var redisOnce sync.Once
+func (c *BKAPIGWConf) Init() error {
+	// only for development
+	c.Host = ""
+	c.JWTPubKey = ""
+	return nil
+}
 
-// GetDefaultRedisSession : get default redis session
-func GetDefaultRedisSession() *RedisSession {
-	if GlobalRedisSession == nil {
-		redisOnce.Do(func() {
-			GlobalRedisSession = &RedisSession{}
-			err := GlobalRedisSession.Init()
-			if err != nil {
-				panic(err)
-			}
-		})
+func (c *BKAPIGWConf) InitJWTPubKey() error {
+	if c.JWTPubKey == "" {
+		return nil
 	}
-	return GlobalRedisSession
+	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(c.JWTPubKey))
+	if err != nil {
+		return err
+	}
+
+	c.JWTPubKeyObj = pubKey
+	return nil
 }

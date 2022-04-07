@@ -11,30 +11,20 @@
  *
  */
 
-package storage
+package bcs
 
-// once synchronization
 import (
-	"sync"
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// GLobals
-var (
-	GlobalRedisSession *RedisSession
-)
+func TestGetProject(t *testing.T) {
+	initConf()
+	ctx := context.Background()
 
-var redisOnce sync.Once
-
-// GetDefaultRedisSession : get default redis session
-func GetDefaultRedisSession() *RedisSession {
-	if GlobalRedisSession == nil {
-		redisOnce.Do(func() {
-			GlobalRedisSession = &RedisSession{}
-			err := GlobalRedisSession.Init()
-			if err != nil {
-				panic(err)
-			}
-		})
-	}
-	return GlobalRedisSession
+	project, err := GetProject(ctx, getTestProjectId())
+	assert.NoError(t, err)
+	assert.Equal(t, project.ProjectId, getTestProjectId())
 }

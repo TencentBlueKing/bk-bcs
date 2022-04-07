@@ -164,7 +164,7 @@ func genClusterRoleBinding(name string) *rbacv1.ClusterRoleBinding {
 			Kind:       "ClusterRoleBinding",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "bcs:" + name,
+			Name: name,
 		},
 		Subjects: []rbacv1.Subject{
 			{

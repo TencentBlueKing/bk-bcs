@@ -13,28 +13,26 @@
 
 package storage
 
-// once synchronization
 import (
-	"sync"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
-// GLobals
-var (
-	GlobalRedisSession *RedisSession
-)
-
-var redisOnce sync.Once
-
-// GetDefaultRedisSession : get default redis session
-func GetDefaultRedisSession() *RedisSession {
-	if GlobalRedisSession == nil {
-		redisOnce.Do(func() {
-			GlobalRedisSession = &RedisSession{}
-			err := GlobalRedisSession.Init()
-			if err != nil {
-				panic(err)
-			}
-		})
-	}
-	return GlobalRedisSession
+// SlotCache :
+type SlotCache struct {
+	Slot              *cache.Cache
+	DefaultExpiration time.Duration
 }
+
+// NewSlotCache :
+func NewSlotCache() (*SlotCache, error) {
+	c := SlotCache{
+		Slot:              cache.New(5*time.Minute, 10*time.Minute),
+		DefaultExpiration: cache.DefaultExpiration,
+	}
+	return &c, nil
+}
+
+// LocalCache :
+var LocalCache, _ = NewSlotCache()
