@@ -361,20 +361,20 @@
                                 {{$t('查看日志')}}
                             </bk-button>
                             <template v-if="row.status === 'REMOVABLE'">
-                                <bk-button text @click="handleEnableNode(row)">
+                                <bk-button text class="mr10" @click="handleEnableNode(row)">
                                     {{ $t('允许调度') }}
                                 </bk-button>
-                                <bk-button text class="ml10" @click="handleSchedulerNode(row)">
+                                <bk-button text class="mr10" @click="handleSchedulerNode(row)">
                                     {{ $t('pod迁移') }}
                                 </bk-button>
                             </template>
-                            <bk-button text class="ml10"
+                            <bk-button text class="mr10"
                                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                                 @click="handleDeleteNode(row)"
                             >
                                 {{ $t('删除') }}
                             </bk-button>
-                            <bk-button text class="ml10"
+                            <bk-button text
                                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
                                 @click="handleRetry(row)"
                             >{{ $t('重试') }}</bk-button>
