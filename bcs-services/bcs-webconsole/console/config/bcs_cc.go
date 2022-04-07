@@ -13,13 +13,12 @@
 
 package config
 
-// BCSCCConf :
+// BCSCCConf : bcs cc 接口配置, 调用项目信息使用
 type BCSCCConf struct {
 	Host  string `yaml:"host"`
 	Stage string `yaml:"stage"`
 }
 
-// Init : init default redis config
 func (c *BCSCCConf) Init() error {
 	// only for development
 	c.Host = ""
