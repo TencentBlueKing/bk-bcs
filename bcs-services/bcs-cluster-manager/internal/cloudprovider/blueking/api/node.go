@@ -11,7 +11,7 @@
  *
  */
 
-package blueking
+package api
 
 import (
 	"sync"
@@ -25,7 +25,7 @@ var nodeMgr sync.Once
 func init() {
 	nodeMgr.Do(func() {
 		//init Node
-		cloudprovider.InitNodeManager(cloudName, &NodeManager{})
+		cloudprovider.InitNodeManager("blueking", &NodeManager{})
 	})
 }
 

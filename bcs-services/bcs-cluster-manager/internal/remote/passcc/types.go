@@ -110,6 +110,7 @@ var testAreaCode = map[string]int{
 	"ap-shanghai":  8,
 	"ap-shenzhen":  9,
 	"ap-nanjing":   10,
+	"default":      1,
 }
 
 var prodAreaCode = map[string]int{
@@ -125,6 +126,7 @@ var prodAreaCode = map[string]int{
 	"ap-tokyo":         28,
 	"ap-xian-ec":       26,
 	"na-siliconvalley": 23,
+	"default":          1,
 }
 
 // DeleteClusterRequest deleteCluster
