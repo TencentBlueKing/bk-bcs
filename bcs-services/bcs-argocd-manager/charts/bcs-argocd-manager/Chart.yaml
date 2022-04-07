@@ -1,0 +1,30 @@
+apiVersion: v2
+appVersion: 0.1.1
+dependencies:
+  - name: common
+    repository: https://charts.bitnami.com/bitnami
+    version: 1.8.0
+  - condition: etcd.enabled
+    name: etcd
+    repository: https://charts.bitnami.com/bitnami
+    version: 6.5.0
+  - condition: bcs-argocd-proxy.enabled
+    name: bcs-argocd-proxy
+    repository: file://./charts/bcs-argocd-proxy
+    version: 0.1.0
+  - condition: bcs-argocd-server.enabled
+    name: bcs-argocd-server
+    repository: file://./charts/bcs-argocd-server
+    version: 0.1.0
+  - condition: bcs-argocd-controller.enabled
+    name: bcs-argocd-controller
+    repository: file://./charts/bcs-argocd-controller
+    version: 0.1.0
+  - condition: bcs-argocd-example-plugin.enabled
+    name: bcs-argocd-example-plugin
+    repository: file://./charts/bcs-argocd-example-plugin
+    version: 0.1.0
+description: A Helm chart for BlueKing Container Service Argocd Manager
+name: bcs-argocd-manager
+type: application
+version: 0.1.1

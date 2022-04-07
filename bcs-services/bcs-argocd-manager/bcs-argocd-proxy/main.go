@@ -36,6 +36,7 @@ func main() {
 	flag.String("insecureaddress", "127.0.0.1", "insecure server address")
 	flag.Uint("port", 8081, "grpc server port")
 	flag.Uint("httpport", 8080, "http server port")
+	flag.Uint("httpinsecureport", 8079, "http insecure port if tls is enabled")
 	flag.Uint("metricport", 8082, "metric port")
 	flag.String("serverca", "", "tls ca file for server")
 	flag.String("servercert", "", "tls cert file for server")

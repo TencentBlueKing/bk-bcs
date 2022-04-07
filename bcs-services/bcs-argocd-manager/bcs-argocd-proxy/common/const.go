@@ -14,7 +14,7 @@ package common
 
 const (
 	// ServiceDomain domain name for service
-	ServiceDomain = "argocdproxy.bkbcs.tencent.com"
+	ServiceDomain = "argocdmanager.bkbcs.tencent.com"
 
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"

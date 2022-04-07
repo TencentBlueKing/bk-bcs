@@ -39,6 +39,7 @@ spec:
                 project:
                   type: string
                 service:
+                  description: ArgocdPluginService defines the service information of the plugins when type is "service"
                   type: object
                   properties:
                     address:
