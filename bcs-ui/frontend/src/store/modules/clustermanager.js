@@ -54,7 +54,7 @@ export default {
             const data = await deleteCluster({
                 ...params,
                 operator: ctx.rootState.user?.username
-            }).catch(() => false)
+            }).then(() => true).catch(() => false)
             return data
         },
         async retryCluster (ctx, params) {
@@ -90,7 +90,7 @@ export default {
             const data = await deleteClusterNode({
                 ...params,
                 operator: ctx.rootState.user?.username
-            }).catch(() => false)
+            }).then(() => true).catch(() => false)
             return data
         },
         async clusterDetail (ctx, params) {
