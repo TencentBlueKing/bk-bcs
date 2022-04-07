@@ -26,6 +26,7 @@ import (
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -131,74 +132,62 @@ func (m *StartupManager) GetContainerByName(namespace, podName, containerName st
 // ensureNamespace 确保 web-console 命名空间配置正确
 func (m *StartupManager) ensureNamespace(name string) error {
 	namespace := genNamespace(name)
-	if _, err := m.k8sClient.CoreV1().Namespaces().Get(m.ctx, name, metav1.GetOptions{}); err == nil {
+	_, err := m.k8sClient.CoreV1().Namespaces().Get(m.ctx, name, metav1.GetOptions{})
+
+	if k8sErr.IsNotFound(err) {
+		// 命名空间不存在，创建命名空间
+		if _, err := m.k8sClient.CoreV1().Namespaces().Create(m.ctx, namespace, metav1.CreateOptions{}); err != nil {
+			// 创建失败
+			logger.Errorf("create namespace %s failed, err: %s", name, err)
+			return err
+		}
 		return nil
 	}
 
-	// 命名空间不存在，创建命名空间
-	if _, err := m.k8sClient.CoreV1().Namespaces().Create(m.ctx, namespace, metav1.CreateOptions{}); err != nil {
-		// 创建失败
-		logger.Errorf("create namespace %s failed, err: %s", name, err)
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // ensureConfigmap: 确保 configmap 配置正确
 func (m *StartupManager) ensureConfigmap(namespace, name string, kubeConfig *clientcmdv1.Config) error {
-	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(m.ctx, name, metav1.GetOptions{}); err == nil {
+	_, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(m.ctx, name, metav1.GetOptions{})
+
+	// 不存在，创建
+	if k8sErr.IsNotFound(err) {
+		kubeConfigYaml, err := yaml.Marshal(kubeConfig)
+		if err != nil {
+			return err
+		}
+		configMap := genConfigMap(name, string(kubeConfigYaml))
+
+		if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Create(m.ctx, configMap, metav1.CreateOptions{}); err != nil {
+			// 创建失败
+			logger.Errorf("create configmap failed, err :%s", err)
+			return err
+		}
 		return nil
 	}
 
-	kubeConfigYaml, err := yaml.Marshal(kubeConfig)
-	if err != nil {
-		return err
-	}
-
-	configMap := genConfigMap(name, string(kubeConfigYaml))
-
-	// 不存在，创建
-	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Create(m.ctx, configMap, metav1.CreateOptions{}); err != nil {
-		// 创建失败
-		logger.Errorf("create configmap failed, err :%s", err)
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // ensurePod 确保 pod 配置正确
 func (m *StartupManager) ensurePod(namespace, name string, podManifest *v1.Pod) error {
-	// k8s 客户端
-	pod, err := m.k8sClient.CoreV1().Pods(namespace).Get(m.ctx, name, metav1.GetOptions{})
-	if err == nil {
-		if pod.Status.Phase == v1.PodRunning {
-			return nil
+	_, err := m.k8sClient.CoreV1().Pods(namespace).Get(m.ctx, name, metav1.GetOptions{})
+
+	if k8sErr.IsNotFound(err) {
+		if _, createErr := m.k8sClient.CoreV1().Pods(namespace).Create(m.ctx, podManifest, metav1.CreateOptions{}); createErr != nil {
+			return createErr
 		}
 
-		if pod.Status.Phase == v1.PodPending {
-			// 等待pod启动成功
-			if err := m.waitUserPodReady(m.ctx, namespace, name); err != nil {
-				return err
-			}
-			// 已经正常启动
-			return nil
-		}
-
-		return errors.New("Pod not Running or Pending")
+		// 等待pod启动成功
+		return m.waitPodReady(namespace, name)
 	}
 
-	if _, err := m.k8sClient.CoreV1().Pods(namespace).Create(m.ctx, podManifest, metav1.CreateOptions{}); err != nil {
+	if err != nil {
 		return err
 	}
 
-	// 等待pod启动成功
-	if err := m.waitUserPodReady(m.ctx, namespace, name); err != nil {
-		return err
-	}
-
-	return nil
+	return m.waitPodReady(namespace, name)
 }
 
 // getExternalKubeConfig 外部集群鉴权
@@ -253,6 +242,10 @@ func (m *StartupManager) ensureServiceAccountRBAC(name string) error {
 	// ensure serviceAccount
 	serviceAccount := genServiceAccount(name)
 	if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Get(m.ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
+		if !k8sErr.IsNotFound(err) {
+			return err
+		}
+
 		if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Create(m.ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
 			return err
 		}
@@ -261,6 +254,10 @@ func (m *StartupManager) ensureServiceAccountRBAC(name string) error {
 	// ensure rolebind
 	clusterRoleBinding := genClusterRoleBinding(name)
 	if _, err := m.k8sClient.RbacV1().ClusterRoleBindings().Get(m.ctx, clusterRoleBinding.Name, metav1.GetOptions{}); err != nil {
+		if !k8sErr.IsNotFound(err) {
+			return err
+		}
+
 		if _, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(m.ctx, clusterRoleBinding, metav1.CreateOptions{}); err != nil {
 			return err
 		}
@@ -295,7 +292,7 @@ func (m *StartupManager) getServiceAccountToken(namespace string) (string, error
 }
 
 // 等待pod启动成功
-func (m *StartupManager) waitUserPodReady(ctx context.Context, namespace, name string) error {
+func (m *StartupManager) waitPodReady(namespace, name string) error {
 	// 错误次数
 	errorCount := 0
 	// 最多等待1分钟
@@ -310,7 +307,7 @@ func (m *StartupManager) waitUserPodReady(ctx context.Context, namespace, name s
 	for {
 		select {
 		case <-interval.C:
-			pod, err := m.k8sClient.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+			pod, err := m.k8sClient.CoreV1().Pods(namespace).Get(m.ctx, name, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
