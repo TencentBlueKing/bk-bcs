@@ -80,7 +80,7 @@
     </section>
 </template>
 <script lang="ts">
-    import { defineComponent, onMounted, ref, computed } from '@vue/composition-api'
+    import { defineComponent, onMounted, ref, computed, watch } from '@vue/composition-api'
     import IpSelector from '@/components/ip-selector/selector-dialog.vue'
     import useGoHome from '@/common/use-gohome'
     import KeyValue from '@/components/key-value.vue'
@@ -199,6 +199,11 @@
                 if (!result) return
                 confirmDialog.value = true
             }
+            watch(confirmDialog, (value) => {
+                if (!value) {
+                    createConfirm.value = []
+                }
+            })
             const curProject = computed(() => {
                 return $store.state.curProject
             })
