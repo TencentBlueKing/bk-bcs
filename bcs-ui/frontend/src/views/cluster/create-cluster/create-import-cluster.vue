@@ -75,7 +75,7 @@
     </section>
 </template>
 <script lang="ts">
-    import { defineComponent, ref, computed, onMounted } from '@vue/composition-api'
+    import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api'
     import FormGroup from './form-group.vue'
     import Ace from '@/components/ace-editor'
     import useGoHome from '@/common/use-gohome'
@@ -144,6 +144,11 @@
             const handleCancel = () => {
                 $router.back()
             }
+            watch(showImportDialog, (value) => {
+                if (!value) {
+                    importConfirm.value = []
+                }
+            })
             
             const curProject = computed(() => {
                 return $store.state.curProject
