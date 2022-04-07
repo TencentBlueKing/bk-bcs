@@ -215,20 +215,8 @@ func (la *ListAction) returnClusterExtraInfo(clusterList []cmproto.Cluster) {
 
 	// cluster extra info
 	for i := range clusterList {
-		cond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": clusterList[i].ClusterID})
-		nodes, err := la.model.ListNode(la.ctx, cond, &storeopt.ListOption{})
-		if err != nil {
-			continue
-		}
-		canDeleted := func() bool {
-			if len(nodes) > 0 {
-				return false
-			}
-			return true
-		}()
-
 		la.resp.ClusterExtraInfo[clusterList[i].ClusterID] = &cmproto.ExtraInfo{
-			CanDeleted:   canDeleted,
+			CanDeleted:   true,
 			ProviderType: la.GetCloudProviderEngine(clusterList[i]),
 		}
 	}

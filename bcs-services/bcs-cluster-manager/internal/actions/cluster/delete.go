@@ -403,6 +403,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 		}
 
 		blog.Infof("only Delete Cluster %s local information successfully", req.ClusterID)
+		da.resp.Data = da.cluster
 		da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 		return
 	}

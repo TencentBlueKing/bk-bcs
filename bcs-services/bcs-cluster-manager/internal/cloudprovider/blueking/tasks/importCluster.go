@@ -132,6 +132,7 @@ func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
 		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
 	}
 
+	now := time.Now().Format(time.RFC3339)
 	err = cloudprovider.GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
 		ServerKey:            data.Cluster.ClusterID,
 		ClusterID:            data.Cluster.ClusterID,
@@ -140,8 +141,8 @@ func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
 		CaCertData:           caCertData,
 		UserToken:            token,
 		ConnectMode:          modules.BCSConnectModeDirect,
-		CreateTime:           time.Now().String(),
-		UpdateTime:           time.Now().String(),
+		CreateTime:           now,
+		UpdateTime:           now,
 	})
 	if err != nil {
 		return err
