@@ -101,6 +101,7 @@ func TestCObj(t *testing.T) {
 		CRDName:   handler.CRDName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 	getResp := clusterRes.CommonResp{}
 	err = h.GetCObj(ctx, &getReq, &getResp)

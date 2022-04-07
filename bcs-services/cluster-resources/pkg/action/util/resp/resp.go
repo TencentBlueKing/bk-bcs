@@ -22,11 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -68,17 +66,13 @@ func BuildRetrieveAPIResp(
 		return nil, err
 	}
 
-	manifest := ret.UnstructuredContent()
-	respData := map[string]interface{}{}
-	if format == action.FormDataFormat {
-		parseFunc, err := parser.GetResParseFunc(resKind)
-		if err != nil {
-			return nil, err
-		}
-		respData["formData"] = parseFunc(manifest)
-	} else {
-		respData["manifest"] = manifest
-		respData["manifestExt"] = formatter.GetFormatFunc(resKind)(manifest)
+	respDataBuilder, err := NewGetRespDataBuilder(ret.UnstructuredContent(), resKind, format)
+	if err != nil {
+		return nil, err
+	}
+	respData, err := respDataBuilder.Do()
+	if err != nil {
+		return nil, err
 	}
 	return pbstruct.Map2pbStruct(respData)
 }

@@ -219,6 +219,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
 		Name:      resName.(string),
+		Format:    action.ManifestFormat,
 	}
 	err = h.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)

@@ -65,6 +65,7 @@ func GenResGetReq(name string) clusterRes.ResGetReq {
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
 		Name:      name,
+		Format:    action.ManifestFormat,
 	}
 }
 
