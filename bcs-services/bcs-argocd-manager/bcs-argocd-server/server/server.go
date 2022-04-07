@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	tunnelSDK "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/sdk"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
 	discovery "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/dicsovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/handler"
@@ -70,6 +71,9 @@ type ArgocdServer struct {
 	tlsConfig       *tls.Config
 	clientTLSConfig *tls.Config
 
+	// tunnel
+	tunnelClient *tunnelSDK.WebsocketClient
+
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	stopCh        chan struct{}
@@ -95,6 +99,7 @@ func (as *ArgocdServer) Init() error {
 		as.initDiscovery,
 		as.initMicro,
 		as.initHTTPService,
+		as.initProxyAgent,
 		//as.initMetric,
 	} {
 		if err := f(); err != nil {
@@ -319,6 +324,18 @@ func (as *ArgocdServer) initHTTPGateway(router *mux.Router) error {
 	}
 	router.Handle("/{uri:.*}", rmMux)
 	blog.Info("register http gateway handler to path /")
+
+	return nil
+}
+
+func (as *ArgocdServer) initProxyAgent() error {
+	as.tunnelClient = tunnelSDK.NewWebsocketClient(
+		as.opt.Tunnel.ProxyAddress,
+		"http://127.0.0.1:"+strconv.Itoa(int(as.opt.HTTPPort)),
+		as.opt.Tunnel.AgentID,
+	)
+	as.tunnelClient.Start()
+
 	return nil
 }
 

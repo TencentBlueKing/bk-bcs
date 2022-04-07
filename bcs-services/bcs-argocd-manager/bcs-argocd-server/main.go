@@ -63,6 +63,10 @@ func main() {
 	flag.String("masterurl", "", "url of k8s master")
 	flag.String("kubeconfig", "", "kubeconfig path")
 
+	// tunnel option
+	flag.String("tunnel_agentid", "fake-cluster", "id for this proxy agent")
+	flag.String("tunnel_proxyaddress", "r", "target proxy address")
+
 	// config file path
 	flag.String("conf", "", "config file path")
 	flag.Parse()

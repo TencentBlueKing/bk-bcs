@@ -57,6 +57,12 @@ type ClientConfig struct {
 	ClientCa   string `json:"clientca"`
 }
 
+// Tunnel option for bcs-argocd-server as proxy agent
+type Tunnel struct {
+	AgentID      string `json:"agentid"`
+	ProxyAddress string `json:"proxyaddress"`
+}
+
 // ArgocdServerOptions options of bcs argocd server
 type ArgocdServerOptions struct {
 	Etcd       EtcdOption    `json:"etcd"`
@@ -65,6 +71,7 @@ type ArgocdServerOptions struct {
 	MasterURL  string        `json:"masterurl"`
 	KubeConfig string        `json:"kubeconfig"`
 	Debug      bool          `json:"debug"`
+	Tunnel     Tunnel        `json:"tunnel"`
 	ServerConfig
 	ClientConfig
 }

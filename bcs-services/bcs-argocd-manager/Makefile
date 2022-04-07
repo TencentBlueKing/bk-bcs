@@ -57,6 +57,12 @@ build-server:
 build-proxy:
 	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/bcs-argocd-proxy ./bcs-argocd-proxy/main.go
 
+.PHONY: docker-proxy
+docker-proxy: build-proxy
+	cp -R ./bcs-argocd-proxy/conf/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/
+	cd ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/ && docker build . -t bcs-argocd-proxy:${VERSION}
+
+
 .PHONY: build-proxy-example-agent
 build-proxy-example-agent:
 	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/bcs-argocd-example-agent ./bcs-argocd-proxy/example/example.go
@@ -105,9 +111,9 @@ docker-repo-sidecar: docker-repo-sidecar-client docker-repo-sidecar-server
 
 .PHONY: build-plugin-example
 build-plugin-example:
-	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/plugins/example/bcs-plugins-example-server ./plugins/example/main.go
+	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/plugins/example/bcs-argocd-example-plugin ./plugins/example/main.go
 
 .PHONY: docker-plugin-example
 docker-plugin-example: build-plugin-example
 	cp -R ./plugins/example/conf/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/plugins/example/
-	cd ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/plugins/example && docker build . -t bcs-plugins-example-server:${VERSION}
+	cd ../${INNER_PACKAGEPATH}/bcs-services/bcs-argocd-manager/plugins/example && docker build . -t bcs-argocd-example-plugin:${VERSION}

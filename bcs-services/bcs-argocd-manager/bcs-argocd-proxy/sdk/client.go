@@ -69,6 +69,7 @@ func (wc *WebsocketClient) connect2Proxy(ctx context.Context) {
 			return
 		default:
 			wc.lastConnectTime = time.Now()
+			blog.Infof("try connect to tunnel proxy address %s", proxyWS)
 			if err := websocketDialer.ClientConnect(ctx, proxyWS, headers, nil, nil,
 				func(proto, address string) bool {
 					switch proto {

@@ -37,8 +37,6 @@ import (
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microSvc "go-micro.dev/v4"
 	microRgt "go-micro.dev/v4/registry"
-	"google.golang.org/grpc"
-	gCred "google.golang.org/grpc/credentials"
 )
 
 // ArgocdProxy describe the main proxy server
@@ -212,21 +210,35 @@ func (ap *ArgocdProxy) initHTTPService() error {
 		Addr:    httpAddr,
 		Handler: originMux,
 	}
-	go func() {
-		var err error
-		blog.Infof("start http gateway server on address %s", httpAddr)
-		if ap.tlsConfig != nil {
-			ap.httpServer.TLSConfig = ap.tlsConfig
-			err = ap.httpServer.ListenAndServeTLS("", "")
-		} else {
-			err = ap.httpServer.ListenAndServe()
-		}
-		if err != nil {
-			blog.Errorf("start http gateway server failed, %s", err.Error())
-			ap.stopCh <- struct{}{}
-		}
-	}()
+
+	if ap.tlsConfig != nil {
+		ap.httpServer.TLSConfig = ap.tlsConfig
+
+		// brings up another insecure port
+		go ap.bringsUp(&http.Server{
+			Addr:    ap.opt.InsecureAddress + ":" + strconv.Itoa(int(ap.opt.HTTPInsecurePort)),
+			Handler: originMux,
+		})
+	}
+
+	go ap.bringsUp(ap.httpServer)
 	return nil
+}
+
+func (ap *ArgocdProxy) bringsUp(svr *http.Server) {
+	blog.Infof("start http gateway server on address %s", svr.Addr)
+
+	var err error
+	if svr.TLSConfig != nil {
+		err = svr.ListenAndServeTLS("", "")
+	} else {
+		err = svr.ListenAndServe()
+	}
+
+	if err != nil {
+		blog.Errorf("start http gateway server failed, %s", err.Error())
+		ap.stopCh <- struct{}{}
+	}
 }
 
 func (ap *ArgocdProxy) initHTTPGateway(router *mux.Router) error {
@@ -243,7 +255,7 @@ func (ap *ArgocdProxy) initHTTPGateway(router *mux.Router) error {
 const (
 	subPathVarName = "sub_path"
 	tunnelSvrUrl   = "/websocket/connect"
-	proxyPassUrl   = "/argocdmanager/{" + subPathVarName + ":.*}"
+	proxyPassUrl   = "/{" + subPathVarName + ":argocdmanager/.*}"
 )
 
 func (ap *ArgocdProxy) initTunnelServer(router *mux.Router) error {

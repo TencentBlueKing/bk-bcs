@@ -22,14 +22,15 @@ type EtcdOption struct {
 
 // ServerConfig describe options for server
 type ServerConfig struct {
-	Address         string `json:"address"`
-	InsecureAddress string `json:"insecureaddress"`
-	Port            uint   `json:"port"`
-	HTTPPort        uint   `json:"httpport"`
-	MetricPort      uint   `json:"metricport"`
-	ServerCert      string `json:"servercert"`
-	ServerKey       string `json:"serverkey"`
-	ServerCa        string `json:"serverca"`
+	Address          string `json:"address"`
+	InsecureAddress  string `json:"insecureaddress"`
+	Port             uint   `json:"port"`
+	HTTPPort         uint   `json:"httpport"`
+	HTTPInsecurePort uint   `json:"httpinsecureport"`
+	MetricPort       uint   `json:"metricport"`
+	ServerCert       string `json:"servercert"`
+	ServerKey        string `json:"serverkey"`
+	ServerCa         string `json:"serverca"`
 }
 
 // LogConfig describe options for log
