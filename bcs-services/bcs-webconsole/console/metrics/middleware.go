@@ -67,8 +67,7 @@ func New(e *gin.Engine, options ...Option) *GinPrometheus {
 	gp := &GinPrometheus{
 		engine: e,
 		ignored: map[string]bool{
-			bcsWebSocketHandlerPath:     true,
-			createWebConsoleSessionPath: true,
+			bcsWebSocketHandlerPath: true,
 		},
 		pathMap: &handlerPath{},
 	}

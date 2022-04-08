@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -175,9 +176,12 @@ func (m *StartupManager) ensurePod(namespace, name string, podManifest *v1.Pod) 
 	_, err := m.k8sClient.CoreV1().Pods(namespace).Get(m.ctx, name, metav1.GetOptions{})
 
 	if k8sErr.IsNotFound(err) {
+		start := time.Now()
 		if _, createErr := m.k8sClient.CoreV1().Pods(namespace).Create(m.ctx, podManifest, metav1.CreateOptions{}); createErr != nil {
+			metrics.CollectPodCreateDurations(namespace, name, metrics.ErrStatus, start)
 			return createErr
 		}
+		metrics.CollectPodCreateDurations(namespace, name, metrics.SucStatus, start)
 
 		// 等待pod启动成功
 		return m.waitPodReady(namespace, name)

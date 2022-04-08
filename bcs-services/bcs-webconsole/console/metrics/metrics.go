@@ -169,22 +169,22 @@ func ReportAPIRequestMetric(handler, method, status string, started time.Time) {
 // 1.the create duration(seconds) of each pod
 // 2.the max create duration(seconds) of pod
 // 3.the min create duration(seconds) of pod
-func CollectPodCreateDurations(namespace, name, status, podName string, started time.Time) {
+func CollectPodCreateDurations(namespace, podName, status string, started time.Time) {
 	duration := time.Since(started).Seconds()
 
-	podCreateTotal.WithLabelValues(namespace, name, status).Inc()
-	podCreateDuration.WithLabelValues(namespace, name, status).Observe(duration)
+	podCreateTotal.WithLabelValues(namespace, podName, status).Inc()
+	podCreateDuration.WithLabelValues(namespace, podName, status).Observe(duration)
 	if duration > podCreateDurationMaxVal[podName] {
 		podCreateDurationMaxVal[podName] = duration
-		podCreateDurationMax.WithLabelValues(namespace, name, status).Set(duration)
+		podCreateDurationMax.WithLabelValues(namespace, podName, status).Set(duration)
 	}
 
 	if podCreateDurationMinVal[podName] == float64(0) {
 		podCreateDurationMinVal[podName] = duration
-		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+		podCreateDurationMin.WithLabelValues(namespace, podName, status).Set(duration)
 	} else if duration < podCreateDurationMinVal[podName] {
 		podCreateDurationMinVal[podName] = duration
-		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+		podCreateDurationMin.WithLabelValues(namespace, podName, status).Set(duration)
 	}
 }
 
