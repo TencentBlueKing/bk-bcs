@@ -148,9 +148,7 @@ func (s *SidecarController) getPodLogConfigCrd(container *dockertypes.ContainerJ
 	var highLogConfig *bcsv1.BcsLogConfig
 	var highScore int
 	for _, conf := range bcsLogConfs {
-		if s.conf.LogLevel >= 4 {
-			blog.V(4).Infof("BcsLogConfig(%s) check pod(%s) container(%s)", conf.Name, pod.Name, container.ID)
-		}
+		blog.V(4).Infof("BcsLogConfig(%s) check pod(%s) container(%s)", conf.Name, pod.Name, container.ID)
 		score := s.scoreBcsLogConfig(container, pod, conf)
 		if score > highScore {
 			highScore = score
@@ -187,16 +185,12 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 		return 0
 	}
 	if !podSelector.Matches(podLabelSet) {
-		if s.conf.LogLevel >= 4 {
-			blog.V(4).Infof("container %s pod(%s:%s) labels(%+v) not match BcsLogConfig(%s:%s) pod selector(%+v)",
-				container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
-		}
+		blog.V(4).Infof("container %s pod(%s:%s) labels(%+v) not match BcsLogConfig(%s:%s) pod selector(%+v)",
+			container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
 		return 0
 	}
-	if s.conf.LogLevel >= 4 {
-		blog.V(4).Infof("container %s pod(%s:%s) labels(%+v) match BcsLogConfig(%s:%s) pod selector(%+v)",
-			container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
-	}
+	blog.V(4).Infof("container %s pod(%s:%s) labels(%+v) match BcsLogConfig(%s:%s) pod selector(%+v)",
+		container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
 	//the default BcsLogConfig, 1 score
 	if bcsLogConf.Spec.ConfigType == bcsv1.DefaultConfigType {
 		return 1
@@ -219,10 +213,8 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 		}
 		//not matched, return 0 score
 		if !matched {
-			if s.conf.LogLevel >= 4 {
-				blog.V(4).Infof("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) StaticPodNamePattern %s",
-					container.ID, pod.Namespace, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.PodNamePattern)
-			}
+			blog.V(4).Infof("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) StaticPodNamePattern %s",
+				container.ID, pod.Namespace, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.PodNamePattern)
 			return 0
 		}
 	}
@@ -248,10 +240,8 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 		}
 		//not matched, return 0 score
 		if !matched {
-			if s.conf.LogLevel >= 4 {
-				blog.V(4).Infof("container %s pod(%s) OwnerReferencesKind(%s) not match BcsLogConfig(%s:%s) WorkloadType %s",
-					container.ID, pod.Name, pod.OwnerReferences[0].Kind, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
-			}
+			blog.V(4).Infof("container %s pod(%s) OwnerReferencesKind(%s) not match BcsLogConfig(%s:%s) WorkloadType %s",
+				container.ID, pod.Name, pod.OwnerReferences[0].Kind, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
 			return 0
 		}
 	}
@@ -260,10 +250,8 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 			score += 2
 			//not matched, return 0 score
 		} else {
-			if s.conf.LogLevel >= 4 {
-				blog.V(4).Infof("container %s pod(%s) namespace(%s) not match BcsLogConfig(%s:%s) WorkloadNamespace %s",
-					container.ID, pod.Name, pod.Namespace, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadNamespace)
-			}
+			blog.V(4).Infof("container %s pod(%s) namespace(%s) not match BcsLogConfig(%s:%s) WorkloadNamespace %s",
+				container.ID, pod.Name, pod.Namespace, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadNamespace)
 			return 0
 		}
 	}
@@ -292,10 +280,8 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 		}
 		//not matched, return 0 score
 		if !matched {
-			if s.conf.LogLevel >= 4 {
-				blog.V(4).Infof("container %s pod(%s) OwnerReferencesName(%s) not match BcsLogConfig(%s:%s) WorkloadName %s",
-					container.ID, pod.Name, pod.OwnerReferences[0].Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadName)
-			}
+			blog.V(4).Infof("container %s pod(%s) OwnerReferencesName(%s) not match BcsLogConfig(%s:%s) WorkloadName %s",
+				container.ID, pod.Name, pod.OwnerReferences[0].Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadName)
 			return 0
 		}
 	}
@@ -309,10 +295,8 @@ func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJS
 	}
 	//not matched, return 0 score
 	if len(bcsLogConf.Spec.ContainerConfs) != 0 && !matched {
-		if s.conf.LogLevel >= 4 {
-			blog.V(4).Infof("container(%s) pod(%s) containerName(%s) not match BcsLogConfig(%s:%s) ContainerConfs(%+v)", container.ID, pod.Name,
-				container.Config.Labels[ContainerLabelK8sContainerName], bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.ContainerConfs)
-		}
+		blog.V(4).Infof("container(%s) pod(%s) containerName(%s) not match BcsLogConfig(%s:%s) ContainerConfs(%+v)", container.ID, pod.Name,
+			container.Config.Labels[ContainerLabelK8sContainerName], bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.ContainerConfs)
 		return 0
 	}
 

@@ -58,7 +58,6 @@ func setConfig(conf *config.Config, op *options.SidecarOption) {
 	conf.LogbeatPIDFilePath = op.LogbeatPIDFilePath
 	conf.NeedReload = op.NeedReload
 	conf.LogbeatOutputFormat = op.LogbeatOutputFormat
-	conf.LogLevel = op.Verbosity
 	if op.FileExtension == "" {
 		conf.FileExtension = "yaml"
 	} else {

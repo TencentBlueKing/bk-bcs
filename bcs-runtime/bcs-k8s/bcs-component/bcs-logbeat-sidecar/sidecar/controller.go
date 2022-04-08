@@ -113,19 +113,9 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	}
 
 	//init docker client
-	s.client, err = docker.NewClientWithOpts(docker.WithHost(conf.DockerSock))
+	s.client, err = makeProperDockerClient(conf.DockerSock)
 	if err != nil {
-		blog.Errorf("new dockerclient %s failed: %s", conf.DockerSock, err.Error())
-		return nil, err
-	}
-	_, err = s.client.ServerVersion(context.Background())
-	if err != nil {
-		if strings.Contains(err.Error(), dockerapi.DefaultVersion) {
-			blog.Warnf("Use default docker api version failed: %s. Will use server side api version", err)
-			s.client, _ = docker.NewClientWithOpts(docker.WithHost(conf.DockerSock), docker.WithVersion(s.getDockerClientVersion(err.Error())))
-		} else {
-			blog.Fatalf("Check server version failed: %s", err)
-		}
+		blog.Fatalf("makeProperDockerClient %s failed: %s", conf.DockerSock, err.Error())
 	}
 
 	//mkdir logconfig dir
@@ -144,17 +134,39 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	return s, nil
 }
 
-func (s *SidecarController) getDockerClientVersion(errString string) string {
-	r, err := regexp.Compile("\\d\\.\\d\\d")
+func makeProperDockerClient(dockerhost string) (*docker.Client, error) {
+	client, err := docker.NewClientWithOpts(docker.WithHost(dockerhost))
 	if err != nil {
-		blog.Errorf("Extract server version from docker daemon failed: %s. Use min version instead", err.Error())
-		return dockerapi.MinVersion
+		blog.Errorf("new dockerclient %s failed: %s", dockerhost, err.Error())
+		return nil, err
 	}
+	_, err = client.ServerVersion(context.Background())
+	if err != nil {
+		if strings.Contains(err.Error(), dockerapi.DefaultVersion) {
+			blog.Warnf("Use default docker api version failed: %s. Will use server side api version", err)
+			client, err = docker.NewClientWithOpts(docker.WithHost(dockerhost), docker.WithVersion(getDockerClientVersion(err.Error())))
+			if err != nil {
+				blog.Errorf("new dockerclient %s failed: %s", dockerhost, err.Error())
+				return nil, err
+			}
+			if _, checkErr := client.ServerVersion(context.Background()); checkErr != nil {
+				blog.Errorf("Docker client requests to docker failed: %s", err)
+				return nil, err
+			}
+			return client, nil
+		}
+		blog.Errorf("Check server version failed: %s", err)
+		return nil, err
+	}
+	return client, nil
+}
+
+func getDockerClientVersion(errString string) string {
+	r := regexp.MustCompile("\\d\\.\\d\\d")
 	versions := r.FindAllString(errString, -1)
 	if len(versions) != 2 {
-		blog.Errorf("Extract server version from docker daemon failed: %s. Use min version instead", err.Error())
+		blog.Errorf("Extract server version from docker daemon failed. Use min version instead")
 		return dockerapi.MinVersion
-		// s.client, _ = docker.NewClientWithOpts(docker.WithHost(s.conf.DockerSock), docker.WithVersion(dockerapi.MinVersion))
 	}
 	blog.Infof("Server Version: %+v", versions[len(versions)-1])
 	return versions[len(versions)-1]
@@ -173,9 +185,7 @@ func (s *SidecarController) listenerDockerEvent() {
 	var err error
 	ctx, cancel := context.WithCancel(context.Background())
 	eventChan, errChan := s.client.Events(ctx, dockertypes.EventsOptions{Filters: dockerfilters.NewArgs(dockerfilters.Arg("type", "container"))})
-	defer func() {
-		cancel()
-	}()
+	defer cancel()
 
 	freeFunc := func(containerID string) {
 		s.containerCacheMutex.Lock()
