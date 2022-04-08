@@ -27,13 +27,13 @@ local schema = {
       description = "bk bcs module name",
       type        = "string",
       minLength   = 2,
-      maxLength   = 15,
+      maxLength   = 64,
     },
     token = {
       description = "token for auth module api request",
       type        = "string",
       minLength   = 16,
-      maxLength   = 32,
+      maxLength   = 64,
       pattern     = "^[0-9a-zA-Z-.]+$",
     },
     retry_count = {
