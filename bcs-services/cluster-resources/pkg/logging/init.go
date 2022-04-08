@@ -15,6 +15,7 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -22,6 +23,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
@@ -39,6 +41,7 @@ var levelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
+// InitLogger ...
 func InitLogger(logConf *config.LogConf) {
 	loggerInitOnce.Do(func() {
 		// 使用 zap 记录日志，格式为 json
@@ -82,8 +85,9 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 	}
 
 	core := zapcore.NewCore(getEncoder(), w, l)
-	// 设置 error 及以上级别允许打印堆栈信息
-	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))
+	// AddCallerSkip 由于对 logger 进行封装，设置 caller 记录位置往上一层
+	// AddStacktrace 设置 Error 及以上级别允许打印堆栈信息
+	return zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(zap.ErrorLevel))
 }
 
 // GetLogger ...
@@ -91,7 +95,7 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 func GetLogger() *zap.Logger {
 	// 未执行日志组件初始化时，日志输出到 stderr
 	if logger == nil {
-		stderrLogger, _ := zap.NewProductionConfig().Build()
+		stderrLogger, _ := zap.NewProductionConfig().Build(zap.AddCallerSkip(1))
 		return stderrLogger
 	}
 	return logger
@@ -104,18 +108,24 @@ func GetLogger() *zap.Logger {
 // 		log ".../pkg/logging"
 // )
 // func main() {
-// 		log.Info("log content: %s", content)
+// 		log.Info(ctx, "log content: %s", content)
 // }
-func Info(msg string, vars ...interface{}) {
-	GetLogger().Info(fmt.Sprintf(msg, vars...))
+func Info(ctx context.Context, msg string, vars ...interface{}) {
+	GetLogger().Info(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }
 
 // Warn ....
-func Warn(msg string, vars ...interface{}) {
-	GetLogger().Warn(fmt.Sprintf(msg, vars...))
+func Warn(ctx context.Context, msg string, vars ...interface{}) {
+	GetLogger().Warn(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }
 
 // Error ...
-func Error(msg string, vars ...interface{}) {
-	GetLogger().Error(fmt.Sprintf(msg, vars...))
+func Error(ctx context.Context, msg string, vars ...interface{}) {
+	GetLogger().Error(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
+}
+
+// wrapLogMsg 向日志中补充 requestID，username 信息
+func wrapLogMsg(ctx context.Context, msg string) string {
+	requestID, username := ctx.Value(ctxkey.RequestIDKey), ctx.Value(ctxkey.UsernameKey)
+	return fmt.Sprintf("requestID: %v, username: %v, ", requestID, username) + msg
 }

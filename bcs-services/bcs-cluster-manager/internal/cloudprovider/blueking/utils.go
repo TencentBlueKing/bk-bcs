@@ -33,6 +33,7 @@ const (
 )
 
 var (
+	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
 	updateCreateClusterDBInfoTask = fmt.Sprintf("%s-UpdateCreateClusterDBInfoTask", cloudName)
 	cleanClusterDBInfoTask        = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
 	updateAddNodeDBInfoTask       = fmt.Sprintf("%s-UpdateAddNodeDBInfoTask", cloudName)

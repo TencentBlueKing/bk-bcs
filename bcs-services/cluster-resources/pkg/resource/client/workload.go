@@ -16,6 +16,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,30 +25,32 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // PodClient ...
 type PodClient struct {
-	NsScopedResClient
+	ResClient
 }
 
 // NewPodClient ...
-func NewPodClient(conf *res.ClusterConf) *PodClient {
-	podRes, _ := res.GetGroupVersionResource(conf, res.Po, "")
-	return &PodClient{NsScopedResClient{NewDynamicClient(conf), conf, podRes}}
+func NewPodClient(ctx context.Context, conf *res.ClusterConf) *PodClient {
+	podRes, _ := res.GetGroupVersionResource(ctx, conf, res.Po, "")
+	return &PodClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
 // NewPodCliByClusterID ...
-func NewPodCliByClusterID(clusterID string) *PodClient {
-	return NewPodClient(res.NewClusterConfig(clusterID))
+func NewPodCliByClusterID(ctx context.Context, clusterID string) *PodClient {
+	return NewPodClient(ctx, res.NewClusterConfig(clusterID))
 }
 
 // List ...
 func (c *PodClient) List(
-	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
+	ctx context.Context, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
-	ret, err := c.NsScopedResClient.List(namespace, opts)
+	ret, err := c.ResClient.List(ctx, namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +61,7 @@ func (c *PodClient) List(
 	}
 
 	// 找到当前指定资源关联的 Pod 的 OwnerReferences 信息
-	podOwnerRefs, err := c.getPodOwnerRefs(c.conf, namespace, ownerKind, ownerName, opts)
+	podOwnerRefs, err := c.getPodOwnerRefs(ctx, c.conf, namespace, ownerKind, ownerName, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -68,26 +71,26 @@ func (c *PodClient) List(
 
 // 非直接关联 Pod 的资源，找到下层直接关联的子资源
 func (c *PodClient) getPodOwnerRefs(
-	clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
+	ctx context.Context, clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
 	subOwnerRefs := []map[string]string{{"kind": ownerKind, "name": ownerName}}
-	if !util.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
+	if !slice.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
 		return subOwnerRefs, nil
 	}
 
 	// Deployment/CronJob 不直接关联 Pod，而是通过 ReplicaSet/Job 间接关联，需要向下钻取 Pod 的 OwnerReferences 信息
 	subResKind := map[string]string{res.Deploy: res.RS, res.CJ: res.Job}[ownerKind]
-	subRes, err := res.GetGroupVersionResource(clusterConf, subResKind, "")
+	subRes, err := res.GetGroupVersionResource(ctx, clusterConf, subResKind, "")
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewNsScopedResClient(clusterConf, subRes).List(namespace, opts)
+	ret, err := NewResClient(clusterConf, subRes).List(ctx, namespace, opts)
 	if err != nil {
 		return nil, err
 	}
 	ownerRefs := []map[string]string{}
 	for _, res := range c.filterByOwnerRefs(ret.UnstructuredContent()["items"].([]interface{}), subOwnerRefs) {
-		resName, _ := util.GetItems(res.(map[string]interface{}), "metadata.name")
+		resName, _ := mapx.GetItems(res.(map[string]interface{}), "metadata.name")
 		ownerRefs = append(ownerRefs, map[string]string{"kind": subResKind, "name": resName.(string)})
 	}
 	return ownerRefs, nil
@@ -97,7 +100,7 @@ func (c *PodClient) getPodOwnerRefs(
 func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
-		resOwnerRefs, err := util.GetItems(subRes.(map[string]interface{}), "metadata.ownerReferences")
+		resOwnerRefs, err := mapx.GetItems(subRes.(map[string]interface{}), "metadata.ownerReferences")
 		if err != nil {
 			continue
 		}
@@ -118,8 +121,8 @@ func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map
 }
 
 // GetManifest 获取指定 Pod Manifest
-func (c *PodClient) GetManifest(namespace, podName string) (map[string]interface{}, error) {
-	ret, err := c.Get(namespace, podName, metav1.GetOptions{})
+func (c *PodClient) GetManifest(ctx context.Context, namespace, podName string) (map[string]interface{}, error) {
+	ret, err := c.Get(ctx, namespace, podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -128,27 +131,29 @@ func (c *PodClient) GetManifest(namespace, podName string) (map[string]interface
 }
 
 // ListPodRelatedRes 获取 Pod 关联的某种资源列表
-func (c *PodClient) ListPodRelatedRes(namespace, podName, resKind string) (map[string]interface{}, error) {
+func (c *PodClient) ListPodRelatedRes(
+	ctx context.Context, namespace, podName, resKind string,
+) (map[string]interface{}, error) {
 	// 获取同命名空间下指定的关联资源列表
-	relatedRes, err := res.GetGroupVersionResource(c.conf, resKind, "")
+	relatedRes, err := res.GetGroupVersionResource(ctx, c.conf, resKind, "")
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewNsScopedResClient(c.conf, relatedRes).List(namespace, metav1.ListOptions{})
+	ret, err := NewResClient(c.conf, relatedRes).List(ctx, namespace, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	manifest := ret.UnstructuredContent()
 
 	// 获取 Pod 关联的某种资源的名称列表，匹配过滤
-	resNameList, err := c.getPodRelatedResNameList(namespace, podName, resKind)
+	resNameList, err := c.getPodRelatedResNameList(ctx, namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
 	relatedItems := []interface{}{}
 	for _, item := range manifest["items"].([]interface{}) {
-		name, _ := util.GetItems(item.(map[string]interface{}), "metadata.name")
-		if util.StringInSlice(name.(string), resNameList) {
+		name, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.name")
+		if slice.StringInSlice(name.(string), resNameList) {
 			relatedItems = append(relatedItems, item)
 		}
 	}
@@ -157,16 +162,16 @@ func (c *PodClient) ListPodRelatedRes(namespace, podName, resKind string) (map[s
 }
 
 // 获取 Pod 关联的某种资源的名称列表
-func (c *PodClient) getPodRelatedResNameList(namespace, podName, resKind string) ([]string, error) {
-	podManifest, err := c.GetManifest(namespace, podName)
+func (c *PodClient) getPodRelatedResNameList(ctx context.Context, namespace, podName, resKind string) ([]string, error) {
+	podManifest, err := c.GetManifest(ctx, namespace, podName)
 	if err != nil {
 		return nil, err
 	}
 	// Pod 配置中资源类型为驼峰式，需要将 Resource Kind 首字母小写
-	kind, resNameKey := util.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
+	kind, resNameKey := stringx.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
 	// 获取与指定 Pod 相关联的 某种资源 的资源名称列表
 	resNameList := []string{}
-	volumes, _ := util.GetItems(podManifest, "spec.volumes")
+	volumes, _ := mapx.GetItems(podManifest, "spec.volumes")
 	for _, vol := range volumes.([]interface{}) {
 		if v, ok := vol.(map[string]interface{})[kind]; ok {
 			resNameList = append(resNameList, v.(map[string]interface{})[resNameKey].(string))

@@ -16,6 +16,9 @@ package resource
 
 // k8s 资源类型
 const (
+	// NS
+	NS = "Namespace"
+
 	// Deploy ...
 	Deploy = "Deployment"
 	// RS ...
@@ -62,6 +65,15 @@ const (
 	CObj = "CustomObject"
 )
 
+// BCS 提供自定义类型
+const (
+	// GDeploy ...
+	GDeploy = "GameDeployment"
+
+	// GSTS ...
+	GSTS = "GameStatefulSet"
+)
+
 const (
 	// ResCacheTTL 资源信息默认过期时间 14 天
 	ResCacheTTL = 14 * 24 * 60 * 60
@@ -71,6 +83,9 @@ const (
 )
 
 const (
+	// DefaultCJGroupVersion 特殊指定的 CronJob 版本
+	DefaultCJGroupVersion = "batch/v1beta1"
+
 	// DefaultHPAGroupVersion 特殊指定的 HPA 版本
 	DefaultHPAGroupVersion = "autoscaling/v2beta2"
 )
@@ -81,3 +96,11 @@ var Volume2ResNameKeyMap = map[string]string{
 	Secret: "secretName",
 	CM:     "name",
 }
+
+const (
+	// NamespacedScope 命名空间维度
+	NamespacedScope = "Namespaced"
+
+	// ClusterScope 集群维度
+	ClusterScope = "Cluster"
+)

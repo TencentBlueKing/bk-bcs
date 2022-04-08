@@ -29,7 +29,7 @@ export default {
                     return item.isChecked === true
                 })
                 const canSelectList = list.filter((item) => {
-                    return item.can_delete && item.permissions.use
+                    return item.can_delete
                 })
                 if (selectList.length && (selectList.length === canSelectList.length)) {
                     return true
@@ -42,21 +42,6 @@ export default {
         }
     },
     methods: {
-        /**
-         * Toogle当前页面全选
-         * @return {[type]} [description]
-         */
-        toogleCheckCurPage () {
-            const isChecked = this.isCheckCurPageAll
-            this.curPageData.forEach((item) => {
-                // 能删除且有权限才可操作
-                if (item.can_delete && item.permissions.use) {
-                    item.isChecked = !isChecked
-                }
-            })
-            this.selectServices()
-            this.alreadySelectedNums = this.serviceList.filter(item => item.isChecked).length
-        },
 
         /**
          * 每行的多选框点击事件
@@ -100,7 +85,7 @@ export default {
                     namespace: item.namespace,
                     name: item.resourceName
                 })
-                names.push(`${item.cluster_name} / ${item.namespace} / ${item.resourceName}`)
+                names.push(`${item.cluster_id} / ${item.namespace} / ${item.resourceName}`)
             })
             if (!data.length) {
                 this.$bkMessage({

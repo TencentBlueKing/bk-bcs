@@ -10,12 +10,17 @@ export interface INodesParams {
 }
 export interface INodeParams {
     clusterId: string;
-    nodeIP: string;
+    nodeIP: string[];
+    status: 'REMOVABLE' | 'RUNNING';
+}
+export interface INodeDispatchParams {
+    clusterId: string;
+    nodeName: string[];
     status: 'REMOVABLE' | 'RUNNING';
 }
 export interface IBatchDispatchParams {
     clusterId: string;
-    ipList: string[];
+    nodeNameList: string[];
     status: 'REMOVABLE' | 'RUNNING';
 }
 
@@ -75,16 +80,16 @@ export default function useNode () {
         }
     }
     // 停止/允许 调度
-    const toggleNodeDispatch = async (params: INodeParams) => {
-        const { clusterId, nodeIP, status } = params
-        if (!clusterId || !nodeIP || !['REMOVABLE', 'RUNNING'].includes(status)) {
-            console.warn('clusterId or nodeIP or status is empty')
+    const toggleNodeDispatch = async (params: INodeDispatchParams) => {
+        const { clusterId, nodeName, status } = params
+        if (!clusterId || !nodeName || !['REMOVABLE', 'RUNNING'].includes(status)) {
+            console.warn('clusterId or nodeName or status is empty')
             return
         }
         const result = await store.dispatch('cluster/updateNodeStatus', {
             projectId: projectId.value,
             clusterId,
-            nodeIP,
+            nodeName,
             status
         }).catch(() => false)
         result && $bkMessage({
@@ -95,11 +100,11 @@ export default function useNode () {
     }
     // 批量调度
     const batchToggleNodeDispatch = async (params: IBatchDispatchParams) => {
-        const { clusterId, ipList, status } = params
+        const { clusterId, nodeNameList, status } = params
         const result = await store.dispatch('cluster/batchUpdateNodeStatus', {
             projectId: projectId.value,
             clusterId,
-            ipList,
+            nodeNameList,
             status
         })
         result && $bkMessage({

@@ -10,6 +10,8 @@
   "server_key_file": "${serverKeyFile}",
   "client_cert_file": "${clientCertFile}",
   "client_key_file": "${clientKeyFile}",
+  "jwt_public_key_file": "${jwtPublicKeyFile}",
+  "jwt_private_key_file": "${jwtPrivateKeyFile}",
   "log_dir": "${log_dir}",
   "v": "${verbosity}",
   "alsologtostderr": ${alsologtostderr},
@@ -17,6 +19,7 @@
   "pid_dir": "${pid_dir}",
   "verify_client_tls": false,
   "mysql_dsn": "${coreDatabaseDsn}",
+  "redis_dsn": "${redisDsn}",
   "bootstrap_users": [
     {
       "name": "${adminUser}",
@@ -36,5 +39,44 @@
     "etcd_ca": "${bcsEtcdCAFile}",
     "etcd_cert": "${bcsEtcdCertFile}",
     "etcd_key": "${bcsEtcdKeyFile}"
+  },
+  "cluster_config": {
+    "module": "${sdModule}"
+  },
+  "iam_config": {
+    "system_id": "${systemID}",
+    "app_code": "${appCode}",
+    "app_secret": "${appSecret}",
+    "external": ${external},
+    "gateWay_host": "${gateWayHost}",
+    "iam_host": "${iamHost}",
+    "bki_iam_host": "${bkiHost}",
+    "metric": ${iamMetric},
+    "server_debug": ${serverDebug},
+    "enable_auth": ${enableAuth}
+  },
+  "permission_switch": ${permissionSwitch},
+  "token_notify": {
+    "feature": ${bcsTokenNotifyFeature},
+    "dry_run": ${bcsTokenNotifyDryRun},
+    "notify_cron": "${bcsTokenNotifyCron}",
+    "email_title": "${bcsTokenNotifyTitle}",
+    "email_content": "${bcsTokenNotifyContent}",
+    "rtx_title": "${bcsTokenNotifyTitle}",
+    "rtx_content": "${bcsTokenNotifyContent}",
+    "esb_config": {
+      "app_code": "${esbAppCode}",
+      "app_secret": "${esbAppSecret}",
+      "api_host": "${bcsTokenNotifyESBApiHost}",
+      "send_email_path": "${bcsTokenNotifyESBEmailPath}",
+      "send_rtx_path": "${bcsTokenNotifyESBRtxPath}"
+    }
+  },
+  "cmdb": {
+    "enable": ${bcsCmdbEnable},
+    "app_code": "${bcsCmdbAppCode}",
+    "app_secret": "${bcsCmdbAppSecret}",
+    "bk_user_name": "${bcsCmdbBKUsername}",
+    "host": "${bcsCmdbHost}"
   }
 }

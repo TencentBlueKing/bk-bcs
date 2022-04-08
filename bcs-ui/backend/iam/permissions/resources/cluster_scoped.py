@@ -12,12 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List, Optional, Type
+from typing import Dict, List, Type
 
 import attr
 
-from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission
+from backend.iam.permissions.perm import PermCtx, Permission, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
@@ -33,21 +32,26 @@ class ClusterScopedAction(str, StructuredEnum):
     DELETE = EnumField('cluster_scoped_delete', label='cluster_scoped_delete')
 
 
-@attr.dataclass
+@attr.s
 class ClusterScopedPermCtx(PermCtx):
-    project_id: str = ''
-    cluster_id: str = ''
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    cluster_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ClusterScopedPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data.get('force_raise', False),
+            project_id=init_data['project_id'],
+            cluster_id=init_data['cluster_id'],
+        )
 
     @property
     def resource_id(self) -> str:
         return self.cluster_id
 
-    def validate(self):
-        super().validate()
-        if not self.project_id:
-            raise AttrValidationError('project_id must not be empty')
-        if not self.cluster_id:
-            raise AttrValidationError('cluster_id must not be empty')
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [IAMResource(ResourceType.Project, self.project_id)]
 
 
 class ClusterScopedPermission(Permission):
@@ -55,6 +59,7 @@ class ClusterScopedPermission(Permission):
 
     resource_type: str = ResourceType.Cluster
     resource_request_cls: Type[ResourceRequest] = ClusterRequest
+    perm_ctx_cls = ClusterScopedPermCtx
     parent_res_perm = ProjectPermission()
 
     @related_project_perm(method_name='can_view')
@@ -81,8 +86,13 @@ class ClusterScopedPermission(Permission):
             perm_ctx, [ClusterScopedAction.DELETE, ClusterScopedAction.VIEW, ClusterAction.VIEW], raise_exception
         )
 
+    @related_project_perm(method_name='can_view')
     def can_use(self, perm_ctx: ClusterScopedPermCtx, raise_exception: bool = True) -> bool:
-        """use 表示 create、update、view操作的集合，不包括 related_actions 的校验"""
+        """与 can_use_ignore_related_perms 方法的区别是校验上级资源"""
+        return self.can_use_ignore_related_perms(perm_ctx, raise_exception)
+
+    def can_use_ignore_related_perms(self, perm_ctx: ClusterScopedPermCtx, raise_exception: bool = True) -> bool:
+        """use 表示 create、update、view、delete 操作的集合，未校验上级资源"""
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(
             perm_ctx,
@@ -90,16 +100,8 @@ class ClusterScopedPermission(Permission):
                 ClusterScopedAction.CREATE,
                 ClusterScopedAction.VIEW,
                 ClusterScopedAction.UPDATE,
+                ClusterScopedAction.DELETE,
                 ClusterAction.VIEW,
             ],
             raise_exception,
         )
-
-    def make_res_request(self, res_id: str, perm_ctx: ClusterScopedPermCtx) -> ResourceRequest:
-        return self.resource_request_cls(res_id, project_id=perm_ctx.project_id)
-
-    def get_parent_chain(self, perm_ctx: ClusterScopedPermCtx) -> List[IAMResource]:
-        return [IAMResource(ResourceType.Project, perm_ctx.project_id)]
-
-    def get_resource_id(self, perm_ctx: ClusterScopedPermCtx) -> Optional[str]:
-        return perm_ctx.cluster_id

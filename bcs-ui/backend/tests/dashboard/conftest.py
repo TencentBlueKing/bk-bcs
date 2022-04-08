@@ -30,9 +30,9 @@ DASHBOARD_API_URL_COMMON_PREFIX = f'/api/dashboard/projects/{TEST_PROJECT_ID}/cl
 
 @pytest.fixture(autouse=True, scope='package')
 def dashboard_api_common_patch():
-    with mock.patch('backend.dashboard.viewsets.validate_cluster_perm', new=lambda *args, **kwargs: True), mock.patch(
-        'backend.dashboard.viewsets.gen_base_web_annotations', new=lambda *args, **kwargs: {}
-    ):
+    with mock.patch(
+        'backend.dashboard.viewsets.PermValidateMixin._validate_perm', new=lambda *args, **kwargs: True
+    ), mock.patch('backend.dashboard.viewsets.gen_base_web_annotations', new=lambda *args, **kwargs: {}):
         yield
 
 

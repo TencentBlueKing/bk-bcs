@@ -22,6 +22,8 @@ type DbPrivOptions struct {
 	Kubeconfig         string `json:"kubeconfig"`
 	NetworkType        string `json:"network_type"`
 	EsbURL             string `json:"esb_url"`
+	CDPGCSURL          string `json:"cdp_gcs_url"`
+	AccessToken        string `json:"access_token"`
 	InitContainerImage string `json:"init_container_image"`
 }
 

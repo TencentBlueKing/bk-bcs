@@ -21,28 +21,28 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"k8s.io/api/autoscaling/v2beta2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 const (
-	// 至多展示的 HPA 指标数量
+	// HPAMetricMaxDisplayNum 至多展示的 HPA 指标数量
 	HPAMetricMaxDisplayNum = 3
-	// HPA Metric Current 默认值
+	// HPAMetricCurrentDefaultVal HPA Metric Current 默认值
 	HPAMetricCurrentDefaultVal = "<unknown>"
-	// HPA Metric Target 默认值
+	// HPAMetricTargetDefaultVal HPA Metric Target 默认值
 	HPAMetricTargetDefaultVal = "<auto>"
 )
 
 // FormatHPA ...
 func FormatHPA(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
-	ref, _ := util.GetItems(manifest, "spec.scaleTargetRef")
+	ref, _ := mapx.GetItems(manifest, "spec.scaleTargetRef")
 	ret["reference"] = fmt.Sprintf("%s/%s", ref.(map[string]interface{})["kind"], ref.(map[string]interface{})["name"])
 	parser := hpaTargetsParser{manifest: manifest}
 	ret["targets"] = parser.Parse()
-	ret["minPods"] = util.GetWithDefault(manifest, "spec.minReplicas", "<unset>")
-	ret["maxPods"] = util.GetWithDefault(manifest, "spec.maxReplicas", "<unset>")
-	ret["replicas"] = util.GetWithDefault(manifest, "status.currentReplicas", "--")
+	ret["minPods"] = mapx.Get(manifest, "spec.minReplicas", "<unset>")
+	ret["maxPods"] = mapx.Get(manifest, "spec.maxReplicas", "<unset>")
+	ret["replicas"] = mapx.Get(manifest, "status.currentReplicas", "--")
 	return ret
 }
 
@@ -56,11 +56,11 @@ type hpaTargetsParser struct {
 
 // targets 解析逻辑，参考来源：https://github.com/kubernetes/kubernetes/blob/master/pkg/printers/internalversion/printers.go#L2025
 func (p *hpaTargetsParser) Parse() string {
-	specs := util.GetWithDefault(p.manifest, "spec.metrics", []interface{}{})
+	specs := mapx.Get(p.manifest, "spec.metrics", []interface{}{})
 	if err := mapstructure.Decode(specs, &p.specs); err != nil {
 		return "--"
 	}
-	statuses := util.GetWithDefault(p.manifest, "status.currentMetrics", []interface{}{})
+	statuses := mapx.Get(p.manifest, "status.currentMetrics", []interface{}{})
 	if err := mapstructure.Decode(statuses, &p.statuses); err != nil {
 		return "--"
 	}

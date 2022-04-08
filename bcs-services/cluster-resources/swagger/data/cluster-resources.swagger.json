@@ -21,7 +21,7 @@
       "post": {
         "summary": "Echo API",
         "description": "Echo 接口，用于开发测试",
-        "operationId": "ClusterResources_Echo",
+        "operationId": "Basic_Echo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -30,7 +30,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -47,7 +47,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Basic"
         ]
       }
     },
@@ -55,7 +55,7 @@
       "get": {
         "summary": "Healthz API",
         "description": "Healthz 接口，用于检查服务健康状态",
-        "operationId": "ClusterResources_Healthz",
+        "operationId": "Basic_Healthz",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -64,14 +64,14 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
           }
         },
         "tags": [
-          "ClusterResources"
+          "Basic"
         ]
       }
     },
@@ -79,7 +79,7 @@
       "get": {
         "summary": "Ping API",
         "description": "Ping 接口，用于检查服务是否存活",
-        "operationId": "ClusterResources_Ping",
+        "operationId": "Basic_Ping",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -88,14 +88,14 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
           }
         },
         "tags": [
-          "ClusterResources"
+          "Basic"
         ]
       }
     },
@@ -103,7 +103,7 @@
       "post": {
         "summary": "CreateCM API",
         "description": "创建 ConfigMap",
-        "operationId": "ClusterResources_CreateCM",
+        "operationId": "Config_CreateCM",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -112,7 +112,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -141,7 +141,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       }
     },
@@ -149,7 +149,7 @@
       "post": {
         "summary": "CreateSecret API",
         "description": "创建 Secret",
-        "operationId": "ClusterResources_CreateSecret",
+        "operationId": "Config_CreateSecret",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -158,7 +158,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -187,15 +187,15 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds": {
       "get": {
-        "summary": "GetK8SResTemplate API",
-        "description": "获取 K8S 资源模版",
-        "operationId": "ClusterResources_GetK8SResTemplate",
+        "summary": "ListCRD API",
+        "description": "获取 CRD 列表",
+        "operationId": "CustomRes_ListCRD",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -204,7 +204,379 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "labelSelector",
+            "description": "标签选择器.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects": {
+      "get": {
+        "summary": "ListCObj API",
+        "description": "获取 自定义资源 列表",
+        "operationId": "CustomRes_ListCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      },
+      "post": {
+        "summary": "CreateCObj API",
+        "description": "创建 自定义资源",
+        "operationId": "CustomRes_CreateCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCObjCreateReq"
+            }
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}": {
+      "get": {
+        "summary": "GetCObj API",
+        "description": "获取 自定义资源",
+        "operationId": "CustomRes_GetCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      },
+      "delete": {
+        "summary": "DeleteCObj API",
+        "description": "删除 自定义资源",
+        "operationId": "CustomRes_DeleteCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      },
+      "put": {
+        "summary": "UpdateCObj API",
+        "description": "更新 自定义资源",
+        "operationId": "CustomRes_UpdateCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCObjUpdateReq"
+            }
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}": {
+      "get": {
+        "summary": "GetCRD API",
+        "description": "获取 CRD",
+        "operationId": "CustomRes_GetCRD",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests": {
+      "get": {
+        "summary": "GetK8SResTemplate API",
+        "description": "获取 K8S 资源模版",
+        "operationId": "Resource_GetK8SResTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -232,7 +604,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Resource"
         ]
       }
     },
@@ -240,7 +612,7 @@
       "post": {
         "summary": "CreateHPA API",
         "description": "创建 HPA",
-        "operationId": "ClusterResources_CreateHPA",
+        "operationId": "HPA_CreateHPA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -249,7 +621,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -278,7 +650,97 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "HPA"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache": {
+      "post": {
+        "summary": "Invalidate Discovery Cache API",
+        "description": "主动使 Discovery 缓存失效",
+        "operationId": "Resource_InvalidateDiscoveryCache",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces": {
+      "get": {
+        "summary": "ListNS API",
+        "description": "获取命名空间列表",
+        "operationId": "Namespace_ListNS",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "labelSelector",
+            "description": "标签选择器.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
         ]
       }
     },
@@ -286,7 +748,7 @@
       "get": {
         "summary": "ListCM API",
         "description": "获取 ConfigMap 列表",
-        "operationId": "ClusterResources_ListCM",
+        "operationId": "Config_ListCM",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -295,7 +757,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -329,7 +791,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       }
     },
@@ -337,7 +799,7 @@
       "get": {
         "summary": "GetCM API",
         "description": "获取 ConfigMap",
-        "operationId": "ClusterResources_GetCM",
+        "operationId": "Config_GetCM",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -346,7 +808,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -379,13 +841,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       },
       "delete": {
         "summary": "DeleteCM API",
         "description": "删除 ConfigMap",
-        "operationId": "ClusterResources_DeleteCM",
+        "operationId": "Config_DeleteCM",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -394,7 +856,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -427,13 +889,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       },
       "put": {
         "summary": "UpdateCM API",
         "description": "更新 ConfigMap",
-        "operationId": "ClusterResources_UpdateCM",
+        "operationId": "Config_UpdateCM",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -442,7 +904,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -483,7 +945,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       }
     },
@@ -491,7 +953,7 @@
       "get": {
         "summary": "ListSecret API",
         "description": "获取 Secret 列表",
-        "operationId": "ClusterResources_ListSecret",
+        "operationId": "Config_ListSecret",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -500,7 +962,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -534,7 +996,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       }
     },
@@ -542,7 +1004,7 @@
       "get": {
         "summary": "GetSecret API",
         "description": "获取 Secret",
-        "operationId": "ClusterResources_GetSecret",
+        "operationId": "Config_GetSecret",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -551,7 +1013,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -584,13 +1046,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       },
       "delete": {
         "summary": "DeleteSecret API",
         "description": "删除 Secret",
-        "operationId": "ClusterResources_DeleteSecret",
+        "operationId": "Config_DeleteSecret",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -599,7 +1061,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -632,13 +1094,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       },
       "put": {
         "summary": "UpdateSecret API",
         "description": "更新 Secret",
-        "operationId": "ClusterResources_UpdateSecret",
+        "operationId": "Config_UpdateSecret",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -647,7 +1109,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -688,7 +1150,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Config"
         ]
       }
     },
@@ -696,7 +1158,7 @@
       "get": {
         "summary": "ListHPA API",
         "description": "获取 HPA 列表",
-        "operationId": "ClusterResources_ListHPA",
+        "operationId": "HPA_ListHPA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -705,7 +1167,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -739,7 +1201,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "HPA"
         ]
       }
     },
@@ -747,7 +1209,7 @@
       "get": {
         "summary": "GetHPA API",
         "description": "获取 HPA",
-        "operationId": "ClusterResources_GetHPA",
+        "operationId": "HPA_GetHPA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -756,7 +1218,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -789,13 +1251,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "HPA"
         ]
       },
       "delete": {
         "summary": "DeleteHPA API",
         "description": "删除 HPA",
-        "operationId": "ClusterResources_DeleteHPA",
+        "operationId": "HPA_DeleteHPA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -804,7 +1266,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -837,13 +1299,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "HPA"
         ]
       },
       "put": {
         "summary": "UpdateHPA API",
         "description": "更新 HPA",
-        "operationId": "ClusterResources_UpdateHPA",
+        "operationId": "HPA_UpdateHPA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -852,7 +1314,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -893,7 +1355,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "HPA"
         ]
       }
     },
@@ -901,7 +1363,7 @@
       "get": {
         "summary": "ListEP API",
         "description": "获取 Endpoints 列表",
-        "operationId": "ClusterResources_ListEP",
+        "operationId": "Network_ListEP",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -910,7 +1372,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -944,7 +1406,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -952,7 +1414,7 @@
       "get": {
         "summary": "GetEP API",
         "description": "获取 Endpoints",
-        "operationId": "ClusterResources_GetEP",
+        "operationId": "Network_GetEP",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -961,7 +1423,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -994,13 +1456,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       },
       "delete": {
         "summary": "DeleteEP API",
         "description": "删除 Endpoints",
-        "operationId": "ClusterResources_DeleteEP",
+        "operationId": "Network_DeleteEP",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1009,7 +1471,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1042,13 +1504,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       },
       "put": {
         "summary": "UpdateEP API",
         "description": "更新 Endpoints",
-        "operationId": "ClusterResources_UpdateEP",
+        "operationId": "Network_UpdateEP",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1057,7 +1519,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1098,7 +1560,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -1106,7 +1568,7 @@
       "get": {
         "summary": "ListIng API",
         "description": "获取 Ingress 列表",
-        "operationId": "ClusterResources_ListIng",
+        "operationId": "Network_ListIng",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1115,7 +1577,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1149,7 +1611,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -1157,7 +1619,7 @@
       "get": {
         "summary": "GetIng API",
         "description": "获取 Ingress",
-        "operationId": "ClusterResources_GetIng",
+        "operationId": "Network_GetIng",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1166,7 +1628,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1199,13 +1661,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       },
       "delete": {
         "summary": "DeleteIng API",
         "description": "删除 Ingress",
-        "operationId": "ClusterResources_DeleteIng",
+        "operationId": "Network_DeleteIng",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1214,7 +1676,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1247,13 +1709,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       },
       "put": {
         "summary": "UpdateIng API",
         "description": "更新 Ingress",
-        "operationId": "ClusterResources_UpdateIng",
+        "operationId": "Network_UpdateIng",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1262,7 +1724,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1303,7 +1765,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -1311,7 +1773,7 @@
       "get": {
         "summary": "ListSVC API",
         "description": "获取 Service 列表",
-        "operationId": "ClusterResources_ListSVC",
+        "operationId": "Network_ListSVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1320,7 +1782,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1354,7 +1816,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -1362,7 +1824,7 @@
       "get": {
         "summary": "GetSVC API",
         "description": "获取 Service",
-        "operationId": "ClusterResources_GetSVC",
+        "operationId": "Network_GetSVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1371,7 +1833,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1404,13 +1866,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       },
       "delete": {
         "summary": "DeleteSVC API",
         "description": "删除 Service",
-        "operationId": "ClusterResources_DeleteSVC",
+        "operationId": "Network_DeleteSVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1419,7 +1881,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1452,13 +1914,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       },
       "put": {
         "summary": "UpdateSVC API",
         "description": "更新 Service",
-        "operationId": "ClusterResources_UpdateSVC",
+        "operationId": "Network_UpdateSVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1467,7 +1929,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1508,7 +1970,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -1516,7 +1978,7 @@
       "get": {
         "summary": "ListSA API",
         "description": "获取 ServiceAccount 列表",
-        "operationId": "ClusterResources_ListSA",
+        "operationId": "RBAC_ListSA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1525,7 +1987,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1559,7 +2021,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "RBAC"
         ]
       }
     },
@@ -1567,7 +2029,7 @@
       "get": {
         "summary": "GetSA API",
         "description": "获取 ServiceAccount",
-        "operationId": "ClusterResources_GetSA",
+        "operationId": "RBAC_GetSA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1576,7 +2038,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1609,13 +2071,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "RBAC"
         ]
       },
       "delete": {
         "summary": "DeleteSA API",
         "description": "删除 ServiceAccount",
-        "operationId": "ClusterResources_DeleteSA",
+        "operationId": "RBAC_DeleteSA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1624,7 +2086,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1657,13 +2119,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "RBAC"
         ]
       },
       "put": {
         "summary": "UpdateSA API",
         "description": "更新 ServiceAccount",
-        "operationId": "ClusterResources_UpdateSA",
+        "operationId": "RBAC_UpdateSA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1672,7 +2134,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1713,7 +2175,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "RBAC"
         ]
       }
     },
@@ -1721,7 +2183,7 @@
       "get": {
         "summary": "ListPVC API",
         "description": "获取 PersistentVolumeClaim 列表",
-        "operationId": "ClusterResources_ListPVC",
+        "operationId": "Storage_ListPVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1730,7 +2192,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1764,7 +2226,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       }
     },
@@ -1772,7 +2234,7 @@
       "get": {
         "summary": "GetPVC API",
         "description": "获取 PersistentVolumeClaim",
-        "operationId": "ClusterResources_GetPVC",
+        "operationId": "Storage_GetPVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1781,7 +2243,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1814,13 +2276,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "delete": {
         "summary": "DeletePVC API",
         "description": "删除 PersistentVolumeClaim",
-        "operationId": "ClusterResources_DeletePVC",
+        "operationId": "Storage_DeletePVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1829,7 +2291,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1862,13 +2324,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "put": {
         "summary": "UpdatePVC API",
         "description": "更新 PersistentVolumeClaim",
-        "operationId": "ClusterResources_UpdatePVC",
+        "operationId": "Storage_UpdatePVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1877,7 +2339,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1918,7 +2380,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       }
     },
@@ -1926,7 +2388,7 @@
       "get": {
         "summary": "ListCJ API",
         "description": "获取 CronJob 列表",
-        "operationId": "ClusterResources_ListCJ",
+        "operationId": "Workload_ListCJ",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1935,7 +2397,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1969,7 +2431,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -1977,7 +2439,7 @@
       "get": {
         "summary": "GetCJ API",
         "description": "获取 CronJob",
-        "operationId": "ClusterResources_GetCJ",
+        "operationId": "Workload_GetCJ",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -1986,7 +2448,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2019,13 +2481,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "delete": {
         "summary": "DeleteCJ API",
         "description": "删除 CronJob",
-        "operationId": "ClusterResources_DeleteCJ",
+        "operationId": "Workload_DeleteCJ",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2034,7 +2496,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2067,13 +2529,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "put": {
         "summary": "UpdateCJ API",
         "description": "更新 CronJob",
-        "operationId": "ClusterResources_UpdateCJ",
+        "operationId": "Workload_UpdateCJ",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2082,7 +2544,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2123,7 +2585,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2131,7 +2593,7 @@
       "get": {
         "summary": "ListDS API",
         "description": "获取 DaemonSet 列表",
-        "operationId": "ClusterResources_ListDS",
+        "operationId": "Workload_ListDS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2140,7 +2602,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2174,7 +2636,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2182,7 +2644,7 @@
       "get": {
         "summary": "GetDS API",
         "description": "获取 DaemonSet",
-        "operationId": "ClusterResources_GetDS",
+        "operationId": "Workload_GetDS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2191,7 +2653,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2224,13 +2686,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "delete": {
         "summary": "DeleteDS API",
         "description": "删除 DaemonSet",
-        "operationId": "ClusterResources_DeleteDS",
+        "operationId": "Workload_DeleteDS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2239,7 +2701,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2272,13 +2734,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "put": {
         "summary": "UpdateDS API",
         "description": "更新 DaemonSet",
-        "operationId": "ClusterResources_UpdateDS",
+        "operationId": "Workload_UpdateDS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2287,7 +2749,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2328,7 +2790,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2336,7 +2798,7 @@
       "get": {
         "summary": "ListDeploy API",
         "description": "获取 Deployment 列表",
-        "operationId": "ClusterResources_ListDeploy",
+        "operationId": "Workload_ListDeploy",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2345,7 +2807,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2379,7 +2841,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2387,7 +2849,7 @@
       "get": {
         "summary": "GetDeploy API",
         "description": "获取 Deployment",
-        "operationId": "ClusterResources_GetDeploy",
+        "operationId": "Workload_GetDeploy",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2396,7 +2858,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2429,13 +2891,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "delete": {
         "summary": "DeleteDeploy API",
         "description": "删除 Deployment",
-        "operationId": "ClusterResources_DeleteDeploy",
+        "operationId": "Workload_DeleteDeploy",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2444,7 +2906,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2477,13 +2939,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "put": {
         "summary": "UpdateDeploy API",
         "description": "更新 Deployment",
-        "operationId": "ClusterResources_UpdateDeploy",
+        "operationId": "Workload_UpdateDeploy",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2492,7 +2954,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2533,7 +2995,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2541,7 +3003,7 @@
       "get": {
         "summary": "ListJob API",
         "description": "获取 Job 列表",
-        "operationId": "ClusterResources_ListJob",
+        "operationId": "Workload_ListJob",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2550,7 +3012,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2584,7 +3046,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2592,7 +3054,7 @@
       "get": {
         "summary": "GetJob API",
         "description": "获取 Job",
-        "operationId": "ClusterResources_GetJob",
+        "operationId": "Workload_GetJob",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2601,7 +3063,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2634,13 +3096,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "delete": {
         "summary": "DeleteJob API",
         "description": "删除 Job",
-        "operationId": "ClusterResources_DeleteJob",
+        "operationId": "Workload_DeleteJob",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2649,7 +3111,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2682,13 +3144,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "put": {
         "summary": "UpdateJob API",
         "description": "更新 Job",
-        "operationId": "ClusterResources_UpdateJob",
+        "operationId": "Workload_UpdateJob",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2697,7 +3159,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2738,7 +3200,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2746,7 +3208,7 @@
       "get": {
         "summary": "ListPo API",
         "description": "获取 Pod 列表",
-        "operationId": "ClusterResources_ListPo",
+        "operationId": "Workload_ListPo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2755,7 +3217,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2803,7 +3265,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2811,7 +3273,7 @@
       "get": {
         "summary": "GetPo API",
         "description": "获取 Pod",
-        "operationId": "ClusterResources_GetPo",
+        "operationId": "Workload_GetPo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2820,7 +3282,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2853,13 +3315,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "delete": {
         "summary": "DeletePo API",
         "description": "删除 Pod",
-        "operationId": "ClusterResources_DeletePo",
+        "operationId": "Workload_DeletePo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2868,7 +3330,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2901,13 +3363,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "put": {
         "summary": "UpdatePo API",
         "description": "更新 Pod",
-        "operationId": "ClusterResources_UpdatePo",
+        "operationId": "Workload_UpdatePo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2916,7 +3378,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2957,7 +3419,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -2965,7 +3427,7 @@
       "get": {
         "summary": "ListPoCM API",
         "description": "获取 Pod 关联的 ConfigMap",
-        "operationId": "ClusterResources_ListPoCM",
+        "operationId": "Workload_ListPoCM",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2974,7 +3436,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3007,7 +3469,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3015,7 +3477,7 @@
       "get": {
         "summary": "ListPoPVC API",
         "description": "获取 Pod 关联的 PVC",
-        "operationId": "ClusterResources_ListPoPVC",
+        "operationId": "Workload_ListPoPVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3024,7 +3486,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3057,7 +3519,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3065,7 +3527,7 @@
       "put": {
         "summary": "ReschedulePo API",
         "description": "重新调度 Pod",
-        "operationId": "ClusterResources_ReschedulePo",
+        "operationId": "Workload_ReschedulePo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3074,7 +3536,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3115,7 +3577,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3123,7 +3585,7 @@
       "get": {
         "summary": "ListPoSecret API",
         "description": "获取 Pod 关联的 Secret",
-        "operationId": "ClusterResources_ListPoSecret",
+        "operationId": "Workload_ListPoSecret",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3132,7 +3594,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3165,7 +3627,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3173,7 +3635,7 @@
       "get": {
         "summary": "ListContainer API",
         "description": "获取 Pod 包含的容器列表",
-        "operationId": "ClusterResources_ListContainer",
+        "operationId": "Workload_ListContainer",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3182,7 +3644,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3215,7 +3677,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3223,7 +3685,7 @@
       "get": {
         "summary": "GetContainer API",
         "description": "获取指定 Pod 下单个容器信息",
-        "operationId": "ClusterResources_GetContainer",
+        "operationId": "Workload_GetContainer",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3232,7 +3694,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3271,7 +3733,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3279,7 +3741,7 @@
       "get": {
         "summary": "GetContainerEnvInfo API",
         "description": "获取指定 Pod 下单个容器环境变量信息",
-        "operationId": "ClusterResources_GetContainerEnvInfo",
+        "operationId": "Workload_GetContainerEnvInfo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3288,7 +3750,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3327,7 +3789,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3335,7 +3797,7 @@
       "get": {
         "summary": "ListSTS API",
         "description": "获取 StatefulSet 列表",
-        "operationId": "ClusterResources_ListSTS",
+        "operationId": "Workload_ListSTS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3344,7 +3806,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3378,7 +3840,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3386,7 +3848,7 @@
       "get": {
         "summary": "GetSTS API",
         "description": "获取 StatefulSet",
-        "operationId": "ClusterResources_GetSTS",
+        "operationId": "Workload_GetSTS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3395,7 +3857,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3428,13 +3890,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "delete": {
         "summary": "DeleteSTS API",
         "description": "删除 StatefulSet",
-        "operationId": "ClusterResources_DeleteSTS",
+        "operationId": "Workload_DeleteSTS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3443,7 +3905,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3476,13 +3938,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       },
       "put": {
         "summary": "UpdateSTS API",
         "description": "更新 StatefulSet",
-        "operationId": "ClusterResources_UpdateSTS",
+        "operationId": "Workload_UpdateSTS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3491,7 +3953,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3532,7 +3994,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -3540,7 +4002,7 @@
       "post": {
         "summary": "CreateEP API",
         "description": "创建 Endpoints",
-        "operationId": "ClusterResources_CreateEP",
+        "operationId": "Network_CreateEP",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3549,7 +4011,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3578,7 +4040,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -3586,7 +4048,7 @@
       "post": {
         "summary": "CreateIng API",
         "description": "创建 Ingress",
-        "operationId": "ClusterResources_CreateIng",
+        "operationId": "Network_CreateIng",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3595,7 +4057,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3624,7 +4086,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -3632,7 +4094,7 @@
       "post": {
         "summary": "CreateSVC API",
         "description": "创建 Service",
-        "operationId": "ClusterResources_CreateSVC",
+        "operationId": "Network_CreateSVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3641,7 +4103,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3670,7 +4132,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Network"
         ]
       }
     },
@@ -3678,7 +4140,7 @@
       "post": {
         "summary": "CreateSA API",
         "description": "创建 ServiceAccount",
-        "operationId": "ClusterResources_CreateSA",
+        "operationId": "RBAC_CreateSA",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3687,7 +4149,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3716,7 +4178,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "RBAC"
         ]
       }
     },
@@ -3724,7 +4186,7 @@
       "post": {
         "summary": "CreatePVC API",
         "description": "创建 PersistentVolumeClaim",
-        "operationId": "ClusterResources_CreatePVC",
+        "operationId": "Storage_CreatePVC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3733,7 +4195,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3762,7 +4224,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       }
     },
@@ -3770,7 +4232,7 @@
       "get": {
         "summary": "ListPV API",
         "description": "获取 PersistentVolume 列表",
-        "operationId": "ClusterResources_ListPV",
+        "operationId": "Storage_ListPV",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3779,7 +4241,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3814,13 +4276,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "post": {
         "summary": "CreatePV API",
         "description": "创建 PersistentVolume",
-        "operationId": "ClusterResources_CreatePV",
+        "operationId": "Storage_CreatePV",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3829,7 +4291,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3858,7 +4320,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       }
     },
@@ -3866,7 +4328,7 @@
       "get": {
         "summary": "GetPV API",
         "description": "获取 PersistentVolume",
-        "operationId": "ClusterResources_GetPV",
+        "operationId": "Storage_GetPV",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3875,7 +4337,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3909,13 +4371,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "delete": {
         "summary": "DeletePV API",
         "description": "删除 PersistentVolume",
-        "operationId": "ClusterResources_DeletePV",
+        "operationId": "Storage_DeletePV",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3924,7 +4386,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3958,13 +4420,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "put": {
         "summary": "UpdatePV API",
         "description": "更新 PersistentVolume",
-        "operationId": "ClusterResources_UpdatePV",
+        "operationId": "Storage_UpdatePV",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3973,7 +4435,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4008,7 +4470,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       }
     },
@@ -4016,7 +4478,7 @@
       "get": {
         "summary": "ListSC API",
         "description": "获取 StorageClass 列表",
-        "operationId": "ClusterResources_ListSC",
+        "operationId": "Storage_ListSC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4025,7 +4487,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4060,13 +4522,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "post": {
         "summary": "CreateSC API",
         "description": "创建 StorageClass",
-        "operationId": "ClusterResources_CreateSC",
+        "operationId": "Storage_CreateSC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4075,7 +4537,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4104,7 +4566,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       }
     },
@@ -4112,7 +4574,7 @@
       "get": {
         "summary": "GetSC API",
         "description": "获取 StorageClass",
-        "operationId": "ClusterResources_GetSC",
+        "operationId": "Storage_GetSC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4121,7 +4583,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4155,13 +4617,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "delete": {
         "summary": "DeleteSC API",
         "description": "删除 StorageClass",
-        "operationId": "ClusterResources_DeleteSC",
+        "operationId": "Storage_DeleteSC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4170,7 +4632,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4204,13 +4666,13 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
         ]
       },
       "put": {
         "summary": "UpdateSC API",
         "description": "更新 StorageClass",
-        "operationId": "ClusterResources_UpdateSC",
+        "operationId": "Storage_UpdateSC",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4219,7 +4681,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4254,7 +4716,89 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Storage"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe": {
+      "get": {
+        "summary": "Subscribe API",
+        "description": "资源订阅",
+        "operationId": "Resource_Subscribe",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/clusterresourcesSubscribeResp"
+                },
+                "error": {
+                  "$ref": "#/definitions/runtimeStreamError"
+                }
+              },
+              "title": "Stream result of clusterresourcesSubscribeResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceVersion",
+            "description": "资源版本号.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "description": "CRD 名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "API 版本.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Resource"
         ]
       }
     },
@@ -4262,7 +4806,7 @@
       "post": {
         "summary": "CreateCJ API",
         "description": "创建 CronJob",
-        "operationId": "ClusterResources_CreateCJ",
+        "operationId": "Workload_CreateCJ",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4271,7 +4815,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4300,7 +4844,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -4308,7 +4852,7 @@
       "post": {
         "summary": "CreateDS API",
         "description": "创建 DaemonSet",
-        "operationId": "ClusterResources_CreateDS",
+        "operationId": "Workload_CreateDS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4317,7 +4861,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4346,7 +4890,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -4354,7 +4898,7 @@
       "post": {
         "summary": "CreateDeploy API",
         "description": "创建 Deployment",
-        "operationId": "ClusterResources_CreateDeploy",
+        "operationId": "Workload_CreateDeploy",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4363,7 +4907,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4392,7 +4936,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -4400,7 +4944,7 @@
       "post": {
         "summary": "CreateJob API",
         "description": "创建 Job",
-        "operationId": "ClusterResources_CreateJob",
+        "operationId": "Workload_CreateJob",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4409,7 +4953,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4438,7 +4982,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -4446,7 +4990,7 @@
       "post": {
         "summary": "CreatePo API",
         "description": "创建 Pod",
-        "operationId": "ClusterResources_CreatePo",
+        "operationId": "Workload_CreatePo",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4455,7 +4999,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4484,7 +5028,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -4492,7 +5036,7 @@
       "post": {
         "summary": "CreateSTS API",
         "description": "创建 StatefulSet",
-        "operationId": "ClusterResources_CreateSTS",
+        "operationId": "Workload_CreateSTS",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4501,7 +5045,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4530,7 +5074,7 @@
           }
         ],
         "tags": [
-          "ClusterResources"
+          "Workload"
         ]
       }
     },
@@ -4538,7 +5082,7 @@
       "get": {
         "summary": "Version API",
         "description": "Version 接口，用于获取服务版本信息",
-        "operationId": "ClusterResources_Version",
+        "operationId": "Basic_Version",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -4547,19 +5091,73 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
           }
         },
         "tags": [
-          "ClusterResources"
+          "Basic"
         ]
       }
     }
   },
   "definitions": {
+    "clusterresourcesCObjCreateReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "CRDName": {
+          "type": "string",
+          "title": "CRD 名称"
+        },
+        "manifest": {
+          "type": "object",
+          "title": "资源配置信息"
+        }
+      },
+      "description": "创建单个自定义资源请求体",
+      "title": "CObjCreateReq"
+    },
+    "clusterresourcesCObjUpdateReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "CRDName": {
+          "type": "string",
+          "title": "CRD 名称"
+        },
+        "cobjName": {
+          "type": "string",
+          "title": "自定义资源名称"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "manifest": {
+          "type": "object",
+          "title": "资源配置信息"
+        }
+      },
+      "description": "更新单个自定义资源请求体",
+      "title": "CObjUpdateReq"
+    },
     "clusterresourcesCommonListResp": {
       "type": "object",
       "properties": {
@@ -4723,6 +5321,47 @@
       "description": "更新单个 k8s 资源请求体",
       "title": "ResUpdateReq"
     },
+    "clusterresourcesSubscribeResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "kind": {
+          "type": "string",
+          "description": "资源类型",
+          "title": "kind"
+        },
+        "type": {
+          "type": "string",
+          "description": "操作类型",
+          "title": "operate"
+        },
+        "uid": {
+          "type": "string",
+          "description": "唯一标识",
+          "title": "uid"
+        },
+        "manifest": {
+          "type": "object",
+          "description": "资源配置信息",
+          "title": "manifest"
+        },
+        "manifestExt": {
+          "type": "object",
+          "description": "资源扩展信息",
+          "title": "manifestExt"
+        }
+      }
+    },
     "clusterresourcesVersionResp": {
       "type": "object",
       "properties": {
@@ -4794,6 +5433,31 @@
           "format": "int32"
         },
         "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "runtimeStreamError": {
+      "type": "object",
+      "properties": {
+        "grpc_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "http_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "http_status": {
           "type": "string"
         },
         "details": {

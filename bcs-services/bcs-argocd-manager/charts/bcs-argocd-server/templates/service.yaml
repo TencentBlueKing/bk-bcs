@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-argocd-server.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-argocd-server.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - protocol: TCP
+      name: metric
+      port: {{ .Values.argocdserver.service.metricPort }}
+      targetPort: {{ .Values.argocdserver.service.metricPort }}
+    - protocol: TCP
+      name: https
+      port: {{ .Values.argocdserver.service.httpPort }}
+      targetPort: {{ .Values.argocdserver.service.httpPort }}
+    - protocol: TCP
+      name: grpc
+      port: {{ .Values.argocdserver.service.grpcPort }}
+      targetPort: {{ .Values.argocdserver.service.grpcPort }}
+  selector:
+    {{- include "bcs-argocd-server.selectorLabels" . | nindent 4 }}

@@ -30,6 +30,8 @@ nginx_config:
     keepalive_timeout: 3600s
     lua_shared_dict:
       prometheus-metrics: ${prometheusMemory}
+    custom_lua_shared_dict:
+      bcs-dynamic-route: 10M
 plugin_attr:
   log-rotate:
     interval: 3600    # rotate interval (unit: second)
@@ -41,3 +43,6 @@ plugin_attr:
     export_addr:
       ip: 0.0.0.0
       port: 8001
+  bcs-dynamic-route:
+    gateway_token: ${gatewayToken}
+    sync_cluster_credential_interval: 60

@@ -54,7 +54,7 @@ func TestDelete(t *testing.T) {
 
 	key := cache.NewStringKey("testKey2")
 
-	// do delete
+	// delete
 	err := c.Delete(key)
 	assert.NoError(t, err)
 
@@ -62,7 +62,33 @@ func TestDelete(t *testing.T) {
 	err = c.Set(key, 1, 0)
 	assert.NoError(t, err)
 
-	// do it again
+	exists := c.Exists(key)
+	assert.True(t, exists)
+
+	// delete again
 	err = c.Delete(key)
 	assert.NoError(t, err)
+
+	exists = c.Exists(key)
+	assert.False(t, exists)
+}
+
+func TestDeleteByPrefix(t *testing.T) {
+	c := NewCache("test", 5*time.Minute)
+
+	key := cache.NewStringKey("testKey3")
+
+	// set
+	err := c.Set(key, 1, 0)
+	assert.NoError(t, err)
+
+	exists := c.Exists(key)
+	assert.True(t, exists)
+
+	// delete by prefix
+	err = c.DeleteByPrefix("test")
+	assert.NoError(t, err)
+
+	exists = c.Exists(key)
+	assert.False(t, exists)
 }

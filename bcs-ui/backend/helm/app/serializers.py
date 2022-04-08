@@ -19,7 +19,7 @@ import subprocess
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError, ValidationError
+from rest_framework.exceptions import ParseError
 from ruamel.yaml.error import YAMLFutureWarning
 
 from backend.components import paas_cc
@@ -35,13 +35,13 @@ from backend.helm.toolkit.diff.diff import simple_diff
 from backend.helm.toolkit.diff.parser import parse
 from backend.helm.toolkit.kubehelm import exceptions as helm_exceptions
 from backend.helm.toolkit.kubehelm.helm import KubeHelmClient
-from backend.utils.client import get_bcs_client, make_kubectl_client
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.utils.client import make_kubectl_client
 from backend.utils.error_codes import error_codes
 from backend.utils.serializers import HelmValueField, YamlField
 from backend.utils.tempfile import save_to_temporary_dir
 
 from . import bcs_info_injector, utils
-from .deployer import AppDeployer
 from .models import App
 
 
@@ -108,8 +108,6 @@ class AppMixin:
 class AppBaseSLZ(AppMixin, serializers.ModelSerializer):
     def save(self, **kwargs):
         instance = super(AppBaseSLZ, self).save(**kwargs)
-
-        # AppDeployer(app=instance, access_token=self.access_token).install_app()
         instance.refresh_from_db()
         return instance
 
@@ -387,6 +385,16 @@ class AppUpgradeSLZ(AppBaseSLZ):
     cmd_flags = serializers.JSONField(required=False, default=[])
 
     def update(self, instance, validated_data):
+        ns_info = self.get_ns_info_by_id(instance.namespace_id)
+
+        perm_ctx = NamespaceScopedPermCtx(
+            username=self.context["request"].user.username,
+            project_id=instance.project_id,
+            cluster_id=ns_info['cluster_id'],
+            name=ns_info['name'],
+        )
+        NamespaceScopedPermission().can_update(perm_ctx)
+
         # update sys variable
         sys_variables = collect_system_variable(
             access_token=self.context["request"].user.token.access_token,
@@ -1132,8 +1140,7 @@ def _template_with_bcs_renderer(
 
 
 class FilterNamespacesSLZ(serializers.Serializer):
-    filter_use_perm = serializers.BooleanField(default=True)
-    cluster_id = serializers.CharField(required=False)
+    cluster_id = serializers.CharField()
     chart_id = serializers.IntegerField(required=False)
 
 

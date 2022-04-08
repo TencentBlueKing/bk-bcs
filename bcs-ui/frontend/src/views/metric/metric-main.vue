@@ -451,7 +451,6 @@
         },
         data () {
             return {
-                permissions: {},
                 winHeight: 0,
                 searchKeyWord: '',
                 isInitLoading: true,
@@ -624,7 +623,6 @@
                     const res = await this.$store.dispatch('metric/getMetricList', {
                         projectId: this.projectId
                     })
-                    this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
                     this.dataList.splice(0, this.dataList.length, ...(res.data || []))
                     this.dataListTmp.splice(0, this.dataListTmp.length, ...(res.data || []))
                     this.initPageConf()
@@ -851,15 +849,6 @@
              * 显示创建 metric sideslider
              */
             async showCreateMetric () {
-                if (!this.permissions.create) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'create',
-                        resource_type: 'metric'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 this.resetCreateParams()
                 this.createMetricConf.isShow = true
             },
@@ -880,15 +869,6 @@
              * @param {string} url 要跳转的 url
              */
             async go (metric, url) {
-                if (!metric.permissions.use) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: metric.id,
-                        resource_name: metric.name,
-                        resource_type: 'metric'
-                    })
-                }
                 window.open(url)
             },
 
@@ -898,16 +878,6 @@
              * @param {Object} metric 当前 metric 对象
              */
             async editMetric (metric) {
-                if (!metric.permissions.edit) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'edit',
-                        resource_code: metric.id,
-                        resource_name: metric.name,
-                        resource_type: 'metric'
-                    })
-                }
-
                 this.editMetricConf.isShow = true
                 this.editMetricConf.title = this.$t(`更新【{metricName}】`, { metricName: metric.name })
 
@@ -1184,16 +1154,6 @@
              * @param {Object} metric 当前 metric 对象
              */
             async checkMetricInstance (metric) {
-                // if (!metric.permissions.view) {
-                //     let params = {
-                //         project_id: this.projectId,
-                //         policy_code: 'view',
-                //         resource_code: metric.id,
-                //         resource_name: metric.name,
-                //         resource_type: 'metric'
-                //     }
-                //     await this.$store.dispatch('getResourcePermissions', params)
-                // }
                 this.curInstanceMetric = metric
                 this.isMetricInstanceLoading = true
                 this.instanceDialogConf.isShow = true
@@ -1218,16 +1178,6 @@
              * @param {Object} metric 当前 metric 对象
              */
             async deleteMetric (metric) {
-                if (!metric.permissions.delete) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'delete',
-                        resource_code: metric.id,
-                        resource_name: metric.name,
-                        resource_type: 'metric'
-                    })
-                }
-
                 const me = this
                 me.$bkInfo({
                     title: this.$t('确认删除'),
@@ -1274,16 +1224,6 @@
              * @param {Array} namespaceIdList 命名空间 id 集合
              */
             async pauseAndResume (metric, idx, namespaceIdList = []) {
-                if (!metric.permissions.delete) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'delete',
-                        resource_code: metric.id,
-                        resource_name: metric.name,
-                        resource_type: 'metric'
-                    })
-                }
-
                 const idxStr = idx === 'pause' ? this.$t('暂停') : this.$t('恢复')
                 const opType = idx === 'pause' ? 'pause' : 'resume'
 

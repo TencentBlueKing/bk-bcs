@@ -1,0 +1,34 @@
+{
+    "mongo": {
+        "address": "${bcsHelmManagerMongoAddress}",
+        "connecttimeout": ${bcsHelmManagerMongoConnectTimeout},
+        "database": "${bcsHelmManagerMongoDatabase}",
+        "username": "${bcsHelmManagerMongoUsername}",
+        "password": "${bcsHelmManagerMongoPassword}"
+    },
+    "etcd": {
+        "endpoints": "${bcsEtcdHost}",
+        "cert": "${bcsEtcdCertFile}",
+        "key": "${bcsEtcdKeyFile}",
+        "ca": "${bcsEtcdCAFile}"
+    },
+    "swagger": {
+        "dir": "${bcsHelmManagerSwaggerDir}"
+    },
+    "bcslog": {
+        "dir": "${log_dir}",
+        "alsotostderr": ${bcsHelmManagerAlsoToStdErr},
+        "v": ${bcsHelmManagerVerbosity}
+    },
+    "debug": ${bcsHelmManagerDebug},
+    "address": "${localIp}",
+    "port": ${bcsHelmManagerPort},
+    "httpport": ${bcsHelmManagerHTTPPort},
+    "metricport": ${bcsHelmManagerMetricPort},
+    "serverca": "${caFile}",
+    "servercert": "${serverCertFile}",
+    "serverkey": "${serverKeyFile}",
+    "clientca": "${caFile}",
+    "clientcert": "${clientCertFile}",
+    "clientkey": "${clientKeyFile}"
+}

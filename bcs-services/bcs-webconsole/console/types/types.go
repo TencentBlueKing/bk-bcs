@@ -13,7 +13,17 @@
 
 package types
 
-import "time"
+import (
+	"time"
+)
+
+type WebConsoleMode string
+
+const (
+	ClusterInternalMode WebConsoleMode = "cluster_internal" // 用户自己集群 inCluster 模式
+	ClusterExternalMode WebConsoleMode = "cluster_external" // 平台集群, 外部模式, 需要设置 AdminClusterId
+	ContainerDirectMode WebConsoleMode = "container_direct" // 直连容器
+)
 
 // WebSocketConfig is config
 type WebSocketConfig struct {
@@ -139,6 +149,33 @@ type K8sContextByContainerID struct {
 	Namespace     string
 	PodName       string
 	ContainerName string
+}
+
+// webconsole 连接三要素
+type Container struct {
+	Namespace     string
+	PodName       string
+	ContainerName string
+}
+
+// PodContext
+type PodContext struct {
+	ProjectId      string         `json:"project_id"`
+	Username       string         `json:"username"`
+	AdminClusterId string         `json:"admin_cluster_id"` // kubectld pod 所在集群Id, kubectl api 连接的集群
+	Namespace      string         `json:"namespace"`
+	PodName        string         `json:"pod_name"`
+	ClusterId      string         `json:"cluster_id"` // 目标集群Id
+	ContainerName  string         `json:"container_name"`
+	Commands       []string       `json:"commands"`
+	Mode           WebConsoleMode `json:"mode"`
+	Source         string         `json:"source"`
+}
+
+// TimestampPodContext 带时间戳的 PodContext
+type TimestampPodContext struct {
+	PodContext
+	Timestamp int64 `json:"timestamp"`
 }
 
 // SessionData 存储的客户端

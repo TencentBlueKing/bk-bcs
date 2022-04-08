@@ -12,8 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
 import logging
+import operator
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
@@ -28,14 +28,22 @@ from backend.bcs_web.viewsets import SystemViewSet
 from backend.components import cc, paas_cc
 from backend.container_service.projects import base as Project
 from backend.container_service.projects.utils import fetch_has_maintain_perm_apps, update_bcs_service_for_project
-from backend.iam.legacy_perms import ProjectPermission
-from backend.utils.basic import normalize_datetime
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.project import (
+    ProjectAction,
+    ProjectCreatorAction,
+    ProjectPermCtx,
+    ProjectPermission,
+    ProjectRequest,
+)
 from backend.utils.cache import region
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 from . import serializers
+from .authorized import list_auth_projects
 from .cmdb import list_biz_maintainers
 
 logger = logging.getLogger(__name__)
@@ -44,94 +52,19 @@ logger = logging.getLogger(__name__)
 class Projects(viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
-    def normalize_create_update_time(self, created_at, updated_at):
-        return normalize_datetime(created_at), normalize_datetime(updated_at)
-
-    def deploy_type_list(self, deploy_type):
-        """转换deploy_type为list类型"""
-        if not deploy_type:
-            return []
-        if str.isdigit(str(deploy_type)):
-            deploy_type_list = [int(deploy_type)]
-        else:
-            try:
-                deploy_type_list = json.loads(deploy_type)
-            except Exception as err:
-                logger.error("解析部署类型失败，详情: %s", err)
-                return []
-        return deploy_type_list
-
-    def list(self, request):
-        """获取项目列表"""
-        # 获取已经授权的项目
-        access_token = request.user.token.access_token
-        # 直接调用配置中心接口去获取信息
-        projects = paas_cc.get_auth_project(access_token)
-        if projects.get("code") != ErrorCode.NoError:
-            raise error_codes.APIError(projects.get("message"))
-        data = projects.get("data")
-        # 兼容先前，返回array/list
-        if not data:
-            return Response([])
-        # 按数据倒序排序
-        data.sort(key=lambda x: x["created_at"], reverse=True)
-        # 数据处理
-        for info in data:
-            info["created_at"], info["updated_at"] = self.normalize_create_update_time(
-                info["created_at"], info["updated_at"]
-            )
-            info["project_code"] = info["english_name"]
-            info["deploy_type"] = self.deploy_type_list(info.get("deploy_type"))
-
-        return Response(data)
-
-    def has_cluster(self, request, project_id):
-        """判断项目下是否有集群"""
-        resp = paas_cc.get_all_clusters(request.user.token.access_token, project_id)
-        if resp.get("code") != ErrorCode.NoError:
-            raise error_codes.APIError(resp.get("message"))
-        # 存在集群时，不允许修改
-        if resp.get("data", {}).get("count") > 0:
-            return True
-        return False
-
-    def can_edit(self, request, project_id):
-        """判断是否允许修改项目
-        - 项目下有集群，不允许更改项目的调度类型和绑定业务
-        - 非管理员权限，不允许修改项目
-        """
-        perm = ProjectPermission()
-        if (self.has_cluster(request, project_id)) or (not perm.can_edit(request.user.username, project_id)):
-            return False
-        return True
-
-    def info(self, request, project_id):
+    def get_project(self, request, project_id):
         """单个项目信息"""
         data = request.project
-        data["created_at"], data["updated_at"] = self.normalize_create_update_time(
-            data["created_at"], data["updated_at"]
-        )
         # 添加业务名称
         data["cc_app_name"] = cc.get_application_name(request.project.cc_app_id)
-        data["can_edit"] = self.can_edit(request, project_id)
         return Response(data)
 
-    def validate_update_project_data(self, request):
-        serializer = serializers.UpdateProjectNewSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return serializer.data
-
-    def invalid_project_cache(self, project_id):
-        """当变更项目信息时，详细缓存信息失效"""
-        region.delete(bcs_project_cache_key.format(project_id_or_code=project_id))
-        # NOTE: 后续permission统一后，可以删除下面的缓存标识
-        region.delete(f"BK_DEVOPS_BCS:HAS_BCS_SERVICE:{project_id}")
-
-    def update(self, request, project_id):
+    def update_bound_biz(self, request, project_id):
         """更新项目信息"""
-        if not self.can_edit(request, project_id):
+        if not self._can_update_bound_biz(request, project_id):
             raise error_codes.CheckFailed(_("请确认有项目管理员权限，并且项目下无集群"))
-        data = self.validate_update_project_data(request)
+
+        data = self._validate_update_project_data(request)
         access_token = request.user.token.access_token
         data["updator"] = request.user.username
 
@@ -149,18 +82,49 @@ class Projects(viewsets.ViewSet):
             ual_client.log_modify(activity_status="failed")
             raise error_codes.APIError(_("更新项目信息失败，错误详情: {}").format(resp.get("message")))
         ual_client.log_modify(activity_status="succeed")
-        project_data = resp.get("data")
-        if project_data:
-            project_data["created_at"], project_data["updated_at"] = self.normalize_create_update_time(
-                project_data["created_at"], project_data["updated_at"]
-            )
 
+        project_data = resp.get("data")
         # 主动令缓存失效
-        self.invalid_project_cache(project_id)
+        self._invalid_project_cache(project_id)
         # 创建或更新依赖服务，包含data、template、helm
         update_bcs_service_for_project(request, project_id, data)
 
         return Response(project_data)
+
+    def _can_update_bound_biz(self, request, project_id):
+        """判断是否允许修改项目
+        - 项目下有集群，不允许更改项目的绑定业务
+        - 非管理员权限，不允许修改项目
+        """
+        if self._has_cluster(request.user.token.access_token, project_id):
+            return False
+
+        perm_ctx = ProjectPermCtx(username=request.user.username, project_id=project_id)
+        if not ProjectPermission().can_edit(perm_ctx, raise_exception=False):
+            return False
+
+        return True
+
+    def _has_cluster(self, access_token: str, project_id: str):
+        """判断项目下是否有集群"""
+        resp = paas_cc.get_all_clusters(access_token, project_id)
+        if resp.get("code") != ErrorCode.NoError:
+            raise error_codes.APIError(resp.get("message"))
+        # 存在集群时，不允许修改
+        if resp.get("data", {}).get("count") > 0:
+            return True
+        return False
+
+    def _validate_update_project_data(self, request):
+        serializer = serializers.UpdateProjectNewSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return serializer.data
+
+    def _invalid_project_cache(self, project_id):
+        """当变更项目信息时，详细缓存信息失效"""
+        region.delete(bcs_project_cache_key.format(project_id_or_code=project_id))
+        # NOTE: 后续permission统一后，可以删除下面的缓存标识
+        region.delete(f"BK_DEVOPS_BCS:HAS_BCS_SERVICE:{project_id}")
 
 
 class CC(viewsets.ViewSet):
@@ -186,13 +150,35 @@ class UserAPIView(APIView):
         return Response(data)
 
 
-class NavProjectsViewSet(viewsets.ViewSet, ProjectPermission):
+class AuthorizedProjectsViewSet(viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
     permission_classes = (permissions.IsAuthenticated,)
 
+    def list(self, request):
+        """查询用户有权限的项目列表"""
+        resp = list_auth_projects(request.user.token.access_token, request.user.username)
+        if resp.get('code') != ErrorCode.NoError:
+            logger.error('list_auth_projects error: %s', resp.get('message'))
+            raise error_codes.ComponentError('list auth projects error')
+
+        projects = resp['data']
+        if not projects:
+            return Response([])
+
+        projects.sort(key=operator.itemgetter('created_at'), reverse=True)
+        return Response(projects)
+
+
+class NavProjectsViewSet(viewsets.ViewSet):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+    permission_classes = (permissions.IsAuthenticated,)
+    iam_perm = ProjectPermission()
+
     def create_project(self, request):
         username = request.user.username
-        self.can_create(username, raise_exception=True)
+
+        perm_ctx = ProjectPermCtx(username=username)
+        self.iam_perm.can_create(perm_ctx)
 
         req_data = request.data.copy()
         req_data["creator"] = username
@@ -200,11 +186,15 @@ class NavProjectsViewSet(viewsets.ViewSet, ProjectPermission):
         serializer.is_valid(raise_exception=True)
 
         project = Project.create_project(request.user.token.access_token, serializer.validated_data)
-        self.grant_related_action_perms(username, project["project_id"], project["project_name"])
+        self.iam_perm.grant_resource_creator_actions(
+            ProjectCreatorAction(name=project["project_name"], project_id=project["project_id"], creator=username),
+        )
+
         return Response(project)
 
     def update_project(self, request, project_id):
-        self.can_edit(request.user.username, project_id, raise_exception=True)
+        perm_ctx = ProjectPermCtx(username=request.user.username, project_id=project_id)
+        self.iam_perm.can_edit(perm_ctx)
 
         req_data = request.data.copy()
         req_data["updator"] = request.user.username
@@ -214,18 +204,17 @@ class NavProjectsViewSet(viewsets.ViewSet, ProjectPermission):
         project = Project.update_project(request.user.token.access_token, project_id, serializer.validated_data)
         return Response(project)
 
-    def _add_permissions_field(self, projects, username):
-        project_ids = [p["project_id"] for p in projects]
-        resource_perm_allowed = self.batch_resource_multi_actions_allowed(
-            username, [self.actions.VIEW.value, self.actions.EDIT.value], project_ids
-        )
-        for p in projects:
-            p["permissions"] = resource_perm_allowed[p["project_id"]]
-
-    def filter_projects(self, request):
+    @response_perms(
+        action_ids=[ProjectAction.VIEW, ProjectAction.EDIT],
+        permission_cls=ProjectPermission,
+        resource_id_key='project_id',
+    )
+    def list_projects(self, request):
+        """
+        提供查询项目列表的功能, 同时能够根据 project_code 或 project_name 过滤项目
+        """
         project_code = request.query_params.get("project_code")
         project_name = request.query_params.get("project_name")
-        with_permissions_field = request.query_params.get("with_permissions_field")
         access_token = request.user.token.access_token
 
         if project_code:
@@ -238,46 +227,17 @@ class NavProjectsViewSet(viewsets.ViewSet, ProjectPermission):
         if not projects:
             return Response(projects)
 
-        if with_permissions_field != "false":  # 需要权限字段
-            self._add_permissions_field(projects, request.user.username)
+        projects.sort(key=operator.itemgetter('created_at'), reverse=True)
+        return PermsResponse(projects, ProjectRequest())
 
-        projects.sort(key=lambda p: p.get("created_at", ""), reverse=True)
-        return Response(projects)
-
+    @response_perms(
+        action_ids=[ProjectAction.VIEW, ProjectAction.EDIT],
+        permission_cls=ProjectPermission,
+        resource_id_key='project_id',
+    )
     def get_project(self, request, project_id):
         project = Project.get_project(request.user.token.access_token, project_id)
-        project["permissions"] = self.resource_inst_multi_actions_allowed(
-            request.user.username, [self.actions.VIEW.value, self.actions.EDIT.value], project_id
-        )
-        return Response(project)
-
-
-class NavProjectPermissionViewSet(viewsets.ViewSet, ProjectPermission):
-    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get_user_perms(self, request):
-        serializer = serializers.ProjectPermsSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        perms = self.query_user_perms(request.user.username, **serializer.validated_data)
-        return Response(perms)
-
-    def query_user_perms_by_project(self, request, project_id):
-        req_data = request.data.copy()
-        req_data["project_id"] = project_id
-
-        serializer = serializers.ProjectInstPermsSLZ(data=req_data)
-        serializer.is_valid(raise_exception=True)
-
-        perms = self.query_user_perms(request.user.username, **serializer.validated_data)
-        return Response(perms)
-
-    def list_authorized_users(self, request, project_id):
-        serializer = serializers.QueryAuthorizedUsersSLZ(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-
-        users = self.query_authorized_users(project_id, serializer.validated_data["action_id"])
-        return Response(users)
+        return PermsResponse(project, ProjectRequest())
 
 
 class ProjectBizInfoViewSet(SystemViewSet):
@@ -286,12 +246,3 @@ class ProjectBizInfoViewSet(SystemViewSet):
         # 以admin身份查询业务下的运维
         maintainers = list_biz_maintainers(int(request.project.cc_app_id))
         return Response({"maintainers": maintainers})
-
-
-# TODO: 是否有其它方式处理
-try:
-    from .views_ext import patch_project_client
-
-    Projects = patch_project_client(Projects)
-except ImportError as e:
-    logger.debug("Load extension failed: %s", e)

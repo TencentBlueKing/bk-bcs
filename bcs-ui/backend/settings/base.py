@@ -70,7 +70,6 @@ INSTALLED_APPS = [
     "backend.templatesets.legacy_apps.instance.apps.TemplatesetsInstanceConfig",
     "backend.uniapps.resource",
     "backend.uniapps.network",
-    "backend.apps.ticket",
     "backend.helm.app",
     "backend.helm.helm",
     "backend.helm.authtoken.apps.HelmAuthtokenConfig",
@@ -477,14 +476,15 @@ CLUSTER_MANAGER_PROXY = {
     # 前端访问的前缀
     "PREFIX_PATH": "api/cluster_manager/proxy/",
 }
-# 共享集群
-SHARED_CLUSTERS = []
 
 # 直连新版bcs api的地址
 BCS_API_SERVER_DOMAIN = {"prod": os.environ.get("BCS_API_PROD", "")}
 
 # 版本日志放置的路径
 CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
+
+# 共享集群命名空间的前缀
+SHARED_CLUSTER_NS_PREFIX = ""
 
 try:
     from .base_ext import *  # noqa

@@ -90,6 +90,7 @@ func (pc *PortCache) PushPortEntry(entry *PortEntry) {
 	if oldEntry, ok := pc.m[entry.Port]; ok {
 		oldEntry.Quantity = entry.Quantity
 		heap.Fix(pc.h, oldEntry.Index)
+		return
 	}
 	pc.m[entry.Port] = entry
 	heap.Push(pc.h, entry)

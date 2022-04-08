@@ -1,24 +1,34 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package api
 
 import (
 	"fmt"
 	"net/http"
-	"path/filepath"
-	"strings"
-	"time"
+	"net/url"
+	"path"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 type service struct {
@@ -29,71 +39,82 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
-// 	router.Use(route.Localize())
-func (e service) RegisterRoute(router gin.IRoutes) {
-	router.Use(route.AuthRequired()).
-		GET("/api/projects/:projectId/clusters/:clusterId/session/", e.CreateWebConsoleSession).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", e.BCSWebSocketHandler).
-		POST("/web_console", e.CreateOpenWebConsoleSession).
-		GET(filepath.Join(e.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/",
-			e.CreateWebConsoleSession).
-		GET(filepath.Join(e.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/",
-			e.BCSWebSocketHandler).
-		POST(filepath.Join(e.opts.RoutePrefix, "/web_console/"), e.CreateOpenWebConsoleSession)
+func (s service) RegisterRoute(router gin.IRoutes) {
+	api := router.Use(route.APIAuthRequired())
+
+	permAPI := api.Use(route.PermissionRequired())
+
+	// 用户登入态鉴权, session鉴权
+	permAPI.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
+	permAPI.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+
+	api.GET("/api/open_session/", s.CreateOpenSession)
+
+	// 蓝鲸API网关鉴权 & App鉴权
+	api.POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession)
+
+	// websocket协议, session鉴权
+	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
 }
 
+func (s *service) ListClusters(c *gin.Context) {
+	projectId := c.Param("projectId")
+	clusters, err := bcs.ListClusters(c.Request.Context(), config.G.BCS, projectId)
+	if err != nil {
+		APIError(c, i18n.GetMessage(err.Error()))
+		return
+	}
+	data := types.APIResponse{
+		Data:      clusters,
+		Code:      types.NoError,
+		Message:   i18n.GetMessage("获取集群成功"),
+		RequestID: uuid.New().String(),
+	}
+	c.JSON(http.StatusOK, data)
+}
+
+// CreateWebConsoleSession 创建websocket session
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
-	s.opts.Config.Get("").String("")
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
+	consoleQuery := new(podmanager.ConsoleQuery)
+	c.BindQuery(consoleQuery)
 
-	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
-	token := s.opts.Config.Get("bcs_conf", "token").String("")
-
-	config := &rest.Config{
-		Host:        host,
-		BearerToken: token,
-	}
-
-	k8sClient, err := kubernetes.NewForConfig(config)
+	authCtx, err := route.GetAuthContext(c)
 	if err != nil {
-		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		APIError(c, i18n.GetMessage(err.Error()))
 		return
 	}
 
-	backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
-
-	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
-	session, err := store.New(c.Request, "")
+	podCtx, err := podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		APIError(c, i18n.GetMessage(err.Error()))
 		return
 	}
 
-	podName, err := backend.GetK8sContext(c.Request.Context(), projectId, clusterId)
+	podCtx.ProjectId = projectId
+	podCtx.Source = consoleQuery.Source
+
+	store := sessions.NewRedisStore(projectId, clusterId)
+	sessionId, err := store.Set(c.Request.Context(), podCtx)
 	if err != nil {
-		msg := i18n.GetMessage("申请pod资源失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		msg := i18n.GetMessage("获取session失败{}", err)
+		APIError(c, msg)
 		return
 	}
-	// TODO 把创建好的pod信息保存到用户数据session
-	userPodData := &types.UserPodData{
-		ProjectID:  projectId,
-		ClustersID: clusterId,
-		PodName:    podName,
-		SessionID:  session.ID,
-		CrateTime:  time.Now(),
-	}
-	backend.WritePodData(userPodData)
 
-	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		projectId, clusterId, session.ID))
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	if consoleQuery.Lang != "" {
+		query.Set("lang", consoleQuery.Lang)
+	}
+
+	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
+		projectId, clusterId, query.Encode()))
 
 	data := types.APIResponse{
 		Data: map[string]string{
-			"session_id": session.ID,
+			"session_id": sessionId,
 			"ws_url":     wsUrl,
 		},
 		Code:      types.NoError,
@@ -103,115 +124,82 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-func (s *service) BCSWebSocketHandler(c *gin.Context) {
-
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
+func (s *service) CreateOpenSession(c *gin.Context) {
 	sessionId := c.Query("session_id")
-	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
-	values, err := store.GetValues(c.Request, sessionId)
+
+	store := sessions.NewRedisStore("open-session", "open-session")
+	podCtx, err := store.Get(c.Request.Context(), sessionId)
 	if err != nil {
-		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
-		return
-	}
-	username := values["username"]
-
-	host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
-	token := s.opts.Config.Get("bcs_conf", "token").String("")
-
-	config := &rest.Config{
-		Host:        host,
-		BearerToken: token,
-	}
-
-	k8sClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		msg := i18n.GetMessage("初始化k8s客户端失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		msg := i18n.GetMessage("sessin_id不正确", err)
+		APIError(c, msg)
 		return
 	}
 
-	backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
-
-	podName := fmt.Sprintf("kubectld-%s-u%s", strings.ToLower(clusterId), projectId)
-
-	webConsole := &types.WebSocketConfig{
-		PodName:    podName,
-		User:       username,
-		ClusterID:  clusterId,
-		ProjectsID: projectId,
+	newStore := sessions.NewRedisStore(podCtx.ProjectId, podCtx.ClusterId)
+	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
+	if err != nil {
+		msg := i18n.GetMessage("获取session失败{}", err)
+		APIError(c, msg)
+		return
 	}
 
-	// handler container web console
-	backend.StartExec(c, webConsole)
+	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
+		podCtx.ProjectId, podCtx.ClusterId, NewSessionId))
+
+	data := types.APIResponse{
+		Data: map[string]string{
+			"session_id": sessionId,
+			"ws_url":     wsUrl,
+		},
+		Code:      types.NoError,
+		Message:   i18n.GetMessage("获取session成功"),
+		RequestID: uuid.New().String(),
+	}
+	c.JSON(http.StatusOK, data)
 }
 
 func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
+	projectId := c.Param("projectId")
+	clusterId := c.Param("clusterId")
 
-	projectId := c.Query("project_id")
-	clusterId := c.Query("cluster_id")
+	consoleQuery := new(podmanager.OpenQuery)
 
-	var containerName string
-
-	// 优先使用containerID
-	containerID, ok := c.GetPostForm("container_id")
-	if ok {
-		//	有containerID才检查
-		host := fmt.Sprintf("%s/clusters/%s", s.opts.Config.Get("bcs_conf", "host").String(""), clusterId)
-		token := s.opts.Config.Get("bcs_conf", "token").String("")
-		config := &rest.Config{
-			Host:        host,
-			BearerToken: token,
-		}
-
-		k8sClient, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			msg := i18n.GetMessage("初始化k8s客户端失败{}", map[string]string{"err": err.Error()})
-			utils.APIError(c, msg)
-			return
-		}
-
-		backend := manager.NewManager(nil, k8sClient, config, s.opts.RedisClient, s.opts.Config)
-		container, err := backend.GetK8sContextByContainerID(containerID)
-		if err != nil {
-			blog.Info("container_id is incorrect, err : %v", err)
-			msg := i18n.GetMessage("container_id不正确，请检查参数")
-			utils.APIError(c, msg)
-			return
-		}
-
-		containerName = container.ContainerName
-
-	} else {
-
-		podName, _ := c.GetPostForm("pod_name")
-		containerName, _ := c.GetPostForm("container_name")
-		namespace, _ := c.GetPostForm("namespace")
-
-		// 其他使用namespace, pod, container
-		if namespace == "" || podName == "" || containerName == "" {
-			msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
-			utils.APIError(c, msg)
-			return
-		}
-	}
-
-	store := sessions.NewRedisStore(s.opts.RedisClient, projectId, clusterId)
-	session, err := store.New(c.Request, "")
+	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage("获取session失败{}", map[string]string{"err": err.Error()})
-		utils.APIError(c, msg)
+		msg := i18n.GetMessage("请求参数错误")
+		APIError(c, msg)
 		return
 	}
 
-	wsUrl := filepath.Join(s.opts.RoutePrefix, fmt.Sprintf("/web_console/?session_id=%s&container_name=%s",
-		session.ID, containerName))
+	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), clusterId, consoleQuery)
+	if err != nil {
+		msg := i18n.GetMessage("请求参数错误")
+		APIError(c, msg)
+		return
+	}
+	podCtx.ProjectId = projectId
+
+	store := sessions.NewRedisStore("open-session", "open-session")
+
+	sessionId, err := store.Set(c.Request.Context(), podCtx)
+	if err != nil {
+		msg := i18n.GetMessage("获取session失败{}", err)
+		APIError(c, msg)
+		return
+	}
+
+	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/") + "/"
+
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	query.Set("container_name", podCtx.ContainerName)
+
+	webConsoleUrl = fmt.Sprintf("%s%s?%s", config.G.Web.Host, webConsoleUrl, query.Encode())
 
 	respData := types.APIResponse{
 		Data: map[string]string{
-			"session_id": session.ID,
-			"ws_url":     wsUrl,
+			"session_id":      sessionId,
+			"web_console_url": webConsoleUrl,
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -219,4 +207,15 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, respData)
+}
+
+// APIError 简易的错误返回
+func APIError(c *gin.Context, msg string) {
+	data := types.APIResponse{
+		Code:      types.ApiErrorCode,
+		Message:   msg,
+		RequestID: uuid.New().String(),
+	}
+
+	c.AbortWithStatusJSON(http.StatusOK, data)
 }
