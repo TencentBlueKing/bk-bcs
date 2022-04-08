@@ -56,7 +56,6 @@ func (action *ListArgocdInstancesAction) Handle(ctx context.Context,
 		labelSelector := metav1.LabelSelector{MatchLabels: map[string]string{common.ArgocdProjectLabel: req.GetProject()}}
 		listOptions.LabelSelector = metav1.FormatLabelSelector(&labelSelector)
 	}
-	blog.Info("tkexIf: %v", action.tkexIf)
 	list, err := action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).List(ctx, listOptions)
 	if err != nil {
 		blog.Errorf("list instances failed, err: %s", err.Error())

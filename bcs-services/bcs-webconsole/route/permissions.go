@@ -73,7 +73,12 @@ func PermissionRequired() gin.HandlerFunc {
 
 func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 	bcsConf := podmanager.GetBCSConfByClusterId(authCtx.ClusterId)
-	if _, err := bcs.GetCluster(c.Request.Context(), bcsConf, authCtx.ProjectId, authCtx.ClusterId); err != nil {
+	project, err := bcs.GetProject(c.Request.Context(), authCtx.ProjectId)
+	if err != nil {
+		return errors.Wrap(err, "项目不正确")
+	}
+
+	if _, err := bcs.GetCluster(c.Request.Context(), bcsConf, project.ProjectId, authCtx.ClusterId); err != nil {
 		return errors.Wrap(err, "项目或者集群Id不正确")
 	}
 	return nil

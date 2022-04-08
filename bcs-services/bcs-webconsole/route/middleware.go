@@ -32,21 +32,27 @@ var (
 	UnauthorizedError = errors.New("用户未登入")
 )
 
+func RequestIdGenerator() string {
+	uid := uuid.New().String()
+	requestId := strings.Replace(uid, "-", "", -1)
+	return requestId
+}
+
 // AuthContext :
 type AuthContext struct {
-	RequestId string `json:"request_id"`
-	Operator  string `json:"operator"`
-	ProjectId string `json:"project_id"`
-	ClusterId string `json:"cluster_id"`
-	Username  string `json:"username"`
-	// BindAPIGWToken *utils.APIGWToken `json:"bind_jwt"`
+	RequestId string      `json:"request_id"`
+	Operator  string      `json:"operator"`
+	ProjectId string      `json:"project_id"`
+	ClusterId string      `json:"cluster_id"`
+	Username  string      `json:"username"`
+	BindAPIGW *APIGWToken `json:"bind_apigw"`
 }
 
 // WebAuthRequired Web类型, 不需要鉴权
 func WebAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authCtx := &AuthContext{
-			RequestId: uuid.New().String(),
+			RequestId: RequestIdGenerator(),
 		}
 		c.Set("auth", authCtx)
 
@@ -67,6 +73,7 @@ func APIAuthRequired() gin.HandlerFunc {
 
 		switch {
 		case initContextWithBCSJwt(c, authCtx):
+		case initContextWithAPIGW(c, authCtx):
 		case initContextWithDevEnv(c, authCtx):
 		default:
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
@@ -100,7 +107,7 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	return false
 }
 
-func JWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
+func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	if config.G.BCS.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
 	}
@@ -124,6 +131,37 @@ func JWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	return claims, nil
 }
 
+// APIGWToken 返回信息
+type APIGWToken struct {
+	AppCode  string `json:"app_code"`
+	Username string `json:"username"`
+	*jwt.StandardClaims
+}
+
+func BKAPIGWJWTDecode(jwtToken string) (*APIGWToken, error) {
+	if config.G.BKAPIGW.JWTPubKeyObj == nil {
+		return nil, errors.New("jwt public key not set")
+	}
+
+	token, err := jwt.ParseWithClaims(jwtToken, &APIGWToken{}, func(token *jwt.Token) (interface{}, error) {
+		return config.G.BCS.JWTPubKeyObj, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("jwt token not valid")
+	}
+
+	claims, ok := token.Claims.(*APIGWToken)
+	if !ok {
+		return nil, errors.New("jwt token not bcs issuer")
+
+	}
+	return claims, nil
+}
+
 // initContextWithBCSJwt BCS APISix JWT 鉴权
 func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
 	tokenString := c.GetHeader("Authorization")
@@ -132,13 +170,30 @@ func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
 	}
 	tokenString = tokenString[7:]
 
-	claims, err := JWTDecode(tokenString)
+	claims, err := BCSJWTDecode(tokenString)
 	if err != nil {
 		return false
 	}
 
 	authCtx.Username = claims.UserName
 	return true
+}
+
+func initContextWithAPIGW(c *gin.Context, authCtx *AuthContext) bool {
+	// get jwt info from headers
+	tokenString := c.GetHeader("X-Bkapi-Jwt")
+	if tokenString == "" {
+		return false
+	}
+
+	token, err := BKAPIGWJWTDecode(tokenString)
+	if err != nil {
+		return false
+	}
+
+	authCtx.BindAPIGW = token
+
+	return false
 }
 
 // GetAuthContext 查询鉴权信息

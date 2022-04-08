@@ -25,7 +25,21 @@ data:
         "vmodule": "",
         "backtraceat": ""
       },
-      "debug": "{{ .Values.argocdcontroller.debug }}",
+      "plugin": {
+        "serverimage": {
+          "registry": "{{ .Values.argocdcontroller.plugins.serverImage.registry }}",
+          "repository": "{{ .Values.argocdcontroller.plugins.serverImage.repository }}",
+          "pullpolicy": "{{ .Values.argocdcontroller.plugins.serverImage.pullPolicy }}",
+          "tag": "{{ .Values.argocdcontroller.plugins.serverImage.tag }}"
+        },
+        "clientimage": {
+          "registry": "{{ .Values.argocdcontroller.plugins.clientImage.registry }}",
+          "repository": "{{ .Values.argocdcontroller.plugins.clientImage.repository }}",
+          "pullpolicy": "{{ .Values.argocdcontroller.plugins.clientImage.pullPolicy }}",
+          "tag": "{{ .Values.argocdcontroller.plugins.clientImage.tag }}"
+        }
+      },
+      "debug": {{ .Values.argocdcontroller.debug }},
       "master": "{{ .Values.argocdcontroller.master }}",
       "kubeconfig": "{{ .Values.argocdcontroller.kubeconfig }}"
     }

@@ -167,7 +167,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	// 静态资源
 	routePrefix := config.G.Web.RoutePrefix
 	if routePrefix == "" {
-		routePrefix = "/" + service
+		routePrefix = "/webconsole"
 	}
 
 	// 支持路径 prefix 透传和 rewrite 的场景

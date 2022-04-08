@@ -167,7 +167,7 @@
         term.onResize(function (size) {
             data = JSON.stringify({ cols: term.cols, rows: term.rows })
             // set_pty_size()
-            if (typeof ws != "undefined") {
+            if (typeof ws != "undefined" && ws.readyState == 1) {
                 // RESIZE_CHANNEL = 4
                 ws.send('4' + Base64.encode(data));
                 console.log('set_pty_size: ' + data)

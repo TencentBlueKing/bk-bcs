@@ -55,6 +55,14 @@ func (c *WebConsoleConf) Init() error {
 	return nil
 }
 
+// IsExternalMode kubectl 是否使用外部集群
+func (c *WebConsoleConf) IsExternalMode() bool {
+	if c.AdminClusterId == "" {
+		return false
+	}
+	return c.Mode == ExternalMode
+}
+
 func (c *WebConsoleConf) InitTagPatterns() error {
 	c.KubectldTagPatterns = []*Version{}
 	for _, tag := range c.KubectldTags {

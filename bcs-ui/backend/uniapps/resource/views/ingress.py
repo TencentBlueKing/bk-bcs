@@ -84,7 +84,7 @@ class IngressResource(viewsets.ViewSet, BaseAPI, ResourceOperate):
         # 按时间倒序排列
         cluster_ingress.sort(key=lambda x: x.get('createTime', ''), reverse=True)
 
-        return PermsResponse(cluster_ingress, NamespaceRequest(cluster_id=cluster_id))
+        return PermsResponse(cluster_ingress, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
     def delete_ingress(self, request, project_id, cluster_id, namespace, name):
         return self.delete_resource(request, project_id, cluster_id, namespace, name)

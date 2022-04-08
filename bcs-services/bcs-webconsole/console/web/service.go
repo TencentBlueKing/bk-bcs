@@ -19,7 +19,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
@@ -48,14 +48,13 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	// 公共接口, 如metrics, healthy, ready, pprof, metrics 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.HealthyHandler)
-	web.GET("/-/metrics", metrics.HandlerFunc())
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
-	containerId := c.Query("container_id")
-	lang := c.Query("lang")
+	consoleQuery := new(podmanager.ConsoleQuery)
+	c.BindQuery(consoleQuery)
 
 	// 登入Url
 	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
@@ -69,15 +68,9 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	// webconsole Url
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
 
-	query := url.Values{}
-	if lang != "" {
-		query.Set("lang", lang)
-	}
-	if containerId != "" {
-		query.Set("container_id", containerId)
-	}
-	if len(query) != 0 {
-		sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+	encodedQuery := consoleQuery.MakeEncodedQuery()
+	if encodedQuery != "" {
+		sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, encodedQuery)
 	}
 
 	settings := map[string]string{
@@ -126,7 +119,7 @@ func (s *service) SessionPageHandler(c *gin.Context) {
 
 	query := url.Values{}
 
-	if containerName != "" {
+	if containerName == "" {
 		containerName = "--"
 	}
 
