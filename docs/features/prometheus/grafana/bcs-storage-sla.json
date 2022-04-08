@@ -1,0 +1,2271 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 40,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 24,
+      "panels": [],
+      "title": "查询请求",
+      "type": "row"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"GET\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"GET\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"GET\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"GET\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"GET\",status=\"2xx\"}) by (instance) / sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=~\"GET|POST\"} or bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"GET\"} or bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"GET\"} or bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"GET\"} or bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"GET\"} or bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"GET\"}) by (instance)",
+          "interval": "",
+          "legendFormat": "{{instance}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "数据查询请求成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 32,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=~\"GET|POST\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "动态数据查询成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 36,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"GET\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"GET\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "metric数据查询成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 38,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"GET\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"GET\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "event查询成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 40,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"GET\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"GET\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "alarm查询成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "id": 42,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"GET\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"GET\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "集群配置查询成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "id": 44,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"GET\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"GET\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "host配置查询成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"GET\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"GET\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"GET\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"GET\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"GET\"}) by (instance)",
+          "interval": "",
+          "legendFormat": "{{instance}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "数据查询请求延时<50ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
+      "id": 46,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"GET|POST\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"GET|POST\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "动态数据查询延时<50ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
+      "id": 48,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"GET\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "metric数据查询延时<50ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 49
+      },
+      "id": 50,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/mevent.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/mevent.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/mevent.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/mevent.*\",method=\"GET\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "event查询延时<50ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 49
+      },
+      "id": 71,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"GET\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "alarm查询延时<50ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      },
+      "id": 52,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"GET\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "集群配置查询延时<50ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 57
+      },
+      "id": 54,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"GET\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"GET\",status=\"2xx\",le=\"0.05\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"GET\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "host配置查询延时<50ms",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "id": 22,
+      "panels": [],
+      "title": "上报/更新请求",
+      "type": "row"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 30,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"PUT\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"PUT\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"POST\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"PUT\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"PUT\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"PUT\",status=\"2xx\"}) by (instance) / sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"PUT\"} or bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"PUT\"} or bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"PUT\"} or bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"PUT\"} or bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"PUT\"}) by (instance)",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "数据上报/更新请求成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 73
+      },
+      "id": 58,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"PUT\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"PUT\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "动态数据上报/更新成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 73
+      },
+      "id": 74,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"PUT\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"PUT\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "metric数据上报/更新成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 81
+      },
+      "id": 61,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"PUT\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/events.*\",method=\"PUT\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "event上报/更新成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 81
+      },
+      "id": 64,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"POST\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/alarms.*\",method=\"POST\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "alarm上报/更新成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 89
+      },
+      "id": 62,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"GET\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/cluster_config.*\",method=\"GET\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "集群配置上报/更新成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 89
+      },
+      "id": 66,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"PUT\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"PUT\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "host配置上报/更新成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 97
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"PUT\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"PUT\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"PUT\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/events.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/events.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/cluster_config.*\",method=\"PUT\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"PUT\"}) by (instance)",
+          "interval": "",
+          "legendFormat": "{{instance}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "数据上报/更新请求延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 106
+      },
+      "id": 67,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"PUT\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "动态数据上报/更新延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 106
+      },
+      "id": 70,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"PUT\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "metric数据上报/更新延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 114
+      },
+      "id": 68,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/event.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/event.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/event.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/event.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/event.*\",method=\"PUT\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "event上报/更新延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 114
+      },
+      "id": 56,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"POST\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"POST\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"POST\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/alarms.*\",method=\"POST\",status=\"2xx\",le=\"0.25\"})/ sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/alarms.*\",method=\"POST\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "alarm上报/更新延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 122
+      },
+      "id": 72,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/cluster_config.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/cluster_config.*\",method=\"PUT\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "集群配置上报/更新延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 122
+      },
+      "id": 69,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"PUT\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"PUT\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"PUT\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "host配置上报/更新延时<250ms",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 130
+      },
+      "id": 20,
+      "panels": [],
+      "title": "删除请求",
+      "type": "row"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 131
+      },
+      "id": 28,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"DELETE\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"DELETE\",status=\"2xx\"} or bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"PUT\",status=\"2xx\"}) by (instance) / sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"DELETE\"} or bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"DELETE\"} or bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"DELETE\"}) by (instance)",
+          "interval": "",
+          "legendFormat": "{{instance}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "数据删除请求成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 139
+      },
+      "id": 73,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"DELETE\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/dynamic.*\",method=\"DELETE\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "动态数据删除成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 139
+      },
+      "id": 60,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"DELETE\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/metric/clusters.*\",method=\"DELETE\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "metric数据删除成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 147
+      },
+      "id": 75,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"DELETE\",status=\"2xx\"})/sum(bkbcs_storage_api_request_total_num{handler=~\".*/host.*\",method=\"DELETE\"})",
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "host配置删除成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 155
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"DELETE\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"DELETE\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"DELETE\"}) by (instance)",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=~\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"} or bkbcs_storage_api_request_duration_time_bucket{handler=~\"/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"}) by (instance) / sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=~\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/metric/clusters.*\",method=\"DELETE\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/alarms.*\",method=\"POST\"} or bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\"/host.*\",method=\"DELETE\"}) by (instance)",
+          "interval": "",
+          "legendFormat": "{{instance}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "数据删除请求延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 162
+      },
+      "id": 76,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/dynamic.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/dynamic.*\",method=\"DELETE\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "动态数据删除延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 162
+      },
+      "id": 77,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/metric/clusters.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/metric/clusters.*\",method=\"DELETE\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "metric数据删除延时<250ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 170
+      },
+      "id": 78,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"DELETE\"})",
+          "expr": "sum(bkbcs_storage_api_request_duration_time_bucket{handler=~\".*/host.*\",method=\"DELETE\",status=\"2xx\",le=\"0.25\"})/sum(bkbcs_storage_api_request_duration_time_count{status=\"2xx\",handler=~\".*/host.*\",method=\"DELETE\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{handler}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "host配置删除延时<250ms",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "bcs-storage SLA",
+  "uid": "tIRoIby7k2",
+  "version": 4
+}
