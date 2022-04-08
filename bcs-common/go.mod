@@ -21,6 +21,7 @@ require (
 	github.com/docker/engine-api v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible
+	github.com/emicklei/go-restful-openapi v1.4.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.5.0
