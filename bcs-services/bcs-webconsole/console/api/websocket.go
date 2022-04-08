@@ -19,8 +19,10 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -85,6 +87,10 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "获取session失败"))
 		return
 	}
+
+	start := time.Now()
+	metrics.CollectWsConnection(podCtx.Namespace, podCtx.PodName, start)
+	defer metrics.CollectCloseWs(podCtx.Namespace, podCtx.PodName)
 
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
