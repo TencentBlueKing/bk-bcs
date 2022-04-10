@@ -68,7 +68,7 @@ func APIAuthRequired() gin.HandlerFunc {
 			return
 		}
 		authCtx := &AuthContext{
-			RequestId: uuid.New().String(),
+			RequestId: RequestIdGenerator(),
 		}
 
 		switch {

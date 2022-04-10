@@ -40,7 +40,7 @@ func PermissionRequired() gin.HandlerFunc {
 		}
 
 		// 校验项目，集群信息的正确性
-		if authCtx.ClusterId != "" {
+		if authCtx.ClusterId != "" || authCtx.ClusterId == "-" {
 			err := ValidateProjectCluster(c, authCtx)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{

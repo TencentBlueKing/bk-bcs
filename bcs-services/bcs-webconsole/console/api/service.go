@@ -43,19 +43,17 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
-	permAPI := api.Use(route.PermissionRequired())
-
 	gp := metrics.New(s.opts.Router)
 	api.Use(gp.Middleware())
 
 	// 用户登入态鉴权, session鉴权
-	permAPI.GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession)
-	permAPI.GET("/api/projects/:projectId/clusters/", s.ListClusters)
-
-	api.GET("/api/open_session/", s.CreateOpenSession)
+	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", route.PermissionRequired(), s.CreateWebConsoleSession)
+	api.GET("/api/projects/:projectId/clusters/", route.PermissionRequired(), s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	api.POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession)
+	api.POST("/api/gate/sessions/:sessionId/", s.CreateGateSession)
+	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/container/", s.CreateContainerGateSession)
+	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/cluster/", s.CreateClusterGateSession)
 
 	// websocket协议, session鉴权
 	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
@@ -128,7 +126,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-func (s *service) CreateOpenSession(c *gin.Context) {
+func (s *service) CreateGateSession(c *gin.Context) {
 	sessionId := c.Query("session_id")
 
 	store := sessions.NewRedisStore("open-session", "open-session")
@@ -162,7 +160,7 @@ func (s *service) CreateOpenSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
+func (s *service) CreateContainerGateSession(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 
@@ -192,7 +190,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/") + "/"
+	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/gate/container/") + "/"
 
 	query := url.Values{}
 	query.Set("session_id", sessionId)
@@ -211,6 +209,9 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, respData)
+}
+
+func (s *service) CreateClusterGateSession(c *gin.Context) {
 }
 
 // APIError 简易的错误返回
