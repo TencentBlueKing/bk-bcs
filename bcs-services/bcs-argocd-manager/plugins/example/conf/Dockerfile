@@ -1,5 +1,5 @@
 FROM alpine:latest
 
-ADD bcs-plugins-example-server /home/
+ADD bcs-argocd-example-plugin /home/
 
-CMD ["/home/bcs-plugins-example-server"]
+CMD ["/home/bcs-argocd-example-plugin"]

@@ -24,7 +24,9 @@ type Configurations struct {
 	Auth       *AuthConf                  `yaml:"auth_conf"`
 	BkLogin    *BKLoginConf               `yaml:"bklogin_conf"`
 	Logging    *LogConf                   `yaml:"logging"`
+	BKAPIGW    *BKAPIGWConf               `yaml:"bkapigw_conf"`
 	BCS        *BCSConf                   `yaml:"bcs_conf"`
+	BCSCC      *BCSCCConf                 `yaml:"bcs_cc_conf"`
 	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
 	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
 	Redis      *RedisConf                 `yaml:"redis"`
@@ -45,6 +47,9 @@ func (c *Configurations) Init() error {
 	c.BkLogin = &BKLoginConf{}
 	c.BkLogin.Init()
 
+	c.BKAPIGW = &BKAPIGWConf{}
+	c.BKAPIGW.Init()
+
 	// logging
 	c.Logging = &LogConf{}
 	c.Logging.Init()
@@ -52,6 +57,10 @@ func (c *Configurations) Init() error {
 	// BCS Config
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
+
+	// BCS-CC Config
+	c.BCSCC = &BCSCCConf{}
+	c.BCSCC.Init()
 
 	c.BCSEnvConf = []*BCSConf{}
 	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
@@ -104,6 +113,10 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 
 	if err := c.BCS.InitJWTPubKey(); err != nil {
+		return err
+	}
+
+	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
 		return err
 	}
 

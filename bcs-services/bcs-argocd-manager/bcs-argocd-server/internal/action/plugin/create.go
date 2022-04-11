@@ -65,6 +65,7 @@ func (action *CreateArgocdPluginAction) Handle(ctx context.Context,
 		p.Labels = make(map[string]string)
 	}
 	p.Labels[common.ArgocdProjectLabel] = p.Spec.Project
+	p.Labels[common.ArgocdNickNameLabel] = p.Spec.NickName
 
 	created, err := action.generateIDAndCreate(p)
 	if err != nil {

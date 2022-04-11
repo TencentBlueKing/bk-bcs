@@ -22,6 +22,10 @@ bklogin_conf:
 auth_conf:
   host: ""
 
+bcs_cc_conf:
+  host: ""
+  stage: ""
+
 bcs_conf:
   host: ""
   token: ""
