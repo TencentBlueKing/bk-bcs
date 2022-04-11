@@ -1,0 +1,13 @@
+{
+  "kind": "StatefulSet",
+  "class": "workload",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_statefulset",
+      "alias": "StatefulSet 简单示例",
+      "description": "简单的 StatefulSet 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

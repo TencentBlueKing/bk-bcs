@@ -138,10 +138,7 @@ const childRoutes = [
     {
         path: ':projectCode/cluster/:clusterId/node/:nodeId',
         name: 'clusterNodeOverview',
-        component: ClusterNodeOverview,
-        meta: {
-            menuId: 'OVERVIEW'
-        }
+        component: ClusterNodeOverview
     },
     // 节点详情页面跳转的容器详情页面
     {

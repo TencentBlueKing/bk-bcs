@@ -75,7 +75,6 @@
 
 ## Blueking Community
 
-* [BK-BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
 * [BK-CI](https://github.com/Tencent/bk-ci)：蓝鲸持续集成平台是一个开源的持续集成和持续交付系统，可以轻松将你的研发流程呈现到你面前。
 * [BK-CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
 * [BK-PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。

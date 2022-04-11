@@ -193,7 +193,7 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		// NOTE: a best way is to use deepcopy function, save the common fields,
 		// update the change fields.
 
-		var tempLastTimes = make([]metav1.Time, 5)
+		var tempLastTimes = make([]metav1.Time, len(newNode.Status.Conditions))
 		tempVersion := newNode.ResourceVersion
 		newNode.ResourceVersion = oldNode.ResourceVersion
 

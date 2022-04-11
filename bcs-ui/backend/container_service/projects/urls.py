@@ -17,31 +17,24 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    # project list
-    url(r"^api/projects/$", views.Projects.as_view({"get": "list"})),
+    url(r"^api/authorized_projects/$", views.AuthorizedProjectsViewSet.as_view({'get': 'list'})),
     # compatible with project_id, project_code
     url(
         r"^api/projects/(?P<project_id>[\w-]+)/$",
-        views.Projects.as_view({"get": "info", "put": "update"}),
+        views.Projects.as_view({"get": "get_project", "put": "update_bound_biz"}),
         name="update_project",
-    ),
-    # get cmdb business
-    url(r"^api/cc/$", views.CC.as_view({"get": "list"})),
-    url(r"^api/nav/users/$", views.UserAPIView.as_view()),
-    url(
-        r"^api/nav/projects/$", views.NavProjectsViewSet.as_view({"get": "filter_projects", "post": "create_project"})
-    ),
-    url(
-        r"^api/nav/projects/(?P<project_id>\w{32})/$",
-        views.NavProjectsViewSet.as_view({"get": "get_project", "put": "update_project"}),
-    ),
-    url(r"^api/nav/projects/user_perms/$", views.NavProjectPermissionViewSet.as_view({"post": "get_user_perms"})),
-    url(
-        r"^api/nav/projects/(?P<project_id>\w{32})/user_perms/$",
-        views.NavProjectPermissionViewSet.as_view({"post": "query_user_perms_by_project"}),
     ),
     url(
         r"^api/projects/(?P<project_id>\w{32})/biz_maintainers/$",
         views.ProjectBizInfoViewSet.as_view({"get": "list_biz_maintainers"}),
+    ),
+    # get cmdb business
+    url(r"^api/cc/$", views.CC.as_view({"get": "list"})),
+    # nav 用于私有化版本的项目管理功能
+    url(r"^api/nav/users/$", views.UserAPIView.as_view()),
+    url(r"^api/nav/projects/$", views.NavProjectsViewSet.as_view({'get': 'list_projects', "post": "create_project"})),
+    url(
+        r"^api/nav/projects/(?P<project_id>\w{32})/$",
+        views.NavProjectsViewSet.as_view({"get": "get_project", "put": "update_project"}),
     ),
 ]

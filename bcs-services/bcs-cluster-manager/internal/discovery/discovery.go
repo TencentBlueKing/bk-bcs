@@ -13,7 +13,9 @@
 package discovery
 
 import (
+	"errors"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -114,7 +116,9 @@ func (md *ModuleDiscovery) watchRegistry(w registry.Watcher) error {
 	md.Lock()
 	md.curServices = svcs
 	md.Unlock()
-	md.handler(svcs)
+	if md.handler != nil {
+		md.handler(svcs)
+	}
 
 	for {
 		result, err := w.Next()
@@ -135,14 +139,12 @@ func (md *ModuleDiscovery) watchRegistry(w registry.Watcher) error {
 		}
 		blog.V(5).Infof("get services %v", svcs)
 
-		if md.handler == nil {
-			blog.Warnf("event handler for discovery service module %s is empty", md.module)
-			continue
-		}
 		md.Lock()
 		md.curServices = svcs
 		md.Unlock()
-		md.handler(svcs)
+		if md.handler != nil {
+			md.handler(svcs)
+		}
 	}
 	return nil
 }
@@ -152,6 +154,30 @@ func (md *ModuleDiscovery) GetService() []*registry.Service {
 	md.RLock()
 	defer md.RUnlock()
 	return md.curServices
+}
+
+// GetRandomServiceNode get random instance by curServices
+func (md *ModuleDiscovery) GetRandomServiceNode() (*registry.Node, error) {
+	allServiceNodes := make([]*registry.Node, 0)
+
+	if len(md.curServices) == 0 {
+		blog.Infof("discovery has no local service cache[%s]", md.module)
+		return nil, errors.New("curServices is empty")
+	}
+
+	md.Lock()
+	defer md.Unlock()
+	for i := range md.curServices {
+		allServiceNodes = append(allServiceNodes, md.curServices[i].Nodes...)
+	}
+
+	nodeLength := len(allServiceNodes)
+	if nodeLength == 0 {
+		blog.V(3).Infof("discovery found no node information of %s", md.module)
+		return nil, errors.New("allServiceNodes is empty")
+	}
+	selected := rand.Int() % nodeLength
+	return allServiceNodes[selected], nil
 }
 
 // GetModuleName get module name

@@ -18,11 +18,15 @@ import (
 )
 
 const (
+	// CidrStatusAvailable available status
 	CidrStatusAvailable = "available"
-	CidrStatusUsed      = "used"
-	CidrStatusReserved  = "reserved"
+	// CidrStatusUsed used status
+	CidrStatusUsed = "used"
+	// CidrStatusReserved reserved status
+	CidrStatusReserved = "reserved"
 )
 
+// CidrCount cidrInfo
 type CidrCount struct {
 	Count    int    `json:"count"`
 	Vpc      string `json:"vpc"`
@@ -30,6 +34,7 @@ type CidrCount struct {
 	Status   string `json:"status"`
 }
 
+// QueryTkeCidr query tke cidr info
 func QueryTkeCidr(tkeCidr *models.TkeCidr) *models.TkeCidr {
 	result := models.TkeCidr{}
 	GCoreDB.Where(tkeCidr).First(&result)
@@ -39,6 +44,7 @@ func QueryTkeCidr(tkeCidr *models.TkeCidr) *models.TkeCidr {
 	return nil
 }
 
+// SaveTkeCidr save tke cidr
 func SaveTkeCidr(vpc, cidr string, ipNumber uint, status, cluster string) error {
 	tkeCidr := &models.TkeCidr{
 		Vpc:      vpc,
@@ -52,11 +58,13 @@ func SaveTkeCidr(vpc, cidr string, ipNumber uint, status, cluster string) error 
 	return err
 }
 
+// UpdateTkeCidr update tke cidr
 func UpdateTkeCidr(tkeCidr, updatedTkeCidr *models.TkeCidr) error {
 	err := GCoreDB.Model(tkeCidr).Updates(*updatedTkeCidr).Error
 	return err
 }
 
+// CountTkeCidr count tke cidr
 func CountTkeCidr() []CidrCount {
 	var cidrCounts []CidrCount
 	GCoreDB.Table("tke_cidrs").Select("count(*) as count, vpc, ip_number, status").Group("vpc, ip_number, status").Scan(&cidrCounts)

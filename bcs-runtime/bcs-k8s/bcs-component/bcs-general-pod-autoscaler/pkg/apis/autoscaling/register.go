@@ -14,5 +14,9 @@ package autoscaling
 
 // GroupName is the group name used in this package
 const (
+	Kind     = "GeneralPodAutoscaler"
+	Plural   = "generalpodautoscalers"
+	Singular = "generalpodautoscaler"
+
 	GroupName = "autoscaling.tkex.tencent.com"
 )

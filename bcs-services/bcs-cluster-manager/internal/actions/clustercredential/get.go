@@ -18,8 +18,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // GetAction action for getting cluster credential
@@ -54,25 +54,14 @@ func (ga *GetAction) getCredential() error {
 	if !isExisted {
 		return fmt.Errorf("credential with serverkey %s not found", ga.req.ServerKey)
 	}
-	ga.clusterCred = &cmproto.ClusterCredential{
-		ServerKey:     cred.ServerKey,
-		ClusterID:     cred.ClusterID,
-		ClientModule:  cred.ClientModule,
-		ServerAddress: cred.ServerAddress,
-		CaCertData:    cred.CaCertData,
-		UserToken:     cred.UserToken,
-		ClusterDomain: cred.ClusterDomain,
-		ConnectMode:   cred.ConnectMode,
-		CreateTime:    cred.CreateTime.String(),
-		UpdateTime:    cred.UpdateTime.String(),
-	}
+	ga.clusterCred = cred
 	return nil
 }
 
 func (ga *GetAction) setResp(code uint32, msg string) {
 	ga.resp.Code = code
 	ga.resp.Message = msg
-	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 	ga.resp.Data = ga.clusterCred
 }
 
@@ -88,13 +77,13 @@ func (ga *GetAction) Handle(
 	ga.resp = resp
 
 	if err := ga.validate(); err != nil {
-		ga.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := ga.getCredential(); err != nil {
-		ga.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	ga.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

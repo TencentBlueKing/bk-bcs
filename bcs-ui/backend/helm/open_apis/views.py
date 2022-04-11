@@ -12,6 +12,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from itertools import groupby
+from operator import itemgetter
+
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
@@ -19,12 +22,17 @@ from rest_framework.response import Response
 
 from backend.bcs_web.apis.views import NoAccessTokenBaseAPIViewSet
 from backend.bcs_web.viewsets import UserViewSet
+from backend.components import paas_cc
 from backend.helm.app import views as app_views
+from backend.helm.app.models import App
 from backend.helm.helm import views as chart_views
 from backend.helm.helm.constants import PUBLIC_REPO_NAME
 from backend.helm.helm.models.chart import Chart, ChartVersion
 from backend.helm.helm.models.repo import Repository, RepositoryAuth
+from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.utils.error_codes import error_codes
+
+from .serializers import FilterNamespacesSLZ
 
 
 class ChartsApiView(NoAccessTokenBaseAPIViewSet, chart_views.ChartViewSet):
@@ -87,6 +95,72 @@ class ChartAppNamespaceApiView(NoAccessTokenBaseAPIViewSet, app_views.AppNamespa
                 )
 
         return Response(namespaces)
+
+    def list(self, request, project_id):
+        slz = FilterNamespacesSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        params = slz.validated_data
+
+        ns_list = self.filter_namespaces(params.get("filter_use_perm"))
+        if not ns_list:
+            return Response([])
+        cluster_id = params.get("cluster_id")
+        if cluster_id:
+            ns_list = [info for info in ns_list if info["cluster_id"] == cluster_id]
+
+        cluster_id_name_map = {item["cluster_id"]: item["cluster_name"] for item in ns_list}
+        # check which namespace has the chart_id initialized
+        namespace_ids = []
+        chart_id = params.get("chart_id")
+        if chart_id:
+            namespace_ids = set(
+                App.objects.filter(project_id=self.project_id, chart__id=chart_id).values_list(
+                    "namespace_id", flat=True
+                )
+            )
+
+        serializer = self.serializer_class(ns_list, many=True)
+        data = serializer.data
+        for item in data:
+            has_initialized = item["id"] in namespace_ids
+            item["has_initialized"] = has_initialized
+
+        # Sort by the desired field first
+        data.sort(key=itemgetter('cluster_id'))
+        # Iterate in groups
+        result = []
+        for cluster_id, items in groupby(data, key=itemgetter('cluster_id')):
+            result.append({"name": "%s(%s)" % (cluster_id_name_map[cluster_id], cluster_id), "children": list(items)})
+        return Response(result)
+
+    def filter_namespaces(self, filter_use_perm):
+        result = paas_cc.get_namespace_list(self.access_token, self.project_id, desire_all_data=True)
+        results = result["data"]["results"]
+        if not results:
+            return []
+        # 补充cluster_name字段
+        cluster_ids = [i['cluster_id'] for i in results]
+        cluster_list = paas_cc.get_cluster_list(self.access_token, self.project_id, cluster_ids).get('data') or []
+        # cluster_list = bcs_perm.Cluster.hook_perms(request, project_id, cluster_list)
+        cluster_dict = {i['cluster_id']: i for i in cluster_list}
+
+        filter_ns_list = []
+        for i in results:
+            # 过滤掉k8s系统和bcs平台使用的命名空间
+            if i["name"] in K8S_PLAT_NAMESPACE:
+                continue
+            # ns_vars = NameSpaceVariable.get_ns_vars(i['id'], project_id)
+            i['ns_vars'] = []
+
+            if i['cluster_id'] in cluster_dict:
+                i['cluster_name'] = cluster_dict[i['cluster_id']]['name']
+                i['environment'] = cluster_dict[i['cluster_id']]['environment']
+            else:
+                i['cluster_name'] = i['cluster_id']
+                i['environment'] = None
+            filter_ns_list.append(i)
+
+        return filter_ns_list
 
 
 class ChartsAppApiView(NoAccessTokenBaseAPIViewSet, app_views.AppView):

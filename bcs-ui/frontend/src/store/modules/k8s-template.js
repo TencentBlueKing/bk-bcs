@@ -431,7 +431,7 @@ export default {
                         item.config.spec.tls = [
                             {
                                 hosts: '',
-                                certId: ''
+                                secretName: ''
                             }
                         ]
                     }
@@ -671,23 +671,6 @@ export default {
         }
     },
     actions: {
-        /**
-         * 获取证书列表
-         *
-         * @param {Object} context store 上下文对象
-         *
-         * @return {Promise} promise 对象
-         */
-        getCertList (context, projectId) {
-            // return http.get('/app/templateset?invoke=getCertList').then(res => {
-            return http.get(`${DEVOPS_BCS_API_URL}/api/ticket/${projectId}/tls/certs/`).then(res => {
-                if (res.data && res.data.records) {
-                    context.commit('updateCertList', res.data.records)
-                }
-                context.state.certListUrl = res.data.cert_list_url
-                return res
-            })
-        },
         /**
          * 更新templateData
          *
@@ -1813,58 +1796,6 @@ export default {
          */
         getExistVersion (context, { projectId, templateId }) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/template/exist_versions/${templateId}/`)
-        },
-
-        /**
-         *  创建证书
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数：包括projectId, data
-         *
-         * @return {Promise} promise 对象
-         */
-        createBcsTls (context, { projectId, data }, config = {}) {
-            // return http.post('/app/templateset?invoke=createBcsTls')
-            return http.post(`${DEVOPS_BCS_API_URL}/api/ticket/${projectId}/bcs/tls/certs/`, data, config)
-        },
-
-        /**
-         * 获取证书详情
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} 请求参数，包括projectId, certId
-         *
-         * @return {Promise} promise 对象
-         */
-        getBcsTlsDetail (context, { projectId, certId }) {
-            // return http.get('/app/templateset?invoke=getTlsDetail')
-            return http.get(`${DEVOPS_BCS_API_URL}/api/ticket/${projectId}/bcs/tls/cert/${certId}/`)
-        },
-
-        /**
-         * 更新证书
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} 请求参数，包括projectId, certId
-         *
-         * @return {Promise} promise 对象
-         */
-        updateBcsTls (context, { projectId, certId, data }, config = {}) {
-            // return http.post('/app/templateset?invoke=updateBcsTls')
-            return http.post(`${DEVOPS_BCS_API_URL}/api/ticket/${projectId}/bcs/tls/cert/${certId}/`, data, config)
-        },
-
-        /**
-         * 删除证书
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} 请求参数，包括projectId, certId
-         *
-         * @return {Promise} promise 对象
-         */
-        deleteBcsTls (context, { projectId, certId }) {
-            // return http.get('/app/templateset?invoke=deleteBcsTls')
-            return http.delete(`${DEVOPS_BCS_API_URL}/api/ticket/${projectId}/bcs/tls/cert/${certId}/`)
         },
 
         /**

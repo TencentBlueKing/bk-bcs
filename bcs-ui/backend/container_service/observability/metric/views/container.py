@@ -47,7 +47,7 @@ class ContainerMetricViewSet(SystemViewSet):
         params = self.params_validate(self.serializer_class)
         query_params = {
             'cluster_id': cluster_id,
-            'namespace': METRICS_DEFAULT_NAMESPACE,
+            'namespace': params['namespace'],
             'pod_name': pod_name if pod_name != URL_DEFAULT_PLACEHOLDER else METRICS_DEFAULT_POD_NAME,
             'container_id_list': params['container_ids']
             if params.get('container_ids')

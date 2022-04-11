@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
@@ -79,6 +80,7 @@ func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
 		}
 		itemNameMap[item.ItemName] = struct{}{}
 
+		isARN := false
 		for _, lbIDStr := range item.LoadBalancerIDs {
 			lbID, err := getLbIDFromRegionID(lbIDStr)
 			if err != nil {
@@ -87,7 +89,16 @@ func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
 			if itemName, ok := lbIDMap[lbID]; ok {
 				return fmt.Errorf("lbID %s of item %s conflicts with id of item %s", lbID, item.ItemName, itemName)
 			}
+			if arn.IsARN(lbID) {
+				isARN = true
+			}
 			lbIDMap[lbID] = item.ItemName
+		}
+
+		// check protocol
+		if isARN && item.Protocol != constant.PortPoolPortProtocolTCP &&
+			item.Protocol != constant.PortPoolPortProtocolUDP {
+			return fmt.Errorf("protocol %s of item %s invalid", item.Protocol, item.ItemName)
 		}
 	}
 	return nil

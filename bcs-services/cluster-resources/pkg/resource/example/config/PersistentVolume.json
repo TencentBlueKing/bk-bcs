@@ -1,0 +1,13 @@
+{
+  "kind": "PersistentVolume",
+  "class": "storage",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_persistent_volume",
+      "alias": "PersistentVolume 简单示例",
+      "description": "简单的 PersistentVolume 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

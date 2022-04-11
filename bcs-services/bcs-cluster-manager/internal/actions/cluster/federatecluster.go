@@ -19,9 +19,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // FederateAction add single cluster into federation cluster
@@ -30,8 +29,8 @@ type FederateAction struct {
 	model             store.ClusterManagerModel
 	req               *cmproto.AddFederatedClusterReq
 	resp              *cmproto.AddFederatedClusterResp
-	federationCluster *types.Cluster
-	cluster           *types.Cluster
+	federationCluster *cmproto.Cluster
+	cluster           *cmproto.Cluster
 }
 
 // NewFederateAction create action for adding single cluster into federation cluster
@@ -56,7 +55,7 @@ func (fa *FederateAction) getFederationCluster() error {
 	if cluster == nil {
 		return fmt.Errorf("get federation cluster %s return empty", fa.req.FederationClusterID)
 	}
-	if cluster.ClusterType != cmcommon.ClusterTypeFederation {
+	if cluster.ClusterType != common.ClusterTypeFederation {
 		return fmt.Errorf("cluster %s is not federation cluster", fa.req.FederationClusterID)
 	}
 	fa.federationCluster = cluster
@@ -71,7 +70,7 @@ func (fa *FederateAction) getSingleCluster() error {
 	if cluster == nil {
 		return fmt.Errorf("get cluster %s return empty", fa.req.ClusterID)
 	}
-	if cluster.ClusterType == cmcommon.ClusterTypeFederation {
+	if cluster.ClusterType == common.ClusterTypeFederation {
 		return fmt.Errorf("cluster %s is federation cluster, cannot join other federation cluster", fa.req.ClusterID)
 	}
 	if len(cluster.FederationClusterID) != 0 {
@@ -93,14 +92,14 @@ func (fa *FederateAction) updateSingleCluster() error {
 			fa.cluster.ClusterID, fa.federationCluster.ClusterID)
 	}
 	fa.cluster.FederationClusterID = fa.federationCluster.ClusterID
-	fa.cluster.UpdateTime = time.Now()
+	fa.cluster.UpdateTime = time.Now().Format(time.RFC3339)
 	return fa.model.UpdateCluster(fa.ctx, fa.cluster)
 }
 
 func (fa *FederateAction) setResp(code uint32, msg string) {
 	fa.resp.Code = code
 	fa.resp.Message = msg
-	fa.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	fa.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handles federate cluster request
@@ -115,21 +114,33 @@ func (fa *FederateAction) Handle(ctx context.Context,
 	fa.resp = resp
 
 	if err := fa.validate(); err != nil {
-		fa.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		fa.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := fa.getFederationCluster(); err != nil {
-		fa.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		fa.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	if err := fa.getSingleCluster(); err != nil {
-		fa.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		fa.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	if err := fa.updateSingleCluster(); err != nil {
-		fa.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		fa.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	fa.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+
+	err := fa.model.CreateOperationLog(fa.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   fa.cluster.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("添加集群%s为联邦集群%s", fa.req.ClusterID, fa.req.FederationClusterID),
+		OpUser:       fa.cluster.Creator,
+		CreateTime:   time.Now().String(),
+	})
+	if err != nil {
+		blog.Errorf("AddFederatedCluster[%s] CreateOperationLog failed: %v", fa.req.ClusterID, err)
+	}
+	fa.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

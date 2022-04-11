@@ -12,13 +12,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List, Optional, Type
+from typing import Dict, Type
 
 import attr
 
 from backend.iam.permissions import decorators
 from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
-from backend.iam.permissions.request import IAMResource, ResourceRequest
+from backend.iam.permissions.request import ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 from .constants import ResourceType
@@ -30,8 +30,14 @@ class ProjectAction(str, StructuredEnum):
     EDIT = EnumField('project_edit', label='project_edit')
 
 
+@attr.s
 class ProjectRequest(ResourceRequest):
-    resource_type: str = ResourceType.Project
+    resource_type = attr.ib(init=False, default=ResourceType.Project)
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ProjectRequest':
+        """从字典构建对象"""
+        return cls()
 
 
 @attr.dataclass
@@ -44,9 +50,17 @@ class ProjectCreatorAction(ResCreatorAction):
         return {'id': self.project_id, 'name': self.name, **data}
 
 
-@attr.dataclass
+@attr.s
 class ProjectPermCtx(PermCtx):
-    project_id: Optional[str] = None
+    project_id = attr.ib(validator=attr.validators.instance_of(str), default='')
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ProjectPermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data.get('force_raise', False),
+            project_id=init_data.get('project_id', ''),
+        )
 
     @property
     def resource_id(self) -> str:
@@ -54,17 +68,7 @@ class ProjectPermCtx(PermCtx):
 
 
 class related_project_perm(decorators.RelatedPermission):
-
     module_name: str = ResourceType.Project
-
-    def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
-        """仅支持第一个参数是 PermCtx 子类实例"""
-        if len(args) <= 0:
-            raise TypeError('missing ProjectPermCtx instance argument')
-        if isinstance(args[0], PermCtx):
-            return ProjectPermCtx(username=args[0].username, project_id=args[0].project_id)
-        else:
-            raise TypeError('missing ProjectPermCtx instance argument')
 
 
 class ProjectPermission(Permission):
@@ -72,20 +76,15 @@ class ProjectPermission(Permission):
 
     resource_type: str = ResourceType.Project
     resource_request_cls: Type[ResourceRequest] = ProjectRequest
+    perm_ctx_cls = ProjectPermCtx
 
     def can_create(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         return self.can_action(perm_ctx, ProjectAction.CREATE, raise_exception)
 
     def can_view(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
-        return self.can_action(perm_ctx, ProjectAction.VIEW, raise_exception)
+        return self.can_action(perm_ctx, ProjectAction.VIEW, raise_exception, use_cache=True)
 
     def can_edit(self, perm_ctx: ProjectPermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(perm_ctx, [ProjectAction.EDIT, ProjectAction.VIEW], raise_exception)
-
-    def get_parent_chain(self, perm_ctx: ProjectPermCtx) -> List[IAMResource]:
-        return []
-
-    def get_resource_id(self, perm_ctx: ProjectPermCtx) -> Optional[str]:
-        return perm_ctx.project_id

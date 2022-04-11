@@ -20,14 +20,18 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
-	clusterCredentialTableName         = "clustercredential"
+	clusterCredentialTableName = "clustercredential"
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
+	credentialKeyName                  = "serverkey"
 	defaultClusterCredentialListLength = 1000
 )
 
@@ -36,7 +40,7 @@ var (
 		{
 			Name: clusterCredentialTableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: "serverKey", Value: 1},
+				bson.E{Key: credentialKeyName, Value: 1},
 			},
 			Unique: true,
 		},
@@ -90,7 +94,7 @@ func (m *ModelClusterCredential) PutClusterCredential(
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"serverKey": clusterCredential.ServerKey,
+		credentialKeyName: clusterCredential.ServerKey,
 	})
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": clusterCredential})
 }
@@ -101,14 +105,11 @@ func (m *ModelClusterCredential) DeleteClusterCredential(ctx context.Context, se
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"serverKey": serverKey,
+		credentialKeyName: serverKey,
 	})
-	deleteCounter, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
 		return err
-	}
-	if deleteCounter == 0 {
-		return fmt.Errorf("no cluster credential with server key %s", serverKey)
 	}
 	return nil
 }
@@ -120,7 +121,7 @@ func (m *ModelClusterCredential) GetClusterCredential(ctx context.Context, serve
 		return nil, false, err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"serverKey": serverKey,
+		credentialKeyName: serverKey,
 	})
 	retCluster := &types.ClusterCredential{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retCluster); err != nil {

@@ -126,6 +126,7 @@ class UpdateTemplateSLZ(YamlTemplateSLZ):
 
 
 class GetTemplateFilesSLZ(serializers.Serializer):
+    id = serializers.SerializerMethodField()
     show_version = serializers.SerializerMethodField()
     template_files = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
@@ -133,6 +134,9 @@ class GetTemplateFilesSLZ(serializers.Serializer):
     locker = serializers.SerializerMethodField()
     is_locked = serializers.SerializerMethodField()
     updated_timestamp = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return obj["template"].id
 
     def get_show_version(self, obj):
         return OrderedDict({"name": obj["show_version"].name, "show_version_id": obj["show_version"].id})

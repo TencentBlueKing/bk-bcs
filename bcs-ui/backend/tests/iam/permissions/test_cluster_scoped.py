@@ -42,7 +42,7 @@ class TestClusterScopedPermission:
         )
         with pytest.raises(PermissionDeniedError) as exec:
             cluster_scoped_permission_obj.can_create(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             roles.CLUSTER_SCOPED_NO_CLUSTER_USER,
             [
                 ActionResourcesRequest(

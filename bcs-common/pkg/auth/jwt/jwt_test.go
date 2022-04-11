@@ -42,7 +42,7 @@ func TestJWTClient_JWTSign(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	token, err := cli.JWTSign(UserInfo{
+	token, err := cli.JWTSign(&UserInfo{
 		SubType:     User.String(),
 		UserName:    "james",
 		ExpiredTime: 100,
@@ -60,11 +60,11 @@ func TestJWTClient_JWTDecode(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	jwtTokenString := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJfdHlwZSI6InVzZXIiLCJ1c2VybmFtZSI6ImphbWVzIiwiY2xpZW50X2lkIjoiIiwiY2xpZW50X3NlY3JldCI6IiIsImV4cCI6MTY0MjQyMjAwMH0.O5LGaymwO1gndek-eYPXq-nKCBRnhO_PtGKqM1t47y4J0ZBFLXvmz_AEPtTJtssAKg36eEwJXff1ehNRB1C1Gh7ZC4v1lMWiEBB935b_-PYOg11vSgqflqSlTg42SWMQg63RyPApIqnLryXK_W1U_j_HiaHtXEk2bDGtrag8yxU"
+	jwtTokenString := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJfdHlwZSI6InVzZXIiLCJ1c2VybmFtZSI6ImphbWVzIiwiY2xpZW50X2lkIjoiIiwiY2xpZW50X3NlY3JldCI6IiIsImV4cCI6MTY0MzAwNjkzMywiaXNzIjoiQkNTIn0.GW_iX7a8AfVKu7tuWrBDemc3J7GWbWZDVh4H_HerJCSvKuJA48PwAn_QMzw5V2YgkZMg6_kiSuhbGWwbsWfnUnT2880kA-hB01duIbU8j8fqsnouzb1-Srz7pY4_bkxNpXJPOkvW7ydY3C1Up-PseU-TdUCAgyJxnn8DsouUU6s"
 	user, err := cli.JWTDecode(jwtTokenString)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Logf("%+v", user.ExpiresAt)
+	t.Logf("%+v", user)
 }

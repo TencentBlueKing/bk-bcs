@@ -17,8 +17,8 @@ import (
 	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	jaeger2 "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/jaeger"
-	zipkin2 "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/zipkin"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/jaeger"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/zipkin"
 
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -79,11 +79,11 @@ func InitTracerProvider(serviceName string, opt ...Option) (*sdktrace.TracerProv
 	}
 
 	if defaultOptions.TracingType == "jaeger" {
-		return jaeger2.NewTracerProvider(defaultOptions.ExporterURL, defaultOptions.ServiceName)
+		return jaeger.NewTracerProvider(defaultOptions.ExporterURL, defaultOptions.ServiceName)
 	}
 
 	if defaultOptions.TracingType == "zipkin" {
-		return zipkin2.NewTracerProvider(defaultOptions.ExporterURL, defaultOptions.ServiceName)
+		return zipkin.NewTracerProvider(defaultOptions.ExporterURL, defaultOptions.ServiceName)
 	}
 	return &sdktrace.TracerProvider{}, nil
 }

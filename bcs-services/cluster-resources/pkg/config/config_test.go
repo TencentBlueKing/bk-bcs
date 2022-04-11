@@ -12,23 +12,24 @@
  * limitations under the License.
  */
 
-package config
+package config_test
 
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 // 检查配置加载情况，若默认配置修改，需要同步调整该单元测试
-func TestLoadConf(t *testing.T) {
-	conf, err := LoadConf("../../" + common.DefaultConfPath)
+func TestLoadConf(t *testing.T) { //nolint:cyclop
+	conf, err := config.LoadConf("../../" + conf.DefaultConfPath)
 	if err != nil {
 		t.Errorf("Load default conf error: %v", err)
 	}
 	// 检查 debug 配置
-	if debug := false; conf.Debug != debug {
-		t.Errorf("Conf debug, Excepted: %v, Result: %v", debug, conf.Debug)
+	if conf.Debug != false {
+		t.Errorf("Conf debug, Excepted: false, Result: %v", conf.Debug)
 	}
 	// 检查 etcd 配置
 	etcdEndpoints := "127.0.0.1:2379"
@@ -36,7 +37,7 @@ func TestLoadConf(t *testing.T) {
 		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, conf.Etcd.EtcdEndpoints)
 	}
 	// 检查 server 配置
-	address, httpPort := "127.0.0.1", 9091
+	address, httpPort := "", 9091
 	if conf.Server.Address != address {
 		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, conf.Server.Address)
 	}
@@ -54,9 +55,17 @@ func TestLoadConf(t *testing.T) {
 	// 检查 log 配置
 	level, fileName := "info", "cr.log"
 	if conf.Log.Level != level {
-		t.Errorf("Conf log.Level, Excepted: %v, Result: %v", level, conf.Log.Level)
+		t.Errorf("Conf log.level, Excepted: %v, Result: %v", level, conf.Log.Level)
 	}
 	if conf.Log.Name != fileName {
-		t.Errorf("Conf log.WriterType, Excepted: %v, Result: %v", fileName, conf.Log.Name)
+		t.Errorf("Conf log.name, Excepted: %v, Result: %v", fileName, conf.Log.Name)
+	}
+	// 检查 redis 配置
+	redisAddress, redisPwd := "127.0.0.1:6379", ""
+	if conf.Redis.Address != redisAddress {
+		t.Errorf("Conf redis.host, Excepted: %v, Result: %v", redisAddress, conf.Redis.Address)
+	}
+	if conf.Redis.Password != redisPwd {
+		t.Errorf("Conf redis.password, Excepted: %v, Result: %v", redisPwd, conf.Redis.Password)
 	}
 }
