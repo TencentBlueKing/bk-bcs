@@ -12,30 +12,20 @@
  * limitations under the License.
  */
 
-package iam
+package cluster
 
-// PermCtx 权限校验 Context
-type PermCtx struct {
-	Username  string
-	ProjectID string
-	ClusterID string
-	Namespace string
-	// 命名空间唯一 ID
-	NamespaceID string
-}
+const (
+	// ClusterView 查看集群
+	ClusterView = "cluster_view"
+)
 
-// Perm 权限校验接口定义
-type Perm interface {
-	// CanView 能否查看指定域资源
-	CanView(ctx PermCtx) (bool, error)
-	// CanCreate 能否创建指定域资源
-	CanCreate(ctx PermCtx) (bool, error)
-	// CanUpdate 能否更新指定域资源
-	CanUpdate(ctx PermCtx) (bool, error)
-	// CanDelete 能否删除指定域资源
-	CanDelete(ctx PermCtx) (bool, error)
-	// CanUse 能否使用（CURD）指定域资源
-	CanUse(ctx PermCtx) (bool, error)
-	// permCtx 校验
-	ValidateCtx(ctx PermCtx) error
-}
+const (
+	// ClusterScopedView 查看命名空间域资源
+	ClusterScopedView = "cluster_scoped_view"
+	// ClusterScopedCreate 创建命名空间域资源
+	ClusterScopedCreate = "cluster_scoped_create"
+	// ClusterScopedUpdate 更新命名空间域资源
+	ClusterScopedUpdate = "cluster_scoped_update"
+	// ClusterScopedDelete 删除命名空间域资源
+	ClusterScopedDelete = "cluster_scoped_delete"
+)

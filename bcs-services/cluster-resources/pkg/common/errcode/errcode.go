@@ -28,5 +28,5 @@ const (
 	// Unauth 未认证/认证失败
 	Unauth = 5
 	// NoIAMPerm 权限中心鉴权失败
-	NoIAMPerm = 6
+	NoIAMPerm = 40300
 )

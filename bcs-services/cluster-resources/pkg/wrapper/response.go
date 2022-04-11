@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -69,6 +70,8 @@ func getRespMsgCode(err interface{}) (string, int32) {
 	}
 
 	switch e := err.(type) {
+	case *perm.IAMPermError:
+		return e.Error(), int32(e.Code)
 	case *errorx.BaseError:
 		return e.Error(), int32(e.Code())
 	case *errors.Error:
@@ -81,9 +84,10 @@ func getRespMsgCode(err interface{}) (string, int32) {
 // 根据不同错误类型，更新 Data 字段信息
 func genNewRespData(err interface{}) *structpb.Struct {
 	switch e := err.(type) {
-	case *errorx.IAMPermError:
-		perms, _ := pbstruct.Map2pbStruct(e.Perms())
-		return perms
+	case *perm.IAMPermError:
+		perms, _ := e.Perms()
+		spbPerms, _ := pbstruct.Map2pbStruct(perms)
+		return spbPerms
 	default:
 		return nil
 	}

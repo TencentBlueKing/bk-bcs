@@ -12,22 +12,9 @@
  * limitations under the License.
  */
 
-package errorx_test
+package project
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+const (
+	// ProjectView 查看项目
+	ProjectView = "project_view"
 )
-
-func TestNewError(t *testing.T) {
-	err := errorx.New(errcode.General, "this is err msg: %s", "some error")
-	assert.Equal(t, errcode.General, err.(*errorx.BaseError).Code())
-	assert.Equal(t, "this is err msg: some error", err.(*errorx.BaseError).Error())
-
-	err = errorx.New(errcode.NoPerm, "this is err msg")
-	assert.Equal(t, errcode.NoPerm, err.(*errorx.BaseError).Code())
-}

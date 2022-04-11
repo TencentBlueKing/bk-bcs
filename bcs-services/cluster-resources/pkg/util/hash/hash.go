@@ -12,15 +12,16 @@
  * limitations under the License.
  */
 
-package project
+package hash
 
-const (
-	// ProjectView 查看项目
-	ProjectView = "project_view"
-	// ProjectCreate 创建项目
-	ProjectCreate = "project_create"
-	// ProjectEdit 编辑项目
-	ProjectEdit = "project_edit"
-	// ProjectDelete 删除项目
-	ProjectDelete = "project_delete"
+import (
+	"crypto/md5"
+	"encoding/hex"
 )
+
+// MD5Digest 字符串转 MD5
+func MD5Digest(key string) string {
+	hash := md5.New()
+	hash.Write([]byte(key))
+	return hex.EncodeToString(hash.Sum(nil))
+}

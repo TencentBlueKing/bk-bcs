@@ -14,16 +14,34 @@
 
 package iam
 
-// NewPermCtx ...
-func NewPermCtx(username, projectID, clusterID, namespace string) PermCtx {
-	ctx := PermCtx{
-		Username:  username,
-		ProjectID: projectID,
-		ClusterID: clusterID,
-		Namespace: namespace,
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
+	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
+	nsAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/namespace"
+)
+
+// GetNSPerm ...
+func GetNSPerm(projectID, clusterID string) perm.Perm {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return &MockPerm{}
 	}
-	if namespace != "" {
-		ctx.NamespaceID = "xxxx" // TODO 计算 NS ID
+	return nsAuth.NewPerm(projectID, clusterID)
+}
+
+// GetNSScopedPerm ...
+func GetNSScopedPerm(projectID, clusterID string) perm.Perm {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return &MockPerm{}
 	}
-	return ctx
+	return nsAuth.NewScopedPerm(projectID, clusterID)
+}
+
+// GetClusterScopedPerm ...
+func GetClusterScopedPerm(clusterID string) perm.Perm {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return &MockPerm{}
+	}
+	return clusterAuth.NewScopedPerm(clusterID)
 }

@@ -17,6 +17,7 @@ package iam
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
@@ -26,52 +27,55 @@ var NoPermErr = errorx.New(errcode.NoPerm, "no permission")
 // MockPerm ...
 type MockPerm struct{}
 
+// CanList ...
+func (p *MockPerm) CanList(ctx perm.Ctx) (bool, error) {
+	if p.forceNoPerm(ctx) {
+		return false, NoPermErr
+	}
+	return true, nil
+}
+
 // CanView ...
-func (p *MockPerm) CanView(permCtx PermCtx) (bool, error) {
-	if p.forceNoPerm(permCtx) {
+func (p *MockPerm) CanView(ctx perm.Ctx) (bool, error) {
+	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
 	}
 	return true, nil
 }
 
 // CanCreate ...
-func (p *MockPerm) CanCreate(permCtx PermCtx) (bool, error) {
-	if p.forceNoPerm(permCtx) {
+func (p *MockPerm) CanCreate(ctx perm.Ctx) (bool, error) {
+	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
 	}
 	return true, nil
 }
 
 // CanUpdate ...
-func (p *MockPerm) CanUpdate(permCtx PermCtx) (bool, error) {
-	if p.forceNoPerm(permCtx) {
+func (p *MockPerm) CanUpdate(ctx perm.Ctx) (bool, error) {
+	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
 	}
 	return true, nil
 }
 
 // CanDelete ...
-func (p *MockPerm) CanDelete(permCtx PermCtx) (bool, error) {
-	if p.forceNoPerm(permCtx) {
+func (p *MockPerm) CanDelete(ctx perm.Ctx) (bool, error) {
+	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
 	}
 	return true, nil
 }
 
 // CanUse ...
-func (p *MockPerm) CanUse(permCtx PermCtx) (bool, error) {
-	if p.forceNoPerm(permCtx) {
+func (p *MockPerm) CanUse(ctx perm.Ctx) (bool, error) {
+	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
 	}
 	return true, nil
 }
 
-// ValidateCtx 校验 PermCtx 是否缺失参数
-func (p *MockPerm) ValidateCtx(_ PermCtx) error {
-	return nil
-}
-
 // 单测用，若指定参数符合条件，则强制无权限
-func (p *MockPerm) forceNoPerm(permCtx PermCtx) bool {
-	return permCtx.ClusterID == envs.TestNoPermClusterID || permCtx.Namespace == envs.TestNoPermNS
+func (p *MockPerm) forceNoPerm(ctx perm.Ctx) bool {
+	return ctx.GetClusterID() == envs.TestNoPermClusterID
 }

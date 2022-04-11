@@ -12,28 +12,13 @@
  * limitations under the License.
  */
 
-package cluster
+package perm
 
 const (
-	// ClusterView 查看集群
-	ClusterView = "cluster_view"
-	// ClusterCreate 创建集群
-	ClusterCreate = "cluster_create"
-	// ClusterDelete 删除集群
-	ClusterDelete = "cluster_delete"
-	// ClusterManage 管理集群
-	ClusterManage = "cluster_manage"
-	// ClusterUse 使用集群
-	ClusterUse = "cluster_use"
-)
-
-const (
-	// ClusterScopedView 查看命名空间域资源
-	ClusterScopedView = "cluster_scoped_view"
-	// ClusterScopedCreate 创建命名空间域资源
-	ClusterScopedCreate = "cluster_scoped_create"
-	// ClusterScopedUpdate 更新命名空间域资源
-	ClusterScopedUpdate = "cluster_scoped_update"
-	// ClusterScopedDelete 删除命名空间域资源
-	ClusterScopedDelete = "cluster_scoped_delete"
+	// ResTypeProj 资源类型：项目
+	ResTypeProj = "project"
+	// ResTypeCluster 集群
+	ResTypeCluster = "cluster"
+	// ResTypeNS 命名空间
+	ResTypeNS = "namespace"
 )

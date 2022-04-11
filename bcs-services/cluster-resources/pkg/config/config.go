@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/TencentBlueKing/iam-go-sdk"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/TencentBlueKing/iam-go-sdk/metric"
 	jwtGo "github.com/dgrijalva/jwt-go"
@@ -91,13 +91,13 @@ func (c *ClusterResourcesConf) initIAM() error {
 		if bkAPIGWHost == "" {
 			return errorx.New(errcode.ValidateErr, "BKAPIGWHost required")
 		}
-		c.Global.IAM.Cli = iam.NewAPIGatewayIAM(systemID, appCode, appSecret, bkAPIGWHost)
+		c.Global.IAM.Cli = bkiam.NewAPIGatewayIAM(systemID, appCode, appSecret, bkAPIGWHost)
 	} else {
 		bkIAMHost, bkPaaSHost := c.Global.IAM.Host, c.Global.Basic.BKPaaSHost
 		if bkIAMHost == "" || bkPaaSHost == "" {
 			return errorx.New(errcode.ValidateErr, "BKIAMHost/BKPaaSHost required")
 		}
-		c.Global.IAM.Cli = iam.NewIAM(systemID, appCode, appSecret, bkIAMHost, bkPaaSHost)
+		c.Global.IAM.Cli = bkiam.NewIAM(systemID, appCode, appSecret, bkIAMHost, bkPaaSHost)
 	}
 	// 指标相关
 	if c.Global.IAM.Metric {
@@ -213,12 +213,12 @@ type BCSAPIGatewayConf struct {
 
 // IAMConf 权限中心相关配置
 type IAMConf struct {
-	Host       string   `yaml:"host" usage:"权限中心 V3 Host"`
-	SystemID   string   `yaml:"systemID" usage:"接入系统的 ID"`                                  // nolint:tagliatelle
-	UseBKAPIGW bool     `yaml:"useBKApiGW" usage:"为真则使用蓝鲸 apigw，否则使用 iamHost + bkPaaSHost"` // nolint:tagliatelle
-	Metric     bool     `yaml:"metric" usage:"支持 prometheus metrics"`
-	Debug      bool     `yaml:"debug" usage:"启用 iam 调试模式"`
-	Cli        *iam.IAM `yaml:"-" usage:"iam Client 对象（自动生成）"`
+	Host       string     `yaml:"host" usage:"权限中心 V3 Host"`
+	SystemID   string     `yaml:"systemID" usage:"接入系统的 ID"`                                  // nolint:tagliatelle
+	UseBKAPIGW bool       `yaml:"useBKApiGW" usage:"为真则使用蓝鲸 apigw，否则使用 iamHost + bkPaaSHost"` // nolint:tagliatelle
+	Metric     bool       `yaml:"metric" usage:"支持 prometheus metrics"`
+	Debug      bool       `yaml:"debug" usage:"启用 iam 调试模式"`
+	Cli        *bkiam.IAM `yaml:"-" usage:"iam Client 对象（自动生成）"`
 }
 
 // SharedClusterConf 共享集群相关配置

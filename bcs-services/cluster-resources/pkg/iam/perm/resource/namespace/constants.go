@@ -15,6 +15,8 @@
 package namespace
 
 const (
+	// NamespaceList 获取命名空间列表
+	NamespaceList = "namespace_list"
 	// NamespaceView 查看命名空间
 	NamespaceView = "namespace_view"
 	// NamespaceCreate 创建命名空间
@@ -23,8 +25,6 @@ const (
 	NamespaceUpdate = "namespace_update"
 	// NamespaceDelete 删除命名空间
 	NamespaceDelete = "namespace_delete"
-	// NamespaceList 获取命名空间列表
-	NamespaceList = "namespace_list"
 	// NamespaceUse 使用命名空间（CURD）
 	NamespaceUse = "namespace_use"
 )

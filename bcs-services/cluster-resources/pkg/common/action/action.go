@@ -15,6 +15,8 @@
 package action
 
 const (
+	// List 权限动作：查询列表
+	List = "List"
 	// View 权限动作：查看
 	View = "View"
 	// Create 权限动作：创建

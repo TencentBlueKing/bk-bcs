@@ -12,22 +12,19 @@
  * limitations under the License.
  */
 
-package errorx_test
+package hash_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/hash"
 )
 
-func TestNewError(t *testing.T) {
-	err := errorx.New(errcode.General, "this is err msg: %s", "some error")
-	assert.Equal(t, errcode.General, err.(*errorx.BaseError).Code())
-	assert.Equal(t, "this is err msg: some error", err.(*errorx.BaseError).Error())
-
-	err = errorx.New(errcode.NoPerm, "this is err msg")
-	assert.Equal(t, errcode.NoPerm, err.(*errorx.BaseError).Code())
+func TestMD5Digest(t *testing.T) {
+	ret := hash.MD5Digest("ClusterResources")
+	assert.Equal(t, "85360bdaa905e253dbc6c0917ed05d5e", ret)
+	ret = hash.MD5Digest("default")
+	assert.Equal(t, "c21f969b5f03d33d43e04f8f136e7682", ret)
 }

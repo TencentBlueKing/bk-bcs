@@ -12,46 +12,55 @@
  * limitations under the License.
  */
 
-package namespace
+package project
 
 import (
-	crIAM "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 )
+
+// Perm NOTE ClusterResources 不对项目进行管理，因此只实现 CanView 方法
+type Perm struct {
+	perm.IAMPerm
+}
 
 // NewPerm ...
 func NewPerm() *Perm {
-	return &Perm{}
+	return &Perm{
+		IAMPerm: perm.IAMPerm{
+			Cli:     perm.NewIAMClient(),
+			ResType: perm.ResTypeProj,
+			PermCtx: &PermCtx{},
+			ResReq:  NewResRequest(),
+		},
+	}
 }
 
-// Perm ...
-type Perm struct{}
-
-// CanView ...
-func (p *Perm) CanView(ctx crIAM.PermCtx) (bool, error) {
-	return true, nil
-}
-
-// CanCreate ...
-func (p *Perm) CanCreate(ctx crIAM.PermCtx) (bool, error) {
-	return true, nil
-}
-
-// CanUpdate ...
-func (p *Perm) CanUpdate(ctx crIAM.PermCtx) (bool, error) {
-	return true, nil
-}
-
-// CanDelete ...
-func (p *Perm) CanDelete(ctx crIAM.PermCtx) (bool, error) {
-	return true, nil
-}
-
-// CanUse ...
-func (p *Perm) CanUse(ctx crIAM.PermCtx) (bool, error) {
+// CanList ...
+func (p *Perm) CanList(_ perm.Ctx) (bool, error) {
 	panic("not implement")
 }
 
-// ValidateCtx 校验 PermCtx 是否缺失参数
-func (p *Perm) ValidateCtx(ctx crIAM.PermCtx) error {
-	return nil
+// CanView ...
+func (p *Perm) CanView(ctx perm.Ctx) (bool, error) {
+	return p.IAMPerm.CanAction(ctx, ProjectView, true)
+}
+
+// CanCreate ...
+func (p *Perm) CanCreate(_ perm.Ctx) (bool, error) {
+	panic("not implement")
+}
+
+// CanUpdate ...
+func (p *Perm) CanUpdate(_ perm.Ctx) (bool, error) {
+	panic("not implement")
+}
+
+// CanDelete ...
+func (p *Perm) CanDelete(_ perm.Ctx) (bool, error) {
+	panic("not implement")
+}
+
+// CanUse ...
+func (p *Perm) CanUse(_ perm.Ctx) (bool, error) {
+	panic("not implement")
 }

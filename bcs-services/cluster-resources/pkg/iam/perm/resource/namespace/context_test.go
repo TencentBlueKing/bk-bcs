@@ -12,22 +12,15 @@
  * limitations under the License.
  */
 
-package errorx_test
+package namespace
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
-func TestNewError(t *testing.T) {
-	err := errorx.New(errcode.General, "this is err msg: %s", "some error")
-	assert.Equal(t, errcode.General, err.(*errorx.BaseError).Code())
-	assert.Equal(t, "this is err msg: some error", err.(*errorx.BaseError).Error())
-
-	err = errorx.New(errcode.NoPerm, "this is err msg")
-	assert.Equal(t, errcode.NoPerm, err.(*errorx.BaseError).Code())
+func TestCalcNamespaceID(t *testing.T) {
+	nsID := calcNamespaceID("BCS-K8S-40000", "default")
+	assert.Equal(t, "40000:5f03d33dde", nsID)
 }
