@@ -81,7 +81,9 @@ type SwaggerConfig struct {
 // JwtConfig
 type JWTConfig struct {
 	Enable         bool   `yaml:"enable" usage:"enable jwt"`
+	PublicKey      string `yaml:"publicKey" usage:"public key"`
 	PublicKeyFile  string `yaml:"publicKeyFile" usage:"public key file"`
+	PrivateKey     string `yaml:"privateKey" usage:"private key"`
 	PrivateKeyFile string `yaml:"privateKeyFile" usage:"private key file"`
 }
 

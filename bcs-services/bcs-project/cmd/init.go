@@ -17,7 +17,6 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"path"
 	"strconv"
@@ -29,7 +28,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	"github.com/micro/go-micro/v2/server"
 	serverGrpc "github.com/micro/go-micro/v2/server/grpc"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
@@ -186,8 +184,10 @@ func (p *ProjectService) initDiscovery() error {
 // init micro service
 func (p *ProjectService) initMicro() error {
 	// max size: 50M, add grpc address to access
-	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize), server.Address(fmt.Sprintf(":%d", p.opt.Server.Port)))
+	// NOTE: 针对server的调整，需要放在前面，避免覆盖service内置的server
+	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize))
 	svc := microGrpc.NewService(
+		microSvc.Server(server),
 		microSvc.Name(config.ServiceDomain),
 		microSvc.Metadata(map[string]string{
 			config.MicroMetaKeyHTTPPort: strconv.Itoa(int(p.opt.Server.HTTPPort)),
@@ -199,7 +199,6 @@ func (p *ProjectService) initMicro() error {
 		microSvc.RegisterTTL(30*time.Second),      // add ttl to config
 		microSvc.RegisterInterval(25*time.Second), // add interval to config
 		microSvc.Context(p.ctx),
-		microSvc.Server(server),
 		microSvc.AfterStart(func() error {
 			return p.discovery.Start()
 		}),

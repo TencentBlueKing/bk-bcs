@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
@@ -88,6 +89,31 @@ func canExemptAuth(req server.Request) bool {
 	return stringx.StringInSlice(req.Endpoint(), NoAuthEndpoints)
 }
 
+func getJWTOpt(md metadata.Metadata) (*jwt.JWTOptions, error) {
+	jwtOpt := &jwt.JWTOptions{
+		VerifyKeyFile: config.G.JWT.PublicKeyFile,
+		SignKeyFile:   config.G.JWT.PrivateKeyFile,
+	}
+	publicKey := config.G.JWT.PublicKey
+	privateKey := config.G.JWT.PrivateKey
+
+	if publicKey != "" {
+		key, err := jwtGo.ParseRSAPublicKeyFromPEM([]byte(publicKey))
+		if err != nil {
+			return nil, err
+		}
+		jwtOpt.VerifyKey = key
+	}
+	if privateKey != "" {
+		key, err := jwtGo.ParseRSAPrivateKeyFromPEM([]byte(privateKey))
+		if err != nil {
+			return nil, err
+		}
+		jwtOpt.SignKey = key
+	}
+	return jwtOpt, nil
+}
+
 func parseUsername(md metadata.Metadata) (string, error) {
 	jwtToken, ok := md.Get("Authorization")
 	if !ok {
@@ -97,11 +123,11 @@ func parseUsername(md metadata.Metadata) (string, error) {
 		return "", errorx.New(errcode.UnauthErr, "authorization token error")
 	}
 	// 组装 jwt client
-	jwtOpt := jwt.JWTOptions{
-		VerifyKeyFile: config.G.JWT.PublicKeyFile,
-		SignKeyFile:   config.G.JWT.PrivateKeyFile,
+	jwtOpt, err := getJWTOpt(md)
+	if err != nil {
+		return "", errorx.New(errcode.UnauthErr, "parse jwt key error", err.Error())
 	}
-	jwtClient, err := jwt.NewJWTClient(jwtOpt)
+	jwtClient, err := jwt.NewJWTClient(*jwtOpt)
 	if err != nil {
 		return "", err
 	}

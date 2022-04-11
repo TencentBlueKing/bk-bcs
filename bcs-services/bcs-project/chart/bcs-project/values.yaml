@@ -96,14 +96,32 @@ tolerations: []
 
 affinity: {}
 
+livenessProbe:
+  enabled: true
+  conf:
+    httpGet:
+      path: /bcsproject/v1/ping
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 10
+
+readinessProbe:
+  enabled: true
+  conf:
+    httpGet:
+      path: /bcsproject/v1/healthz
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 10
+
 # 服务配置
 svcConf:
   # etcd 配置
   etcd:
     endpoints: "127.0.0.1:2379"
-    cert: ""
-    key: ""
-    ca: ""
+    cert: "/data/project/cert/etcd/etcd.pem"
+    key: "/data/project/cert/etcd/etcd-key.pem"
+    ca: "/data/project/cert/etcd/etcd-ca.pem"
   # mongo 配置
   mongo:
     address: "127.0.0.1:27017"
@@ -144,3 +162,12 @@ svcConf:
     size: 100
     age: 7
     backups: 5
+  jwt:
+    enable: true
+    publicKeyFile: "/data/project/cert/jwt/public.key"
+    privateKeyFile: "/data/project/cert/jwt/private.key"
+  iam:
+    appCode: "bk_bcs"
+    appSecret: ""
+    gatewayHost: ""
+    debug: false

@@ -41,27 +41,35 @@ spec:
             - bcs-project-service -c /data/project/etc/conf.yaml
           ports:
             {{- toYaml .Values.container.ports | nindent 12 }}
+          {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
-            httpGet:
-              path: /bcsproject/v1/ping
-              port: http
-            initialDelaySeconds: 20
-            periodSeconds: 10
+            {{- toYaml .Values.livenessProbe.conf | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
           readinessProbe:
-            httpGet:
-              path: /bcsproject/v1/healthz
-              port: http
-            initialDelaySeconds: 20
-            periodSeconds: 10
+            {{- toYaml .Values.readinessProbe.conf | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: conf-volume
               mountPath: /data/project/etc
+            - name: etcd-certs
+              mountPath: /data/project/cert/etcd
+            - name: jwt-keys
+              mountPath: /data/project/cert/jwt
       volumes:
         - name: conf-volume
           configMap:
             name: {{ include "bcs-project.fullname" . }}-conf
+        - name: etcd-certs
+          secret:
+            defaultMode: 420
+            secretName: bcs-etcd-certs
+        - name: jwt-keys
+          secret:
+            defaultMode: 420
+            secretName: jwt-secret-key
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
