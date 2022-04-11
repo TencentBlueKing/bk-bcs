@@ -14,10 +14,12 @@
 package route
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
@@ -40,12 +42,17 @@ func RequestIdGenerator() string {
 
 // AuthContext :
 type AuthContext struct {
-	RequestId string      `json:"request_id"`
-	Operator  string      `json:"operator"`
-	ProjectId string      `json:"project_id"`
-	ClusterId string      `json:"cluster_id"`
-	Username  string      `json:"username"`
-	BindAPIGW *APIGWToken `json:"bind_apigw"`
+	RequestId   string                 `json:"request_id"`
+	Operator    string                 `json:"operator"`
+	Username    string                 `json:"username"`
+	ProjectId   string                 `json:"project_id"`
+	ProjectCode string                 `json:"project_code"`
+	ClusterId   string                 `json:"cluster_id"`
+	BindEnv     *EnvToken              `json:"bind_env"`
+	BindBCS     *bcsJwt.UserClaimsInfo `json:"bind_bcs"`
+	BindAPIGW   *APIGWToken            `json:"bind_apigw"`
+	BindCluster *bcs.Cluster           `json:"bind_cluster"`
+	BindProject *bcs.Project           `json:"bind_project"`
 }
 
 // WebAuthRequired Web类型, 不需要鉴权
@@ -84,14 +91,15 @@ func APIAuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		authCtx.ProjectId = c.Param("projectId")
-		authCtx.ClusterId = c.Param("clusterId")
-
 		// 设置鉴权
 		c.Set("auth_context", authCtx)
 
 		c.Next()
 	}
+}
+
+type EnvToken struct {
+	Username string
 }
 
 // initContextWithDevEnv Dev环境, 可以设置环境变量
@@ -100,6 +108,7 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	if config.G.Base.RunEnv == config.DevEnv {
 		username := os.Getenv("WEBCONSOLE_USERNAME")
 		if username != "" {
+			authCtx.BindEnv = &EnvToken{Username: username}
 			authCtx.Username = username
 			return true
 		}
@@ -148,6 +157,10 @@ type APIGWToken struct {
 	*jwt.StandardClaims
 }
 
+func (a *APIGWToken) String() string {
+	return fmt.Sprintf("<%s, %v>", a.App.AppCode, a.App.Verified)
+}
+
 func BKAPIGWJWTDecode(jwtToken string) (*APIGWToken, error) {
 	if config.G.BKAPIGW.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
@@ -185,6 +198,7 @@ func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
 		return false
 	}
 
+	authCtx.BindBCS = claims
 	authCtx.Username = claims.UserName
 	return true
 }
@@ -207,16 +221,27 @@ func initContextWithAPIGW(c *gin.Context, authCtx *AuthContext) bool {
 }
 
 // GetAuthContext 查询鉴权信息
-func GetAuthContext(c *gin.Context) (*AuthContext, error) {
-	authCtxObj, ok := c.Get("auth_context")
-	if !ok {
-		return nil, UnauthorizedError
-	}
+func MustGetAuthContext(c *gin.Context) *AuthContext {
+	authCtxObj := c.MustGet("auth_context")
 
 	authCtx, ok := authCtxObj.(*AuthContext)
 	if !ok {
-		return nil, UnauthorizedError
+		panic("not valid auth_context")
 	}
 
-	return authCtx, nil
+	return authCtx
+}
+
+func GetProjectIdOrCode(c *gin.Context) string {
+	if c.Param("projectId") != "" {
+		return c.Param("projectId")
+	}
+	return ""
+}
+
+func GetClusterId(c *gin.Context) string {
+	if c.Param("clusterId") != "" {
+		return c.Param("clusterId")
+	}
+	return ""
 }

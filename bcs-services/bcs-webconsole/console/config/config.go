@@ -104,12 +104,17 @@ func (c *Configurations) ReadCred(content []byte) error {
 		return err
 	}
 	c.Credentials = cred
+	for _, v := range c.Credentials {
+		if err := v.InitMatcher(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (c *Configurations) ValidateCred(projectId string, clusterId string, username string) bool {
+func (c *Configurations) ValidateCred(appCode, projectCode string) bool {
 	for _, cred := range c.Credentials {
-		if cred.IsValid(projectId, clusterId) {
+		if cred.Matches(appCode, projectCode) {
 			return true
 		}
 	}

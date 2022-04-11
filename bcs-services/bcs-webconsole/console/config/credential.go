@@ -13,7 +13,13 @@
 
 package config
 
-import "time"
+import (
+	"errors"
+	"strings"
+	"time"
+
+	"github.com/prometheus/prometheus/pkg/labels"
+)
 
 // 权限控制
 const (
@@ -26,24 +32,96 @@ const (
 // Scope 权限控制，格式如cluster_id: "RE_BCS-K8S-40000", 多个取且关系
 type Scope map[string]string
 
-// Credential 鉴权
-type Credential struct {
-	ProjectId      string    `yaml:"project_id"`
-	CredentialType string    `yaml:"credential_type"`
-	Credential     string    `yaml:"credential"`
-	Scopes         []Scope   `yaml:"scopes"` // 多个取或关系
-	ExpireTime     time.Time `yaml:"expire_time"`
-	Enabled        bool      `yaml:"enabled"`
-	Operator       string    `yaml:"operator"`
-	Comment        string    `yaml:"comment"`
+// LabelMatchers :
+type LabelMatchers []*labels.Matcher
+
+// Matchs : 多个是且的关系
+func (m *LabelMatchers) Matches(s string) bool {
+	for _, matcher := range *m {
+		if !matcher.Matches(s) {
+			return false
+		}
+	}
+	return true
 }
 
-func (c *Credential) IsValid(projectId, clusterId string) bool {
+// Credential 鉴权
+type Credential struct {
+	ProjectId      string           `yaml:"project_id"`
+	CredentialType string           `yaml:"credential_type"`
+	Credential     string           `yaml:"credential"`
+	Scopes         []Scope          `yaml:"scopes"` // 多个取或关系
+	scopeMatcher   []*LabelMatchers `yaml:"-"`
+	ExpireTime     time.Time        `yaml:"expire_time"`
+	Enabled        bool             `yaml:"enabled"`
+	Operator       string           `yaml:"operator"`
+	Comment        string           `yaml:"comment"`
+}
+
+func (c *Credential) InitMatcher() error {
+	if len(c.Scopes) == 0 {
+		return errors.New("scopes is required")
+	}
+
+	c.scopeMatcher = make([]*LabelMatchers, 0, len(c.Scopes))
+	for _, scope := range c.Scopes {
+		matchers := LabelMatchers{}
+		for k, v := range scope {
+			m, err := NewScopeMatcher(k, v)
+			if err != nil {
+				return err
+			}
+			matchers = append(matchers, m)
+		}
+		c.scopeMatcher = append(c.scopeMatcher, &matchers)
+	}
+
+	return nil
+}
+
+func (c *Credential) Matches(appCode, projectCode string) bool {
 	if !c.Enabled {
 		return false
 	}
 	if !c.ExpireTime.IsZero() && c.ExpireTime.Before(time.Now()) {
 		return false
 	}
-	return true
+
+	// 多个是或的关系
+	for _, matcher := range c.scopeMatcher {
+		if matcher.Matches(projectCode) {
+			return true
+		}
+	}
+	return false
+}
+
+// NewScopeMatcher : match 4种类型实现
+func NewScopeMatcher(name, value string) (*labels.Matcher, error) {
+	var (
+		typeStr   string
+		matchType labels.MatchType
+	)
+
+	// 只分割第一个_字符
+	values := strings.SplitN(value, "_", 2)
+	if len(values) >= 2 {
+		typeStr = values[0]
+		value = values[1]
+	}
+
+	switch typeStr {
+	case "NEQ":
+		matchType = labels.MatchNotEqual
+	case "NRE":
+		matchType = labels.MatchNotRegexp
+	case "EQ":
+		matchType = labels.MatchEqual
+	case "RE":
+		matchType = labels.MatchRegexp
+	default:
+		matchType = labels.MatchEqual
+	}
+	return labels.NewMatcher(matchType, name, value)
+
 }

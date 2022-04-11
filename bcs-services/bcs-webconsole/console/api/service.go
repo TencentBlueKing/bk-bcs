@@ -77,16 +77,12 @@ func (s *service) ListClusters(c *gin.Context) {
 
 // CreateWebConsoleSession 创建websocket session
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
+	authCtx := route.MustGetAuthContext(c)
+
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	consoleQuery := new(podmanager.ConsoleQuery)
 	c.BindQuery(consoleQuery)
-
-	authCtx, err := route.GetAuthContext(c)
-	if err != nil {
-		APIError(c, i18n.GetMessage(err.Error()))
-		return
-	}
 
 	podCtx, err := podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
 	if err != nil {
