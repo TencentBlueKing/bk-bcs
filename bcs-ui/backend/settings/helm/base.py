@@ -395,3 +395,13 @@ CLUSTER_MANAGER_DOMAIN = BCS_API_GATEWAY_DOMAIN["prod"]
 BKMONITOR_HOST = os.environ.get("BKAPP_BKMONITOR_URL", "")
 # 蓝鲸日志平台域名
 BKLOG_HOST = os.environ.get("BKAPP_BKLOG_URL", "")
+
+# 蓝鲸 opentelemetry trace 配置
+# 是否开启 OTLP, 默认不开启
+OPEN_OTLP = False
+# 上报的地址
+OTLP_GRPC_HOST = os.environ.get("OTLP_GRPC_HOST", "")
+# 上报的 data id
+OTLP_DATA_ID = os.environ.get("OTLP_DATA_ID", "")
+# 上报时, 使用的服务名称
+OTLP_SERVICE_NAME = APP_ID
