@@ -14,24 +14,28 @@
 package config
 
 import (
+	"sync"
+
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
 // Configurations : manage all configurations
 type Configurations struct {
-	Base       *BaseConf                  `yaml:"base_conf"`
-	Auth       *AuthConf                  `yaml:"auth_conf"`
-	BkLogin    *BKLoginConf               `yaml:"bklogin_conf"`
-	Logging    *LogConf                   `yaml:"logging"`
-	BKAPIGW    *BKAPIGWConf               `yaml:"bkapigw_conf"`
-	BCS        *BCSConf                   `yaml:"bcs_conf"`
-	BCSCC      *BCSCCConf                 `yaml:"bcs_cc_conf"`
-	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
-	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
-	Redis      *RedisConf                 `yaml:"redis"`
-	WebConsole *WebConsoleConf            `yaml:"webconsole"`
-	Web        *WebConf                   `yaml:"web"`
+	mtx         sync.Mutex
+	Base        *BaseConf                  `yaml:"base_conf"`
+	Auth        *AuthConf                  `yaml:"auth_conf"`
+	BkLogin     *BKLoginConf               `yaml:"bklogin_conf"`
+	Logging     *LogConf                   `yaml:"logging"`
+	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
+	BCS         *BCSConf                   `yaml:"bcs_conf"`
+	BCSCC       *BCSCCConf                 `yaml:"bcs_cc_conf"`
+	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
+	Credentials []*Credential              `yaml:"credentials"`
+	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
+	Redis       *RedisConf                 `yaml:"redis"`
+	WebConsole  *WebConsoleConf            `yaml:"webconsole"`
+	Web         *WebConf                   `yaml:"web"`
 }
 
 // ReadFrom : read from file
@@ -90,8 +94,24 @@ func init() {
 	G.Init()
 }
 
+func (c *Configurations) ReadCred(content []byte) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	cred := []*Credential{}
+	err := yaml.Unmarshal(content, &cred)
+	if err != nil {
+		return err
+	}
+	c.Credentials = cred
+	return nil
+}
+
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
 	if len(content) == 0 {
 		return errors.New("conf content is empty, will use default values")
 	}
