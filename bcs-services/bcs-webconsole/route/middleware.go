@@ -131,10 +131,20 @@ func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	return claims, nil
 }
 
+type APIGWApp struct {
+	AppCode  string `json:"app_code"`
+	Verified bool   `json:"verified"`
+}
+
+type APIGWUser struct {
+	Username string `json:"username"`
+	Verified bool   `json:"verified"`
+}
+
 // APIGWToken 返回信息
 type APIGWToken struct {
-	AppCode  string `json:"app_code"`
-	Username string `json:"username"`
+	App  *APIGWApp  `json:"app"`
+	User *APIGWUser `json:"user"`
 	*jwt.StandardClaims
 }
 
@@ -144,7 +154,7 @@ func BKAPIGWJWTDecode(jwtToken string) (*APIGWToken, error) {
 	}
 
 	token, err := jwt.ParseWithClaims(jwtToken, &APIGWToken{}, func(token *jwt.Token) (interface{}, error) {
-		return config.G.BCS.JWTPubKeyObj, nil
+		return config.G.BKAPIGW.JWTPubKeyObj, nil
 	})
 	if err != nil {
 		return nil, err
@@ -156,7 +166,7 @@ func BKAPIGWJWTDecode(jwtToken string) (*APIGWToken, error) {
 
 	claims, ok := token.Claims.(*APIGWToken)
 	if !ok {
-		return nil, errors.New("jwt token not bcs issuer")
+		return nil, errors.New("jwt token not BKAPIGW issuer")
 
 	}
 	return claims, nil
@@ -193,7 +203,7 @@ func initContextWithAPIGW(c *gin.Context, authCtx *AuthContext) bool {
 
 	authCtx.BindAPIGW = token
 
-	return false
+	return true
 }
 
 // GetAuthContext 查询鉴权信息

@@ -51,7 +51,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	api.GET("/api/projects/:projectId/clusters/", route.PermissionRequired(), s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	api.POST("/api/gate/sessions/:sessionId/", s.CreateGateSession)
+	api.GET("/api/gate/sessions/:sessionId/", s.CreateGateSession)
 	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/container/", route.CredentialRequired(), s.CreateContainerGateSession)
 	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/cluster/", route.CredentialRequired(), s.CreateClusterGateSession)
 
