@@ -24,9 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -56,8 +54,7 @@ type ProjectService struct {
 	opt *conf.ProjectConfig
 
 	// mongo DB options
-	mongoOptions *mongo.Options
-	model        store.ProjectModel
+	model store.ProjectModel
 
 	microSvc  microSvc.Service
 	microRgt  microRgt.Registry
@@ -145,43 +142,10 @@ func (p *ProjectService) initTLSConfig() error {
 
 // init mongo client
 func (p *ProjectService) initMongo() error {
-	if len(p.opt.Mongo.Address) == 0 {
-		return fmt.Errorf("mongo address cannot be empty")
-	}
-	if len(p.opt.Mongo.Database) == 0 {
-		return fmt.Errorf("mongo database cannot be empty")
-	}
-	// 判断 password 是否加密，如果加密需要解密获取到原始数据
-	// 使用 bcs service 统一的 pwd
-	password := p.opt.Mongo.Password
-	if password != "" && p.opt.Mongo.Encrypted {
-		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
-		password = string(realPwd)
-	}
-
-	mongoOptions := &mongo.Options{
-		Hosts:                 strings.Split(p.opt.Mongo.Address, ","),
-		ConnectTimeoutSeconds: int(p.opt.Mongo.ConnectTimeout),
-		Database:              p.opt.Mongo.Database,
-		Username:              p.opt.Mongo.Username,
-		Password:              password,
-		MaxPoolSize:           uint64(p.opt.Mongo.MaxPoolSize),
-		MinPoolSize:           uint64(p.opt.Mongo.MinPoolSize),
-	}
-	p.mongoOptions = mongoOptions
-
-	mongoDB, err := mongo.NewDB(mongoOptions)
-	if err != nil {
-		logging.Error("create mongo error, err: %s", err.Error())
-		return err
-	}
-	if err = mongoDB.Ping(); err != nil {
-		logging.Error("connect mongo error, err: %s", err.Error())
-		return err
-	}
-	logging.Info("init mongo successfully")
-	modelSet := store.New(mongoDB)
+	store.InitMongo(&p.opt.Mongo)
+	modelSet := store.New(store.GetMongo())
 	p.model = modelSet
+	logging.Info("init mongo successfully")
 	return nil
 }
 
@@ -244,7 +208,7 @@ func (p *ProjectService) initMicro() error {
 			return nil
 		}),
 		microSvc.WrapHandler(
-			wrapper.NewInjectRequestIDWrapper,
+			wrapper.NewInjectContextWrapper,
 			wrapper.NewLogWrapper,
 			wrapper.NewResponseWrapper,
 			wrapper.NewValidatorWrapper,
@@ -255,6 +219,10 @@ func (p *ProjectService) initMicro() error {
 	// project hander
 	if err := proto.RegisterBCSProjectHandler(svc.Server(), handler.NewProject(p.model)); err != nil {
 		logging.Error("register handler failed, err: %s", err.Error())
+		return err
+	}
+	if err := proto.RegisterHealthzHandler(svc.Server(), handler.NewHealthz(p.opt.Mongo)); err != nil {
+		logging.Error("register healthz handler failed, err: %s", err.Error())
 		return err
 	}
 
@@ -281,24 +249,40 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(config.MaxMsgSize), grpc.MaxCallSendMsgSize(config.MaxMsgSize)))
-	err := proto.RegisterBCSProjectGwFromEndpoint(
-		context.TODO(),
-		gwMux,
-		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
-		grpcDialOpts,
-	)
-	if err != nil {
-		logging.Error("register http gateway failed, err %s", err.Error())
-		return fmt.Errorf("register http gateway failed, err %s", err.Error())
+	if err := p.registerGatewayFromEndPoint(gwMux, grpcDialOpts); err != nil {
+		return err
 	}
 	router.Handle("/{uri:.*}", gwMux)
 	logging.Info("register grpc gateway handler to path /")
 	return nil
 }
 
+func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, grpcDialOpts []grpc.DialOption) error {
+	if err := proto.RegisterBCSProjectGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register http gateway failed, err %s", err.Error())
+		return err
+	}
+	// healthz
+	if err := proto.RegisterHealthzGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register healthz gateway failed, err %s", err.Error())
+		return err
+	}
+	return nil
+}
+
 // init swagger
 func (p *ProjectService) initSwagger(mux *http.ServeMux) {
-	if len(p.opt.Swagger.Dir) != 0 {
+	if p.opt.Swagger.Enable {
 		logging.Info("swagger doc is enabled")
 		mux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, path.Join(p.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))

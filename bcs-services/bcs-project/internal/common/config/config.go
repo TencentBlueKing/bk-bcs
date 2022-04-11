@@ -27,4 +27,7 @@ const (
 
 	// MaxMsgSize grpc限制的message的最大值
 	MaxMsgSize int = 50 * 1024 * 1024
+
+	// AnonymousUsername 匿名用户
+	AnonymousUsername = "anonymous"
 )

@@ -16,16 +16,13 @@ package handler
 
 import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/convert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/copier"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
-// setResp 设置单项目数据的返回
-func setResp(resp *proto.ProjectResponse, err *errorx.ProjectError, data *pm.Project) {
-	resp.Code = (*err).Code()
-	resp.Message = (*err).Error()
-	// 处理数据
+// setResp 设置返回的数据和权限信息
+func setResp(resp *proto.ProjectResponse, data *pm.Project, perm map[string]interface{}) {
 	if data != nil {
 		var project proto.Project
 		copier.CopyStruct(&project, data)
@@ -34,12 +31,14 @@ func setResp(resp *proto.ProjectResponse, err *errorx.ProjectError, data *pm.Pro
 		resp.Data = nil
 	}
 
+	resp.WebAnnotations = &proto.Perms{Perms: convert.Map2pbStruct(perm)}
 }
 
-// setListResp 设置多个项目数据的返回
-func setListResp(resp *proto.ListProjectsResponse, err *errorx.ProjectError, data *map[string]interface{}) {
-	resp.Code = (*err).Code()
-	resp.Message = (*err).Error()
+func setListResp(resp *proto.ListProjectsResponse, data *map[string]interface{}, perm map[string]map[string]bool) {
+	if data == nil {
+		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
+		return
+	}
 	if val, ok := (*data)["results"].([]*pm.Project); ok {
 		projectData := proto.ListProjectData{Total: (*data)["total"].(uint32)}
 		var projects []*proto.Project
@@ -53,6 +52,29 @@ func setListResp(resp *proto.ListProjectsResponse, err *errorx.ProjectError, dat
 		// 赋值到response
 		resp.Data = &projectData
 	} else {
-		resp.Data = nil
+		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
+	}
+	resp.WebAnnotations = &proto.Perms{Perms: convert.MapBool2pbStruct(perm)}
+}
+
+func setListAuthProjResp(resp *proto.ListAuthorizedProjResp, data *map[string]interface{}) {
+	if data == nil {
+		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
+		return
+	}
+	if val, ok := (*data)["results"].([]pm.Project); ok {
+		projectData := proto.ListProjectData{Total: (*data)["total"].(uint32)}
+		var projects []*proto.Project
+		// 组装返回数据
+		for i := range val {
+			var dstProject proto.Project
+			copier.CopyStruct(&dstProject, val[i])
+			projects = append(projects, &dstProject)
+		}
+		projectData.Results = projects
+		// 赋值到response
+		resp.Data = &projectData
+	} else {
+		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
 	}
 }

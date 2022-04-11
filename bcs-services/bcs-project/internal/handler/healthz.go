@@ -12,39 +12,45 @@
  * limitations under the License.
  */
 
-package project
+package handler
 
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
-// DeleteAction action for delete project
-type DeleteAction struct {
-	ctx   context.Context
-	model store.ProjectModel
-	req   *proto.DeleteProjectRequest
+// HealthzHandler ...
+type HealthzHandler struct {
+	mongoConf config.MongoConfig
 }
 
-// NewDeleteAction delete project action
-func NewDeleteAction(model store.ProjectModel) *DeleteAction {
-	return &DeleteAction{
-		model: model,
+// New create a healthz hander
+func NewHealthz(mongoConf config.MongoConfig) *HealthzHandler {
+	return &HealthzHandler{
+		mongoConf: mongoConf,
 	}
 }
 
-// Do delete project
-func (da *DeleteAction) Do(ctx context.Context, req *proto.DeleteProjectRequest) *errorx.ProjectError {
-	da.ctx = ctx
-	da.req = req
+// Ping 用于liveness
+func (h *HealthzHandler) Ping(_ context.Context, req *proto.PingRequest, resp *proto.PingResponse) error {
+	resp.Ret = "pong"
+	return nil
+}
 
-	if err := da.model.DeleteProject(ctx, req.ProjectID); err != nil {
-		return errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+// Healthz 用于readiness
+func (h *HealthzHandler) Healthz(_ context.Context, req *proto.HealthzRequest, resp *proto.HealthzResponse) error {
+	mongoDB := store.GetMongo()
+	// 默认状态为正常
+	health := "service is ok!"
+	if err := mongoDB.Ping(); err != nil {
+		health = "service is unhealthy, mongo ping error"
 	}
 
+	// 现阶段仅依赖mongo，因此，返回一样
+	resp.Status = health
+	resp.MongoStatus = health
 	return nil
 }

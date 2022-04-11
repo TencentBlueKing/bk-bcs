@@ -19,8 +19,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
@@ -53,7 +56,7 @@ func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*
 		"total":   uint32(total),
 		"results": projects,
 	}
-	return &data, errorx.New(errcode.Success, errcode.SuccessMsg)
+	return &data, nil
 }
 
 func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
@@ -92,4 +95,38 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 		projectList = append(projectList, &projects[i])
 	}
 	return projectList, total, nil
+}
+
+type ListAuthorizedProject struct {
+	ctx   context.Context
+	model store.ProjectModel
+	req   *proto.ListProjectsRequest
+}
+
+// NewListAuthorizedProj new list authorized project action
+func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
+	return &ListAuthorizedProject{
+		model: model,
+	}
+}
+
+func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
+	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
+	ids, err := perm.FilterAuthProjIds(username)
+	// 没有权限的项目时，返回为空，并记录信息
+	if ids == nil || err != nil {
+		logging.Error("%s no permission project", username)
+		return nil, nil
+	}
+	// 通过 project id 获取项目详情
+	projects, total, err := lap.model.ListProjectByIDs(lap.ctx, ids, &page.Pagination{All: true})
+	if err != nil {
+		return nil, err
+	}
+	data := map[string]interface{}{
+		"total":   uint32(total),
+		"results": projects,
+	}
+
+	return &data, nil
 }

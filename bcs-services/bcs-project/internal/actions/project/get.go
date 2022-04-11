@@ -48,5 +48,5 @@ func (ga *GetAction) Do(ctx context.Context, req *proto.GetProjectRequest) (*pm.
 		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
 	}
 
-	return p, errorx.New(errcode.Success, errcode.SuccessMsg)
+	return p, nil
 }

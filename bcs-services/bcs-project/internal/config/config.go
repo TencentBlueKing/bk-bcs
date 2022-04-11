@@ -74,7 +74,23 @@ type LogConfig struct {
 
 // SwaggerConfig
 type SwaggerConfig struct {
-	Dir string `yaml:"dir" usage:"swagger dir"`
+	Enable bool   `yaml:"enable" usage:"enable swagger"`
+	Dir    string `yaml:"dir" usage:"swagger dir"`
+}
+
+// JwtConfig
+type JWTConfig struct {
+	Enable         bool   `yaml:"enable" usage:"enable jwt"`
+	PublicKeyFile  string `yaml:"publicKeyFile" usage:"public key file"`
+	PrivateKeyFile string `yaml:"privateKeyFile" usage:"private key file"`
+}
+
+// IAMConfig iam操作需要的配置
+type IAMConfig struct {
+	AppCode     string `yaml:"appCode" usage:"app code"`
+	AppSecret   string `yaml:"appSecret" usage:"app secret"`
+	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
+	Debug       bool   `yaml:"debug" usage:"debug mode"`
 }
 
 type ProjectConfig struct {
@@ -84,7 +100,11 @@ type ProjectConfig struct {
 	Swagger SwaggerConfig `yaml:"swagger"`
 	Server  ServerConfig  `yaml:"server"`
 	Client  ClientConfig  `yaml:"client"`
+	JWT     JWTConfig     `yaml:"jwt"`
+	IAM     IAMConfig     `yaml:"iam"`
 }
+
+var G *ProjectConfig
 
 // LoadConfig 通过制定的path，加载对应的配置选项
 func LoadConfig(filePath string) (*ProjectConfig, error) {
@@ -96,5 +116,7 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+	// 用于后续的使用
+	G = conf
 	return conf, nil
 }

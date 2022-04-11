@@ -16,24 +16,44 @@ package wrapper
 
 import (
 	"context"
+	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
+	constant "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
-// NewInjectRequestIDWrapper 生成 request id, 用于操作审计等便于跟踪
-func NewInjectRequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) error {
+// NewInjectContextWrapper 生成 request id, 用于操作审计等便于跟踪
+func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 		// generate uuid， e.g. 40a05290d67a4a39a04c705a0ee56add
 		// TODO: trace id by opentelemetry
 		uuid := stringx.GenUUID()
 		ctx = context.WithValue(ctx, ctxkey.RequestIDKey, uuid)
+		// 解析jwt，获取username，并注入到context
+		var username string
+		if canExemptAuth(req) {
+			username = constant.AnonymousUsername
+		} else {
+			md, ok := metadata.FromContext(ctx)
+			if !ok {
+				return RenderResponse(rsp, uuid, errorx.New(errcode.UnauthErr, "failed to get micro's metadata"))
+			}
+
+			username, err = parseUsername(md)
+			if err != nil {
+				return RenderResponse(rsp, uuid, err)
+			}
+		}
+		ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 		return fn(ctx, req, rsp)
 	}
 }
@@ -52,33 +72,43 @@ func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	}
 }
 
-// NewResponseWrapper 添加request id, 统一处理返回
-func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) error {
-		err := fn(ctx, req, rsp)
-		requestID := ctx.Value(ctxkey.RequestIDKey).(string)
-		switch rsp.(type) {
-		case *proto.ProjectResponse:
-			if r, ok := rsp.(*proto.ProjectResponse); ok {
-				r.RequestID = requestID
-				if err != nil {
-					r.Code = errcode.InnerErr
-					r.Data = nil
-					r.Message = err.Error()
-					return nil
-				}
-			}
-		case *proto.ListProjectsResponse:
-			if r, ok := rsp.(*proto.ListProjectsResponse); ok {
-				r.RequestID = requestID
-				if err != nil {
-					r.Code = errcode.InnerErr
-					r.Data = nil
-					r.Message = err.Error()
-					return nil
-				}
-			}
-		}
-		return err
+// NoAuthEndpoints 不需要用户身份认证的方法
+var NoAuthEndpoints = []string{
+	"Healthz.Ping",
+	"Healthz.Healthz",
+}
+
+// 检查当前请求是否允许免除用户认证
+func canExemptAuth(req server.Request) bool {
+	// 禁用身份认证
+	if !config.G.JWT.Enable {
+		return true
 	}
+	// 特殊指定的Handler，不需要认证的方法
+	return stringx.StringInSlice(req.Endpoint(), NoAuthEndpoints)
+}
+
+func parseUsername(md metadata.Metadata) (string, error) {
+	jwtToken, ok := md.Get("Authorization")
+	if !ok {
+		return "", errorx.New(errcode.UnauthErr, "failed to get authorization token!")
+	}
+	if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
+		return "", errorx.New(errcode.UnauthErr, "authorization token error")
+	}
+	// 组装 jwt client
+	jwtOpt := jwt.JWTOptions{
+		VerifyKeyFile: config.G.JWT.PublicKeyFile,
+		SignKeyFile:   config.G.JWT.PrivateKeyFile,
+	}
+	jwtClient, err := jwt.NewJWTClient(jwtOpt)
+	if err != nil {
+		return "", err
+	}
+	// 解析token
+	claims, err := jwtClient.JWTDecode(jwtToken[7:])
+	if err != nil {
+		return "", err
+	}
+	return claims.UserName, nil
 }

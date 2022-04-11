@@ -35,4 +35,12 @@ const (
 	DBErr = errorCode.AdditionErrorCode + 501
 	// DbErrMsg DB操作失败消息
 	DbErrMsg = "db error"
+	// UnauthErr 未认证/认证失败
+	UnauthErr = errorCode.AdditionErrorCode + 401
+	// UnauthErrMsg 认证失败消息
+	UnauthErrMsg = "auth error"
+	// NoPermErr 无权限
+	NoPermErr = errorCode.AdditionErrorCode + 403
+	// NoPermErrMsg 无权限消息
+	NoPermErrMsg = "no permission"
 )

@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
@@ -62,7 +63,7 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
 	}
 
-	return p, errorx.New(errcode.Success, errcode.SuccessMsg)
+	return p, nil
 }
 
 func (ua *UpdateAction) validate() error {
@@ -85,9 +86,11 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	// 更新时间
 	p.UpdateTime = timeStr
-	p.Updater = ua.req.Updater
+	// 从 context 中获取 username
+	updater := ua.ctx.Value(ctxkey.UsernameKey).(string)
+	p.Updater = updater
 	// 更新管理员，添加项目更新者，并且去重
-	managers := stringx.JoinString(p.Managers, ua.req.Updater)
+	managers := stringx.JoinString(p.Managers, updater)
 	managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
 	p.Managers = strings.Join(managerList, ",")
 
