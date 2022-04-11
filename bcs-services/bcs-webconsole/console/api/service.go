@@ -52,8 +52,8 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	api.POST("/api/gate/sessions/:sessionId/", s.CreateGateSession)
-	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/container/", s.CreateContainerGateSession)
-	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/cluster/", s.CreateClusterGateSession)
+	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/container/", route.CredentialRequired(), s.CreateContainerGateSession)
+	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/cluster/", route.CredentialRequired(), s.CreateClusterGateSession)
 
 	// websocket协议, session鉴权
 	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)

@@ -96,3 +96,23 @@ func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
 
 	return nil
 }
+
+// CredentialRequired
+func CredentialRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Method == http.MethodOptions {
+			c.Next()
+			return
+		}
+		authCtx, err := GetAuthContext(c)
+		if err != nil {
+			panic(err)
+		}
+
+		c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+			Code:      types.ApiErrorCode,
+			Message:   "",
+			RequestID: authCtx.RequestId,
+		})
+	}
+}

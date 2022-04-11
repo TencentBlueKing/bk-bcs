@@ -284,6 +284,10 @@ func (c *WebConsoleManager) Run() error {
 					}
 					return err
 				}
+				// watch 会传入 null 空值
+				if string(value.Bytes()) == "null" {
+					continue
+				}
 				if err := config.G.ReadCred(value.Bytes()); err != nil {
 					logger.Errorf("reload credential error, %s", err)
 				}

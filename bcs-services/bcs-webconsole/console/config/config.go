@@ -107,6 +107,15 @@ func (c *Configurations) ReadCred(content []byte) error {
 	return nil
 }
 
+func (c *Configurations) ValidateCred(projectId string, clusterId string, username string) bool {
+	for _, cred := range c.Credentials {
+		if cred.IsValid(projectId, clusterId) {
+			return true
+		}
+	}
+	return false
+}
+
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
 	c.mtx.Lock()

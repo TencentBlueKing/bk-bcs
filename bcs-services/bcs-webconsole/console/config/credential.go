@@ -26,17 +26,24 @@ const (
 // Scope 权限控制，格式如cluster_id: "RE_BCS-K8S-40000", 多个取且关系
 type Scope map[string]string
 
-// Scopes 权限控制, 多个取或关系
-type Scopes []Scope
-
 // Credential 鉴权
 type Credential struct {
 	ProjectId      string    `yaml:"project_id"`
 	CredentialType string    `yaml:"credential_type"`
 	Credential     string    `yaml:"credential"`
-	Scopes         Scopes    `yaml:"scopes"`
+	Scopes         []Scope   `yaml:"scopes"` // 多个取或关系
 	ExpireTime     time.Time `yaml:"expire_time"`
 	Enabled        bool      `yaml:"enabled"`
 	Operator       string    `yaml:"operator"`
 	Comment        string    `yaml:"comment"`
+}
+
+func (c *Credential) IsValid(projectId, clusterId string) bool {
+	if !c.Enabled {
+		return false
+	}
+	if !c.ExpireTime.IsZero() && c.ExpireTime.Before(time.Now()) {
+		return false
+	}
+	return true
 }
