@@ -85,7 +85,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			segmentLen = 1
 		}
 		if err := ppih.ensureListeners(
-			lbObj.Region, lbObj.LoadbalancerID, item.StartPort, item.EndPort, segmentLen, item.Protocol); err != nil {
+			lbObj.Region, lbObj.LoadbalancerID, item.ItemName, item.StartPort, item.EndPort, segmentLen, item.Protocol); err != nil {
 			blog.Warnf("listeners of loadbalance %s not all ready, err %s", lbObj.LoadbalancerID, err.Error())
 			errMsgs = append(errMsgs, fmt.Sprintf("lb %s: %s", lbObj.LoadbalancerID, err.Error()))
 		}
@@ -211,7 +211,7 @@ func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.Listene
 }
 
 // ensure listeners about this port pool item
-func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort, endPort,
+func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, startPort, endPort,
 	segment uint32, protocol string) error {
 	listenerList, err := ppih.getListenerList(lbID)
 	if err != nil {
@@ -244,11 +244,19 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort,
 			if !ok {
 				notReady = true
 				if err := ppih.K8sClient.Create(context.Background(), ppih.generateListener(
-					region, lbID, protocol, tmpStartPort, uint32(tmpEndPort),
+					region, lbID, protocol, itemName, tmpStartPort, uint32(tmpEndPort),
 				), &client.CreateOptions{}); err != nil {
 					blog.Warnf("create listener %s failed, err %s", tmpName, err.Error())
 				}
 			} else {
+				// set label to identify this listener is created by what port pool
+				poolNameLabel := common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName)
+				if v, ok := listener.Labels[poolNameLabel]; !ok || v != netextv1.LabelValueForPortPoolItemName {
+					listener.Labels[poolNameLabel] = netextv1.LabelValueForPortPoolItemName
+					if err := ppih.K8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
+						blog.Warnf("update listener %s failed, err %s", tmpName, err.Error())
+					}
+				}
 				if len(listener.Status.ListenerID) == 0 {
 					notReady = true
 					blog.Warnf("listener %s is not ready", tmpName)
@@ -264,7 +272,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort,
 }
 
 func (ppih *PortPoolItemHandler) generateListener(
-	region, lbID, protocol string, startPort, endPort uint32) *netextv1.Listener {
+	region, lbID, protocol, itemName string, startPort, endPort uint32) *netextv1.Listener {
 	li := &netextv1.Listener{}
 	segLabelValue := netextv1.LabelValueTrue
 	listenerName := common.GetListenerNameWithProtocol(lbID, protocol, int(startPort), int(endPort))
@@ -274,10 +282,11 @@ func (ppih *PortPoolItemHandler) generateListener(
 	li.SetName(listenerName)
 	li.SetNamespace(ppih.Namespace)
 	li.SetLabels(map[string]string{
-		netextv1.LabelKeyForPortPoolListener:  netextv1.LabelValueTrue,
-		netextv1.LabelKeyForIsSegmentListener: segLabelValue,
-		netextv1.LabelKeyForLoadbalanceID:     generator.GetLabelLBId(lbID),
-		netextv1.LabelKeyForLoadbalanceRegion: region,
+		netextv1.LabelKeyForPortPoolListener:                            netextv1.LabelValueTrue,
+		netextv1.LabelKeyForIsSegmentListener:                           segLabelValue,
+		netextv1.LabelKeyForLoadbalanceID:                               generator.GetLabelLBId(lbID),
+		netextv1.LabelKeyForLoadbalanceRegion:                           region,
+		common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName): netextv1.LabelValueForPortPoolItemName,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = int(startPort)
