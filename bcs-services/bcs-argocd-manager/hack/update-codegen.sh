@@ -4,8 +4,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+PROJECT_ROOT=$(cd $(dirname ${BASH_SOURCE})/..; pwd)
+GOPATH=${GOPATH:-$(go env GOPATH)}
 # corresponding to go mod init <module>
 MODULE=github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager
+SUBPATH=${PROJECT_ROOT:${#GOPATH}+5}
 # api package
 APIS_PKG=pkg/apis
 # generated output package
@@ -22,8 +25,24 @@ echo "codegen package: ${CODEGEN_PKG}"
 # --output-base    because this script should also be able to run inside the vendor dir of
 #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
-bash "${CODEGEN_PKG}"/generate-groups.sh "client,lister,informer,deepcopy" \
-  ${MODULE}/${OUTPUT_PKG} ${MODULE}/${APIS_PKG} \
+#bash "${CODEGEN_PKG}"/generate-groups.sh \
+#  "client,lister,informer,deepcopy" \
+#  ${SUBPATH}/${OUTPUT_PKG} \
+#  ${SUBPATH}/${APIS_PKG} \
+#  ${GROUP_VERSION} \
+#  --output-base "../../.." \
+#  --go-header-file "${SCRIPT_ROOT}"/hack/boilerplate.go.txt
+
+bash "${CODEGEN_PKG}"/generate-groups.sh \
+  "client,lister,informer,deepcopy" \
+  ${MODULE}/${OUTPUT_PKG} \
+  ${MODULE}/${APIS_PKG} \
   ${GROUP_VERSION} \
   --go-header-file "${SCRIPT_ROOT}"/hack/boilerplate.go.txt \
-#  --output-base "${SCRIPT_ROOT}"
+  --output-base generated
+
+cp -r generated/${MODULE}/pkg/client pkg
+cp -r generated/${MODULE}/pkg/apis pkg
+rm -rf generated
+
+echo "generate clientset,lister,informer,deepcopy done"
