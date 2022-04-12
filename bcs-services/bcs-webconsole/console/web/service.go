@@ -44,8 +44,8 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	// html 页面
 	web.GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
 	web.GET("/projects/:projectId/mgr/", s.MgrPageHandler)
-	web.GET("/gate/container/", s.ContainerGatePageHandler)
-	web.GET("/gate/cluster/", s.ClusterGatePageHandler)
+	web.GET("/portal/container/", s.ContainerGatePageHandler)
+	web.GET("/portal/cluster/", s.ClusterGatePageHandler)
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
@@ -124,7 +124,7 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 		containerName = "--"
 	}
 
-	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/gate/sessions/%s/", sessionId)) + "/"
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,

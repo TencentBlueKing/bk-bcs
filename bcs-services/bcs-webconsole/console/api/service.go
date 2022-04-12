@@ -51,9 +51,9 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	api.GET("/api/projects/:projectId/clusters/", route.PermissionRequired(), s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	api.GET("/api/gate/sessions/:sessionId/", s.CreateGateSession)
-	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/container/", route.CredentialRequired(), s.CreateContainerGateSession)
-	api.POST("/api/gate/projects/:projectId/clusters/:clusterId/cluster/", route.CredentialRequired(), s.CreateClusterGateSession)
+	api.GET("/api/portal/sessions/:sessionId/", s.CreatePortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/", route.CredentialRequired(), s.CreateContainerPortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/", route.CredentialRequired(), s.CreateClusterPortalSession)
 
 	// websocket协议, session鉴权
 	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
@@ -122,7 +122,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-func (s *service) CreateGateSession(c *gin.Context) {
+func (s *service) CreatePortalSession(c *gin.Context) {
 	sessionId := c.Query("session_id")
 
 	authCtx := route.MustGetAuthContext(c)
@@ -157,7 +157,7 @@ func (s *service) CreateGateSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-func (s *service) CreateContainerGateSession(c *gin.Context) {
+func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
 	consoleQuery := new(podmanager.OpenQuery)
@@ -186,7 +186,7 @@ func (s *service) CreateContainerGateSession(c *gin.Context) {
 		return
 	}
 
-	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/gate/container/") + "/"
+	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/portal/container/") + "/"
 
 	query := url.Values{}
 	query.Set("session_id", sessionId)
@@ -207,7 +207,7 @@ func (s *service) CreateContainerGateSession(c *gin.Context) {
 	c.JSON(http.StatusOK, respData)
 }
 
-func (s *service) CreateClusterGateSession(c *gin.Context) {
+func (s *service) CreateClusterPortalSession(c *gin.Context) {
 }
 
 // APIError 简易的错误返回
