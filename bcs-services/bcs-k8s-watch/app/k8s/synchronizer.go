@@ -258,6 +258,10 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 			_, exists, err := watcher.store.GetByKey(key)
 			if !exists && err == nil {
 				glog.Infof("sync: %s: %s (name=%s) not on local, do delete", watcher.resourceType, key, name)
+				// Event not to delete.
+				if watcher.resourceType == ResourceTypeEvent {
+					continue
+				}
 
 				syncData := &action.SyncData{
 					Kind:      watcher.resourceType,
