@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
@@ -53,6 +54,7 @@ type AuthContext struct {
 	BindAPIGW   *APIGWToken            `json:"bind_apigw"`
 	BindCluster *bcs.Cluster           `json:"bind_cluster"`
 	BindProject *bcs.Project           `json:"bind_project"`
+	BindSession *types.PodContext      `json:"bind_session"`
 }
 
 // WebAuthRequired Web类型, 不需要鉴权
@@ -81,6 +83,7 @@ func APIAuthRequired() gin.HandlerFunc {
 		switch {
 		case initContextWithBCSJwt(c, authCtx):
 		case initContextWithAPIGW(c, authCtx):
+		case initContextWithSession(c, authCtx):
 		case initContextWithDevEnv(c, authCtx):
 		default:
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
@@ -220,6 +223,24 @@ func initContextWithAPIGW(c *gin.Context, authCtx *AuthContext) bool {
 	return true
 }
 
+func initContextWithSession(c *gin.Context, authCtx *AuthContext) bool {
+	// get jwt info from headers
+	sessionId := GetSessionId(c)
+	if sessionId == "" {
+		return false
+	}
+
+	store := sessions.NewRedisStore("open-session", "open-session")
+	podCtx, err := store.Get(c.Request.Context(), sessionId)
+	if err != nil {
+		return false
+	}
+
+	authCtx.BindSession = podCtx
+
+	return true
+}
+
 // GetAuthContext 查询鉴权信息
 func MustGetAuthContext(c *gin.Context) *AuthContext {
 	authCtxObj := c.MustGet("auth_context")
@@ -242,6 +263,13 @@ func GetProjectIdOrCode(c *gin.Context) string {
 func GetClusterId(c *gin.Context) string {
 	if c.Param("clusterId") != "" {
 		return c.Param("clusterId")
+	}
+	return ""
+}
+
+func GetSessionId(c *gin.Context) string {
+	if c.Param("sessionId") != "" {
+		return c.Param("sessionId")
 	}
 	return ""
 }

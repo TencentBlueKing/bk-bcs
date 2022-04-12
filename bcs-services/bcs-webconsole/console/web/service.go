@@ -120,16 +120,11 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	sessionId := c.Query("session_id")
 	containerName := c.Query("container_name")
 
-	query := url.Values{}
-
 	if containerName == "" {
 		containerName = "--"
 	}
 
-	query.Set("session_id", sessionId)
-
-	sessionUrl := path.Join(s.opts.RoutePrefix, "/api/projects/-/clusters/-/session/") + "/"
-	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/gate/sessions/%s/", sessionId)) + "/"
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,

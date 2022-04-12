@@ -125,13 +125,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 func (s *service) CreateGateSession(c *gin.Context) {
 	sessionId := c.Query("session_id")
 
-	store := sessions.NewRedisStore("open-session", "open-session")
-	podCtx, err := store.Get(c.Request.Context(), sessionId)
-	if err != nil {
-		msg := i18n.GetMessage("sessin_id不正确", err)
+	authCtx := route.MustGetAuthContext(c)
+	if authCtx.BindSession == nil {
+		msg := i18n.GetMessage("sessin_id不正确")
 		APIError(c, msg)
 		return
 	}
+
+	podCtx := authCtx.BindSession
 
 	newStore := sessions.NewRedisStore(podCtx.ProjectId, podCtx.ClusterId)
 	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
@@ -157,8 +158,7 @@ func (s *service) CreateGateSession(c *gin.Context) {
 }
 
 func (s *service) CreateContainerGateSession(c *gin.Context) {
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
+	authCtx := route.MustGetAuthContext(c)
 
 	consoleQuery := new(podmanager.OpenQuery)
 
@@ -169,13 +169,13 @@ func (s *service) CreateContainerGateSession(c *gin.Context) {
 		return
 	}
 
-	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), clusterId, consoleQuery)
+	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
 		msg := i18n.GetMessage("请求参数错误")
 		APIError(c, msg)
 		return
 	}
-	podCtx.ProjectId = projectId
+	podCtx.ProjectId = authCtx.ProjectId
 
 	store := sessions.NewRedisStore("open-session", "open-session")
 
