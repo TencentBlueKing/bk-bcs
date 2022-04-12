@@ -32,7 +32,7 @@ func SplitAddrString(address string) []string {
 func RandomString(prefix string, n int) string {
 	const alphaNum = "0123456789abcdefghijklmnopqrstuvwxyz"
 	var bytes = make([]byte, n)
-	rand.Read(bytes)
+	_, _ = rand.Read(bytes)
 	for i, b := range bytes {
 		bytes[i] = alphaNum[b%byte(len(alphaNum))]
 	}
