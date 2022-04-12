@@ -933,20 +933,22 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		if isEmpty(gpa.Spec.AutoScalingDrivenMode) {
 			return nil
 		}
-		// get replicas from metric mode
-		metricDesiredReplicas, metricName, metricStatuses, metricTimestamp, err = a.computeReplicasForMetrics(gpa,
-			scale, gpa.Spec.MetricMode.Metrics)
-		if err != nil {
-			a.setCurrentReplicasInStatus(gpa, currentReplicas)
-			if updateErr := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); updateErr != nil {
-				utilruntime.HandleError(updateErr)
+		if gpa.Spec.MetricMode != nil {
+			// get replicas from metric mode
+			metricDesiredReplicas, metricName, metricStatuses, metricTimestamp, err = a.computeReplicasForMetrics(gpa,
+				scale, gpa.Spec.MetricMode.Metrics)
+			if err != nil {
+				a.setCurrentReplicasInStatus(gpa, currentReplicas)
+				if updateErr := a.updateStatusIfNeeded(gpaStatusOriginal, gpa); updateErr != nil {
+					utilruntime.HandleError(updateErr)
+				}
+				a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedComputeMetricsReplicas", err.Error())
+				return fmt.Errorf("failed to compute desired number of replicas based on listed metrics for %s: %v",
+					reference, err)
 			}
-			a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedComputeMetricsReplicas", err.Error())
-			return fmt.Errorf("failed to compute desired number of replicas based on listed metrics for %s: %v",
-				reference, err)
+			klog.V(4).Infof("Metric-Mode: proposing %v desired replicas (based on %s from %s) for %s",
+				metricDesiredReplicas, metricName, metricTimestamp, reference)
 		}
-		klog.V(4).Infof("Metric-Mode: proposing %v desired replicas (based on %s from %s) for %s",
-			metricDesiredReplicas, metricName, metricTimestamp, reference)
 
 		// get replicas from time/webhook/cron/event mode
 		simpleReplicas, simpleName, simpleStatuses, simpleTimestamp, simpleErr := a.computeReplicasForSimple(gpa,
