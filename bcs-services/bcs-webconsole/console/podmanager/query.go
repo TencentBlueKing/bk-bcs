@@ -286,5 +286,5 @@ func QueryOpenPodCtx(ctx context.Context, clusterId string, consoleQuery *OpenQu
 		return podCtx, err
 	}
 
-	return nil, errors.New("")
+	return nil, errors.New("container_id或namespace/pod_name/container_name不能同时为空")
 }

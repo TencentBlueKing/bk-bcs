@@ -42,14 +42,15 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/user/perm_request/", route.APIAuthRequired(), s.UserPermRequestRedirect)
 
 	// html 页面
-	web.GET("/", s.SessionPageHandler)
 	web.GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
 	web.GET("/projects/:projectId/mgr/", s.MgrPageHandler)
+	web.GET("/portal/container/", s.ContainerGatePageHandler)
+	web.GET("/portal/cluster/", s.ClusterGatePageHandler)
 
-	// 公共接口, 如metrics, healthy, ready, pprof, metrics 等
+	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.HealthyHandler)
-	web.GET("/-/metrics", metrics.HandlerFunc())
+	web.GET("/metrics", metrics.HandlerFunc())
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
@@ -114,21 +115,16 @@ func (s *service) MgrPageHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "mgr.html", data)
 }
 
-// SessionPageHandler 开放的页面WebConsole页面
-func (s *service) SessionPageHandler(c *gin.Context) {
+// ContainerGatePageHandler 开放的页面WebConsole页面
+func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	sessionId := c.Query("session_id")
 	containerName := c.Query("container_name")
-
-	query := url.Values{}
 
 	if containerName == "" {
 		containerName = "--"
 	}
 
-	query.Set("session_id", sessionId)
-
-	sessionUrl := path.Join(s.opts.RoutePrefix, "/api/open_session/") + "/"
-	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
@@ -142,6 +138,11 @@ func (s *service) SessionPageHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
+}
+
+// ClusterGatePageHandler 开放的页面WebConsole页面
+func (s *service) ClusterGatePageHandler(c *gin.Context) {
+
 }
 
 func (s *service) HealthyHandler(c *gin.Context) {
