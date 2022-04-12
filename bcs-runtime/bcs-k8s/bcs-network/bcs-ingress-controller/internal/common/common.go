@@ -13,6 +13,7 @@
 package common
 
 import (
+	"crypto/md5"
 	"fmt"
 	"strconv"
 	"strings"
@@ -25,6 +26,10 @@ import (
 func GetLbRegionAndName(lbName string) (string, string, error) {
 	if a, err := arn.Parse(lbName); err == nil {
 		return a.Region, lbName, nil
+	}
+	// for lb name without region, we use default region
+	if !strings.Contains(lbName, constant.DelimiterForLbID) {
+		return "", lbName, nil
 	}
 	idStrs := strings.Split(lbName, constant.DelimiterForLbID)
 	if len(idStrs) != 2 {
@@ -84,4 +89,11 @@ func GetSegmentListenerName(lbID string, startPort, endPort int) string {
 // GetNamespacedNameKey get key by name and namespace
 func GetNamespacedNameKey(name, ns string) string {
 	return name + "/" + ns
+}
+
+// GetPortPoolListenerLabelKey get key for port pool listener label
+// example: pool1/md5(item1)
+// because item1 is an anomaly string, so we use md5 to encode it
+func GetPortPoolListenerLabelKey(portPoolName, itemName string) string {
+	return portPoolName + "/" + fmt.Sprintf("%x", (md5.Sum([]byte(itemName))))
 }
