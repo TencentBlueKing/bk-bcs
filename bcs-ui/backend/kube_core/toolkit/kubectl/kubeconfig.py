@@ -71,7 +71,6 @@ class KubeConfig:
         if cluster.cert:
             cert_info = {"certificate-authority": cluster.cert}
 
-        # if settings.HELM_INSECURE_SKIP_TLS_VERIFY:
         cert_info = {"insecure-skip-tls-verify": True}
 
         return {

@@ -41,7 +41,7 @@ def common_base_request(url, data):
 
 
 def get_all_users():
-    url = f"{settings.BK_PAAS_INNER_HOST}/{BK_LOGIN_PREFIX_PATH}/get_all_users/"
+    url = f"{settings.COMPONENT_HOST}/{BK_LOGIN_PREFIX_PATH}/get_all_users/"
     data = {
         "bk_username": "100",
     }

@@ -8,6 +8,8 @@ const Cluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster')
 const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-cluster')
 // 表单模式
 const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-form-cluster')
+// ee版本创建集群流程
+const CreateFormClusterEE = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-form-cluster-ee')
 // import模式
 const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster/create-cluster/create-import-cluster')
 // 集群模板创建
@@ -52,6 +54,15 @@ const childRoutes = [
         path: ':projectCode/cluster/create/form',
         name: 'createFormCluster',
         component: CreateFormCluster,
+        meta: {
+            title: window.i18n.t('自建集群')
+        }
+    },
+    // 创建集群 - 表单模式（ee版本）
+    {
+        path: ':projectCode/cluster/create/form-ee',
+        name: 'createFormClusterEE',
+        component: CreateFormClusterEE,
         meta: {
             title: window.i18n.t('自建集群')
         }

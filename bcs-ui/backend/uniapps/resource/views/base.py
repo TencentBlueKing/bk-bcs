@@ -405,7 +405,7 @@ class ResourceOperate:
             else:
                 # 非模板集创建，可以删除但是不可以更新
                 _s['can_update'] = False
-                _s['can_update_msg'] = _("不是由模板实例化生成，无法更新")
+                _s['can_update_msg'] = _("不是由 表单模版集 实例化生成，无法更新")
 
             _s['instance_id'] = instance_id
 

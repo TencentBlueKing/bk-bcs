@@ -517,6 +517,12 @@ class PaaSCCConfig:
         self.list_projects_by_ids = f"{host}/project_list/"
         self.list_namespaces_in_shared_cluster = f"{host}/shared_clusters/{{cluster_id}}/"
 
+        # TODO 兼容容器化版本的逻辑，直连 SVC，后续随 PaaSCC 一并移除
+        if getattr(settings, "BCS_CC_GET_PROJECT_NODES", None):
+            self.get_node_list_url = f"{host}/projects/{{project_id}}/clusters/null/nodes/"
+        else:
+            self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
+
 
 @dataclass
 class UpdateNodesData:

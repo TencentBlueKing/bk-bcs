@@ -18,7 +18,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components import prometheus as prom
+from backend.components import bcs_monitor as prom
 from backend.container_service.observability.metric.constants import (
     METRICS_DEFAULT_CONTAINER_LIST,
     METRICS_DEFAULT_NAMESPACE,
@@ -61,6 +61,10 @@ class ContainerMetricViewSet(SystemViewSet):
                     'end': params['end_at'],
                 }
             )
+
+        # 添加业务ID
+        query_params['bk_biz_id'] = self.request.project.cc_app_id
+
         return query_metric_func(**query_params)
 
     @action(methods=['POST'], url_path='cpu_limit', detail=False)

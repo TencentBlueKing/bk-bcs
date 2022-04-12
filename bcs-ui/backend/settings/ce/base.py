@@ -49,8 +49,8 @@ INSTALLED_APPS += [
 LOGIN_FULL = ""
 LOGIN_SIMPLE = ""
 
-# 设置存储在 session 中的 token 一天后过期，默认为 5 分钟
-BKAUTH_SESSION_TIMEOUT = 86400
+# 设置 session 过期时间为 12H
+SESSION_COOKIE_AGE = 12 * 60 * 60
 
 # bkpaas_auth 模块会通过用户的 AccessToken 获取用户基本信息，因为这个 API 调用比较昂贵。
 # 所以最好设置 Django 缓存来避免不必要的请求以提高效率。
@@ -281,13 +281,16 @@ BCS_APP_ID = 1
 BCS_APP_CODE = APP_CODE
 BCS_APP_SECRET = SECRET_KEY
 
+# 是否支持使用 Mesos 服务
+SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
+
 # REPO 相关配置
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
 HELM_MERELY_REPO_URL = HELM_REPO_DOMAIN
 BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
-# 默认 BKCC 设备供应方
-BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', None)
+# 默认 BKCC 设备供应方，社区版默认 '0'
+BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', '0')
 
 # clustermanager域名
 CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")
@@ -295,6 +298,13 @@ CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")
 # 可能有带端口的情况，需要去除
 SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
+# 蓝鲸监控 unify-query 地址
+BK_MONITOR_QUERY_HOST = os.environ.get(
+    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
+)
+
+# 基础性能查询数据源
+PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
 
 # 蓝鲸 opentelemetry trace 配置
 # 是否开启 OTLP, 默认不开启
