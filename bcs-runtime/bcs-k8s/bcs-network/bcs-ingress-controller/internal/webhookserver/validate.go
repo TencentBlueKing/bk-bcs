@@ -90,7 +90,7 @@ func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
 				return fmt.Errorf("lbIDStr %s of item %s is invalid", lbIDStr, item.ItemName)
 			}
 			for port := item.StartPort; port < item.EndPort; port++ {
-				lbPort := fmt.Sprintf("%s-%d", lbID, port)
+				lbPort := common.GetListenerName(lbID, int(port))
 				if itemName, ok := lbPortMap[lbPort]; ok {
 					return fmt.Errorf("lbID %s of item %s conflicts with id of item %s", lbID, item.ItemName, itemName)
 				}
@@ -158,7 +158,7 @@ func (s *Server) checkPortPoolConflicts(newPool *networkextensionv1.PortPool) er
 					return fmt.Errorf("lbIDStr %s of existed item %s is invalid", item.ItemName, lbIDStr)
 				}
 				for port := item.StartPort; port < item.EndPort; port++ {
-					lbPort := fmt.Sprintf("%s-%d", lbID, port)
+					lbPort := common.GetListenerName(lbID, int(port))
 					lbPortMap[lbPort] = existedPool.GetName() + "/" + existedPool.GetNamespace()
 				}
 			}
@@ -172,7 +172,7 @@ func (s *Server) checkPortPoolConflicts(newPool *networkextensionv1.PortPool) er
 				return fmt.Errorf("lbIDStr %s of new item %s is invalid", newItem.ItemName, lbIDStr)
 			}
 			for port := newItem.StartPort; port < newItem.EndPort; port++ {
-				lbPort := fmt.Sprintf("%s-%d", lbID, port)
+				lbPort := common.GetListenerName(lbID, int(port))
 				if existedPoolKey, ok := lbPortMap[lbPort]; ok {
 					return fmt.Errorf("lbID %s of new item %s is conflict with pool %s",
 						lbID, newItem.ItemName, existedPoolKey)
