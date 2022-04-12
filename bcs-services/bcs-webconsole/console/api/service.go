@@ -29,7 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type service struct {
@@ -60,6 +59,8 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 }
 
 func (s *service) ListClusters(c *gin.Context) {
+	authCtx := route.MustGetAuthContext(c)
+
 	projectId := c.Param("projectId")
 	clusters, err := bcs.ListClusters(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
@@ -70,7 +71,7 @@ func (s *service) ListClusters(c *gin.Context) {
 		Data:      clusters,
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取集群成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 	c.JSON(http.StatusOK, data)
 }
@@ -117,7 +118,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 	c.JSON(http.StatusOK, data)
 }
@@ -152,7 +153,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 	c.JSON(http.StatusOK, data)
 }
@@ -201,7 +202,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 
 	c.JSON(http.StatusOK, respData)
@@ -212,10 +213,12 @@ func (s *service) CreateClusterPortalSession(c *gin.Context) {
 
 // APIError 简易的错误返回
 func APIError(c *gin.Context, msg string) {
+	authCtx := route.MustGetAuthContext(c)
+
 	data := types.APIResponse{
 		Code:      types.ApiErrorCode,
 		Message:   msg,
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 
 	c.AbortWithStatusJSON(http.StatusOK, data)
