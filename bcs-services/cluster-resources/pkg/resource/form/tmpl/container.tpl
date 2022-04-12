@@ -94,7 +94,7 @@ ports:
 {{- end }}
 
 {{- define "container.envs" -}}
-{{- if or (typeMapInSlice .vars "type" "keyValue") (typeMapInSlice .vars "type" "podField") (typeMapInSlice .vars "type" "resource") (typeMapInSlice .vars "type" "configMapKey") (typeMapInSlice .vars "type" "secretKey") }}
+{{- if or (matchKVInSlice .vars "type" "keyValue") (matchKVInSlice .vars "type" "podField") (matchKVInSlice .vars "type" "resource") (matchKVInSlice .vars "type" "configMapKey") (matchKVInSlice .vars "type" "secretKey") }}
 envs:
   {{- range .vars }}
   {{- if eq .type "keyValue" }}
@@ -128,7 +128,7 @@ envs:
   {{- end }}
   {{- end }}
 {{- end }}
-{{- if or (typeMapInSlice .vars "type" "configMap") (typeMapInSlice .vars "type" "secret") }}
+{{- if or (matchKVInSlice .vars "type" "configMap") (matchKVInSlice .vars "type" "secret") }}
 envForm:
   {{- range .vars }}
   {{- if eq .type "configMap" }}

@@ -30,8 +30,8 @@ func newTmplFuncMap() template.FuncMap {
 
 	extra := template.FuncMap{
 		"toYaml":                 toYaml,
-		"filterTypeMapFromSlice": slice.FilterTypeMapFromSlice,
-		"typeMapInSlice":         slice.TypeMapInSlice,
+		"filterMatchKVFormSlice": slice.FilterMatchKVFromSlice,
+		"matchKVInSlice":         slice.MatchKVInSlice,
 
 		// This is a placeholder for the "include" function, which is late-bound to a template.
 		// By declaring it here, we preserve the integrity of the linter.

@@ -34,32 +34,32 @@ template:
 {{- end }}
 
 {{- define "workload.affinity" -}}
-{{- $podAffinity := filterTypeMapFromSlice .podAffinity "type" "affinity" }}
+{{- $podAffinity := filterMatchKVFormSlice .podAffinity "type" "affinity" }}
 {{- if $podAffinity }}
 podAffinity:
-  {{- if typeMapInSlice $podAffinity "priority" "required" }}
+  {{- if matchKVInSlice $podAffinity "priority" "required" }}
   {{- include "podAffinity.required" $podAffinity | nindent 2 }}
   {{- end }}
-  {{- if typeMapInSlice $podAffinity "priority" "preferred" }}
+  {{- if matchKVInSlice $podAffinity "priority" "preferred" }}
   {{- include "podAffinity.preferred" $podAffinity | nindent 2 }}
   {{- end }}
 {{- end }}
-{{- $podAntiAffinity := filterTypeMapFromSlice .spec.affinity.podAffinity "type" "antiAffinity" }}
+{{- $podAntiAffinity := filterMatchKVFormSlice .spec.affinity.podAffinity "type" "antiAffinity" }}
 {{- if $podAntiAffinity }}
 podAntiAffinity:
-  {{- if typeMapInSlice $podAntiAffinity "priority" "required" }}
+  {{- if matchKVInSlice $podAntiAffinity "priority" "required" }}
   {{- include "podAffinity.required" $podAntiAffinity | nindent 2 }}
   {{- end }}
-  {{- if typeMapInSlice $podAffinity "priority" "preferred" }}
+  {{- if matchKVInSlice $podAffinity "priority" "preferred" }}
   {{- include "podAffinity.preferred" $podAntiAffinity | nindent 2 }}
   {{- end }}
 {{- end }}
 {{- if .nodeAffinity }}
 nodeAffinity:
-  {{- if typeMapInSlice .nodeAffinity "priority" "required" }}
+  {{- if matchKVInSlice .nodeAffinity "priority" "required" }}
   {{- include "nodeAffinity.required" .nodeAffinity | nindent 2 }}
   {{- end }}
-  {{- if typeMapInSlice .nodeAffinity "priority" "preferred" }}
+  {{- if matchKVInSlice .nodeAffinity "priority" "preferred" }}
   {{- include "nodeAffinity.preferred" .nodeAffinity | nindent 2 }}
   {{- end }}
 {{- end }}

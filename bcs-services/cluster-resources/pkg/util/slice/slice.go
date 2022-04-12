@@ -24,9 +24,9 @@ func StringInSlice(str string, list []string) bool {
 	return false
 }
 
-// TypeMapInSlice 对 MapList 中每项进行检查，
+// MatchKVInSlice 对 MapList 中每项进行检查，
 // 若存在某项的 key 的 value 为指定值，则返回 true
-func TypeMapInSlice(list []interface{}, key, value string) bool {
+func MatchKVInSlice(list []interface{}, key, value string) bool {
 	for _, item := range list {
 		if it, ok := item.(map[string]interface{}); ok {
 			if v, ok := it[key]; ok {
@@ -39,9 +39,9 @@ func TypeMapInSlice(list []interface{}, key, value string) bool {
 	return false
 }
 
-// FilterTypeMapFromSlice 对 MapList 中每项进行检查，
+// FilterMatchKVFromSlice 对 MapList 中每项进行检查，
 // 若存在某项的 key 的 value 为指定值，添加到返回的列表中
-func FilterTypeMapFromSlice(list []interface{}, key, value string) []interface{} {
+func FilterMatchKVFromSlice(list []interface{}, key, value string) []interface{} {
 	ret := []interface{}{}
 	for _, item := range list {
 		if it, ok := item.(map[string]interface{}); ok {
