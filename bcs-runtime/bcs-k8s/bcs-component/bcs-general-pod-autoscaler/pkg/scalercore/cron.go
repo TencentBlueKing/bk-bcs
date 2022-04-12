@@ -19,6 +19,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
 )
 
 var _ Scaler = &CronScaler{}
@@ -39,9 +40,13 @@ func NewCronScaler(ranges []v1alpha1.TimeRange) Scaler {
 // GetReplicas return replicas  recommend by crontab GPA
 func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
 	var max int32 = -1
+	var metricsServer metrics.PrometheusMetricServer
+	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
 	for _, t := range s.ranges {
+		timeMetric := t.Schedule
 		misMatch, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {
+			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "time", timeMetric, err)
 			klog.Error(err)
 			return currentReplicas, nil
 		}
@@ -58,6 +63,9 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 	if max == -1 {
 		klog.Info("Now is not in any time range")
 	}
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "time", recordScheduleName,
+		int64(max), int64(currentReplicas))
+	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "time", max)
 	return max, nil
 }
 

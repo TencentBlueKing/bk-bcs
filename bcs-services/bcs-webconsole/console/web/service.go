@@ -19,6 +19,8 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
@@ -35,28 +37,43 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 func (s service) RegisterRoute(router gin.IRoutes) {
 	web := router.Use(route.WebAuthRequired())
 
+	// 跳转 URL
+	web.GET("/user/login/", s.UserLoginRedirect)
+	web.GET("/user/perm_request/", route.APIAuthRequired(), s.UserPermRequestRedirect)
+
 	// html 页面
-	web.GET("/", s.SessionPageHandler)
 	web.GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
 	web.GET("/projects/:projectId/mgr/", s.MgrPageHandler)
+	web.GET("/portal/container/", s.ContainerGatePageHandler)
+	web.GET("/portal/cluster/", s.ClusterGatePageHandler)
 
-	// 公共接口, 如metrics, healthy, ready, pprof, metrics 等
+	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.HealthyHandler)
+	web.GET("/metrics", metrics.HandlerFunc())
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
-	containerId := c.Query("container_id")
+	consoleQuery := new(podmanager.ConsoleQuery)
+	c.BindQuery(consoleQuery)
 
-	query := url.Values{}
+	// 登入Url
+	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
 
+	// 权限申请Url
+	promRequestQuery := url.Values{}
+	promRequestQuery.Set("project_id", projectId)
+	promRequestQuery.Set("cluster_id", clusterId)
+	promRequestUrl := path.Join(s.opts.RoutePrefix, "/user/perm_request") + "/" + "?" + promRequestQuery.Encode()
+
+	// webconsole Url
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
 
-	if containerId != "" {
-		query.Set("container_id", containerId)
-		sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+	encodedQuery := consoleQuery.MakeEncodedQuery()
+	if encodedQuery != "" {
+		sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, encodedQuery)
 	}
 
 	settings := map[string]string{
@@ -65,9 +82,11 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	}
 
 	data := gin.H{
-		"title":       clusterId,
-		"session_url": sessionUrl,
-		"settings":    settings,
+		"title":            clusterId,
+		"session_url":      sessionUrl,
+		"login_url":        loginUrl,
+		"perm_request_url": promRequestUrl,
+		"settings":         settings,
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
@@ -78,29 +97,34 @@ func (s *service) MgrPageHandler(c *gin.Context) {
 
 	settings := map[string]string{"SITE_URL": s.opts.RoutePrefix}
 
+	// 登入Url
+	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
+
+	// 权限申请Url
+	promRequestQuery := url.Values{}
+	promRequestQuery.Set("project_id", projectId)
+	promRequestUrl := path.Join(s.opts.RoutePrefix, "/user/perm_request") + "/" + "?" + promRequestQuery.Encode()
+
 	data := gin.H{
-		"settings":   settings,
-		"project_id": projectId,
+		"settings":         settings,
+		"project_id":       projectId,
+		"login_url":        loginUrl,
+		"perm_request_url": promRequestUrl,
 	}
 
 	c.HTML(http.StatusOK, "mgr.html", data)
 }
 
-// SessionPageHandler 开放的页面WebConsole页面
-func (s *service) SessionPageHandler(c *gin.Context) {
+// ContainerGatePageHandler 开放的页面WebConsole页面
+func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	sessionId := c.Query("session_id")
 	containerName := c.Query("container_name")
 
-	query := url.Values{}
-
-	if containerName != "" {
+	if containerName == "" {
 		containerName = "--"
 	}
 
-	query.Set("session_id", sessionId)
-
-	sessionUrl := path.Join(s.opts.RoutePrefix, "/api/open_session/") + "/"
-	sessionUrl = fmt.Sprintf("%s?%s", sessionUrl, query.Encode())
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
@@ -114,6 +138,11 @@ func (s *service) SessionPageHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
+}
+
+// ClusterGatePageHandler 开放的页面WebConsole页面
+func (s *service) ClusterGatePageHandler(c *gin.Context) {
+
 }
 
 func (s *service) HealthyHandler(c *gin.Context) {

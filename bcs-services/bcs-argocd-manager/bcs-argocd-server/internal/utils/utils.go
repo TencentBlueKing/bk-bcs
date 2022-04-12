@@ -30,13 +30,13 @@ func SplitAddrString(address string) []string {
 // (Implementation from Even Shaw's contribution on
 // http://stackoverflow.com/questions/12771930/what-is-the-fastest-way-to-generate-a-long-random-string-in-go).
 func RandomString(prefix string, n int) string {
-	const alphaNum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	const alphaNum = "0123456789abcdefghijklmnopqrstuvwxyz"
 	var bytes = make([]byte, n)
 	rand.Read(bytes)
 	for i, b := range bytes {
 		bytes[i] = alphaNum[b%byte(len(alphaNum))]
 	}
-	return prefix + string(bytes)
+	return prefix + "-" + string(bytes)
 }
 
 // ItemInList check if item is in list

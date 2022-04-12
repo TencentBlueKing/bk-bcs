@@ -146,6 +146,10 @@ func (da *DeleteAction) canDelete() error {
 }
 
 func (da *DeleteAction) cleanLocalInformation() error {
+	// importer cluster only delete cluster related data
+	if da.isImporterCluster() {
+		da.req.IsForced = true
+	}
 	if da.req.IsForced {
 		// clean cluster autoscaling option
 		if da.scalingOption != nil {
@@ -255,7 +259,7 @@ func (da *DeleteAction) setResp(code uint32, msg string) {
 }
 
 func (da *DeleteAction) releaseClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
+	if len(cls.NetworkSettings.GetClusterIPv4CIDR()) > 0 {
 		cidr, err := da.model.GetTkeCidr(da.ctx, cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Errorf("delete cluster release cidr[%s] failed: %v", cls.NetworkSettings.ClusterIPv4CIDR, err)
@@ -387,10 +391,11 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	}
 
 	// version 1 only delete cluster info, manual delete cluster by cloud provider
-	// OnlyDeleteInfo = true && IsForced = true (delete relative resource and delete cluster)
-	// and IsForced = false (check resource, can't delete cluster if resource do not nil)
-	if req.OnlyDeleteInfo {
-		//clean all relative resource then delete cluster finnally
+	//     OnlyDeleteInfo = true && IsForced = true (delete relative resource and delete cluster)
+	//     and IsForced = false (check resource, can't delete cluster if resource do not nil).
+	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
+	if req.OnlyDeleteInfo || da.isImporterCluster() {
+		//clean all relative resource then delete cluster finally
 		if err := da.cleanLocalInformation(); err != nil {
 			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -398,6 +403,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 		}
 
 		blog.Infof("only Delete Cluster %s local information successfully", req.ClusterID)
+		da.resp.Data = da.cluster
 		da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 		return
 	}
@@ -453,6 +459,10 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	da.resp.Task = da.tasks
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func (da *DeleteAction) isImporterCluster() bool {
+	return da.cluster.ClusterCategory == Importer
 }
 
 func (da *DeleteAction) createDeleteClusterTask(req *cmproto.DeleteClusterReq) error {

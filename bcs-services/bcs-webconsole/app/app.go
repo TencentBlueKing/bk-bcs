@@ -24,9 +24,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -42,6 +42,7 @@ import (
 	microConf "go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/reader"
 	"go-micro.dev/v4/config/reader/json"
+	"go-micro.dev/v4/config/source"
 	"go-micro.dev/v4/config/source/file"
 	"go-micro.dev/v4/registry"
 	"golang.org/x/sync/errgroup"
@@ -49,8 +50,9 @@ import (
 
 var (
 	// 变量, 编译后覆盖
-	service = "bcs-webconsole"
-	version = "latest"
+	service              = "webconsole.bkbcs.tencent.com"
+	version              = "latest"
+	credentialConfigPath = ""
 )
 
 // WebConsoleManager is an console struct
@@ -59,6 +61,7 @@ type WebConsoleManager struct {
 	opt          *options.WebConsoleManagerOption
 	microService micro.Service
 	microConfig  microConf.Config
+	credConf     microConf.Config
 }
 
 // NewWebConsoleManager
@@ -71,9 +74,10 @@ func NewWebConsoleManager(opt *options.WebConsoleManagerOption) *WebConsoleManag
 
 func (c *WebConsoleManager) Init() error {
 	// 初始化服务注册, 配置文件等
-	microService, microConfig := c.initMicroService()
+	microService, microConfig, credConf := c.initMicroService()
 	c.microService = microService
 	c.microConfig = microConfig
+	c.credConf = credConf
 
 	// etcd 服务发现注册
 	etcdRegistry, err := c.initEtcdRegistry()
@@ -98,11 +102,16 @@ func (c *WebConsoleManager) Init() error {
 	return nil
 }
 
-func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config) {
-	var configPath string
+func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, microConf.Config) {
+	var (
+		configPath string
+	)
 
 	// new config
 	conf, _ := microConf.NewConfig(
+		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
+	)
+	credConf, _ := microConf.NewConfig(
 		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
 	)
 
@@ -124,6 +133,12 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config)
 			Required:    true,
 			Destination: &configPath,
 		},
+		&cli.StringFlag{
+			Name:        "credential-config",
+			Usage:       "credential config file path",
+			Required:    false,
+			Destination: &credentialConfigPath,
+		},
 	}
 
 	microCmd.App().Action = func(c *cli.Context) error {
@@ -138,6 +153,20 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config)
 		}
 
 		logger.Infof("load conf from %s", configPath)
+
+		// 授权信息
+		if credentialConfigPath != "" {
+			if err := credConf.Load(file.NewSource(file.WithPath(credentialConfigPath))); err != nil {
+				return err
+			}
+
+			if err := config.G.ReadCred(credConf.Get("credentials").Bytes()); err != nil {
+				logger.Errorf("config not valid, err: %s, exited", err)
+				os.Exit(1)
+			}
+
+			logger.Infof("load credential conf from %s, len=%d", credentialConfigPath, len(config.G.Credentials))
+		}
 		return nil
 	}
 
@@ -151,7 +180,7 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config)
 	// 配置文件, 日志这里才设置完成
 	srv.Init(opts...)
 
-	return srv, conf
+	return srv, conf, credConf
 }
 
 // initHTTPService 初始化 gin Http 配置
@@ -167,7 +196,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	// 静态资源
 	routePrefix := config.G.Web.RoutePrefix
 	if routePrefix == "" {
-		routePrefix = "/" + service
+		routePrefix = "/webconsole"
 	}
 
 	// 支持路径 prefix 透传和 rewrite 的场景
@@ -194,20 +223,23 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 
 // initEtcdRegistry etcd 服务注册
 func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
-	ca := c.microConfig.Get("etcd", "ca").String("")
-	cert := c.microConfig.Get("etcd", "cert").String("")
-	key := c.microConfig.Get("etcd", "key").String("")
-	if ca == "" || cert == "" || key == "" {
+	endpoints := c.microConfig.Get("etcd", "endpoints").String("")
+	if endpoints == "" {
 		return nil, nil
 	}
 
-	endpoints := c.microConfig.Get("etcd", "endpoints").String("127.0.0.1:2379")
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
-	tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
-	if err != nil {
-		return nil, err
+
+	ca := c.microConfig.Get("etcd", "ca").String("")
+	cert := c.microConfig.Get("etcd", "cert").String("")
+	key := c.microConfig.Get("etcd", "key").String("")
+	if ca != "" && cert != "" && key != "" {
+		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
+		if err != nil {
+			return nil, err
+		}
+		etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 	}
-	etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 
 	return etcdRegistry, nil
 }
@@ -233,6 +265,36 @@ func (c *WebConsoleManager) Run() error {
 	eg.Go(func() error {
 		return podCleanUpMgr.Run()
 	})
+
+	if credentialConfigPath != "" {
+		w, _ := c.credConf.Watch("credentials")
+
+		c.microService.Init(micro.AfterStop(func() error {
+			logger.Infof("receive interput, stop watch %s", credentialConfigPath)
+			w.Stop()
+			return nil
+		}))
+
+		eg.Go(func() error {
+			for {
+				value, err := w.Next()
+				if err != nil {
+					if err.Error() == source.ErrWatcherStopped.Error() {
+						return nil
+					}
+					return err
+				}
+				// watch 会传入 null 空值
+				if string(value.Bytes()) == "null" {
+					continue
+				}
+				if err := config.G.ReadCred(value.Bytes()); err != nil {
+					logger.Errorf("reload credential error, %s", err)
+				}
+				logger.Infof("reload credential conf from %s, len=%d", credentialConfigPath, len(config.G.Credentials))
+			}
+		})
+	}
 
 	eg.Go(func() error {
 		if err := c.microService.Run(); err != nil {

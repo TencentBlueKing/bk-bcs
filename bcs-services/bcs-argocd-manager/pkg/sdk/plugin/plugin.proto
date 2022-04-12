@@ -44,7 +44,17 @@ message CreateArgocdPluginResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "plugin",
     description: "插件的信息"
   }];
@@ -58,7 +68,7 @@ message UpdateArgocdPluginRequest {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "plugin",
     description: "插件的信息"
   }];
@@ -72,7 +82,17 @@ message UpdateArgocdPluginResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "plugin",
     description: "插件的信息"
   }];
@@ -100,6 +120,15 @@ message DeleteArgocdPluginResponse {
     }
   };
 
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
 }
 
 message GetArgocdPluginRequest {
@@ -124,7 +153,17 @@ message GetArgocdPluginResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPlugin plugin = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "plugin",
     description: "插件的信息"
   }];
@@ -142,6 +181,10 @@ message ListArgocdPluginsRequest {
     title: "project",
     description: "项目名称"
   }];
+  optional string nickName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nickName",
+    description: "别名"
+  }];
 }
 
 message ListArgocdPluginsResponse {
@@ -152,7 +195,17 @@ message ListArgocdPluginsResponse {
     }
   };
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPluginList plugins = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  required uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  required string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdPluginList plugins = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "plugins",
     description: "插件列表的信息"
   }];

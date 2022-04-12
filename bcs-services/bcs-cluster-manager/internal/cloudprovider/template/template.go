@@ -28,12 +28,16 @@ const (
 	apiServer  = "apiServer"
 	etcdServer = "etcdServer"
 
+	createCluster = "create_cluster"
+	addNodes = "add_nodes"
+
 	// defaultPolicy default cpu_manager policy
 	defaultPolicy = "none"
 	staticPolicy  = "static"
 
 	// bk-sops template vars prefix
 	prefix = "CM"
+	template = "template"
 )
 
 var (
@@ -50,6 +54,8 @@ var (
 	clusterExtraID        = "CM.cluster.ClusterExtraID"
 	clusterExtraClusterID = "CM.cluster.ClusterExtraClusterID"
 	clusterProjectID      = "CM.cluster.ClusterProjectID"
+	clusterExtraEnv       = "CM.cluster.CreateClusterExtraEnv"
+	addNodesExtraEnv      = "CM.cluster.AddNodesExtraEnv"
 
 	nodePasswd           = "CM.node.NodePasswd"
 	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy"
@@ -102,7 +108,10 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 				blog.Errorf("%s GenerateBKopsStep failed: %v", taskName, err)
 				return nil, err
 			}
-
+			if strings.Contains(v, template) {
+				step.Params[k] = tValue
+				continue
+			}
 			constants[fmt.Sprintf("${%s}", k)] = tValue
 			continue
 		}
@@ -174,6 +183,10 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return extra.BusinessID, nil
 	case templateOperator:
 		return extra.Operator, nil
+	case clusterExtraEnv:
+		return getClusterCreateExtraEnv(cluster), nil
+	case addNodesExtraEnv:
+		return getAddNodesExtraEnv(cluster), nil
 	default:
 	}
 

@@ -21,3 +21,9 @@ class NamespaceAuditor(Auditor):
     def __init__(self, audit_ctx: AuditContext):
         super().__init__(audit_ctx)
         self.audit_ctx.resource_type = ResourceType.Namespace
+
+
+class NamespaceQuotaAuditor(Auditor):
+    def __init__(self, audit_ctx: AuditContext):
+        super().__init__(audit_ctx)
+        self.audit_ctx.resource_type = ResourceType.ResourceQuota

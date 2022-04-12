@@ -989,9 +989,13 @@ class K8sStatefulSetGenerator(K8sDeploymentGenerator):
             remove_key(db_config["spec"], "volumeClaimTemplates")
 
         # 获取关联的Service
-        service_app = VersionedEntity.get_k8s_service_by_statefulset_id(self.version_id, self.resource_id)
-        service_name = service_app.name
-        db_config["spec"]["serviceName"] = service_name
+        try:
+            service_app = VersionedEntity.get_k8s_service_by_statefulset_id(self.version_id, self.resource_id)
+            service_name = service_app.name
+            db_config["spec"]["serviceName"] = service_name
+        except ValidationError:
+            # 去除对 serviceName 的强制校验
+            db_config['spec']['serviceName'] = ''
 
         # OnDelete 时删除 rollingUpdate
         update_strategy = db_config["spec"]["updateStrategy"]

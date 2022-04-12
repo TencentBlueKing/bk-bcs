@@ -32,6 +32,8 @@ var (
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）
 var (
+	// AnonymousUsername 匿名用户
+	AnonymousUsername = envx.Get("ANONYMOUS_USERNAME", "anonymous")
 	// TestProjectID 单测指定的项目 ID
 	TestProjectID = envx.Get("TEST_PROJECT_ID", stringx.Rand(32, ""))
 	// TestProjectCode 单测指定的项目 Code

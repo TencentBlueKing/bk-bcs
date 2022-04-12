@@ -14,6 +14,7 @@
 package v1http
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
@@ -36,6 +37,7 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	initTkeRouters(ws)
 	initPermissionRouters(ws, service)
 	initTokenRouters(ws)
+	initExtraTokenRouters(ws, service)
 }
 
 // initUsersRouters init users api routers
@@ -86,6 +88,13 @@ func initTokenRouters(ws *restful.WebService) {
 	// for Temporary Token
 	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/temp").To(tokenHandler.CreateTempToken)))
 	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/client").To(tokenHandler.CreateClientToken)))
+}
+
+// initExtraTokenRouters init bcs extra token for third-party system
+func initExtraTokenRouters(ws *restful.WebService, service *permission.PermVerifyClient) {
+	tokenHandler := token.NewExtraTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB),
+		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient, service.ClusterClient, cmdb.CMDBClient)
+	ws.Route(ws.GET("/v1/tokens/extra/getClusterUserToken").To(tokenHandler.GetTokenByUserAndClusterID))
 }
 
 // initTkeRouters init tke api routers
