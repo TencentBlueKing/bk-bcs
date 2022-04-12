@@ -55,7 +55,7 @@ func NewResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *
 func (c *ResClient) List(
 	ctx context.Context, namespace string, opts metav1.ListOptions,
 ) (*unstructured.UnstructuredList, error) {
-	if err := c.permValidate(ctx, action.View, namespace); err != nil {
+	if err := c.permValidate(ctx, action.List, namespace); err != nil {
 		return nil, err
 	}
 	return c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)

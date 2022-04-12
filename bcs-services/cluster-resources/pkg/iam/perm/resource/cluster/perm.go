@@ -87,8 +87,9 @@ func NewScopedPerm(projectID string) *ScopedPerm {
 }
 
 // CanList ...
-func (p *ScopedPerm) CanList(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+func (p *ScopedPerm) CanList(ctx perm.Ctx) (bool, error) {
+	// 集群域资源 List 权限，与 View 权限相同
+	return p.CanView(ctx)
 }
 
 // CanView ...

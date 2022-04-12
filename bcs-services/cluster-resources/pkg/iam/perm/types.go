@@ -26,7 +26,7 @@ type IAMRes struct {
 type Ctx interface {
 	// Validate 参数完整性校验
 	Validate(actionIDs []string) error
-	// GetProjectID 获取项目 ID
+	// GetProjID 获取项目 ID
 	GetProjID() string
 	// GetClusterID 获取集群 ID
 	GetClusterID() string
@@ -48,24 +48,25 @@ type Ctx interface {
 
 // Perm 权限校验接口定义
 type Perm interface {
+	// CanList 能否获取指定资源列表
 	CanList(ctx Ctx) (bool, error)
-	// CanView 能否查看指定域资源
+	// CanView 能否查看指定（域）资源
 	CanView(ctx Ctx) (bool, error)
-	// CanCreate 能否创建指定域资源
+	// CanCreate 能否创建指定（域）资源
 	CanCreate(ctx Ctx) (bool, error)
-	// CanUpdate 能否更新指定域资源
+	// CanUpdate 能否更新指定（域）资源
 	CanUpdate(ctx Ctx) (bool, error)
-	// CanDelete 能否删除指定域资源
+	// CanDelete 能否删除指定（域）资源
 	CanDelete(ctx Ctx) (bool, error)
-	// CanUse 能否使用（CURD）指定域资源
+	// CanUse 能否使用（CURD）指定（域）资源
 	CanUse(ctx Ctx) (bool, error)
 }
 
 // ResRequest 请求体接口定义
 type ResRequest interface {
-	// MakeResources ...
+	// MakeResources 生成 ResourceNode 列表
 	MakeResources(resIDs []string) []bkiam.ResourceNode
-	// MakeAttribute ...
+	// MakeAttribute 生成 ResourceNode.Attribute
 	MakeAttribute(resID string) map[string]interface{}
 	// FormMap 根据 map 数据更新
 	FormMap(m map[string]interface{}) ResRequest

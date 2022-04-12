@@ -29,7 +29,7 @@ type IAMPerm struct {
 	ParentResPerm *IAMPerm
 }
 
-// CanAction ...
+// CanAction 校验用户的 action_id 权限
 func (p *IAMPerm) CanAction(ctx Ctx, actionID string, useCache bool) (bool, error) {
 	if err := ctx.Validate([]string{actionID}); err != nil {
 		return false, err
@@ -37,10 +37,14 @@ func (p *IAMPerm) CanAction(ctx Ctx, actionID string, useCache bool) (bool, erro
 	if ctx.ForceRaise() {
 		return false, p.genIAMPermError(ctx, actionID)
 	}
-	return p.canAction(ctx, actionID, useCache)
+	allow, err := p.canAction(ctx, actionID, useCache)
+	if allow && err == nil {
+		return true, nil
+	}
+	return false, p.genIAMPermError(ctx, actionID)
 }
 
-// CanMultiActions ...
+// CanMultiActions 校验同类型单个资源的多个 action 权限
 func (p *IAMPerm) CanMultiActions(ctx Ctx, actionIDs []string) (allow bool, err error) {
 	if err = ctx.Validate(actionIDs); err != nil {
 		return false, err
@@ -51,7 +55,7 @@ func (p *IAMPerm) CanMultiActions(ctx Ctx, actionIDs []string) (allow bool, err 
 			perms[actionID] = false
 		}
 	} else {
-		resReq := p.MakeResReq(ctx)
+		resReq := p.makeResReq(ctx)
 		perms, _ = p.Cli.ResInstMultiActionsAllowed(
 			ctx.GetUsername(), actionIDs, resReq.MakeResources([]string{ctx.GetResID()}),
 		)
@@ -59,36 +63,34 @@ func (p *IAMPerm) CanMultiActions(ctx Ctx, actionIDs []string) (allow bool, err 
 	return p.canMultiActions(ctx, perms)
 }
 
-// BatchResMultiActionAllowed ...
+// BatchResMultiActionAllowed 判断用户对某些资源是否具有多个指定操作的权限. 当前 sdk 仅支持同类型的资源
 func (p *IAMPerm) BatchResMultiActionAllowed(
 	username string, actionIDs []string, resIDs []string, resRequest ResRequest,
 ) (map[string]map[string]bool, error) {
 	return p.Cli.BatchResMultiActionsAllowed(username, actionIDs, resRequest.MakeResources(resIDs))
 }
 
-// HasParentRes ...
-func (p *IAMPerm) HasParentRes() bool {
+func (p *IAMPerm) hasParentRes() bool {
 	return p.ParentResPerm != nil
 }
 
-// MakeResReq ...
-func (p *IAMPerm) MakeResReq(ctx Ctx) ResRequest {
+func (p *IAMPerm) makeResReq(ctx Ctx) ResRequest {
 	return p.ResReq.FormMap(ctx.ToMap())
 }
 
 func (p *IAMPerm) canAction(ctx Ctx, actionID string, useCache bool) (bool, error) {
 	if resID := ctx.GetResID(); resID != "" {
-		reqReq := p.MakeResReq(ctx)
+		reqReq := p.makeResReq(ctx)
 		resources := reqReq.MakeResources([]string{resID})
 		return p.Cli.ResInstAllowed(ctx.GetUsername(), actionID, resources, useCache)
 	}
 
-	if !p.HasParentRes() {
+	if !p.hasParentRes() {
 		return p.Cli.ResTypeAllowed(ctx.GetUsername(), actionID, useCache)
 	}
 
 	pPermCtx := p.ParentResPerm.PermCtx.FromMap(ctx.ToMap())
-	resReq := p.ParentResPerm.MakeResReq(pPermCtx)
+	resReq := p.ParentResPerm.makeResReq(pPermCtx)
 	resources := resReq.MakeResources([]string{pPermCtx.GetResID()})
 	return p.Cli.ResInstAllowed(pPermCtx.GetUsername(), actionID, resources, useCache)
 
@@ -128,6 +130,11 @@ func (p *IAMPerm) genIAMPermError(ctx Ctx, actionID string) error {
 	if resID := ctx.GetResID(); resID != "" {
 		resIDs = append(resIDs, resID)
 		parentChain = ctx.GetParentChain()
+	} else if p.hasParentRes() {
+		resType = p.ParentResPerm.ResType
+		pPermCtx := p.ParentResPerm.PermCtx.FromMap(ctx.ToMap())
+		resIDs = append(resIDs, pPermCtx.GetResID())
+		parentChain = pPermCtx.GetParentChain()
 	}
 
 	return NewIAMPermErr(ctx.GetUsername(), "no "+actionID+" permission", []ActionResourcesRequest{

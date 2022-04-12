@@ -51,6 +51,6 @@ func (r *ResRequest) MakeAttribute(_ string) map[string]interface{} {
 }
 
 // FormMap ...
-func (r *ResRequest) FormMap(m map[string]interface{}) perm.ResRequest {
+func (r *ResRequest) FormMap(_ map[string]interface{}) perm.ResRequest {
 	return r
 }

@@ -44,23 +44,27 @@ func (p *Perm) CanList(ctx perm.Ctx) (bool, error) {
 }
 
 // CanView ...
-func (p *Perm) CanView(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+func (p *Perm) CanView(ctx perm.Ctx) (bool, error) {
+	allow, err := p.IAMPerm.CanAction(ctx, NamespaceView, false)
+	return cluster.RelatedClusterCanViewPerm(ctx, allow, err)
 }
 
 // CanCreate ...
-func (p *Perm) CanCreate(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+func (p *Perm) CanCreate(ctx perm.Ctx) (bool, error) {
+	allow, err := p.IAMPerm.CanAction(ctx, NamespaceCreate, false)
+	return cluster.RelatedClusterCanViewPerm(ctx, allow, err)
 }
 
 // CanUpdate ...
-func (p *Perm) CanUpdate(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+func (p *Perm) CanUpdate(ctx perm.Ctx) (bool, error) {
+	allow, err := p.IAMPerm.CanAction(ctx, NamespaceUpdate, false)
+	return cluster.RelatedClusterCanViewPerm(ctx, allow, err)
 }
 
 // CanDelete ...
-func (p *Perm) CanDelete(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+func (p *Perm) CanDelete(ctx perm.Ctx) (bool, error) {
+	allow, err := p.IAMPerm.CanAction(ctx, NamespaceDelete, false)
+	return cluster.RelatedClusterCanViewPerm(ctx, allow, err)
 }
 
 // CanUse ...
@@ -87,8 +91,9 @@ func NewScopedPerm(projectID, clusterID string) *ScopedPerm {
 }
 
 // CanList ...
-func (p *ScopedPerm) CanList(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+func (p *ScopedPerm) CanList(ctx perm.Ctx) (bool, error) {
+	// 命名空间域资源 List 权限，与 View 权限相同
+	return p.CanView(ctx)
 }
 
 // CanView ...

@@ -37,9 +37,9 @@ func RelatedProjectCanViewPerm(ctx perm.Ctx, subAllow bool, subErr error) (bool,
 		}
 		return false, subErr
 	}
-	// 添加保险措施，防止出现越权的情况
+	// 若没有错误，但是 allow 仍然是 false，说明 iam 不存在对应的策略
 	if !subAllow {
-		return false, errorx.New(errcode.General, "perm error: allow is false but err not nil!")
+		return false, errorx.New(errcode.NoIAMPerm, "not iam permission for current operate")
 	}
 	// TODO 考虑下要不要加上 View 类型的，跳过鉴权？
 	return NewPerm().CanView(projPermCtx.FromMap(ctx.ToMap()))

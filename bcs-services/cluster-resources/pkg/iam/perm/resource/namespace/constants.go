@@ -25,8 +25,6 @@ const (
 	NamespaceUpdate = "namespace_update"
 	// NamespaceDelete 删除命名空间
 	NamespaceDelete = "namespace_delete"
-	// NamespaceUse 使用命名空间（CURD）
-	NamespaceUse = "namespace_use"
 )
 
 const (

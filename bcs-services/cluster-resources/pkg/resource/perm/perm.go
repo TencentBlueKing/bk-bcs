@@ -29,13 +29,9 @@ import (
 
 // Validate 权限中心 V3 资源权限校验，支持 命名空间，命名空间域资源，集群域资源权限校验
 func Validate(ctx context.Context, res, action, projectID, clusterID, namespace string) error {
-	// TODO 确认命名空间权限校验逻辑
-	if res == "namespaces" {
-		return nil
-	}
 	username := ctx.Value(ctxkey.UsernameKey).(string)
-	p, pCtx := genPermAndCtx(username, projectID, clusterID, namespace)
-	if allow, err := validateCanAction(action, p, pCtx); err != nil {
+	p, pCtx := genPermAndCtx(res, action, username, projectID, clusterID, namespace)
+	if allow, err := canAction(p, pCtx, action); err != nil {
 		return err
 	} else if !allow {
 		return errorx.New(errcode.NoIAMPerm, "无指定操作权限")
@@ -44,10 +40,16 @@ func Validate(ctx context.Context, res, action, projectID, clusterID, namespace 
 }
 
 // 生成权限中心鉴权所需的 Perm && Ctx
-func genPermAndCtx(username, projectID, clusterID, namespace string) (iamPerm.Perm, iamPerm.Ctx) {
+func genPermAndCtx(res, action, username, projectID, clusterID, namespace string) (iamPerm.Perm, iamPerm.Ctx) {
 	// 上游逻辑中已经确保命名空间域的资源，传入的 Namespace 必定不为空，
 	// 因此这里直接根据命名空间是否为空判断权限类型即可（命名空间类型除外）
 	switch {
+	case res == "namespaces":
+		// 获取命名空间列表 / 创建命名空间，务必确保命名空间是空
+		if action == crAction.List || action == crAction.Create {
+			namespace = ""
+		}
+		return criam.GetNSPerm(projectID, clusterID), nsAuth.NewPermCtx(username, projectID, clusterID, namespace)
 	case namespace == "":
 		return criam.GetClusterScopedPerm(clusterID), clusterAuth.NewPermCtx(username, projectID, clusterID)
 	default:
@@ -56,7 +58,7 @@ func genPermAndCtx(username, projectID, clusterID, namespace string) (iamPerm.Pe
 }
 
 // 根据指定动作进行权限校验
-func validateCanAction(action string, perm iamPerm.Perm, permCtx iamPerm.Ctx) (allow bool, err error) {
+func canAction(perm iamPerm.Perm, permCtx iamPerm.Ctx, action string) (allow bool, err error) {
 	switch action {
 	case crAction.List:
 		return perm.CanList(permCtx)
