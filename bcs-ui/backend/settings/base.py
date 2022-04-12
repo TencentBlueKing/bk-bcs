@@ -488,6 +488,9 @@ CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
 # 共享集群命名空间的前缀
 SHARED_CLUSTER_NS_PREFIX = ""
 
+# API 密钥前端渲染用
+BCS_API_HOST = ""
+
 try:
     from .base_ext import *  # noqa
 except ImportError as e:
