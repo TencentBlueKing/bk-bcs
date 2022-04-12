@@ -76,14 +76,21 @@ func APIAuthRequired() gin.HandlerFunc {
 			c.Next()
 			return
 		}
+
+		// websocket 协议单独鉴权
+		if c.IsWebsocket() {
+			c.Next()
+			return
+		}
+
 		authCtx := &AuthContext{
 			RequestId: RequestIdGenerator(),
 		}
 
 		switch {
-		case initContextWithBCSJwt(c, authCtx):
+		case initContextWithPortalSession(c, authCtx):
 		case initContextWithAPIGW(c, authCtx):
-		case initContextWithSession(c, authCtx):
+		case initContextWithBCSJwt(c, authCtx):
 		case initContextWithDevEnv(c, authCtx):
 		default:
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
@@ -223,7 +230,7 @@ func initContextWithAPIGW(c *gin.Context, authCtx *AuthContext) bool {
 	return true
 }
 
-func initContextWithSession(c *gin.Context, authCtx *AuthContext) bool {
+func initContextWithPortalSession(c *gin.Context, authCtx *AuthContext) bool {
 	// get jwt info from headers
 	sessionId := GetSessionId(c)
 	if sessionId == "" {
