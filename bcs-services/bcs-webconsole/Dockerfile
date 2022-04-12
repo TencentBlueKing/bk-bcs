@@ -7,8 +7,8 @@ RUN go mod download
 COPY . .
 RUN make tidy build
 
-FROM scratch
-COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+FROM alpine
+RUN apk --update --no-cache add ca-certificates bash vim
 COPY --from=builder /go/src/bcs-webconsole/bcs-webconsole /bcs-webconsole
 ENTRYPOINT ["/bcs-webconsole"]
 CMD []
