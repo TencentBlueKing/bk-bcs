@@ -164,14 +164,14 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage("请求参数错误")
+		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
 		APIError(c, msg)
 		return
 	}
 
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage("请求参数错误")
+		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
 		APIError(c, msg)
 		return
 	}
