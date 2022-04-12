@@ -64,6 +64,8 @@ type Storage interface {
 	QueryK8SGameDeployment(cluster string) ([]*storage.GameDeployment, error)
 	// QueryK8SGameStatefulSet query all gamestatefulset in specified cluster
 	QueryK8SGameStatefulSet(cluster string) ([]*storage.GameStatefulSet, error)
+	// QueryK8SNode query all node in specified cluster
+	QueryK8SNode(cluster string) ([]*storage.K8sNode, error)
 	// QueryMesosNamespace query all namespace in specified cluster
 	QueryMesosNamespace(cluster string) ([]*storage.Namespace, error)
 	//QueryMesosDeployment query all deployment in specified cluster
@@ -97,6 +99,23 @@ type StorageCli struct {
 	Config   *Config
 	Client   *restclient.RESTClient
 	discover registry.Registry
+}
+
+func (c *StorageCli) QueryK8SNode(cluster string) ([]*storage.K8sNode, error) {
+	subPath := "/query/k8s/dynamic/clusters/%s/node"
+	response, err := c.query(cluster, subPath)
+	if err != nil {
+		return nil, err
+	}
+	var k8sNodes []*storage.K8sNode
+	if err := json.Unmarshal(response.Data, &k8sNodes); err != nil {
+		return nil, fmt.Errorf("k8sNode slice decode err: %s", err.Error())
+	}
+	if len(k8sNodes) == 0 {
+		blog.V(5).Infof("query kubernetes empty k8sNodes in cluster %s", cluster)
+		return nil, nil
+	}
+	return k8sNodes, nil
 }
 
 func (c *StorageCli) QueryMesosApplication(cluster string) ([]*storage.MesosApplication, error) {
