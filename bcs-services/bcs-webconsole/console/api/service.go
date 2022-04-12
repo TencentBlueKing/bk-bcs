@@ -47,7 +47,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", route.PermissionRequired(), s.CreateWebConsoleSession)
-	api.GET("/api/projects/:projectId/clusters/", route.PermissionRequired(), s.ListClusters)
+	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	api.GET("/api/portal/sessions/:sessionId/", s.CreatePortalSession)
