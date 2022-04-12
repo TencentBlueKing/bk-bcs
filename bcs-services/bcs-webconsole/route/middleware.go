@@ -63,7 +63,7 @@ func WebAuthRequired() gin.HandlerFunc {
 		authCtx := &AuthContext{
 			RequestId: RequestIdGenerator(),
 		}
-		c.Set("auth", authCtx)
+		c.Set("auth_context", authCtx)
 
 		c.Next()
 	}
@@ -72,6 +72,11 @@ func WebAuthRequired() gin.HandlerFunc {
 // APIAuthRequired API类型, 兼容多种鉴权模式
 func APIAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		authCtx := &AuthContext{
+			RequestId: RequestIdGenerator(),
+		}
+		c.Set("auth_context", authCtx)
+
 		if c.Request.Method == http.MethodOptions {
 			c.Next()
 			return
@@ -81,10 +86,6 @@ func APIAuthRequired() gin.HandlerFunc {
 		if c.IsWebsocket() {
 			c.Next()
 			return
-		}
-
-		authCtx := &AuthContext{
-			RequestId: RequestIdGenerator(),
 		}
 
 		switch {
@@ -100,9 +101,6 @@ func APIAuthRequired() gin.HandlerFunc {
 			})
 			return
 		}
-
-		// 设置鉴权
-		c.Set("auth_context", authCtx)
 
 		c.Next()
 	}
