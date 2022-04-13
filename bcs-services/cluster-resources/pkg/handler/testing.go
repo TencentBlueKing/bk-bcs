@@ -20,6 +20,7 @@ import (
 	spb "google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -40,7 +41,8 @@ func GenResCreateReq(manifest *spb.Struct) clusterRes.ResCreateReq {
 	return clusterRes.ResCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
-		Manifest:  manifest,
+		RawData:   manifest,
+		Format:    action.ManifestFormat,
 	}
 }
 
@@ -51,7 +53,8 @@ func GenResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq 
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
 		Name:      name,
-		Manifest:  manifest,
+		RawData:   manifest,
+		Format:    action.ManifestFormat,
 	}
 }
 
@@ -62,6 +65,7 @@ func GenResGetReq(name string) clusterRes.ResGetReq {
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
 		Name:      name,
+		Format:    action.ManifestFormat,
 	}
 }
 

@@ -1,0 +1,28 @@
+apiVersion: {{ .apiVersion }}
+kind: Deployment
+{{ include "common.metadata" .metadata }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
+  replicas: {{ .spec.replicas.cnt }}
+  strategy:
+    type: {{ .spec.replicas.updateStrategy }}
+    rollingUpdate:
+      {{- if or .spec.replicas.maxUnavailable .spec.replicas.maxSurge }}
+      {{- if .spec.replicas.maxUnavailable }}
+      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}
+      {{- end }}
+      {{- if .spec.replicas.maxSurge }}
+      maxSurge: {{ .spec.replicas.maxSurge }}{{ if eq .spec.replicas.msUnit "cnt" }}% {{ end }}
+      {{- end }}
+      {{- else }}
+      {}
+      {{- end }}
+  {{- if .spec.replicas.minReadySecs }}
+  minReadySeconds: {{ .spec.replicas.minReadySecs }}
+  {{- end }}
+  {{- if .spec.replicas.progressDeadlineSecs }}
+  progressDeadlineSeconds: {{ .spec.replicas.progressDeadlineSecs }}
+  {{- end }}
+  {{- include "workload.podTemplate" . | nindent 2 }}

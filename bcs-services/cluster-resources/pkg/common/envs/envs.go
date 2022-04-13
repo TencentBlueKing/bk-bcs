@@ -28,6 +28,10 @@ var (
 	ExampleFileBaseDir = envx.Get(
 		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/example",
 	)
+	// FormFileBaseDir 表单化相关文件目录
+	FormFileBaseDir = envx.Get(
+		"FORM_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form",
+	)
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）

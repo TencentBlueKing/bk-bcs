@@ -197,3 +197,206 @@ func TestSetItemsFailCase(t *testing.T) {
 	err = mapx.SetItems(deploySpec, 123, 1)
 	assert.NotNil(t, err)
 }
+
+var formData = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"annotations": []interface{}{},
+		"labels": []interface{}{
+			map[string]interface{}{
+				"key":   "app",
+				"value": "busybox",
+			},
+		},
+		"name":      "busybox-deployment-12345",
+		"namespace": "default",
+	},
+	"spec": map[string]interface{}{
+		"affinity": map[string]interface{}{
+			"nodeAffinity": []interface{}{},
+			"podAffinity":  []interface{}{},
+		},
+		"nodeSelect": map[string]interface{}{
+			"nodeName": "",
+			"selector": []interface{}{},
+			"type":     "anyAvailable",
+		},
+		"other": map[string]interface{}{
+			"imagePullSecrets":           []interface{}{},
+			"restartPolicy":              "",
+			"saName":                     "",
+			"terminationGracePeriodSecs": 0,
+		},
+		"security": map[string]interface{}{
+			"runAsUser":    1111,
+			"runAsGroup":   2222,
+			"fsGroup":      3333,
+			"runAsNonRoot": true,
+			"seLinuxOpt": map[string]interface{}{
+				"level": "",
+				"role":  "",
+				"type":  "",
+				"user":  "",
+			},
+		},
+		"toleration": map[string]interface{}{
+			"rules": []interface{}{},
+		},
+	},
+	"volume": map[string]interface{}{
+		"hostPath": []interface{}{},
+		"nfs": []interface{}{
+			map[string]interface{}{
+				"name":     "nfs",
+				"path":     "/data",
+				"readOnly": false,
+				"server":   "1.1.1.1",
+			},
+		},
+	},
+	"containerGroup": map[string]interface{}{
+		"containers": []interface{}{
+			map[string]interface{}{
+				"basic": map[string]interface{}{
+					"image":      "busybox:latest",
+					"name":       "busybox",
+					"pullPolicy": "IfNotPresent",
+				},
+				"command": map[string]interface{}{
+					"args": []interface{}{
+						"echo hello",
+					},
+					"command": []interface{}{
+						"/bin/bash",
+						"-c",
+					},
+					"Stdin":      false,
+					"stdinOnce":  true,
+					"tty":        false,
+					"workingDir": "/data/dev",
+				},
+				"envs": map[string]interface{}{
+					"vars": []interface{}{},
+				},
+				"healthz": map[string]interface{}{
+					"livenessProbe": map[string]interface{}{
+						"command": []interface{}{
+							"echo hello",
+						},
+						"failureThreshold": 3,
+						"initialDelaySecs": 0,
+						"path":             "",
+						"periodSecs":       10,
+						"port":             0,
+						"successThreshold": 1,
+						"timeoutSecs":      3,
+						"type":             "exec",
+					},
+					"readinessProbe": map[string]interface{}{
+						"command":          []interface{}{},
+						"failureThreshold": 0,
+						"initialDelaySecs": 0,
+						"path":             "",
+						"periodSecs":       0,
+						"port":             0,
+						"successThreshold": 0,
+						"timeoutSecs":      0,
+						"type":             "",
+					},
+				},
+				"mount": map[string]interface{}{
+					"volumes": []interface{}{},
+				},
+				"resource": map[string]interface{}{
+					"limits": map[string]interface{}{
+						"cpu":    500,
+						"memory": 1024,
+					},
+					"requests": map[string]interface{}{
+						"cpu":    0,
+						"memory": 0,
+					},
+				},
+			},
+		},
+		"initContainers": []interface{}{},
+	},
+}
+
+var noZeroFormData = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"labels": []interface{}{
+			map[string]interface{}{
+				"key":   "app",
+				"value": "busybox",
+			},
+		},
+		"name":      "busybox-deployment-12345",
+		"namespace": "default",
+	},
+	"spec": map[string]interface{}{
+		"nodeSelect": map[string]interface{}{
+			"type": "anyAvailable",
+		},
+		"security": map[string]interface{}{
+			"runAsUser":    1111,
+			"runAsGroup":   2222,
+			"fsGroup":      3333,
+			"runAsNonRoot": true,
+		},
+	},
+	"volume": map[string]interface{}{
+		"nfs": []interface{}{
+			map[string]interface{}{
+				"name":   "nfs",
+				"path":   "/data",
+				"server": "1.1.1.1",
+			},
+		},
+	},
+	"containerGroup": map[string]interface{}{
+		"containers": []interface{}{
+			map[string]interface{}{
+				"basic": map[string]interface{}{
+					"image":      "busybox:latest",
+					"name":       "busybox",
+					"pullPolicy": "IfNotPresent",
+				},
+				"command": map[string]interface{}{
+					"args": []interface{}{
+						"echo hello",
+					},
+					"command": []interface{}{
+						"/bin/bash",
+						"-c",
+					},
+					"stdinOnce":  true,
+					"workingDir": "/data/dev",
+				},
+				"healthz": map[string]interface{}{
+					"livenessProbe": map[string]interface{}{
+						"command": []interface{}{
+							"echo hello",
+						},
+						"failureThreshold": 3,
+						"periodSecs":       10,
+						"successThreshold": 1,
+						"timeoutSecs":      3,
+						"type":             "exec",
+					},
+				},
+				"resource": map[string]interface{}{
+					"limits": map[string]interface{}{
+						"cpu":    500,
+						"memory": 1024,
+					},
+				},
+			},
+		},
+	},
+}
+
+// 清理 Map 空子项测试
+func TestRemoveZeroSubItem(t *testing.T) {
+	mapx.RemoveZeroSubItem(formData)
+	assert.Equal(t, noZeroFormData, formData)
+}
