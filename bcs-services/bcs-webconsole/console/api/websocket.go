@@ -114,6 +114,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	eg.Go(func() error {
 		defer stop()
+		defer manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New("BCS Console 服务端连接断开，请重新登录"))
 		defer remoteStreamConn.Close()
 		defer logger.Infof("Close %s WaitStreamDone done", podCtx.PodName)
 
