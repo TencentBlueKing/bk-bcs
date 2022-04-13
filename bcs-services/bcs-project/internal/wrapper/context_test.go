@@ -31,8 +31,8 @@ var adminName = "admin"
 func newClient() *jwt.JWTClient {
 	config.LoadConfig("../../" + constant.DefaultConfigPath)
 	jwtOpt := jwt.JWTOptions{
-		VerifyKeyFile: config.G.JWT.PublicKeyFile,
-		SignKeyFile:   config.G.JWT.PrivateKeyFile,
+		VerifyKeyFile: "../../test/jwt/app.rsa.pub",
+		SignKeyFile:   "../../test/jwt/app.rsa",
 	}
 	jwtClient, err := jwt.NewJWTClient(jwtOpt)
 	if err != nil {
@@ -45,8 +45,8 @@ func newJWTToken() string {
 	jwtClient := newClient()
 	jwtToken, err := jwtClient.JWTSign(&jwt.UserInfo{
 		SubType:     jwt.User.String(),
-		UserName:    "admin",
-		ExpiredTime: 1000,
+		UserName:    adminName,
+		ExpiredTime: 10000,
 	})
 	if err != nil {
 		panic(fmt.Errorf("new jwt token error, %v", err))

@@ -12,11 +12,9 @@
  * limitations under the License.
  */
 
-package errcode
+package errorx
 
-import (
-	errorCode "github.com/Tencent/bk-bcs/bcs-common/common"
-)
+import commErr "github.com/Tencent/bk-bcs/bcs-common/common"
 
 const (
 	// Success 正常返回
@@ -24,23 +22,31 @@ const (
 	// SuccessMsg 正常返回的消息
 	SuccessMsg = "success"
 	// ParamErr 参数校验失败
-	ParamErr = errorCode.AdditionErrorCode + 400
+	ParamErr = commErr.AdditionErrorCode + 400
 	// ParamErrMsg 参数校验失败消息
 	ParamErrMsg = "params error"
 	// InnerErr 内部服务异常
-	InnerErr = errorCode.AdditionErrorCode + 500
+	InnerErr = commErr.AdditionErrorCode + 500
 	// InnerErrMsg 内部服务异常消息
 	InnerErrMsg = "inner error"
 	// DBErr DB操作失败
-	DBErr = errorCode.AdditionErrorCode + 501
+	DBErr = commErr.AdditionErrorCode + 501
 	// DbErrMsg DB操作失败消息
-	DbErrMsg = "db error"
+	DBErrMsg = "db error"
 	// UnauthErr 未认证/认证失败
-	UnauthErr = errorCode.AdditionErrorCode + 401
+	UnauthErr = commErr.AdditionErrorCode + 401
 	// UnauthErrMsg 认证失败消息
 	UnauthErrMsg = "auth error"
-	// NoPermErr 无权限
-	NoPermErr = errorCode.AdditionErrorCode + 403
-	// NoPermErrMsg 无权限消息
-	NoPermErrMsg = "no permission"
+	// PermDeniedErr 无权限
+	PermDeniedErr = commErr.AdditionErrorCode + 403
+	// PermDeniedErrMsg 无权限消息
+	PermDeniedErrMsg = "no permission"
+	// IAMClientErr 构建 iam client异常
+	IAMClientErr = commErr.AdditionErrorCode + 506
+	// IAMClientErrMsg ...
+	IAMClientErrMsg = "make iam client error"
+	// IAMOPErr 错误的iam operation
+	IAMOPErr = commErr.AdditionErrorCode + 507
+	// IAMOPErrMsg ...
+	IAMOPErrMsg = "iam op error"
 )

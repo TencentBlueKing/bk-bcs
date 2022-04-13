@@ -40,7 +40,7 @@
     },
     "/bcsproject/v1/healthz": {
       "get": {
-        "description": "探针API, 用于readness",
+        "description": "探针API, 用于readiness探测",
         "operationId": "Healthz_Healthz",
         "responses": {
           "200": {
@@ -63,7 +63,7 @@
     },
     "/bcsproject/v1/ping": {
       "get": {
-        "description": "探针API, 用于liveness",
+        "description": "探针API, 用于liveness探测",
         "operationId": "Healthz_Ping",
         "responses": {
           "200": {

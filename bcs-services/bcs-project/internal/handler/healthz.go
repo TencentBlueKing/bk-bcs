@@ -17,21 +17,16 @@ package handler
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
 // HealthzHandler ...
-type HealthzHandler struct {
-	mongoConf config.MongoConfig
-}
+type HealthzHandler struct{}
 
 // New create a healthz hander
-func NewHealthz(mongoConf config.MongoConfig) *HealthzHandler {
-	return &HealthzHandler{
-		mongoConf: mongoConf,
-	}
+func NewHealthz() *HealthzHandler {
+	return &HealthzHandler{}
 }
 
 // Ping 用于liveness

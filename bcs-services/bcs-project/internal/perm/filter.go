@@ -22,14 +22,13 @@ import (
 	iamOP "github.com/TencentBlueKing/iam-go-sdk/expression/operator"
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 )
 
-// FilterAuthProjIds 过滤有权限的项目 ID
-func FilterAuthProjIds(username string) ([]string, error) {
+// ListAuthorizedProjectIDs 过滤有权限的项目 ID
+func ListAuthorizedProjectIDs(username string) ([]string, error) {
 	// 组装 iam request
 	iamReq := makeIAMRequest(username, ProjectView)
 	if err := iamReq.Validate(); err != nil {
@@ -70,10 +69,10 @@ func makeIAMRequest(username, actionID string) iam.Request {
 // 生成查询策略
 func makeIAMPolicy(iamReq iam.Request) (map[string]interface{}, error) {
 	backendClient := iamBackendClient.NewIAMBackendClient(
-		config.G.IAM.GatewayHost,
+		config.GlobalConf.IAM.GatewayHost,
 		true,
 		bcsIAM.SystemIDBKBCS,
-		config.G.IAM.AppCode, config.G.IAM.AppSecret,
+		config.GlobalConf.IAM.AppCode, config.GlobalConf.IAM.AppSecret,
 	)
 	policy, err := backendClient.PolicyQuery(iamReq)
 	if err != nil {
@@ -100,7 +99,7 @@ func makeFilter(policy map[string]interface{}) (map[string]interface{}, error) {
 	case iamOP.OR, iamOP.AND:
 		return parseContent(expr.Content), nil
 	default:
-		return nil, errorx.New(errcode.NoPermErr, "not support op", expr.OP)
+		return nil, errorx.NewIAMOPErr("not support op", expr.OP)
 	}
 }
 

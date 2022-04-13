@@ -20,12 +20,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestProjectError(t *testing.T) {
+var (
+	applyUrl = "http://iam.example.com"
+	actionID = "projectView"
+	hasPerm  = false
+)
+
+func TestPermissionDeniedError(t *testing.T) {
 	// one message
-	err := NewProjectError(Success, SuccessMsg)
-	assert.Equal(t, err.Error(), SuccessMsg)
-	// some message
-	err = NewProjectError(ParamErr, ParamErrMsg, "some error")
-	assert.Equal(t, int(err.Code()), int(ParamErr))
-	assert.Contains(t, err.Error(), ParamErrMsg)
+	err := NewPermDeniedErr(applyUrl, actionID, hasPerm)
+	assert.Equal(t, err.ApplyUrl(), applyUrl)
+	assert.Equal(t, err.HasPerm(), hasPerm)
+	assert.Equal(t, err.ActionID(), actionID)
 }

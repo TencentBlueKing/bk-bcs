@@ -95,6 +95,7 @@ type IAMConfig struct {
 	Debug       bool   `yaml:"debug" usage:"debug mode"`
 }
 
+// ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd    EtcdConfig    `yaml:"etcd"`
 	Mongo   MongoConfig   `yaml:"mongo"`
@@ -106,7 +107,8 @@ type ProjectConfig struct {
 	IAM     IAMConfig     `yaml:"iam"`
 }
 
-var G *ProjectConfig
+// GlobalConf 项目配置信息，全局都可以使用
+var GlobalConf *ProjectConfig
 
 // LoadConfig 通过制定的path，加载对应的配置选项
 func LoadConfig(filePath string) (*ProjectConfig, error) {
@@ -119,6 +121,6 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 		return nil, err
 	}
 	// 用于后续的使用
-	G = conf
+	GlobalConf = conf
 	return conf, nil
 }

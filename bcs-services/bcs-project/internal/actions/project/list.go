@@ -20,7 +20,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/perm"
@@ -44,13 +43,13 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
-func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*map[string]interface{}, *errorx.ProjectError) {
+func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*map[string]interface{}, error) {
 	la.ctx = ctx
 	la.req = req
 
 	projects, total, err := la.listProjects()
 	if err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 	data := map[string]interface{}{
 		"total":   uint32(total),
@@ -111,8 +110,8 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 }
 
 func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
-	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
-	ids, err := perm.FilterAuthProjIds(username)
+	username := ctx.Value(ctxkey.UsernameKey).(string)
+	ids, err := perm.ListAuthorizedProjectIDs(username)
 	// 没有权限的项目时，返回为空，并记录信息
 	if ids == nil || err != nil {
 		logging.Error("%s no permission project", username)
@@ -123,9 +122,14 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthori
 	if err != nil {
 		return nil, err
 	}
+
+	projectList := []*pm.Project{}
+	for i := range projects {
+		projectList = append(projectList, &projects[i])
+	}
 	data := map[string]interface{}{
 		"total":   uint32(total),
-		"results": projects,
+		"results": projectList,
 	}
 
 	return &data, nil

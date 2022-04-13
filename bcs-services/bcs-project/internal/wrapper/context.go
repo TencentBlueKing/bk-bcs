@@ -25,7 +25,6 @@ import (
 
 	constant "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
@@ -46,7 +45,7 @@ func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		} else {
 			md, ok := metadata.FromContext(ctx)
 			if !ok {
-				return RenderResponse(rsp, uuid, errorx.New(errcode.UnauthErr, "failed to get micro's metadata"))
+				return RenderResponse(rsp, uuid, errorx.NewAuthErr("failed to get micro's metadata"))
 			}
 
 			username, err = parseUsername(md)
@@ -82,7 +81,7 @@ var NoAuthEndpoints = []string{
 // 检查当前请求是否允许免除用户认证
 func canExemptAuth(req server.Request) bool {
 	// 禁用身份认证
-	if !config.G.JWT.Enable {
+	if !config.GlobalConf.JWT.Enable {
 		return true
 	}
 	// 特殊指定的Handler，不需要认证的方法
@@ -91,11 +90,11 @@ func canExemptAuth(req server.Request) bool {
 
 func getJWTOpt(md metadata.Metadata) (*jwt.JWTOptions, error) {
 	jwtOpt := &jwt.JWTOptions{
-		VerifyKeyFile: config.G.JWT.PublicKeyFile,
-		SignKeyFile:   config.G.JWT.PrivateKeyFile,
+		VerifyKeyFile: config.GlobalConf.JWT.PublicKeyFile,
+		SignKeyFile:   config.GlobalConf.JWT.PrivateKeyFile,
 	}
-	publicKey := config.G.JWT.PublicKey
-	privateKey := config.G.JWT.PrivateKey
+	publicKey := config.GlobalConf.JWT.PublicKey
+	privateKey := config.GlobalConf.JWT.PrivateKey
 
 	if publicKey != "" {
 		key, err := jwtGo.ParseRSAPublicKeyFromPEM([]byte(publicKey))
@@ -117,15 +116,15 @@ func getJWTOpt(md metadata.Metadata) (*jwt.JWTOptions, error) {
 func parseUsername(md metadata.Metadata) (string, error) {
 	jwtToken, ok := md.Get("Authorization")
 	if !ok {
-		return "", errorx.New(errcode.UnauthErr, "failed to get authorization token!")
+		return "", errorx.NewAuthErr("failed to get authorization token!")
 	}
 	if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
-		return "", errorx.New(errcode.UnauthErr, "authorization token error")
+		return "", errorx.NewAuthErr("authorization token error")
 	}
 	// 组装 jwt client
 	jwtOpt, err := getJWTOpt(md)
 	if err != nil {
-		return "", errorx.New(errcode.UnauthErr, "parse jwt key error", err.Error())
+		return "", errorx.NewAuthErr("parse jwt key error", err.Error())
 	}
 	jwtClient, err := jwt.NewJWTClient(*jwtOpt)
 	if err != nil {

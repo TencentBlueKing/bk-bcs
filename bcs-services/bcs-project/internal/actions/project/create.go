@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
@@ -43,12 +42,12 @@ func NewCreateAction(model store.ProjectModel) *CreateAction {
 }
 
 // Do create project request
-func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (*pm.Project, *errorx.ProjectError) {
+func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (*pm.Project, error) {
 	ca.ctx = ctx
 	ca.req = req
 
 	if err := ca.validate(); err != nil {
-		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
+		return nil, errorx.NewParamErr(err)
 	}
 
 	// 如果有传递项目ID，则以传递的为准，否则动态生成32位的字符串作为项目ID
@@ -57,12 +56,12 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 	}
 
 	if err := ca.createProject(); err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 
 	p, err := ca.model.GetProject(ca.ctx, ca.req.ProjectID)
 	if err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 	// 返回项目信息
 	return p, nil
@@ -71,7 +70,7 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 func (ca *CreateAction) createProject() error {
 	timeStr := time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
-	creator, _ := ca.ctx.Value(ctxkey.UsernameKey).(string)
+	creator := ca.ctx.Value(ctxkey.UsernameKey).(string)
 	p := &pm.Project{
 		ProjectID:   ca.req.ProjectID,
 		Name:        ca.req.Name,

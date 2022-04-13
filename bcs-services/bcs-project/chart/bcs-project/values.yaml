@@ -151,7 +151,7 @@ svcConf:
     ca: ""
   # swagger 配置
   swagger:
-    enable: true
+    enable: false
     dir: "."
   # 日志记录
   log:

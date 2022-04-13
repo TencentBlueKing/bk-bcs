@@ -141,8 +141,7 @@ func (p *ProjectService) initTLSConfig() error {
 // init mongo client
 func (p *ProjectService) initMongo() error {
 	store.InitMongo(&p.opt.Mongo)
-	modelSet := store.New(store.GetMongo())
-	p.model = modelSet
+	p.model = store.New(store.GetMongo())
 	logging.Info("init mongo successfully")
 	return nil
 }
@@ -215,12 +214,13 @@ func (p *ProjectService) initMicro() error {
 	)
 	svc.Init()
 
-	// project hander
+	// project handler
 	if err := proto.RegisterBCSProjectHandler(svc.Server(), handler.NewProject(p.model)); err != nil {
 		logging.Error("register handler failed, err: %s", err.Error())
 		return err
 	}
-	if err := proto.RegisterHealthzHandler(svc.Server(), handler.NewHealthz(p.opt.Mongo)); err != nil {
+	// 添加健康检查相关handler
+	if err := proto.RegisterHealthzHandler(svc.Server(), handler.NewHealthz()); err != nil {
 		logging.Error("register healthz handler failed, err: %s", err.Error())
 		return err
 	}
@@ -257,6 +257,7 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 }
 
 func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, grpcDialOpts []grpc.DialOption) error {
+	// 注册项目功能 endpoint
 	if err := proto.RegisterBCSProjectGwFromEndpoint(
 		context.TODO(),
 		gwMux,
@@ -266,7 +267,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 		logging.Error("register http gateway failed, err %s", err.Error())
 		return err
 	}
-	// healthz
+	// 注册健康检查相关 endpoint
 	if err := proto.RegisterHealthzGwFromEndpoint(
 		context.TODO(),
 		gwMux,

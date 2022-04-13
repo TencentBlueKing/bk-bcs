@@ -19,7 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
@@ -43,17 +42,15 @@ func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreatePro
 	// 判断是否有创建权限
 	permClient, err := perm.NewPermClient()
 	if err != nil {
-		return errorx.New(errcode.NoPermErr, err.Error())
+		return errorx.NewIAMClientErr(err)
 	}
-	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
+	username := ctx.Value(ctxkey.UsernameKey).(string)
 	canCreate, applyUrl, err := permClient.CanCreateProject(username)
 	if err != nil {
-		return errorx.New(errcode.NoPermErr, err.Error())
+		return errorx.NewPermDeniedErr(applyUrl, "projectCreate", canCreate, err)
 	}
-	permMap := map[string]interface{}{"applyUrl": applyUrl, "projectCreate": canCreate}
 	if !canCreate {
-		setResp(resp, nil, permMap)
-		return errorx.New(errcode.NoPermErr, errcode.NoPermErrMsg)
+		return errorx.NewPermDeniedErr(applyUrl, "projectCreate", canCreate)
 	}
 	// 创建项目
 	ca := project.NewCreateAction(p.model)
@@ -62,7 +59,7 @@ func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreatePro
 		return e
 	}
 	// 处理返回数据及权限
-	setResp(resp, projectInfo, permMap)
+	setResp(resp, projectInfo)
 	return nil
 }
 
@@ -75,22 +72,20 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 		return err
 	}
 	// 校验项目的查看权限
-	permClient, e := perm.NewPermClient()
-	if e != nil {
-		return errorx.New(errcode.NoPermErr, e.Error())
+	permClient, err := perm.NewPermClient()
+	if err != nil {
+		return errorx.NewIAMClientErr(err)
 	}
-	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
-	canView, applyUrl, e := permClient.CanViewProject(username, projectInfo.ProjectID)
-	if e != nil {
-		return errorx.New(errcode.NoPermErr, e.Error())
+	username := ctx.Value(ctxkey.UsernameKey).(string)
+	canView, applyUrl, err := permClient.CanViewProject(username, projectInfo.ProjectID)
+	if err != nil {
+		return errorx.NewPermDeniedErr(applyUrl, "projectView", canView, err)
 	}
-	permMap := map[string]interface{}{"applyUrl": applyUrl, "projectView": canView}
 	if !canView {
-		setResp(resp, projectInfo, permMap)
-		return errorx.New(errcode.NoPermErr, errcode.NoPermErrMsg)
+		return errorx.NewPermDeniedErr(applyUrl, "projectView", canView)
 	}
 	// 处理返回数据及权限
-	setResp(resp, projectInfo, permMap)
+	setResp(resp, projectInfo)
 	return nil
 }
 
@@ -99,18 +94,16 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeletePro
 	// 校验项目的删除权限
 	permClient, err := perm.NewPermClient()
 	if err != nil {
-		return errorx.New(errcode.NoPermErr, err.Error())
+		return errorx.NewIAMClientErr(err)
 	}
-	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
+	username := ctx.Value(ctxkey.UsernameKey).(string)
 	// NOTE: 不校验集群
 	canDelete, applyUrl, err := permClient.CanDeleteProject(username, req.ProjectID, "")
 	if err != nil {
-		return errorx.New(errcode.NoPermErr, err.Error())
+		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err)
 	}
-	permMap := map[string]interface{}{"applyUrl": applyUrl, "projectDelete": canDelete}
 	if !canDelete {
-		setResp(resp, nil, permMap)
-		return errorx.New(errcode.NoPermErr, errcode.NoPermErrMsg)
+		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err)
 	}
 	// 删除项目
 	da := project.NewDeleteAction(p.model)
@@ -118,7 +111,7 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeletePro
 		return err
 	}
 	// 处理返回数据及权限
-	setResp(resp, nil, permMap)
+	setResp(resp, nil)
 	return nil
 }
 
@@ -126,17 +119,15 @@ func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdatePro
 	// 校验项目的删除权限
 	permClient, err := perm.NewPermClient()
 	if err != nil {
-		return errorx.New(errcode.NoPermErr, err.Error())
+		return errorx.NewIAMClientErr(err)
 	}
-	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
+	username := ctx.Value(ctxkey.UsernameKey).(string)
 	canEdit, applyUrl, err := permClient.CanEditProject(username, req.ProjectID)
 	if err != nil {
-		return errorx.New(errcode.NoPermErr, err.Error())
+		return errorx.NewPermDeniedErr(applyUrl, "projectEdit", canEdit, err)
 	}
-	permMap := map[string]interface{}{"applyUrl": applyUrl, "projectEdit": canEdit}
 	if !canEdit {
-		setResp(resp, nil, permMap)
-		return errorx.New(errcode.NoPermErr, errcode.NoPermErrMsg)
+		return errorx.NewPermDeniedErr(applyUrl, "projectEdit", canEdit, err)
 	}
 	ua := project.NewUpdateAction(p.model)
 	projectInfo, e := ua.Do(ctx, req)
@@ -144,7 +135,7 @@ func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdatePro
 		return e
 	}
 	// 处理返回数据及权限
-	setResp(resp, projectInfo, permMap)
+	setResp(resp, projectInfo)
 	return nil
 }
 
@@ -157,9 +148,9 @@ func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjec
 	// 获取权限
 	permClient, err := perm.NewPermClient()
 	if err != nil {
-		return errorx.New(errcode.NoPermErr, err.Error())
+		return errorx.NewIAMClientErr(err)
 	}
-	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
+	username := ctx.Value(ctxkey.UsernameKey).(string)
 	// 获取 project id, 用以获取对应的权限
 	ids := getProjectIDs(projects)
 	perms, err := permClient.GetMultiProjectMultiActionPermission(
@@ -170,7 +161,7 @@ func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjec
 		return err
 	}
 	// 处理返回
-	setListResp(resp, projects, perms)
+	setListPermsResp(resp, projects, perms)
 	return nil
 }
 
@@ -180,7 +171,7 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context, req *proto.
 	if e != nil {
 		return e
 	}
-	setListAuthProjResp(resp, projects)
+	setListResp(resp, projects)
 	return nil
 }
 

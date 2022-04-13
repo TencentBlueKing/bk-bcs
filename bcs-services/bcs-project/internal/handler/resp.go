@@ -22,7 +22,7 @@ import (
 )
 
 // setResp 设置返回的数据和权限信息
-func setResp(resp *proto.ProjectResponse, data *pm.Project, perm map[string]interface{}) {
+func setResp(resp *proto.ProjectResponse, data *pm.Project) {
 	if data != nil {
 		var project proto.Project
 		copier.CopyStruct(&project, data)
@@ -30,17 +30,36 @@ func setResp(resp *proto.ProjectResponse, data *pm.Project, perm map[string]inte
 	} else {
 		resp.Data = nil
 	}
-
-	resp.WebAnnotations = &proto.Perms{Perms: convert.Map2pbStruct(perm)}
 }
 
-func setListResp(resp *proto.ListProjectsResponse, data *map[string]interface{}, perm map[string]map[string]bool) {
-	if data == nil {
-		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
+// setListResp 设置列表数据的返回
+func setListResp(resp interface{}, data *map[string]interface{}) {
+	// 返回
+	if listProjectResp, ok := resp.(*proto.ListProjectsResponse); ok {
+		listProjectResp.Data = getProjectData(data)
 		return
 	}
-	if val, ok := (*data)["results"].([]*pm.Project); ok {
-		projectData := proto.ListProjectData{Total: (*data)["total"].(uint32)}
+	if listAuthProjectResp, ok := resp.(*proto.ListAuthorizedProjResp); ok {
+		listAuthProjectResp.Data = getProjectData(data)
+		return
+	}
+}
+
+// setListPermsResp 添加权限信息
+func setListPermsResp(resp interface{}, data *map[string]interface{}, perm map[string]map[string]bool) {
+	setListResp(resp, data)
+	// NOTE: 当根据条件查询项目信息时，带上项目对应的权限
+	if listProjectResp, ok := resp.(*proto.ListProjectsResponse); ok {
+		listProjectResp.WebAnnotations = &proto.Perms{Perms: convert.MapBool2pbStruct(perm)}
+	}
+}
+
+func getProjectData(d *map[string]interface{}) *proto.ListProjectData {
+	if d == nil {
+		return &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
+	}
+	if val, ok := (*d)["results"].([]*pm.Project); ok {
+		projectData := proto.ListProjectData{Total: (*d)["total"].(uint32)}
 		var projects []*proto.Project
 		// 组装返回数据
 		for i := range val {
@@ -49,32 +68,8 @@ func setListResp(resp *proto.ListProjectsResponse, data *map[string]interface{},
 			projects = append(projects, &dstProject)
 		}
 		projectData.Results = projects
-		// 赋值到response
-		resp.Data = &projectData
+		return &projectData
 	} else {
-		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
-	}
-	resp.WebAnnotations = &proto.Perms{Perms: convert.MapBool2pbStruct(perm)}
-}
-
-func setListAuthProjResp(resp *proto.ListAuthorizedProjResp, data *map[string]interface{}) {
-	if data == nil {
-		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
-		return
-	}
-	if val, ok := (*data)["results"].([]pm.Project); ok {
-		projectData := proto.ListProjectData{Total: (*data)["total"].(uint32)}
-		var projects []*proto.Project
-		// 组装返回数据
-		for i := range val {
-			var dstProject proto.Project
-			copier.CopyStruct(&dstProject, val[i])
-			projects = append(projects, &dstProject)
-		}
-		projectData.Results = projects
-		// 赋值到response
-		resp.Data = &projectData
-	} else {
-		resp.Data = &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
+		return &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
 	}
 }

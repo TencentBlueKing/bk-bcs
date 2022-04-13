@@ -22,7 +22,7 @@ import (
 	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/convert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
@@ -42,7 +42,9 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 	case *proto.ProjectResponse:
 		if r, ok := rsp.(*proto.ProjectResponse); ok {
 			r.RequestID = requestID
-			r.Message, r.Code = getRespMsgCode(err)
+			var perm map[string]interface{}
+			r.Message, r.Code, perm = getMsgCodePerm(err)
+			r.WebAnnotations = &proto.Perms{Perms: convert.Map2pbStruct(perm)}
 			if err != nil {
 				r.Data = nil
 				return nil
@@ -51,7 +53,7 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 	case *proto.ListProjectsResponse:
 		if r, ok := rsp.(*proto.ListProjectsResponse); ok {
 			r.RequestID = requestID
-			r.Message, r.Code = getRespMsgCode(err)
+			r.Message, r.Code = getMsgCode(err)
 			if err != nil {
 				r.Data = nil
 				return nil
@@ -60,7 +62,7 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 	case *proto.ListAuthorizedProjResp:
 		if r, ok := rsp.(*proto.ListAuthorizedProjResp); ok {
 			r.RequestID = requestID
-			r.Message, r.Code = getRespMsgCode(err)
+			r.Message, r.Code = getMsgCode(err)
 			if err != nil {
 				r.Data = nil
 				return nil
@@ -71,16 +73,30 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 }
 
 // 根据不同的错误类型，获取错误信息 & 错误码
-func getRespMsgCode(err interface{}) (string, uint32) {
+func getMsgCode(err interface{}) (string, uint32) {
 	if err == nil {
-		return errcode.SuccessMsg, errcode.Success
+		return errorx.SuccessMsg, errorx.Success
 	}
 	switch e := err.(type) {
 	case *errorx.ProjectError:
 		return e.Error(), e.Code()
 	case *errors.Error:
-		return e.Detail, errcode.InnerErr
+		return e.Detail, errorx.InnerErr
 	default:
-		return fmt.Sprintf("%s", e), errcode.InnerErr
+		return fmt.Sprintf("%s", e), errorx.InnerErr
 	}
+}
+
+// 获取错误信息 & 错误码 & 权限信息
+func getMsgCodePerm(err interface{}) (string, uint32, map[string]interface{}) {
+	if err != nil {
+		if e, ok := err.(*errorx.PermissionDeniedError); ok {
+			return e.Error(), e.Code(), map[string]interface{}{
+				"applyUrl":   e.ApplyUrl(),
+				e.ActionID(): e.HasPerm(),
+			}
+		}
+	}
+	msg, code := getMsgCode(err)
+	return msg, code, nil
 }

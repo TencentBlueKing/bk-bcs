@@ -32,7 +32,31 @@ func (e *ProjectError) Code() uint32 {
 	return e.code
 }
 
-// New 初始化
-func New(code uint32, msg string, extra ...interface{}) *ProjectError {
+// NewProjectError 初始化 ProjectError
+func NewProjectError(code uint32, msg string, extra ...interface{}) *ProjectError {
 	return &ProjectError{code: code, msg: fmt.Sprintf(msg, extra...)}
+}
+
+func NewParamErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(ParamErr, ParamErrMsg, msg...)
+}
+
+func NewInnerErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(InnerErr, InnerErrMsg, msg...)
+}
+
+func NewDBErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(DBErr, DBErrMsg, msg...)
+}
+
+func NewAuthErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(UnauthErr, UnauthErrMsg, msg...)
+}
+
+func NewIAMClientErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(IAMClientErr, IAMClientErrMsg, msg...)
+}
+
+func NewIAMOPErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(IAMOPErr, IAMOPErrMsg, msg...)
 }

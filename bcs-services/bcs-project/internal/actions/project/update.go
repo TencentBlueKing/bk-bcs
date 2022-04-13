@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
@@ -45,22 +44,22 @@ func NewUpdateAction(model store.ProjectModel) *UpdateAction {
 }
 
 // Do update project request
-func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (*pm.Project, *errorx.ProjectError) {
+func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (*pm.Project, error) {
 	ua.ctx = ctx
 	ua.req = req
 
 	if err := ua.validate(); err != nil {
-		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
+		return nil, errorx.NewParamErr(err)
 	}
 
 	// 获取要更新的项目信息
 	p, err := ua.model.GetProject(ua.ctx, req.ProjectID)
 	if err != nil {
 		logging.Error("project: %s not found", req.ProjectID)
-		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
+		return nil, errorx.NewParamErr(err)
 	}
 	if err := ua.updateProject(p); err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 
 	return p, nil
