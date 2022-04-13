@@ -48,12 +48,58 @@ var (
 )
 
 const (
+	// MasterRole label
+	MasterRole = "node-role.kubernetes.io/master"
+)
+
+const (
+	// KubeAPIServer cluster apiserver key
+	KubeAPIServer = "KubeAPIServer"
+	// KubeController cluster controller key
+	KubeController = "KubeController"
+	// KubeScheduler cluster scheduler key
+	KubeScheduler = "KubeScheduler"
+	// Etcd cluster etcd key
+	Etcd = "Etcd"
+	// Kubelet cluster kubelet key
+	Kubelet = "kubelet"
+)
+
+// DefaultClusterConfig cluster default service config
+var DefaultClusterConfig = map[string]string{
+	Etcd: "node-data-dir=/data/bcs/lib/etcd;",
+}
+
+const (
+	// Prod prod env
+	Prod = "prod"
+	// Debug debug env
+	Debug = "debug"
+
 	// ClusterAddNodesLimit cluster addNodes limit
 	ClusterAddNodesLimit = 100
 	// ClusterManagerServiceDomain domain name for service
 	ClusterManagerServiceDomain = "clustermanager.bkbcs.tencent.com"
 	// ResourceManagerServiceDomain domain name for service
 	ResourceManagerServiceDomain = "resourcemanager.bkbcs.tencent.com"
+
+	// ClusterOverlayNetwork overlay
+	ClusterOverlayNetwork = "overlay"
+	// ClusterUnderlayNetwork underlay
+	ClusterUnderlayNetwork = "underlay"
+
+	// DockerGraphPath docker path
+	DockerGraphPath = "/data/bcs/service/docker"
+	// MountTarget default mount path
+	MountTarget = "/data"
+
+	// DefaultImageName default image name
+	DefaultImageName = "Tencent Linux Release 2.2 (Final)"
+
+	// DockerContainerRuntime runtime
+	DockerContainerRuntime = "docker"
+	// DockerRuntimeVersion runtime version
+	DockerRuntimeVersion = "19.3"
 
 	// ClusterEngineTypeMesos mesos cluster
 	ClusterEngineTypeMesos = "mesos"
@@ -84,6 +130,8 @@ const (
 	StatusInitialization = "INITIALIZATION"
 	//StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
+	//StatusImportClusterFailed status import failed
+	StatusImportClusterFailed = "IMPORT-FAILURE"
 	//StatusRunning status running
 	StatusRunning = "RUNNING"
 	//StatusDeleting status deleting for scaling down
@@ -145,7 +193,9 @@ const (
 	// BcsErrClusterManagerNodeManagerErr build clusterID error
 	BcsErrClusterManagerNodeManagerErr = bcscommon.BCSErrClusterManager + 29
 	// BcsErrClusterManagerTaskDoneErr build task doing or done error
-	BcsErrClusterManagerTaskDoneErr = bcscommon.BCSErrClusterManager + 29
+	BcsErrClusterManagerTaskDoneErr = bcscommon.BCSErrClusterManager + 30
+	// BcsErrClusterManagerSyncCloudErr cloud config error
+	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 24
 )
 
 // ClusterIDRange for generate clusterID range

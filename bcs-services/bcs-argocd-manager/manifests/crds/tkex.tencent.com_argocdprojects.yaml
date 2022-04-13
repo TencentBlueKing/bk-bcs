@@ -29,6 +29,7 @@ spec:
             metadata:
               type: object
             spec:
+              description: ArgocdProjectSpec defines the desired state of ArgocdProjectSpec
               type: object
               properties:
                 foo:

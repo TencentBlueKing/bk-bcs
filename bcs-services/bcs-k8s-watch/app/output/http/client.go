@@ -47,6 +47,8 @@ type Client interface {
 }
 
 const (
+	// ResourceTypeEvent is resource type of event.
+	ResourceTypeEvent = "Event"
 	// bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s/%s"
 	// handler namespace type name resource
@@ -73,7 +75,7 @@ const (
 	HandlerEventName = "events"
 
 	// request timeout
-	StorageRequestTimeoutSeconds = 2
+	StorageRequestTimeoutSeconds = 5
 
 	// bcsstorage/v1/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeWatchURLFmt = "%s/bcsstorage/v1/k8s/watch/clusters/%s/namespaces/%s/%s/%s"
@@ -348,9 +350,24 @@ func (client *StorageClient) ListNamespaceResource() (data []interface{}, err er
 
 	urlWithParams := fmt.Sprintf("%s?field=resourceName", url)
 
+	if client.ResourceType == ResourceTypeEvent {
+		url, _ = client.GetURL()
+		now := time.Now()
+		duration := time.Duration(1) * time.Hour // event will disappear after 1 hour
+		urlWithParams = fmt.Sprintf(
+			"%s?clusterId=%s&field=data.metadata.name&timeBegin=%d&timeEnd=%d&extra={\"namespace\":\"%s\"}",
+			url, client.ClusterID, now.Add(-duration).Unix(), now.Unix(), client.Namespace)
+	}
+
 	glog.V(2).Infof("sync call list namespace resource: %s", urlWithParams)
 
 	data, err = client.listResource(urlWithParams, handlerName)
+	if client.ResourceType == ResourceTypeEvent {
+		for i := range data {
+			data[i].(map[string]interface{})["resourceName"] = data[i].(map[string]interface{})["data"].(map[string]interface{})["metadata"].(map[string]interface{})["name"]
+			delete(data[i].(map[string]interface{}), "data")
+		}
+	}
 	return
 }
 

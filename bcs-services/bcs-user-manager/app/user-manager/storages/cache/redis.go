@@ -20,8 +20,10 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// RDB is the global redis cache
 var RDB Cache
 
+// InitRedis init redis cache with url
 func InitRedis(conf *config.UserMgrConfig) error {
 	options, err := redis.ParseURL(conf.RedisDSN)
 	if err != nil {
@@ -32,6 +34,7 @@ func InitRedis(conf *config.UserMgrConfig) error {
 	return nil
 }
 
+// Cache is the interface of redis cache
 type Cache interface {
 	Set(key string, value interface{}, expiration time.Duration) (string, error)
 	SetNX(key string, value interface{}, expiration time.Duration) (bool, error)
@@ -47,26 +50,32 @@ type redisCache struct {
 	client *redis.Client
 }
 
+// Set implements Cache.Set
 func (r *redisCache) Set(key string, value interface{}, expiration time.Duration) (string, error) {
 	return r.client.Set(context.TODO(), key, value, expiration).Result()
 }
 
+// SetNX implements Cache.SetNX
 func (r *redisCache) SetNX(key string, value interface{}, expiration time.Duration) (bool, error) {
 	return r.client.SetNX(context.TODO(), key, value, expiration).Result()
 }
 
+// SetEX implements Cache.SetEX
 func (r *redisCache) SetEX(key string, value interface{}, expiration time.Duration) (string, error) {
 	return r.client.SetEX(context.TODO(), key, value, expiration).Result()
 }
 
+// Get implements Cache.Get
 func (r *redisCache) Get(key string) (string, error) {
 	return r.client.Get(context.TODO(), key).Result()
 }
 
+// Del implements Cache.Del
 func (r *redisCache) Del(key string) (uint64, error) {
 	return r.client.Del(context.TODO(), key).Uint64()
 }
 
+// Expire implements Cache.Expire
 func (r *redisCache) Expire(key string, expiration time.Duration) (bool, error) {
 	return r.client.Expire(context.TODO(), key, expiration).Result()
 }

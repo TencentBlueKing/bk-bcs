@@ -23,3 +23,34 @@ func StringInSlice(str string, list []string) bool {
 	}
 	return false
 }
+
+// MatchKVInSlice 对 MapList 中每项进行检查，
+// 若存在某项的 key 的 value 为指定值，则返回 true
+func MatchKVInSlice(list []interface{}, key, value string) bool {
+	for _, item := range list {
+		if it, ok := item.(map[string]interface{}); ok {
+			if v, ok := it[key]; ok {
+				if s, ok := v.(string); ok && s == value {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// FilterMatchKVFromSlice 对 MapList 中每项进行检查，
+// 若存在某项的 key 的 value 为指定值，添加到返回的列表中
+func FilterMatchKVFromSlice(list []interface{}, key, value string) []interface{} {
+	ret := []interface{}{}
+	for _, item := range list {
+		if it, ok := item.(map[string]interface{}); ok {
+			if v, ok := it[key]; ok {
+				if s, ok := v.(string); ok && s == value {
+					ret = append(ret, it)
+				}
+			}
+		}
+	}
+	return ret
+}

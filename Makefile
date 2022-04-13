@@ -79,9 +79,9 @@ clean:
 
 svcpack:
 	cd ./build/bcs.${VERSION}/bcs-services && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
-	
+
 k8spack:
-	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-k8s/bcs-component && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5 
+	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-k8s/bcs-component && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 mmpack:
 	cd ./build/bcs.${VERSION}/bcs-runtime/bcs-mesos/bcs-mesos-master && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
@@ -155,7 +155,7 @@ netservice:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-netservice ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-netservice/bcs-netservice ./bcs-services/bcs-netservice/main.go
-	
+
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
 	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-master/bcs-netservice ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-netservice/bcs-netservice ./bcs-services/bcs-netservice/main.go
@@ -281,11 +281,16 @@ detection:pre
 
 tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
-	
+
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-user-manager ${PACKAGEPATH}/bcs-services
 	cd bcs-services/bcs-user-manager/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./main.go
+
+webconsole:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webconsole
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webconsole ${PACKAGEPATH}/bcs-servicesf
+	cd bcs-services/bcs-webconsole/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webconsole/bcs-webconsole ./main.go
 
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services

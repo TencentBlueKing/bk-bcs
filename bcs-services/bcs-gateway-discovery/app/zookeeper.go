@@ -214,8 +214,8 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 				HostName: cluster.UserToken,
 			}
 			hostport := strings.Split(u.Host, ":")
+			svc.IP = hostport[0]
 			if len(hostport) == 2 {
-				svc.IP = hostport[0]
 				port, _ := strconv.Atoi(hostport[1])
 				svc.Port = uint(port)
 			} else {

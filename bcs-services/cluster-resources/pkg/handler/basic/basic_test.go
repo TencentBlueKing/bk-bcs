@@ -16,6 +16,7 @@ package basic
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,7 @@ func TestBasicHandler(t *testing.T) {
 	// Echo API
 	echoReq, echoResp := clusterRes.EchoReq{Str: "testString"}, clusterRes.EchoResp{}
 	err := h.Echo(context.TODO(), &echoReq, &echoResp)
-	assert.Equal(t, "Echo: testString", echoResp.Ret)
+	assert.True(t, strings.Contains(echoResp.Ret, "Echo: testString"))
 	assert.Nil(t, err)
 
 	// Ping API

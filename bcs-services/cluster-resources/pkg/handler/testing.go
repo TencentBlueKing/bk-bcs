@@ -15,9 +15,12 @@
 package handler
 
 import (
+	"context"
+
 	spb "google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -38,7 +41,8 @@ func GenResCreateReq(manifest *spb.Struct) clusterRes.ResCreateReq {
 	return clusterRes.ResCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
-		Manifest:  manifest,
+		RawData:   manifest,
+		Format:    action.ManifestFormat,
 	}
 }
 
@@ -49,7 +53,8 @@ func GenResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq 
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
 		Name:      name,
-		Manifest:  manifest,
+		RawData:   manifest,
+		Format:    action.ManifestFormat,
 	}
 }
 
@@ -60,6 +65,7 @@ func GenResGetReq(name string) clusterRes.ResGetReq {
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
 		Name:      name,
+		Format:    action.ManifestFormat,
 	}
 }
 
@@ -87,14 +93,15 @@ func GetOrCreateNS(namespace string) error {
 	if namespace == "" {
 		namespace = envs.TestNamespace
 	}
-	nsCli := cli.NewNSCliByClusterID(envs.TestClusterID)
-	_, err := nsCli.Get("", namespace, metav1.GetOptions{})
+	ctx := context.TODO()
+	nsCli := cli.NewNSCliByClusterID(ctx, envs.TestClusterID)
+	_, err := nsCli.Get(ctx, "", namespace, metav1.GetOptions{})
 	if err != nil {
 		_ = mapx.SetItems(nsManifest4Test, "metadata.name", namespace)
 		if namespace == envs.TestSharedClusterNS {
 			_ = mapx.SetItems(nsManifest4Test, []string{"metadata", "annotations", cli.ProjCodeAnnoKey}, envs.TestProjectCode)
 		}
-		_, err = nsCli.Create(nsManifest4Test, false, metav1.CreateOptions{})
+		_, err = nsCli.Create(ctx, nsManifest4Test, false, metav1.CreateOptions{})
 	}
 	return err
 }
@@ -153,11 +160,12 @@ var CRDManifest4Test = map[string]interface{}{
 
 // GetOrCreateCRD 在集群中初始化 CRD 用于单元测试用
 func GetOrCreateCRD() error {
-	crdCli := cli.NewCRDCliByClusterID(envs.TestClusterID)
-	_, err := crdCli.Get("", CRDName4Test, metav1.GetOptions{})
+	ctx := context.TODO()
+	crdCli := cli.NewCRDCliByClusterID(ctx, envs.TestClusterID)
+	_, err := crdCli.Get(ctx, "", CRDName4Test, metav1.GetOptions{})
 	if err != nil {
 		// TODO 这里认为出错就是不存在，可以做进一步的细化？
-		_, err = crdCli.Create(CRDManifest4Test, false, metav1.CreateOptions{})
+		_, err = crdCli.Create(ctx, CRDManifest4Test, false, metav1.CreateOptions{})
 	}
 	return err
 }

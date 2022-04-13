@@ -1,0 +1,680 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "BCS Project API Doc",
+    "version": "0.0.1"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/bcsproject/v1/projects": {
+      "get": {
+        "summary": "查询项目列表",
+        "description": "通过查询参数过滤项目列表, 支持分页和全量数据",
+        "operationId": "BCSProject_ListProjects",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListProjectsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDs",
+            "description": "projectIDs. 项目ID, 多个以半角逗号分隔",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "names",
+            "description": "names. 项目中文名称, 长度不能超过64字符, 多个以半角逗号分隔",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "searchName",
+            "description": "searchName. 项目中文名称, 通过此字段模糊查询项目信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "kind. 项目中集群类型, 允许k8s/mesos",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 分页数据, 表示第几页",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 分页数据, 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "all",
+            "description": "all. 表示查询全量数据",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      },
+      "post": {
+        "summary": "创建项目",
+        "description": "创建项目信息",
+        "operationId": "BCSProject_CreateProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectCreateProjectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectIDOrCode}": {
+      "get": {
+        "summary": "查询项目",
+        "description": "通过项目ID或英文缩写, 查询项目信息",
+        "operationId": "BCSProject_GetProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDOrCode",
+            "description": "项目ID或英文缩写",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectID}": {
+      "delete": {
+        "description": "删除项目",
+        "operationId": "BCSProject_DeleteProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      },
+      "put": {
+        "summary": "更新项目",
+        "description": "更新项目信息",
+        "operationId": "BCSProject_UpdateProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateProjectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "bcsprojectCreateProjectRequest": {
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "creator": {
+          "type": "string",
+          "description": "项目创建者",
+          "title": "creator"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID, 全局唯一, 长度为32位字符串, 自动生成",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "useBKRes": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
+          "title": "useBKRes"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目描述, 尽量限制在100字符",
+          "title": "description"
+        },
+        "isOffline": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目是否已经下线, 默认false",
+          "title": "isOffline"
+        },
+        "kind": {
+          "type": "string",
+          "description": "项目中集群类型, 可选k8s/mesos",
+          "title": "kind"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "isSecret": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为保密项目, 默认为false",
+          "title": "isSecret"
+        },
+        "projectType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品",
+          "title": "type"
+        },
+        "deployType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署",
+          "title": "deployType"
+        },
+        "BGID": {
+          "type": "string",
+          "description": "事业群ID, 保留字段, 默认为0",
+          "title": "bgID"
+        },
+        "BGName": {
+          "type": "string",
+          "description": "事业群名称, 保留字段, 默认为空",
+          "title": "bgName"
+        },
+        "deptID": {
+          "type": "string",
+          "description": "部门ID, 保留字段, 默认为0",
+          "title": "deptID"
+        },
+        "deptName": {
+          "type": "string",
+          "description": "部门名称, 保留字段, 默认为空",
+          "title": "deptName"
+        },
+        "centerID": {
+          "type": "string",
+          "description": "中心ID, 保留字段, 默认为0",
+          "title": "centerID"
+        },
+        "centerName": {
+          "type": "string",
+          "description": "中心名称, 保留字段, 默认为空",
+          "title": "centerName"
+        }
+      },
+      "description": "创建项目",
+      "title": "CreateProjectRequest",
+      "required": [
+        "name",
+        "projectCode"
+      ]
+    },
+    "bcsprojectListProjectData": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总量",
+          "title": "total"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectProject"
+          },
+          "description": "项目数据",
+          "title": "results"
+        }
+      },
+      "description": "项目列表数据",
+      "title": "ListProjectData"
+    },
+    "bcsprojectListProjectsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectListProjectData",
+          "description": "返回项目信息, 包含总量及项目列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
+    "bcsprojectProject": {
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "creator": {
+          "type": "string",
+          "description": "项目创建者",
+          "title": "creator"
+        },
+        "updater": {
+          "type": "string",
+          "description": "项目更新者",
+          "title": "updater"
+        },
+        "managers": {
+          "type": "string",
+          "description": "项目管理人员，默认为创建者+更新者",
+          "title": "managers"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID, 全局唯一, 长度为32位字符串, 自动生成",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过32字符",
+          "title": "projectCode"
+        },
+        "useBKRes": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
+          "title": "useBKRes"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目描述, 尽量限制在100字符",
+          "title": "description"
+        },
+        "isOffline": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目是否已经下线, 默认false",
+          "title": "isOffline"
+        },
+        "kind": {
+          "type": "string",
+          "description": "项目中集群类型, 可选k8s/mesos",
+          "title": "kind"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "isSecret": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为保密项目, 默认为false",
+          "title": "isSecret"
+        },
+        "projectType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品",
+          "title": "type"
+        },
+        "deployType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署",
+          "title": "deployType"
+        },
+        "BGID": {
+          "type": "string",
+          "description": "事业群ID, 保留字段, 默认为0",
+          "title": "bgID"
+        },
+        "BGName": {
+          "type": "string",
+          "description": "事业群名称, 保留字段, 默认为空",
+          "title": "bgName"
+        },
+        "deptID": {
+          "type": "string",
+          "description": "部门ID, 保留字段, 默认为0",
+          "title": "deptID"
+        },
+        "deptName": {
+          "type": "string",
+          "description": "部门名称, 保留字段, 默认为空",
+          "title": "deptName"
+        },
+        "centerID": {
+          "type": "string",
+          "description": "中心ID, 保留字段, 默认为0",
+          "title": "centerID"
+        },
+        "centerName": {
+          "type": "string",
+          "description": "中心名称, 保留字段, 默认为空",
+          "title": "centerName"
+        }
+      },
+      "description": "项目的基本信息",
+      "title": "Project"
+    },
+    "bcsprojectProjectResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectProject",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
+    "bcsprojectUpdateProjectRequest": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        },
+        "useBKRes": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
+          "title": "useBKRes"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目简要描述",
+          "title": "description"
+        },
+        "isOffline": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目是否已经下线, 默认false",
+          "title": "isOffline"
+        },
+        "kind": {
+          "type": "string",
+          "description": "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃",
+          "title": "kind"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "isSecret": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为保密项目, 默认为false",
+          "title": "isSecret"
+        },
+        "deployType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署",
+          "title": "deployType"
+        },
+        "projectType": {
+          "type": "integer",
+          "format": "int64",
+          "description": "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品",
+          "title": "type"
+        },
+        "BGID": {
+          "type": "string",
+          "description": "事业群ID, 保留字段, 默认为0",
+          "title": "bgID"
+        },
+        "BGName": {
+          "type": "string",
+          "description": "事业群名称, 保留字段, 默认为空",
+          "title": "bgName"
+        },
+        "deptID": {
+          "type": "string",
+          "description": "部门ID, 保留字段, 默认为0",
+          "title": "deptID"
+        },
+        "deptName": {
+          "type": "string",
+          "description": "部门名称, 保留字段, 默认为空",
+          "title": "deptName"
+        },
+        "centerID": {
+          "type": "string",
+          "description": "中心ID, 保留字段, 默认为0",
+          "title": "centerID"
+        },
+        "centerName": {
+          "type": "string",
+          "description": "中心名称, 保留字段, 默认为空",
+          "title": "centerName"
+        }
+      },
+      "description": "更新项目请求",
+      "title": "UpdateProjectRequest"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

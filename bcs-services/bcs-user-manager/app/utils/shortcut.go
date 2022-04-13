@@ -17,8 +17,10 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// EmptyResponse is the empty response for restful response
 type EmptyResponse struct{}
 
+// ErrorResponse is the error response for restful response
 type ErrorResponse struct {
 	Result  bool        `json:"result"`
 	Code    int         `json:"code"`
@@ -38,8 +40,17 @@ func WriteFuncFactory(statusCode int) func(response *restful.Response, code int,
 	}
 }
 
+// WriteClientError writes client error
 var WriteClientError = WriteFuncFactory(400)
+
+// WriteUnauthorizedError writes unauthorized error
 var WriteUnauthorizedError = WriteFuncFactory(401)
+
+// WriteForbiddenError writes forbidden error
 var WriteForbiddenError = WriteFuncFactory(403)
+
+// WriteNotFoundError writes not found error
 var WriteNotFoundError = WriteFuncFactory(404)
+
+// WriteServerError writes internal error
 var WriteServerError = WriteFuncFactory(500)

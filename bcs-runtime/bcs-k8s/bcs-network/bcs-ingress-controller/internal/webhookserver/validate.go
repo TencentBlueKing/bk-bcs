@@ -17,8 +17,11 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
@@ -52,14 +55,15 @@ func (s *Server) validatePortPool(newPool *networkextensionv1.PortPool) error {
 	if err := s.checkPortPoolConflicts(newPool); err != nil {
 		return err
 	}
-	if err := s.checkPortPoolConflictWithIngress(newPool); err != nil {
+	if err := s.checkPortPoolConflictWithPort(newPool); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
-	lbIDMap := make(map[string]string)
+	// key: lbID-port, value: itemName
+	lbPortMap := make(map[string]string)
 	itemNameMap := make(map[string]struct{})
 	for _, item := range newPool.Spec.PoolItems {
 		if err := item.Validate(); err != nil {
@@ -79,15 +83,28 @@ func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
 		}
 		itemNameMap[item.ItemName] = struct{}{}
 
+		isARN := false
 		for _, lbIDStr := range item.LoadBalancerIDs {
 			lbID, err := getLbIDFromRegionID(lbIDStr)
 			if err != nil {
 				return fmt.Errorf("lbIDStr %s of item %s is invalid", lbIDStr, item.ItemName)
 			}
-			if itemName, ok := lbIDMap[lbID]; ok {
-				return fmt.Errorf("lbID %s of item %s conflicts with id of item %s", lbID, item.ItemName, itemName)
+			for port := item.StartPort; port < item.EndPort; port++ {
+				lbPort := common.GetListenerName(lbID, int(port))
+				if itemName, ok := lbPortMap[lbPort]; ok {
+					return fmt.Errorf("lbID %s of item %s conflicts with id of item %s", lbID, item.ItemName, itemName)
+				}
+				if arn.IsARN(lbID) {
+					isARN = true
+				}
+				lbPortMap[lbPort] = item.ItemName
 			}
-			lbIDMap[lbID] = item.ItemName
+		}
+
+		// check protocol
+		if isARN && item.Protocol != constant.PortPoolPortProtocolTCP &&
+			item.Protocol != constant.PortPoolPortProtocolUDP {
+			return fmt.Errorf("protocol %s of item %s invalid", item.Protocol, item.ItemName)
 		}
 	}
 	return nil
@@ -118,15 +135,6 @@ func (s *Server) checkPortPoolChanges(newPool, oldPool *networkextensionv1.PortP
 				lbIDMap[lbID] = oldItem.ItemName
 			}
 		}
-		for _, lbIDStr := range newItem.LoadBalancerIDs {
-			lbID, err := getLbIDFromRegionID(lbIDStr)
-			if err != nil {
-				return fmt.Errorf("lbIDStr %s of item %s is invalid", newItem.ItemName, lbIDStr)
-			}
-			if oldItemName, ok := lbIDMap[lbID]; ok {
-				return fmt.Errorf("lbID %s of item %s conflicts with item %s", lbID, newItem.ItemName, oldItemName)
-			}
-		}
 	}
 	return nil
 }
@@ -137,7 +145,8 @@ func (s *Server) checkPortPoolConflicts(newPool *networkextensionv1.PortPool) er
 		return fmt.Errorf("list port pool list failed, err %s", err.Error())
 	}
 
-	lbIDMap := make(map[string]string)
+	// key: lb-port, value: existedPoolNamespaceName
+	lbPortMap := make(map[string]string)
 	for _, existedPool := range portPoolList.Items {
 		if newPool.GetName() == existedPool.GetName() && newPool.GetNamespace() == existedPool.GetNamespace() {
 			continue
@@ -148,7 +157,10 @@ func (s *Server) checkPortPoolConflicts(newPool *networkextensionv1.PortPool) er
 				if err != nil {
 					return fmt.Errorf("lbIDStr %s of existed item %s is invalid", item.ItemName, lbIDStr)
 				}
-				lbIDMap[lbID] = existedPool.GetName() + "/" + existedPool.GetNamespace()
+				for port := item.StartPort; port < item.EndPort; port++ {
+					lbPort := common.GetListenerName(lbID, int(port))
+					lbPortMap[lbPort] = existedPool.GetName() + "/" + existedPool.GetNamespace()
+				}
 			}
 		}
 	}
@@ -159,9 +171,12 @@ func (s *Server) checkPortPoolConflicts(newPool *networkextensionv1.PortPool) er
 			if err != nil {
 				return fmt.Errorf("lbIDStr %s of new item %s is invalid", newItem.ItemName, lbIDStr)
 			}
-			if existedPoolKey, ok := lbIDMap[lbID]; ok {
-				return fmt.Errorf("lbID %s of new item %s is conflict with pool %s",
-					lbID, newItem.ItemName, existedPoolKey)
+			for port := newItem.StartPort; port < newItem.EndPort; port++ {
+				lbPort := common.GetListenerName(lbID, int(port))
+				if existedPoolKey, ok := lbPortMap[lbPort]; ok {
+					return fmt.Errorf("lbID %s of new item %s is conflict with pool %s",
+						lbID, newItem.ItemName, existedPoolKey)
+				}
 			}
 		}
 	}
@@ -199,5 +214,52 @@ func (s *Server) checkPortPoolConflictWithIngress(newPool *networkextensionv1.Po
 			}
 		}
 	}
+	return nil
+}
+
+// this function is used to check portpool's port conflicts with ingress or other portpool
+func (s *Server) checkPortPoolConflictWithPort(newPool *networkextensionv1.PortPool) error {
+	existedListeners := &networkextensionv1.ListenerList{}
+	err := s.k8sClient.List(context.Background(), existedListeners, &client.ListOptions{})
+	if err != nil {
+		blog.Errorf("list existed listener failed, err %s", err.Error())
+		return fmt.Errorf("list existed listener failed, err %s", err.Error())
+	}
+
+	// use lbid-port as key of map for check conflicts
+	existedListenerMap := make(map[string]networkextensionv1.Listener)
+	for index, listener := range existedListeners.Items {
+		// listener for port segment
+		if listener.Spec.EndPort > 0 {
+			for i := listener.Spec.Port; i <= listener.Spec.EndPort; i++ {
+				tmpKey := common.GetListenerName(listener.Spec.LoadbalancerID, i)
+				existedListenerMap[tmpKey] = existedListeners.Items[index]
+			}
+			continue
+		}
+		tmpKey := common.GetListenerName(listener.Spec.LoadbalancerID, listener.Spec.Port)
+		existedListenerMap[tmpKey] = existedListeners.Items[index]
+	}
+
+	// check port pool every port
+	for _, v := range newPool.Spec.PoolItems {
+		for i := v.StartPort; i < v.EndPort; i++ {
+			for _, lb := range v.LoadBalancerIDs {
+				tmpKey := common.GetListenerName(lb, int(i))
+				existedListener, ok := existedListenerMap[tmpKey]
+				if !ok {
+					continue
+				}
+
+				// check self
+				poolNameValue, okListenerLabel := existedListener.Labels[common.GetPortPoolListenerLabelKey(newPool.Name, v.ItemName)]
+				if !okListenerLabel || poolNameValue != networkextensionv1.LabelValueForPortPoolItemName ||
+					newPool.Namespace != existedListener.GetNamespace() {
+					return fmt.Errorf("lbID %s port %d of item %s is conflict", lb, i, v.ItemName)
+				}
+			}
+		}
+	}
+
 	return nil
 }

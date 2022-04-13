@@ -278,6 +278,13 @@
 
     .taskgroup-item-wrapper {
         border-bottom: 1px solid $borderWeightColor;
+        .pod-manager-status {
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            word-break: break-all;
+        }
     }
 
     .taskgroup-item {

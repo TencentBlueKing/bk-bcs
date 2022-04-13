@@ -14,13 +14,14 @@ package instance
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // NewGetArgocdInstanceAction return a new GetArgocdInstanceAction instance
@@ -68,14 +69,8 @@ func (action *GetArgocdInstanceAction) Handle(ctx context.Context,
 		return nil
 	}
 	// TODO: check if the operator has permission in project
-	got, err := action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		blog.Errorf("get argocd instance failed, err: %s", err.Error())
-		action.setResp(common.ErrActionFailed, "get argocd instance failed", nil)
-		return nil
-	}
 	blog.Infof("get argocd instance %s success", name)
-	action.setResp(common.ErrArgocdServerSuccess, "", got)
+	action.setResp(common.ErrArgocdServerSuccess, "", i)
 	return nil
 }
 
