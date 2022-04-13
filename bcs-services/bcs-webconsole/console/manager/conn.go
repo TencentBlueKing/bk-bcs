@@ -123,7 +123,7 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	return inputMsg, nil
 }
 
-// Read : executor 回调读取 web 端的输入
+// Read : executor 回调读取 web 端的输入, 主动断开链接逻辑
 func (r *RemoteStreamConn) Read(p []byte) (int, error) {
 	select {
 	case <-r.ctx.Done():

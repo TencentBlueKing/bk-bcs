@@ -113,6 +113,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	})
 
 	eg.Go(func() error {
+		defer stop()
 		defer remoteStreamConn.Close()
 		defer logger.Infof("Close %s WaitStreamDone done", podCtx.PodName)
 
