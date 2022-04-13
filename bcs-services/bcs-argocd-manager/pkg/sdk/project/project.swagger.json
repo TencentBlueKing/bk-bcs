@@ -190,6 +190,17 @@
     "projectCreateArgocdProjectResponse": {
       "type": "object",
       "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
         "project": {
           "$ref": "#/definitions/v1alpha1ArgocdProject",
           "description": "项目的信息",
@@ -201,12 +212,36 @@
     },
     "projectDeleteArgocdProjectResponse": {
       "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        }
+      },
       "description": "删除项目的请求",
       "title": "DeleteArgocdProjectResponse"
     },
     "projectGetArgocdProjectResponse": {
       "type": "object",
       "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
         "project": {
           "$ref": "#/definitions/v1alpha1ArgocdProject",
           "description": "项目的信息",
@@ -219,6 +254,17 @@
     "projectListArgocdProjectsResponse": {
       "type": "object",
       "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
         "projects": {
           "$ref": "#/definitions/v1alpha1ArgocdProjectList",
           "description": "项目列表的信息",
@@ -243,6 +289,17 @@
     "projectUpdateArgocdProjectResponse": {
       "type": "object",
       "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
         "project": {
           "$ref": "#/definitions/v1alpha1ArgocdProject",
           "description": "项目的信息",
