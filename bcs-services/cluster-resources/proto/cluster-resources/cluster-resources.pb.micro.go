@@ -3416,7 +3416,20 @@ func NewResourceEndpoints() []*api.Endpoint {
 			Name:    "Resource.InvalidateDiscoveryCache",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
 			Method:  []string{"POST"},
-			Body:    "",
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.FormDataRenderPreview",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.GetResFormSchema",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"},
+			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 	}
@@ -3431,6 +3444,10 @@ type ResourceService interface {
 	Subscribe(ctx context.Context, in *SubscribeReq, opts ...client.CallOption) (Resource_SubscribeService, error)
 	// 主动使 Discover 缓存失效
 	InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, opts ...client.CallOption) (*CommonResp, error)
+	// 表单化数据渲染预览
+	FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取指定资源表单 Schema
+	GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type resourceService struct {
@@ -3519,6 +3536,26 @@ func (c *resourceService) InvalidateDiscoveryCache(ctx context.Context, in *Inva
 	return out, nil
 }
 
+func (c *resourceService) FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.FormDataRenderPreview", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceService) GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.GetResFormSchema", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Resource service
 
 type ResourceHandler interface {
@@ -3528,6 +3565,10 @@ type ResourceHandler interface {
 	Subscribe(context.Context, *SubscribeReq, Resource_SubscribeStream) error
 	// 主动使 Discover 缓存失效
 	InvalidateDiscoveryCache(context.Context, *InvalidateDiscoveryCacheReq, *CommonResp) error
+	// 表单化数据渲染预览
+	FormDataRenderPreview(context.Context, *FormRenderPreviewReq, *CommonResp) error
+	// 获取指定资源表单 Schema
+	GetResFormSchema(context.Context, *GetResFormSchemaReq, *CommonResp) error
 }
 
 func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...server.HandlerOption) error {
@@ -3535,6 +3576,8 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error
 		Subscribe(ctx context.Context, stream server.Stream) error
 		InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error
+		FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error
+		GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error
 	}
 	type Resource struct {
 		resource
@@ -3557,7 +3600,20 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		Name:    "Resource.InvalidateDiscoveryCache",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
 		Method:  []string{"POST"},
-		Body:    "",
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.FormDataRenderPreview",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.GetResFormSchema",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&Resource{h}, opts...))
@@ -3613,4 +3669,12 @@ func (x *resourceSubscribeStream) Send(m *SubscribeResp) error {
 
 func (h *resourceHandler) InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error {
 	return h.ResourceHandler.InvalidateDiscoveryCache(ctx, in, out)
+}
+
+func (h *resourceHandler) FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error {
+	return h.ResourceHandler.FormDataRenderPreview(ctx, in, out)
+}
+
+func (h *resourceHandler) GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error {
+	return h.ResourceHandler.GetResFormSchema(ctx, in, out)
 }

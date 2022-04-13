@@ -48,7 +48,7 @@ func (h *Handler) GetPV(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).Get(
-		ctx, "", req.Name, metav1.GetOptions{},
+		ctx, "", req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
 }
@@ -58,7 +58,7 @@ func (h *Handler) CreatePV(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).Create(
-		ctx, req.Manifest, false, metav1.CreateOptions{},
+		ctx, req.RawData, req.Format, false, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -68,7 +68,7 @@ func (h *Handler) UpdatePV(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PV).Update(
-		ctx, "", req.Name, req.Manifest, metav1.UpdateOptions{},
+		ctx, "", req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
 }

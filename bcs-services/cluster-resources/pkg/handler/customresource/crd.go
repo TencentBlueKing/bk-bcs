@@ -61,7 +61,7 @@ func (h *Handler) GetCRD(
 		return errorx.New(errcode.NoPerm, "共享集群中不支持查看 CRD %s 信息", req.Name)
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		ctx, req.ClusterID, res.CRD, "", "", req.Name, metav1.GetOptions{},
+		ctx, req.ClusterID, res.CRD, "", "", req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
 }

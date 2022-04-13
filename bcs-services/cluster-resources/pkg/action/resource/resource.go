@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
@@ -57,15 +58,25 @@ func (m *ResMgr) List(ctx context.Context, namespace string, opts metav1.ListOpt
 }
 
 // Get ...
-func (m *ResMgr) Get(ctx context.Context, namespace, name string, opts metav1.GetOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Get(ctx context.Context, namespace, name string, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
+	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format, opts)
 }
 
 // Create ...
-func (m *ResMgr) Create(ctx context.Context, manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Create(
+	ctx context.Context, rawData *structpb.Struct, format string, isNSScoped bool, opts metav1.CreateOptions,
+) (*structpb.Struct, error) {
+	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, format)
+	if err != nil {
+		return nil, err
+	}
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return nil, err
+	}
 	if err := m.checkAccess(ctx, "", manifest); err != nil {
 		return nil, err
 	}
@@ -73,7 +84,17 @@ func (m *ResMgr) Create(ctx context.Context, manifest *structpb.Struct, isNSScop
 }
 
 // Update ...
-func (m *ResMgr) Update(ctx context.Context, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Update(
+	ctx context.Context, namespace, name string, rawData *structpb.Struct, format string, opts metav1.UpdateOptions,
+) (*structpb.Struct, error) {
+	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, format)
+	if err != nil {
+		return nil, err
+	}
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return nil, err
+	}
 	if err := m.checkAccess(ctx, namespace, manifest); err != nil {
 		return nil, err
 	}
@@ -89,7 +110,7 @@ func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1
 }
 
 // 访问权限检查（如共享集群禁用等）
-func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest *structpb.Struct) error {
+func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map[string]interface{}) error {
 	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
 	if err != nil {
 		return err
@@ -104,7 +125,7 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest *st
 	}
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
-		namespace = mapx.Get(manifest.AsMap(), "metadata.namespace", "").(string)
+		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
 	}
 	if !cli.IsProjNSinSharedCluster(ctx, m.ProjectID, m.ClusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
