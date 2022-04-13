@@ -5,3 +5,9 @@ metadata:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
   name: argocd-cm
+data:
+  configManagementPlugins: |
+    - name: bcs-plugin
+      generate:
+        command: ["/home/bcs-plugin/bcs-repo-sidecar-client"]
+      lockRepo: false

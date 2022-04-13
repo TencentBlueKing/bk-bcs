@@ -16,6 +16,7 @@ package events
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -133,6 +134,12 @@ func getTimeConds(req *restful.Request) []*operator.Condition {
 }
 
 func listEvent(req *restful.Request) ([]operator.M, int, error) {
+	clusterID := req.QueryParameter(clusterIDTag)
+	if clusterID == "" {
+		blog.Errorf("request clusterID is empty")
+		return nil, 0, fmt.Errorf("request clusterID is empty")
+	}
+	blog.Infof("clusterID: %s", clusterID)
 	fields := lib.GetQueryParamStringArray(req, fieldTag, ",")
 	limit, err := lib.GetQueryParamInt64(req, limitTag, 0)
 	if err != nil {
@@ -154,13 +161,26 @@ func listEvent(req *restful.Request) ([]operator.M, int, error) {
 		Limit:  limit,
 	}
 
+	eventDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
+
 	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		eventDBClient,
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	mList, err := store.Get(req.Request.Context(), tableName, getOption)
+	var mList []operator.M
+
+	mList, err = store.Get(req.Request.Context(), tablePrefix+clusterID, getOption)
 	if err != nil {
 		return nil, 0, err
 	}
+	if int64(len(mList)) < limit {
+		getOption.Limit = limit - int64(len(mList))
+		tmpList, err := store.Get(req.Request.Context(), tableName, getOption)
+		if err != nil {
+			return nil, 0, err
+		}
+		mList = append(mList, tmpList...)
+	}
+
 	lib.FormatTime(mList, []string{eventTimeTag})
 	return mList, len(mList), nil
 }
@@ -197,7 +217,7 @@ func insert(req *restful.Request) error {
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	data[createTimeTag] = time.Now()
-	err = store.Put(req.Request.Context(), tableName, data, putOption)
+	err = store.Put(req.Request.Context(), tablePrefix+data[clusterIDTag].(string), data, putOption)
 	if err != nil {
 		return fmt.Errorf("failed to insert, err %s", err.Error())
 	}
@@ -236,11 +256,17 @@ func insert(req *restful.Request) error {
 }
 
 func watch(req *restful.Request, resp *restful.Response) {
+	clusterID := req.QueryParameter(clusterIDTag)
+	if clusterID == "" {
+		blog.Errorf("request clusterID is empty")
+		resp.WriteError(http.StatusBadRequest, fmt.Errorf("request clusterID is empty"))
+		return
+	}
 	newWatchOption := &lib.WatchServerOption{
 		Store: lib.NewStore(
 			apiserver.GetAPIResource().GetDBClient(dbConfig),
 			apiserver.GetAPIResource().GetEventBus(dbConfig)),
-		TableName: tableName,
+		TableName: tablePrefix + clusterID,
 		Req:       req,
 		Resp:      resp,
 	}

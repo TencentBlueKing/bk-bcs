@@ -76,9 +76,11 @@ func (la *ListAction) validate() error {
 func (la *ListAction) getSharedCluster() error {
 	condM := make(operator.M)
 	condM["isshared"] = true
-
 	condCluster := operator.NewLeafCondition(operator.Eq, condM)
-	clusterList, err := la.model.ListCluster(la.ctx, condCluster, &storeopt.ListOption{})
+	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+
+	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+	clusterList, err := la.model.ListCluster(la.ctx, branchCond, &storeopt.ListOption{})
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		return err
 	}
@@ -213,20 +215,8 @@ func (la *ListAction) returnClusterExtraInfo(clusterList []cmproto.Cluster) {
 
 	// cluster extra info
 	for i := range clusterList {
-		cond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": clusterList[i].ClusterID})
-		nodes, err := la.model.ListNode(la.ctx, cond, &storeopt.ListOption{})
-		if err != nil {
-			continue
-		}
-		canDeleted := func() bool {
-			if len(nodes) > 0 {
-				return false
-			}
-			return true
-		}()
-
 		la.resp.ClusterExtraInfo[clusterList[i].ClusterID] = &cmproto.ExtraInfo{
-			CanDeleted:   canDeleted,
+			CanDeleted:   true,
 			ProviderType: la.GetCloudProviderEngine(clusterList[i]),
 		}
 	}

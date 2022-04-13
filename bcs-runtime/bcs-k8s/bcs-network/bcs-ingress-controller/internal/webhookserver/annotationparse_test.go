@@ -83,7 +83,7 @@ func TestParserAnnotation(t *testing.T) {
 			exceptedError: fmt.Errorf("protocol %s is invalid", ""),
 		},
 		{
-			name:  "mutil port",
+			name:  "mutil port in one line",
 			value: "portpool1.ns1 TCP 8000;portpool1.ns1 UDP 8000;portpool2.ns1 TCP 8080",
 			annotationPorts: []*annotationPort{
 				{
@@ -156,7 +156,7 @@ func TestParserAnnotation(t *testing.T) {
 	for _, s := range tests {
 		t.Run(s.name, func(t *testing.T) {
 			annotationPorts, err := parserAnnotation(s.value)
-			if !reflect.DeepEqual(err, s.exceptedError) {
+			if !isSameError(err, s.exceptedError) {
 				t.Errorf("parserAnnotation(%s) error, excepted: %v, actual: %v", s.value, s.exceptedError, err)
 			}
 			if !reflect.DeepEqual(annotationPorts, s.annotationPorts) {
@@ -164,4 +164,17 @@ func TestParserAnnotation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func isSameError(err1, err2 error) bool {
+	if err1 != nil && err2 == nil {
+		return false
+	}
+	if err1 == nil && err2 != nil {
+		return false
+	}
+	if err1 != nil && err2 != nil && err1.Error() != err2.Error() {
+		return false
+	}
+	return true
 }

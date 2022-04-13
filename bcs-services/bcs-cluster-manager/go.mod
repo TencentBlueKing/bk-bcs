@@ -38,15 +38,16 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/prometheus/client_golang v1.11.0
 	github.com/satori/go.uuid v1.2.0
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.226
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.226
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.226
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.376
+    github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.376
+    github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.374
 	go.mongodb.org/mongo-driver v1.5.3
 	google.golang.org/genproto v0.0.0-20210402141018-6c239bbf2bb1
 	google.golang.org/grpc v1.41.0
+	google.golang.org/protobuf v1.27.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
+	k8s.io/api v0.23.1
+	k8s.io/apimachinery v0.23.1
 	k8s.io/client-go v11.0.0+incompatible
 )

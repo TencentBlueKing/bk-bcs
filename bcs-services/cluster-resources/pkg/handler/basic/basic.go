@@ -73,7 +73,7 @@ func (h *Handler) Version(
 // Healthz 服务健康信息
 func (h *Handler) Healthz(
 	_ context.Context,
-	_ *clusterRes.HealthzReq,
+	req *clusterRes.HealthzReq,
 	resp *clusterRes.HealthzResp,
 ) error {
 	// 服务是否健康标志
@@ -91,6 +91,12 @@ func (h *Handler) Healthz(
 	// 转换为可读状态
 	resp.Status = genHealthzStatus(allOK, "")
 	resp.CallTime = timex.Current()
+
+	// 一般用于健康探针等，可直接根据 http statusCode 判断是否成功
+	// 若需要查看总的服务状态，则无需指定 raiseErr 的值
+	if req.RaiseErr {
+		return err
+	}
 	return nil
 }
 

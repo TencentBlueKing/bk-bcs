@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -51,6 +52,12 @@ func Run(op *options.UserManagerOptions) {
 	err = jwt.InitJWTClient(op)
 	if err != nil {
 		blog.Errorf("init jwt client error: %s", err.Error())
+		os.Exit(1)
+	}
+
+	// init cmdb client
+	if err := cmdb.InitCMDBClient(op); err != nil {
+		blog.Errorf("init cmdb client error: %s", err.Error())
 		os.Exit(1)
 	}
 

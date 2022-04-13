@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
@@ -57,7 +58,8 @@ func TestCObj(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		CRDName:   handler.CRDName4Test,
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -85,7 +87,8 @@ func TestCObj(t *testing.T) {
 		CRDName:   handler.CRDName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
-		Manifest:  updateManifest,
+		RawData:   updateManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.UpdateCObj(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -97,6 +100,7 @@ func TestCObj(t *testing.T) {
 		CRDName:   handler.CRDName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 	getResp := clusterRes.CommonResp{}
 	err = h.GetCObj(ctx, &getReq, &getResp)

@@ -1,5 +1,5 @@
 syntax = "proto2";
-option go_package = "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance";
+option go_package = "./;instance";
 
 package instance;
 

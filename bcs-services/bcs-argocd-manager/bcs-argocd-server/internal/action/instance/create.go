@@ -21,7 +21,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
-	
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -64,41 +65,25 @@ func (action *CreateArgocdInstanceAction) Handle(ctx context.Context,
 		return nil
 	}
 	// TODO: check if the operator has permission in project
-	var generaged bool
-	for j := 0; j < 3; j++ {
-		i.Name = utils.RandomString(common.InstanceNamePrefix, 5)
-		list, err := action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).List(ctx, metav1.ListOptions{})
-		if err != nil {
-			blog.Errorf("list argocd instances %s failed, err: %s", i.Name, err.Error())
-			action.setResp(common.ErrActionFailed, "list argocd instances failed", i)
-			return nil
-		}
-		var exist bool
-		for _, item := range list.Items {
-			if item.Name == i.Name {
-				exist = true
-			}
-		}
-		if !exist {
-			generaged = true
-			break
-		}
-	}
-	if !generaged {
-		blog.Errorf("try generate argocd instance name failed")
-		action.setResp(common.ErrActionFailed, "", nil)
-		return nil
-	}
+	i.Name = utils.RandomString(common.InstanceNamePrefix, 5)
 	// set label
 	if i.Labels == nil {
 		i.Labels = make(map[string]string)
 	}
 	i.Labels[common.ArgocdProjectLabel] = i.Spec.Project
-	created, err := action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).Create(ctx, i, metav1.CreateOptions{})
-	if err != nil {
-		blog.Errorf("create argocd instance failed, err: %s", err.Error())
-		action.setResp(common.ErrActionFailed, "create argocd instance failed", i)
-		return nil
+	created := &v1alpha1.ArgocdInstance{}
+	for {
+		created, err = action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).Create(ctx, i, metav1.CreateOptions{})
+		if errors.IsAlreadyExists(err) {
+			blog.Errorf("create argocd instance failed, instance %s already exists, retrying...", i.Name)
+			continue
+		}
+		if err != nil {
+			blog.Errorf("create argocd instance failed, err: %s", err.Error())
+			action.setResp(common.ErrActionFailed, "create argocd instance failed", i)
+			return nil
+		}
+		break
 	}
 	blog.Infof("create argocd instance %s success", created.Name)
 	action.setResp(common.ErrArgocdServerSuccess, "", created)

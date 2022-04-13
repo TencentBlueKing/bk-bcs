@@ -217,6 +217,8 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for IsShared
 
+	// no validation rules for KubeConfig
+
 	return nil
 }
 
@@ -413,6 +415,8 @@ func (m *NetworkSetting) Validate() error {
 	// no validation rules for IsStaticIpMode
 
 	// no validation rules for ClaimExpiredSeconds
+
+	// no validation rules for CidrStep
 
 	return nil
 }
@@ -3414,6 +3418,21 @@ func (m *AutoScalingGroup) Validate() error {
 
 	// no validation rules for ScalingMode
 
+	for idx, item := range m.GetTimeRanges() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AutoScalingGroupValidationError{
+					field:  fmt.Sprintf("TimeRanges[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -3470,6 +3489,88 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AutoScalingGroupValidationError{}
+
+// Validate checks the field values on TimeRange with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *TimeRange) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 1024 {
+		return TimeRangeValidationError{
+			field:  "Name",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetSchedule()); l < 2 || l > 1024 {
+		return TimeRangeValidationError{
+			field:  "Schedule",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+	}
+
+	// no validation rules for Zone
+
+	// no validation rules for DesiredNum
+
+	return nil
+}
+
+// TimeRangeValidationError is the validation error returned by
+// TimeRange.Validate if the designated constraints aren't met.
+type TimeRangeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TimeRangeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TimeRangeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TimeRangeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TimeRangeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TimeRangeValidationError) ErrorName() string { return "TimeRangeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TimeRangeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTimeRange.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TimeRangeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TimeRangeValidationError{}
 
 // Validate checks the field values on DataDisk with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -4588,10 +4689,10 @@ func (m *CreateClusterReq) Validate() error {
 
 	// no validation rules for ClusterID
 
-	if l := utf8.RuneCountInString(m.GetClusterName()); l < 2 || l > 1024 {
+	if l := utf8.RuneCountInString(m.GetClusterName()); l < 1 || l > 1024 {
 		return CreateClusterReqValidationError{
 			field:  "ClusterName",
-			reason: "value length must be between 2 and 1024 runes, inclusive",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
 		}
 	}
 
@@ -4602,10 +4703,10 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetRegion()); l < 1 || l > 100 {
 		return CreateClusterReqValidationError{
 			field:  "Region",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -4988,6 +5089,382 @@ var _ interface {
 	ErrorName() string
 } = CreateClusterRespValidationError{}
 
+// Validate checks the field values on ImportCloudMode with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ImportCloudMode) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CloudID
+
+	// no validation rules for KubeConfig
+
+	return nil
+}
+
+// ImportCloudModeValidationError is the validation error returned by
+// ImportCloudMode.Validate if the designated constraints aren't met.
+type ImportCloudModeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportCloudModeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportCloudModeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportCloudModeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportCloudModeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportCloudModeValidationError) ErrorName() string { return "ImportCloudModeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ImportCloudModeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportCloudMode.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportCloudModeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportCloudModeValidationError{}
+
+// Validate checks the field values on ImportClusterReq with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ImportClusterReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterID
+
+	if l := utf8.RuneCountInString(m.GetClusterName()); l < 1 || l > 1024 {
+		return ImportClusterReqValidationError{
+			field:  "ClusterName",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
+		}
+	}
+
+	// no validation rules for Description
+
+	if l := utf8.RuneCountInString(m.GetProvider()); l < 1 || l > 1024 {
+		return ImportClusterReqValidationError{
+			field:  "Provider",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
+		return ImportClusterReqValidationError{
+			field:  "Region",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if !_ImportClusterReq_Region_Pattern.MatchString(m.GetRegion()) {
+		return ImportClusterReqValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 100 {
+		return ImportClusterReqValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+	}
+
+	if !_ImportClusterReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return ImportClusterReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetBusinessID()); l < 1 || l > 100 {
+		return ImportClusterReqValidationError{
+			field:  "BusinessID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+	}
+
+	if !_ImportClusterReq_BusinessID_Pattern.MatchString(m.GetBusinessID()) {
+		return ImportClusterReqValidationError{
+			field:  "BusinessID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if _, ok := _ImportClusterReq_Environment_InLookup[m.GetEnvironment()]; !ok {
+		return ImportClusterReqValidationError{
+			field:  "Environment",
+			reason: "value must be in list [stag debug prod]",
+		}
+	}
+
+	if _, ok := _ImportClusterReq_EngineType_InLookup[m.GetEngineType()]; !ok {
+		return ImportClusterReqValidationError{
+			field:  "EngineType",
+			reason: "value must be in list [k8s mesos ]",
+		}
+	}
+
+	if v, ok := interface{}(m.GetIsExclusive()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ImportClusterReqValidationError{
+				field:  "IsExclusive",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _ImportClusterReq_ClusterType_InLookup[m.GetClusterType()]; !ok {
+		return ImportClusterReqValidationError{
+			field:  "ClusterType",
+			reason: "value must be in list [federation single ]",
+		}
+	}
+
+	if len(m.GetLabels()) > 20 {
+		return ImportClusterReqValidationError{
+			field:  "Labels",
+			reason: "value must contain no more than 20 pair(s)",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetCreator()); l < 1 || l > 1024 {
+		return ImportClusterReqValidationError{
+			field:  "Creator",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
+		}
+	}
+
+	if m.GetCloudMode() == nil {
+		return ImportClusterReqValidationError{
+			field:  "CloudMode",
+			reason: "value is required",
+		}
+	}
+
+	if a := m.GetCloudMode(); a != nil {
+
+	}
+
+	// no validation rules for ManageType
+
+	// no validation rules for NetworkType
+
+	// no validation rules for ExtraInfo
+
+	// no validation rules for ExtraClusterID
+
+	// no validation rules for ClusterCategory
+
+	// no validation rules for IsShared
+
+	if utf8.RuneCountInString(m.GetVersion()) > 1024 {
+		return ImportClusterReqValidationError{
+			field:  "Version",
+			reason: "value length must be at most 1024 runes",
+		}
+	}
+
+	return nil
+}
+
+// ImportClusterReqValidationError is the validation error returned by
+// ImportClusterReq.Validate if the designated constraints aren't met.
+type ImportClusterReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportClusterReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportClusterReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportClusterReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportClusterReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportClusterReqValidationError) ErrorName() string { return "ImportClusterReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ImportClusterReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportClusterReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportClusterReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportClusterReqValidationError{}
+
+var _ImportClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _ImportClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _ImportClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _ImportClusterReq_Environment_InLookup = map[string]struct{}{
+	"stag":  {},
+	"debug": {},
+	"prod":  {},
+}
+
+var _ImportClusterReq_EngineType_InLookup = map[string]struct{}{
+	"k8s":   {},
+	"mesos": {},
+	"":      {},
+}
+
+var _ImportClusterReq_ClusterType_InLookup = map[string]struct{}{
+	"federation": {},
+	"single":     {},
+	"":           {},
+}
+
+// Validate checks the field values on ImportClusterResp with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ImportClusterResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ImportClusterRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ImportClusterRespValidationError is the validation error returned by
+// ImportClusterResp.Validate if the designated constraints aren't met.
+type ImportClusterRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportClusterRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportClusterRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportClusterRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportClusterRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportClusterRespValidationError) ErrorName() string {
+	return "ImportClusterRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportClusterRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportClusterResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportClusterRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportClusterRespValidationError{}
+
 // Validate checks the field values on DeleteClusterReq with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -4996,10 +5473,10 @@ func (m *DeleteClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return DeleteClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -5377,6 +5854,13 @@ func (m *UpdateClusterReq) Validate() error {
 
 	// no validation rules for CreateTime
 
+	if utf8.RuneCountInString(m.GetCreator()) > 1024 {
+		return UpdateClusterReqValidationError{
+			field:  "Creator",
+			reason: "value length must be at most 1024 runes",
+		}
+	}
+
 	return nil
 }
 
@@ -5537,10 +6021,10 @@ func (m *RetryCreateClusterReq) Validate() error {
 
 	// no validation rules for ClusterID
 
-	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 1 || l > 100 {
 		return RetryCreateClusterReqValidationError{
 			field:  "Operator",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -5704,10 +6188,10 @@ func (m *GetClusterReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return GetClusterReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -7102,10 +7586,10 @@ func (m *ListNodesInClusterRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return ListNodesInClusterRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -7305,10 +7789,10 @@ func (m *GetClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetServerKey()); l < 1 || l > 100 {
 		return GetClusterCredentialReqValidationError{
 			field:  "ServerKey",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -7462,31 +7946,31 @@ func (m *UpdateClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetServerKey()); l < 1 || l > 100 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ServerKey",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetClientModule()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClientModule()); l < 1 || l > 100 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ClientModule",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerAddress()); l < 2 || l > 2048 {
+	if l := utf8.RuneCountInString(m.GetServerAddress()); l < 1 || l > 2048 {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ServerAddress",
-			reason: "value length must be between 2 and 2048 runes, inclusive",
+			reason: "value length must be between 1 and 2048 runes, inclusive",
 		}
 	}
 
@@ -7652,10 +8136,10 @@ func (m *DeleteClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetServerKey()); l < 1 || l > 100 {
 		return DeleteClusterCredentialReqValidationError{
 			field:  "ServerKey",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -8275,10 +8759,10 @@ func (m *CreateNamespaceReq) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 100 {
 		return CreateNamespaceReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 2 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -10121,24 +10605,24 @@ func (m *CreateProjectRequest) Validate() error {
 
 	// no validation rules for ProjectID
 
-	if utf8.RuneCountInString(m.GetName()) < 2 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		return CreateProjectRequestValidationError{
 			field:  "Name",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetEnglishName()) < 2 {
+	if utf8.RuneCountInString(m.GetEnglishName()) < 1 {
 		return CreateProjectRequestValidationError{
 			field:  "EnglishName",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetCreator()) < 2 {
+	if utf8.RuneCountInString(m.GetCreator()) < 1 {
 		return CreateProjectRequestValidationError{
 			field:  "Creator",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
@@ -10337,10 +10821,10 @@ func (m *UpdateProjectRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 32 {
 		return UpdateProjectRequestValidationError{
 			field:  "ProjectID",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 	}
 
@@ -12140,10 +12624,10 @@ func (m *CreateNodeGroupRequest) Validate() error {
 		}
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 2 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetRegion()); l < 1 || l > 32 {
 		return CreateNodeGroupRequestValidationError{
 			field:  "Region",
-			reason: "value length must be between 2 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 	}
 
@@ -13112,10 +13596,10 @@ func (m *AddNodesRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return AddNodesRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 5 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -13327,10 +13811,10 @@ func (m *DeleteNodesRequest) Validate() error {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 5 || l > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
 		return DeleteNodesRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be between 5 and 100 runes, inclusive",
+			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
 	}
 
@@ -13348,10 +13832,10 @@ func (m *DeleteNodesRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetNodes()) < 2 {
+	if utf8.RuneCountInString(m.GetNodes()) < 1 {
 		return DeleteNodesRequestValidationError{
 			field:  "Nodes",
-			reason: "value length must be at least 2 runes",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 

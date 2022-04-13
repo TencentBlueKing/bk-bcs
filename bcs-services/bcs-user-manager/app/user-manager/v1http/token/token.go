@@ -63,6 +63,7 @@ func NewTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenN
 
 // CreateTokenForm is a form for create token.
 type CreateTokenForm struct {
+	UserType uint    `json:"usertype"`
 	Username string `json:"username" validate:"required"`
 	// token expiration second, -1: never expire
 	Expiration int `json:"expiration" validate:"required"`
@@ -135,6 +136,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 	allow, createBy := checkTokenCreateBy(request, form.Username)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
+		metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}
@@ -215,6 +217,7 @@ func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Resp
 	allow, _ := checkTokenCreateBy(request, username)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
+		metrics.ReportRequestAPIMetrics("GetToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}
@@ -257,6 +260,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 	allow, _ := checkTokenCreateBy(request, tokenInDB.Name)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
+		metrics.ReportRequestAPIMetrics("DeleteToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}
@@ -309,6 +313,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	allow, _ := checkTokenCreateBy(request, tokenInDB.Name)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
+		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}
@@ -378,6 +383,7 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 	allow, createBy := checkTokenCreateBy(request, form.Username)
 	if !allow || form.Username == createBy {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
+		metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}
@@ -408,11 +414,12 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 		return
 	}
 
+	userType := getTempTokenUserType(form.UserType)
 	// insert token record in db
 	userToken := &models.BcsTempToken{
 		Username:  form.Username,
 		Token:     token,
-		UserType:  sqlstore.PlainUser,
+		UserType:  userType,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
 	}
@@ -435,11 +442,24 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 	metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.SucStatus, start)
 }
 
+func getTempTokenUserType(userType uint) uint {
+	switch userType {
+	case sqlstore.AdminUser, sqlstore.SaasUser, sqlstore.PlainUser, sqlstore.ClientUser:
+		return userType
+	default:
+		userType = sqlstore.PlainUser
+	}
+
+	return userType
+}
+
 // CreateClientTokenForm is the form of creating client token
 type CreateClientTokenForm struct {
+	// ClientName name
 	ClientName   string `json:"clientName" validate:"required"`
+	// ClientSecret secret
 	ClientSecret string `json:"clientSecret"`
-	// token expiration second, -1: never expire
+	// Expiration token expiration second, -1: never expire
 	Expiration int `json:"expiration" validate:"required"`
 }
 
@@ -460,6 +480,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	allow, createBy := checkTokenCreateBy(request, form.ClientName)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to create client token", common.BcsErrApiUnauthorized)
+		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}

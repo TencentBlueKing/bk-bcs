@@ -33,7 +33,7 @@ def get_res_inst_multi_actions_perms(
         raise ResourceTypeUnsupported()
 
     if resource_type == ResourceType.Namespace:
-        resources = NamespaceRequest(project_id, cluster_id).make_resources(namespace)
+        resources = NamespaceRequest(project_id=project_id, cluster_id=cluster_id).make_resources(namespace)
         action_ids = [
             NamespaceScopedAction.VIEW,
             NamespaceScopedAction.CREATE,

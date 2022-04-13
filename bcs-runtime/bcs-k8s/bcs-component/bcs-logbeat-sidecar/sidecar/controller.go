@@ -14,10 +14,12 @@
 package sidecar
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -30,7 +32,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/metric"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/types"
 
-	docker "github.com/fsouza/go-dockerclient"
+	dockerapi "github.com/docker/docker/api"
+	dockertypes "github.com/docker/docker/api/types"
+	dockerevents "github.com/docker/docker/api/types/events"
+	dockerfilters "github.com/docker/docker/api/types/filters"
+	docker "github.com/docker/docker/client"
 	"gopkg.in/yaml.v2"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/labels"
@@ -51,12 +57,13 @@ const (
 type SidecarController struct {
 	sync.RWMutex
 
-	conf   *config.Config
+	conf *config.Config
+	// client *dockerclient.Client
 	client *docker.Client
 	//key = containerid, value = ContainerLogConf
 	logConfs map[string]*ContainerLogConf
-	//key = containerid, value = *docker.Container
-	containerCache      map[string]*docker.Container
+	//key = containerid, value = *dockertypes.ContainerJSON
+	containerCache      map[string]*dockertypes.ContainerJSON
 	containerCacheMutex sync.RWMutex
 	//log config prefix file name
 	prefixFile string
@@ -101,15 +108,14 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	s := &SidecarController{
 		conf:           conf,
 		logConfs:       make(map[string]*ContainerLogConf),
-		containerCache: make(map[string]*docker.Container),
+		containerCache: make(map[string]*dockertypes.ContainerJSON),
 		prefixFile:     conf.PrefixFile,
 	}
 
 	//init docker client
-	s.client, err = docker.NewClient(conf.DockerSock)
+	s.client, err = makeProperDockerClient(conf.DockerSock)
 	if err != nil {
-		blog.Errorf("new dockerclient %s failed: %s", conf.DockerSock, err.Error())
-		return nil, err
+		blog.Fatalf("makeProperDockerClient %s failed: %s", conf.DockerSock, err.Error())
 	}
 
 	//mkdir logconfig dir
@@ -128,6 +134,44 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	return s, nil
 }
 
+func makeProperDockerClient(dockerhost string) (*docker.Client, error) {
+	client, err := docker.NewClientWithOpts(docker.WithHost(dockerhost))
+	if err != nil {
+		blog.Errorf("new dockerclient %s failed: %s", dockerhost, err.Error())
+		return nil, err
+	}
+	_, err = client.ServerVersion(context.Background())
+	if err != nil {
+		if strings.Contains(err.Error(), dockerapi.DefaultVersion) {
+			blog.Warnf("Use default docker api version failed: %s. Will use server side api version", err)
+			client, err = docker.NewClientWithOpts(docker.WithHost(dockerhost), docker.WithVersion(getDockerClientVersion(err.Error())))
+			if err != nil {
+				blog.Errorf("new dockerclient %s failed: %s", dockerhost, err.Error())
+				return nil, err
+			}
+			if _, checkErr := client.ServerVersion(context.Background()); checkErr != nil {
+				blog.Errorf("Docker client requests to docker failed: %s", err)
+				return nil, err
+			}
+			return client, nil
+		}
+		blog.Errorf("Check server version failed: %s", err)
+		return nil, err
+	}
+	return client, nil
+}
+
+func getDockerClientVersion(errString string) string {
+	r := regexp.MustCompile("\\d\\.\\d\\d")
+	versions := r.FindAllString(errString, -1)
+	if len(versions) != 2 {
+		blog.Errorf("Extract server version from docker daemon failed. Use min version instead")
+		return dockerapi.MinVersion
+	}
+	blog.Infof("Server Version: %+v", versions[len(versions)-1])
+	return versions[len(versions)-1]
+}
+
 // Start starts the controller
 func (s *SidecarController) Start() {
 	go s.listenerDockerEvent()
@@ -138,18 +182,10 @@ func (s *SidecarController) Start() {
 //when create container, and produce container log config
 //when stop container, and delete container log config
 func (s *SidecarController) listenerDockerEvent() {
-	listener := make(chan *docker.APIEvents)
-	err := s.client.AddEventListener(listener)
-	if err != nil {
-		blog.Errorf("listen docker event error %s", err.Error())
-		os.Exit(1)
-	}
-	defer func() {
-		err = s.client.RemoveEventListener(listener)
-		if err != nil {
-			blog.Errorf("remove docker event error  %s", err.Error())
-		}
-	}()
+	var err error
+	ctx, cancel := context.WithCancel(context.Background())
+	eventChan, errChan := s.client.Events(ctx, dockertypes.EventsOptions{Filters: dockerfilters.NewArgs(dockerfilters.Arg("type", "container"))})
+	defer cancel()
 
 	freeFunc := func(containerID string) {
 		s.containerCacheMutex.Lock()
@@ -166,24 +202,26 @@ func (s *SidecarController) listenerDockerEvent() {
 	}
 
 	for {
-		var msg *docker.APIEvents
+		var message dockerevents.Message
 		select {
-		case msg = <-listener:
-			blog.V(3).Infof("receive docker event action %s container %s", msg.Action, msg.ID)
+		case message = <-eventChan:
+			blog.V(3).Infof("receive docker event action %s container %s", message.Action, message.ID)
+		case err := <-errChan:
+			blog.Fatalf("Docker event channal return error: %s", err.Error())
 		}
 
-		switch msg.Action {
+		switch message.Action {
 		//start container
-		case "start":
-			blog.Infof("docker action : %+v", *msg)
-			c := s.inspectContainer(msg.ID)
+		case "create", "start":
+			blog.Infof("docker action : %+v", message)
+			c := s.inspectContainer(message.ID)
 			if c == nil {
-				blog.Errorf("inspect container %s failed", msg.ID)
-				freeFunc(msg.ID)
+				blog.Errorf("inspect container %s failed", message.ID)
+				freeFunc(message.ID)
 				break
 			}
 			s.containerCacheMutex.Lock()
-			s.containerCache[msg.ID] = c
+			s.containerCache[message.ID] = c
 			s.containerCacheMutex.Unlock()
 			s.produceContainerLogConf(c)
 			err = s.reloadLogbeat()
@@ -194,13 +232,13 @@ func (s *SidecarController) listenerDockerEvent() {
 
 			// exit container
 		case "die", "stop":
-			blog.Infof("docker action : %+v", *msg)
+			blog.Infof("docker action : %+v", message)
 			s.containerCacheMutex.RLock()
-			c, ok := s.containerCache[msg.ID]
+			c, ok := s.containerCache[message.ID]
 			s.containerCacheMutex.RUnlock()
 			if !ok {
-				blog.Errorf("Container info with containerID (%s) did not in containerCache", msg.ID)
-				freeFunc(msg.ID)
+				blog.Errorf("Container info with containerID (%s) did not in containerCache", message.ID)
+				freeFunc(message.ID)
 				break
 			}
 			c.State.Running = false
@@ -214,7 +252,7 @@ func (s *SidecarController) listenerDockerEvent() {
 
 		// destroy container
 		case "destroy":
-			freeFunc(msg.ID)
+			freeFunc(message.ID)
 		}
 	}
 }
@@ -222,7 +260,7 @@ func (s *SidecarController) listenerDockerEvent() {
 func (s *SidecarController) syncLogConfs() {
 	var hostIP string
 	//list all running containers
-	apiContainers, err := s.client.ListContainers(docker.ListContainersOptions{All: true})
+	apiContainers, err := s.client.ContainerList(context.Background(), dockertypes.ContainerListOptions{All: true})
 	if err != nil {
 		blog.Errorf("docker ListContainers failed: %s", err.Error())
 		return
@@ -237,9 +275,13 @@ func (s *SidecarController) syncLogConfs() {
 			blog.Errorf("No container info (%s) in containercache", apiC.ID)
 			continue
 		}
-		if !c.State.Running {
-			blog.Infof("container (%s) is in state of (%s), not in running/paused/restarting, skipped", apiC.ID, c.State.StateString())
-			continue
+		if !c.State.Running && c.State.Status != "created" {
+			key := s.getContainerLogConfKey(c.ID)
+			_, ok := s.logConfs[key]
+			if !ok {
+				blog.Infof("container (%s) is in state of (%s), not in running/paused/restarting, skipped", apiC.ID, c.State.Status)
+				continue
+			}
 		}
 		s.produceContainerLogConf(c)
 		//Get host IP
@@ -340,7 +382,7 @@ func (s *SidecarController) getBCSLogConfigKey(logConf *bcsv1.BcsLogConfig) stri
 	return fmt.Sprintf("%s/%s", logConf.Namespace, logConf.Name)
 }
 
-func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
+func (s *SidecarController) produceContainerLogConf(c *dockertypes.ContainerJSON) {
 	key := s.getContainerLogConfKey(c.ID)
 	y, ok := s.produceLogConfParameterV2(c)
 
@@ -490,7 +532,7 @@ func (s *SidecarController) deleteContainerLogConf(containerID string) {
 
 // if need to collect the container logs, return true
 // else return false
-func (s *SidecarController) produceLogConfParameterV2(container *docker.Container) (*types.Yaml, bool) {
+func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.ContainerJSON) (*types.Yaml, bool) {
 	//if container is network, ignore
 	name := container.Config.Labels[ContainerLabelK8sContainerName]
 	if name == "POD" || name == "" {
@@ -555,8 +597,8 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 			OutputFormat:     s.conf.LogbeatOutputFormat,
 			Package:          logConf.Spec.PackageCollection,
 		}
-		blog.Infof("container info: %+v", *container)
-		if !container.State.Running {
+		blog.V(4).Infof("container info: %+v", *container)
+		if !container.State.Running && container.State.Status != "created" {
 			var closeEOF bool = true
 			para.CloseEOF = &closeEOF
 			para.CloseTimeout = time.Duration(time.Duration(logConf.Spec.ExitedContainerLogCloseTimeout) * time.Second).String()
@@ -578,7 +620,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		//whether report pod labels to log tags
 		if logConf.Spec.PodLabels {
 			for k, v := range pod.Labels {
-				para.ExtMeta[fmt.Sprintf("labels_%s", strings.ReplaceAll(k, ".", "_"))] = v
+				para.ExtMeta[strings.ReplaceAll(k, ".", "_")] = v
 			}
 		}
 		//custom log tags

@@ -163,6 +163,9 @@ func (ua *UpdateAction) updateCluster() error {
 	if len(ua.req.CreateTime) > 0 {
 		ua.cluster.CreateTime = ua.req.CreateTime
 	}
+	if len(ua.req.Creator) > 0 {
+		ua.cluster.Creator = ua.req.Creator
+	}
 
 	for _, ip := range ua.req.Master {
 		if ua.cluster.Master == nil {
