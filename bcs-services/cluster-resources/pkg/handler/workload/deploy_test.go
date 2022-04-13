@@ -122,7 +122,7 @@ var deployManifest4FormTest = map[string]interface{}{
 
 func TestDeployWithForm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
 
