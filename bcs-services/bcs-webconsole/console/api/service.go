@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/shlex"
 )
 
 type service struct {
@@ -170,6 +171,17 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		return
 	}
 
+	// 自定义命令行
+	var commands []string
+	if consoleQuery.Command != "" {
+		commands, err = shlex.Split(consoleQuery.Command)
+		if err != nil {
+			msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, command not valid, %s", err))
+			APIError(c, msg)
+			return
+		}
+	}
+
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
 		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
@@ -177,6 +189,10 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		return
 	}
 	podCtx.ProjectId = authCtx.ProjectId
+
+	if len(commands) > 0 {
+		podCtx.Commands = commands
+	}
 
 	store := sessions.NewRedisStore("open-session", "open-session")
 
