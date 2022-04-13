@@ -37,6 +37,7 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -92,6 +93,7 @@ func (crSvc *clusterResourcesService) Init() error {
 		crSvc.initHandler,
 		crSvc.initHTTPService,
 		crSvc.initMetricService,
+		crSvc.initDependentServiceClient,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -338,5 +340,14 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 			crSvc.stopCh <- struct{}{}
 		}
 	}()
+	return nil
+}
+
+// 初始化依赖服务 Client
+func (crSvc *clusterResourcesService) initDependentServiceClient() error {
+	// ClusterManager
+	cluster.InitClusterMgrClient(crSvc.microRtr, crSvc.clientTLSConfig)
+	// ProjectManager
+	// TODO ...
 	return nil
 }

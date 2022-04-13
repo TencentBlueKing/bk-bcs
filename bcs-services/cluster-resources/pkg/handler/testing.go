@@ -184,9 +184,10 @@ func NewInjectedContext(username, projectID, clusterID string) context.Context {
 	if clusterID == "" {
 		clusterID = envs.TestClusterID
 	}
-	projInfo, _ := project.GetProjectInfo(projectID)
-	clusterInfo, _ := cluster.GetClusterInfo(clusterID)
-	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, username)
+	ctx := context.TODO()
+	projInfo, _ := project.GetProjectInfo(ctx, projectID)
+	clusterInfo, _ := cluster.GetClusterInfo(ctx, clusterID)
+	ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 	ctx = context.WithValue(ctx, ctxkey.ProjKey, projInfo)
 	return context.WithValue(ctx, ctxkey.ClusterKey, clusterInfo)
 }

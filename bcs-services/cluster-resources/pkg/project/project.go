@@ -19,7 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/projmgr"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
@@ -31,8 +30,8 @@ type Project struct {
 }
 
 // GetProjectInfo ...
-func GetProjectInfo(projectID string) (*Project, error) {
-	projInfo, err := projmgr.FetchProjectInfo(projectID)
+func GetProjectInfo(_ context.Context, projectID string) (*Project, error) {
+	projInfo, err := FetchProjectInfo(projectID)
 	if err != nil {
 		return &Project{}, err
 	}

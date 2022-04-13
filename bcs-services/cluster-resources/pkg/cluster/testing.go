@@ -12,15 +12,20 @@
  * limitations under the License.
  */
 
-package projmgr
+package cluster
 
 import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 
-// 获取单测用项目信息
-func fetchMockProjectInfo(projectID string) (map[string]interface{}, error) {
-	return map[string]interface{}{
-		"id":    projectID,
-		"code":  envs.TestProjectCode,
-		"bizID": "blueking",
-	}, nil
+// 获取单测用集群信息
+func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
+	ret := map[string]interface{}{
+		"id":     clusterID,
+		"type":   ClusterTypeSingle,
+		"name":   "TestCluster-" + clusterID,
+		"projID": envs.TestProjectID,
+	}
+	if clusterID == envs.TestSharedClusterID {
+		ret["type"] = ClusterTypeShared
+	}
+	return ret, nil
 }

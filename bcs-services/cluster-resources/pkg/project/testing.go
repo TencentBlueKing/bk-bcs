@@ -12,22 +12,15 @@
  * limitations under the License.
  */
 
-package projmgr
+package project
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-)
+import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 
-// FetchProjectInfo 获取项目信息
-func FetchProjectInfo(projectID string) (map[string]interface{}, error) {
-	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
-		return fetchMockProjectInfo(projectID)
-	}
-	return fetchProjectInfo(projectID)
-}
-
-func fetchProjectInfo(projectID string) (map[string]interface{}, error) {
-	// TODO 切换成实际获取项目信息逻辑（调用 projmgr api ?）
-	return fetchMockProjectInfo(projectID)
+// 获取单测用项目信息
+func fetchMockProjectInfo(projectID string) (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"id":    projectID,
+		"code":  envs.TestProjectCode,
+		"bizID": "blueking",
+	}, nil
 }

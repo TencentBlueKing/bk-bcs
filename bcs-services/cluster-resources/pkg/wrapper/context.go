@@ -63,7 +63,7 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 
 			// 3. 注入 Project，Cluster 信息
 			if needInjectProjCluster(req) {
-				projInfo, clusterInfo, err := fetchProjCluster(req)
+				projInfo, clusterInfo, err := fetchProjCluster(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -160,12 +160,12 @@ func needInjectProjCluster(req server.Request) bool {
 }
 
 // 获取项目，集群信息
-func fetchProjCluster(req server.Request) (*project.Project, *cluster.Cluster, error) {
+func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project, *cluster.Cluster, error) {
 	projectID, err := goAttr.GetValue(req.Body(), "ProjectID")
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "Get ProjectID from Request Failed: %v", err)
 	}
-	projInfo, err := project.GetProjectInfo(projectID.(string))
+	projInfo, err := project.GetProjectInfo(ctx, projectID.(string))
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "获取项目 %s 信息失败：%v", projectID, err)
 	}
@@ -173,7 +173,7 @@ func fetchProjCluster(req server.Request) (*project.Project, *cluster.Cluster, e
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "Get ClusterID from Request Failed: %v", err)
 	}
-	clusterInfo, err := cluster.GetClusterInfo(clusterID.(string))
+	clusterInfo, err := cluster.GetClusterInfo(ctx, clusterID.(string))
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "获取集群 %s 信息失败：%v", clusterID, err)
 	}

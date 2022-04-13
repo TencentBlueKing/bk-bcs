@@ -12,20 +12,22 @@
  * limitations under the License.
  */
 
-package clustermgr
+package project
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+)
 
-// 获取单测用集群信息
-func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
-	ret := map[string]interface{}{
-		"id":         clusterID,
-		"type":       "Single",
-		"name":       "TestCluster",
-		"project_id": envs.TestProjectID,
+// FetchProjectInfo 获取项目信息
+func FetchProjectInfo(projectID string) (map[string]interface{}, error) {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return fetchMockProjectInfo(projectID)
 	}
-	if clusterID == envs.TestSharedClusterID {
-		ret["type"] = "Shared"
-	}
-	return ret, nil
+	return fetchProjectInfo(projectID)
+}
+
+func fetchProjectInfo(projectID string) (map[string]interface{}, error) {
+	// TODO 切换成实际获取项目信息逻辑（调用 projmgr api ?）
+	return fetchMockProjectInfo(projectID)
 }

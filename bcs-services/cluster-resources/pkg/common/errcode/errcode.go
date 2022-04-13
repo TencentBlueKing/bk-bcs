@@ -29,4 +29,6 @@ const (
 	Unauth = 5
 	// NoIAMPerm 权限中心鉴权失败
 	NoIAMPerm = 40300
+	// ComponentErr 依赖组件异常
+	ComponentErr = 6
 )
