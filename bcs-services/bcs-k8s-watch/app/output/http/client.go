@@ -75,7 +75,7 @@ const (
 	HandlerEventName = "events"
 
 	// request timeout
-	StorageRequestTimeoutSeconds = 2
+	StorageRequestTimeoutSeconds = 5
 
 	// bcsstorage/v1/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeWatchURLFmt = "%s/bcsstorage/v1/k8s/watch/clusters/%s/namespaces/%s/%s/%s"
