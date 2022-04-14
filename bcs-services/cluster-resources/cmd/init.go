@@ -345,8 +345,19 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 
 // 初始化依赖服务 Client
 func (crSvc *clusterResourcesService) initDependentServiceClient() error {
+	if crSvc.conf.Discovery.Cert == "" || crSvc.conf.Discovery.Key == "" || crSvc.conf.Discovery.Ca == "" {
+		return errorx.New(errcode.ValidateErr, "discovery client's Cert/Key/Ca required")
+	}
+	tlsConf, err := ssl.ClientTslConfVerity(
+		crSvc.conf.Discovery.Ca, crSvc.conf.Discovery.Cert, crSvc.conf.Discovery.Key, crSvc.conf.Discovery.CertPwd,
+	)
+	if err != nil {
+		log.Error(crSvc.ctx, "load discovery client tls config failed: %v", err)
+		return err
+	}
+	log.Info(crSvc.ctx, "load discovery client tls config successfully")
 	// ClusterManager
-	cluster.InitCMClient(crSvc.microRtr, crSvc.clientTLSConfig)
+	cluster.InitCMClient(crSvc.microRtr, tlsConf)
 	// ProjectManager
 	// TODO ...
 	return nil

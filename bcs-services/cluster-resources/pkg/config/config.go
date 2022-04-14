@@ -60,14 +60,15 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 
 // ClusterResourcesConf ClusterResources 服务启动配置
 type ClusterResourcesConf struct {
-	Debug   bool        `yaml:"debug"`
-	Etcd    EtcdConf    `yaml:"etcd"`
-	Server  ServerConf  `yaml:"server"`
-	Client  ClientConf  `yaml:"client"`
-	Swagger SwaggerConf `yaml:"swagger"`
-	Log     LogConf     `yaml:"log"`
-	Redis   RedisConf   `yaml:"redis"`
-	Global  GlobalConf  `yaml:"crGlobal"`
+	Debug     bool        `yaml:"debug"`
+	Etcd      EtcdConf    `yaml:"etcd"`
+	Server    ServerConf  `yaml:"server"`
+	Client    ClientConf  `yaml:"client"`
+	Discovery ClientConf  `yaml:"discovery"`
+	Swagger   SwaggerConf `yaml:"swagger"`
+	Log       LogConf     `yaml:"log"`
+	Redis     RedisConf   `yaml:"redis"`
+	Global    GlobalConf  `yaml:"crGlobal"`
 }
 
 // 初始化 jwt 公钥

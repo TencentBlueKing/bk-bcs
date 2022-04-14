@@ -21,6 +21,7 @@ import (
 	"time"
 
 	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/fatih/structs"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
 
@@ -111,6 +112,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	if err != nil || !resp.Result {
 		return nil, errorx.New(errcode.ComponentErr, "获取集群 %s 信息失败", clusterID)
 	}
+	log.Info(ctx, "get cluster %s info: %v", clusterID, structs.Map(resp.Data))
 	clusterInfo := map[string]interface{}{
 		"id":   resp.Data.ClusterID,
 		"name": resp.Data.ClusterName,
