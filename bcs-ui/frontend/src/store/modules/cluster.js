@@ -1244,6 +1244,28 @@ export default {
         async getNodeTaints (context, params = {}, config = {}) {
             const data = await getNodeTaints(params, config).catch(() => ({}))
             return data
+        },
+
+        /**
+         * 获取园区列表
+         * @param {String} projectId 项目ID
+         * @param {String} region 所属地域
+         */
+        async getZoneList (context, { projectId, region }, config = {}) {
+            return http.get(
+                `${DEVOPS_BCS_API_URL}/api/hosts/projects/${projectId}/zones/?region=${region}`,
+                config
+            )
+        },
+
+        /**
+         * 获取数据盘类型列表
+         */
+        async getDiskTypeList (context, { projectId }, config = {}) {
+            return http.get(
+                `${DEVOPS_BCS_API_URL}/api/hosts/projects/${projectId}/disk_types/`,
+                config
+            )
         }
     }
 }
