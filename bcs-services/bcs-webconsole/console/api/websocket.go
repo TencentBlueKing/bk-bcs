@@ -114,20 +114,19 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	eg.Go(func() error {
 		defer stop()
-		defer manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New("BCS Console 服务端连接断开，请重新登录"))
 		defer remoteStreamConn.Close()
 		defer logger.Infof("Close %s WaitStreamDone done", podCtx.PodName)
 
-		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
 		// 关闭需要主动发送 Ctrl-D 命令
 		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.AdminClusterId)
 		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
 
 	if err := eg.Wait(); err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "Handle websocket"))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, err)
 		return
 	}
 
-	manager.GracefulCloseWebSocket(ctx, ws, connected, nil)
+	// 正常退出, 如使用 Exit 命令主动退出返回提示
+	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New("BCS Console 服务端连接断开，请重新登录"))
 }

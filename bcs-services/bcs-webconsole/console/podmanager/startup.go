@@ -114,11 +114,6 @@ func (m *StartupManager) GetContainerByName(namespace, podName, containerName st
 			continue
 		}
 
-		reason, ready := IsPodReady(pod)
-		if !ready {
-			return nil, errors.Errorf("Pod not ready, status: %s", reason)
-		}
-
 		container := &types.Container{
 			Namespace:     pod.Namespace,
 			PodName:       pod.Name,

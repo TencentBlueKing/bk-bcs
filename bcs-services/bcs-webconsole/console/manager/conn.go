@@ -189,7 +189,7 @@ func (r *RemoteStreamConn) Run() error {
 		select {
 		case <-r.ctx.Done():
 			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
-			return r.ctx.Err()
+			return nil
 		case output := <-r.outputMsgChan:
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
