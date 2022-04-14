@@ -77,5 +77,5 @@ func (p *MockPerm) CanUse(ctx perm.Ctx) (bool, error) {
 
 // 单测用，若指定参数符合条件，则强制无权限
 func (p *MockPerm) forceNoPerm(ctx perm.Ctx) bool {
-	return ctx.GetClusterID() == envs.TestNoPermClusterID
+	return ctx.GetClusterID() == envs.TestNoPermClusterID || ctx.ForceRaise()
 }
