@@ -48,12 +48,12 @@ func TestLoadResRefs(t *testing.T) {
 }
 
 func TestLoadDemoManifest(t *testing.T) {
-	manifest, _ := LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := LoadDemoManifest("workload/simple_deployment", "")
 	assert.Equal(t, "Deployment", manifest["kind"])
 
-	manifest, _ = LoadDemoManifest("storage/simple_persistent_volume")
+	manifest, _ = LoadDemoManifest("storage/simple_persistent_volume", "")
 	assert.Equal(t, "PersistentVolume", manifest["kind"])
 
-	_, err := LoadDemoManifest("custom_resource/custom_object")
+	_, err := LoadDemoManifest("custom_resource/custom_object", "")
 	assert.NotNil(t, err)
 }

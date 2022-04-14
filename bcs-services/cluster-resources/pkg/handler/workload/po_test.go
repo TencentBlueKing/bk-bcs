@@ -32,7 +32,7 @@ func TestPod(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_pod")
+	manifest, _ := example.LoadDemoManifest("workload/simple_pod", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

@@ -31,7 +31,7 @@ func TestSA(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("rbac/simple_service_account")
+	manifest, _ := example.LoadDemoManifest("rbac/simple_service_account", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

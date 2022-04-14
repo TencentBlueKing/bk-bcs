@@ -31,7 +31,7 @@ func TestSTS(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_statefulset")
+	manifest, _ := example.LoadDemoManifest("workload/simple_statefulset", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

@@ -31,7 +31,7 @@ func TestCJ(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_cronjob")
+	manifest, _ := example.LoadDemoManifest("workload/simple_cronjob", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
