@@ -21,5 +21,7 @@ RUN cp -R ./third_party/swagger-ui/* ./swagger/
 
 ENV EXAMPLE_FILE_BASE_DIR=/go/src/pkg/resource/example
 
+ENV FORM_FILE_BASE_DIR=/go/src/pkg/resource/form
+
 # default log file base dir
 RUN mkdir -p /tmp/logs
