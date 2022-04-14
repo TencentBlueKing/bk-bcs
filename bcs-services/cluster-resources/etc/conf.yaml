@@ -54,6 +54,8 @@ log:
   level: "info"
   # 日志刷新间隔，单位: 秒
   flushInterval: 5
+  # 是否自动创建日志目录（若不存在）
+  autoCreateDir: false
   # 文件绝对路径
   path: "/tmp/logs"
   # 文件名称

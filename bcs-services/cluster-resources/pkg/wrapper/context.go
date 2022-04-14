@@ -126,7 +126,6 @@ func jwtDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	claims, ok := token.Claims.(*bcsJwt.UserClaimsInfo)
 	if !ok {
 		return nil, errorx.New(errcode.Unauth, "jwt token's issuer isn't bcs")
-
 	}
 	return claims, nil
 }
