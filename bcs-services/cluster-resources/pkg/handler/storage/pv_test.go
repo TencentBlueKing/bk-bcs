@@ -31,7 +31,7 @@ func TestPV(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume")
+	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

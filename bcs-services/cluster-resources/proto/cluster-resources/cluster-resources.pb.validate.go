@@ -2361,6 +2361,28 @@ func (m *GetK8SResTemplateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetK8SResTemplateReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return GetK8SResTemplateReqMultiError(errors)
 	}
@@ -2441,6 +2463,8 @@ var _ interface {
 } = GetK8SResTemplateReqValidationError{}
 
 var _GetK8SResTemplateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _GetK8SResTemplateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjListReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

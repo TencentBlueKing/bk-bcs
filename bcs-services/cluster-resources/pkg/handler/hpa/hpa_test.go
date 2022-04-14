@@ -31,7 +31,7 @@ func TestHPA(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa")
+	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
