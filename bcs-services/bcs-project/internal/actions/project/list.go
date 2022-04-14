@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
@@ -64,7 +65,7 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 	var cond *operator.Condition
 	// 通过项目名称进行模糊查询
 	if la.req.SearchName != "" {
-		condM["name"] = la.req.SearchName
+		condM["name"] = primitive.Regex{Pattern: la.req.SearchName, Options: "i"}
 		cond = operator.NewLeafCondition(operator.Con, condM)
 	} else {
 		if la.req.ProjectIDs != "" {
