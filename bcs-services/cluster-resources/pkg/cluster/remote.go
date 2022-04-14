@@ -21,11 +21,11 @@ import (
 	"math/rand"
 	"time"
 
-	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
+	bcsapicm "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/bcsapi/clustermanager"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 )
 

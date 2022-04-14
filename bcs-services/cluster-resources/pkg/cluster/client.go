@@ -20,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/fatih/structs"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
@@ -29,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	bcsapicm "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/discovery"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -113,12 +113,15 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 		return nil, errorx.New(errcode.ComponentErr, "获取集群 %s 信息失败", clusterID)
 	}
 	log.Info(ctx, "get cluster %s info: %v", clusterID, structs.Map(resp.Data))
+
 	clusterInfo := map[string]interface{}{
-		"id":   resp.Data.ClusterID,
-		"name": resp.Data.ClusterName,
-		// TODO 确认 clustermanager 返回的 type 值
-		"type":   resp.Data.ClusterType,
+		"id":     resp.Data.ClusterID,
+		"name":   resp.Data.ClusterName,
+		"type":   ClusterTypeSingle,
 		"projID": resp.Data.ProjectID,
+	}
+	if resp.Data.IsShared {
+		clusterInfo["type"] = ClusterTypeShared
 	}
 
 	err = c.cache.Add(cacheKey, clusterInfo, cache.DefaultExpiration)

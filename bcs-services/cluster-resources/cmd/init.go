@@ -344,18 +344,18 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 }
 
 // 初始化依赖服务 Client
-func (crSvc *clusterResourcesService) initDependentServiceClient() error {
-	if crSvc.conf.Discovery.Cert == "" || crSvc.conf.Discovery.Key == "" || crSvc.conf.Discovery.Ca == "" {
-		return errorx.New(errcode.ValidateErr, "discovery client's Cert/Key/Ca required")
+func (crSvc *clusterResourcesService) initDependentServiceClient() (err error) {
+	var tlsConf *tls.Config
+	if crSvc.conf.Discovery.Cert != "" || crSvc.conf.Discovery.Key != "" || crSvc.conf.Discovery.Ca != "" {
+		tlsConf, err = ssl.ClientTslConfVerity(
+			crSvc.conf.Discovery.Ca, crSvc.conf.Discovery.Cert, crSvc.conf.Discovery.Key, crSvc.conf.Discovery.CertPwd,
+		)
+		if err != nil {
+			log.Error(crSvc.ctx, "load discovery client tls config failed: %v", err)
+			return err
+		}
+		log.Info(crSvc.ctx, "load discovery client tls config successfully")
 	}
-	tlsConf, err := ssl.ClientTslConfVerity(
-		crSvc.conf.Discovery.Ca, crSvc.conf.Discovery.Cert, crSvc.conf.Discovery.Key, crSvc.conf.Discovery.CertPwd,
-	)
-	if err != nil {
-		log.Error(crSvc.ctx, "load discovery client tls config failed: %v", err)
-		return err
-	}
-	log.Info(crSvc.ctx, "load discovery client tls config successfully")
 	// ClusterManager
 	cluster.InitCMClient(crSvc.microRtr, tlsConf)
 	// ProjectManager
