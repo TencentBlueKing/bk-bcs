@@ -31,7 +31,7 @@ func TestSVC(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("network/simple_service")
+	manifest, _ := example.LoadDemoManifest("network/simple_service", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

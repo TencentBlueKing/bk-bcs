@@ -35,7 +35,7 @@ func TestDeploy(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
@@ -187,7 +187,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 	// 设置为共享集群项目属命名空间
 	err = mapx.SetItems(manifest, "metadata.namespace", envs.TestSharedClusterNS)
@@ -251,7 +251,7 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	h := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

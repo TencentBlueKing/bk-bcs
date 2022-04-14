@@ -140,7 +140,7 @@ func TestSubscribeCMInSharedCluster(t *testing.T) {
 	assert.Contains(t, err.Error(), "命名空间不属于指定项目")
 
 	// 在共享集群项目命名空间中创建 configmap 确保存在事件
-	cmManifest, _ := example.LoadDemoManifest("config/simple_configmap")
+	cmManifest, _ := example.LoadDemoManifest("config/simple_configmap", "")
 	_ = mapx.SetItems(cmManifest, "metadata.namespace", envs.TestSharedClusterNS)
 	clusterConf := res.NewClusterConfig(envs.TestSharedClusterID)
 	cmRes, err := res.GetGroupVersionResource(context.TODO(), clusterConf, res.CM, "")

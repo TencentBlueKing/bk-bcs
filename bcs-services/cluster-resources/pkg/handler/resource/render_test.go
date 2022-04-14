@@ -31,7 +31,7 @@ func TestFormDataRenderPreview(t *testing.T) {
 	hdlr := New()
 	ctx := context.TODO()
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	// 类型强制转换，确保解析器正确解析
 	res.ConvertInt2Int64(manifest)
 	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(manifest))
