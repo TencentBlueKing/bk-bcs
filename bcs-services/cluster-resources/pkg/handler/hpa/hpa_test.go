@@ -30,7 +30,7 @@ func TestHPA(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa")
+	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

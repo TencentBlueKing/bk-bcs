@@ -30,7 +30,7 @@ func TestSTS(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_statefulset")
+	manifest, _ := example.LoadDemoManifest("workload/simple_statefulset", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

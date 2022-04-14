@@ -30,7 +30,7 @@ func TestEP(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("network/simple_endpoints")
+	manifest, _ := example.LoadDemoManifest("network/simple_endpoints", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

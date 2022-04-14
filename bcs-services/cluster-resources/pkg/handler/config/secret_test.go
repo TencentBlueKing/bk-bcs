@@ -30,7 +30,7 @@ func TestSecret(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("config/simple_secret")
+	manifest, _ := example.LoadDemoManifest("config/simple_secret", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
