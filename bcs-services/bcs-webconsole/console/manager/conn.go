@@ -189,7 +189,11 @@ func (r *RemoteStreamConn) Run() error {
 		case <-r.ctx.Done():
 			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
 			return nil
-		case output := <-r.outputMsgChan:
+		case output, ok := <-r.outputMsgChan:
+			if !ok {
+				logger.Infof("close %s RemoteStreamConn done by chan", r.bindMgr.PodCtx.PodName)
+				return nil
+			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg {
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
@@ -209,6 +213,8 @@ func (r *RemoteStreamConn) Run() error {
 
 // WaitStreamDone: stream 流处理
 func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types.PodContext) error {
+	defer r.Close()
+
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.AdminClusterId)
 	k8sConfig := &rest.Config{
 		Host:        host,
@@ -253,12 +259,11 @@ func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types
 	})
 
 	if err != nil {
-		logger.Warnf("remote stream %s closed, err: %s", podCtx.PodName, err)
+		logger.Warnf("close %s WaitStreamDone err, %s", podCtx.PodName, err)
 		return err
 	}
 
-	logger.Info("remote stream %s closed normal", podCtx.PodName)
-
+	logger.Infof("close %s WaitStreamDone done", podCtx.PodName)
 	return nil
 }
 
@@ -281,7 +286,7 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error()),
 		time.Now().Add(time.Second*5), // 最迟 5 秒
 	); err != nil {
-		logger.Warnf("gracefully close websocket error, %s", err)
+		logger.Warnf("gracefully close websocket [%s] error: %s", errMsg, err)
 	}
 
 	// 如果没有建立双向连接前, 需要ReadMessage才能正常结束

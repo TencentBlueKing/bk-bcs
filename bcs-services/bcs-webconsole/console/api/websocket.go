@@ -27,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
@@ -103,19 +102,21 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 
 	eg.Go(func() error {
+		defer stop()
+
 		// 定时检查任务等
 		return consoleMgr.Run()
 	})
 
 	eg.Go(func() error {
+		defer stop()
+
 		// 定时发送心跳等, 保持连接的活跃
 		return remoteStreamConn.Run()
 	})
 
 	eg.Go(func() error {
 		defer stop()
-		defer remoteStreamConn.Close()
-		defer logger.Infof("Close %s WaitStreamDone done", podCtx.PodName)
 
 		// 关闭需要主动发送 Ctrl-D 命令
 		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.AdminClusterId)
