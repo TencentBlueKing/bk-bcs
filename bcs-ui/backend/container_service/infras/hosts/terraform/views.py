@@ -92,6 +92,6 @@ class ApplyHostViewSet(SystemViewSet):
 
 
 try:
-    from .views_ext import CVMTypeViewSet
+    from .views_ext import CVMTypeViewSet, DiskTypeViewSet, ZoneViewSet
 except ImportError as e:
     logger.debug("Load extension failed: %s", e)

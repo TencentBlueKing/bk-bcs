@@ -32,7 +32,7 @@ class HostData:
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> "HostData":
-        return cls(**init_data)
+        return cls(**{k: v for k, v in init_data.items() if k in [f.name for f in attr.fields(cls)]})
 
 
 def create_and_start_host_application(cc_app_id: str, username: str, host_data: HostData) -> Tuple[int, str]:
