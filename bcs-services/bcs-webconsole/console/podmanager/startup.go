@@ -62,9 +62,9 @@ func matchContainerById(pod *v1.Pod, containerId string) (*types.Container, erro
 			continue
 		}
 
-		// 必须是 running 状态
-		if pod.Status.Phase != v1.PodRunning {
-			return nil, errors.New("Pod not running")
+		reason, ok := IsContainerReady(&container)
+		if !ok {
+			return nil, errors.Errorf("Container %s not ready, %s", container.Name, reason)
 		}
 
 		container := &types.Container{
@@ -98,7 +98,7 @@ func (m *StartupManager) GetContainerById(containerId string) (*types.Container,
 		}
 	}
 
-	return nil, errors.New("Pod not found")
+	return nil, errors.New("Container not found")
 }
 
 // GetContainerByName 通过 namespace, podName, containerName 校验后获取容器信息
@@ -109,14 +109,14 @@ func (m *StartupManager) GetContainerByName(namespace, podName, containerName st
 		return nil, err
 	}
 
-	for _, container := range pod.Spec.Containers {
+	for _, container := range pod.Status.ContainerStatuses {
 		if container.Name != containerName {
 			continue
 		}
 
-		reason, ready := IsPodReady(pod)
-		if !ready {
-			return nil, errors.Errorf("Pod not ready, status: %s", reason)
+		reason, ok := IsContainerReady(&container)
+		if !ok {
+			return nil, errors.Errorf("Container %s not ready, %s", containerName, reason)
 		}
 
 		container := &types.Container{
@@ -127,7 +127,7 @@ func (m *StartupManager) GetContainerByName(namespace, podName, containerName st
 		return container, nil
 	}
 
-	return nil, errors.New("Container not found")
+	return nil, errors.Errorf("Container %s not found", containerName)
 }
 
 // ensureNamespace 确保 web-console 命名空间配置正确
@@ -404,11 +404,21 @@ func IsPodReady(pod *v1.Pod) (string, bool) {
 
 func IsContainerReady(container *v1.ContainerStatus) (string, bool) {
 	if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
-		return container.State.Waiting.Reason, false
+		reason := container.State.Waiting.Reason
+		if container.State.Waiting.Message != "" {
+			reason = reason + ": " + container.State.Waiting.Message
+		}
+		return reason, false
 	}
+
 	if container.State.Terminated != nil && container.State.Terminated.Reason != "" {
-		return container.State.Terminated.Reason, false
+		reason := container.State.Terminated.Reason
+		if container.State.Terminated.Message != "" {
+			reason = reason + ": " + container.State.Terminated.Message
+		}
+		return reason, false
 	}
+
 	if container.State.Terminated != nil && container.State.Terminated.Reason == "" {
 		if container.State.Terminated.Signal != 0 {
 			return fmt.Sprintf("Signal: %d", container.State.Terminated.Signal), false
