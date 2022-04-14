@@ -30,6 +30,10 @@ class HostData:
     replicas: int
     zone_id: str
 
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> "HostData":
+        return cls(**init_data)
+
 
 def create_and_start_host_application(cc_app_id: str, username: str, host_data: HostData) -> Tuple[int, str]:
     """创建并启动申请主机任务流程"""

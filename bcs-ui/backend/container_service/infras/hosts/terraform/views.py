@@ -52,7 +52,7 @@ class ApplyHostViewSet(SystemViewSet):
         slz.is_valid(raise_exception=True)
         data = slz.validated_data
         # 组装申请主机需要的信息
-        host_data = HostData(**data)
+        host_data = HostData.from_dict(data)
 
         with ContextActivityLogClient(
             project_id=project_id,
