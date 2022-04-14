@@ -266,7 +266,7 @@
                 ws.send('0' + Base64.encode(data));
             });
 
-            // bcs api 首个字节流
+            // 使用 BCS API 首个字节流判断是否连接
             notConnected = true
 
             ws.onmessage = function (e) {
@@ -283,6 +283,8 @@
             // websocket handler
             ws.onopen = function () {
                 term.reset();
+
+                // 后台连接中, 等待 BCS API 首个字节流
                 term.write('\x1b[32mConnecting BCS API...\x1b[m');
             };
 
