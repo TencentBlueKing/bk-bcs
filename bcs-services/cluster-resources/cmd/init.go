@@ -346,7 +346,7 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 // 初始化依赖服务 Client
 func (crSvc *clusterResourcesService) initDependentServiceClient() error {
 	// ClusterManager
-	cluster.InitClusterMgrClient(crSvc.microRtr, crSvc.clientTLSConfig)
+	cluster.InitCMClient(crSvc.microRtr, crSvc.clientTLSConfig)
 	// ProjectManager
 	// TODO ...
 	return nil

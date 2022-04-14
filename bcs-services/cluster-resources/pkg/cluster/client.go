@@ -26,6 +26,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/discovery"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -62,7 +64,7 @@ type CMClient struct {
 
 // InitCMClient 初始化集群管理客户端
 func InitCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
-	if clusterMgrCli != nil {
+	if clusterMgrCli != nil || runtime.RunMode == runmode.Dev {
 		return
 	}
 	initOnce.Do(func() {
