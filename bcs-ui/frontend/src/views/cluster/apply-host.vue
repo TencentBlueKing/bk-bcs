@@ -61,7 +61,7 @@
                 </bk-form-item>
                 <bk-form-item property="zone_id" :label="$t('园区')" :required="true">
                     <bk-selector :placeholder="$t('请选择园区')"
-                        :selected.sync="formdata.vpc_name"
+                        :selected.sync="formdata.zone_id"
                         :list="zoneList"
                         :searchable="true"
                         setting-key="value"
@@ -468,9 +468,7 @@
                         projectId: this.projectId,
                         region: this.formdata.region
                     })
-
                     this.zoneList = data.data
-
                     if (this.clusterInfo.zone_id && this.isBackfill) {
                         const zone = this.zoneList.find(item => item.value === this.clusterInfo.zone_id)
                         if (zone) {
