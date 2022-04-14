@@ -468,7 +468,9 @@
                         projectId: this.projectId,
                         region: this.formdata.region
                     })
+
                     this.zoneList = data.data
+
                     if (this.clusterInfo.zone_id && this.isBackfill) {
                         const zone = this.zoneList.find(item => item.value === this.clusterInfo.zone_id)
                         if (zone) {
