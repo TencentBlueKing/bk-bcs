@@ -47,7 +47,7 @@ def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) ->
     for node in cluster_node_list.items:
         labels = node.labels
         # 现阶段节点页面展示及操作，需要排除master
-        if exclude_master and labels.get(node_constants.K8S_NODE_ROLE_MASTER) == "true":
+        if exclude_master and node.is_master:
             continue
 
         # 使用inner_ip作为key，主要是方便匹配及获取值
@@ -185,10 +185,8 @@ class BcsClusterMaster:
         # 过滤 master 信息
         masters = []
         for node in cluster_nodes.items:
-            labels = node.labels
-            # 排除非master节点
-            if labels.get(node_constants.K8S_NODE_ROLE_MASTER) != "true":
-                continue
+            if not node.is_master:
+                return
             masters.append({"inner_ip": node.inner_ip, "host_name": node.name})
         return masters
 
