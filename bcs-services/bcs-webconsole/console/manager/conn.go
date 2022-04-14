@@ -182,8 +182,7 @@ func (r *RemoteStreamConn) Run() error {
 	defer pingInterval.Stop()
 
 	guideMessages := helloMessage(r.bindMgr.PodCtx.Source)
-
-	PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+	notSendMsg := true
 
 	for {
 		select {
@@ -191,6 +190,12 @@ func (r *RemoteStreamConn) Run() error {
 			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
 			return nil
 		case output := <-r.outputMsgChan:
+			// 收到首个字节才发送 hello 信息
+			if notSendMsg {
+				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+				notSendMsg = false
+			}
+
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
 			}

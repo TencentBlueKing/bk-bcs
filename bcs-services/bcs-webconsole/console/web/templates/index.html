@@ -266,7 +266,16 @@
                 ws.send('0' + Base64.encode(data));
             });
 
+            // bcs api 首个字节流
+            notConnected = true
+
             ws.onmessage = function (e) {
+                if (notConnected) {
+                    term.reset();
+                    term.focus();
+                    notConnected = false
+                }
+
                 // obj = JSON.parse(e.data);
                 term.write(Base64.decode(e.data));
             };
@@ -274,7 +283,7 @@
             // websocket handler
             ws.onopen = function () {
                 term.reset();
-                term.focus();
+                term.write('\x1b[32mConnecting BCS API...\x1b[m');
             };
 
             ws.onclose = function (e) {
