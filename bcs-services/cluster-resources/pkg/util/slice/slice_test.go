@@ -33,3 +33,48 @@ func TestStringInSlice(t *testing.T) {
 	assert.False(t, slice.StringInSlice("str1", []string{}))
 	assert.False(t, slice.StringInSlice("", []string{"str1"}))
 }
+
+var typeMapList = []interface{}{
+	map[string]interface{}{
+		"type": "a",
+	},
+	map[string]interface{}{
+		"type": "a",
+		"kind": "c",
+	},
+	map[string]interface{}{
+		"type": "b",
+		"kind": "d",
+	},
+	map[string]interface{}{
+		"type": 1,
+	},
+	"k-v",
+}
+
+func TestMatchKVInSlice(t *testing.T) {
+	// 存在
+	assert.True(t, slice.MatchKVInSlice(typeMapList, "type", "a"))
+	assert.True(t, slice.MatchKVInSlice(typeMapList, "type", "b"))
+	assert.True(t, slice.MatchKVInSlice(typeMapList, "kind", "c"))
+
+	// 不存在的情况
+	assert.False(t, slice.MatchKVInSlice(typeMapList, "type", "v"))
+	assert.False(t, slice.MatchKVInSlice(typeMapList, "type", "1"))
+	assert.False(t, slice.MatchKVInSlice(typeMapList, "kind", "a"))
+	assert.False(t, slice.MatchKVInSlice(typeMapList, "k", "v"))
+}
+
+func TestFilterMatchKVFormSlice(t *testing.T) {
+	mapList := slice.FilterMatchKVFromSlice(typeMapList, "type", "a")
+	assert.Equal(t, len(mapList), 2)
+	assert.True(t, slice.MatchKVInSlice(mapList, "type", "a"))
+
+	mapList = slice.FilterMatchKVFromSlice(typeMapList, "type", "b")
+	assert.Equal(t, len(mapList), 1)
+	assert.True(t, slice.MatchKVInSlice(mapList, "type", "b"))
+
+	mapList = slice.FilterMatchKVFromSlice(typeMapList, "kind", "c")
+	assert.Equal(t, len(mapList), 1)
+	assert.True(t, slice.MatchKVInSlice(mapList, "kind", "c"))
+}

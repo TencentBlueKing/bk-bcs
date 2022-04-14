@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-common
 go 1.14
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => ../bcs-common
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
@@ -12,14 +13,13 @@ replace (
 )
 
 require (
-	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/kubebkbcsv2 v0.0.0-20220330120237-0bbed74dcf6d
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/etcd v3.3.18+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/engine-api v0.4.0
-	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.4.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
@@ -67,5 +67,4 @@ require (
 	k8s.io/apimachinery v0.23.1
 	k8s.io/client-go v0.23.1
 	k8s.io/klog v1.0.0
-	moul.io/http2curl v1.0.0 // indirect
 )

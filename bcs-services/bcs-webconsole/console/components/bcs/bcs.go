@@ -44,6 +44,10 @@ type Cluster struct {
 	IsShared    bool   `json:"is_shared"`
 }
 
+func (c *Cluster) String() string {
+	return fmt.Sprintf("cluster<%s, %s>", c.ClusterName, c.ClusterId)
+}
+
 // ListClusters 获取项目集群列表
 func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string) ([]*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", bcsConf.Host)

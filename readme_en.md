@@ -87,6 +87,7 @@ If you are interested in this project and want to contribute and improve the pro
 
 * [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
 * [BK-CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
+* [BK-JOB](https://github.com/Tencent/bk-job):BlueKing JOB is a set of operation and maintenance script management platform with the ability to handle a large number of tasks concurrently.
 * [BK-PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
 * [BK-SOPS](https://github.com/Tencent/bk-sops):Standard Operations (SOPS) is a system for task scheduling and execution through a visual graphical interface. It is a lightweight in the BlueKing system scheduling SaaS products.
 

@@ -11,3 +11,5 @@ go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
 go install go-micro.dev/v4/cmd/protoc-gen-micro@v4
 go install sigs.k8s.io/controller-tools/cmd/controller-gen
+
+echo "dependency install done"

@@ -20,13 +20,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned"
 	tkexscheme "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/scheme"
 	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/informers/externalversions/tkex/v1alpha1"
 	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/listers/tkex/v1alpha1"
-	"github.com/ghodss/yaml"
 
+	"github.com/ghodss/yaml"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/storage/driver"
@@ -56,6 +57,7 @@ const (
 	MessageResourceSynced = "argocd instance synced successfully"
 )
 
+// InstanceController argocd instance controller
 type InstanceController struct {
 	kubeclientset   kubernetes.Interface
 	tkexclientset   clientset.Interface
@@ -72,8 +74,15 @@ type InstanceController struct {
 }
 
 // NewController 初始化Controller
-func NewController(kubeconfig *restclient.Config, pluginOptions options.Plugin, kubeclientset kubernetes.Interface, clientset clientset.Interface,
-	instanceInformer informers.ArgocdInstanceInformer, namespaceInformer corev1informers.NamespaceInformer, serviceInformer corev1informers.ServiceInformer) *InstanceController {
+func NewController(
+	kubeconfig *restclient.Config,
+	pluginOptions options.Plugin,
+	kubeclientset kubernetes.Interface,
+	clientset clientset.Interface,
+	instanceInformer informers.ArgocdInstanceInformer,
+	namespaceInformer corev1informers.NamespaceInformer,
+	serviceInformer corev1informers.ServiceInformer,
+) *InstanceController {
 
 	utilruntime.Must(tkexscheme.AddToScheme(scheme.Scheme))
 	blog.Info("Create event broadcaster")
@@ -199,9 +208,9 @@ func (c *InstanceController) syncHandler(key string) error {
 	flags.TLSServerName = &c.kubeconfig.ServerName
 
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(flags, instanceName, "", blog.Info); err != nil {
-		blog.Errorf("init helm action config failed: %v", err)
-		return err
+	if initErr := actionConfig.Init(flags, instanceName, "", blog.Info); initErr != nil {
+		blog.Errorf("init helm action config failed: %v", initErr)
+		return initErr
 	}
 
 	// get ArgocdInstance from cache
@@ -209,73 +218,20 @@ func (c *InstanceController) syncHandler(key string) error {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			blog.Infof("ArgocdInstance %s/%s deleted", namespace, instanceName)
-			// check helm release exists
-			actionStatus := action.NewStatus(actionConfig)
-			_, err := actionStatus.Run(instanceName)
-			if err == nil {
-				// exists, uninstall it
-				actionDelete := action.NewUninstall(actionConfig)
-				_, err = actionDelete.Run(instanceName)
-				if err != nil {
-					utilruntime.HandleError(err)
-					return err
-				}
-			} else if err == driver.ErrReleaseNotFound {
-				// not exists, do nothing
-			} else {
-				utilruntime.HandleError(err)
-				return err
+			if deleteErr := c.syncInstanceDelete(namespace, instanceName, actionConfig); deleteErr != nil {
+				return deleteErr
 			}
-			// check and delete ns
-			ns, err := c.kubeclientset.CoreV1().Namespaces().Get(context.TODO(), instanceName, metav1.GetOptions{})
-			if err != nil {
-				if errors.IsNotFound(err) {
-					return nil
-				} else {
-					utilruntime.HandleError(err)
-					return err
-				}
-			}
-			blog.Infof("deleting ns [%s]", ns.GetName())
-			if err := c.kubeclientset.CoreV1().Namespaces().
-				Delete(context.TODO(), ns.GetName(), metav1.DeleteOptions{}); err != nil {
-				utilruntime.HandleError(err)
-				return err
-			} else {
-				blog.Infof("Namespace %s deleted", instanceName)
-				return nil
-			}
-		} else {
-			utilruntime.HandleError(err)
-			return err
 		}
+		utilruntime.HandleError(err)
+		return err
 	}
 
 	// sync argocd instance to desired state
 	// 1. sync namespace
-	ns, err := c.namespaceLister.Get(instance.GetName())
-	if errors.IsNotFound(err) {
-		// 如果没有找到，就创建
-		ns = &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: instanceName,
-				Labels: map[string]string{
-					common.ArgoCDKeyPartOf:   common.ArgocdManagerAppName,
-					common.ArgocdKeyProject:  instance.Spec.Project,
-					common.ArgocdKeyInstance: instance.GetName(),
-				},
-			},
-		}
-		if _, err = c.kubeclientset.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{}); err != nil {
-			utilruntime.HandleError(err)
-			return err
-		}
-	}
-	// if both get and create failed, return err
-	if err != nil {
-		utilruntime.HandleError(err)
+	if err := c.syncNamespace(instance.GetName(), instance); err != nil {
 		return err
 	}
+
 	// 2. check helm release exists
 	actionStatus := action.NewStatus(actionConfig)
 	_, err = actionStatus.Run(instance.GetName())
@@ -304,7 +260,72 @@ func (c *InstanceController) syncHandler(key string) error {
 	return nil
 }
 
-func (c *InstanceController) doInstallArgocd(actionInstall *action.Install, instance *tkexv1alpha1.ArgocdInstance) error {
+func (c *InstanceController) syncInstanceDelete(namespace, name string, config *action.Configuration) error {
+	// check helm release exists
+	actionStatus := action.NewStatus(config)
+	_, err := actionStatus.Run(name)
+	if err == nil {
+		// exists, uninstall it
+		actionDelete := action.NewUninstall(config)
+		if _, runErr := actionDelete.Run(name); runErr != nil {
+			utilruntime.HandleError(runErr)
+			return runErr
+		}
+	} else if err == driver.ErrReleaseNotFound {
+		// not exists, do nothing
+	} else {
+		utilruntime.HandleError(err)
+		return err
+	}
+	// check and delete ns
+	ns, err := c.kubeclientset.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		utilruntime.HandleError(err)
+		return err
+	}
+	blog.Infof("deleting ns [%s]", ns.GetName())
+	if err := c.kubeclientset.CoreV1().Namespaces().
+		Delete(context.TODO(), ns.GetName(), metav1.DeleteOptions{}); err != nil {
+		utilruntime.HandleError(err)
+		return err
+	}
+	blog.Infof("Namespace %s deleted", name)
+	return nil
+}
+
+func (c *InstanceController) syncNamespace(namespace string, instance *v1alpha1.ArgocdInstance) error {
+	_, err := c.namespaceLister.Get(namespace)
+	if errors.IsNotFound(err) {
+		// 如果没有找到，就创建
+		ns := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+				Labels: map[string]string{
+					common.ArgoCDKeyPartOf:   common.ArgocdManagerAppName,
+					common.ArgocdKeyProject:  instance.Spec.Project,
+					common.ArgocdKeyInstance: instance.GetName(),
+				},
+			},
+		}
+		if _, err = c.kubeclientset.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{}); err != nil {
+			utilruntime.HandleError(err)
+			return err
+		}
+	}
+	// if both get and create failed, return err
+	if err != nil {
+		utilruntime.HandleError(err)
+		return err
+	}
+	return nil
+}
+
+func (c *InstanceController) doInstallArgocd(
+	actionInstall *action.Install,
+	instance *tkexv1alpha1.ArgocdInstance) error {
 	argocdChart, err := loader.Load("charts/bcs-argocd")
 	if err != nil {
 		blog.Errorf("load argocd chart failed: %v", err)
@@ -324,16 +345,18 @@ func (c *InstanceController) doInstallArgocd(actionInstall *action.Install, inst
 		blog.Errorf("run install failed: %v", err)
 		return err
 	}
-
 	return nil
 }
 
 // updateDatabaseManagerStatus update ArgocdInstance status
-func (c *InstanceController) updateArgocdInstanceStatus(instance *tkexv1alpha1.ArgocdInstance, service *corev1.Service) error {
+func (c *InstanceController) updateArgocdInstanceStatus(
+	instance *tkexv1alpha1.ArgocdInstance,
+	service *corev1.Service) error {
 	instanceCopy := instance.DeepCopy()
 	blog.Info("service.Spec.ClusterIP: %s", service.Spec.ClusterIP)
 	instanceCopy.Status.ServerHost = service.Spec.ClusterIP
-	updated, err := c.tkexclientset.TkexV1alpha1().ArgocdInstances(common.ArgocdManagerNamespace).UpdateStatus(context.TODO(), instanceCopy, metav1.UpdateOptions{})
+	updated, err := c.tkexclientset.TkexV1alpha1().ArgocdInstances(common.ArgocdManagerNamespace).
+		UpdateStatus(context.TODO(), instanceCopy, metav1.UpdateOptions{})
 	if err != nil {
 		utilruntime.HandleError(err)
 		return err

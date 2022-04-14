@@ -15,16 +15,19 @@ package proxy
 import (
 	"context"
 	"crypto/tls"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
-	"github.com/gorilla/mux"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
+	
+	"github.com/gorilla/mux"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// InstanceProxyDispatcher handler for dispatch request to instance
 type InstanceProxyDispatcher struct {
 	InstanceVarName string
 	SubPathVarName  string
@@ -53,7 +56,8 @@ func (f *InstanceProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Re
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	instance, err := f.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).Get(context.TODO(), instanceID, metav1.GetOptions{})
+	instance, err := f.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).
+		Get(context.TODO(), instanceID, metav1.GetOptions{})
 	if err != nil {
 		blog.Error("[instance-proxy] get instance failed, err: %s", err.Error())
 		rw.WriteHeader(http.StatusInternalServerError)
