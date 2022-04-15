@@ -38,7 +38,6 @@ func TestCalcDuration(t *testing.T) {
 	assert.Equal(t, "1s", timex.CalcDuration("2022-01-01T14:00:00Z", "2022-01-01T14:00:01Z"))
 	assert.Equal(t, "14m29s", timex.CalcDuration("2022-01-01T14:45:30Z", "2022-01-01T14:59:59Z"))
 	assert.Equal(t, "275d3h", timex.CalcDuration("2021-04-01T11:00:00Z", "2022-01-01T14:00:00Z"))
-
 }
 
 func TestCalcAge(t *testing.T) {
