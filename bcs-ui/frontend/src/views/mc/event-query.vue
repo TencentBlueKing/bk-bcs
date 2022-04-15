@@ -211,7 +211,7 @@
                         text: this.$t('今天'),
                         value () {
                             const end = new Date()
-                            const start = new Date()
+                            const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
                             return [start, end]
                         },
                         onClick: picker => {
