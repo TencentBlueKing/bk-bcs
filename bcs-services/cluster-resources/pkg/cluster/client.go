@@ -121,7 +121,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	}
 	resp, err := cli.GetCluster(ctx, &bcsapicm.GetClusterReq{ClusterID: clusterID})
 	if err != nil || !resp.Result {
-		return nil, errorx.New(errcode.ComponentErr, "获取集群 %s 信息失败", clusterID)
+		return nil, errorx.New(errcode.ComponentErr, "get cluster %s info failed: %v", clusterID, err)
 	}
 
 	clusterInfo := map[string]interface{}{

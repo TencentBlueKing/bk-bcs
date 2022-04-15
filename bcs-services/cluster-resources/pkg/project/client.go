@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/structs"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
 
@@ -121,8 +122,9 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 	}
 	resp, err := cli.GetProject(ctx, &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID})
 	if err != nil || resp.Code != 0 {
-		return nil, errorx.New(errcode.ComponentErr, "获取项目 %s 信息失败", projectID)
+		return nil, errorx.New(errcode.ComponentErr, "get project %s info failed: %v", projectID, err)
 	}
+	log.Info(ctx, "get project info: %v", structs.Map(resp.Data))
 	projInfo := map[string]interface{}{
 		"id":    projectID,
 		"name":  resp.Data.Name,
