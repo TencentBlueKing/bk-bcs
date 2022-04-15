@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	common "github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/constants"
 	hooksutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/hook"
@@ -107,7 +108,8 @@ func (hc *HookController) Run(workers int, stopCh <-chan struct{}) error {
 	}
 
 	imageVersion, hookrunVersion, hooktemplateVersion := hc.getVersion()
-	hc.metrics.collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion)
+	hc.metrics.collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion,
+		common.BcsVersion, common.BcsGitHash, common.BcsBuildTime)
 
 	for i := 0; i < workers; i++ {
 		go wait.Until(hc.worker, time.Second, stopCh)

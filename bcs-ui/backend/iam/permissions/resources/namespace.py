@@ -17,8 +17,7 @@ from typing import Dict, List, Optional, Type
 import attr
 
 from backend.iam.permissions import decorators
-from backend.iam.permissions.exceptions import AttrValidationError
-from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction
+from backend.iam.permissions.perm import PermCtx, Permission, ResCreatorAction, validate_empty
 from backend.iam.permissions.request import IAMResource, ResourceRequest
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 from backend.utils.basic import md5_digest
@@ -71,66 +70,60 @@ class NamespaceCreatorAction(ResCreatorAction):
         }
 
 
-@attr.dataclass
+@attr.s
 class NamespacePermCtx(PermCtx):
-    project_id: str = ''
-    cluster_id: str = ''
-    name: Optional[str] = None  # 命名空间名
-    iam_ns_id: Optional[str] = None  # 注册到权限中心的命名空间ID
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    cluster_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    name = attr.ib(validator=attr.validators.instance_of(str), default='')  # 命名空间名
+    iam_ns_id = attr.ib(init=False)  # 注册到权限中心的命名空间 ID
 
     def __attrs_post_init__(self):
         """权限中心的 resource_id 长度限制为32位"""
-        if self.name:
-            self.iam_ns_id = calc_iam_ns_id(self.cluster_id, self.name)
+        self.iam_ns_id = calc_iam_ns_id(self.cluster_id, self.name) if self.name else ''
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'NamespacePermCtx':
+        return cls(
+            username=init_data['username'],
+            force_raise=init_data.get('force_raise', False),
+            project_id=init_data['project_id'],
+            cluster_id=init_data['cluster_id'],
+            name=init_data.get('name', ''),
+        )
 
     @property
     def resource_id(self) -> str:
         return self.iam_ns_id
 
-    def validate(self):
-        super().validate()
-        if not self.project_id:
-            raise AttrValidationError('project_id must not be empty')
-        if not self.cluster_id:
-            raise AttrValidationError('cluster_id must not be empty')
+    def get_parent_chain(self) -> List[IAMResource]:
+        return [
+            IAMResource(ResourceType.Project, self.project_id),
+            IAMResource(ResourceType.Cluster, self.cluster_id),
+        ]
 
 
+@attr.s
 class NamespaceRequest(ResourceRequest):
-    resource_type: str = ResourceType.Namespace
-    attr = {'_bk_iam_path_': f'/project,{{project_id}}/cluster,{{cluster_id}}/'}
+    project_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    cluster_id = attr.ib(validator=[attr.validators.instance_of(str), validate_empty])
+    resource_type = attr.ib(init=False, default=ResourceType.Namespace)
+    request_attrs = attr.ib(init=False, default={'_bk_iam_path_': f'/project,{{project_id}}/cluster,{{cluster_id}}/'})
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'NamespaceRequest':
+        """从字典构建对象"""
+        return cls(project_id=init_data['project_id'], cluster_id=init_data['cluster_id'])
 
     def _make_attribute(self, res_id: str) -> Dict:
         return {
-            '_bk_iam_path_': self.attr['_bk_iam_path_'].format(
-                project_id=self.attr_kwargs['project_id'], cluster_id=self.attr_kwargs['cluster_id']
+            '_bk_iam_path_': self.request_attrs['_bk_iam_path_'].format(
+                project_id=self.project_id, cluster_id=self.cluster_id
             )
         }
 
-    def _validate_attr_kwargs(self):
-        if not self.attr_kwargs.get('project_id'):
-            raise AttrValidationError('missing project_id or project_id is invalid')
-
-        if not self.attr_kwargs.get('cluster_id'):
-            raise AttrValidationError('missing cluster_id or cluster_id is invalid')
-
 
 class related_namespace_perm(decorators.RelatedPermission):
-
     module_name: str = ResourceType.Namespace
-
-    def _convert_perm_ctx(self, instance, args, kwargs) -> PermCtx:
-        """仅支持第一个参数是 PermCtx 子类实例"""
-        if len(args) <= 0:
-            raise TypeError('missing NamespacePermCtx instance argument')
-        if isinstance(args[0], PermCtx):
-            return NamespacePermCtx(
-                username=args[0].username,
-                project_id=args[0].project_id,
-                cluster_id=args[0].cluster_id,
-                name=args[0].name,
-            )
-        else:
-            raise TypeError('missing NamespacePermCtx instance argument')
 
 
 class namespace_perm(decorators.Permission):
@@ -142,6 +135,7 @@ class NamespacePermission(Permission):
 
     resource_type: str = ResourceType.Namespace
     resource_request_cls: Type[ResourceRequest] = NamespaceRequest
+    perm_ctx_cls = NamespacePermCtx
     parent_res_perm = ClusterPermission()
 
     @related_cluster_perm(method_name='can_view')
@@ -162,15 +156,3 @@ class NamespacePermission(Permission):
     def can_delete(self, perm_ctx: NamespacePermCtx, raise_exception: bool = True) -> bool:
         perm_ctx.validate_resource_id()
         return self.can_multi_actions(perm_ctx, [NamespaceAction.DELETE, NamespaceAction.VIEW], raise_exception)
-
-    def make_res_request(self, res_id: str, perm_ctx: NamespacePermCtx) -> ResourceRequest:
-        return self.resource_request_cls(res_id, project_id=perm_ctx.project_id, cluster_id=perm_ctx.cluster_id)
-
-    def get_parent_chain(self, perm_ctx: NamespacePermCtx) -> List[IAMResource]:
-        return [
-            IAMResource(ResourceType.Project, perm_ctx.project_id),
-            IAMResource(ResourceType.Cluster, perm_ctx.cluster_id),
-        ]
-
-    def get_resource_id(self, perm_ctx: NamespacePermCtx) -> Optional[str]:
-        return perm_ctx.iam_ns_id

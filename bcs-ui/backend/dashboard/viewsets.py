@@ -22,31 +22,43 @@ from backend.bcs_web.viewsets import SystemViewSet
 from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.dashboard.auditors import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
-from backend.dashboard.permissions import AccessNamespacePermission, validate_cluster_perm
+from backend.dashboard.permissions import AccessNamespacePermission
 from backend.dashboard.serializers import CreateResourceSLZ, ListResourceSLZ, UpdateResourceSLZ
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations
+from backend.iam.permissions.resources import (
+    ClusterScopedPermCtx,
+    ClusterScopedPermission,
+    NamespaceScopedPermCtx,
+    NamespaceScopedPermission,
+)
+from backend.resources.constants import NATIVE_CLUSTER_SCOPE_RES_KINDS
 from backend.utils.basic import getitems
 from backend.utils.response import BKAPIResponse
 from backend.utils.url_slug import KUBE_NAME_REGEX
+
+from .constants import DashboardAction
+from .exceptions import ActionUnsupported
 
 
 class ListAndRetrieveMixin:
     """ 查询类接口通用逻辑 """
 
     def list(self, request, project_id, cluster_id, namespace):
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         params = self.params_validate(ListResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         response_data = ListApiRespBuilder(client, namespace=namespace, **params).build()
         # 补充页面信息注解，包含权限信息
-        web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
+        web_annotations = gen_base_web_annotations(request.user.username, project_id, cluster_id, namespace)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, namespace, name):
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         client = self.resource_client(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace, name).build()
         # 补充页面信息注解，包含权限信息
-        web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
+        web_annotations = gen_base_web_annotations(request.user.username, project_id, cluster_id, namespace)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
 
@@ -55,8 +67,8 @@ class DestroyMixin:
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Delete)
     def destroy(self, request, project_id, cluster_id, namespace, name):
-        # 操作类接口统一检查集群操作权限
-        validate_cluster_perm(request, project_id, cluster_id)
+        # 检查是否有删除资源权限
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Delete)
         client = self.resource_client(request.ctx_cluster)
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(), resource=f'{namespace}/{name}'
@@ -73,11 +85,16 @@ class CreateMixin:
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Add)
     def create(self, request, project_id, cluster_id):
-        # 操作类接口统一检查集群操作权限
-        validate_cluster_perm(request, project_id, cluster_id)
         params = self.params_validate(CreateResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         namespace = getitems(params, 'manifest.metadata.namespace')
+
+        # 检查命名空间必须性，若为命名空间域资源，必须指定命名空间
+        res_kind = self.resource_client.kind
+        if not (res_kind in NATIVE_CLUSTER_SCOPE_RES_KINDS or namespace):
+            raise CreateResourceError(_('创建资源 {} 需要指定命名空间').format(res_kind))
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Create)
+
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(),
             resource=f"{namespace}/{getitems(params, 'manifest.metadata.name')}",
@@ -97,8 +114,8 @@ class UpdateMixin:
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id, cluster_id, namespace, name):
-        # 操作类接口统一检查集群操作权限
-        validate_cluster_perm(request, project_id, cluster_id)
+        # 检查是否有更新资源权限
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Update)
         params = self.params_validate(UpdateResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         request.audit_ctx.update_fields(
@@ -125,8 +142,29 @@ class AccessNamespacePermMixin:
         return [*super().get_permissions(), AccessNamespacePermission()]
 
 
+class PermValidateMixin:
+    def _validate_perm(self, username, project_id, cluster_id, namespace, action: DashboardAction):
+        params = {"username": username, "project_id": project_id, "cluster_id": cluster_id, "name": namespace}
+        # 前置逻辑中中已检查命名空间的必须性，此处直接判断即可
+        if namespace:
+            perm, perm_ctx = NamespaceScopedPermission(), NamespaceScopedPermCtx.from_dict(params)
+        else:
+            perm, perm_ctx = ClusterScopedPermission(), ClusterScopedPermCtx.from_dict(params)
+
+        try:
+            getattr(perm, f'can_{action}')(perm_ctx)
+        except AttributeError:
+            raise ActionUnsupported(_("Action {} 不被支持").format(action))
+
+
 class NamespaceScopeViewSet(
-    ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, AccessNamespacePermMixin, SystemViewSet
+    ListAndRetrieveMixin,
+    DestroyMixin,
+    CreateMixin,
+    UpdateMixin,
+    AccessNamespacePermMixin,
+    PermValidateMixin,
+    SystemViewSet,
 ):
     """ 命名空间维度资源 ViewSet，抽层一些通用方法 """
 
@@ -135,7 +173,13 @@ class NamespaceScopeViewSet(
 
 
 class ClusterScopeViewSet(
-    ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, AccessClusterPermMixin, SystemViewSet
+    ListAndRetrieveMixin,
+    DestroyMixin,
+    CreateMixin,
+    UpdateMixin,
+    AccessClusterPermMixin,
+    PermValidateMixin,
+    SystemViewSet,
 ):
     """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
 

@@ -10,38 +10,26 @@
  * limitations under the License.
  *
  */
+
 package api
 
 import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os/signal"
 	"path"
-	"strconv"
-	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
 )
-
-var upgrader = websocket.Upgrader{
-	EnableCompression: true,
-	CheckOrigin:       func(r *http.Request) bool { return true },
-}
 
 type service struct {
 	opts *route.Options
@@ -51,32 +39,30 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
-// 	router.Use(route.Localize())
 func (s service) RegisterRoute(router gin.IRoutes) {
+	api := router.Use(route.APIAuthRequired())
+
+	gp := metrics.New(s.opts.Router)
+	api.Use(gp.Middleware())
+
 	// 用户登入态鉴权, session鉴权
-	router.Use(route.APIAuthRequired()).
-		GET("/api/projects/:projectId/clusters/:clusterId/session/", s.CreateWebConsoleSession).
-		GET("/api/projects/:projectId/clusters/", s.ListClusters).
-		GET("/api/open_session/", s.CreateOpenSession).
-		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/session")+"/", s.CreateWebConsoleSession).
-		GET(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/"), s.ListClusters).
-		GET(path.Join(s.opts.RoutePrefix, "/api/open_session/")+"/", s.CreateOpenSession)
+	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", route.PermissionRequired(), s.CreateWebConsoleSession)
+	api.GET("/api/projects/:projectId/clusters/", route.PermissionRequired(), s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	router.Use(route.APIAuthRequired()).
-		POST("/api/projects/:projectId/clusters/:clusterId/open_session/", s.CreateOpenWebConsoleSession).
-		POST(path.Join(s.opts.RoutePrefix, "/api/projects/:projectId/clusters/:clusterId/open_session/")+"/", s.CreateOpenWebConsoleSession)
+	api.GET("/api/portal/sessions/:sessionId/", s.CreatePortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/", route.CredentialRequired(), s.CreateContainerPortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/", route.CredentialRequired(), s.CreateClusterPortalSession)
 
 	// websocket协议, session鉴权
-	router.Use(route.APIAuthRequired()).
-		GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler).
-		GET(path.Join(s.opts.RoutePrefix, "/ws/projects/:projectId/clusters/:clusterId")+"/", s.BCSWebSocketHandler)
-
+	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
 }
 
 func (s *service) ListClusters(c *gin.Context) {
+	authCtx := route.MustGetAuthContext(c)
+
 	projectId := c.Param("projectId")
-	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
+	clusters, err := bcs.ListClusters(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
 		return
@@ -85,64 +71,28 @@ func (s *service) ListClusters(c *gin.Context) {
 		Data:      clusters,
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取集群成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 	c.JSON(http.StatusOK, data)
 }
 
+// CreateWebConsoleSession 创建websocket session
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
+	authCtx := route.MustGetAuthContext(c)
+
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
-	containerId := c.Query("container_id")
-	source := c.Query("source")
+	consoleQuery := new(podmanager.ConsoleQuery)
+	c.BindQuery(consoleQuery)
 
-	authCtx, err := route.GetAuthContext(c)
+	podCtx, err := podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
 		return
 	}
 
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
-	if err != nil {
-		msg := i18n.GetMessage("k8s客户端初始化失败{}", err)
-		APIError(c, msg)
-		return
-	}
-
-	podCtx := &types.PodContext{
-		ProjectId: projectId,
-		Username:  authCtx.Username,
-		ClusterId: clusterId,
-		Source:    source,
-	}
-
-	if containerId != "" {
-		resp, err := startupMgr.GetK8sContextByContainerID(containerId)
-		if err != nil {
-			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
-			APIError(c, msg)
-			return
-		}
-		podCtx.Namespace = resp.Namespace
-		podCtx.PodName = resp.PodName
-		podCtx.ContainerName = resp.ContainerName
-		podCtx.Commands = manager.DefaultCommand
-		podCtx.Mode = types.K8SContainerDirectMode
-	} else {
-		namespace := podmanager.GetNamespace()
-		podName, err := startupMgr.WaitPodUp(namespace, authCtx.Username)
-		if err != nil {
-			msg := i18n.GetMessage("申请pod资源失败{err}", err)
-			APIError(c, msg)
-			return
-		}
-		podCtx.Namespace = namespace
-		podCtx.PodName = podName
-		podCtx.ContainerName = podmanager.KubectlContainerName
-		podCtx.Mode = types.K8SKubectlInternalMode
-		// 进入 kubectld pod， 固定使用bash
-		podCtx.Commands = []string{"/bin/bash"}
-	}
+	podCtx.ProjectId = projectId
+	podCtx.Source = consoleQuery.Source
 
 	store := sessions.NewRedisStore(projectId, clusterId)
 	sessionId, err := store.Set(c.Request.Context(), podCtx)
@@ -152,8 +102,14 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		projectId, clusterId, sessionId))
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	if consoleQuery.Lang != "" {
+		query.Set("lang", consoleQuery.Lang)
+	}
+
+	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
+		projectId, clusterId, query.Encode()))
 
 	data := types.APIResponse{
 		Data: map[string]string{
@@ -162,21 +118,22 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 	c.JSON(http.StatusOK, data)
 }
 
-func (s *service) CreateOpenSession(c *gin.Context) {
+func (s *service) CreatePortalSession(c *gin.Context) {
 	sessionId := c.Query("session_id")
 
-	store := sessions.NewRedisStore("open-session", "open-session")
-	podCtx, err := store.Get(c.Request.Context(), sessionId)
-	if err != nil {
-		msg := i18n.GetMessage("sessin_id不正确", err)
+	authCtx := route.MustGetAuthContext(c)
+	if authCtx.BindSession == nil {
+		msg := i18n.GetMessage("sessin_id不正确")
 		APIError(c, msg)
 		return
 	}
+
+	podCtx := authCtx.BindSession
 
 	newStore := sessions.NewRedisStore(podCtx.ProjectId, podCtx.ClusterId)
 	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
@@ -196,159 +153,30 @@ func (s *service) CreateOpenSession(c *gin.Context) {
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 	c.JSON(http.StatusOK, data)
 }
 
-// BCSWebSocketHandler WebSocket 连接处理函数
-func (s *service) BCSWebSocketHandler(c *gin.Context) {
-	// 还未建立 WebSocket 连接, 使用 Json 返回
-	errResp := types.APIResponse{
-		Code: 400,
-		Data: map[string]string{},
-	}
+func (s *service) CreateContainerPortalSession(c *gin.Context) {
+	authCtx := route.MustGetAuthContext(c)
 
-	if !websocket.IsWebSocketUpgrade(c.Request) {
-		errResp.Message = "invalid websocket connection"
-		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
-		return
-	}
+	consoleQuery := new(podmanager.OpenQuery)
 
-	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		errResp.Message = fmt.Sprintf("upgrade websocket connection error, %s", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
-		return
-	}
-	defer ws.Close()
-
-	// 监听 Ctrl-C 信号
-	ctx, stop := signal.NotifyContext(c.Request.Context(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
-	eg, ctx := errgroup.WithContext(ctx)
-
-	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
-	sessionId := c.Query("session_id")
-
-	rows, _ := strconv.Atoi(c.Query("rows"))
-	cols, _ := strconv.Atoi(c.Query("cols"))
-
-	initTerminalSize := &manager.TerminalSize{
-		Rows: uint16(rows),
-		Cols: uint16(cols),
-	}
-
-	connected := false
-	store := sessions.NewRedisStore(projectId, clusterId)
-	podCtx, err := store.Get(c.Request.Context(), sessionId)
-	if err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "获取session失败"))
-		return
-	}
-
-	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
-	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
-	connected = true
-
-	// kubectl 容器， 需要定时上报心跳
-	if podCtx.Mode == types.K8SKubectlExternalMode || podCtx.Mode == types.K8SKubectlInternalMode {
-		podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
-		consoleMgr.AddMgrFunc(podCleanUpMgr.Heartbeat)
-	}
-
-	eg.Go(func() error {
-		// 定时检查任务等
-		return consoleMgr.Run()
-	})
-
-	eg.Go(func() error {
-		// 定时发送心跳等, 保持连接的活跃
-		return remoteStreamConn.Run()
-	})
-
-	eg.Go(func() error {
-		defer remoteStreamConn.Close()
-		defer logger.Info("Close WaitStreamDone done")
-
-		// 远端错误, 一般是远端 Pod 被关闭或者使用 Exit 命令主动退出
-		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitStreamDone(podCtx)
-	})
-
-	if err := eg.Wait(); err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "Handle websocket"))
-		return
-	}
-
-	manager.GracefulCloseWebSocket(ctx, ws, connected, nil)
-}
-
-type OpenSession struct {
-	ContainerId   string `json:"container_id"`
-	Operator      string `json:"operator" binding:"required"`
-	Command       string `json:"command"`
-	Namespace     string `json:"namespace"`
-	PodName       string `json:"pod_name"`
-	ContainerName string `json:"container_name"`
-}
-
-func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
-
-	var openSession OpenSession
-
-	err := c.BindJSON(&openSession)
-	if err != nil {
-		msg := i18n.GetMessage("请求参数错误")
-		APIError(c, msg)
-		return
-	}
-	commands := manager.DefaultCommand
-	if openSession.Command == "" {
-		commands = []string{}
-	}
-
-	startupMgr, err := podmanager.NewStartupManager(c.Request.Context(), clusterId)
-	if err != nil {
-		msg := i18n.GetMessage("k8s客户端初始化失败{}", map[string]string{"err": err.Error()})
+		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
 		APIError(c, msg)
 		return
 	}
 
-	podCtx := &types.PodContext{
-		ProjectId: projectId,
-		ClusterId: clusterId,
-		Mode:      types.K8SContainerDirectMode,
-		Username:  "",
-		Commands:  commands,
-	}
-
-	// 优先使用containerID
-	if openSession.ContainerId != "" {
-		resp, err := startupMgr.GetK8sContextByContainerID(openSession.ContainerId)
-		if err != nil {
-			msg := i18n.GetMessage("container_id不正确，请检查参数", err)
-			APIError(c, msg)
-			return
-		}
-		podCtx.Namespace = resp.Namespace
-		podCtx.PodName = resp.PodName
-		podCtx.ContainerName = resp.ContainerName
-		podCtx.Commands = manager.DefaultCommand
-	} else if openSession.Namespace != "" && openSession.PodName != "" && openSession.ContainerName != "" {
-		podCtx = &types.PodContext{
-			Namespace: openSession.Namespace,
-		}
-	} else {
-		msg := i18n.GetMessage("container_id或namespace/pod_name/container_name不能同时为空")
+	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
+	if err != nil {
+		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
 		APIError(c, msg)
 		return
 	}
+	podCtx.ProjectId = authCtx.ProjectId
 
 	store := sessions.NewRedisStore("open-session", "open-session")
 
@@ -359,7 +187,7 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/") + "/"
+	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/portal/container/") + "/"
 
 	query := url.Values{}
 	query.Set("session_id", sessionId)
@@ -374,18 +202,23 @@ func (s *service) CreateOpenWebConsoleSession(c *gin.Context) {
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 
 	c.JSON(http.StatusOK, respData)
 }
 
+func (s *service) CreateClusterPortalSession(c *gin.Context) {
+}
+
 // APIError 简易的错误返回
 func APIError(c *gin.Context, msg string) {
+	authCtx := route.MustGetAuthContext(c)
+
 	data := types.APIResponse{
 		Code:      types.ApiErrorCode,
 		Message:   msg,
-		RequestID: uuid.New().String(),
+		RequestID: authCtx.RequestId,
 	}
 
 	c.AbortWithStatusJSON(http.StatusOK, data)

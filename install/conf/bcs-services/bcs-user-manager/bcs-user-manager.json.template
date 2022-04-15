@@ -71,5 +71,12 @@
       "send_email_path": "${bcsTokenNotifyESBEmailPath}",
       "send_rtx_path": "${bcsTokenNotifyESBRtxPath}"
     }
+  },
+  "cmdb": {
+    "enable": ${bcsCmdbEnable},
+    "app_code": "${bcsCmdbAppCode}",
+    "app_secret": "${bcsCmdbAppSecret}",
+    "bk_user_name": "${bcsCmdbBKUsername}",
+    "host": "${bcsCmdbHost}"
   }
 }

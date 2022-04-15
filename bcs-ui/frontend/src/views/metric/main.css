@@ -112,6 +112,7 @@
 
     .act {
         /* text-align: right; */
+        display: flex;
         padding-right: 30px;
         .disabled {
             cursor: not-allowed;

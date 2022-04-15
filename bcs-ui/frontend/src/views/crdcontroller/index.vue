@@ -6,14 +6,8 @@
             </div>
             <bk-guide></bk-guide>
         </div>
-        <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-            <app-exception
-                v-if="exceptionCode && !isInitLoading"
-                :type="exceptionCode.code"
-                :text="exceptionCode.msg">
-            </app-exception>
-
-            <template v-if="!exceptionCode && !isInitLoading">
+        <div class="biz-content-wrapper" style="padding: 0;">
+            <template>
                 <div class="biz-panel-header">
                     <div class="right">
                         <bk-data-searcher
@@ -26,7 +20,7 @@
                         </bk-data-searcher>
                     </div>
                 </div>
-                <div class="biz-crdcontroller" v-bkloading="{ isLoading: isPageLoading, opacity: 0.1 }" style="min-height: 180px;">
+                <div class="biz-crdcontroller" v-bkloading="{ isLoading: isPageLoading }" style="min-height: 180px;">
                     <svg style="display: none;">
                         <title>{{$t('模板集默认图标')}}</title>
                         <symbol id="biz-set-icon" viewBox="0 0 60 60">
@@ -399,7 +393,7 @@
                 this.search()
             }
         },
-        created () {
+        mounted () {
             this.init()
         },
         beforeRouteLeave (to, from, next) {
@@ -410,11 +404,11 @@
             async init () {
                 try {
                     if (this.clusterList.length) {
-                        if (this.curClusterId) {
-                            this.searchScope = this.curClusterId
-                        } else {
-                            this.searchScope = this.clusterList[0].cluster_id
-                        }
+                        // if (this.curClusterId) {
+                        //     this.searchScope = this.curClusterId
+                        // } else {
+                        //     this.searchScope = this.clusterList[0].cluster_id
+                        // }
                         this.getCrdControllersByCluster()
                     } else {
                         this.isInitLoading = false
@@ -576,7 +570,8 @@
                     params: {
                         clusterId: this.searchScope,
                         name: crdcontroller.name,
-                        id: crdcontroller.crd_ctr_id
+                        id: crdcontroller.crd_ctr_id,
+                        chartName: crdcontroller.chart_name
                     }
                 })
             },

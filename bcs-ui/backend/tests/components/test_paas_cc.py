@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import mock
 from requests_mock import ANY
 
 from backend.components.base import ComponentAuth
@@ -19,7 +20,8 @@ from backend.components.paas_cc import PaaSCCClient, UpdateNodesData
 
 
 class TestPaaSCCClient:
-    def test_get_cluster_simple(self, project_id, cluster_id, requests_mock):
+    @mock.patch("backend.components.paas_cc.get_shared_clusters", return_value=[])
+    def test_get_cluster_simple(self, get_shared_clusters, project_id, cluster_id, requests_mock):
         requests_mock.get(ANY, json={'foo': 'bar'})
 
         client = PaaSCCClient(ComponentAuth('token'))

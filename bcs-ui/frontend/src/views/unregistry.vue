@@ -61,6 +61,13 @@
     import { isEmpty } from '@/common/util'
     export default {
         name: 'bcs-unregistry',
+        props: {
+            curProject: {
+                type: Object,
+                default: () => ({}),
+                require: true
+            }
+        },
         data () {
             return {
                 kindList: [],
@@ -73,9 +80,6 @@
         computed: {
             enableBtn () {
                 return !isEmpty(this.ccKey)
-            },
-            curProject () {
-                return this.$store.state.curProject
             }
         },
         created () {
@@ -86,15 +90,6 @@
                     desc: this.$t('k8s容器编排引擎')
                 }
             ]
-            // if (this.$INTERNAL) {
-            //     this.kindList.push({
-            //         id: 2,
-            //         name: 'Mesos',
-            //         desc: this.$t('基于mesos框架自研的容器编排引擎'),
-            //         disabled: true,
-            //         tips: `${this.$t('如需使用，请联系')}<a href="${this.PROJECT_CONFIG.doc.contact}" style="color: #3a84ff" target="">${this.$t('【蓝鲸容器助手】')}</a>`
-            //     })
-            // }
             this.guideList = [
                 {
                     id: 'binding',

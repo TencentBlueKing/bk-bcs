@@ -146,7 +146,8 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "operator_version",
 			Help:      "operatorVersion contains the image version of hook operator pods and the version of CRD",
-		}, []string{"name", "image_version", "hookrun_version", "hooktemplate_version"})
+		}, []string{"name", "image_version", "hookrun_version", "hooktemplate_version",
+			"git_version", "git_commit", "build_date"})
 		prometheus.MustRegister(m.operatorVersion)
 
 		metricsInstance = m
@@ -208,6 +209,8 @@ func (m *metrics) collectHookrunSurviveTime(namespace, ownerRef, name, phase str
 }
 
 // collectOperatorVersion collects the image version of gamestatefulset operator pods
-func (m *metrics) collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion string) {
-	m.operatorVersion.WithLabelValues("Hook", imageVersion, hookrunVersion, hooktemplateVersion).Set(float64(1))
+func (m *metrics) collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion,
+	gitVersion, gitCommit, buildDate string) {
+	m.operatorVersion.WithLabelValues("Hook", imageVersion, hookrunVersion, hooktemplateVersion,
+		gitVersion, gitCommit, buildDate).Set(float64(1))
 }

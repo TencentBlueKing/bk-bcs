@@ -23,7 +23,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	clientTesting "k8s.io/client-go/testing"
 	"k8s.io/kubernetes/pkg/controller/history"
 	"reflect"
@@ -54,7 +53,7 @@ func NewGameDeployment(replicas int) *gdv1alpha1.GameDeployment {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: v1.NamespaceDefault,
-			UID:       types.UID("test"),
+			UID:       "test",
 		},
 		Spec: gdv1alpha1.GameDeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -71,6 +70,7 @@ func NewGameDeployment(replicas int) *gdv1alpha1.GameDeployment {
 	}
 }
 
+// NewPod create a new pod for unit tests.
 func NewPod(suffix interface{}) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -90,6 +90,7 @@ func NewPod(suffix interface{}) *v1.Pod {
 	}
 }
 
+// NewHookTemplate for unit tests.
 func NewHookTemplate() *v1alpha1.HookTemplate {
 	return &v1alpha1.HookTemplate{
 		ObjectMeta: metav1.ObjectMeta{
@@ -106,6 +107,7 @@ func NewHookTemplate() *v1alpha1.HookTemplate {
 	}
 }
 
+// NewHookRunFromTemplate create a new hook run from template for unit tests.
 func NewHookRunFromTemplate(hookTemplate *v1alpha1.HookTemplate, deploy *gdv1alpha1.GameDeployment) *v1alpha1.HookRun {
 	run, _ := commonhookutil.NewHookRunFromTemplate(hookTemplate, nil,
 		fmt.Sprintf("predelete---%s", hookTemplate.Name), "", hookTemplate.Namespace)
@@ -118,6 +120,7 @@ func NewHookRunFromTemplate(hookTemplate *v1alpha1.HookTemplate, deploy *gdv1alp
 	return run
 }
 
+// NewGDControllerRevision create a new gd controller revision for unit tests.
 func NewGDControllerRevision(deploy *gdv1alpha1.GameDeployment, revision int64) *v12.ControllerRevision {
 	cr, _ := history.NewControllerRevision(deploy,
 		schema.GroupVersionKind{Group: v1alpha1.GroupName, Version: v1alpha1.Version, Kind: v1alpha1.Kind},
@@ -125,6 +128,7 @@ func NewGDControllerRevision(deploy *gdv1alpha1.GameDeployment, revision int64) 
 	return cr
 }
 
+// EqualActions check if two actions are equal.
 func EqualActions(x, y []clientTesting.Action) bool {
 	if len(x) != len(y) {
 		return false
@@ -138,6 +142,7 @@ func EqualActions(x, y []clientTesting.Action) bool {
 	return true
 }
 
+// CompareAction compare two action that have same object
 func CompareAction(x, y clientTesting.Action) bool {
 	// for create action
 	a, ok := x.(clientTesting.CreateActionImpl)
@@ -159,6 +164,7 @@ func CompareAction(x, y clientTesting.Action) bool {
 	return poda.String() == podb.String()
 }
 
+// FilterActions filter actions by filterFns.
 func FilterActions(actions []clientTesting.Action, filterFns ...func(action clientTesting.Action) clientTesting.Action) []clientTesting.Action {
 	for i := range actions {
 		for _, fn := range filterFns {
@@ -168,6 +174,7 @@ func FilterActions(actions []clientTesting.Action, filterFns ...func(action clie
 	return actions
 }
 
+// FilterCreateAction filter create actions.
 func FilterCreateAction(action clientTesting.Action) clientTesting.Action {
 	if a, ok := action.(clientTesting.CreateActionImpl); ok {
 		return clientTesting.NewCreateAction(a.GetResource(), a.GetNamespace(), nil)
@@ -175,6 +182,7 @@ func FilterCreateAction(action clientTesting.Action) clientTesting.Action {
 	return action
 }
 
+// FilterUpdateAction filter update actions.
 func FilterUpdateAction(action clientTesting.Action) clientTesting.Action {
 	if a, ok := action.(clientTesting.UpdateActionImpl); ok {
 		return clientTesting.NewUpdateAction(a.GetResource(), a.GetNamespace(), nil)
@@ -182,20 +190,10 @@ func FilterUpdateAction(action clientTesting.Action) clientTesting.Action {
 	return action
 }
 
+// FilterPatchAction filter patch actions.
 func FilterPatchAction(action clientTesting.Action) clientTesting.Action {
 	if a, ok := action.(clientTesting.PatchActionImpl); ok {
 		return clientTesting.NewPatchAction(a.GetResource(), a.GetNamespace(), a.Name, a.PatchType, nil)
-	}
-	return action
-}
-
-func FilterOwnerRefer(action clientTesting.Action) clientTesting.Action {
-	if a, ok := action.(clientTesting.CreateActionImpl); ok {
-		if pod, ok := a.GetObject().(*v1.Pod); ok {
-			pod.OwnerReferences = nil
-			return clientTesting.NewCreateAction(a.GetResource(), a.GetNamespace(), pod)
-		}
-		return a
 	}
 	return action
 }

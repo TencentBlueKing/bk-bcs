@@ -264,7 +264,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 			// so just update backend targets info, if rules of plugins & routes
 			// change frequently, we need to verify all changes between oldSvc & newSvc.
 			// but now, we confirm that rules are stable. operations can be done quickly by manually
-			if err := s.regMgr.UpdateService(local); err != nil {
+			if err := s.regMgr.ReplaceTargetByService(local, local.Backends); err != nil {
 				blog.Errorf("gateway-discovery update Service %s backend failed in synchronization, %s. backend %+v", svc.Name, err.Error(), local.Backends)
 				continue
 			}

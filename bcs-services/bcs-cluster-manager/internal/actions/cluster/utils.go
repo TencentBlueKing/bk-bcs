@@ -38,8 +38,11 @@ import (
 const (
 	// Builder self builder cluster
 	Builder = "builder"
-	// Exporter export external cluster
-	Exporter = "exporter"
+	// Importer export external cluster
+	Importer = "importer"
+
+	// Prod environment
+	Prod = "prod"
 )
 
 const (

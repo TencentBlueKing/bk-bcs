@@ -22,11 +22,25 @@ import storageRoutes from './storage'
 import dashboardRoutes from './dashboard'
 import menuConfig from '@/store/menu'
 
+const originalPush = VueRouter.prototype.push
+const originalReplace = VueRouter.prototype.replace
+// push
+VueRouter.prototype.push = function push (location, onResolve, onReject) {
+    if (onResolve || onReject) return originalPush.call(this, location, onResolve, onReject)
+    return originalPush.call(this, location).catch(err => err)
+}
+// replace
+VueRouter.prototype.replace = function push (location, onResolve, onReject) {
+    if (onResolve || onReject) return originalReplace.call(this, location, onResolve, onReject)
+    return originalReplace.call(this, location).catch(err => err)
+}
 Vue.use(VueRouter)
 
 const Entry = () => import(/* webpackChunkName: entry */'@/views/index')
 const NotFound = () => import(/* webpackChunkName: 'none' */'@/components/exception')
 const ProjectManage = () => import(/* webpackChunkName: 'projectmanage' */'@/views/project/project.vue')
+const userToken = () => import(/* webpackChunkName: 'token' */'@/views/token/token.vue')
+const Forbidden = () => import(/* webpackChunkName: 'none' */'@/components/exception/403.vue')
 
 const router = new VueRouter({
     mode: 'history',
@@ -52,6 +66,22 @@ const router = new VueRouter({
                 ...dashboardRoutes
             ]
         },
+        {
+            path: '/api_key',
+            name: 'token',
+            component: userToken
+        },
+        {
+            path: '/projectManage',
+            name: 'projectManage',
+            component: ProjectManage
+        },
+        {
+            path: '/403',
+            name: '403',
+            props: (route) => ({ ...route.params, ...route.query }),
+            component: Forbidden
+        },
         // 404
         {
             path: '*',
@@ -60,15 +90,6 @@ const router = new VueRouter({
         }
     ]
 })
-
-// 私有化版本开启项目管理菜单
-if (['ce', 'ee'].includes(window.REGION)) {
-    router.addRoute({
-        path: '/',
-        name: 'projectManage',
-        component: ProjectManage
-    })
-}
 
 const cancelRequest = async () => {
     const allRequest = http.queue.get()

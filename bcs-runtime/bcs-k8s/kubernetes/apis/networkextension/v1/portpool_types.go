@@ -30,6 +30,7 @@ type PortPoolItem struct {
 	// +kubebuilder:validation:MinLength=1
 	ItemName        string   `json:"itemName"`
 	LoadBalancerIDs []string `json:"loadBalancerIDs"`
+	Protocol        string   `json:"protocol"`
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	StartPort uint32 `json:"startPort"`
@@ -41,13 +42,10 @@ type PortPoolItem struct {
 
 // GetKey get port pool item key
 func (ppi *PortPoolItem) GetKey() string {
-	tmpIDs := make([]string, len(ppi.LoadBalancerIDs))
-	copy(tmpIDs, ppi.LoadBalancerIDs)
-	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return GetPoolItemKey(ppi.ItemName, ppi.LoadBalancerIDs)
 }
 
-// Valiate do validation
+// Validate do validation
 func (ppi *PortPoolItem) Validate() error {
 	if ppi == nil {
 		return fmt.Errorf("port pool item cannot be empty")
@@ -84,10 +82,15 @@ type PortPoolItemStatus struct {
 
 // GetKey get port pool item key
 func (ppis *PortPoolItemStatus) GetKey() string {
-	tmpIDs := make([]string, len(ppis.LoadBalancerIDs))
-	copy(tmpIDs, ppis.LoadBalancerIDs)
+	return GetPoolItemKey(ppis.ItemName, ppis.LoadBalancerIDs)
+}
+
+// GetPoolItemKey get port pool item key
+func GetPoolItemKey(itemName string, loadBalancerIDs []string) string {
+	tmpIDs := make([]string, len(loadBalancerIDs))
+	copy(tmpIDs, loadBalancerIDs)
 	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return itemName + "-" + strings.Join(tmpIDs, ",")
 }
 
 // PortPoolStatus defines the observed state of PortPool

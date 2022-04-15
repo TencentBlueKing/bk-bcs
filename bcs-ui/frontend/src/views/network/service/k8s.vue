@@ -51,7 +51,22 @@
                             <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
                             <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
                                 <template slot-scope="props">
-                                    <a href="javascript: void(0)" class="bk-text-button" @click.stop.prevent="showServiceDetail(props.row, index)">{{props.row.resourceName ? props.row.resourceName : '--'}}</a>
+                                    <a href="javascript: void(0)"
+                                        class="bk-text-button"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[props.row.iam_ns_id]
+                                                && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_view,
+                                            actionId: 'namespace_scoped_view',
+                                            resourceName: props.row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: props.row.cluster_id,
+                                                name: props.row.namespace
+                                            }
+                                        }"
+                                        @click.stop.prevent="showServiceDetail(props.row, index)"
+                                    >{{props.row.resourceName ? props.row.resourceName : '--'}}</a>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('所属集群/命名空间')" min-width="200">
@@ -59,7 +74,7 @@
                                     <div class="lh20">
                                         <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('所属集群: ')}}</span>
                                         <bcs-popover :content="props.row.clusterId || '--'" placement="top">
-                                            <div class="cluster-name">{{props.row.cluster_name ? props.row.cluster_name : '--'}}</div>
+                                            <div class="cluster-name">{{curCluster ? curCluster.clusterName : '--'}}</div>
                                         </bcs-popover>
                                     </div>
                                     <div class="lh20">
@@ -114,7 +129,22 @@
                             <bk-table-column :label="$t('操作')" width="200">
                                 <template slot-scope="props">
                                     <template v-if="props.row.can_update">
-                                        <a href="javascript:void(0);" class="bk-text-button" @click="showUpdateServicePanel(props.row)">{{$t('更新')}}</a>
+                                        <a href="javascript:void(0);"
+                                            class="bk-text-button"
+                                            v-authority="{
+                                                clickable: webAnnotations.perms[props.row.iam_ns_id]
+                                                    && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
+                                                actionId: 'namespace_scoped_update',
+                                                resourceName: props.row.namespace,
+                                                disablePerms: true,
+                                                permCtx: {
+                                                    project_id: projectId,
+                                                    cluster_id: props.row.cluster_id,
+                                                    name: props.row.namespace
+                                                }
+                                            }"
+                                            @click="showUpdateServicePanel(props.row)"
+                                        >{{$t('更新')}}</a>
                                     </template>
                                     <template v-else>
                                         <bcs-popover :content="props.row.can_update_msg" placement="left">
@@ -122,7 +152,22 @@
                                         </bcs-popover>
                                     </template>
                                     <template v-if="props.row.can_delete">
-                                        <a href="javascript:void(0);" class="bk-text-button ml15" @click="removeService(props.row)">{{$t('删除')}}</a>
+                                        <a href="javascript:void(0);"
+                                            class="bk-text-button ml15"
+                                            v-authority="{
+                                                clickable: webAnnotations.perms[props.row.iam_ns_id]
+                                                    && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_delete,
+                                                actionId: 'namespace_scoped_delete',
+                                                resourceName: props.row.namespace,
+                                                disablePerms: true,
+                                                permCtx: {
+                                                    project_id: projectId,
+                                                    cluster_id: props.row.cluster_id,
+                                                    name: props.row.namespace
+                                                }
+                                            }"
+                                            @click="removeService(props.row)"
+                                        >{{$t('删除')}}</a>
                                     </template>
                                     <template v-else>
                                         <bcs-popover :content="props.row.can_delete_msg" placement="left" style="margin-left: 15px;">
@@ -132,7 +177,19 @@
                                     <bcs-button text class="ml15 cl5-router"
                                         :disabled="props.row.access_info.external.CL5"
                                         v-if="$INTERNAL"
-                                        @click="showCreateCL5(props.row )">
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[props.row.iam_ns_id]
+                                                && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
+                                            actionId: 'namespace_scoped_update',
+                                            resourceName: props.row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: props.row.cluster_id,
+                                                name: props.row.namespace
+                                            }
+                                        }"
+                                        @click="showCreateCL5(props.row)">
                                         {{$t('CL5路由')}}
                                     </bcs-button>
                                 </template>
@@ -673,7 +730,8 @@
                     isHasSid: 'no'
                 },
                 isCreatingCL5: false,
-                serviceSelectedList: []
+                serviceSelectedList: [],
+                webAnnotations: { perms: {} }
             }
         },
         computed: {
@@ -685,7 +743,7 @@
             },
             curRemarkList () {
                 const list = []
-                const annotations = this.curServiceDetail.config.metadata.annotations
+                const annotations = this.curServiceDetail?.config.metadata.annotations || {}
                 // 如果有缓存直接使用
                 // if (this.curServiceDetail.config.webCache && this.curServiceDetail.config.webCache.remarkList) {
                 //     return this.curServiceDetail.config.webCache.remarkList
@@ -706,7 +764,7 @@
             },
             curServicePortList () {
                 const results = []
-                const ports = this.curServiceDetail.config.spec.ports
+                const ports = this.curServiceDetail?.config.spec.ports || []
                 ports.forEach(item => {
                     results.push(item.targetPort)
                 })
@@ -720,6 +778,10 @@
             },
             userInfo () {
                 return this.$store.state.user
+            },
+            curCluster () {
+                const list = this.$store.state.cluster.clusterList || []
+                return list.find(item => item.clusterID === this.searchScope)
             }
         },
         watch: {
@@ -741,11 +803,11 @@
                         }, 1000)
                     }
                 }
-            },
-            curClusterId () {
-                this.searchScope = this.curClusterId
-                this.getServiceList()
             }
+            // curClusterId () {
+            //     this.searchScope = this.curClusterId
+            //     this.getServiceList()
+            // }
         },
         created () {
             this.initPageConf()
@@ -836,17 +898,6 @@
              * @param  {object} service service
              */
             async showUpdateServicePanel (service) {
-                if (!service.permissions.use) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: service.namespace_id,
-                        resource_name: service.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 const projectId = this.projectId
                 const namespace = service.namespace
                 const clusterId = service.clusterId
@@ -1069,16 +1120,6 @@
              * @param  {number} index 索引
              */
             async showServiceDetail (service, index) {
-                if (!service.permissions.view) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'view',
-                        resource_code: service.namespace_id,
-                        resource_name: service.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
                 this.serviceSlider.title = service.resourceName
                 this.curService = service
                 this.serviceSlider.isShow = true
@@ -1096,10 +1137,11 @@
 
                 try {
                     this.isPageLoading = true
-                    await this.$store.dispatch('network/getServiceList', {
+                    const res = await this.$store.dispatch('network/getServiceList', {
                         projectId,
                         params
                     })
+                    this.webAnnotations = res.web_annotations
 
                     setTimeout(() => {
                         this.clearSelectServices()
@@ -1495,7 +1537,9 @@
             },
 
             rowSelectable (row, index) {
-                return row.can_delete && row.permissions.use
+                return row.can_delete
+                    && this.webAnnotations.perms[row.iam_ns_id]
+                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete
             }
         }
     }

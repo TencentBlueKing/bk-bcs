@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	autoscalingv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/requests"
 )
 
@@ -100,6 +101,14 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 		return 0, err
 	}
 
+	var metricsServer metrics.PrometheusMetricServer
+	var webhookMetric string
+	if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
+		webhookMetric = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
+	} else {
+		webhookMetric = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
+			gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
+	}
 	var faResp requests.AutoscaleReview
 	err = json.Unmarshal(result, &faResp)
 	if err != nil {
@@ -108,9 +117,18 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	if faResp.Response == nil {
 		return 0, fmt.Errorf("received empty response")
 	}
+	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
 	if faResp.Response.Scale {
+		metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook",
+			webhookMetric, int64(faResp.Response.Replicas), int64(currentReplicas))
+		metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook",
+			faResp.Response.Replicas)
 		return faResp.Response.Replicas, nil
 	}
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook",
+		webhookMetric, int64(currentReplicas), int64(currentReplicas))
+	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook",
+		currentReplicas)
 	return currentReplicas, nil
 
 }

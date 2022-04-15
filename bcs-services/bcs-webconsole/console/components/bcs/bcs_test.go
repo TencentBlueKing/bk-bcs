@@ -56,6 +56,14 @@ func getTestProjectId() string {
 	return projectId
 }
 
+func getTestClusterId() string {
+	clusterId := os.Getenv("TEST_CLUSTER_ID")
+	if clusterId == "" {
+		return "cluster00"
+	}
+	return clusterId
+}
+
 func getTestUsername() string {
 	username := os.Getenv("TEST_USERNAME")
 	if username == "" {
@@ -68,16 +76,25 @@ func TestListClusters(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	clusters, err := ListClusters(ctx, getTestProjectId())
+	clusters, err := ListClusters(ctx, config.G.BCS, getTestProjectId())
 	assert.NoError(t, err)
 	assert.Equal(t, len(clusters), 0)
 }
 
-func TestCreateToken(t *testing.T) {
+func TestGetCluster(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	token, err := CreateTempToken(ctx, getTestUsername())
+	cluster, err := GetCluster(ctx, config.G.BCS, getTestProjectId(), getTestClusterId())
+	assert.NoError(t, err)
+	assert.Equal(t, cluster.ProjectId, getTestProjectId())
+}
+
+func TestCreateTempToken(t *testing.T) {
+	initConf()
+	ctx := context.Background()
+
+	token, err := CreateTempToken(ctx, config.G.BCS, getTestUsername())
 	assert.NoError(t, err)
 	assert.Equal(t, len(token.Token), 32)
 }
