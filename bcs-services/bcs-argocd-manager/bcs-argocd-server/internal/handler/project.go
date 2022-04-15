@@ -33,34 +33,34 @@ func NewProjectHandler(tkexIf tkexv1alpha1.TkexV1alpha1Interface) *ProjectHandle
 // CreateArgocdProject create argocd project
 func (handler *ProjectHandler) CreateArgocdProject(ctx context.Context,
 	request *project.CreateArgocdProjectRequest, response *project.CreateArgocdProjectResponse) error {
-	action := actions.CreateArgocdProjectAction{}
+	action := actions.NewCreateArgocdProjectAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // UpdateArgocdProject update argocd project
 func (handler *ProjectHandler) UpdateArgocdProject(ctx context.Context,
 	request *project.UpdateArgocdProjectRequest, response *project.UpdateArgocdProjectResponse) error {
-	action := actions.UpdateArgocdProjectAction{}
+	action := actions.NewUpdateArgocdProjectAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // DeleteArgocdProject delete argocd project by name
 func (handler *ProjectHandler) DeleteArgocdProject(ctx context.Context,
 	request *project.DeleteArgocdProjectRequest, response *project.DeleteArgocdProjectResponse) error {
-	action := actions.DeleteArgocdProjectAction{}
+	action := actions.NewDeleteArgocdProjectAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // GetArgocdProject get argocd project by name
 func (handler *ProjectHandler) GetArgocdProject(ctx context.Context,
 	request *project.GetArgocdProjectRequest, response *project.GetArgocdProjectResponse) error {
-	action := actions.GetArgocdProjectAction{}
+	action := actions.NewGetArgocdProjectAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
 
 // ListArgocdProjects list argocd projects
 func (handler *ProjectHandler) ListArgocdProjects(ctx context.Context,
 	request *project.ListArgocdProjectsRequest, response *project.ListArgocdProjectsResponse) error {
-	action := actions.ListArgocdProjectsAction{}
+	action := actions.NewListArgocdProjectsAction(handler.tkexIf)
 	return action.Handle(ctx, request, response)
 }
