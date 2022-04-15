@@ -9,7 +9,7 @@
         <!-- 操作栏 -->
         <div class="cluster-node-operate">
             <div class="left">
-                <template v-if="!nodeMenu">
+                <template v-if="!nodeMenu && !isImportCluster">
                     <bcs-button theme="primary"
                         icon="plus"
                         class="add-node mr10"
@@ -30,12 +30,12 @@
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                         <li @click="handleBatchEnableNodes">{{$t('允许调度')}}</li>
                         <li @click="handleBatchStopNodes">{{$t('停止调度')}}</li>
-                        <li @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
+                        <li v-if="!isImportCluster" @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
                         <div style="width: 100px; height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
                             <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
                         </div>
                         <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
-                        <li @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
+                        <li v-if="!isImportCluster" @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
                         <!-- <li>{{$t('导出')}}</li> -->
                     </ul>
                 </bcs-dropdown-menu>
@@ -315,7 +315,7 @@
                             </bk-button>
                         </template>
                         <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status) && !isImportCluster"
                             @click="handleDeleteNode(row)"
                         >
                             {{ $t('删除') }}
@@ -628,6 +628,10 @@
             // 是否是单集群
             const isSingleCluster = computed(() => {
                 return !!curClusterId.value
+            })
+            // 导入集群
+            const isImportCluster = computed(() => {
+                return curSelectedCluster.value.clusterCategory === 'importer'
             })
             // 全量表格数据
             const tableData = ref<any[]>([])
@@ -1310,7 +1314,8 @@
                 handleShowLog,
                 closeLog,
                 handleBatchPodScheduler,
-                podDisabled
+                podDisabled,
+                isImportCluster
             }
         }
     })
