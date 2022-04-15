@@ -121,8 +121,11 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 		return nil, err
 	}
 	resp, err := cli.GetProject(ctx, &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID})
-	if err != nil || resp.Code != 0 {
-		return nil, errorx.New(errcode.ComponentErr, "get project %s info failed: %v", projectID, err)
+	if err != nil {
+		return nil, errorx.New(errcode.ComponentErr, "call for project %s info failed: %v", projectID, err)
+	}
+	if resp.Code != 0 {
+		return nil, errorx.New(errcode.ComponentErr, "project: %s, errMsg: %s", projectID, resp.Message)
 	}
 	log.Info(ctx, "get project info: %v", structs.Map(resp.Data))
 	projInfo := map[string]interface{}{
