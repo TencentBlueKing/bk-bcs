@@ -92,6 +92,9 @@ type IAMConfig struct {
 	AppCode     string `yaml:"appCode" usage:"app code"`
 	AppSecret   string `yaml:"appSecret" usage:"app secret"`
 	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
+	UseGWHost   bool   `yaml:"useGWHost" usage:"use gatewayHost when true, else use iamHost and bkPaaSHost"`
+	IAMHost     string `yaml:"iamHost" usage:"iam host"`
+	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"bk paas host"`
 	Debug       bool   `yaml:"debug" usage:"debug mode"`
 }
 

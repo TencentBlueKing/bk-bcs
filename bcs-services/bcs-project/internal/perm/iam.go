@@ -15,10 +15,14 @@
 package perm
 
 import (
+	"context"
+
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	iamPerm "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 )
 
 const (
@@ -37,7 +41,7 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 		SystemID:    bcsIAM.SystemIDBKBCS,
 		AppCode:     config.GlobalConf.IAM.AppCode,
 		AppSecret:   config.GlobalConf.IAM.AppSecret,
-		External:    false,
+		External:    !config.GlobalConf.IAM.UseGWHost,
 		GateWayHost: config.GlobalConf.IAM.GatewayHost,
 		Metric:      false,
 		Debug:       config.GlobalConf.IAM.Debug,
@@ -48,4 +52,73 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 	}
 
 	return iamPerm.NewBCSProjectPermClient(cli), nil
+}
+
+// CanCreateProject ...
+func CanCreateProject(ctx context.Context) error {
+	// 判断是否有创建权限
+	permClient, err := NewPermClient()
+	if err != nil {
+		return errorx.NewIAMClientErr(err)
+	}
+
+	canCreate, applyUrl, err := permClient.CanCreateProject(auth.GetUserFromCtx(ctx))
+	if err != nil {
+		return errorx.NewRequestIAMErr(applyUrl, "projectCreate", canCreate, err)
+	}
+	if !canCreate {
+		return errorx.NewPermDeniedErr(applyUrl, "projectCreate", canCreate)
+	}
+	return nil
+}
+
+// CanViewProject ...
+func CanViewProject(ctx context.Context, projectID string) error {
+	permClient, err := NewPermClient()
+	if err != nil {
+		return errorx.NewIAMClientErr(err)
+	}
+
+	canView, applyUrl, err := permClient.CanViewProject(auth.GetUserFromCtx(ctx), projectID)
+	if err != nil {
+		return errorx.NewRequestIAMErr(applyUrl, "projectView", canView, err)
+	}
+	if !canView {
+		return errorx.NewPermDeniedErr(applyUrl, "projectView", canView)
+	}
+	return nil
+}
+
+// CanEditProject ...
+func CanEditProject(ctx context.Context, projectID string) error {
+	permClient, err := NewPermClient()
+	if err != nil {
+		return errorx.NewIAMClientErr(err)
+	}
+	// 校验是否有编辑权限
+	canEdit, applyUrl, err := permClient.CanEditProject(auth.GetUserFromCtx(ctx), projectID)
+	if err != nil {
+		return errorx.NewRequestIAMErr(applyUrl, "projectEdit", canEdit, err)
+	}
+	if !canEdit {
+		return errorx.NewPermDeniedErr(applyUrl, "projectEdit", canEdit, err)
+	}
+	return nil
+}
+
+// CanEditProject ...
+func CanDeleteProject(ctx context.Context, projectID string) error {
+	permClient, err := NewPermClient()
+	if err != nil {
+		return errorx.NewIAMClientErr(err)
+	}
+	// NOTE: 不校验集群
+	canDelete, applyUrl, err := permClient.CanDeleteProject(auth.GetUserFromCtx(ctx), projectID, "")
+	if err != nil {
+		return errorx.NewRequestIAMErr(applyUrl, "projectDelete", canDelete, err)
+	}
+	if !canDelete {
+		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err)
+	}
+	return nil
 }

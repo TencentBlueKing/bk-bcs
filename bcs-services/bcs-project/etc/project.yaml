@@ -57,4 +57,7 @@ iam:
   appCode: ""
   appSecret: ""
   gatewayHost: ""
+  useGWHost: true
+  iamHost: ""
+  bkPaaSHost: ""
   debug: false

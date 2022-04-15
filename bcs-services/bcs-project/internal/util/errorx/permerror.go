@@ -16,6 +16,7 @@ package errorx
 
 import "fmt"
 
+// PermissionDeniedError 权限异常内容
 type PermissionDeniedError struct {
 	code     uint32
 	msg      string
@@ -48,6 +49,7 @@ func (e *PermissionDeniedError) HasPerm() bool {
 	return e.hasPerm
 }
 
+// NewPermDeniedErr ...
 func NewPermDeniedErr(applyUrl string, actionID string, hasPerm bool, msg ...interface{}) *PermissionDeniedError {
 	return &PermissionDeniedError{
 		code:     PermDeniedErr,

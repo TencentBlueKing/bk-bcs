@@ -37,26 +37,37 @@ func NewProjectError(code uint32, msg string, extra ...interface{}) *ProjectErro
 	return &ProjectError{code: code, msg: fmt.Sprintf(msg, extra...)}
 }
 
+// NewParamErr ...
 func NewParamErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(ParamErr, ParamErrMsg, msg...)
 }
 
+// NewInnerErr ...
 func NewInnerErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(InnerErr, InnerErrMsg, msg...)
 }
 
+// NewDBErr ...
 func NewDBErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(DBErr, DBErrMsg, msg...)
 }
 
+// NewAuthErr ...
 func NewAuthErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(UnauthErr, UnauthErrMsg, msg...)
 }
 
+// NewIAMClientErr ...
 func NewIAMClientErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(IAMClientErr, IAMClientErrMsg, msg...)
 }
 
+// NewIAMOPErr ...
 func NewIAMOPErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(IAMOPErr, IAMOPErrMsg, msg...)
+}
+
+// NewRequestIAMErr ...
+func NewRequestIAMErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(RequestIAMErr, RequestIAMErrMsg, msg...)
 }

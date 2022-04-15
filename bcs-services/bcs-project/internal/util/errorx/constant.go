@@ -49,4 +49,8 @@ const (
 	IAMOPErr = commErr.AdditionErrorCode + 507
 	// IAMOPErrMsg ...
 	IAMOPErrMsg = "iam op error"
+	// RequestIAMErr 请求 IAM api 异常
+	RequestIAMErr = commErr.AdditionErrorCode + 508
+	// RequestIAMErrMsg ...
+	RequestIAMErrMsg = "request iam api error"
 )

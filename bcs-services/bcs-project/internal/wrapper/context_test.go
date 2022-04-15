@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	"github.com/micro/go-micro/v2/metadata"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	constant "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 )
@@ -56,7 +56,6 @@ func newJWTToken() string {
 
 func TestParseUsername(t *testing.T) {
 	jwtToken := newJWTToken()
-	md := metadata.Metadata{"Authorization": "Bearer " + jwtToken}
-	username, _ := parseUsername(md)
+	username, _ := auth.ParseUserFromJWT(jwtToken)
 	assert.Equal(t, username, adminName)
 }

@@ -40,17 +40,8 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
 	// 判断是否有创建权限
-	permClient, err := perm.NewPermClient()
-	if err != nil {
-		return errorx.NewIAMClientErr(err)
-	}
-	username := ctx.Value(ctxkey.UsernameKey).(string)
-	canCreate, applyUrl, err := permClient.CanCreateProject(username)
-	if err != nil {
-		return errorx.NewPermDeniedErr(applyUrl, "projectCreate", canCreate, err)
-	}
-	if !canCreate {
-		return errorx.NewPermDeniedErr(applyUrl, "projectCreate", canCreate)
+	if err := perm.CanCreateProject(ctx); err != nil {
+		return err
 	}
 	// 创建项目
 	ca := project.NewCreateAction(p.model)
@@ -72,17 +63,8 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 		return err
 	}
 	// 校验项目的查看权限
-	permClient, err := perm.NewPermClient()
-	if err != nil {
-		return errorx.NewIAMClientErr(err)
-	}
-	username := ctx.Value(ctxkey.UsernameKey).(string)
-	canView, applyUrl, err := permClient.CanViewProject(username, projectInfo.ProjectID)
-	if err != nil {
-		return errorx.NewPermDeniedErr(applyUrl, "projectView", canView, err)
-	}
-	if !canView {
-		return errorx.NewPermDeniedErr(applyUrl, "projectView", canView)
+	if err := perm.CanViewProject(ctx, projectInfo.ProjectID); err != nil {
+		return err
 	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
@@ -92,18 +74,8 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
 	// 校验项目的删除权限
-	permClient, err := perm.NewPermClient()
-	if err != nil {
-		return errorx.NewIAMClientErr(err)
-	}
-	username := ctx.Value(ctxkey.UsernameKey).(string)
-	// NOTE: 不校验集群
-	canDelete, applyUrl, err := permClient.CanDeleteProject(username, req.ProjectID, "")
-	if err != nil {
-		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err)
-	}
-	if !canDelete {
-		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err)
+	if err := perm.CanDeleteProject(ctx, req.ProjectID); err != nil {
+		return err
 	}
 	// 删除项目
 	da := project.NewDeleteAction(p.model)
@@ -117,18 +89,10 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeletePro
 
 func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
 	// 校验项目的删除权限
-	permClient, err := perm.NewPermClient()
-	if err != nil {
-		return errorx.NewIAMClientErr(err)
+	if err := perm.CanEditProject(ctx, req.ProjectID); err != nil {
+		return err
 	}
-	username := ctx.Value(ctxkey.UsernameKey).(string)
-	canEdit, applyUrl, err := permClient.CanEditProject(username, req.ProjectID)
-	if err != nil {
-		return errorx.NewPermDeniedErr(applyUrl, "projectEdit", canEdit, err)
-	}
-	if !canEdit {
-		return errorx.NewPermDeniedErr(applyUrl, "projectEdit", canEdit, err)
-	}
+
 	ua := project.NewUpdateAction(p.model)
 	projectInfo, e := ua.Do(ctx, req)
 	if e != nil {
