@@ -15,20 +15,32 @@
 package cluster
 
 import (
+	"context"
 	"crypto/tls"
 
+	microMetadata "go-micro.dev/v4/metadata"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 )
 
 // NewGrpcConn 新建 Grpc 连接
-func NewGrpcConn(address string, tlsConf *tls.Config) (conn *grpc.ClientConn, err error) {
+func NewGrpcConn(ctx context.Context, address string, tlsConf *tls.Config) (conn *grpc.ClientConn, err error) {
 	// 组装配置信息
-	md := metadata.New(map[string]string{
+	headers := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
-	})
+	}
+	// 若存在 jwtToken 则透传到依赖服务
+	rawMetadata, ok := microMetadata.FromContext(ctx)
+	if ok {
+		jwtToken, exists := rawMetadata.Get("Authorization")
+		if exists {
+			headers["Authorization"] = jwtToken
+		}
+	}
+
+	md := metadata.New(headers)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
 	if tlsConf != nil {

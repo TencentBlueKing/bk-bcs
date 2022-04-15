@@ -47,6 +47,8 @@ discovery:
   certPwd: ""
   key: ""
   ca: ""
+  callCMWithTLS: false
+  callProjWithTLS: false
 
 # Swagger 配置信息
 swagger:

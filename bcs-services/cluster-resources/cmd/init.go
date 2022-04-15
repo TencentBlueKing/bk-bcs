@@ -358,8 +358,16 @@ func (crSvc *clusterResourcesService) initDependentServiceClient() (err error) {
 		log.Info(crSvc.ctx, "load discovery client tls config successfully")
 	}
 	// ClusterManager
-	cluster.InitCMClient(crSvc.microRtr, tlsConf)
+	if crSvc.conf.Discovery.CallCMWithTLS {
+		cluster.InitCMClient(crSvc.microRtr, tlsConf)
+	} else {
+		cluster.InitCMClient(crSvc.microRtr, nil)
+	}
 	// ProjectManager
-	project.InitProjClient(crSvc.microRtr, tlsConf)
+	if crSvc.conf.Discovery.CallCMWithTLS {
+		project.InitProjClient(crSvc.microRtr, tlsConf)
+	} else {
+		project.InitProjClient(crSvc.microRtr, nil)
+	}
 	return nil
 }

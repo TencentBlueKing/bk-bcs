@@ -145,7 +145,7 @@ func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProject
 	}
 	log.Info(ctx, "get remote project manager instance [%s] from etcd registry successfully", node.Address)
 
-	conn, err := grpcUtil.NewGrpcConn(node.Address, c.CliTLSConfig)
+	conn, err := grpcUtil.NewGrpcConn(ctx, node.Address, c.CliTLSConfig)
 	if conn == nil || err != nil {
 		log.Error(ctx, "create project manager grpc client with %s failed: %v", node.Address, err)
 	}

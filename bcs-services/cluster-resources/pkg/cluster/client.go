@@ -147,7 +147,7 @@ func (c *CMClient) genAvailableCli(ctx context.Context) (bcsapicm.ClusterManager
 	}
 	log.Info(ctx, "get remote cluster manager instance [%s] from etcd registry successfully", node.Address)
 
-	conn, err := grpcUtil.NewGrpcConn(node.Address, c.CliTLSConfig)
+	conn, err := grpcUtil.NewGrpcConn(ctx, node.Address, c.CliTLSConfig)
 	if conn == nil || err != nil {
 		log.Error(ctx, "create cluster manager grpc client with %s failed: %v", node.Address, err)
 	}
