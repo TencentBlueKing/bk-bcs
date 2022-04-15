@@ -9,10 +9,11 @@
         <!-- 操作栏 -->
         <div class="cluster-node-operate">
             <div class="left">
-                <template v-if="!nodeMenu && !isImportCluster">
+                <template v-if="!nodeMenu">
                     <bcs-button theme="primary"
                         icon="plus"
                         class="add-node mr10"
+                        :disabled="isImportCluster"
                         @click="handleAddNode"
                     >{{$t('添加节点')}}</bcs-button>
                     <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
@@ -30,12 +31,12 @@
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                         <li @click="handleBatchEnableNodes">{{$t('允许调度')}}</li>
                         <li @click="handleBatchStopNodes">{{$t('停止调度')}}</li>
-                        <li v-if="!isImportCluster" @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
+                        <li :disabled="isImportCluster" @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
                         <div style="width: 100px; height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
                             <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
                         </div>
                         <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
-                        <li v-if="!isImportCluster" @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
+                        <li :disabled="isImportCluster" @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
                         <!-- <li>{{$t('导出')}}</li> -->
                     </ul>
                 </bcs-dropdown-menu>
@@ -315,7 +316,8 @@
                             </bk-button>
                         </template>
                         <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status) && !isImportCluster"
+                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                            :disabled="isImportCluster"
                             @click="handleDeleteNode(row)"
                         >
                             {{ $t('删除') }}
@@ -1060,7 +1062,7 @@
             }
             // 重新添加节点
             const handleBatchReAddNodes = () => {
-                if (!selections.value.length) return
+                if (!selections.value.length || isImportCluster.value) return
 
                 bkComfirmInfo({
                     title: $i18n.t('确认重新添加节点'),
@@ -1080,6 +1082,7 @@
             }
             // 批量删除节点
             const handleBatchDeleteNodes = () => {
+                if (isImportCluster.value) return
                 bkComfirmInfo({
                     title: $i18n.t('确认删除节点'),
                     subTitle: $i18n.t('确认是否删除 {ip} 等 {num} 个节点', {
