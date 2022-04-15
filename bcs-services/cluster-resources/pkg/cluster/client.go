@@ -20,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fatih/structs"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
 
@@ -32,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/discovery"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	grpcUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/grpc"
 )
 
 var clusterMgrCli *CMClient
@@ -42,7 +42,7 @@ const (
 	// ClusterInfoCacheKeyPrefix 集群信息缓存键前缀
 	ClusterInfoCacheKeyPrefix = "cluster_manager_cluster_info"
 	// CacheExpireTime 缓存过期时间，单位：min
-	CacheExpireTime = 5
+	CacheExpireTime = 20
 	// PurgeExpiredCacheTime 清理过期缓存时间，单位：min
 	PurgeExpiredCacheTime = 60
 )
@@ -94,16 +94,27 @@ func newCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*CMClient,
 	return &cli, nil
 }
 
-// 获取集群信息
-func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interface{}, error) {
+// 获取集群信息（支持缓存）
+func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID string) (map[string]interface{}, error) {
 	cacheKey := genClusterInfoCacheKey(clusterID)
-	info, ok := c.cache.Get(cacheKey)
-	if info != nil && ok {
+	if info, ok := c.cache.Get(cacheKey); info != nil && ok {
 		return info.(map[string]interface{}), nil
 	}
-
 	log.Info(ctx, "cluster %s info not in cache, start call cluster manager", clusterID)
 
+	clusterInfo, err := c.fetchClusterInfo(ctx, clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = c.cache.Add(cacheKey, clusterInfo, cache.DefaultExpiration); err != nil {
+		log.Warn(ctx, "set cluster info to cache failed: %v", err)
+	}
+	return clusterInfo, nil
+}
+
+// 获取集群信息
+func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interface{}, error) {
 	cli, err := c.genAvailableCli(ctx)
 	if err != nil {
 		return nil, err
@@ -112,7 +123,6 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	if err != nil || !resp.Result {
 		return nil, errorx.New(errcode.ComponentErr, "获取集群 %s 信息失败", clusterID)
 	}
-	log.Info(ctx, "get cluster %s info: %v", clusterID, structs.Map(resp.Data))
 
 	clusterInfo := map[string]interface{}{
 		"id":     resp.Data.ClusterID,
@@ -122,11 +132,6 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	}
 	if resp.Data.IsShared {
 		clusterInfo["type"] = ClusterTypeShared
-	}
-
-	err = c.cache.Add(cacheKey, clusterInfo, cache.DefaultExpiration)
-	if err != nil {
-		log.Warn(ctx, "set cluster info to cache failed: %v", err)
 	}
 	return clusterInfo, nil
 }
@@ -139,11 +144,12 @@ func (c *CMClient) genAvailableCli(ctx context.Context) (bcsapicm.ClusterManager
 	}
 	log.Info(ctx, "get remote cluster manager instance [%s] from etcd registry successfully", node.Address)
 
-	cli := NewClusterManager(&Config{
-		Hosts:     []string{node.Address},
-		TLSConfig: c.CliTLSConfig,
-	})
+	conn, err := grpcUtil.NewGrpcConn(node.Address, c.CliTLSConfig)
+	if conn == nil || err != nil {
+		log.Error(ctx, "create cluster manager grpc client with %s failed: %v", node.Address, err)
+	}
 
+	cli := bcsapicm.NewClusterManagerClient(conn)
 	if cli == nil {
 		return nil, errorx.New(errcode.ComponentErr, "no available cluster manager client")
 	}

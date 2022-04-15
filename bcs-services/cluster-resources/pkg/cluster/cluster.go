@@ -60,5 +60,5 @@ func fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interfa
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return fetchMockClusterInfo(clusterID)
 	}
-	return clusterMgrCli.fetchClusterInfo(ctx, clusterID)
+	return clusterMgrCli.fetchClusterInfoWithCache(ctx, clusterID)
 }

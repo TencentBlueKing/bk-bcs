@@ -15,19 +15,139 @@
 package project
 
 import (
+	"context"
+	"crypto/tls"
+	"sync"
+	"time"
+
+	"github.com/patrickmn/go-cache"
+	"go-micro.dev/v4/registry"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	bcsapiProj "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/discovery"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	grpcUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/grpc"
 )
 
-// FetchProjectInfo 获取项目信息
-func FetchProjectInfo(projectID string) (map[string]interface{}, error) {
-	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
-		return fetchMockProjectInfo(projectID)
-	}
-	return fetchProjectInfo(projectID)
+var projMgrCli *ProjClient
+
+var initOnce sync.Once
+
+const (
+	// ProjectInfoCacheKeyPrefix 项目信息缓存键前缀
+	ProjectInfoCacheKeyPrefix = "bcs_project_proj_info"
+	// CacheExpireTime 缓存过期时间，单位：min
+	CacheExpireTime = 20
+	// PurgeExpiredCacheTime 清理过期缓存时间，单位：min
+	PurgeExpiredCacheTime = 60
+)
+
+// 获取项目信息缓存键
+func genProjInfoCacheKey(projectID string) string {
+	return ProjectInfoCacheKeyPrefix + "-" + projectID
 }
 
-func fetchProjectInfo(projectID string) (map[string]interface{}, error) {
-	// TODO 切换成实际获取项目信息逻辑（调用 projmgr api ?）
-	return fetchMockProjectInfo(projectID)
+// ProjClient ...
+type ProjClient struct {
+	ServiceName  string
+	EtcdRtr      registry.Registry
+	CliTLSConfig *tls.Config
+	discovery    *discovery.ServiceDiscovery
+	cache        *cache.Cache
+	ctx          context.Context
+	cancel       context.CancelFunc
+}
+
+// InitProjClient 初始化项目管理客户端
+func InitProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
+	if projMgrCli != nil || runtime.RunMode == runmode.Dev {
+		return
+	}
+	initOnce.Do(func() {
+		var err error
+		if projMgrCli, err = newProjClient(microRtr, cliTLSConf); err != nil {
+			projMgrCli = nil
+			panic(err)
+		}
+	})
+}
+
+func newProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*ProjClient, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cli := ProjClient{
+		ServiceName:  conf.ProjectMgrServiceName,
+		EtcdRtr:      microRtr,
+		CliTLSConfig: cliTLSConf,
+		discovery:    discovery.NewServiceDiscovery(conf.ProjectMgrServiceName, microRtr),
+		cache:        cache.New(time.Minute*CacheExpireTime, time.Minute*PurgeExpiredCacheTime),
+		ctx:          ctx,
+		cancel:       cancel,
+	}
+	if err := cli.discovery.Start(); err != nil {
+		return nil, err
+	}
+	return &cli, nil
+}
+
+// 获取项目信息（支持缓存）
+func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID string) (map[string]interface{}, error) {
+	cacheKey := genProjInfoCacheKey(projectID)
+	if info, ok := c.cache.Get(cacheKey); info != nil && ok {
+		return info.(map[string]interface{}), nil
+	}
+	log.Info(ctx, "project %s info not in cache, start call project manager", projectID)
+
+	projInfo, err := c.fetchProjInfo(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = c.cache.Add(cacheKey, projInfo, cache.DefaultExpiration); err != nil {
+		log.Warn(ctx, "set project info to cache failed: %v", err)
+	}
+	return projInfo, nil
+}
+
+// 获取项目信息
+func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[string]interface{}, error) {
+	cli, err := c.genAvailableCli(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := cli.GetProject(ctx, &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID})
+	if err != nil || resp.Code != 0 {
+		return nil, errorx.New(errcode.ComponentErr, "获取项目 %s 信息失败", projectID)
+	}
+	projInfo := map[string]interface{}{
+		"id":    projectID,
+		"name":  resp.Data.Name,
+		"code":  resp.Data.ProjectCode,
+		"bizID": resp.Data.BusinessID,
+	}
+	return projInfo, nil
+}
+
+// 获取可用的 ProjManager 服务
+func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProjectClient, error) {
+	node, err := c.discovery.GetRandServiceInst(ctx)
+	if err != nil {
+		return nil, err
+	}
+	log.Info(ctx, "get remote project manager instance [%s] from etcd registry successfully", node.Address)
+
+	conn, err := grpcUtil.NewGrpcConn(node.Address, c.CliTLSConfig)
+	if conn == nil || err != nil {
+		log.Error(ctx, "create project manager grpc client with %s failed: %v", node.Address, err)
+	}
+
+	cli := bcsapiProj.NewBCSProjectClient(conn)
+	if cli == nil {
+		return nil, errorx.New(errcode.ComponentErr, "no available project manager client")
+	}
+	return cli, nil
 }

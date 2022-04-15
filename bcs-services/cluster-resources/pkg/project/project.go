@@ -19,24 +19,28 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // Project BCS 项目
 type Project struct {
 	ID    string
+	Name  string
 	Code  string
 	BizID string
 }
 
 // GetProjectInfo ...
-func GetProjectInfo(_ context.Context, projectID string) (*Project, error) {
-	projInfo, err := FetchProjectInfo(projectID)
+func GetProjectInfo(ctx context.Context, projectID string) (*Project, error) {
+	projInfo, err := fetchProjectInfo(ctx, projectID)
 	if err != nil {
 		return &Project{}, err
 	}
 	return &Project{
 		ID:    projInfo["id"].(string),
+		Name:  projInfo["name"].(string),
 		Code:  projInfo["code"].(string),
 		BizID: projInfo["bizID"].(string),
 	}, nil
@@ -49,4 +53,12 @@ func FromContext(ctx context.Context) (*Project, error) {
 		return nil, errorx.New(errcode.General, "project info not exists in context")
 	}
 	return p.(*Project), nil
+}
+
+// 获取项目信息（bcsProject）
+func fetchProjectInfo(ctx context.Context, projectID string) (map[string]interface{}, error) {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return fetchMockProjectInfo(projectID)
+	}
+	return projMgrCli.fetchProjInfoWithCache(ctx, projectID)
 }

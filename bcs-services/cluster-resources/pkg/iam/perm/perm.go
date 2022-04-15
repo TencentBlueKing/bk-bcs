@@ -93,7 +93,6 @@ func (p *IAMPerm) canAction(ctx Ctx, actionID string, useCache bool) (bool, erro
 	resReq := p.ParentResPerm.makeResReq(pPermCtx)
 	resources := resReq.MakeResources([]string{pPermCtx.GetResID()})
 	return p.Cli.ResInstAllowed(pPermCtx.GetUsername(), actionID, resources, useCache)
-
 }
 
 func (p *IAMPerm) canMultiActions(ctx Ctx, perms map[string]bool) (bool, error) {

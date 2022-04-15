@@ -52,6 +52,7 @@ import (
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
 	workloadHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/workload"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -359,6 +360,6 @@ func (crSvc *clusterResourcesService) initDependentServiceClient() (err error) {
 	// ClusterManager
 	cluster.InitCMClient(crSvc.microRtr, tlsConf)
 	// ProjectManager
-	// TODO ...
+	project.InitProjClient(crSvc.microRtr, tlsConf)
 	return nil
 }
