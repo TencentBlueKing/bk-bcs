@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/actions/project"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
@@ -114,11 +114,10 @@ func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjec
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
 	}
-	username := ctx.Value(ctxkey.UsernameKey).(string)
 	// 获取 project id, 用以获取对应的权限
 	ids := getProjectIDs(projects)
 	perms, err := permClient.GetMultiProjectMultiActionPermission(
-		username, ids,
+		auth.GetUserFromCtx(ctx), ids,
 		[]string{perm.ProjectCreate, perm.ProjectView, perm.ProjectEdit, perm.ProjectDelete},
 	)
 	if err != nil {

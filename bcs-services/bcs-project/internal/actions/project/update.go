@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
@@ -86,10 +86,10 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	// 更新时间
 	p.UpdateTime = timeStr
 	// 从 context 中获取 username
-	updater := ua.ctx.Value(ctxkey.UsernameKey).(string)
-	p.Updater = updater
+	username := auth.GetUserFromCtx(ua.ctx)
+	p.Updater = username
 	// 更新管理员，添加项目更新者，并且去重
-	managers := stringx.JoinString(p.Managers, updater)
+	managers := stringx.JoinString(p.Managers, username)
 	managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
 	p.Managers = strings.Join(managerList, ",")
 

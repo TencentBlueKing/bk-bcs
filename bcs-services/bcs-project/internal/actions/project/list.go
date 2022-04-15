@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/perm"
@@ -111,7 +111,7 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 }
 
 func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
-	username := ctx.Value(ctxkey.UsernameKey).(string)
+	username := auth.GetUserFromCtx(lap.ctx)
 	ids, err := perm.ListAuthorizedProjectIDs(username)
 	// 没有权限的项目时，返回为空，并记录信息
 	if ids == nil || err != nil {

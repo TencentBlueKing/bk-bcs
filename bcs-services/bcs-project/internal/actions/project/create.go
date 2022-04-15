@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
@@ -70,12 +70,12 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 func (ca *CreateAction) createProject() error {
 	timeStr := time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
-	creator := ca.ctx.Value(ctxkey.UsernameKey).(string)
+	username := auth.GetUserFromCtx(ca.ctx)
 	p := &pm.Project{
 		ProjectID:   ca.req.ProjectID,
 		Name:        ca.req.Name,
 		ProjectCode: ca.req.ProjectCode,
-		Creator:     creator,
+		Creator:     username,
 		ProjectType: ca.req.ProjectType,
 		UseBKRes:    ca.req.UseBKRes,
 		Description: ca.req.Description,
@@ -92,7 +92,7 @@ func (ca *CreateAction) createProject() error {
 		IsSecret:    ca.req.IsSecret,
 		CreateTime:  timeStr,
 		UpdateTime:  timeStr,
-		Managers:    creator,
+		Managers:    username,
 	}
 	return ca.model.CreateProject(ca.ctx, p)
 }
