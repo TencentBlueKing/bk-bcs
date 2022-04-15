@@ -30,7 +30,7 @@ func TestCM(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("config/simple_configmap")
+	manifest, _ := example.LoadDemoManifest("config/simple_configmap", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

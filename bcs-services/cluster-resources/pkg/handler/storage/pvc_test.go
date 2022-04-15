@@ -30,7 +30,7 @@ func TestPVC(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume_claim")
+	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume_claim", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

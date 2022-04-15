@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
@@ -222,6 +223,30 @@ func TestMongoQueryCondtionCombine(t *testing.T) {
 						},
 					},
 				},
+			},
+		},
+		{
+			"test Con when value is string",
+			func() *operator.Condition {
+				conCondition := operator.NewLeafCondition(
+					operator.Con,
+					operator.M{"key1": "value1"})
+				return conCondition
+			},
+			bson.M{
+				"key1": primitive.Regex{Pattern: ".*value1.*"},
+			},
+		},
+		{
+			"test Con when value is primitive.Regex",
+			func() *operator.Condition {
+				conCondition := operator.NewLeafCondition(
+					operator.Con,
+					operator.M{"key1": primitive.Regex{Pattern: ".*value1.*", Options: "i"}})
+				return conCondition
+			},
+			bson.M{
+				"key1": primitive.Regex{Pattern: ".*value1.*", Options: "i"},
 			},
 		},
 	}

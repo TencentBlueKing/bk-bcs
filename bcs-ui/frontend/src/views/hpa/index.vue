@@ -66,8 +66,8 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('关联资源')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
                             <template slot-scope="{ row }">
-                                <a class="bk-text-button biz-text-wrapper" target="_blank"
-                                    @click="handleGotoAppDetail(row)">{{row.deployment_name}}</a>
+                                <bk-button :disabled="!['Deployment', 'StatefulSet'].includes(row.ref_kind)"
+                                    text @click="handleGotoAppDetail(row)">{{row.ref_name}}</bk-button>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('来源')" prop="source_type">
@@ -546,16 +546,15 @@
             },
             handleGotoAppDetail (row) {
                 const kindMap = {
-                    deployment: 'deploymentsInstanceDetail2',
-                    daemonset: 'daemonsetInstanceDetail2',
-                    job: 'jobInstanceDetail2'
+                    Deployment: 'deploymentsInstanceDetail2',
+                    StatefulSet: 'statefulsetInstanceDetail2'
                 }
                 const location = this.$router.resolve({
-                    name: kindMap[row.resource_kind] || '404',
+                    name: kindMap[row.ref_kind] || '404',
                     params: {
-                        instanceName: row.deployment_name,
+                        instanceName: row.ref_name,
                         instanceNamespace: row.namespace,
-                        instanceCategory: row.resource_kind
+                        instanceCategory: row.ref_kind
                     },
                     query: {
                         cluster_id: row.cluster_id

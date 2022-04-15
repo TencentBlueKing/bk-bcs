@@ -624,6 +624,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

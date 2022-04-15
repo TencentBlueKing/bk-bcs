@@ -30,7 +30,7 @@ func TestIng(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("network/simple_ingress")
+	manifest, _ := example.LoadDemoManifest("network/simple_ingress", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

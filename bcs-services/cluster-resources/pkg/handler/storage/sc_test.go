@@ -30,7 +30,7 @@ func TestSC(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("storage/simple_storage_class")
+	manifest, _ := example.LoadDemoManifest("storage/simple_storage_class", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

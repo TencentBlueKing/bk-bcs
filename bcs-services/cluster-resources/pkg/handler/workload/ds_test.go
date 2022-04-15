@@ -30,7 +30,7 @@ func TestDS(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_daemonset")
+	manifest, _ := example.LoadDemoManifest("workload/simple_daemonset", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
