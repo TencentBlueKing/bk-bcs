@@ -315,7 +315,7 @@
                             </bk-button>
                         </template>
                         <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status) && !isImportCluster"
                             @click="handleDeleteNode(row)"
                         >
                             {{ $t('删除') }}
