@@ -1,0 +1,1374 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Data Manager API Doc",
+    "version": "0.1.0"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/datamanager/v1/clusters/{clusterID}": {
+      "get": {
+        "summary": "查询Cluster",
+        "description": "查询指定ClusterID的集群资源信息",
+        "operationId": "DataManager_GetClusterInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetClusterInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/clusters/{clusterID}/namespaces": {
+      "get": {
+        "summary": "查询namespace list",
+        "description": "查询指定ClusterID的命名空间资源列表信息",
+        "operationId": "DataManager_GetNamespaceInfoList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetNamespaceInfoListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，minute，hour，day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}": {
+      "get": {
+        "summary": "查询namespace",
+        "description": "查询指定ClusterID和namespace的集群命名空间信息",
+        "operationId": "DataManager_GetNamespaceInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetNamespaceInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名字",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}": {
+      "get": {
+        "summary": "查询workload list",
+        "description": "查询指定ClusterID、命名空间、类型的模块资源列表信息",
+        "operationId": "DataManager_GetWorkloadInfoList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadInfoListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名字",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "模块类型",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，minute，hour，day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}/{workloadName}": {
+      "get": {
+        "summary": "查询workload",
+        "description": "查询指定ClusterID、命名空间、类型和名称的模块资源信息",
+        "operationId": "DataManager_GetWorkloadInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名字",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "模块类型",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workloadName",
+            "description": "模块名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/projects/{projectID}": {
+      "get": {
+        "summary": "查询project",
+        "description": "查询指定projectID的项目资源信息",
+        "operationId": "DataManager_GetProjectInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetProjectInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/projects/{projectID}/cluster": {
+      "get": {
+        "summary": "查询cluster list",
+        "description": "查询指定projectID的集群资源信息列表",
+        "operationId": "DataManager_GetClusterInfoList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetClusterInfoListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，minute，hour，day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "datamanagerCluster": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群id",
+          "title": "clusterID"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "时间维度",
+          "title": "dimension"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "开始时间",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "结束时间",
+          "title": "endTime"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerClusterMetrics"
+          },
+          "description": "数据列表",
+          "title": "metrics"
+        },
+        "minNode": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小节点数及时间",
+          "title": "minNode"
+        },
+        "maxNode": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小节点数及时间",
+          "title": "minNode"
+        },
+        "minInstance": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小实例数及时间",
+          "title": "minInstance"
+        },
+        "maxInstance": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大实例数及时间",
+          "title": "maxInstance"
+        }
+      },
+      "description": "记录cluster资源信息",
+      "title": "cluster"
+    },
+    "datamanagerClusterMetrics": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "description": "数据时间",
+          "title": "time"
+        },
+        "nodeCount": {
+          "type": "string",
+          "description": "节点总数",
+          "title": "nodeCount"
+        },
+        "availableNodeCount": {
+          "type": "string",
+          "description": "可用节点数",
+          "title": "availableNodeCount"
+        },
+        "minNode": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小节点数及所在时间段",
+          "title": "minNode"
+        },
+        "maxNode": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大节点数及所在时间段",
+          "title": "maxNode"
+        },
+        "nodeQuantile": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerNodeQuantile"
+          },
+          "description": "节点分位数",
+          "title": "nodeQuantile"
+        },
+        "minUsageNode": {
+          "type": "string",
+          "description": "最低负载节点百分比",
+          "title": "minUsageNode"
+        },
+        "totalCPU": {
+          "type": "string",
+          "description": "总cpu",
+          "title": "totalCPU"
+        },
+        "totalMemory": {
+          "type": "string",
+          "description": "总内存",
+          "title": "totalMemory"
+        },
+        "totalLoadCPU": {
+          "type": "string",
+          "description": "总cpu负载",
+          "title": "totalLoadCPU"
+        },
+        "totalLoadMemory": {
+          "type": "string",
+          "description": "总内存负载",
+          "title": "totalLoadMemory"
+        },
+        "avgLoadCPU": {
+          "type": "string",
+          "description": "平均cpu负载",
+          "title": "avgLoadCPU"
+        },
+        "avgLoadMemory": {
+          "type": "string",
+          "description": "平均cpu负载",
+          "title": "avgLoadMemory"
+        },
+        "CPUUsage": {
+          "type": "string",
+          "description": "cpu使用率",
+          "title": "CPUUsage"
+        },
+        "MemoryUsage": {
+          "type": "string",
+          "description": "内存使用率",
+          "title": "MemoryUsage"
+        },
+        "workloadCount": {
+          "type": "string",
+          "description": "模块数",
+          "title": "workloadCount"
+        },
+        "instanceCount": {
+          "type": "string",
+          "description": "当前实例数",
+          "title": "instanceCount"
+        },
+        "minInstance": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小实例数及所在时间段",
+          "title": "minInstance"
+        },
+        "MaxInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大实例数及所在时间段",
+          "title": "MaxInstanceTimeTime"
+        },
+        "CpuRequest": {
+          "type": "string",
+          "description": "cpu请求量",
+          "title": "cpuRequest"
+        },
+        "MemoryRequest": {
+          "type": "string",
+          "description": "内存请求量",
+          "title": "memoryRequest"
+        }
+      }
+    },
+    "datamanagerExtremumRecord": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "对象名称，如模块名",
+          "title": "name"
+        },
+        "metricName": {
+          "type": "string",
+          "description": "指标，如cpu，memory",
+          "title": "metricName"
+        },
+        "value": {
+          "type": "number",
+          "format": "double",
+          "description": "值",
+          "title": "value"
+        },
+        "period": {
+          "type": "string",
+          "description": "时间段",
+          "title": "period"
+        }
+      }
+    },
+    "datamanagerGetClusterInfoListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerCluster"
+          },
+          "description": "集群列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询集群列表返回",
+      "title": "GetClusterInfoListResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetClusterInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/datamanagerCluster",
+          "description": "集群信息",
+          "title": "data"
+        }
+      },
+      "description": "查询集群返回",
+      "title": "GetClusterInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetNamespaceInfoListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerNamespace"
+          },
+          "description": "命名空间列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询命名空间列表返回",
+      "title": "GetNamespaceInfoListResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetNamespaceInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/datamanagerNamespace",
+          "description": "命名空间信息",
+          "title": "data"
+        }
+      },
+      "description": "查询命名空间返回",
+      "title": "GetNamespaceInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetProjectInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/datamanagerProject",
+          "description": "项目信息",
+          "title": "data"
+        }
+      },
+      "description": "查询项目信息返回",
+      "title": "GetProjectInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetWorkloadInfoListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkload"
+          },
+          "description": "模块列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询模块列表返回",
+      "title": "GetWorkloadInfoListResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetWorkloadInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/datamanagerWorkload",
+          "description": "模块列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询模块返回",
+      "title": "GetWorkloadInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerNamespace": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群id",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名字",
+          "title": "namespace"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "时间维度",
+          "title": "dimension"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerNamespaceMetrics"
+          },
+          "description": "数据列表",
+          "title": "metrics"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "开始时间",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "结束时间",
+          "title": "endTime"
+        },
+        "suggestCPU": {
+          "type": "string",
+          "description": "建议cpu值",
+          "title": "suggestCPU"
+        },
+        "suggestMemory": {
+          "type": "string",
+          "description": "建议内存值",
+          "title": "suggestMemory"
+        },
+        "resourceLimit": {
+          "$ref": "#/definitions/datamanagerResourceLimit",
+          "description": "资源限制",
+          "title": "resourceLimit"
+        },
+        "MaxCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大cpu利用率及时间",
+          "title": "MaxCPUUsageTime"
+        },
+        "MinCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小cpu利用率及时间",
+          "title": "MinCPUUsageTime"
+        },
+        "MaxMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大内存利用率及时间",
+          "title": "MaxMemoryUsageTime"
+        },
+        "MinMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小内存利用率及时间",
+          "title": "MinMemoryUsageTime"
+        },
+        "MinInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小实例数及时间",
+          "title": "MinInstanceTime"
+        },
+        "MaxInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大实例数及时间",
+          "title": "MaxInstanceTime"
+        },
+        "MinWorkloadUsage": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "使用率最小模块及时间",
+          "title": "MinWorkloadUsage"
+        },
+        "MaxWorkloadUsage": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "使用率最大模块及时间",
+          "title": "MaxWorkloadUsage"
+        }
+      },
+      "description": "记录namespace资源信息",
+      "title": "namespace"
+    },
+    "datamanagerNamespaceMetrics": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "description": "数据时间",
+          "title": "time"
+        },
+        "CPURequest": {
+          "type": "string",
+          "description": "cpu请求量",
+          "title": "CPURequest"
+        },
+        "MemoryRequest": {
+          "type": "string",
+          "description": "内存请求量",
+          "title": "memoryRequest"
+        },
+        "CPUUsageAmount": {
+          "type": "string",
+          "description": "cpu使用量",
+          "title": "CPUUsageAmount"
+        },
+        "memoryUsageAmount": {
+          "type": "string",
+          "description": "内存使用量",
+          "title": "memoryUsageAmount"
+        },
+        "CPUUsage": {
+          "type": "string",
+          "description": "cpu使用率",
+          "title": "CPUUsage"
+        },
+        "MemoryUsage": {
+          "type": "string",
+          "description": "内存使用率",
+          "title": "MemoryUsage"
+        },
+        "maxCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "CPU使用率最高时间段",
+          "title": "maxCPUUsageTime"
+        },
+        "minCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "CPU使用率最低时间段",
+          "title": "minCPUUsageTime"
+        },
+        "maxMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "内存使用率最高时间段",
+          "title": "maxMemoryUsageTime"
+        },
+        "minMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "内存使用率最低时间段",
+          "title": "minMemoryUsageTime"
+        },
+        "workloadCount": {
+          "type": "string",
+          "description": "模块数",
+          "title": "workloadCount"
+        },
+        "instanceCount": {
+          "type": "string",
+          "description": "当前实例数",
+          "title": "instanceCount"
+        },
+        "minInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小实例数及所在时间段",
+          "title": "minInstanceTime"
+        },
+        "MaxInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大实例数及所在时间段",
+          "title": "maxInstanceTime"
+        },
+        "minWorkloadUsage": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "使用率最低模块",
+          "title": "minWorkloadUsage"
+        },
+        "maxWorkloadUsage": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "使用率最高模块",
+          "title": "maxWorkloadUsage"
+        }
+      }
+    },
+    "datamanagerNodeQuantile": {
+      "type": "object",
+      "properties": {
+        "percentage": {
+          "type": "string"
+        },
+        "nodeCPUUsage": {
+          "type": "string"
+        }
+      }
+    },
+    "datamanagerProject": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "时间维度",
+          "title": "dimension"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "开始时间",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "结束时间",
+          "title": "endTime"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerProjectMetrics"
+          },
+          "description": "数据列表",
+          "title": "metrics"
+        },
+        "minNode": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小节点数及时间",
+          "title": "minNode"
+        },
+        "maxNode": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大节点数及时间",
+          "title": "maxNode"
+        }
+      },
+      "description": "记录project资源信息",
+      "title": "Project"
+    },
+    "datamanagerProjectMetrics": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "description": "数据时间",
+          "title": "time"
+        },
+        "clustersCount": {
+          "type": "string",
+          "description": "集群总数",
+          "title": "clusterCount"
+        },
+        "totalCPU": {
+          "type": "string",
+          "description": "总cpu",
+          "title": "totalCPU"
+        },
+        "totalMemory": {
+          "type": "string",
+          "description": "总内存",
+          "title": "totalMemory"
+        },
+        "totalLoadCPU": {
+          "type": "string",
+          "description": "总cpu负载",
+          "title": "totalLoadCPU"
+        },
+        "totalLoadMemory": {
+          "type": "string",
+          "description": "总内存负载",
+          "title": "totalLoadMemory"
+        },
+        "avgLoadCPU": {
+          "type": "string",
+          "description": "平均cpu负载",
+          "title": "avgLoadCPU"
+        },
+        "avgLoadMemory": {
+          "type": "string",
+          "description": "平均cpu负载",
+          "title": "avgLoadMemory"
+        },
+        "CPUUsage": {
+          "type": "string",
+          "description": "cpu使用率",
+          "title": "CPUUsage"
+        },
+        "MemoryUsage": {
+          "type": "string",
+          "description": "内存使用率",
+          "title": "MemoryUsage"
+        },
+        "nodeCount": {
+          "type": "string",
+          "description": "节点总数",
+          "title": "nodeCount"
+        },
+        "availableNodeCount": {
+          "type": "string",
+          "description": "可用节点数",
+          "title": "availableNodeCount"
+        },
+        "minNodeCount": {
+          "type": "string",
+          "description": "最小节点数",
+          "title": "minNodeCount"
+        },
+        "minNodeTime": {
+          "type": "string",
+          "description": "最小节点数时间",
+          "title": "minNodeTime"
+        },
+        "maxNodeCount": {
+          "type": "string",
+          "description": "最大节点数",
+          "title": "maxNodeCount"
+        },
+        "maxNodeTime": {
+          "type": "string",
+          "description": "最大节点数时间",
+          "title": "maxNodeTime"
+        }
+      }
+    },
+    "datamanagerResourceLimit": {
+      "type": "object",
+      "properties": {
+        "CPULimit": {
+          "type": "string",
+          "description": "cpu限制",
+          "title": "CPULimit"
+        },
+        "CPURequest": {
+          "type": "string",
+          "description": "cpu请求",
+          "title": "CPURequest"
+        },
+        "MemoryLimit": {
+          "type": "string",
+          "description": "内存限制",
+          "title": "MemoryLimit"
+        },
+        "MemoryRequest": {
+          "type": "string",
+          "description": "内存请求",
+          "title": "MemoryRequest"
+        }
+      }
+    },
+    "datamanagerWorkload": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群id",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名字",
+          "title": "namespace"
+        },
+        "workloadType": {
+          "type": "string",
+          "description": "模块类型",
+          "title": "workloadType"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "模块名称",
+          "title": "workloadName"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "时间维度",
+          "title": "dimension"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerWorkloadMetrics"
+          },
+          "description": "数据列表",
+          "title": "metrics"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "开始时间",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "结束时间",
+          "title": "endTime"
+        },
+        "suggestCPU": {
+          "type": "string",
+          "description": "建议cpu值",
+          "title": "suggestCPU"
+        },
+        "suggestMemory": {
+          "type": "string",
+          "description": "建议内存值",
+          "title": "suggestMemory"
+        },
+        "MaxCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大cpu利用率及时间",
+          "title": "MaxCPUUsageTime"
+        },
+        "MinCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小cpu利用率及时间",
+          "title": "MinCPUUsageTime"
+        },
+        "MaxMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大内存利用率及时间",
+          "title": "MaxMemoryUsageTime"
+        },
+        "MinMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小内存利用率及时间",
+          "title": "MinMemoryUsageTime"
+        },
+        "MinInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小实例数及时间",
+          "title": "MinInstanceTime"
+        },
+        "MaxInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大实例数及时间",
+          "title": "MaxInstanceTime"
+        }
+      },
+      "description": "记录模块资源信息",
+      "title": "workload"
+    },
+    "datamanagerWorkloadMetrics": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "description": "数据时间",
+          "title": "time"
+        },
+        "CPURequest": {
+          "type": "string",
+          "description": "cpu请求量",
+          "title": "CPURequest"
+        },
+        "memoryRequest": {
+          "type": "string",
+          "description": "内存请求量",
+          "title": "memoryRequest"
+        },
+        "CPUUsageAmount": {
+          "type": "string",
+          "description": "cpu使用量",
+          "title": "CPUUsageAmount"
+        },
+        "memoryUsageAmount": {
+          "type": "string",
+          "description": "内存使用量",
+          "title": "memoryUsageAmount"
+        },
+        "CPUUsage": {
+          "type": "string",
+          "description": "cpu使用率",
+          "title": "CPUUsage"
+        },
+        "MemoryUsage": {
+          "type": "string",
+          "description": "内存使用率",
+          "title": "MemoryUsage"
+        },
+        "maxCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "CPU使用率最高值及对应时间段",
+          "title": "maxCPUUsageTime"
+        },
+        "minCPUUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "CPU使用率最低值及对应时间段",
+          "title": "minCPUUsageTime"
+        },
+        "maxMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "内存使用率最高值及时间段",
+          "title": "maxMemoryUsageTime"
+        },
+        "minMemoryUsageTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "内存使用率最低值及时间段",
+          "title": "minMemoryUsageTime"
+        },
+        "instanceCount": {
+          "type": "string",
+          "description": "当前实例数",
+          "title": "instanceCount"
+        },
+        "minInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小实例数及所在时间段",
+          "title": "minInstanceTime"
+        },
+        "maxInstanceTime": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大实例数及所在时间段",
+          "title": "maxInstanceTime"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
