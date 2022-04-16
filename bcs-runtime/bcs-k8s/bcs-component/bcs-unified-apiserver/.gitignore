@@ -1,0 +1,3 @@
+# don't commit the service binary to vcs
+./bcs-unified-apiserver
+etc/*dev*
