@@ -99,6 +99,7 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 		if err := initConfig(); err != nil {
 			return err
 		}
+
 		return nil
 	}
 
@@ -116,9 +117,11 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 }
 
 func Run(bindAddress, clusterId string) error {
-	zapProd, _ := zap.NewProduction()
-	defer zapProd.Sync() // flushes buffer, if any
-	logger := zapProd.Sugar()
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	zap.ReplaceGlobals(logger)
+
+	sugar := logger.Sugar()
 
 	handler, err := proxy.NewHandler(clusterId)
 	if err != nil {
@@ -138,6 +141,6 @@ func Run(bindAddress, clusterId string) error {
 	srv := &http.Server{
 		Handler: r,
 	}
-	logger.Infof("start server %s", bindAddress)
+	sugar.Infof("Using config file:%s", viper.ConfigFileUsed())
 	return srv.Serve(ln)
 }
