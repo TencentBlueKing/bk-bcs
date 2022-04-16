@@ -120,7 +120,8 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 	if err != nil {
 		return nil, err
 	}
-	resp, err := cli.GetProject(ctx, &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID})
+	callOptions := grpcUtil.NewGrpcCallOpts(ctx)
+	resp, err := cli.GetProject(ctx, &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID}, callOptions...)
 	if err != nil {
 		return nil, errorx.New(errcode.ComponentErr, "call for project %s info failed: %v", projectID, err)
 	}
@@ -145,7 +146,7 @@ func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProject
 	}
 	log.Info(ctx, "get remote project manager instance [%s] from etcd registry successfully", node.Address)
 
-	conn, err := grpcUtil.NewGrpcConn(ctx, node.Address, c.CliTLSConfig)
+	conn, err := grpcUtil.NewGrpcConn(node.Address, c.CliTLSConfig)
 	if conn == nil || err != nil {
 		log.Error(ctx, "create project manager grpc client with %s failed: %v", node.Address, err)
 	}

@@ -25,22 +25,12 @@ import (
 )
 
 // NewGrpcConn 新建 Grpc 连接
-func NewGrpcConn(ctx context.Context, address string, tlsConf *tls.Config) (conn *grpc.ClientConn, err error) {
+func NewGrpcConn(address string, tlsConf *tls.Config) (conn *grpc.ClientConn, err error) {
 	// 组装配置信息
-	headers := map[string]string{
+	md := metadata.New(map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
-	}
-	// 若存在 jwtToken 则透传到依赖服务
-	rawMetadata, ok := microMetadata.FromContext(ctx)
-	if ok {
-		jwtToken, exists := rawMetadata.Get("Authorization")
-		if exists {
-			headers["Authorization"] = jwtToken
-		}
-	}
-
-	md := metadata.New(headers)
+	})
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
 	if tlsConf != nil {
@@ -51,4 +41,21 @@ func NewGrpcConn(ctx context.Context, address string, tlsConf *tls.Config) (conn
 
 	// 尝试建立 grpc 连接
 	return grpc.Dial(address, opts...)
+}
+
+// NewGrpcCallOpts 新建 grpc 调用配置
+func NewGrpcCallOpts(ctx context.Context) []grpc.CallOption {
+	var opts []grpc.CallOption
+	// 若存在 jwtToken 则透传到依赖服务
+	rawMetadata, ok := microMetadata.FromContext(ctx)
+	if ok {
+		jwtToken, exists := rawMetadata.Get("Authorization")
+		if exists {
+			md := metadata.New(map[string]string{
+				"Authorization": jwtToken,
+			})
+			opts = append(opts, grpc.Header(&md))
+		}
+	}
+	return opts
 }

@@ -150,7 +150,7 @@ var NoInjectProjClusterEndpoints = []string{
 	"Basic.Healthz",
 	"Basic.Echo",
 	"Resource.GetK8SResTemplate",
-	// TODO 获取表单数据的也不需要
+	"Resource.GetResFormSchema",
 }
 
 // 需要注入项目 & 集群信息

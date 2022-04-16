@@ -364,7 +364,7 @@ func (crSvc *clusterResourcesService) initDependentServiceClient() (err error) {
 		cluster.InitCMClient(crSvc.microRtr, nil)
 	}
 	// ProjectManager
-	if crSvc.conf.Discovery.CallCMWithTLS {
+	if crSvc.conf.Discovery.CallProjWithTLS {
 		project.InitProjClient(crSvc.microRtr, tlsConf)
 	} else {
 		project.InitProjClient(crSvc.microRtr, nil)
