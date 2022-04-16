@@ -15,7 +15,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -43,7 +42,7 @@ const (
 	cmdName = "bcs-unified-apiserver"
 )
 
-func initConfig() {
+func initConfig() error {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -61,11 +60,9 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(filepath.Join(cwd, "etc"))
 
-		viper.SetConfigName("prime")
+		viper.SetConfigName("bcs-unified-apiserver")
 		viper.SetConfigType("yml")
 	}
-
-	viper.AutomaticEnv()
 
 	zapProd, _ := zap.NewProduction()
 	defer zapProd.Sync() // flushes buffer, if any
@@ -73,21 +70,22 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		logger.Errorf("Parse config file error: %v", err)
-		os.Exit(1)
+		return err
 	}
 
 	out, err := yaml.Marshal(viper.AllSettings())
 	if err != nil {
 		logger.Errorf("Marshal config file error: %v", err)
-		os.Exit(1)
+		return err
 	}
 
 	if err := config.G.ReadFrom(out); err != nil {
 		logger.Errorf("ReadFrom config file error: %v", err)
-		os.Exit(1)
+		return err
 	}
 
 	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
+	return nil
 }
 
 func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
@@ -97,9 +95,15 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 		Long:  `BCS Unified APIServer for isolated, shared and federated cluster`,
 	}
 
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := initConfig(); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if err := Run(bindAddress, clusterId); err != nil {
-			fmt.Printf("lei")
 			os.Exit(1)
 		}
 	}
@@ -112,9 +116,9 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 }
 
 func Run(bindAddress, clusterId string) error {
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
-	zap.ReplaceGlobals(logger)
+	zapProd, _ := zap.NewProduction()
+	defer zapProd.Sync() // flushes buffer, if any
+	logger := zapProd.Sugar()
 
 	handler, err := proxy.NewHandler(clusterId)
 	if err != nil {
@@ -134,6 +138,6 @@ func Run(bindAddress, clusterId string) error {
 	srv := &http.Server{
 		Handler: r,
 	}
-	fmt.Println("lei", bindAddress)
+	logger.Infof("start server %s", bindAddress)
 	return srv.Serve(ln)
 }
