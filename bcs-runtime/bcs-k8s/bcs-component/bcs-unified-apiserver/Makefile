@@ -2,7 +2,7 @@ GOPATH:=$(shell go env GOPATH)
 VERSION=$(shell git describe --tags || echo "unknown version")
 BUILDTIME=$(shell date -u)
 GOBUILD=CGO_ENABLED=0 go build -trimpath
-BIN_DIR=_output/
+BIN_DIR=_output
 
 .PHONY: init
 init:
@@ -25,6 +25,10 @@ tidy:
 .PHONY: build
 build:
 	${GOBUILD} -o ${BIN_DIR}/bcs-unified-apiserver ./cmd/bcs-unified-apiserver
+
+.PHONY: run
+run:
+	./${BIN_DIR}/bcs-unified-apiserver
 
 .PHONY: test
 test:

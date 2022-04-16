@@ -15,25 +15,74 @@ package proxy
 import (
 	"fmt"
 	"net/http"
-	"sync"
+	"strings"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/proxy"
+	"k8s.io/client-go/rest"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
 )
 
 // Handler handler for http request
 type Handler struct {
-	handlerMapLock sync.Mutex
-	defaultNs      string
-	handlerMap     map[string]*proxy.UpgradeAwareHandler
+	memberId     string
+	proxyHandler *proxy.UpgradeAwareHandler
 }
 
 // NewHandler create handler
-func NewHandler(defaultNs string) (*Handler, error) {
+func NewHandler(memberId string) (*Handler, error) {
+	kubeConf, err := GetKubeConfByClusterId(memberId)
+	if err != nil {
+		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
+	}
+
+	proxyHandler, err := NewProxyHandlerFromConfig(kubeConf)
+	if err != nil {
+		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
+	}
+
 	return &Handler{
-		handlerMap: make(map[string]*proxy.UpgradeAwareHandler),
-		defaultNs:  defaultNs,
+		memberId:     memberId,
+		proxyHandler: proxyHandler,
 	}, nil
+}
+
+// GetEnvByClusterId 获取集群所属环境, 目前通过集群ID前缀判断
+func GetEnvByClusterId(clusterId string) config.BCSClusterEnv {
+	if strings.HasPrefix(clusterId, "BCS-K8S-1") {
+		return config.UatCluster
+	}
+	if strings.HasPrefix(clusterId, "BCS-K8S-2") {
+		return config.DebugCLuster
+	}
+	if strings.HasPrefix(clusterId, "BCS-K8S-4") {
+		return config.ProdEnv
+	}
+	return config.ProdEnv
+}
+
+// GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
+func GetKubeConfByClusterId(clusterId string) (*rest.Config, error) {
+	bcsConf := GetBCSConfByClusterId(clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsConf.Token,
+	}
+
+	return config, nil
+}
+
+// GetBCSConfByClusterId 通过集群ID, 获取不同admin token 信息
+func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
+	env := GetEnvByClusterId(clusterId)
+	conf, ok := config.G.BCSEnvMap[env]
+	if ok {
+		return conf
+	}
+	// 默认返回bcs配置
+	return config.G.BCS
 }
 
 // ServeHTTP serves http request
@@ -45,36 +94,5 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// damage the real cluster authentication process.
 	delete(req.Header, "Authorization")
 
-	ns, err := getNamespaceFromRequest(req)
-	if err != nil {
-		zap.L().Error("get ns from request failed", zap.Error(err),
-			zap.String("client", req.RemoteAddr), zap.String("path", req.URL.Path))
-		h.backtoDefaultHandler(rw, req)
-		return
-	}
-	if len(ns) == 0 {
-		h.backtoDefaultHandler(rw, req)
-		return
-	}
-
-	h.handlerMapLock.Lock()
-	handler, ok := h.handlerMap[ns]
-	h.handlerMapLock.Unlock()
-	if !ok {
-		http.Error(rw, fmt.Sprintf("no credential for ns %s", ns), http.StatusNotFound)
-		return
-	}
-
-	handler.ServeHTTP(rw, req)
-}
-
-func (h *Handler) backtoDefaultHandler(rw http.ResponseWriter, req *http.Request) {
-	h.handlerMapLock.Lock()
-	defaultHandler, ok := h.handlerMap[h.defaultNs]
-	h.handlerMapLock.Unlock()
-	if !ok {
-		http.Error(rw, "no credential for default kubeconfig", http.StatusInternalServerError)
-		return
-	}
-	defaultHandler.ServeHTTP(rw, req)
+	h.proxyHandler.ServeHTTP(rw, req)
 }

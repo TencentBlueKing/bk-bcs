@@ -14,21 +14,35 @@
 package main
 
 import (
-	goflag "flag"
 	"fmt"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/cmd/apiserver/app"
-	"github.com/spf13/pflag"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	_ "go.uber.org/automaxprocs"
+	"go.uber.org/zap"
 )
 
 func main() {
-	command := app.NewAggregationCommand()
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+	handler, err := proxy.NewHandler("")
+	if err != nil {
+		zap.L().Fatal("create proxy handler failed", zap.Error(err))
+	}
 
-	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+	httpServer := httpserver.NewHttpServer(
+		8088,
+		"0.0.0.0",
+		"",
+	)
+
+	router := httpServer.GetRouter()
+	router.Handle("/{uri:.*}", handler)
+	if err := httpServer.ListenAndServeMux(false); err != nil {
+		fmt.Println(err)
+		blog.Errorf("http listen and serve failed, err %s", err.Error())
 		os.Exit(1)
 	}
+	ch := make(chan int)
+	<-ch
 }
