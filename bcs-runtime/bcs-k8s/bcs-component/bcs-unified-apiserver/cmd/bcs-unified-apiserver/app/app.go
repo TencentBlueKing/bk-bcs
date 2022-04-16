@@ -14,11 +14,16 @@
 package app
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
-	"github.com/mitchellh/go-homedir"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -27,7 +32,12 @@ import (
 
 var (
 	// Used for flags.
-	cfgFile string
+	cfgFile     string
+	bindAddress string
+)
+
+const (
+	cmdName = "bcs-unified-apiserver"
 )
 
 func initConfig() {
@@ -75,4 +85,40 @@ func initConfig() {
 	}
 
 	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
+}
+
+func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   cmdName,
+		Short: "BCS Unified APIServer",
+		Long:  `BCS Unified APIServer for isolated, shared and federated cluster`,
+	}
+
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		handler, err := proxy.NewHandler("")
+		if err != nil {
+			zap.L().Fatal("create proxy handler failed", zap.Error(err))
+		}
+
+		httpServer := httpserver.NewHttpServer(
+			8088,
+			"0.0.0.0",
+			"",
+		)
+
+		router := httpServer.GetRouter()
+		router.Handle("/{uri:.*}", handler)
+		if err := httpServer.ListenAndServeMux(false); err != nil {
+			fmt.Println(err)
+			blog.Errorf("http listen and serve failed, err %s", err.Error())
+			os.Exit(1)
+		}
+		ch := make(chan int)
+		<-ch
+	}
+
+	flags := cmd.Flags()
+	flags.String("bind-address", bindAddress, "The IP address on which to listen for the --secure-port port.")
+	flags.String("config", cfgFile, "config file (default is $HOME/config.yml)")
+	return cmd
 }
