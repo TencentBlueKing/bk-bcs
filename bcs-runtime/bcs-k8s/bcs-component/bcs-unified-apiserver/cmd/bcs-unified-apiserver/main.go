@@ -22,9 +22,10 @@ import (
 )
 
 func main() {
-	command := app.NewUnifiedAPIServer(context.TODO())
+	ctx := context.Background()
+	command := app.NewUnifiedAPIServer(ctx)
 
-	if err := command.Execute(); err != nil {
+	if err := command.ExecuteContext(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
