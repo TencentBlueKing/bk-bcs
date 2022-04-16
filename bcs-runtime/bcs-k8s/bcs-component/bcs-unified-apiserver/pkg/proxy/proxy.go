@@ -13,7 +13,6 @@
 package proxy
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -92,9 +91,10 @@ func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler,
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("lei", target, config.Host)
+
 	apiProxy := proxy.NewUpgradeAwareHandler(target, apiTransport, false, false, &responder{})
 	apiProxy.UpgradeTransport = upgradeTransport
 	apiProxy.UseRequestLocation = true
+	apiProxy.AppendLocationPath = true
 	return apiProxy, nil
 }
