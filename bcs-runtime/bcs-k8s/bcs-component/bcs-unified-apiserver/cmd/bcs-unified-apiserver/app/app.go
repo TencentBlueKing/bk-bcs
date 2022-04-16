@@ -15,6 +15,8 @@ package app
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -85,6 +87,7 @@ func initConfig() error {
 	}
 
 	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
+	fmt.Println(config.G.ClusterResourceMap, config.G)
 	return nil
 }
 
@@ -97,6 +100,7 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := initConfig(); err != nil {
+			fmt.Println(err)
 			return err
 		}
 
@@ -105,6 +109,7 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if err := Run(bindAddress, clusterId); err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
@@ -123,7 +128,17 @@ func Run(bindAddress, clusterId string) error {
 
 	sugar := logger.Sugar()
 
-	handler, err := proxy.NewHandler(clusterId)
+	member, ok := config.G.GetMember(clusterId)
+	if !ok {
+		return errors.New("invalid cluster")
+	}
+	if member == "" {
+		return errors.New("member is required")
+	}
+
+	fmt.Println("lei", member)
+
+	handler, err := proxy.NewHandler(member)
 	if err != nil {
 		zap.L().Fatal("create proxy handler failed", zap.Error(err))
 	}

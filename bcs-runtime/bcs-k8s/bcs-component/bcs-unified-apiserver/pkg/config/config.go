@@ -22,12 +22,14 @@ import (
 
 // Configurations : manage all configurations
 type Configurations struct {
-	mtx        sync.Mutex
-	Base       *BaseConf                  `yaml:"base_conf"`
-	Logging    *LogConf                   `yaml:"logging"`
-	BCS        *BCSConf                   `yaml:"bcs_conf"`
-	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
-	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
+	mtx                sync.Mutex
+	Base               *BaseConf                   `yaml:"base_conf"`
+	Logging            *LogConf                    `yaml:"logging"`
+	BCS                *BCSConf                    `yaml:"bcs_conf"`
+	BCSEnvMap          map[BCSClusterEnv]*BCSConf  `yaml:"-"`
+	BCSEnvConf         []*BCSConf                  `yaml:"bcs_env_conf"`
+	ClusterResources   []*ClusterResource          `yaml:"cluster_resources"`
+	ClusterResourceMap map[string]*ClusterResource `yaml:"-"`
 }
 
 // ReadFrom : read from file
@@ -77,6 +79,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 	c.Logging.InitBlog()
 	c.Base.InitManagers()
+	c.InitClusterResources()
 
 	// 把列表类型转换为map，方便检索
 	for _, conf := range c.BCSEnvConf {
@@ -88,4 +91,20 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 
 	return nil
+}
+
+func (c *Configurations) InitClusterResources() error {
+	c.ClusterResourceMap = make(map[string]*ClusterResource)
+	for _, v := range c.ClusterResources {
+		c.ClusterResourceMap[v.ClusterId] = v
+	}
+	return nil
+}
+
+func (c *Configurations) GetMember(clusterId string) (string, bool) {
+	resource, ok := c.ClusterResourceMap[clusterId]
+	if !ok {
+		return "", false
+	}
+	return resource.Member, true
 }

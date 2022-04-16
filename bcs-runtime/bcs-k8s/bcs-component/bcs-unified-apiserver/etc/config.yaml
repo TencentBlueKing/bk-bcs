@@ -20,7 +20,7 @@ bcs_env_conf: []
 
 cluster_resources:
   - cluster_id: xxx
-    members:
+    member:
       - BCS-K8S-xx
       - BCS-K8S-xx
     kind: federated_cluster # 联邦集群
