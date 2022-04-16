@@ -33,6 +33,9 @@ cluster_resources:
     kind: shared_cluster # 共享集群
     member: xx
 
+apiserver:
+  cluster_id: xx
+
 etcd:
   endpoints: ""
   ca: ""
