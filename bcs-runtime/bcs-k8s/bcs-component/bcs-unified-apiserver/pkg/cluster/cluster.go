@@ -13,23 +13,70 @@
 package cluster
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
-	apirequest "k8s.io/apiserver/pkg/endpoints/request"
+	"go.uber.org/zap"
+	v1 "k8s.io/api/apps/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/isolated"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
+	"github.com/gorilla/mux"
 )
 
-func ClusterFactory(clusterId string, reqInfo *apirequest.RequestInfo, uri string) (http.Handler, error) {
+// Handler handler for http request
+type Handler struct{}
+
+func NewHandler() (*Handler, error) {
+	return &Handler{}, nil
+}
+
+// ServeHTTP serves http request
+func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	zap.L().Info("receive request", zap.String("client", req.RemoteAddr), zap.String("method", req.Method), zap.String("path", req.URL.Path))
+
+	vars := mux.Vars(req)
+	clusterId := vars["clusterId"]
+	uri := vars["uri"]
+
+	reqInfo, err := rest.NewRequestInfo(req)
+	if err != nil {
+		rw.Header().Set("Content-Type", "application/json; charset=utf-8")
+		rw.Header().Set("Cache-Control", "no-cache, no-store")
+		result := apierrors.NewNotFound(v1.Resource("secrets"), req.URL.Path)
+		rw.WriteHeader(int(result.ErrStatus.Code))
+		json.NewEncoder(rw).Encode(result)
+		return
+	}
+
+	handler, err := ClusterFactory(clusterId, reqInfo, uri)
+	if err != nil {
+		rw.Header().Set("Content-Type", "application/json; charset=utf-8")
+		rw.Header().Set("Cache-Control", "no-cache, no-store")
+		result := apierrors.NewNotFound(v1.Resource("secrets"), req.URL.Path)
+		rw.WriteHeader(int(result.ErrStatus.Code))
+		json.NewEncoder(rw).Encode(result)
+		return
+	}
+
+	// Delete the original auth header so that the original user token won't be passed to the rev-proxy request and
+	// damage the real cluster authentication process.
+	delete(req.Header, "Authorization")
+
+	handler.Serve(reqInfo)
+}
+
+func ClusterFactory(clusterId string, reqInfo *rest.RequestInfo, uri string) (rest.Handler, error) {
 	cluster, ok := config.G.GetMember(clusterId)
 	if !ok {
 		return nil, errors.New("invalid cluster")
 	}
 
 	var (
-		handle http.Handler
+		handle rest.Handler
 		err    error
 	)
 

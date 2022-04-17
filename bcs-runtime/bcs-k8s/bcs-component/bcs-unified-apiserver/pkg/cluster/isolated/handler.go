@@ -14,16 +14,16 @@ package isolated
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
-	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/util/proxy"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
+	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 )
 
 type Handler struct {
 	clusterId    string
-	proxyHandler *proxy.UpgradeAwareHandler
+	proxyHandler *apiproxy.UpgradeAwareHandler
 }
 
 // NewHandler create handler
@@ -33,7 +33,7 @@ func NewHandler(clusterId string) (*Handler, error) {
 		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
 	}
 
-	proxyHandler, err := NewProxyHandlerFromConfig(kubeConf)
+	proxyHandler, err := proxy.NewProxyHandlerFromConfig(kubeConf)
 	if err != nil {
 		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
 	}
@@ -45,12 +45,6 @@ func NewHandler(clusterId string) (*Handler, error) {
 }
 
 // ServeHTTP serves http request
-func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	zap.L().Info("receive request", zap.String("client", req.RemoteAddr), zap.String("method", req.Method), zap.String("path", req.URL.Path))
-
-	// Delete the original auth header so that the original user token won't be passed to the rev-proxy request and
-	// damage the real cluster authentication process.
-	delete(req.Header, "Authorization")
-
-	h.proxyHandler.ServeHTTP(rw, req)
+func (h *Handler) Serve(c *rest.RequestInfo) {
+	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
 }

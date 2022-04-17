@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package server
+package rest
 
 import (
 	"fmt"
@@ -28,7 +28,19 @@ const (
 	APIGroupPrefix = "/apis"
 )
 
-func getNamespaceFromRequest(req *http.Request) (*apirequest.RequestInfo, error) {
+type TableRequest struct {
+	IsTable      bool
+	AcceptHeader string
+}
+
+type RequestInfo struct {
+	*apirequest.RequestInfo
+	TableReq *TableRequest
+	Writer   http.ResponseWriter
+	Request  *http.Request
+}
+
+func NewRequestInfo(req *http.Request) (*RequestInfo, error) {
 	apiPrefixes := sets.NewString(strings.Trim(APIGroupPrefix, "/"))
 	legacyAPIPrefixes := sets.String{}
 	apiPrefixes.Insert(strings.Trim(DefaultLegacyAPIPrefix, "/"))
@@ -44,5 +56,21 @@ func getNamespaceFromRequest(req *http.Request) (*apirequest.RequestInfo, error)
 		return nil, fmt.Errorf("create info from request %s %s failed, err %s",
 			req.RemoteAddr, req.URL.String(), err.Error())
 	}
-	return requestInfo, nil
+
+	tableReq := &TableRequest{}
+
+	acceptHeader := req.Header.Get("Accept")
+	if strings.Contains(acceptHeader, "as=Table") {
+		tableReq.AcceptHeader = acceptHeader
+		tableReq.IsTable = true
+	}
+	reqInfo := &RequestInfo{RequestInfo: requestInfo, TableReq: tableReq}
+	return reqInfo, nil
+}
+
+// HandlerFunc defines the handler used by gin middleware as return value.
+type HandlerFunc func(*RequestInfo)
+
+type Handler interface {
+	Serve(*RequestInfo)
 }

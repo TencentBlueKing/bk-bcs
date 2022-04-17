@@ -13,20 +13,17 @@
 package federated
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/util/proxy"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
+	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 )
 
 type Handler struct {
 	clusterId    string
-	proxyHandler *proxy.UpgradeAwareHandler
+	proxyHandler *apiproxy.UpgradeAwareHandler
 }
 
 // NewHandler create handler
@@ -36,7 +33,7 @@ func NewHandler(clusterId string) (*Handler, error) {
 		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
 	}
 
-	proxyHandler, err := NewProxyHandlerFromConfig(kubeConf)
+	proxyHandler, err := proxy.NewProxyHandlerFromConfig(kubeConf)
 	if err != nil {
 		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
 	}
@@ -48,50 +45,32 @@ func NewHandler(clusterId string) (*Handler, error) {
 }
 
 // ServeHTTP serves http request
-func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	zap.L().Info("receive request", zap.String("client", req.RemoteAddr), zap.String("method", req.Method), zap.String("path", req.URL.Path))
-
-	vars := mux.Vars(req)
-	fmt.Println("vars", vars)
-
-	namespace, ok := vars["namespace"]
-	if ok {
-		stor, err := NewPodStor([]string{})
-		listOptions, err := clientutil.GetListOptionsFromQueryParam(req.URL.Query())
-		if err != nil {
-			fmt.Println(err)
-		}
-		acceptHeader := req.Header.Get("Accept")
-		if strings.Contains(acceptHeader, "as=Table") {
-			result, err := stor.ListAsTable(req.Context(), namespace, listOptions, acceptHeader)
-			if err == nil {
-				rw.Header().Set("Content-Type", "application/json; charset=utf-8")
-				rw.Header().Set("Cache-Control", "no-cache, no-store")
-				if err := json.NewEncoder(rw).Encode(result); err != nil {
-					rw.WriteHeader(http.StatusOK)
-				} else {
-					rw.WriteHeader(http.StatusInternalServerError)
-				}
-				return
-			}
-		} else {
-			result, err := stor.List(req.Context(), namespace, listOptions)
-			if err == nil {
-				rw.Header().Set("Content-Type", "application/json; charset=utf-8")
-				rw.Header().Set("Cache-Control", "no-cache, no-store")
-				if err := json.NewEncoder(rw).Encode(result); err != nil {
-					rw.WriteHeader(http.StatusOK)
-				} else {
-					rw.WriteHeader(http.StatusInternalServerError)
-				}
-				return
-			}
-		}
+func (h *Handler) Serve(c *rest.RequestInfo) {
+	stor, err := NewPodStor([]string{})
+	listOptions, err := clientutil.GetListOptionsFromQueryParam(c.Request.URL.Query())
+	if err != nil {
+		c.AbortWithError(err)
+		return
 	}
 
-	// Delete the original auth header so that the original user token won't be passed to the rev-proxy request and
-	// damage the real cluster authentication process.
-	delete(req.Header, "Authorization")
+	if c.Resource == "pod" && c.Verb == "list" {
+		if c.TableReq.IsTable {
+			result, err := stor.ListAsTable(c.Request.Context(), c.Namespace, listOptions, c.TableReq.AcceptHeader)
+			if err != nil {
+				c.AbortWithError(err)
+				return
+			}
+			c.Write(result)
+			return
+		}
+		result, err := stor.List(c.Request.Context(), c.Namespace, listOptions)
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
+		c.Write(result)
+		return
+	}
 
-	h.proxyHandler.ServeHTTP(rw, req)
+	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
 }

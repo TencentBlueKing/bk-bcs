@@ -36,7 +36,6 @@ var (
 	// Used for flags.
 	cfgFile     string
 	bindAddress string
-	clusterId   string
 )
 
 const (
@@ -107,7 +106,7 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 	}
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		if err := Run(bindAddress, clusterId); err != nil {
+		if err := Run(bindAddress); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -116,11 +115,10 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVar(&bindAddress, "bind-address", "0.0.0.0:8088", "The IP address on which to listen for the --secure-port port.")
 	flags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/config.yml)")
-	flags.StringVar(&clusterId, "cluster-id", "", "cluster member")
 	return cmd
 }
 
-func Run(bindAddress, clusterId string) error {
+func Run(bindAddress string) error {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	zap.ReplaceGlobals(logger)
