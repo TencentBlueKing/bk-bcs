@@ -13,13 +13,13 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
@@ -71,7 +71,7 @@ func (c *RequestInfo) Serve() {
 
 }
 
-func addTypeInformationToObject(obj runtime.Object) error {
+func AddTypeInformationToObject(obj runtime.Object) error {
 	gvks, _, err := scheme.Scheme.ObjectKinds(obj)
 	if err != nil {
 		return fmt.Errorf("missing apiVersion or kind and cannot assign it; %w", err)

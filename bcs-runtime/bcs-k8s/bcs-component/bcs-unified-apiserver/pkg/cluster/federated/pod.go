@@ -14,6 +14,8 @@ package federated
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	v1 "k8s.io/api/core/v1"
@@ -60,37 +62,24 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListO
 	return podList, nil
 }
 
+func (p *PodStor) SelfLink(namespace string) string {
+	return fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace)
+}
+
 // ListAsTable kubectl 返回
 func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav1.ListOptions, accept string) (*metav1.Table, error) {
-	potTable := &metav1.Table{}
-	isSucc := false
-	for clusterId, v := range p.k8sClientMap {
-		result := &metav1.Table{}
-		err := v.CoreV1().RESTClient().Get().
-			Namespace(namespace).
-			Resource("pods").
-			VersionedParams(opts, scheme.ParameterCodec).
-			SetHeader("Accept", accept).
-			Do(ctx).
-			Into(result)
-		if err != nil {
-			return nil, err
-		}
-
-		for idx, row := range result.Rows {
-			cells := []interface{}{clusterId}
-			cells = append(cells, row.Cells...)
-			result.Rows[idx].Cells = cells
-		}
-
-		if !isSucc {
-			potTable = result
-			isSucc = true
-		} else {
-			result.Rows = append(result.Rows, potTable.Rows...)
-			potTable = result
-		}
+	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
+	listMeta := metav1.ListMeta{
+		SelfLink:        p.SelfLink(namespace),
+		ResourceVersion: "0",
 	}
+
+	result := &metav1.Table{
+		TypeMeta: typeMata,
+		ListMeta: listMeta,
+	}
+
+	// 联邦集群添加集群Id一列
 	clusterId := metav1.TableColumnDefinition{
 		Name:        "Cluster Id",
 		Type:        "string",
@@ -98,15 +87,42 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav
 		Description: "bcs cluster id",
 	}
 	columns := []metav1.TableColumnDefinition{clusterId}
-	columns = append(columns, potTable.ColumnDefinitions...)
 
-	potTable.ColumnDefinitions = columns
-	potTable.Kind = "Table"
-	potTable.APIVersion = "meta.k8s.io/v1"
+	rows := []metav1.TableRow{}
 
-	// err := addTypeInformationToObject(potTable)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	return potTable, nil
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+
+	for clusterId, v := range p.k8sClientMap {
+		resultTemp := &metav1.Table{}
+		err := v.CoreV1().RESTClient().Get().
+			Namespace(namespace).
+			Resource("pods").
+			VersionedParams(opts, scheme.ParameterCodec).
+			Timeout(timeout).
+			SetHeader("Accept", accept).
+			Do(ctx).
+			Into(resultTemp)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(columns) == 1 {
+			columns = append(columns, resultTemp.ColumnDefinitions...)
+		}
+
+		for idx, row := range resultTemp.Rows {
+			cells := []interface{}{clusterId}
+			cells = append(cells, row.Cells...)
+			resultTemp.Rows[idx].Cells = cells
+			rows = append(rows, resultTemp.Rows[idx])
+		}
+	}
+
+	result.ColumnDefinitions = columns
+	result.Rows = rows
+
+	return result, nil
 }
