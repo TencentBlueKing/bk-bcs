@@ -14,12 +14,10 @@ package federated
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -49,33 +47,17 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListO
 			return nil, err
 		}
 		for _, item := range result.Items {
-			item.Labels["bcs_cluster_id"] = k
+			if item.Annotations == nil {
+				item.Annotations = map[string]string{"bcs_cluster_id": k}
+			} else {
+				item.Annotations["bcs_cluster_id"] = k
+			}
 		}
 
 		podList.TypeMeta = result.TypeMeta
 		podList.Items = append(podList.Items, result.Items...)
 	}
 	return podList, nil
-}
-
-func addTypeInformationToObject(obj runtime.Object) error {
-	gvks, _, err := scheme.Scheme.ObjectKinds(obj)
-	if err != nil {
-		return fmt.Errorf("missing apiVersion or kind and cannot assign it; %w", err)
-	}
-
-	for _, gvk := range gvks {
-		if len(gvk.Kind) == 0 {
-			continue
-		}
-		if len(gvk.Version) == 0 || gvk.Version == runtime.APIVersionInternal {
-			continue
-		}
-		obj.GetObjectKind().SetGroupVersionKind(gvk)
-		break
-	}
-
-	return nil
 }
 
 // ListAsTable kubectl 返回
