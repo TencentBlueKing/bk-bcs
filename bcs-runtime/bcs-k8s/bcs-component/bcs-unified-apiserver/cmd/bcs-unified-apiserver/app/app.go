@@ -15,7 +15,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -30,7 +29,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/server"
 )
 
 var (
@@ -128,17 +127,7 @@ func Run(bindAddress, clusterId string) error {
 
 	sugar := logger.Sugar()
 
-	member, ok := config.G.GetMember(clusterId)
-	if !ok {
-		return errors.New("invalid cluster")
-	}
-	if member == "" {
-		return errors.New("member is required")
-	}
-
-	fmt.Println("lei", member)
-
-	handler, err := proxy.NewHandler(member)
+	handler, err := server.NewHandler()
 	if err != nil {
 		zap.L().Fatal("create proxy handler failed", zap.Error(err))
 	}
@@ -151,8 +140,7 @@ func Run(bindAddress, clusterId string) error {
 
 	r := mux.NewRouter()
 
-	r.Handle("/api/v1/namespaces/{namespace}/pods", handler)
-	r.Handle("/{uri:.*}", handler)
+	r.Handle("/clusters/{cluster_id}/{uri:.*}", handler)
 
 	srv := &http.Server{
 		Handler: r,

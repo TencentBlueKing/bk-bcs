@@ -101,10 +101,10 @@ func (c *Configurations) InitClusterResources() error {
 	return nil
 }
 
-func (c *Configurations) GetMember(clusterId string) (string, bool) {
+func (c *Configurations) GetMember(clusterId string) (*ClusterResource, bool) {
 	resource, ok := c.ClusterResourceMap[clusterId]
 	if !ok {
-		return "", false
+		return nil, false
 	}
-	return resource.Member, true
+	return resource, true
 }

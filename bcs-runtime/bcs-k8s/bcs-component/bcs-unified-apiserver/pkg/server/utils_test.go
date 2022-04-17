@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package proxy
+package server
 
 import (
 	"net/http"
@@ -60,9 +60,9 @@ func TestGetNamespaceFromRequest(t *testing.T) {
 	}
 	for _, test := range testCases {
 		req, _ := http.NewRequest(test.method, test.url, nil)
-		ns, _ := getNamespaceFromRequest(req)
-		if ns != test.expectedNamespace {
-			t.Errorf("expected %s but get %s", test.expectedNamespace, ns)
+		info, _ := getNamespaceFromRequest(req)
+		if info.Namespace != test.expectedNamespace {
+			t.Errorf("expected %s but get %s", test.expectedNamespace, info.Namespace)
 		}
 	}
 }

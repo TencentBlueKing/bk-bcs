@@ -13,6 +13,14 @@
 
 package config
 
+type ClusterKind string
+
+var (
+	IsolatedCLuster ClusterKind = "isolated"
+	SharedCluster   ClusterKind = "shared"
+	FederatedCluter ClusterKind = "federated"
+)
+
 type ClusterResource struct {
 	Kind      string   `yaml:"kind"`
 	Member    string   `yaml:"member"`

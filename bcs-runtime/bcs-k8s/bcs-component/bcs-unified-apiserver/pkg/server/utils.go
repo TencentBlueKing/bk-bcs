@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package proxy
+package server
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ const (
 	APIGroupPrefix = "/apis"
 )
 
-func getNamespaceFromRequest(req *http.Request) (string, error) {
+func getNamespaceFromRequest(req *http.Request) (*apirequest.RequestInfo, error) {
 	apiPrefixes := sets.NewString(strings.Trim(APIGroupPrefix, "/"))
 	legacyAPIPrefixes := sets.String{}
 	apiPrefixes.Insert(strings.Trim(DefaultLegacyAPIPrefix, "/"))
@@ -41,8 +41,8 @@ func getNamespaceFromRequest(req *http.Request) (string, error) {
 
 	requestInfo, err := requestInfoFactory.NewRequestInfo(req)
 	if err != nil {
-		return "", fmt.Errorf("create info from request %s %s failed, err %s",
+		return nil, fmt.Errorf("create info from request %s %s failed, err %s",
 			req.RemoteAddr, req.URL.String(), err.Error())
 	}
-	return requestInfo.Namespace, nil
+	return requestInfo, nil
 }

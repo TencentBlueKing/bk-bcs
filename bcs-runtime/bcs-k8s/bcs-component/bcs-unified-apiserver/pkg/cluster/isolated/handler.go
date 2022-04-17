@@ -10,17 +10,17 @@
  * limitations under the License.
  */
 
-package proxy
+package isolated
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/proxy"
 )
 
-// Handler handler for http request
 type Handler struct {
 	clusterId    string
 	proxyHandler *proxy.UpgradeAwareHandler
@@ -46,5 +46,11 @@ func NewHandler(clusterId string) (*Handler, error) {
 
 // ServeHTTP serves http request
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	zap.L().Info("receive request", zap.String("client", req.RemoteAddr), zap.String("method", req.Method), zap.String("path", req.URL.Path))
+
+	// Delete the original auth header so that the original user token won't be passed to the rev-proxy request and
+	// damage the real cluster authentication process.
+	delete(req.Header, "Authorization")
+
 	h.proxyHandler.ServeHTTP(rw, req)
 }
