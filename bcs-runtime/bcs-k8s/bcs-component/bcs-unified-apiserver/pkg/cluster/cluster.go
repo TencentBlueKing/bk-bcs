@@ -36,7 +36,7 @@ func NewHandler() (*Handler, error) {
 	return &Handler{}, nil
 }
 
-func ClusterFactory(clusterId string, reqInfo *rest.RequestInfo, uri string) (rest.Handler, error) {
+func ClusterFactory(clusterId string) (rest.Handler, error) {
 	cluster, ok := config.G.GetMember(clusterId)
 	if !ok {
 		return nil, errors.New("invalid cluster")
@@ -80,7 +80,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	handler, err := ClusterFactory(clusterId, reqInfo, uri)
+	handler, err := ClusterFactory(clusterId)
 	if err != nil {
 		reqInfo.AbortWithError(err)
 		return

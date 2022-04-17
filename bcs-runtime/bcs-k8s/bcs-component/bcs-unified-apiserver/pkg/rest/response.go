@@ -16,48 +16,34 @@ import (
 	"fmt"
 	"net/http"
 
-	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
 func (c *RequestInfo) AbortWithError(err error) {
-	if c.TableReq.IsTable {
-		c.abortWithErrorTable(err)
-		return
-	}
-
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-	c.Writer.Header().Set("Cache-Control", "no-cache, no-store")
-	result := apierrors.NewNotFound(v1.Resource("secrets"), c.Request.URL.Path)
-	c.Writer.WriteHeader(int(result.ErrStatus.Code))
-	json.NewEncoder(c.Writer).Encode(result)
+	AbortWithError(c.Writer, err)
 }
 
 func AbortWithError(rw http.ResponseWriter, err error) {
+	var status metav1.Status
+
+	switch v := err.(type) {
+	case *apierrors.StatusError:
+		status = v.ErrStatus
+	default:
+		status = apierrors.NewBadRequest(err.Error()).ErrStatus
+	}
+
+	status.Kind = "Status"
+	status.APIVersion = "v1"
+
 	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
 	rw.Header().Set("Cache-Control", "no-cache, no-store")
-	result := apierrors.NewNotFound(v1.Resource("secrets"), "")
-	rw.WriteHeader(int(result.ErrStatus.Code))
-	json.NewEncoder(rw).Encode(result)
-}
-
-func AbortWithErrorTable(rw http.ResponseWriter, err error) {
-	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
-	rw.Header().Set("Cache-Control", "no-cache, no-store")
-	result := apierrors.NewNotFound(v1.Resource("secrets"), "")
-	rw.WriteHeader(int(result.ErrStatus.Code))
-	json.NewEncoder(rw).Encode(result)
-}
-
-func (c *RequestInfo) abortWithErrorTable(err error) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-	c.Writer.Header().Set("Cache-Control", "no-cache, no-store")
-	result := apierrors.NewNotFound(v1.Resource("secrets"), c.Request.URL.Path)
-	c.Writer.WriteHeader(int(result.ErrStatus.Code))
-	json.NewEncoder(c.Writer).Encode(result)
+	rw.WriteHeader(int(status.Code))
+	json.NewEncoder(rw).Encode(status)
 }
 
 func (c *RequestInfo) Write(obj runtime.Object) {
