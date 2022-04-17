@@ -42,7 +42,17 @@ func NewPodStor(members []string) (*PodStor, error) {
 }
 
 func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListOptions) (*v1.PodList, error) {
-	podList := &v1.PodList{}
+	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "PodList"}
+	listMeta := metav1.ListMeta{
+		SelfLink:        p.SelfLink(namespace),
+		ResourceVersion: "0",
+	}
+
+	podList := &v1.PodList{
+		TypeMeta: typeMata,
+		ListMeta: listMeta,
+		Items:    []v1.Pod{},
+	}
 	for k, v := range p.k8sClientMap {
 		result, err := v.CoreV1().Pods(namespace).List(ctx, *opts)
 		if err != nil {
@@ -56,7 +66,6 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListO
 			}
 		}
 
-		podList.TypeMeta = result.TypeMeta
 		podList.Items = append(podList.Items, result.Items...)
 	}
 	return podList, nil
