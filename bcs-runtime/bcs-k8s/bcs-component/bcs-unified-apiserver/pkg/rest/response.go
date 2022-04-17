@@ -14,6 +14,7 @@ package rest
 
 import (
 	"encoding/json"
+	"net/http"
 
 	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,6 +32,22 @@ func (c *RequestInfo) AbortWithError(err error) {
 	result := apierrors.NewNotFound(v1.Resource("secrets"), c.Request.URL.Path)
 	c.Writer.WriteHeader(int(result.ErrStatus.Code))
 	json.NewEncoder(c.Writer).Encode(result)
+}
+
+func AbortWithError(rw http.ResponseWriter, err error) {
+	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
+	rw.Header().Set("Cache-Control", "no-cache, no-store")
+	result := apierrors.NewNotFound(v1.Resource("secrets"), "")
+	rw.WriteHeader(int(result.ErrStatus.Code))
+	json.NewEncoder(rw).Encode(result)
+}
+
+func AbortWithErrorTable(rw http.ResponseWriter, err error) {
+	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
+	rw.Header().Set("Cache-Control", "no-cache, no-store")
+	result := apierrors.NewNotFound(v1.Resource("secrets"), "")
+	rw.WriteHeader(int(result.ErrStatus.Code))
+	json.NewEncoder(rw).Encode(result)
 }
 
 func (c *RequestInfo) abortWithErrorTable(err error) {

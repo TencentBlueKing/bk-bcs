@@ -40,7 +40,28 @@ type RequestInfo struct {
 	Request  *http.Request
 }
 
-func NewRequestInfo(req *http.Request) (*RequestInfo, error) {
+func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestInfo, error) {
+	requestInfo, err := NewRequestInfo(req)
+	if err != nil {
+		return nil, err
+	}
+
+	tableReq := &TableRequest{}
+	acceptHeader := req.Header.Get("Accept")
+	if strings.Contains(acceptHeader, "as=Table") {
+		tableReq.AcceptHeader = acceptHeader
+		tableReq.IsTable = true
+	}
+	reqInfo := &RequestInfo{
+		RequestInfo: requestInfo,
+		TableReq:    tableReq,
+		Request:     req,
+		Writer:      rw,
+	}
+	return reqInfo, nil
+}
+
+func NewRequestInfo(req *http.Request) (*apirequest.RequestInfo, error) {
 	apiPrefixes := sets.NewString(strings.Trim(APIGroupPrefix, "/"))
 	legacyAPIPrefixes := sets.String{}
 	apiPrefixes.Insert(strings.Trim(DefaultLegacyAPIPrefix, "/"))
@@ -56,16 +77,7 @@ func NewRequestInfo(req *http.Request) (*RequestInfo, error) {
 		return nil, fmt.Errorf("create info from request %s %s failed, err %s",
 			req.RemoteAddr, req.URL.String(), err.Error())
 	}
-
-	tableReq := &TableRequest{}
-
-	acceptHeader := req.Header.Get("Accept")
-	if strings.Contains(acceptHeader, "as=Table") {
-		tableReq.AcceptHeader = acceptHeader
-		tableReq.IsTable = true
-	}
-	reqInfo := &RequestInfo{RequestInfo: requestInfo, TableReq: tableReq}
-	return reqInfo, nil
+	return requestInfo, nil
 }
 
 // HandlerFunc defines the handler used by gin middleware as return value.
