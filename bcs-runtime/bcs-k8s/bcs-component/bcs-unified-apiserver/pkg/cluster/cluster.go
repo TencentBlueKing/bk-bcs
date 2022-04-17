@@ -13,13 +13,10 @@
 package cluster
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/federated"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/isolated"
@@ -72,17 +69,13 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	reqInfo, err := rest.NewRequestContext(rw, req)
 	if err != nil {
-		rw.Header().Set("Content-Type", "application/json; charset=utf-8")
-		rw.Header().Set("Cache-Control", "no-cache, no-store")
-		result := apierrors.NewNotFound(v1.Resource("secrets"), req.URL.Path)
-		rw.WriteHeader(int(result.ErrStatus.Code))
-		json.NewEncoder(rw).Encode(result)
+		rest.AbortWithError(rw, err)
 		return
 	}
 
 	handler, err := ClusterFactory(clusterId)
 	if err != nil {
-		reqInfo.AbortWithError(err)
+		rest.AbortWithError(rw, err)
 		return
 	}
 
