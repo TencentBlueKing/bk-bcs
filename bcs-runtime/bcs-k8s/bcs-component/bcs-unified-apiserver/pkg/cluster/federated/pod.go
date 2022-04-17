@@ -82,7 +82,7 @@ func addTypeInformationToObject(obj runtime.Object) error {
 func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav1.ListOptions, accept string) (*metav1.Table, error) {
 	potTable := &metav1.Table{}
 	isSucc := false
-	for _, v := range p.k8sClientMap {
+	for clusterId, v := range p.k8sClientMap {
 		result := &metav1.Table{}
 		err := v.CoreV1().RESTClient().Get().
 			Namespace(namespace).
@@ -94,7 +94,13 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("kind", result.APIVersion, result.Kind)
+
+		for idx, row := range result.Rows {
+			cells := []interface{}{clusterId}
+			cells = append(cells, row.Cells...)
+			result.Rows[idx].Cells = cells
+		}
+
 		if !isSucc {
 			potTable = result
 			isSucc = true
@@ -103,8 +109,19 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav
 			potTable = result
 		}
 	}
+	clusterId := metav1.TableColumnDefinition{
+		Name:        "Cluster Id",
+		Type:        "string",
+		Format:      "",
+		Description: "bcs cluster id",
+	}
+	columns := []metav1.TableColumnDefinition{clusterId}
+	columns = append(columns, potTable.ColumnDefinitions...)
+
+	potTable.ColumnDefinitions = columns
 	potTable.Kind = "Table"
 	potTable.APIVersion = "meta.k8s.io/v1"
+
 	// err := addTypeInformationToObject(potTable)
 	// if err != nil {
 	// 	return nil, err
