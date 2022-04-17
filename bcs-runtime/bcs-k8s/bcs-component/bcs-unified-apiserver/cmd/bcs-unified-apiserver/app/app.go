@@ -151,6 +151,7 @@ func Run(bindAddress, clusterId string) error {
 
 	r := mux.NewRouter()
 
+	r.Handle("/api/v1/namespaces/{namespace}/pods", handler)
 	r.Handle("/{uri:.*}", handler)
 
 	srv := &http.Server{
