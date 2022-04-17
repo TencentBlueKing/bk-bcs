@@ -61,9 +61,8 @@ func (c *RequestInfo) abortWithErrorTable(err error) {
 func (c *RequestInfo) Write(obj runtime.Object) {
 	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	c.Writer.Header().Set("Cache-Control", "no-cache, no-store")
-	result := apierrors.NewNotFound(v1.Resource("secrets"), c.Request.URL.Path)
-	c.Writer.WriteHeader(int(result.ErrStatus.Code))
-	json.NewEncoder(c.Writer).Encode(result)
+	c.Writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(c.Writer).Encode(obj)
 }
 
 func (c *RequestInfo) Serve() {

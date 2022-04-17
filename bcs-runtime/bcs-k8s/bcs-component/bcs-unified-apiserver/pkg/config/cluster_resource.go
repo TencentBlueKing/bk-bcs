@@ -24,10 +24,15 @@ var (
 type ClusterResource struct {
 	Kind      string   `yaml:"kind"`
 	Member    string   `yaml:"member"`
-	members   []string `yaml:"-"`
+	Members   []string `yaml:"members"`
+	Master    string   `yaml:"master"`
 	ClusterId string   `yaml:"cluster_id"`
 }
 
 func (c *ClusterResource) GetMember() string {
-	return c.members[0]
+	return c.Member
+}
+
+func (c *ClusterResource) GetMemberList() []string {
+	return c.Members
 }

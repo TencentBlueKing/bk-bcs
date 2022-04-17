@@ -23,11 +23,12 @@ import (
 
 type Handler struct {
 	clusterId    string
+	members      []string
 	proxyHandler *apiproxy.UpgradeAwareHandler
 }
 
 // NewHandler create handler
-func NewHandler(clusterId string) (*Handler, error) {
+func NewHandler(clusterId string, members []string) (*Handler, error) {
 	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
@@ -41,19 +42,24 @@ func NewHandler(clusterId string) (*Handler, error) {
 	return &Handler{
 		clusterId:    clusterId,
 		proxyHandler: proxyHandler,
+		members:      members,
 	}, nil
 }
 
 // ServeHTTP serves http request
 func (h *Handler) Serve(c *rest.RequestInfo) {
-	stor, err := NewPodStor([]string{})
-	listOptions, err := clientutil.GetListOptionsFromQueryParam(c.Request.URL.Query())
-	if err != nil {
-		c.AbortWithError(err)
-		return
-	}
+	if c.Resource == "pods" && c.Verb == "list" {
+		stor, err := NewPodStor(h.members)
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
+		listOptions, err := clientutil.GetListOptionsFromQueryParam(c.Request.URL.Query())
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
 
-	if c.Resource == "pod" && c.Verb == "list" {
 		if c.TableReq.IsTable {
 			result, err := stor.ListAsTable(c.Request.Context(), c.Namespace, listOptions, c.TableReq.AcceptHeader)
 			if err != nil {

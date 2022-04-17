@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package isolated
+package shared
 
 import (
 	"fmt"
@@ -45,6 +45,6 @@ func NewHandler(clusterId string) (*Handler, error) {
 }
 
 // ServeHTTP serves http request
-func (h *Handler) Handle(c *rest.RequestInfo) {
+func (h *Handler) Serve(c *rest.RequestInfo) {
 	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
 }

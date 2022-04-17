@@ -21,7 +21,9 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/federated"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/isolated"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/shared"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 	"github.com/gorilla/mux"
@@ -49,9 +51,9 @@ func ClusterFactory(clusterId string, reqInfo *rest.RequestInfo, uri string) (re
 	case string(config.IsolatedCLuster):
 		handle, err = isolated.NewHandler(cluster.Member)
 	case string(config.SharedCluster):
-		handle, err = isolated.NewHandler(cluster.Member)
+		handle, err = shared.NewHandler(cluster.Member)
 	case string(config.FederatedCluter):
-		handle, err = isolated.NewHandler(cluster.Member)
+		handle, err = federated.NewHandler(cluster.Master, cluster.Members)
 	default:
 		return nil, errors.New("not valid cluster kind")
 	}
