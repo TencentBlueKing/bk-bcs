@@ -28,8 +28,8 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/server"
 )
 
 var (
@@ -125,7 +125,7 @@ func Run(bindAddress string) error {
 
 	sugar := logger.Sugar()
 
-	handler, err := server.NewHandler()
+	clusterHandler, err := cluster.NewHandler()
 	if err != nil {
 		zap.L().Fatal("create proxy handler failed", zap.Error(err))
 	}
@@ -138,7 +138,7 @@ func Run(bindAddress string) error {
 
 	r := mux.NewRouter()
 
-	r.Handle("/clusters/{cluster_id}/{uri:.*}", handler)
+	r.Handle("/clusters/{cluster_id}/{uri:.*}", clusterHandler)
 
 	srv := &http.Server{
 		Handler: r,
