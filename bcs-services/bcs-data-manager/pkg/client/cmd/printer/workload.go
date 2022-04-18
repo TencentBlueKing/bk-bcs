@@ -30,7 +30,7 @@ func PrintWorkloadInTable(wide bool, workload *bcsdatamanager.Workload) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
 		r := []string{"NAME", "METRIC_TIME", "INSTANCE_CNT",
-			"CPU_REQ", "CPU_USAGE", "MM_REQ", "MM_USAGE"}
+			"CPU_REQ", "LOAD_CPU", "CPU_USAGE", "MM_REQ", "LOAD_CPU", "MM_USAGE"}
 		return r
 	}())
 	// table.SetAutoWrapText(false)
@@ -53,8 +53,10 @@ func PrintWorkloadInTable(wide bool, workload *bcsdatamanager.Workload) {
 				workload.GetWorkloadName(), metric.GetTime(),
 				metric.GetInstanceCount(),
 				metric.GetCPURequest(),
+				metric.GetCPUUsageAmount(),
 				metric.GetCPUUsage(),
 				metric.GetMemoryRequest(),
+				metric.GetMemoryUsageAmount(),
 				metric.GetMemoryUsage(),
 			}
 			return r
@@ -72,7 +74,7 @@ func PrintWorkloadListInTable(wide bool, workloadList []*bcsdatamanager.Workload
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
 		r := []string{"NAME", "METRIC_TIME", "INSTANCE_CNT",
-			"CPU_REQ", "CPU_USAGE", "MM_REQ", "MM_USAGE"}
+			"CPU_REQ", "LOAD_CPU", "CPU_USAGE", "MM_REQ", "LOAD_MM", "MM_USAGE"}
 		return r
 	}())
 	// table.SetAutoWrapText(false)
@@ -96,7 +98,10 @@ func PrintWorkloadListInTable(wide bool, workloadList []*bcsdatamanager.Workload
 					workload.GetWorkloadName(), metric.GetTime(),
 					metric.GetInstanceCount(),
 					metric.GetCPURequest(),
-					metric.GetCPUUsage(), metric.GetMemoryRequest(),
+					metric.GetCPUUsageAmount(),
+					metric.GetCPUUsage(),
+					metric.GetMemoryRequest(),
+					metric.GetMemoryUsageAmount(),
 					metric.GetMemoryUsage(),
 				}
 				return r

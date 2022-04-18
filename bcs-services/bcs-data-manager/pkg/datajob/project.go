@@ -70,7 +70,7 @@ func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		TotalLoadMemory:    loadMemory,
 		AvgLoadCPU:         loadCPU / float64(len(clusters)),
 		AvgLoadMemory:      loadMemory / int64(len(clusters)),
-		CPUUsage:           float64(loadCPU) / float64(totalCPU),
+		CPUUsage:           loadCPU / totalCPU,
 		MemoryUsage:        float64(loadMemory) / float64(totalMemory),
 		NodeCount:          nodeCount,
 		AvailableNodeCount: availableNode,
@@ -78,7 +78,9 @@ func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		MaxNode:            nil,
 	}
 	err = p.store.InsertProjectInfo(ctx, projectMetric, opts)
-	blog.Errorf("do day project policy error, err:%v", err)
+	if err != nil {
+		blog.Errorf("do day project policy error, err:%v", err)
+	}
 }
 
 // CalculateCpu calculate cpu

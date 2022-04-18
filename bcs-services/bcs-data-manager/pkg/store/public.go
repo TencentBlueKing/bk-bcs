@@ -74,7 +74,9 @@ func (m *ModelPublic) InsertPublicInfo(ctx context.Context, metrics *common.Publ
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retPublic)
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			blog.Infof(" public info not found, create a new data")
+			blog.Infof("public info not found, create a new data")
+			metrics.CreateTime = primitive.NewDateTimeFromTime(time.Now())
+			metrics.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{metrics})
 			if err != nil {
 				return err
@@ -86,7 +88,6 @@ func (m *ModelPublic) InsertPublicInfo(ctx context.Context, metrics *common.Publ
 	retPublic.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	return m.DB.Table(m.TableName).
 		Update(ctx, cond, operator.M{"$set": retPublic})
-
 }
 
 // GetRawPublicInfo get raw public info data
@@ -111,18 +112,21 @@ func (m *ModelPublic) generateCond(opts *common.JobCommonOpts) (*operator.Condit
 	switch opts.ObjectType {
 	case common.ProjectType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
-			ProjectIDKey: opts.ProjectID,
+			ProjectIDKey:  opts.ProjectID,
+			ObjectTypeKey: common.ProjectType,
 		}), nil
 	case common.ClusterType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
-			ProjectIDKey: opts.ProjectID,
-			ClusterIDKey: opts.ClusterID,
+			ProjectIDKey:  opts.ProjectID,
+			ClusterIDKey:  opts.ClusterID,
+			ObjectTypeKey: common.ClusterType,
 		}), nil
 	case common.NamespaceType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
-			ProjectIDKey: opts.ProjectID,
-			ClusterIDKey: opts.ClusterID,
-			NamespaceKey: opts.Namespace,
+			ProjectIDKey:  opts.ProjectID,
+			ClusterIDKey:  opts.ClusterID,
+			NamespaceKey:  opts.Namespace,
+			ObjectTypeKey: common.NamespaceType,
 		}), nil
 	case common.WorkloadType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
@@ -131,6 +135,7 @@ func (m *ModelPublic) generateCond(opts *common.JobCommonOpts) (*operator.Condit
 			NamespaceKey:    opts.Namespace,
 			WorkloadTypeKey: opts.WorkloadType,
 			WorkloadNameKey: opts.Name,
+			ObjectTypeKey:   common.WorkloadType,
 		}), nil
 	default:
 		return nil, fmt.Errorf("wrong object type: %s", opts.ObjectType)

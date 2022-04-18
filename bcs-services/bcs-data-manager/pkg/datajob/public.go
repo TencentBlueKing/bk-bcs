@@ -65,7 +65,14 @@ func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *common
 				SuggestMemory: suggestMemory,
 			}
 			workloadPublic := &common.PublicData{
-				Metrics: workloadPublicMetric,
+				WorkloadName: workloadList[key].Name,
+				WorkloadType: workloadList[key].WorkloadType,
+				ObjectType:   common.WorkloadType,
+				ClusterID:    workloadList[key].ClusterID,
+				Namespace:    workloadList[key].Namespace,
+				ClusterType:  workloadList[key].ClusterType,
+				ProjectID:    workloadList[key].ProjectID,
+				Metrics:      workloadPublicMetric,
 			}
 			workloadOpts := &common.JobCommonOpts{
 				ObjectType:   common.WorkloadType,
@@ -76,6 +83,7 @@ func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *common
 				WorkloadType: workloadList[key].WorkloadType,
 				Name:         workloadList[key].Name,
 			}
+
 			err := p.store.InsertPublicInfo(ctx, workloadPublic, workloadOpts)
 			if err != nil {
 				blog.Errorf("insert workload public data error: %v", err)
