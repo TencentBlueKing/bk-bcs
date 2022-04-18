@@ -1,0 +1,131 @@
+# Default values for bcs-cluster-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+image:
+  registry: ""
+  repository: bcs/bcs-data-manager
+  tag: "v1.21.3"
+  pullPolicy: Always
+
+env:
+  # bcs server configuration render flag, when setting render,
+  # we will render server configuration file by Env
+  # it's common env, global value comes first
+  BK_BCS_CONFIG_TYPE: "render"
+  # cluster manager http server port
+  BK_BCS_bcsDataManagerHTTPPort: 8080
+  # cluster manager grpc server port
+  BK_BCS_bcsDataManagerPort: 8081
+  # cluster manager metric server port
+  BK_BCS_bcsDataManagerMetricPort: 8082
+  # pprof option
+  BK_BCS_bcsDataManagerDebug: false
+  # whether log to std err, it's common env, global value comes first
+  BK_BCS_also_log_to_stderr: "true"
+  # log level, it's common env, global value comes first
+  BK_BCS_log_level: 3
+  # mongo options
+  # mongo db client timeout
+  BK_BCS_bcsDataManagerMongoConnectTimeout: "3"
+  # mongo db database for datamanager
+  BK_BCS_bcsDataManagerMongoDatabase: "datamanager"
+  # mongo db user name
+  BK_BCS_bcsDataManagerMongoUsername: ""
+  # mongo db user password
+  BK_BCS_mongodbPassword: ""
+  # mongo db max pool size
+  BK_BCS_bcsDataManagerMongoMaxPoolSize: 0
+  # mongo db min pool size
+  BK_BCS_bcsDataManagerMongoMinPoolSize: 0
+
+  # broker options
+  BK_BCS_bcsDataManagerQueueAddress: ""
+  BK_BCS_bcsDataManagerExchange: "bcs-data-manager"
+  # bcs api conf
+  BK_BCS_bcsApiGwUrl: ""
+  BK_BCS_bcsAdminToken: ""
+  BK_BCS_grpcGwAddress: ""
+  # bk monitor conf
+  BK_BCS_bcsMonitorSchem: ""
+  BK_BCS_bcsMonitorEp: ""
+  BK_BCS_bcsMonitorUser: ""
+  BK_BCS_bcsMonitorPassword: ""
+  # worker concurrency
+  BK_BCS_bcsDataManagerConcurrency: ""
+  BK_BCS_bcsDataManagerChanLen: ""
+  # filter opts
+  BK_BCS_bcsDataManagerNeedFilterCluster: ""
+  BK_BCS_bcsDataManagerSelectedCluster: ""
+
+secret:
+  #bcs exporter certtificatin quote
+  bcsCerts: bk-bcs-certs
+  #etcd registry certification quote
+  etcdCerts: bcs-etcd-certs
+
+storage:
+  etcd:
+    endpoints: []
+  mongodb:
+    endpoint: ""
+    username: "root"
+    password: ""
+  messageQueue:
+    enabled: true
+    kind: "rabbitmq"
+    endpoint: ""
+    username: "bcs"
+    password: ""
+
+service:
+  type: ClusterIP
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-data-manager"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+#   cpu: 100m
+#   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+hostAliases: []
+
+affinity: {}
+
+serviceMonitor:
+  enabled: true

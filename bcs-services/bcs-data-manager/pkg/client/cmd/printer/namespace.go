@@ -30,7 +30,7 @@ func PrintNamespaceInTable(wide bool, namespace *bcsdatamanager.Namespace) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
 		r := []string{"NAMESPACE", "METRIC_TIME", "WORKLOAD_CNT", "INSTANCE_CNT",
-			"CPU_REQ", "CPU_USAGE", "MM_REQ", "MM_USAGE"}
+			"CPU_REQ", "CPU_USAGE", "MM_REQ", "Load_MM", "MM_USAGE"}
 		return r
 	}())
 	// table.SetAutoWrapText(false)
@@ -56,6 +56,7 @@ func PrintNamespaceInTable(wide bool, namespace *bcsdatamanager.Namespace) {
 				metric.GetCPURequest(),
 				metric.GetCPUUsage(),
 				metric.GetMemoryRequest(),
+				metric.GetMemoryUsageAmount(),
 				metric.GetMemoryUsage(),
 			}
 			return r
@@ -73,7 +74,7 @@ func PrintNamespaceListInTable(wide bool, namespaceList []*bcsdatamanager.Namesp
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
 		r := []string{"NAMESPACE", "METRIC_TIME", "WORKLOAD_CNT", "INSTANCE_CNT",
-			"CPU_REQ", "CPU_USAGE", "MM_REQ", "MM_USAGE"}
+			"CPU_REQ", "CPU_USAGE", "MM_REQ", "LOAD_MM", "MM_USAGE"}
 		if wide {
 			r = append(r, "AVG_CPU")
 		}
@@ -103,6 +104,7 @@ func PrintNamespaceListInTable(wide bool, namespaceList []*bcsdatamanager.Namesp
 					metric.GetCPURequest(),
 					metric.GetCPUUsage(),
 					metric.GetMemoryRequest(),
+					metric.GetMemoryUsageAmount(),
 					metric.GetMemoryUsage(),
 				}
 				return r
