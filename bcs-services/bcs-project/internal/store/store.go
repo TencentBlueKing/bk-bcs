@@ -31,6 +31,7 @@ type ProjectModel interface {
 	DeleteProject(ctx context.Context, projectID string) error
 	UpdateProject(ctx context.Context, project *project.Project) error
 	ListProjects(ctx context.Context, cond *operator.Condition, opt *page.Pagination) ([]project.Project, int64, error)
+	ListProjectByIDs(ctx context.Context, ids []string, opt *page.Pagination) ([]project.Project, int64, error)
 }
 
 type modelSet struct {

@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -74,6 +75,12 @@ func NewBCSProjectEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "BCSProject.ListAuthorizedProjects",
+			Path:    []string{"/bcsproject/v1/authorized_projects"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -85,6 +92,7 @@ type BCSProjectService interface {
 	UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...client.CallOption) (*ListProjectsResponse, error)
+	ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, opts ...client.CallOption) (*ListAuthorizedProjResp, error)
 }
 
 type bCSProjectService struct {
@@ -149,6 +157,16 @@ func (c *bCSProjectService) ListProjects(ctx context.Context, in *ListProjectsRe
 	return out, nil
 }
 
+func (c *bCSProjectService) ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, opts ...client.CallOption) (*ListAuthorizedProjResp, error) {
+	req := c.c.NewRequest(c.name, "BCSProject.ListAuthorizedProjects", in)
+	out := new(ListAuthorizedProjResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for BCSProject service
 
 type BCSProjectHandler interface {
@@ -157,6 +175,7 @@ type BCSProjectHandler interface {
 	UpdateProject(context.Context, *UpdateProjectRequest, *ProjectResponse) error
 	DeleteProject(context.Context, *DeleteProjectRequest, *ProjectResponse) error
 	ListProjects(context.Context, *ListProjectsRequest, *ListProjectsResponse) error
+	ListAuthorizedProjects(context.Context, *ListAuthorizedProjReq, *ListAuthorizedProjResp) error
 }
 
 func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...server.HandlerOption) error {
@@ -166,6 +185,7 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		UpdateProject(ctx context.Context, in *UpdateProjectRequest, out *ProjectResponse) error
 		DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *ProjectResponse) error
 		ListProjects(ctx context.Context, in *ListProjectsRequest, out *ListProjectsResponse) error
+		ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, out *ListAuthorizedProjResp) error
 	}
 	type BCSProject struct {
 		bCSProject
@@ -204,6 +224,12 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProject.ListAuthorizedProjects",
+		Path:    []string{"/bcsproject/v1/authorized_projects"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&BCSProject{h}, opts...))
 }
 
@@ -229,4 +255,109 @@ func (h *bCSProjectHandler) DeleteProject(ctx context.Context, in *DeleteProject
 
 func (h *bCSProjectHandler) ListProjects(ctx context.Context, in *ListProjectsRequest, out *ListProjectsResponse) error {
 	return h.BCSProjectHandler.ListProjects(ctx, in, out)
+}
+
+func (h *bCSProjectHandler) ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, out *ListAuthorizedProjResp) error {
+	return h.BCSProjectHandler.ListAuthorizedProjects(ctx, in, out)
+}
+
+// Api Endpoints for Healthz service
+
+func NewHealthzEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		&api.Endpoint{
+			Name:    "Healthz.Healthz",
+			Path:    []string{"/bcsproject/v1/healthz"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Healthz.Ping",
+			Path:    []string{"/bcsproject/v1/ping"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Healthz service
+
+type HealthzService interface {
+	Healthz(ctx context.Context, in *HealthzRequest, opts ...client.CallOption) (*HealthzResponse, error)
+	Ping(ctx context.Context, in *PingRequest, opts ...client.CallOption) (*PingResponse, error)
+}
+
+type healthzService struct {
+	c    client.Client
+	name string
+}
+
+func NewHealthzService(name string, c client.Client) HealthzService {
+	return &healthzService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *healthzService) Healthz(ctx context.Context, in *HealthzRequest, opts ...client.CallOption) (*HealthzResponse, error) {
+	req := c.c.NewRequest(c.name, "Healthz.Healthz", in)
+	out := new(HealthzResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *healthzService) Ping(ctx context.Context, in *PingRequest, opts ...client.CallOption) (*PingResponse, error) {
+	req := c.c.NewRequest(c.name, "Healthz.Ping", in)
+	out := new(PingResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Healthz service
+
+type HealthzHandler interface {
+	Healthz(context.Context, *HealthzRequest, *HealthzResponse) error
+	Ping(context.Context, *PingRequest, *PingResponse) error
+}
+
+func RegisterHealthzHandler(s server.Server, hdlr HealthzHandler, opts ...server.HandlerOption) error {
+	type healthz interface {
+		Healthz(ctx context.Context, in *HealthzRequest, out *HealthzResponse) error
+		Ping(ctx context.Context, in *PingRequest, out *PingResponse) error
+	}
+	type Healthz struct {
+		healthz
+	}
+	h := &healthzHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Healthz.Healthz",
+		Path:    []string{"/bcsproject/v1/healthz"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Healthz.Ping",
+		Path:    []string{"/bcsproject/v1/ping"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Healthz{h}, opts...))
+}
+
+type healthzHandler struct {
+	HealthzHandler
+}
+
+func (h *healthzHandler) Healthz(ctx context.Context, in *HealthzRequest, out *HealthzResponse) error {
+	return h.HealthzHandler.Healthz(ctx, in, out)
+}
+
+func (h *healthzHandler) Ping(ctx context.Context, in *PingRequest, out *PingResponse) error {
+	return h.HealthzHandler.Ping(ctx, in, out)
 }

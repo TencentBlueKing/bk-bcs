@@ -12,27 +12,24 @@
  * limitations under the License.
  */
 
-package errcode
+package errorx
 
 import (
-	errorCode "github.com/Tencent/bk-bcs/bcs-common/common"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-const (
-	// Success 正常返回
-	Success = 0
-	// SuccessMsg 正常返回的消息
-	SuccessMsg = "success"
-	// ParamErr 参数校验失败
-	ParamErr = errorCode.AdditionErrorCode + 400
-	// ParamErrMsg 参数校验失败消息
-	ParamErrMsg = "params error"
-	// InnerErr 内部服务异常
-	InnerErr = errorCode.AdditionErrorCode + 500
-	// InnerErrMsg 内部服务异常消息
-	InnerErrMsg = "inner error"
-	// DBErr DB操作失败
-	DBErr = errorCode.AdditionErrorCode + 501
-	// DbErrMsg DB操作失败消息
-	DbErrMsg = "db error"
+var (
+	applyUrl = "http://iam.example.com"
+	actionID = "projectView"
+	hasPerm  = false
 )
+
+func TestPermissionDeniedError(t *testing.T) {
+	// one message
+	err := NewPermDeniedErr(applyUrl, actionID, hasPerm)
+	assert.Equal(t, err.ApplyUrl(), applyUrl)
+	assert.Equal(t, err.HasPerm(), hasPerm)
+	assert.Equal(t, err.ActionID(), actionID)
+}
