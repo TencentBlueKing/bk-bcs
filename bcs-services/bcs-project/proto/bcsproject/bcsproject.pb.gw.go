@@ -279,6 +279,60 @@ func local_request_BCSProject_ListProjects_0(ctx context.Context, marshaler runt
 
 }
 
+func request_BCSProject_ListAuthorizedProjects_0(ctx context.Context, marshaler runtime.Marshaler, client BCSProjectClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAuthorizedProjReq
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.ListAuthorizedProjects(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BCSProject_ListAuthorizedProjects_0(ctx context.Context, marshaler runtime.Marshaler, server BCSProjectServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAuthorizedProjReq
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.ListAuthorizedProjects(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Healthz_Healthz_0(ctx context.Context, marshaler runtime.Marshaler, client HealthzClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq HealthzRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.Healthz(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Healthz_Healthz_0(ctx context.Context, marshaler runtime.Marshaler, server HealthzServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq HealthzRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.Healthz(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Healthz_Ping_0(ctx context.Context, marshaler runtime.Marshaler, client HealthzClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq PingRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.Ping(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Healthz_Ping_0(ctx context.Context, marshaler runtime.Marshaler, server HealthzServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq PingRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.Ping(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 // RegisterBCSProjectGwServer registers the http handlers for service BCSProject to "mux".
 // UnaryRPC     :call BCSProjectServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -381,6 +435,74 @@ func RegisterBCSProjectGwServer(ctx context.Context, mux *runtime.ServeMux, serv
 		}
 
 		forward_BCSProject_ListProjects_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_BCSProject_ListAuthorizedProjects_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BCSProject_ListAuthorizedProjects_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BCSProject_ListAuthorizedProjects_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+// RegisterHealthzGwServer registers the http handlers for service Healthz to "mux".
+// UnaryRPC     :call HealthzServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+func RegisterHealthzGwServer(ctx context.Context, mux *runtime.ServeMux, server HealthzServer) error {
+
+	mux.Handle("GET", pattern_Healthz_Healthz_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Healthz_Healthz_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Healthz_Healthz_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Healthz_Ping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Healthz_Ping_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Healthz_Ping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -525,6 +647,26 @@ func RegisterBCSProjectGwClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
+	mux.Handle("GET", pattern_BCSProject_ListAuthorizedProjects_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BCSProject_ListAuthorizedProjects_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BCSProject_ListAuthorizedProjects_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -538,6 +680,8 @@ var (
 	pattern_BCSProject_DeleteProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v1", "projects", "projectID"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BCSProject_ListProjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcsproject", "v1", "projects"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_BCSProject_ListAuthorizedProjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcsproject", "v1", "authorized_projects"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -550,4 +694,99 @@ var (
 	forward_BCSProject_DeleteProject_0 = runtime.ForwardResponseMessage
 
 	forward_BCSProject_ListProjects_0 = runtime.ForwardResponseMessage
+
+	forward_BCSProject_ListAuthorizedProjects_0 = runtime.ForwardResponseMessage
+)
+
+// RegisterHealthzGwFromEndpoint is same as RegisterHealthzGw but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterHealthzGwFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return RegisterHealthzGw(ctx, mux, conn)
+}
+
+// RegisterHealthzGw registers the http handlers for service Healthz to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterHealthzGw(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterHealthzGwClient(ctx, mux, NewHealthzClient(conn))
+}
+
+// RegisterHealthzGwClient registers the http handlers for service Healthz
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "HealthzClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "HealthzClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "HealthzClient" to call the correct interceptors.
+func RegisterHealthzGwClient(ctx context.Context, mux *runtime.ServeMux, client HealthzClient) error {
+
+	mux.Handle("GET", pattern_Healthz_Healthz_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Healthz_Healthz_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Healthz_Healthz_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Healthz_Ping_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Healthz_Ping_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Healthz_Ping_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_Healthz_Healthz_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcsproject", "v1", "healthz"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_Healthz_Ping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcsproject", "v1", "ping"}, "", runtime.AssumeColonVerbOpt(true)))
+)
+
+var (
+	forward_Healthz_Healthz_0 = runtime.ForwardResponseMessage
+
+	forward_Healthz_Ping_0 = runtime.ForwardResponseMessage
 )

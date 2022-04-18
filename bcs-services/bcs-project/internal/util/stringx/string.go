@@ -26,8 +26,6 @@ func SplitString(str string) []string {
 // AddString 拼接字符串
 func JoinString(str ...string) string {
 	var strList []string
-	for _, s := range str {
-		strList = append(strList, s)
-	}
+	strList = append(strList, str...)
 	return strings.Join(strList, ",")
 }

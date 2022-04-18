@@ -37,8 +37,8 @@ replace (
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220309021702-fe8a9f6843e1
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20211220083546-9911225681e0
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220221082336-47ffb7ebf0b5
 	github.com/antonmedv/expr v1.8.9
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/go-openapi/spec v0.20.1 // indirect

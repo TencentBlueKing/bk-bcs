@@ -74,9 +74,31 @@ type LogConfig struct {
 
 // SwaggerConfig
 type SwaggerConfig struct {
-	Dir string `yaml:"dir" usage:"swagger dir"`
+	Enable bool   `yaml:"enable" usage:"enable swagger"`
+	Dir    string `yaml:"dir" usage:"swagger dir"`
 }
 
+// JwtConfig
+type JWTConfig struct {
+	Enable         bool   `yaml:"enable" usage:"enable jwt"`
+	PublicKey      string `yaml:"publicKey" usage:"public key"`
+	PublicKeyFile  string `yaml:"publicKeyFile" usage:"public key file"`
+	PrivateKey     string `yaml:"privateKey" usage:"private key"`
+	PrivateKeyFile string `yaml:"privateKeyFile" usage:"private key file"`
+}
+
+// IAMConfig iam操作需要的配置
+type IAMConfig struct {
+	AppCode     string `yaml:"appCode" usage:"app code"`
+	AppSecret   string `yaml:"appSecret" usage:"app secret"`
+	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
+	UseGWHost   bool   `yaml:"useGWHost" usage:"use gatewayHost when true, else use iamHost and bkPaaSHost"`
+	IAMHost     string `yaml:"iamHost" usage:"iam host"`
+	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"bk paas host"`
+	Debug       bool   `yaml:"debug" usage:"debug mode"`
+}
+
+// ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd    EtcdConfig    `yaml:"etcd"`
 	Mongo   MongoConfig   `yaml:"mongo"`
@@ -84,7 +106,12 @@ type ProjectConfig struct {
 	Swagger SwaggerConfig `yaml:"swagger"`
 	Server  ServerConfig  `yaml:"server"`
 	Client  ClientConfig  `yaml:"client"`
+	JWT     JWTConfig     `yaml:"jwt"`
+	IAM     IAMConfig     `yaml:"iam"`
 }
+
+// GlobalConf 项目配置信息，全局都可以使用
+var GlobalConf *ProjectConfig
 
 // LoadConfig 通过制定的path，加载对应的配置选项
 func LoadConfig(filePath string) (*ProjectConfig, error) {
@@ -96,5 +123,7 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+	// 用于后续的使用
+	GlobalConf = conf
 	return conf, nil
 }

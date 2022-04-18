@@ -17,7 +17,6 @@ package project
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
@@ -39,14 +38,14 @@ func NewGetAction(model store.ProjectModel) *GetAction {
 }
 
 // Do get project info
-func (ga *GetAction) Do(ctx context.Context, req *proto.GetProjectRequest) (*pm.Project, *errorx.ProjectError) {
+func (ga *GetAction) Do(ctx context.Context, req *proto.GetProjectRequest) (*pm.Project, error) {
 	ga.ctx = ctx
 	ga.req = req
 
 	p, err := ga.model.GetProject(ctx, req.ProjectIDOrCode)
 	if err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 
-	return p, errorx.New(errcode.Success, errcode.SuccessMsg)
+	return p, nil
 }

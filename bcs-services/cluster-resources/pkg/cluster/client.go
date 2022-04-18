@@ -119,7 +119,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	if err != nil {
 		return nil, err
 	}
-	resp, err := cli.GetCluster(ctx, &bcsapicm.GetClusterReq{ClusterID: clusterID})
+	resp, err := cli.GetCluster(grpcUtil.SetMD4CTX(ctx), &bcsapicm.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
 		return nil, errorx.New(errcode.ComponentErr, "call for cluster %s info failed: %v", clusterID, err)
 	}
@@ -136,6 +136,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	if resp.Data.IsShared {
 		clusterInfo["type"] = ClusterTypeShared
 	}
+	log.Info(ctx, "fetch cluster info: %v", clusterInfo)
 	return clusterInfo, nil
 }
 
