@@ -109,7 +109,7 @@ func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1
 
 // 访问权限检查（如共享集群禁用等）
 func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map[string]interface{}) error {
-	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
+	clusterInfo, err := cluster.GetClusterInfo(ctx, m.ClusterID)
 	if err != nil {
 		return err
 	}

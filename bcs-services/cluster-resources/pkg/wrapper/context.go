@@ -63,7 +63,7 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 
 			// 3. 注入 Project，Cluster 信息
 			if needInjectProjCluster(req) {
-				projInfo, clusterInfo, err := fetchProjCluster(req)
+				projInfo, clusterInfo, err := fetchProjCluster(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -100,15 +100,15 @@ func canExemptAuth(req server.Request) bool {
 
 // 通过 micro metadata（headers）信息，解析出用户名
 func parseUsername(md metadata.Metadata) (string, error) {
-	jwtToken, ok := md.Get("Authorization")
+	authorization, ok := md.Get("Authorization")
 	if !ok {
 		return "", errorx.New(errcode.Unauth, "failed to get authorization token!")
 	}
-	if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
+	if len(authorization) == 0 || !strings.HasPrefix(authorization, "Bearer ") {
 		return "", errorx.New(errcode.Unauth, "authorization token error")
 	}
 
-	claims, err := jwtDecode(jwtToken[7:])
+	claims, err := jwtDecode(authorization[7:])
 	if err != nil {
 		return "", err
 	}
@@ -150,7 +150,7 @@ var NoInjectProjClusterEndpoints = []string{
 	"Basic.Healthz",
 	"Basic.Echo",
 	"Resource.GetK8SResTemplate",
-	// TODO 获取表单数据的也不需要
+	"Resource.GetResFormSchema",
 }
 
 // 需要注入项目 & 集群信息
@@ -159,12 +159,12 @@ func needInjectProjCluster(req server.Request) bool {
 }
 
 // 获取项目，集群信息
-func fetchProjCluster(req server.Request) (*project.Project, *cluster.Cluster, error) {
+func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project, *cluster.Cluster, error) {
 	projectID, err := goAttr.GetValue(req.Body(), "ProjectID")
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "Get ProjectID from Request Failed: %v", err)
 	}
-	projInfo, err := project.GetProjectInfo(projectID.(string))
+	projInfo, err := project.GetProjectInfo(ctx, projectID.(string))
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "获取项目 %s 信息失败：%v", projectID, err)
 	}
@@ -172,7 +172,7 @@ func fetchProjCluster(req server.Request) (*project.Project, *cluster.Cluster, e
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "Get ClusterID from Request Failed: %v", err)
 	}
-	clusterInfo, err := cluster.GetClusterInfo(clusterID.(string))
+	clusterInfo, err := cluster.GetClusterInfo(ctx, clusterID.(string))
 	if err != nil {
 		return nil, nil, errorx.New(errcode.General, "获取集群 %s 信息失败：%v", clusterID, err)
 	}
