@@ -170,7 +170,7 @@
             }
         },
         setup (props, ctx) {
-            const { name, id, namespace, pod } = toRefs(props)
+            const { name, namespace, pod } = toRefs(props)
             const { $store } = ctx.root
 
             // 详情loading
@@ -184,7 +184,10 @@
             // 图表指标参数
             const params = computed(() => {
                 return {
-                    container_ids: [id.value],
+                    // container_ids: [id.value],
+                    namespace: namespace.value,
+                    pod_name: pod.value,
+                    container_name: name.value,
                     $podId: pod.value
                 }
             })
