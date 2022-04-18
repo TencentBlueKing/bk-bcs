@@ -15,10 +15,11 @@ package federated
 import (
 	"fmt"
 
+	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
-	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 )
 
 type Handler struct {

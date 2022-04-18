@@ -44,7 +44,7 @@ func NewHandler(clusterId string) (*Handler, error) {
 	}, nil
 }
 
-// ServeHTTP serves http request
+// Serve 目前是直接透明代理
 func (h *Handler) Serve(c *rest.RequestInfo) {
 	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
 }

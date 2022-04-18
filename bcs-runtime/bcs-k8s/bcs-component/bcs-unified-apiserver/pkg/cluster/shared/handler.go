@@ -15,10 +15,11 @@ package shared
 import (
 	"fmt"
 
+	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
-	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 )
 
 type Handler struct {
@@ -44,7 +45,7 @@ func NewHandler(clusterId string) (*Handler, error) {
 	}, nil
 }
 
-// ServeHTTP serves http request
+// Serve 目前是直接透明代理
 func (h *Handler) Serve(c *rest.RequestInfo) {
 	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
 }
