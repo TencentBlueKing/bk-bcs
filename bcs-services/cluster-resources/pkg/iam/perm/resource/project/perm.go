@@ -64,3 +64,8 @@ func (p *Perm) CanDelete(_ perm.Ctx) (bool, error) {
 func (p *Perm) CanUse(_ perm.Ctx) (bool, error) {
 	panic("not implement")
 }
+
+// CanManage ...
+func (p *Perm) CanManage(_ perm.Ctx) (bool, error) {
+	panic("not implement")
+}

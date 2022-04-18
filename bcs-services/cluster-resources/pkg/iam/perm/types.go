@@ -60,6 +60,8 @@ type Perm interface {
 	CanDelete(ctx Ctx) (bool, error)
 	// CanUse 能否使用（CURD）指定（域）资源
 	CanUse(ctx Ctx) (bool, error)
+	// CanManage 能否管理资源（仅集群有效）
+	CanManage(ctx Ctx) (bool, error)
 }
 
 // ResRequest 请求体接口定义
