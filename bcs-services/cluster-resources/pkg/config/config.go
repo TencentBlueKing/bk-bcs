@@ -88,7 +88,11 @@ func (c *ClusterResourcesConf) initJWTPubKey() (err error) {
 	if c.Global.Auth.JWTPubKey == "" {
 		return nil
 	}
-	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM([]byte(c.Global.Auth.JWTPubKey))
+	pemContent, err := ioutil.ReadFile(c.Global.Auth.JWTPubKey)
+	if err != nil {
+		return err
+	}
+	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM(pemContent)
 	return err
 }
 
@@ -217,7 +221,7 @@ type GlobalConf struct {
 // AuthConf 认证相关配置
 type AuthConf struct {
 	Disabled     bool           `yaml:"disabled" usage:"是否禁用身份认证"`
-	JWTPubKey    string         `yaml:"jwtPublicKey" usage:"jwt 公钥"`
+	JWTPubKey    string         `yaml:"jwtPublicKey" usage:"jwt 公钥（文件路径）"`
 	JWTPubKeyObj *rsa.PublicKey `yaml:"-" usage:"jwt 公钥对象（自动生成）"`
 }
 
