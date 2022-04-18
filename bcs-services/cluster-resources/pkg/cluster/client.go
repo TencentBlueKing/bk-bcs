@@ -136,6 +136,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	if resp.Data.IsShared {
 		clusterInfo["type"] = ClusterTypeShared
 	}
+	log.Info(ctx, "fetch cluster info: %v", clusterInfo)
 	return clusterInfo, nil
 }
 

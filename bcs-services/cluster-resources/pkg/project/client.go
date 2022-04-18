@@ -132,6 +132,7 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 		"code":  resp.Data.ProjectCode,
 		"bizID": resp.Data.BusinessID,
 	}
+	log.Info(ctx, "fetch project info: %v", projInfo)
 	return projInfo, nil
 }
 
