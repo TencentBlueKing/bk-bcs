@@ -178,7 +178,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="biz-cluster-node-overview-table-wrapper">
+                <!-- <div class="biz-cluster-node-overview-table-wrapper">
                     <bk-tab class="biz-tab-container" :type="'fill'" :active-name="'container'" @tab-changed="tabChanged">
                         <bk-tab-panel name="container" :title="$t('容器')">
                             <div class="container-table-wrapper" v-bkloading="{ isLoading: containerTableLoading }">
@@ -264,7 +264,7 @@
                             </div>
                         </bk-tab-panel>
                     </bk-tab>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
