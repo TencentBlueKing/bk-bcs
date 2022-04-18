@@ -106,6 +106,7 @@ crGlobal:
   bcsApiGW:
     host: "http://bcs.apigw.com"
     authToken: ""
+    readAuthTokenFromEnv: false
 
   # 权限中心相关配置
   iam:

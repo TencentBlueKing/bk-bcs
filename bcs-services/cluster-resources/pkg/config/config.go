@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
@@ -44,6 +45,8 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 		return nil, err
 	}
 	for _, f := range []func() error{
+		// 初始化 AuthToken
+		conf.initAuthToken,
 		// 初始化 jwt 公钥
 		conf.initJWTPubKey,
 		// 初始化 iam
@@ -71,12 +74,25 @@ type ClusterResourcesConf struct {
 	Global    GlobalConf    `yaml:"crGlobal"`
 }
 
+// 初始化 BCS AuthToken
+func (c *ClusterResourcesConf) initAuthToken() (err error) {
+	// 若指定从环境变量读取 BCS AuthToken，则丢弃配置文件中的值
+	if c.Global.BCSAPIGW.ReadAuthTokenFromEnv {
+		c.Global.BCSAPIGW.AuthToken = envs.BCSApiGWAuthToken
+	}
+	return nil
+}
+
 // 初始化 jwt 公钥
 func (c *ClusterResourcesConf) initJWTPubKey() (err error) {
 	if c.Global.Auth.JWTPubKey == "" {
 		return nil
 	}
-	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM([]byte(c.Global.Auth.JWTPubKey))
+	content, err := ioutil.ReadFile(c.Global.Auth.JWTPubKey)
+	if err != nil {
+		return err
+	}
+	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM(content)
 	return err
 }
 
@@ -205,7 +221,7 @@ type GlobalConf struct {
 // AuthConf 认证相关配置
 type AuthConf struct {
 	Disabled     bool           `yaml:"disabled" usage:"是否禁用身份认证"`
-	JWTPubKey    string         `yaml:"jwtPublicKey" usage:"jwt 公钥"`
+	JWTPubKey    string         `yaml:"jwtPublicKey" usage:"jwt 公钥（文件路径）"`
 	JWTPubKeyObj *rsa.PublicKey `yaml:"-" usage:"jwt 公钥对象（自动生成）"`
 }
 
@@ -219,8 +235,9 @@ type BasicConf struct {
 
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
-	Host      string `yaml:"host" usage:"容器服务网关 Host"`
-	AuthToken string `yaml:"authToken" usage:"网关 Auth Token"`
+	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken            string `yaml:"authToken" usage:"网关 AuthToken"`
+	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
 }
 
 // IAMConf 权限中心相关配置
