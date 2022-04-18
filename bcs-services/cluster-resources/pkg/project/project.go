@@ -26,10 +26,9 @@ import (
 
 // Project BCS 项目
 type Project struct {
-	ID    string
-	Name  string
-	Code  string
-	BizID string
+	ID   string
+	Name string
+	Code string
 }
 
 // GetProjectInfo ...
@@ -39,10 +38,9 @@ func GetProjectInfo(ctx context.Context, projectID string) (*Project, error) {
 		return &Project{}, err
 	}
 	return &Project{
-		ID:    projInfo["id"].(string),
-		Name:  projInfo["name"].(string),
-		Code:  projInfo["code"].(string),
-		BizID: projInfo["bizID"].(string),
+		ID:   projInfo["id"].(string),
+		Name: projInfo["name"].(string),
+		Code: projInfo["code"].(string),
 	}, nil
 }
 

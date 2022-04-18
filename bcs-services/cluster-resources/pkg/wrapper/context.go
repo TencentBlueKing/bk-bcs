@@ -100,15 +100,15 @@ func canExemptAuth(req server.Request) bool {
 
 // 通过 micro metadata（headers）信息，解析出用户名
 func parseUsername(md metadata.Metadata) (string, error) {
-	jwtToken, ok := md.Get("Authorization")
+	authorization, ok := md.Get("Authorization")
 	if !ok {
 		return "", errorx.New(errcode.Unauth, "failed to get authorization token!")
 	}
-	if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
+	if len(authorization) == 0 || !strings.HasPrefix(authorization, "Bearer ") {
 		return "", errorx.New(errcode.Unauth, "authorization token error")
 	}
 
-	claims, err := jwtDecode(jwtToken[7:])
+	claims, err := jwtDecode(authorization[7:])
 	if err != nil {
 		return "", err
 	}

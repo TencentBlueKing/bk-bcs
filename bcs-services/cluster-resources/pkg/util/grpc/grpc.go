@@ -48,10 +48,10 @@ func SetMD4CTX(ctx context.Context) context.Context {
 	// 若存在 jwtToken 则透传到依赖服务
 	rawMetadata, ok := microMetadata.FromContext(ctx)
 	if ok {
-		jwtToken, exists := rawMetadata.Get("Authorization")
+		authorization, exists := rawMetadata.Get("Authorization")
 		if exists {
 			md := metadata.New(map[string]string{
-				"Authorization": jwtToken,
+				"Authorization": authorization,
 			})
 			return metadata.NewOutgoingContext(ctx, md)
 		}

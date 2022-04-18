@@ -127,10 +127,9 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 		return nil, errorx.New(errcode.ComponentErr, "project: %s, errMsg: %s", projectID, resp.Message)
 	}
 	projInfo := map[string]interface{}{
-		"id":    projectID,
-		"name":  resp.Data.Name,
-		"code":  resp.Data.ProjectCode,
-		"bizID": resp.Data.BusinessID,
+		"id":   projectID,
+		"name": resp.Data.Name,
+		"code": resp.Data.ProjectCode,
 	}
 	log.Info(ctx, "fetch project info: %v", projInfo)
 	return projInfo, nil
