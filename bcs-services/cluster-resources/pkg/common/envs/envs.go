@@ -32,6 +32,8 @@ var (
 	FormFileBaseDir = envx.Get(
 		"FORM_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form",
 	)
+	// BCSApiGWAuthToken 网关 Auth Token（仅挂载环境变量模式使用，来源为 Secret）
+	BCSApiGWAuthToken = envx.Get("BCS_API_GW_AUTH_TOKEN", "")
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）

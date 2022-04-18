@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
@@ -44,6 +45,8 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 		return nil, err
 	}
 	for _, f := range []func() error{
+		// 初始化 AuthToken
+		conf.initAuthToken,
 		// 初始化 jwt 公钥
 		conf.initJWTPubKey,
 		// 初始化 iam
@@ -69,6 +72,15 @@ type ClusterResourcesConf struct {
 	Log       LogConf       `yaml:"log"`
 	Redis     RedisConf     `yaml:"redis"`
 	Global    GlobalConf    `yaml:"crGlobal"`
+}
+
+// 初始化 BCS AuthToken
+func (c *ClusterResourcesConf) initAuthToken() (err error) {
+	// 若指定从环境变量读取 BCS AuthToken，则丢弃配置文件中的值
+	if c.Global.BCSAPIGW.ReadAuthTokenFromEnv {
+		c.Global.BCSAPIGW.AuthToken = envs.BCSApiGWAuthToken
+	}
+	return nil
 }
 
 // 初始化 jwt 公钥
@@ -219,8 +231,9 @@ type BasicConf struct {
 
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
-	Host      string `yaml:"host" usage:"容器服务网关 Host"`
-	AuthToken string `yaml:"authToken" usage:"网关 Auth Token"`
+	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken            string `yaml:"authToken" usage:"网关 Auth Token"`
+	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 Auth Token（适用于同集群部署情况）"`
 }
 
 // IAMConf 权限中心相关配置
