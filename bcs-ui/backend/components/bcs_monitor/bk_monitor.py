@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 BK_MONITOR_QUERY_HOST = settings.BK_MONITOR_QUERY_HOST
 
-# 磁盘统计 允许的文件系统
-DISK_FSTYPE = "ext[234]|btrfs|xfs|zfs"
+# 磁盘统计 不允许的文件系统
+DISK_FSTYPE = "iso9660|tmpfs|udf"
 # 磁盘统计 允许的挂载目录
 DISK_MOUNTPOINT = "/data"
 
@@ -204,11 +204,11 @@ def get_cluster_disk_usage(cluster_id, node_ip_list, bk_biz_id=None):
     node_ip_list = "|".join(node_ip_list)
 
     disk_total_prom_query = f"""
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}})
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ DISK_FSTYPE }", ip=~"{node_ip_list}"}})
     """  # noqa
 
     disk_used_prom_query = f"""
-        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}})
+        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", device_type!~"{ DISK_FSTYPE }", ip=~"{node_ip_list}"}})
     """  # noqa
 
     data = {
@@ -227,9 +227,9 @@ def get_cluster_disk_usage_range(cluster_id, node_ip_list, bk_biz_id=None):
     node_ip_list = "|".join(node_ip_list)
 
     prom_query = f"""
-        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}}) /
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}})
-    """
+        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", device_type!~"{ DISK_FSTYPE }", ip=~"{node_ip_list}"}}) /
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ DISK_FSTYPE }", ip=~"{node_ip_list}"}})
+    """  # noqa
 
     resp = query_range(prom_query, start, end, step)
     return resp.get("data") or {}
@@ -268,7 +268,7 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
         info_resp['result'].append(result)
 
     node_disk_size_query = f"""
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip="{ip}"}})
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ DISK_FSTYPE }", ip="{ip}"}})
     """
     resp_data = query(node_disk_size_query).get('data') or []
     if resp_data and resp_data.get('result'):
@@ -362,8 +362,8 @@ def get_node_memory_usage_range(cluster_id, ip, start, end, bk_biz_id=None):
 
 def get_node_disk_usage(cluster_id, ip, bk_biz_id=None):
     prom_query = f"""
-        (sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip="{ip}"}}) /
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip="{ip}"}})) *
+        (sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", device_type!~"{ DISK_FSTYPE }", ip="{ip}"}}) /
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ DISK_FSTYPE }", ip="{ip}"}})) *
         100
     """  # noqa
 
