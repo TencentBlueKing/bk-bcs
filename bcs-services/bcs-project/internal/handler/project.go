@@ -40,7 +40,7 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
 	// 判断是否有创建权限
-	if err := perm.CanCreateProject(ctx); err != nil {
+	if err := perm.CanCreateProject(auth.GetUserFromCtx(ctx)); err != nil {
 		return err
 	}
 	// 创建项目
@@ -63,7 +63,7 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 		return err
 	}
 	// 校验项目的查看权限
-	if err := perm.CanViewProject(ctx, projectInfo.ProjectID); err != nil {
+	if err := perm.CanViewProject(auth.GetUserFromCtx(ctx), projectInfo.ProjectID); err != nil {
 		return err
 	}
 	// 处理返回数据及权限
@@ -74,7 +74,7 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
 	// 校验项目的删除权限
-	if err := perm.CanDeleteProject(ctx, req.ProjectID); err != nil {
+	if err := perm.CanDeleteProject(auth.GetUserFromCtx(ctx), req.ProjectID); err != nil {
 		return err
 	}
 	// 删除项目
@@ -89,7 +89,7 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeletePro
 
 func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
 	// 校验项目的删除权限
-	if err := perm.CanEditProject(ctx, req.ProjectID); err != nil {
+	if err := perm.CanEditProject(auth.GetUserFromCtx(ctx), req.ProjectID); err != nil {
 		return err
 	}
 

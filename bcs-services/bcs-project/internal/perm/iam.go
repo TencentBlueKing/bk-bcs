@@ -15,12 +15,9 @@
 package perm
 
 import (
-	"context"
-
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	iamPerm "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 )
@@ -55,14 +52,14 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 }
 
 // CanCreateProject ...
-func CanCreateProject(ctx context.Context) error {
+func CanCreateProject(username string) error {
 	// 判断是否有创建权限
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
 	}
 
-	canCreate, applyUrl, err := permClient.CanCreateProject(auth.GetUserFromCtx(ctx))
+	canCreate, applyUrl, err := permClient.CanCreateProject(username)
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectCreate", canCreate, err)
 	}
@@ -73,13 +70,13 @@ func CanCreateProject(ctx context.Context) error {
 }
 
 // CanViewProject ...
-func CanViewProject(ctx context.Context, projectID string) error {
+func CanViewProject(username string, projectID string) error {
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
 	}
 
-	canView, applyUrl, err := permClient.CanViewProject(auth.GetUserFromCtx(ctx), projectID)
+	canView, applyUrl, err := permClient.CanViewProject(username, projectID)
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectView", canView, err)
 	}
@@ -90,13 +87,13 @@ func CanViewProject(ctx context.Context, projectID string) error {
 }
 
 // CanEditProject ...
-func CanEditProject(ctx context.Context, projectID string) error {
+func CanEditProject(username, projectID string) error {
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
 	}
 	// 校验是否有编辑权限
-	canEdit, applyUrl, err := permClient.CanEditProject(auth.GetUserFromCtx(ctx), projectID)
+	canEdit, applyUrl, err := permClient.CanEditProject(username, projectID)
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectEdit", canEdit, err)
 	}
@@ -107,13 +104,13 @@ func CanEditProject(ctx context.Context, projectID string) error {
 }
 
 // CanEditProject ...
-func CanDeleteProject(ctx context.Context, projectID string) error {
+func CanDeleteProject(username string, projectID string) error {
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
 	}
 	// NOTE: 不校验集群
-	canDelete, applyUrl, err := permClient.CanDeleteProject(auth.GetUserFromCtx(ctx), projectID, "")
+	canDelete, applyUrl, err := permClient.CanDeleteProject(username, projectID, "")
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectDelete", canDelete, err)
 	}

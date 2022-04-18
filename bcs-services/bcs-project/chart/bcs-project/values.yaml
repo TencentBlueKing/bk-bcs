@@ -157,7 +157,7 @@ svcConf:
   log:
     level: "info"
     flushInterval: 5
-    path: "."
+    path: "./log"
     name: "project.log"
     size: 100
     age: 7
@@ -170,4 +170,7 @@ svcConf:
     appCode: "bk_bcs"
     appSecret: ""
     gatewayHost: ""
+    useGWHost: true
+    iamHost: ""
+    bkPaaSHost: ""
     debug: false
