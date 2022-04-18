@@ -2363,7 +2363,7 @@ func TestConditionInvalidSU(t *testing.T) {
 			},
 			Status: autoscalinginternal.ScaleStatus{
 				Replicas: tc.specReplicas,
-				Selector: "cheddar cheese",
+				Selector: "cheddar=cheese",
 			},
 		}
 		return true, obj, nil

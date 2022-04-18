@@ -251,7 +251,7 @@ type GPAScalingRules struct {
 	// - For scale up: 0 (i.e. no stabilization is done).
 	// - For scale down: 300 (i.e. the stabilization window is 300 seconds long).
 	// +optional
-	StabilizationWindowSeconds *int32 `json:"stabilizationWindowSeconds" protobuf:"varint,3,opt,name=stabilizationWindowSeconds"`
+	StabilizationWindowSeconds *int32 `json:"stabilizationWindowSeconds,omitempty" protobuf:"varint,3,opt,name=stabilizationWindowSeconds"`
 	// selectPolicy is used to specify which policy should be used.
 	// If not set, the default value MaxPolicySelect is used.
 	// +optional
@@ -441,14 +441,15 @@ type GeneralPodAutoscalerStatus struct {
 
 	// currentMetrics is the last read state of the metrics used by this autoscaler.
 	// +optional
-	CurrentMetrics []MetricStatus `json:"currentMetrics" protobuf:"bytes,5,rep,name=currentMetrics"`
+	CurrentMetrics []MetricStatus `json:"currentMetrics,omitempty" protobuf:"bytes,5,rep,name=currentMetrics"`
 
 	// conditions is the set of conditions required for this autoscaler to scale its target,
 	// and indicates whether or not those conditions are met.
 	Conditions []GeneralPodAutoscalerCondition `json:"conditions" protobuf:"bytes,6,rep,name=conditions"`
 
 	// LastCronScheduleTime is the schedule time of time mode
-	LastCronScheduleTime *metav1.Time `json:"lastCronScheduleTime" protobuf:"bytes,7,rep,name=lastCronScheduleTime"`
+	// +optional
+	LastCronScheduleTime *metav1.Time `json:"lastCronScheduleTime,omitempty" protobuf:"bytes,7,rep,name=lastCronScheduleTime"`
 }
 
 // GeneralPodAutoscalerConditionType are the valid conditions of
