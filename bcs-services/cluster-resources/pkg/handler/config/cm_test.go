@@ -15,7 +15,6 @@
 package config
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +28,7 @@ import (
 
 func TestCM(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("config/simple_configmap", "")
 	resName := mapx.Get(manifest, "metadata.name", "")

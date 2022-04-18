@@ -15,7 +15,6 @@
 package workload
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,7 +32,7 @@ import (
 
 func TestDeploy(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
@@ -123,7 +122,7 @@ var deployManifest4FormTest = map[string]interface{}{
 
 func TestDeployWithForm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
 
@@ -185,7 +184,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
@@ -249,7 +248,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 
 func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")

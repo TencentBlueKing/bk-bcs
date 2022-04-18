@@ -14,9 +14,7 @@
 
 package errorx
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // BaseError ClusterResources 模块基础 Error
 type BaseError struct {

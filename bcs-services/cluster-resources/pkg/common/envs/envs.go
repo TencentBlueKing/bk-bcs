@@ -48,6 +48,8 @@ var (
 	TestNamespace = envx.Get("TEST_NAMESPACE", "default")
 	// TestSharedClusterID 单测指定的共享集群 ID
 	TestSharedClusterID = envx.Get("TEST_SHARED_CLUSTER_ID", "BCS-K8S-S99999")
-	// TestSharedClusterNS 单测指定的共享集群中的命名空间名称
-	TestSharedClusterNS = envx.Get("TEST_SHARED_CLUSTER_NS", TestProjectCode+"-shared-t533")
+	// TestSharedClusterNS 单测指定的共享集群中的命名空间
+	TestSharedClusterNS = envx.Get("TEST_SHARED_CLUSTER_NS", "ieg-"+TestProjectCode+"-shared-t533")
+	// TestNoPermClusterID 单测指定没有权限的集群 ID
+	TestNoPermClusterID = envx.Get("TEST_NO_PERM_CLUSTER_ID", "BCS-K8S-NP8888")
 )

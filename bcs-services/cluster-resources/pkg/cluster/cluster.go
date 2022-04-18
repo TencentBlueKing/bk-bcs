@@ -15,23 +15,41 @@
 package cluster
 
 import (
+	"context"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/clustermgr"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // Cluster BCS 集群信息
 type Cluster struct {
-	ID   string
-	Type string
+	ID     string
+	Name   string
+	Type   string
+	ProjID string
 }
 
 // GetClusterInfo ...
 func GetClusterInfo(clusterID string) (*Cluster, error) {
-	clusterInfo, err := clustermgr.FetchClusterInfo(clusterID)
+	info, err := clustermgr.FetchClusterInfo(clusterID)
 	if err != nil {
 		return &Cluster{}, err
 	}
 	return &Cluster{
-		ID:   clusterInfo["id"].(string),
-		Type: clusterInfo["type"].(string),
+		ID:     info["id"].(string),
+		Name:   info["name"].(string),
+		Type:   info["type"].(string),
+		ProjID: info["project_id"].(string),
 	}, nil
+}
+
+// FromContext 通过 Context 获取集群信息
+func FromContext(ctx context.Context) (*Cluster, error) {
+	c := ctx.Value(ctxkey.ClusterKey)
+	if c == nil {
+		return nil, errorx.New(errcode.General, "cluster info not exists in context")
+	}
+	return c.(*Cluster), nil
 }

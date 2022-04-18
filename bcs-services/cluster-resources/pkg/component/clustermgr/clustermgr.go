@@ -15,6 +15,7 @@
 package clustermgr
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -32,8 +33,10 @@ func FetchClusterInfo(clusterID string) (map[string]interface{}, error) {
 func fetchClusterInfo(clusterID string) (map[string]interface{}, error) {
 	// TODO 这里根据配置判断集群类型，后续切换成 clustermgr api
 	ret := map[string]interface{}{
-		"id":   clusterID,
-		"type": "Single",
+		"id":         clusterID,
+		"type":       "Single",
+		"name":       "ThisIsCluster",
+		"project_id": envs.TestProjectID,
 	}
 	if slice.StringInSlice(clusterID, conf.G.SharedCluster.ClusterIDs) {
 		ret["type"] = "Shared"
