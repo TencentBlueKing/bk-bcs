@@ -20,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fatih/structs"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
 
@@ -120,15 +119,13 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 	if err != nil {
 		return nil, err
 	}
-	callOptions := grpcUtil.NewGrpcCallOpts(ctx)
-	resp, err := cli.GetProject(ctx, &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID}, callOptions...)
+	resp, err := cli.GetProject(grpcUtil.SetMD4CTX(ctx), &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID})
 	if err != nil {
 		return nil, errorx.New(errcode.ComponentErr, "call for project %s info failed: %v", projectID, err)
 	}
 	if resp.Code != 0 {
 		return nil, errorx.New(errcode.ComponentErr, "project: %s, errMsg: %s", projectID, resp.Message)
 	}
-	log.Info(ctx, "get project info: %v", structs.Map(resp.Data))
 	projInfo := map[string]interface{}{
 		"id":    projectID,
 		"name":  resp.Data.Name,

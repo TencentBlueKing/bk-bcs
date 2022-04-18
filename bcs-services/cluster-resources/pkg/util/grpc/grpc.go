@@ -43,9 +43,8 @@ func NewGrpcConn(address string, tlsConf *tls.Config) (conn *grpc.ClientConn, er
 	return grpc.Dial(address, opts...)
 }
 
-// NewGrpcCallOpts 新建 grpc 调用配置
-func NewGrpcCallOpts(ctx context.Context) []grpc.CallOption {
-	var opts []grpc.CallOption
+// SetMD4CTX 为调用 Grpc 的 Context 设置 Metadata
+func SetMD4CTX(ctx context.Context) context.Context {
 	// 若存在 jwtToken 则透传到依赖服务
 	rawMetadata, ok := microMetadata.FromContext(ctx)
 	if ok {
@@ -54,8 +53,8 @@ func NewGrpcCallOpts(ctx context.Context) []grpc.CallOption {
 			md := metadata.New(map[string]string{
 				"Authorization": jwtToken,
 			})
-			opts = append(opts, grpc.Header(&md))
+			return metadata.NewOutgoingContext(ctx, md)
 		}
 	}
-	return opts
+	return ctx
 }
