@@ -18,7 +18,6 @@ WORKSPACE=$(shell pwd)
 BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_NETWORK_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-network
 BCS_COMPONENT_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-component
-BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_MESOS_PATH=${WORKSPACE}/bcs-runtime/bcs-mesos
 BCS_CONF_COMPONENT_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-component
 BCS_CONF_NETWORK_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-network
@@ -61,7 +60,8 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
-	user-manager cluster-manager tools alert-manager k8s-watch kube-agent
+	user-manager cluster-manager tools alert-manager k8s-watch kube-agent \
+	bcs-project
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -379,6 +379,9 @@ alert-manager:pre
 	cp -R ./bcs-services/bcs-alert-manager/pkg/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/swagger-ui
 	cp ./bcs-services/bcs-alert-manager/pkg/proto/alertmanager/alertmanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/alertmanager.swagger.json
 	cd ./bcs-services/bcs-alert-manager/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
+
+bcs-project:pre
+	cd ${BCS_SERVICES_PATH}/bcs-project && make build
 
 # end of bcs-service section
 
