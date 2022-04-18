@@ -88,11 +88,11 @@ func (c *ClusterResourcesConf) initJWTPubKey() (err error) {
 	if c.Global.Auth.JWTPubKey == "" {
 		return nil
 	}
-	pemContent, err := ioutil.ReadFile(c.Global.Auth.JWTPubKey)
+	content, err := ioutil.ReadFile(c.Global.Auth.JWTPubKey)
 	if err != nil {
 		return err
 	}
-	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM(pemContent)
+	c.Global.Auth.JWTPubKeyObj, err = jwtGo.ParseRSAPublicKeyFromPEM(content)
 	return err
 }
 
@@ -236,8 +236,8 @@ type BasicConf struct {
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
 	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
-	AuthToken            string `yaml:"authToken" usage:"网关 Auth Token"`
-	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 Auth Token（适用于同集群部署情况）"`
+	AuthToken            string `yaml:"authToken" usage:"网关 AuthToken"`
+	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
 }
 
 // IAMConf 权限中心相关配置
