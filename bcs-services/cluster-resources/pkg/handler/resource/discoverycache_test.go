@@ -15,16 +15,17 @@
 package resource
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestInvalidateDiscoveryCache(t *testing.T) {
+	ctx := handler.NewInjectedContext("", "", "")
 	req := clusterRes.InvalidateDiscoveryCacheReq{ProjectID: envs.TestProjectID, ClusterID: envs.TestClusterID}
-	assert.Nil(t, New().InvalidateDiscoveryCache(context.TODO(), &req, &clusterRes.CommonResp{}))
+	assert.Nil(t, New().InvalidateDiscoveryCache(ctx, &req, &clusterRes.CommonResp{}))
 }
