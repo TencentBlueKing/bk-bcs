@@ -23,18 +23,15 @@ cluster_resources:
     member:
       - BCS-K8S-xx
       - BCS-K8S-xx
-    kind: federated_cluster # 联邦集群
+    kind: federated # 联邦集群
 
   - cluster_id: BCS-xx
-    kind: isolated_cluster # 独立集群
+    kind: isolated # 独立集群
     member: xx
 
   - cluster_id: BCS-xx
-    kind: shared_cluster # 共享集群
+    kind: shared # 共享集群
     member: xx
-
-apiserver:
-  cluster_id: xx
 
 etcd:
   endpoints: ""
