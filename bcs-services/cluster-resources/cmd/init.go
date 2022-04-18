@@ -94,7 +94,7 @@ func (crSvc *clusterResourcesService) Init() error {
 		crSvc.initHandler,
 		crSvc.initHTTPService,
 		crSvc.initMetricService,
-		crSvc.initDependentServiceClient,
+		crSvc.initComponentClient,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -344,8 +344,8 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 	return nil
 }
 
-// 初始化依赖服务 Client
-func (crSvc *clusterResourcesService) initDependentServiceClient() (err error) {
+// 初始化依赖组件 Client
+func (crSvc *clusterResourcesService) initComponentClient() (err error) {
 	var tlsConf *tls.Config
 	if crSvc.conf.Discovery.Cert != "" || crSvc.conf.Discovery.Key != "" || crSvc.conf.Discovery.Ca != "" {
 		tlsConf, err = ssl.ClientTslConfVerity(
