@@ -119,4 +119,3 @@ crGlobal:
   sharedCluster:
     enabledCObjKinds: []
     enabledCRDs: []
-    clusterIDs: []

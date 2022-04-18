@@ -237,5 +237,4 @@ type IAMConf struct {
 type SharedClusterConf struct {
 	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
 	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
-	ClusterIDs       []string `yaml:"clusterIDs" usage:"共享集群 ID 列表"`    // TODO 对接 ClusterMgr 后去除
 }
