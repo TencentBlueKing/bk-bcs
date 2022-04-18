@@ -72,6 +72,11 @@ func (p *Perm) CanUse(_ perm.Ctx) (bool, error) {
 	panic("not implement")
 }
 
+// CanManage ...
+func (p *Perm) CanManage(_ perm.Ctx) (bool, error) {
+	panic("not implement")
+}
+
 // ScopedPerm ...
 type ScopedPerm struct {
 	perm perm.IAMPerm
@@ -135,4 +140,9 @@ func (p *ScopedPerm) CanUse(ctx perm.Ctx) (bool, error) {
 	}
 	allow, err := p.perm.CanMultiActions(ctx, actionIDs)
 	return cluster.RelatedClusterCanViewPerm(ctx, allow, err)
+}
+
+// CanManage ...
+func (p *ScopedPerm) CanManage(_ perm.Ctx) (bool, error) {
+	panic("not implement")
 }

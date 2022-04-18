@@ -17,6 +17,8 @@ package cluster
 const (
 	// ClusterView 查看集群
 	ClusterView = "cluster_view"
+	// ClusterManage 集群管理
+	ClusterManage = "cluster_manage"
 )
 
 const (

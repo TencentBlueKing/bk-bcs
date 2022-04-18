@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
 )
 
-// Perm NOTE ClusterResources 不对集群进行管理，因此只实现 CanView 方法
+// Perm ...
 type Perm struct {
 	perm.IAMPerm
 }
@@ -66,6 +66,12 @@ func (p *Perm) CanDelete(_ perm.Ctx) (bool, error) {
 // CanUse ...
 func (p *Perm) CanUse(_ perm.Ctx) (bool, error) {
 	panic("not implement")
+}
+
+// CanManage ...
+func (p *Perm) CanManage(ctx perm.Ctx) (bool, error) {
+	allow, err := p.IAMPerm.CanAction(ctx, ClusterManage, false)
+	return project.RelatedProjectCanViewPerm(ctx, allow, err)
 }
 
 // ScopedPerm ...
@@ -131,4 +137,9 @@ func (p *ScopedPerm) CanUse(ctx perm.Ctx) (bool, error) {
 	}
 	allow, err := p.perm.CanMultiActions(ctx, actionIDs)
 	return project.RelatedProjectCanViewPerm(ctx, allow, err)
+}
+
+// CanManage ...
+func (p *ScopedPerm) CanManage(_ perm.Ctx) (bool, error) {
+	panic("not implement")
 }

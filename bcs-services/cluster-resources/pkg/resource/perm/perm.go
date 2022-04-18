@@ -49,11 +49,11 @@ func genPermAndCtx(res, action, username, projectID, clusterID, namespace string
 		if action == crAction.List || action == crAction.Create {
 			namespace = ""
 		}
-		return criam.GetNSPerm(projectID, clusterID), nsAuth.NewPermCtx(username, projectID, clusterID, namespace)
+		return criam.NewNSPerm(projectID, clusterID), nsAuth.NewPermCtx(username, projectID, clusterID, namespace)
 	case namespace == "":
-		return criam.GetClusterScopedPerm(clusterID), clusterAuth.NewPermCtx(username, projectID, clusterID)
+		return criam.NewClusterScopedPerm(projectID), clusterAuth.NewPermCtx(username, projectID, clusterID)
 	default:
-		return criam.GetNSScopedPerm(projectID, clusterID), nsAuth.NewPermCtx(username, projectID, clusterID, namespace)
+		return criam.NewNSScopedPerm(projectID, clusterID), nsAuth.NewPermCtx(username, projectID, clusterID, namespace)
 	}
 }
 
@@ -73,8 +73,6 @@ func canAction(perm iamPerm.Perm, permCtx iamPerm.Ctx, action string) (allow boo
 	case crAction.Use:
 		return perm.CanUse(permCtx)
 	default:
-		return false, errorx.New(
-			errcode.Unsupported, "Action %s in scoped resource perm validate unsupported", action,
-		)
+		return false, errorx.New(errcode.Unsupported, "Action %s in perm validate unsupported", action)
 	}
 }
