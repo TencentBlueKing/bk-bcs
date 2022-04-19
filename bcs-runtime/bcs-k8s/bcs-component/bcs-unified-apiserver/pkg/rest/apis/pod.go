@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
+// PodInterface Pod Handler 需要实现的方法
 type PodInterface interface {
 	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
@@ -32,31 +33,32 @@ type PodInterface interface {
 }
 
 type PodHandler struct {
-	stor PodInterface
+	handler PodInterface
 }
 
 func NewPodHandler(handler PodInterface) *PodHandler {
-	return &PodHandler{stor: handler}
+	return &PodHandler{handler: handler}
 }
 
 func (h *PodHandler) Serve(c *rest.RequestInfo) error {
 	var (
-		result runtime.Object
-		err    error
+		obj runtime.Object
+		err error
 	)
 	switch c.Options.Verb {
 	case rest.ListVerb:
-		result, err = h.stor.List(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
+		obj, err = h.handler.List(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
 	case rest.ListAsTableVerb:
-		result, err = h.stor.ListAsTable(c.Request.Context(), c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
+		obj, err = h.handler.ListAsTable(c.Request.Context(), c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
 	case rest.GetVerb:
-		result, err = h.stor.Get(c.Request.Context(), c.Namespace, c.Name, *c.Options.GetOptions)
+		obj, err = h.handler.Get(c.Request.Context(), c.Namespace, c.Name, *c.Options.GetOptions)
 	case rest.GetAsTableVerb:
-		result, err = h.stor.GetAsTable(c.Request.Context(), c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
+		obj, err = h.handler.GetAsTable(c.Request.Context(), c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
 	case rest.DeleteVerb:
-		result, err = h.stor.Delete(c.Request.Context(), c.Namespace, c.Name, *c.Options.DeleteOptions)
+		obj, err = h.handler.Delete(c.Request.Context(), c.Namespace, c.Name, *c.Options.DeleteOptions)
 	case rest.WatchVerb:
-		watch, err := h.stor.Watch(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
+		// watch 需要特殊处理 chunk
+		watch, err := h.handler.Watch(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
 		if err != nil {
 			return err
 		}
@@ -71,11 +73,13 @@ func (h *PodHandler) Serve(c *rest.RequestInfo) error {
 		}
 		return nil
 	default:
+		// 未实现的功能
 		return rest.ErrNotImplemented
 	}
+
 	if err != nil {
 		return err
 	}
-	c.Write(result)
+	c.Write(obj)
 	return nil
 }
