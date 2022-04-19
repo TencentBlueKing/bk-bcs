@@ -111,6 +111,27 @@ func (h *Handler) Serve(c *rest.RequestInfo) {
 		}
 		c.Write(result)
 		return
+	} else if c.Resource == "pods" && c.Verb == "watch" {
+		listOptions, err := clientutil.GetListOptionsFromQueryParam(c.Request.URL.Query())
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
+		watch, err := stor.Watch(c.Request.Context(), c.Namespace, *listOptions)
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
+		firstChunk := true
+		for event := range watch.ResultChan() {
+			err = rest.AddTypeInformationToObject(event.Object)
+			if err != nil {
+				c.AbortWithError(err)
+				return
+			}
+			c.WriteChunk(event, firstChunk)
+			firstChunk = false
+		}
 	}
 
 	h.proxyHandler.ServeHTTP(c.Writer, c.Request)

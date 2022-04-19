@@ -15,11 +15,13 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
@@ -53,8 +55,29 @@ func (c *RequestInfo) Write(obj runtime.Object) {
 	json.NewEncoder(c.Writer).Encode(obj)
 }
 
-func (c *RequestInfo) Serve() {
-
+func (c *RequestInfo) WriteChunk(obj watch.Event, firstChunk bool) {
+	flusher, ok := c.Writer.(http.Flusher)
+	if !ok {
+		panic("expected http.ResponseWriter to be an http.Flusher")
+	}
+	if firstChunk {
+		c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+		c.Writer.Header().Set("Cache-Control", "no-cache, private")
+		c.Writer.Header().Set("Transfer-Encoding", "chunked")
+		c.Writer.WriteHeader(http.StatusOK)
+	}
+	eJsons, err := json.Marshal(obj) //转换成JSON返回的是byte[]
+	if err != nil {
+		panic(err)
+	}
+	eJsonStr := string(eJsons) + "\r\n"
+	// 大小写字符串替换，参考：
+	// k8s.io/apimachinery@v0.21.3/pkg/apis/meta/v1/watch.go:31
+	// k8s.io/apimachinery@v0.21.3/pkg/watch/watch.go:57
+	eJsonStr = strings.Replace(eJsonStr, "Type", "type", 1)
+	eJsonStr = strings.Replace(eJsonStr, "Object", "object", 1)
+	c.Writer.Write([]byte(eJsonStr))
+	flusher.Flush()
 }
 
 func AddTypeInformationToObject(obj runtime.Object) error {

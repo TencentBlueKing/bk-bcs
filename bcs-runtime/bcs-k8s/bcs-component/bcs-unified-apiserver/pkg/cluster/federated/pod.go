@@ -21,6 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 
@@ -79,6 +80,33 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListO
 
 func (p *PodStor) SelfLink(namespace string) string {
 	return fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace)
+}
+
+func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+	opts.Watch = true
+
+	for _, v := range p.k8sClientMap {
+		watch, err := v.CoreV1().RESTClient().Get().
+			Namespace(namespace).
+			Resource("pods").
+			VersionedParams(&opts, scheme.ParameterCodec).
+			Timeout(timeout).
+			SetHeader("Accept", "application/json").
+			Watch(ctx)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+
+		return watch, nil
+	}
+	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
 }
 
 // ListAsTable 查询Pod列表, kubectl格式返回

@@ -16,14 +16,17 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
+	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/federated"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/isolated"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/cluster/shared"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
-	"github.com/gorilla/mux"
 )
 
 // Handler handler for http request
@@ -83,4 +86,15 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// damage the real cluster authentication process.
 	delete(req.Header, "Authorization")
 	handler.Serve(reqInfo)
+}
+
+func init() {
+	err := metav1.AddMetaToScheme(scheme.Scheme)
+	if err != nil {
+		panic(err)
+	}
+	err = metav1beta1.AddMetaToScheme(scheme.Scheme)
+	if err != nil {
+		panic(err)
+	}
 }
