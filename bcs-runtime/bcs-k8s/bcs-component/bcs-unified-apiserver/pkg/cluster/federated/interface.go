@@ -16,6 +16,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 )
 
 // PodInterface has methods to work with Pod resources.
@@ -25,4 +26,5 @@ type PodInterface interface {
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error)
 	GetAsTable(ctx context.Context, namespace string, name string, accept string, opts metav1.GetOptions) (*metav1.Table, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error)
+	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 }

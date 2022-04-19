@@ -132,6 +132,7 @@ func (h *Handler) Serve(c *rest.RequestInfo) {
 			c.WriteChunk(event, firstChunk)
 			firstChunk = false
 		}
+		return
 	}
 
 	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
