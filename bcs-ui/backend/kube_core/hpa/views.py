@@ -18,9 +18,15 @@ from rest_framework import views, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
-from backend.accounts import bcs_perm
 from backend.components import paas_cc
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import (
+    NamespaceScopedAction,
+    NamespaceScopedPermCtx,
+    NamespaceScopedPermission,
+)
 from backend.kube_core.hpa import constants, utils
 from backend.resources.exceptions import DeleteResourceError
 from backend.templatesets.legacy_apps.configuration.constants import K8sResourceName
@@ -29,7 +35,7 @@ from backend.uniapps.network.serializers import BatchResourceSLZ
 from backend.uniapps.resource.views import ResourceOperate
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
-from backend.utils.response import BKAPIResponse
+from backend.utils.response import BKAPIResponse, PermsResponse
 
 logger = logging.getLogger(__name__)
 
@@ -37,32 +43,22 @@ logger = logging.getLogger(__name__)
 class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
     category = K8sResourceName.K8sHPA.value
+    iam_perm = NamespaceScopedPermission()
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.VIEW, NamespaceScopedAction.UPDATE, NamespaceScopedAction.DELETE],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def list(self, request, project_id):
         """获取所有HPA数据"""
-        access_token = request.user.token.access_token
-        cluster_dicts = self.get_project_cluster_info(request, project_id)
-        cluster_data = cluster_dicts.get('results', {}) or {}
-        k8s_hpa_list = []
+        cluster_id = request.query_params.get("cluster_id")
+        hpa_list = utils.get_cluster_hpa_list(request, project_id, cluster_id)
 
-        namespace_res = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
-        namespace_data = namespace_res.get('data', {}).get('results') or []
-        namespace_dict = {i['name']: i['id'] for i in namespace_data}
+        for h in hpa_list:
+            h['iam_ns_id'] = calc_iam_ns_id(cluster_id, h['namespace'])
 
-        for cluster_info in cluster_data:
-            cluster_id = cluster_info['cluster_id']
-            cluster_env = cluster_info.get('environment')
-            cluster_name = cluster_info['name']
-            hpa_list = utils.get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_name)
-            k8s_hpa_list.extend(hpa_list)
-
-        for p in k8s_hpa_list:
-            p['namespace_id'] = namespace_dict.get(p['namespace'])
-
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        k8s_hpa_list = perm.hook_perms(k8s_hpa_list, ns_id_flag='namespace_id')
-
-        return Response(k8s_hpa_list)
+        return PermsResponse(hpa_list, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
     def check_namespace_use_perm(self, request, project_id, namespace_list):
         """检查是否有命名空间的使用权限"""
@@ -72,11 +68,17 @@ class HPA(viewsets.ViewSet, BaseAPI, ResourceOperate):
         namespace_res = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
         namespace_data = namespace_res.get('data', {}).get('results') or []
         namespace_dict = {i['name']: i['id'] for i in namespace_data}
+        namespace_cluster_dict = {i['name']: i['cluster_id'] for i in namespace_data}
+
         for namespace in namespace_list:
-            namespace_id = namespace_dict.get(namespace)
             # 检查是否有命名空间的使用权限
-            perm = bcs_perm.Namespace(request, project_id, namespace_id)
-            perm.can_use(raise_exception=True)
+            perm_ctx = NamespaceScopedPermCtx(
+                username=request.user.username,
+                project_id=project_id,
+                cluster_id=namespace_cluster_dict.get(namespace),
+                name=namespace,
+            )
+            self.iam_perm.can_use(perm_ctx)
         return namespace_dict
 
     def delete(self, request, project_id, cluster_id, ns_name, name):

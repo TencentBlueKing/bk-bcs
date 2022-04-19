@@ -15,6 +15,8 @@ local core = require("apisix.core")
 local stringx = require('pl.stringx')
 local authentication = require("apisix.plugins.bcs-auth.authentication")
 
+local ngx = ngx
+local ngx_escape_uri = ngx.escape_uri
 local tab_concat = table.concat
 local plugin_name = "bcs-auth"
 
@@ -57,9 +59,8 @@ local function is_from_browser(user_agent)
 end
 
 
--- 本地测试用，后面移除
 local function concat_login_uri(conf, ctx)
-    local c_url = tab_concat({ctx.var.scheme, "://", ctx.var.host, ":", "31399", ctx.var.request_uri})
+    local c_url = tab_concat({ctx.var.scheme, "://", ctx.var.host, ngx_escape_uri(ctx.var.request_uri)})
     return tab_concat({conf.bk_login_host, "/plain/?size=big&c_url=", c_url})
 end
 

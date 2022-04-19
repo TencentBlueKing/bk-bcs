@@ -14,19 +14,10 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework.permissions import BasePermission
 
-from backend.accounts import bcs_perm
 from backend.container_service.clusters.base.utils import get_cluster_type, is_proj_ns_in_shared_cluster
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.clusters.permissions import AccessClusterPermMixin  # noqa
 from backend.utils.basic import getitems
-
-
-def validate_cluster_perm(request, project_id: str, cluster_id: str, raise_exception: bool = True) -> bool:
-    """ 检查用户是否有操作集群权限 """
-    if request.user.is_superuser:
-        return True
-    perm = bcs_perm.Cluster(request, project_id, cluster_id)
-    return perm.can_use(raise_exception=raise_exception)
 
 
 class AccessNamespacePermission(BasePermission):

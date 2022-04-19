@@ -16,8 +16,8 @@
                             :id="option.project_code"
                             :name="option.project_name">
                         </bcs-option>
-                        <template #extension v-if="!$INTERNAL">
-                            <div class="extension-item" @click="handleCreateProject"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('新建项目')}}</div>
+                        <template #extension>
+                            <div class="extension-item" @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
                             <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
                         </template>
                     </bcs-select>
@@ -46,13 +46,14 @@
                     <div class="header-help" @click="handleGotoHelp">
                         <i class="bcs-icon bcs-icon-help-2"></i>
                     </div>
-                    <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 10" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                    <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 20" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
                         <div class="header-user">
                             {{user.username}}
                             <i class="bk-icon icon-down-shape"></i>
                         </div>
                         <template slot="content">
                             <ul class="bcs-navigation-admin">
+                                <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
                                 <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
                                 <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
                             </ul>
@@ -130,6 +131,16 @@
                         }
                     })
                 }
+            },
+            handleGotoUserToken () {
+                if (this.$route.name === 'token') return
+                this.$router.push({
+                    name: 'token'
+                })
+            },
+            // 申请项目权限
+            handleGotoIAM () {
+                window.open(window.BK_IAM_APP_URL)
             },
             handleGotoProjectManage () {
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()

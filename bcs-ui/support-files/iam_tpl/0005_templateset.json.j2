@@ -1,182 +1,218 @@
 {
-    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-    "operations": [
-        {
-            "operation": "upsert_resource_type",
-                "data": {
-                    "id": "templateset",
-                    "name": "模板集",
-                    "name_en": "templateset",
-                    "description": "模板集",
-                    "description_en": "templateset",
-                    "provider_config": {
-                        "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/templatesets/"
-                    },
-                    "version": 1
-                }
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "templateset",
+        "name": "模板集",
+        "name_en": "templateset",
+        "description": "模板集",
+        "description_en": "templateset",
+        "provider_config": {
+          "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/templatesets/"
         },
-        {
-            "operation": "upsert_instance_selection",
-            "data": {
-                "id": "templateset_list",
-                "name": "模板集",
-                "name_en": "templateset",
-                "resource_type_chain": [
-                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "project"},
-                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "templateset"}
-                ]
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "templateset_create",
-                "name": "模板集创建",
-                "name_en": "create templateset",
-                "description": "用户创建模板集",
-                "description_en": "user create templateset",
-                "type": "create",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "project",
-                    "related_instance_selections": [{
-                        "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                        "id": "project_list"
-                    }]
-                }],
-                "related_actions": ["project_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "templateset_view",
-                "name": "模板集查看",
-                "name_en": "view templateset",
-                "description": "用户查看模板集",
-                "description_en": "user view templateset",
-                "type": "view",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "templateset",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "templateset_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "templateset_copy",
-                "name": "模板集复制",
-                "name_en": "copy templateset",
-                "description": "用户复制模板集",
-                "description_en": "user copy templateset",
-                "type": "use",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "templateset",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "templateset_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "templateset_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "templateset_update",
-                "name": "模板集更新",
-                "name_en": "update templateset",
-                "description": "用户更新模板集",
-                "description_en": "user update templateset",
-                "type": "edit",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "templateset",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "templateset_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "templateset_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "templateset_delete",
-                "name": "模板集删除",
-                "name_en": "delete templateset",
-                "description": "用户删除模板集",
-                "description_en": "user delete templateset",
-                "type": "delete",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "templateset",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "templateset_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "templateset_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "templateset_instantiate",
-                "name": "模板集实例化",
-                "name_en": "instantiate templateset",
-                "description": "用户实例化模板集",
-                "description_en": "user instantiate templateset",
-                "type": "use",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "templateset",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "templateset_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "templateset_view"],
-                "version": 1
-            }
-        }
-    ]
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "templateset_list",
+        "name": "模板集",
+        "name_en": "templateset",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "templateset"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_create",
+        "name": "模板集创建",
+        "name_en": "create templateset",
+        "description": "用户创建模板集",
+        "description_en": "user create templateset",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_view",
+        "name": "模板集查看",
+        "name_en": "view templateset",
+        "description": "用户查看模板集",
+        "description_en": "user view templateset",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_copy",
+        "name": "模板集复制",
+        "name_en": "copy templateset",
+        "description": "用户复制模板集",
+        "description_en": "user copy templateset",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_update",
+        "name": "模板集更新",
+        "name_en": "update templateset",
+        "description": "用户更新模板集",
+        "description_en": "user update templateset",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_delete",
+        "name": "模板集删除",
+        "name_en": "delete templateset",
+        "description": "用户删除模板集",
+        "description_en": "user delete templateset",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_instantiate",
+        "name": "模板集实例化",
+        "name_en": "instantiate templateset",
+        "description": "用户实例化模板集",
+        "description_en": "user instantiate templateset",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
 }

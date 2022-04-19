@@ -39,12 +39,12 @@ class ClusterProvider(ResourceProvider):
         :return: ListResult 类型的实例列表
         """
         project_id = filter_obj.parent['id']
-        cluster_list = get_clusters(get_system_token(), project_id)
+        clusters = get_clusters(get_system_token(), project_id)
         results = [
             {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
+            for cluster in clusters[page_obj.slice_from : page_obj.slice_to]
         ]
-        return ListResult(results=results, count=len(cluster_list))
+        return ListResult(results=results, count=len(clusters))
 
     def fetch_instance_info(self, filter_obj: FancyDict, **options) -> ListResult:
         """
@@ -56,7 +56,10 @@ class ClusterProvider(ResourceProvider):
         cluster_ids = filter_obj.ids
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
         cluster_list = paas_cc.list_clusters(cluster_ids)
-        results = [{'id': cluster['cluster_id'], 'display_name': cluster['name']} for cluster in cluster_list]
+        results = [
+            {'id': cluster['cluster_id'], 'display_name': cluster['name'], '_bk_iam_approver_': [cluster['creator']]}
+            for cluster in cluster_list
+        ]
         return ListResult(results=results, count=len(results))
 
     def list_instance_by_policy(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
@@ -71,14 +74,12 @@ class ClusterProvider(ResourceProvider):
     def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         """支持模糊搜索集群名"""
         project_id = filter_obj.parent['id']
+
         # 针对搜索关键字过滤集群
-        cluster_list = [
-            cluster
+        clusters = [
+            {'id': cluster['cluster_id'], 'display_name': cluster['name']}
             for cluster in get_clusters(get_system_token(), project_id)
             if filter_obj.keyword in cluster['name']
         ]
-        results = [
-            {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in cluster_list[page_obj.slice_from : page_obj.slice_to]
-        ]
-        return ListResult(results=results, count=len(cluster_list))
+
+        return ListResult(results=clusters[page_obj.slice_from : page_obj.slice_to], count=len(clusters))

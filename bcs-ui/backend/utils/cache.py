@@ -20,7 +20,7 @@ rd_pool = redis.ConnectionPool(
     host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB, password=settings.REDIS_PASSWORD
 )
 
-rd_client = redis.Redis(connection_pool=rd_pool)
+rd_client = redis.Redis(connection_pool=rd_pool, health_check_interval=30)
 
 
 region = make_region().configure(

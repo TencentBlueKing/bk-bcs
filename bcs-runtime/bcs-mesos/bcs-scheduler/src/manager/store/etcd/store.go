@@ -208,10 +208,12 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		store.StorageOperatorFailedTotal.Reset()
 		store.StorageOperatorLatencyMs.Reset()
 		store.StorageOperatorTotal.Reset()
-		store.ClusterMemoryResouceRemain.Reset()
-		store.ClusterCpuResouceRemain.Reset()
-		store.ClusterMemoryResouceTotal.Reset()
-		store.ClusterCpuResouceTotal.Reset()
+		store.ClusterMemoryResourceRemain.Reset()
+		store.ClusterCpuResourceRemain.Reset()
+		store.ClusterMemoryResourceTotal.Reset()
+		store.ClusterCpuResourceAvailable.Reset()
+		store.ClusterMemoryResourceAvailable.Reset()
+		store.ClusterCpuResourceTotal.Reset()
 
 		// handle service metrics
 		services, err := s.ListAllServices()
@@ -269,16 +271,28 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			store.ReportObjectResourceInfoMetrics(store.ObjectResourceSecret, secret.NameSpace, secret.Name, "")
 		}
 
+		// handle agentSettings
+		agentSettingsMap := make(map[string]bool)
+		agentSettings, err := s.ListAgentsettings()
+		if err != nil {
+			blog.Errorf("list all agent settings error %s", err.Error())
+		}
+		for _, setting := range agentSettings {
+			agentSettingsMap[setting.InnerIP] = setting.Disabled
+		}
+
 		// handle agents metrics
 		agents, err := s.ListAllAgents()
 		if err != nil {
 			blog.Errorf("list all agent error %s", err.Error())
 		}
 		var (
-			clusterCpu float64
-			clusterMem float64
-			remainCpu  float64
-			remainMem  float64
+			clusterCpu   float64
+			clusterMem   float64
+			remainCpu    float64
+			remainMem    float64
+			availableCpu float64
+			availableMem float64
 		)
 		for _, agent := range agents {
 			info := agent.GetAgentInfo()
@@ -326,19 +340,25 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			if s.pm == nil || ipValue > 0 {
 				remainCpu += float2Float(tmpAgentRemainCpu)
 				remainMem += float2Float(tmpAgentRemainMem)
-
+				// no need to add remain cpu/mem if agent is disabled
+				agentDisabled, ok := agentSettingsMap[info.IP]
+				if ok && !agentDisabled {
+					availableCpu += float2Float(tmpAgentRemainCpu)
+					availableMem += float2Float(tmpAgentRemainMem)
+				}
 			}
 			store.ReportAgentInfoMetrics(info.IP, s.clusterId, info.CpuTotal, tmpAgentRemainCpu,
 				info.MemTotal, tmpAgentRemainMem, ipValue)
 			clusterCpu += float2Float(info.CpuTotal)
 			clusterMem += float2Float(info.MemTotal)
 		}
-		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, clusterCpu, remainMem, clusterMem)
+		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, availableCpu, clusterCpu, remainMem,
+			availableMem, clusterMem)
 	}
 }
 
 func float2Float(num float64) float64 {
-	float_num, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", num), 64)
+	float_num, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", num), 64)
 	return float_num
 }
 

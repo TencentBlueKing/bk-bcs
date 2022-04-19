@@ -2,6 +2,8 @@
     <bcs-select class="cluster-select"
         v-model="localValue"
         :clearable="false"
+        :searchable="searchable"
+        :disabled="disabled"
         @change="handleClusterChange">
         <bcs-option v-for="item in clusterList"
             :key="item.clusterID"
@@ -21,6 +23,14 @@
             value: {
                 type: String,
                 default: ''
+            },
+            searchable: {
+                type: Boolean,
+                default: false
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         model: {
@@ -53,5 +63,6 @@
 <style lang="postcss" scoped>
 .cluster-select {
     min-width: 200px;
+    background-color: #fff;
 }
 </style>

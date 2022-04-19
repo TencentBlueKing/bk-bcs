@@ -78,7 +78,7 @@ type ESBBusinessInfo struct {
 	BkPmpSvcPm        string      `json:"bk_pmp_svc_pm"`
 	BkPmpTestTm       string      `json:"bk_pmp_test_tm"`
 	BkProductName     string      `json:"bk_product_name"`
-	BkSourceID        int64       `json:"bk_source_id"`
+	BkSourceID        string      `json:"bk_source_id"`
 	BkSupplierAccount string      `json:"bk_supplier_account"`
 	BkTclsID          string      `json:"bk_tcls_id"`
 	BkTcmID           string      `json:"bk_tcm_id"`

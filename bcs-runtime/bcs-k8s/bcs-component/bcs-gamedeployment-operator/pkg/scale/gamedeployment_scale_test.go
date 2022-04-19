@@ -61,7 +61,7 @@ func newRealControl() testControl {
 
 	// init hook controller
 	hookClient := hookFake.NewSimpleClientset()
-	hookFake.AddToScheme(scheme.Scheme)
+	_ = hookFake.AddToScheme(scheme.Scheme)
 	hookInformerFactory := hookinformers.NewSharedInformerFactory(hookClient, controller.NoResyncPeriodFunc())
 	hookStop := make(chan struct{})
 	defer close(hookStop)
@@ -71,7 +71,7 @@ func newRealControl() testControl {
 	hookInformerFactory.WaitForCacheSync(hookStop)
 	return testControl{
 		Interface: New(kubeClient, gdfake.NewSimpleClientset(), &record.FakeRecorder{}, expectations.NewScaleExpectations(),
-			hookInformer.Lister(), hookTemplateInformer.Lister(),
+			hookInformer.Lister(), hookTemplateInformer.Lister(), kubeInformers.Core().V1().Nodes().Lister(),
 			predelete.New(kubeClient, hookClient, &record.FakeRecorder{}, hookInformer.Lister(),
 				hookTemplateInformer.Lister()), gdmetrics.NewMetrics()),
 		kubeClient:    kubeClient,

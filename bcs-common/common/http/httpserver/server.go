@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/emicklei/go-restful"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/gorilla/mux"
 	"net"
 	"net/http"
@@ -85,6 +86,19 @@ func (s *HttpServer) RegisterWebServer(rootPath string, filters []restful.Filter
 	//register action
 	s.RegisterActions(ws, actions)
 
+	return nil
+}
+
+// RegisterApiDocs register api docs
+func (s *HttpServer) RegisterApiDocs(apidocsPath string) error {
+	if apidocsPath == "" {
+		apidocsPath = "/apidocs.json"
+	}
+	config := restfulspec.Config{
+		WebServices: s.webContainer.RegisteredWebServices(),
+		APIPath:     apidocsPath,
+	}
+	s.webContainer.Add(restfulspec.NewOpenAPIService(config))
 	return nil
 }
 

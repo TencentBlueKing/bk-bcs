@@ -160,6 +160,13 @@ export default {
         },
 
         /**
+         * 获取版本列表
+         */
+        getChartVersionsList (context, { projectId, chartName }, config = {}) {
+            return http.get(`${DEVOPS_BCS_API_URL}/api/helm_chart/projects/${projectId}/charts/${chartName}/versions/?is_public_repo=true`)
+        },
+
+        /**
          * 获取当前集群下的namespace 列表
          *
          * @param {Object} context store 上下文对象

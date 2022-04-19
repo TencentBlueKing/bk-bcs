@@ -3,8 +3,16 @@
         <bcs-alert
             type="info"
             class="cluster-node-tip"
-            :title="$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务')"
         >
+            <div slot="title">
+                {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ')}}
+                <i18n path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}"
+                    v-if="remainNodesCount > 0"
+                >
+                    <span place="nodes" class="num">{{nodesCount}}</span>
+                    <span place="remainNodes" class="num">{{remainNodesCount}}</span>
+                </i18n>
+            </div>
         </bcs-alert>
         <!-- 操作栏 -->
         <div class="cluster-node-operate">
@@ -13,6 +21,17 @@
                     <bcs-button theme="primary"
                         icon="plus"
                         class="add-node mr10"
+                        v-authority="{
+                            clickable: webAnnotations.perms[localClusterId]
+                                && webAnnotations.perms[localClusterId].cluster_manage,
+                            actionId: 'cluster_manage',
+                            resourceName: curSelectedCluster.clusterName,
+                            disablePerms: true,
+                            permCtx: {
+                                project_id: curProject.project_id,
+                                cluster_id: localClusterId
+                            }
+                        }"
                         @click="handleAddNode"
                     >{{$t('添加节点')}}</bcs-button>
                     <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
@@ -22,7 +41,19 @@
                             :is-backfill="true" />
                     </template>
                 </template>
-                <bcs-dropdown-menu :disabled="!selections.length" class="mr10">
+                <bcs-dropdown-menu :disabled="!selections.length"
+                    class="mr10"
+                    v-authority="{
+                        clickable: webAnnotations.perms[localClusterId]
+                            && webAnnotations.perms[localClusterId].cluster_manage,
+                        actionId: 'cluster_manage',
+                        resourceName: curSelectedCluster.clusterName,
+                        disablePerms: true,
+                        permCtx: {
+                            project_id: curProject.project_id,
+                            cluster_id: localClusterId
+                        }
+                    }">
                     <div class="dropdown-trigger-btn" slot="dropdown-trigger">
                         <span>{{$t('批量')}}</span>
                         <i class="bk-icon icon-angle-down"></i>
@@ -126,6 +157,17 @@
                         <bcs-button
                             :disabled="['INITIALIZATION', 'DELETING'].includes(row.status)"
                             text
+                            v-authority="{
+                                clickable: webAnnotations.perms[localClusterId]
+                                    && webAnnotations.perms[localClusterId].cluster_view,
+                                actionId: 'cluster_view',
+                                resourceName: curSelectedCluster.clusterName,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: curProject.project_id,
+                                    cluster_id: localClusterId
+                                }
+                            }"
                             @click="handleGoOverview(row)"
                         >
                             {{ row.inner_ip }}
@@ -293,37 +335,50 @@
                 </bcs-table-column>
                 <bcs-table-column :label="$t('操作')" width="260">
                     <template #default="{ row }">
-                        <template v-if="row.status === 'RUNNING'">
-                            <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
-                            <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
-                        </template>
-                        <bk-button text @click="handleStopNode(row)" v-if="row.status === 'RUNNING'">
-                            {{ $t('停止调度') }}
-                        </bk-button>
-                        <bk-button text
-                            v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                            @click="handleShowLog(row)"
-                        >
-                            {{$t('查看日志')}}
-                        </bk-button>
-                        <template v-if="row.status === 'REMOVABLE'">
-                            <bk-button text @click="handleEnableNode(row)">
-                                {{ $t('允许调度') }}
+                        <div class="node-operate-wrapper"
+                            v-authority="{
+                                clickable: webAnnotations.perms[localClusterId]
+                                    && webAnnotations.perms[localClusterId].cluster_manage,
+                                actionId: 'cluster_manage',
+                                resourceName: curSelectedCluster.clusterName,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: curProject.project_id,
+                                    cluster_id: localClusterId
+                                }
+                            }">
+                            <template v-if="row.status === 'RUNNING'">
+                                <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
+                                <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
+                            </template>
+                            <bk-button text @click="handleStopNode(row)" v-if="row.status === 'RUNNING'">
+                                {{ $t('停止调度') }}
                             </bk-button>
-                            <bk-button text class="ml10" @click="handleSchedulerNode(row)">
-                                {{ $t('pod迁移') }}
+                            <bk-button text
+                                v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                                @click="handleShowLog(row)"
+                            >
+                                {{$t('查看日志')}}
                             </bk-button>
-                        </template>
-                        <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
-                            @click="handleDeleteNode(row)"
-                        >
-                            {{ $t('删除') }}
-                        </bk-button>
-                        <bk-button text class="ml10"
-                            v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                            @click="handleRetry(row)"
-                        >{{ $t('重试') }}</bk-button>
+                            <template v-if="row.status === 'REMOVABLE'">
+                                <bk-button text class="mr10" @click="handleEnableNode(row)">
+                                    {{ $t('允许调度') }}
+                                </bk-button>
+                                <bk-button text class="mr10" @click="handleSchedulerNode(row)">
+                                    {{ $t('pod迁移') }}
+                                </bk-button>
+                            </template>
+                            <bk-button text class="mr10"
+                                v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                                @click="handleDeleteNode(row)"
+                            >
+                                {{ $t('删除') }}
+                            </bk-button>
+                            <bk-button text
+                                v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                                @click="handleRetry(row)"
+                            >{{ $t('重试') }}</bk-button>
+                        </div>
                     </template>
                 </bcs-table-column>
                 <bcs-table-column type="setting">
@@ -490,6 +545,12 @@
         },
         setup (props, ctx) {
             const { $i18n, $router, $bkMessage, $store, $bkInfo } = ctx.root
+            const webAnnotations = computed(() => {
+                return $store.state.cluster.clusterWebAnnotations
+            })
+            const curProject = computed(() => {
+                return $store.state.curProject
+            })
             // 表格设置字段配置
             const fields = [
                 {
@@ -620,15 +681,12 @@
             
             const tableLoading = ref(false)
             // 初始化当前集群ID
-            const { defaultClusterId, clusterList, curClusterId } = useDefaultClusterId()
+            const { defaultClusterId, clusterList, isSingleCluster } = useDefaultClusterId()
             const localClusterId = ref(props.clusterId || defaultClusterId.value || '')
             const curSelectedCluster = computed(() => {
                 return clusterList.value.find(item => item.clusterID === localClusterId.value) || {}
             })
-            // 是否是单集群
-            const isSingleCluster = computed(() => {
-                return !!curClusterId.value
-            })
+           
             // 全量表格数据
             const tableData = ref<any[]>([])
             
@@ -905,7 +963,7 @@
                     callback: async () => {
                         const result = await toggleNodeDispatch({
                             clusterId: row.cluster_id,
-                            nodeIP: row.inner_ip,
+                            nodeName: [row.name],
                             status: 'REMOVABLE'
                         })
                         result && handleGetNodeData()
@@ -920,7 +978,7 @@
                     callback: async () => {
                         const result = await toggleNodeDispatch({
                             clusterId: row.cluster_id,
-                            nodeIP: row.inner_ip,
+                            nodeName: [row.name],
                             status: 'RUNNING'
                         })
                         result && handleGetNodeData()
@@ -1027,7 +1085,7 @@
                     callback: async () => {
                         const result = await batchToggleNodeDispatch({
                             clusterId: localClusterId.value,
-                            ipList: selections.value.map(item => item.inner_ip),
+                            nodeNameList: selections.value.map(item => item.name),
                             status: 'RUNNING'
                         })
                         result && handleGetNodeData()
@@ -1047,7 +1105,7 @@
                     callback: async () => {
                         const result = await batchToggleNodeDispatch({
                             clusterId: localClusterId.value,
-                            ipList: selections.value.map(item => item.inner_ip),
+                            nodeNameList: selections.value.map(item => item.name),
                             status: 'REMOVABLE'
                         })
                         result && handleGetNodeData()
@@ -1235,6 +1293,33 @@
             const { stop, start } = useInterval(async () => {
                 tableData.value = await getNodeList(localClusterId.value)
             }, 5000)
+
+            const nodesCount = computed(() => {
+                return tableData.value.length + Object.keys(curSelectedCluster.value?.master || {}).length
+            })
+            const getCidrIpNum = (cidr) => {
+                const mask = Number(cidr.split('/')[1] || 0)
+                if (mask <= 0) {
+                    return 0
+                }
+                return Math.pow(2, 32 - mask)
+            }
+            const remainNodesCount = computed(() => {
+                const { cidrStep, maxNodePodNum, maxServiceNum, clusterIPv4CIDR, multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {}
+                let totalCidrStep = 0
+                if (multiClusterCIDR.length < 3) {
+                    totalCidrStep = (5 - multiClusterCIDR.length) * cidrStep + multiClusterCIDR.reduce((pre, cidr) => {
+                        pre += getCidrIpNum(cidr)
+                        return pre
+                    }, 0)
+                } else {
+                    totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce((pre, cidr) => {
+                        pre += getCidrIpNum(cidr)
+                        return pre
+                    }, 0)
+                }
+                return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum)
+            })
             
             onMounted(async () => {
                 await handleGetNodeData()
@@ -1243,6 +1328,8 @@
                 }
             })
             return {
+                nodesCount,
+                remainNodesCount,
                 isSingleCluster,
                 curSelectedCluster,
                 taskStatusTextMap,
@@ -1310,7 +1397,9 @@
                 handleShowLog,
                 closeLog,
                 handleBatchPodScheduler,
-                podDisabled
+                podDisabled,
+                webAnnotations,
+                curProject
             }
         }
     })
@@ -1323,6 +1412,9 @@
 }
 .cluster-node-tip {
     margin: 20px;
+    .num {
+        font-weight: 700;
+    }
 }
 .cluster-node-operate {
     display: flex;

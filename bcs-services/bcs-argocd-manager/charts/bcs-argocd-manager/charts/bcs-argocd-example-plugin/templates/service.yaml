@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-argocd-example-plugin.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-argocd-example-plugin.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - protocol: TCP
+      name: http
+      port: {{ .Values.argocdexampleplugin.port }}
+      targetPort: {{ .Values.argocdexampleplugin.port }}
+  selector:
+    {{- include "bcs-argocd-example-plugin.selectorLabels" . | nindent 4 }}

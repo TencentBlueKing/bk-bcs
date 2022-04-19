@@ -27,6 +27,8 @@ from backend.celery_app.tasks.application import delete_instance_task
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.configuration.constants import K8sResourceName
 from backend.templatesets.legacy_apps.configuration.models import Template
 from backend.templatesets.legacy_apps.instance.constants import EventType
@@ -632,62 +634,47 @@ class BaseAPI(views.APIView):
         ns_name_flag='namespace',
         tmpl_view=True,
     ):  # noqa
-        """列表权限处理"""
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        ns_ret_instance_list = ns_perm_client.hook_perms(
-            data, ns_id_flag=ns_id_flag, filter_use=filter_use, ns_name_flag=ns_name_flag
-        )
-        ns_ret_data_map = {info["id"]: info["permissions"] for info in ns_ret_instance_list}
-        if not tmpl_view:
-            for info in data:
-                if info['id'] in ns_ret_data_map:
-                    info['permissions'] = info['permissions']
-                else:
-                    info["permissions"] = {
-                        "create": False,
-                        "delete": False,
-                        "view": False,
-                        "edit": False,
-                        "use": False,
-                    }  # noqa
-            return data
-        # ns_ret_data_map = {(info["namespace"], info["name"]): info["permissions"] for info in ns_ret_instance_list}
-        tmpl_perm_client = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-        tmpl_ret_instance_list = tmpl_perm_client.hook_perms(data, id_flag="muster_id", filter_use=filter_use)
-        # map handle
-        ret_data = []
-        for info in tmpl_ret_instance_list:
-            # item_key = (info["namespace"], info["name"])
-            if info["id"] in ns_ret_data_map:
-                curr_permissions = ns_ret_data_map[info["id"]]
-                insert_set = set(curr_permissions.keys()) & set(info["permissions"].keys())
-                diff_set = (set(info["permissions"].keys()) | set(curr_permissions.keys())) - insert_set
-                for key in insert_set:
-                    info["permissions"][key] = info["permissions"][key] and curr_permissions[key]
-                for key in diff_set:
-                    info["permissions"][key] = False
-            else:
-                info["permissions"] = {"create": False, "delete": False, "view": False, "edit": False, "use": False}
-            if filter_use:
-                if info["permissions"].get("use"):
-                    ret_data.append(info)
-                continue
-            ret_data.append(info)
+        return data
 
-        return ret_data
+    def validate_view_perms(self, request, project_id, muster_id, ns_id, source_type="模板集"):
+        """查询资源时, 校验用户的查询权限"""
+        resp = paas_cc.get_namespace(request.user.token.access_token, project_id, ns_id)
+        data = resp.get('data')
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username,
+            project_id=project_id,
+            cluster_id=data.get('cluster_id'),
+            name=data.get('name'),
+        )
+        NamespaceScopedPermission().can_view(perm_ctx)
+
+        if source_type == "模板集":
+            muster_info = Template.objects.filter(id=muster_id, is_deleted=False).first()
+            if not muster_info:
+                raise error_codes.CheckFailed(_("没有查询到模板集信息"))
+            perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=muster_id)
+            TemplatesetPermission().can_view(perm_ctx)
 
     def bcs_single_app_perm_handler(self, request, project_id, muster_id, ns_id, source_type="模板集"):
         """针对具体资源的权限处理"""
         # 继承命名空间的权限
-        ns_perm = bcs_perm.Namespace(request, project_id, ns_id)
-        ns_perm.can_use(raise_exception=True)
+        resp = paas_cc.get_namespace(request.user.token.access_token, project_id, ns_id)
+        data = resp.get('data')
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username,
+            project_id=project_id,
+            cluster_id=data.get('cluster_id'),
+            name=data.get('name'),
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
+
         if source_type == "模板集":
             muster_info = Template.objects.filter(id=muster_id, is_deleted=False).first()
             if not muster_info:
                 raise error_codes.CheckFailed(_("没有查询到模板集信息"))
             # 继承模板集的权限
-            tmpl_perm = bcs_perm.Templates(request, project_id, muster_id, resource_name=muster_info.name)
-            tmpl_perm.can_use(raise_exception=True)
+            perm_ctx = TemplatesetPermCtx(username=request.user.username, project_id=project_id, template_id=muster_id)
+            TemplatesetPermission().can_instantiate(perm_ctx)
 
     def online_app_conf(self, request, project_id, project_kind, cluster_id, name, namespace, category):
         """针对非模板创建的应用，获取线上的配置"""
@@ -740,8 +727,7 @@ class InstanceAPI(BaseAPI):
         ns_name_id_map = self.get_namespace_name_id(request, project_id)
         ns_id = ns_name_id_map.get(data['namespace'])
         # check perm
-        self.can_use_instance(request, project_id, ns_id)
-
+        self.validate_view_perms(request, project_id, None, ns_id, source_type=NOT_TMPL_SOURCE_TYPE)
         return data['cluster_id'], data['namespace'], data['name'], data['category']
 
     def _from_template(self, instance_id):

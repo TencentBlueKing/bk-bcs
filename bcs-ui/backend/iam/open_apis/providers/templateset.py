@@ -44,8 +44,11 @@ class TemplatesetProvider(ResourceProvider):
         :param filter_obj: 查询参数
         :return: ListResult 类型的实例列表
         """
-        template_qset = Template.objects.filter(id__in=filter_obj.ids).values('id', 'name')
-        results = [{'id': template['id'], 'display_name': template['name']} for template in template_qset]
+        template_qset = Template.objects.filter(id__in=filter_obj.ids).values('id', 'name', 'creator')
+        results = [
+            {'id': template['id'], 'display_name': template['name'], '_bk_iam_approver_': [template['creator']]}
+            for template in template_qset
+        ]
         return ListResult(results=results, count=template_qset.count())
 
     def list_instance_by_policy(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:

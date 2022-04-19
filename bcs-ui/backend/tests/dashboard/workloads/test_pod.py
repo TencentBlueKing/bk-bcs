@@ -70,7 +70,6 @@ class TestPod:
         response = api_client.get(f'{self.inst_url}secrets/')
         assert response.json()['code'] == 0
 
-    @mock.patch('backend.dashboard.workloads.views.pod.validate_cluster_perm', new=lambda *args, **kwargs: True)
     def test_reschedule(self, api_client):
         """
         测试重新调度 Pod

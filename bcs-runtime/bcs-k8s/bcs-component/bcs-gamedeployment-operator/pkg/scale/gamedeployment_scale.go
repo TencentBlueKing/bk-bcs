@@ -32,6 +32,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 )
@@ -43,10 +44,12 @@ const (
 	// When batching pod creates, initialBatchSize is the size of the initial batch.
 	initialBatchSize = 1
 
-	// DeletionCost is the cost of pod's deletion
-	DeletionCost = "io.tencent.bcs.dev/pod-deletion-cost"
+	// PodDeletionCost is the cost of pod's deletion
+	PodDeletionCost = "controller.kubernetes.io/pod-deletion-cost"
+	// NodeDeletionCost is the cost of node's deletion
+	NodeDeletionCost = "io.tencent.bcs.dev/node-deletion-cost"
 
-	// DeletionCostSortOrder is the method when sorting deletion cost. Default is ascend.
+	// DeletionCostSortMethod is the method when sorting deletion cost. Default is ascend.
 	DeletionCostSortMethod = "io.tencent.bcs.dev/pod-deletion-cost-sort-method"
 	// CostSortMethodAscend will sort costs in asecnding order
 	CostSortMethodAscend = "ascend"
@@ -66,11 +69,13 @@ type Interface interface {
 }
 
 // New returns a scale control.
-func New(kubeClient clientset.Interface, tkexClient gdclientset.Interface, recorder record.EventRecorder, exp expectations.ScaleExpectations,
-	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister,
+func New(kubeClient clientset.Interface, tkexClient gdclientset.Interface, recorder record.EventRecorder,
+	exp expectations.ScaleExpectations, hookRunLister hooklister.HookRunLister,
+	hookTemplateLister hooklister.HookTemplateLister, nodeLister corelisters.NodeLister,
 	preDeleteControl predelete.PreDeleteInterface, metrics *gdmetrics.Metrics) Interface {
-	return &realControl{kubeClient: kubeClient, tkexClient: tkexClient, recorder: recorder, exp: exp, hookRunLister: hookRunLister,
-		hookTemplateLister: hookTemplateLister, preDeleteControl: preDeleteControl, metrics: metrics}
+	return &realControl{kubeClient: kubeClient, tkexClient: tkexClient, recorder: recorder, exp: exp,
+		hookRunLister: hookRunLister, hookTemplateLister: hookTemplateLister, nodeLister: nodeLister,
+		preDeleteControl: preDeleteControl, metrics: metrics}
 }
 
 type realControl struct {
@@ -80,6 +85,7 @@ type realControl struct {
 	exp                expectations.ScaleExpectations
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
+	nodeLister         corelisters.NodeLister
 	preDeleteControl   predelete.PreDeleteInterface
 	metrics            *gdmetrics.Metrics
 }
@@ -146,7 +152,7 @@ func (r *realControl) Manage(
 			controllerKey, diff, currentRevDiff)
 
 		sortMethod := getDeletionCostSortMethod(updateDeploy)
-		podsToDelete := choosePodsToDelete(diff, currentRevDiff, notUpdatedPods, updatedPods, sortMethod)
+		podsToDelete := choosePodsToDelete(diff, currentRevDiff, notUpdatedPods, updatedPods, sortMethod, r.nodeLister)
 
 		return r.deletePods(updateDeploy, podsToDelete, newStatus)
 	}

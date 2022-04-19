@@ -6,17 +6,18 @@ package cluster_resources
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	proto "github.com/golang/protobuf/proto"
+	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
 )
 
 import (
 	context "context"
-	api "github.com/micro/go-micro/v2/api"
-	client "github.com/micro/go-micro/v2/client"
-	server "github.com/micro/go-micro/v2/server"
+	api "go-micro.dev/v4/api"
+	client "go-micro.dev/v4/client"
+	server "go-micro.dev/v4/server"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -24,67 +25,67 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
-
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
 var _ context.Context
 var _ client.Option
 var _ server.Option
 
-// Api Endpoints for ClusterResources service
+// Api Endpoints for Basic service
 
-func NewClusterResourcesEndpoints() []*api.Endpoint {
+func NewBasicEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
-			Name:    "ClusterResources.Echo",
+		{
+			Name:    "Basic.Echo",
 			Path:    []string{"/clusterresources/v1/echo"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
-			Name:    "ClusterResources.Ping",
+		{
+			Name:    "Basic.Ping",
 			Path:    []string{"/clusterresources/v1/ping"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
-			Name:    "ClusterResources.Healthz",
+		{
+			Name:    "Basic.Healthz",
 			Path:    []string{"/clusterresources/v1/healthz"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Basic.Version",
+			Path:    []string{"/clusterresources/v1/version"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 	}
 }
 
-// Client API for ClusterResources service
+// Client API for Basic service
 
-type ClusterResourcesService interface {
-	// 基础类接口
+type BasicService interface {
 	Echo(ctx context.Context, in *EchoReq, opts ...client.CallOption) (*EchoResp, error)
 	Ping(ctx context.Context, in *PingReq, opts ...client.CallOption) (*PingResp, error)
 	Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error)
+	Version(ctx context.Context, in *VersionReq, opts ...client.CallOption) (*VersionResp, error)
 }
 
-type clusterResourcesService struct {
+type basicService struct {
 	c    client.Client
 	name string
 }
 
-func NewClusterResourcesService(name string, c client.Client) ClusterResourcesService {
-	return &clusterResourcesService{
+func NewBasicService(name string, c client.Client) BasicService {
+	return &basicService{
 		c:    c,
 		name: name,
 	}
 }
 
-func (c *clusterResourcesService) Echo(ctx context.Context, in *EchoReq, opts ...client.CallOption) (*EchoResp, error) {
-	req := c.c.NewRequest(c.name, "ClusterResources.Echo", in)
+func (c *basicService) Echo(ctx context.Context, in *EchoReq, opts ...client.CallOption) (*EchoResp, error) {
+	req := c.c.NewRequest(c.name, "Basic.Echo", in)
 	out := new(EchoResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -93,8 +94,8 @@ func (c *clusterResourcesService) Echo(ctx context.Context, in *EchoReq, opts ..
 	return out, nil
 }
 
-func (c *clusterResourcesService) Ping(ctx context.Context, in *PingReq, opts ...client.CallOption) (*PingResp, error) {
-	req := c.c.NewRequest(c.name, "ClusterResources.Ping", in)
+func (c *basicService) Ping(ctx context.Context, in *PingReq, opts ...client.CallOption) (*PingResp, error) {
+	req := c.c.NewRequest(c.name, "Basic.Ping", in)
 	out := new(PingResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -103,8 +104,8 @@ func (c *clusterResourcesService) Ping(ctx context.Context, in *PingReq, opts ..
 	return out, nil
 }
 
-func (c *clusterResourcesService) Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error) {
-	req := c.c.NewRequest(c.name, "ClusterResources.Healthz", in)
+func (c *basicService) Healthz(ctx context.Context, in *HealthzReq, opts ...client.CallOption) (*HealthzResp, error) {
+	req := c.c.NewRequest(c.name, "Basic.Healthz", in)
 	out := new(HealthzResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -113,59 +114,3503 @@ func (c *clusterResourcesService) Healthz(ctx context.Context, in *HealthzReq, o
 	return out, nil
 }
 
-// Server API for ClusterResources service
+func (c *basicService) Version(ctx context.Context, in *VersionReq, opts ...client.CallOption) (*VersionResp, error) {
+	req := c.c.NewRequest(c.name, "Basic.Version", in)
+	out := new(VersionResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
 
-type ClusterResourcesHandler interface {
-	// 基础类接口
+// Server API for Basic service
+
+type BasicHandler interface {
 	Echo(context.Context, *EchoReq, *EchoResp) error
 	Ping(context.Context, *PingReq, *PingResp) error
 	Healthz(context.Context, *HealthzReq, *HealthzResp) error
+	Version(context.Context, *VersionReq, *VersionResp) error
 }
 
-func RegisterClusterResourcesHandler(s server.Server, hdlr ClusterResourcesHandler, opts ...server.HandlerOption) error {
-	type clusterResources interface {
+func RegisterBasicHandler(s server.Server, hdlr BasicHandler, opts ...server.HandlerOption) error {
+	type basic interface {
 		Echo(ctx context.Context, in *EchoReq, out *EchoResp) error
 		Ping(ctx context.Context, in *PingReq, out *PingResp) error
 		Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error
+		Version(ctx context.Context, in *VersionReq, out *VersionResp) error
 	}
-	type ClusterResources struct {
-		clusterResources
+	type Basic struct {
+		basic
 	}
-	h := &clusterResourcesHandler{hdlr}
+	h := &basicHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterResources.Echo",
+		Name:    "Basic.Echo",
 		Path:    []string{"/clusterresources/v1/echo"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterResources.Ping",
+		Name:    "Basic.Ping",
 		Path:    []string{"/clusterresources/v1/ping"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterResources.Healthz",
+		Name:    "Basic.Healthz",
 		Path:    []string{"/clusterresources/v1/healthz"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
-	return s.Handle(s.NewHandler(&ClusterResources{h}, opts...))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Basic.Version",
+		Path:    []string{"/clusterresources/v1/version"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Basic{h}, opts...))
 }
 
-type clusterResourcesHandler struct {
-	ClusterResourcesHandler
+type basicHandler struct {
+	BasicHandler
 }
 
-func (h *clusterResourcesHandler) Echo(ctx context.Context, in *EchoReq, out *EchoResp) error {
-	return h.ClusterResourcesHandler.Echo(ctx, in, out)
+func (h *basicHandler) Echo(ctx context.Context, in *EchoReq, out *EchoResp) error {
+	return h.BasicHandler.Echo(ctx, in, out)
 }
 
-func (h *clusterResourcesHandler) Ping(ctx context.Context, in *PingReq, out *PingResp) error {
-	return h.ClusterResourcesHandler.Ping(ctx, in, out)
+func (h *basicHandler) Ping(ctx context.Context, in *PingReq, out *PingResp) error {
+	return h.BasicHandler.Ping(ctx, in, out)
 }
 
-func (h *clusterResourcesHandler) Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error {
-	return h.ClusterResourcesHandler.Healthz(ctx, in, out)
+func (h *basicHandler) Healthz(ctx context.Context, in *HealthzReq, out *HealthzResp) error {
+	return h.BasicHandler.Healthz(ctx, in, out)
+}
+
+func (h *basicHandler) Version(ctx context.Context, in *VersionReq, out *VersionResp) error {
+	return h.BasicHandler.Version(ctx, in, out)
+}
+
+// Api Endpoints for Namespace service
+
+func NewNamespaceEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "Namespace.ListNS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Namespace service
+
+type NamespaceService interface {
+	ListNS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type namespaceService struct {
+	c    client.Client
+	name string
+}
+
+func NewNamespaceService(name string, c client.Client) NamespaceService {
+	return &namespaceService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *namespaceService) ListNS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Namespace.ListNS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Namespace service
+
+type NamespaceHandler interface {
+	ListNS(context.Context, *ResListReq, *CommonResp) error
+}
+
+func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...server.HandlerOption) error {
+	type namespace interface {
+		ListNS(ctx context.Context, in *ResListReq, out *CommonResp) error
+	}
+	type Namespace struct {
+		namespace
+	}
+	h := &namespaceHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.ListNS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Namespace{h}, opts...))
+}
+
+type namespaceHandler struct {
+	NamespaceHandler
+}
+
+func (h *namespaceHandler) ListNS(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.NamespaceHandler.ListNS(ctx, in, out)
+}
+
+// Api Endpoints for Workload service
+
+func NewWorkloadEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "Workload.ListDeploy",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetDeploy",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.CreateDeploy",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.UpdateDeploy",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.DeleteDeploy",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.CreateDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/daemonsets"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.UpdateDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.DeleteDS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.CreateSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/statefulsets"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.UpdateSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.DeleteSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.CreateCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.UpdateCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.DeleteCJ",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.CreateJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/jobs"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.UpdateJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.DeleteJob",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListPo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetPo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.CreatePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/pods"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.UpdatePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.DeletePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListPoPVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListPoCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListPoSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ReschedulePo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListContainer",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetContainer",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetContainerEnvInfo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Workload service
+
+type WorkloadService interface {
+	ListDeploy(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetDeploy(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateDeploy(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateDeploy(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListDS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetDS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateDS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateDS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteDS(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListSTS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetSTS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateSTS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateSTS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteSTS(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListCJ(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCJ(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateCJ(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateCJ(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteCJ(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListJob(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetJob(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateJob(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateJob(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreatePo(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdatePo(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeletePo(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoCM(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoSecret(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ReschedulePo(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	ListContainer(ctx context.Context, in *ContainerListReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetContainer(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonListResp, error)
+}
+
+type workloadService struct {
+	c    client.Client
+	name string
+}
+
+func NewWorkloadService(name string, c client.Client) WorkloadService {
+	return &workloadService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *workloadService) ListDeploy(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetDeploy(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) CreateDeploy(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.CreateDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) UpdateDeploy(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.UpdateDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.DeleteDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListDS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetDS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) CreateDS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.CreateDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) UpdateDS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.UpdateDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) DeleteDS(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.DeleteDS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListSTS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetSTS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) CreateSTS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.CreateSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) UpdateSTS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.UpdateSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) DeleteSTS(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.DeleteSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListCJ(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetCJ(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) CreateCJ(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.CreateCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) UpdateCJ(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.UpdateCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) DeleteCJ(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.DeleteCJ", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListJob(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetJob(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) CreateJob(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.CreateJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) UpdateJob(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.UpdateJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.DeleteJob", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListPo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetPo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) CreatePo(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.CreatePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) UpdatePo(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.UpdatePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) DeletePo(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.DeletePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListPoPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListPoPVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListPoCM(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListPoCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListPoSecret(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListPoSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ReschedulePo(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ReschedulePo", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListContainer(ctx context.Context, in *ContainerListReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListContainer", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetContainer(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetContainer", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetContainerEnvInfo", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Workload service
+
+type WorkloadHandler interface {
+	ListDeploy(context.Context, *ResListReq, *CommonResp) error
+	GetDeploy(context.Context, *ResGetReq, *CommonResp) error
+	CreateDeploy(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateDeploy(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteDeploy(context.Context, *ResDeleteReq, *CommonResp) error
+	ListDS(context.Context, *ResListReq, *CommonResp) error
+	GetDS(context.Context, *ResGetReq, *CommonResp) error
+	CreateDS(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateDS(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteDS(context.Context, *ResDeleteReq, *CommonResp) error
+	ListSTS(context.Context, *ResListReq, *CommonResp) error
+	GetSTS(context.Context, *ResGetReq, *CommonResp) error
+	CreateSTS(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateSTS(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteSTS(context.Context, *ResDeleteReq, *CommonResp) error
+	ListCJ(context.Context, *ResListReq, *CommonResp) error
+	GetCJ(context.Context, *ResGetReq, *CommonResp) error
+	CreateCJ(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateCJ(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteCJ(context.Context, *ResDeleteReq, *CommonResp) error
+	ListJob(context.Context, *ResListReq, *CommonResp) error
+	GetJob(context.Context, *ResGetReq, *CommonResp) error
+	CreateJob(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateJob(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteJob(context.Context, *ResDeleteReq, *CommonResp) error
+	ListPo(context.Context, *PodResListReq, *CommonResp) error
+	GetPo(context.Context, *ResGetReq, *CommonResp) error
+	CreatePo(context.Context, *ResCreateReq, *CommonResp) error
+	UpdatePo(context.Context, *ResUpdateReq, *CommonResp) error
+	DeletePo(context.Context, *ResDeleteReq, *CommonResp) error
+	ListPoPVC(context.Context, *ResGetReq, *CommonResp) error
+	ListPoCM(context.Context, *ResGetReq, *CommonResp) error
+	ListPoSecret(context.Context, *ResGetReq, *CommonResp) error
+	ReschedulePo(context.Context, *ResUpdateReq, *CommonResp) error
+	ListContainer(context.Context, *ContainerListReq, *CommonListResp) error
+	GetContainer(context.Context, *ContainerGetReq, *CommonResp) error
+	GetContainerEnvInfo(context.Context, *ContainerGetReq, *CommonListResp) error
+}
+
+func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...server.HandlerOption) error {
+	type workload interface {
+		ListDeploy(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetDeploy(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateDeploy(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateDeploy(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetDS(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateDS(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateDS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteDS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListSTS(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetSTS(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateSTS(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateSTS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteSTS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListCJ(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetCJ(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateCJ(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateCJ(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteCJ(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListJob(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetJob(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateJob(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateJob(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteJob(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error
+		GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreatePo(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdatePo(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeletePo(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListPoPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		ListPoCM(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		ListPoSecret(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		ReschedulePo(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error
+		GetContainer(ctx context.Context, in *ContainerGetReq, out *CommonResp) error
+		GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, out *CommonListResp) error
+	}
+	type Workload struct {
+		workload
+	}
+	h := &workloadHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListDeploy",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetDeploy",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.CreateDeploy",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.UpdateDeploy",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.DeleteDeploy",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.CreateDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/daemonsets"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.UpdateDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.DeleteDS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.CreateSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/statefulsets"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.UpdateSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.DeleteSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.CreateCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.UpdateCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.DeleteCJ",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.CreateJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/jobs"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.UpdateJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.DeleteJob",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListPo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetPo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.CreatePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/pods"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.UpdatePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.DeletePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListPoPVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListPoCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListPoSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ReschedulePo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListContainer",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetContainer",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetContainerEnvInfo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Workload{h}, opts...))
+}
+
+type workloadHandler struct {
+	WorkloadHandler
+}
+
+func (h *workloadHandler) ListDeploy(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) GetDeploy(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) CreateDeploy(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.WorkloadHandler.CreateDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) UpdateDeploy(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.WorkloadHandler.UpdateDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.WorkloadHandler.DeleteDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListDS(ctx, in, out)
+}
+
+func (h *workloadHandler) GetDS(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetDS(ctx, in, out)
+}
+
+func (h *workloadHandler) CreateDS(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.WorkloadHandler.CreateDS(ctx, in, out)
+}
+
+func (h *workloadHandler) UpdateDS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.WorkloadHandler.UpdateDS(ctx, in, out)
+}
+
+func (h *workloadHandler) DeleteDS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.WorkloadHandler.DeleteDS(ctx, in, out)
+}
+
+func (h *workloadHandler) ListSTS(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListSTS(ctx, in, out)
+}
+
+func (h *workloadHandler) GetSTS(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetSTS(ctx, in, out)
+}
+
+func (h *workloadHandler) CreateSTS(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.WorkloadHandler.CreateSTS(ctx, in, out)
+}
+
+func (h *workloadHandler) UpdateSTS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.WorkloadHandler.UpdateSTS(ctx, in, out)
+}
+
+func (h *workloadHandler) DeleteSTS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.WorkloadHandler.DeleteSTS(ctx, in, out)
+}
+
+func (h *workloadHandler) ListCJ(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListCJ(ctx, in, out)
+}
+
+func (h *workloadHandler) GetCJ(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetCJ(ctx, in, out)
+}
+
+func (h *workloadHandler) CreateCJ(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.WorkloadHandler.CreateCJ(ctx, in, out)
+}
+
+func (h *workloadHandler) UpdateCJ(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.WorkloadHandler.UpdateCJ(ctx, in, out)
+}
+
+func (h *workloadHandler) DeleteCJ(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.WorkloadHandler.DeleteCJ(ctx, in, out)
+}
+
+func (h *workloadHandler) ListJob(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListJob(ctx, in, out)
+}
+
+func (h *workloadHandler) GetJob(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetJob(ctx, in, out)
+}
+
+func (h *workloadHandler) CreateJob(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.WorkloadHandler.CreateJob(ctx, in, out)
+}
+
+func (h *workloadHandler) UpdateJob(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.WorkloadHandler.UpdateJob(ctx, in, out)
+}
+
+func (h *workloadHandler) DeleteJob(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.WorkloadHandler.DeleteJob(ctx, in, out)
+}
+
+func (h *workloadHandler) ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListPo(ctx, in, out)
+}
+
+func (h *workloadHandler) GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetPo(ctx, in, out)
+}
+
+func (h *workloadHandler) CreatePo(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.WorkloadHandler.CreatePo(ctx, in, out)
+}
+
+func (h *workloadHandler) UpdatePo(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.WorkloadHandler.UpdatePo(ctx, in, out)
+}
+
+func (h *workloadHandler) DeletePo(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.WorkloadHandler.DeletePo(ctx, in, out)
+}
+
+func (h *workloadHandler) ListPoPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListPoPVC(ctx, in, out)
+}
+
+func (h *workloadHandler) ListPoCM(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListPoCM(ctx, in, out)
+}
+
+func (h *workloadHandler) ListPoSecret(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListPoSecret(ctx, in, out)
+}
+
+func (h *workloadHandler) ReschedulePo(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.WorkloadHandler.ReschedulePo(ctx, in, out)
+}
+
+func (h *workloadHandler) ListContainer(ctx context.Context, in *ContainerListReq, out *CommonListResp) error {
+	return h.WorkloadHandler.ListContainer(ctx, in, out)
+}
+
+func (h *workloadHandler) GetContainer(ctx context.Context, in *ContainerGetReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetContainer(ctx, in, out)
+}
+
+func (h *workloadHandler) GetContainerEnvInfo(ctx context.Context, in *ContainerGetReq, out *CommonListResp) error {
+	return h.WorkloadHandler.GetContainerEnvInfo(ctx, in, out)
+}
+
+// Api Endpoints for Network service
+
+func NewNetworkEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "Network.ListIng",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.GetIng",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.CreateIng",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/ingresses"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.UpdateIng",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.DeleteIng",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.ListSVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.GetSVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.CreateSVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/services"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.UpdateSVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.DeleteSVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.ListEP",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.GetEP",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.CreateEP",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.UpdateEP",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Network.DeleteEP",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Network service
+
+type NetworkService interface {
+	ListIng(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetIng(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateIng(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateIng(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteIng(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListSVC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetSVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateSVC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateSVC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteSVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListEP(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetEP(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateEP(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateEP(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteEP(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type networkService struct {
+	c    client.Client
+	name string
+}
+
+func NewNetworkService(name string, c client.Client) NetworkService {
+	return &networkService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *networkService) ListIng(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.ListIng", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) GetIng(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.GetIng", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) CreateIng(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.CreateIng", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) UpdateIng(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.UpdateIng", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) DeleteIng(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.DeleteIng", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) ListSVC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.ListSVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) GetSVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.GetSVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) CreateSVC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.CreateSVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) UpdateSVC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.UpdateSVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) DeleteSVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.DeleteSVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) ListEP(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.ListEP", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) GetEP(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.GetEP", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) CreateEP(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.CreateEP", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) UpdateEP(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.UpdateEP", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkService) DeleteEP(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.DeleteEP", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Network service
+
+type NetworkHandler interface {
+	ListIng(context.Context, *ResListReq, *CommonResp) error
+	GetIng(context.Context, *ResGetReq, *CommonResp) error
+	CreateIng(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateIng(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteIng(context.Context, *ResDeleteReq, *CommonResp) error
+	ListSVC(context.Context, *ResListReq, *CommonResp) error
+	GetSVC(context.Context, *ResGetReq, *CommonResp) error
+	CreateSVC(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateSVC(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteSVC(context.Context, *ResDeleteReq, *CommonResp) error
+	ListEP(context.Context, *ResListReq, *CommonResp) error
+	GetEP(context.Context, *ResGetReq, *CommonResp) error
+	CreateEP(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateEP(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteEP(context.Context, *ResDeleteReq, *CommonResp) error
+}
+
+func RegisterNetworkHandler(s server.Server, hdlr NetworkHandler, opts ...server.HandlerOption) error {
+	type network interface {
+		ListIng(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetIng(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateIng(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateIng(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteIng(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListSVC(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetSVC(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateSVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateSVC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteSVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListEP(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetEP(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateEP(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateEP(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteEP(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+	}
+	type Network struct {
+		network
+	}
+	h := &networkHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.ListIng",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.GetIng",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.CreateIng",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/ingresses"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.UpdateIng",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.DeleteIng",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.ListSVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.GetSVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.CreateSVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/services"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.UpdateSVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.DeleteSVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.ListEP",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.GetEP",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.CreateEP",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.UpdateEP",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.DeleteEP",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Network{h}, opts...))
+}
+
+type networkHandler struct {
+	NetworkHandler
+}
+
+func (h *networkHandler) ListIng(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.NetworkHandler.ListIng(ctx, in, out)
+}
+
+func (h *networkHandler) GetIng(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.NetworkHandler.GetIng(ctx, in, out)
+}
+
+func (h *networkHandler) CreateIng(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.NetworkHandler.CreateIng(ctx, in, out)
+}
+
+func (h *networkHandler) UpdateIng(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.NetworkHandler.UpdateIng(ctx, in, out)
+}
+
+func (h *networkHandler) DeleteIng(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.NetworkHandler.DeleteIng(ctx, in, out)
+}
+
+func (h *networkHandler) ListSVC(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.NetworkHandler.ListSVC(ctx, in, out)
+}
+
+func (h *networkHandler) GetSVC(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.NetworkHandler.GetSVC(ctx, in, out)
+}
+
+func (h *networkHandler) CreateSVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.NetworkHandler.CreateSVC(ctx, in, out)
+}
+
+func (h *networkHandler) UpdateSVC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.NetworkHandler.UpdateSVC(ctx, in, out)
+}
+
+func (h *networkHandler) DeleteSVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.NetworkHandler.DeleteSVC(ctx, in, out)
+}
+
+func (h *networkHandler) ListEP(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.NetworkHandler.ListEP(ctx, in, out)
+}
+
+func (h *networkHandler) GetEP(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.NetworkHandler.GetEP(ctx, in, out)
+}
+
+func (h *networkHandler) CreateEP(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.NetworkHandler.CreateEP(ctx, in, out)
+}
+
+func (h *networkHandler) UpdateEP(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.NetworkHandler.UpdateEP(ctx, in, out)
+}
+
+func (h *networkHandler) DeleteEP(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.NetworkHandler.DeleteEP(ctx, in, out)
+}
+
+// Api Endpoints for Config service
+
+func NewConfigEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "Config.ListCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.GetCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.CreateCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/configmaps"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.UpdateCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.DeleteCM",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.ListSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.GetSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.CreateSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/secrets"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.UpdateSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Config.DeleteSecret",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Config service
+
+type ConfigService interface {
+	ListCM(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCM(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateCM(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateCM(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteCM(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListSecret(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetSecret(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateSecret(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateSecret(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteSecret(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type configService struct {
+	c    client.Client
+	name string
+}
+
+func NewConfigService(name string, c client.Client) ConfigService {
+	return &configService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *configService) ListCM(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.ListCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) GetCM(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.GetCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) CreateCM(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.CreateCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) UpdateCM(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.UpdateCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) DeleteCM(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.DeleteCM", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) ListSecret(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.ListSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) GetSecret(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.GetSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) CreateSecret(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.CreateSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) UpdateSecret(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.UpdateSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configService) DeleteSecret(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Config.DeleteSecret", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Config service
+
+type ConfigHandler interface {
+	ListCM(context.Context, *ResListReq, *CommonResp) error
+	GetCM(context.Context, *ResGetReq, *CommonResp) error
+	CreateCM(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateCM(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteCM(context.Context, *ResDeleteReq, *CommonResp) error
+	ListSecret(context.Context, *ResListReq, *CommonResp) error
+	GetSecret(context.Context, *ResGetReq, *CommonResp) error
+	CreateSecret(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateSecret(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteSecret(context.Context, *ResDeleteReq, *CommonResp) error
+}
+
+func RegisterConfigHandler(s server.Server, hdlr ConfigHandler, opts ...server.HandlerOption) error {
+	type config interface {
+		ListCM(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetCM(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateCM(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateCM(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteCM(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListSecret(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetSecret(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateSecret(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateSecret(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteSecret(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+	}
+	type Config struct {
+		config
+	}
+	h := &configHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.ListCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.GetCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.CreateCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/configmaps"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.UpdateCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.DeleteCM",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.ListSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.GetSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.CreateSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/secrets"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.UpdateSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Config.DeleteSecret",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Config{h}, opts...))
+}
+
+type configHandler struct {
+	ConfigHandler
+}
+
+func (h *configHandler) ListCM(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.ConfigHandler.ListCM(ctx, in, out)
+}
+
+func (h *configHandler) GetCM(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.ConfigHandler.GetCM(ctx, in, out)
+}
+
+func (h *configHandler) CreateCM(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.ConfigHandler.CreateCM(ctx, in, out)
+}
+
+func (h *configHandler) UpdateCM(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.ConfigHandler.UpdateCM(ctx, in, out)
+}
+
+func (h *configHandler) DeleteCM(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.ConfigHandler.DeleteCM(ctx, in, out)
+}
+
+func (h *configHandler) ListSecret(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.ConfigHandler.ListSecret(ctx, in, out)
+}
+
+func (h *configHandler) GetSecret(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.ConfigHandler.GetSecret(ctx, in, out)
+}
+
+func (h *configHandler) CreateSecret(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.ConfigHandler.CreateSecret(ctx, in, out)
+}
+
+func (h *configHandler) UpdateSecret(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.ConfigHandler.UpdateSecret(ctx, in, out)
+}
+
+func (h *configHandler) DeleteSecret(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.ConfigHandler.DeleteSecret(ctx, in, out)
+}
+
+// Api Endpoints for Storage service
+
+func NewStorageEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "Storage.ListPV",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.GetPV",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.CreatePV",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.UpdatePV",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.DeletePV",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.ListPVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.GetPVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.CreatePVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.UpdatePVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.DeletePVC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.ListSC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.GetSC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.CreateSC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.UpdateSC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.DeleteSC",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Storage service
+
+type StorageService interface {
+	ListPV(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetPV(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreatePV(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdatePV(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeletePV(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPVC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreatePVC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdatePVC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeletePVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListSC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetSC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateSC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateSC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteSC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type storageService struct {
+	c    client.Client
+	name string
+}
+
+func NewStorageService(name string, c client.Client) StorageService {
+	return &storageService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *storageService) ListPV(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.ListPV", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) GetPV(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.GetPV", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) CreatePV(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.CreatePV", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) UpdatePV(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.UpdatePV", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) DeletePV(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.DeletePV", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) ListPVC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.ListPVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) GetPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.GetPVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) CreatePVC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.CreatePVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) UpdatePVC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.UpdatePVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) DeletePVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.DeletePVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) ListSC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.ListSC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) GetSC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.GetSC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) CreateSC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.CreateSC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) UpdateSC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.UpdateSC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) DeleteSC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.DeleteSC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Storage service
+
+type StorageHandler interface {
+	ListPV(context.Context, *ResListReq, *CommonResp) error
+	GetPV(context.Context, *ResGetReq, *CommonResp) error
+	CreatePV(context.Context, *ResCreateReq, *CommonResp) error
+	UpdatePV(context.Context, *ResUpdateReq, *CommonResp) error
+	DeletePV(context.Context, *ResDeleteReq, *CommonResp) error
+	ListPVC(context.Context, *ResListReq, *CommonResp) error
+	GetPVC(context.Context, *ResGetReq, *CommonResp) error
+	CreatePVC(context.Context, *ResCreateReq, *CommonResp) error
+	UpdatePVC(context.Context, *ResUpdateReq, *CommonResp) error
+	DeletePVC(context.Context, *ResDeleteReq, *CommonResp) error
+	ListSC(context.Context, *ResListReq, *CommonResp) error
+	GetSC(context.Context, *ResGetReq, *CommonResp) error
+	CreateSC(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateSC(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteSC(context.Context, *ResDeleteReq, *CommonResp) error
+}
+
+func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server.HandlerOption) error {
+	type storage interface {
+		ListPV(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetPV(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreatePV(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdatePV(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeletePV(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListPVC(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreatePVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdatePVC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeletePVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListSC(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetSC(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateSC(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateSC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteSC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+	}
+	type Storage struct {
+		storage
+	}
+	h := &storageHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.ListPV",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.GetPV",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.CreatePV",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.UpdatePV",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.DeletePV",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.ListPVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.GetPVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.CreatePVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.UpdatePVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.DeletePVC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.ListSC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.GetSC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.CreateSC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.UpdateSC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.DeleteSC",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Storage{h}, opts...))
+}
+
+type storageHandler struct {
+	StorageHandler
+}
+
+func (h *storageHandler) ListPV(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.StorageHandler.ListPV(ctx, in, out)
+}
+
+func (h *storageHandler) GetPV(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.StorageHandler.GetPV(ctx, in, out)
+}
+
+func (h *storageHandler) CreatePV(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.StorageHandler.CreatePV(ctx, in, out)
+}
+
+func (h *storageHandler) UpdatePV(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.StorageHandler.UpdatePV(ctx, in, out)
+}
+
+func (h *storageHandler) DeletePV(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.StorageHandler.DeletePV(ctx, in, out)
+}
+
+func (h *storageHandler) ListPVC(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.StorageHandler.ListPVC(ctx, in, out)
+}
+
+func (h *storageHandler) GetPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.StorageHandler.GetPVC(ctx, in, out)
+}
+
+func (h *storageHandler) CreatePVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.StorageHandler.CreatePVC(ctx, in, out)
+}
+
+func (h *storageHandler) UpdatePVC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.StorageHandler.UpdatePVC(ctx, in, out)
+}
+
+func (h *storageHandler) DeletePVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.StorageHandler.DeletePVC(ctx, in, out)
+}
+
+func (h *storageHandler) ListSC(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.StorageHandler.ListSC(ctx, in, out)
+}
+
+func (h *storageHandler) GetSC(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.StorageHandler.GetSC(ctx, in, out)
+}
+
+func (h *storageHandler) CreateSC(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.StorageHandler.CreateSC(ctx, in, out)
+}
+
+func (h *storageHandler) UpdateSC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.StorageHandler.UpdateSC(ctx, in, out)
+}
+
+func (h *storageHandler) DeleteSC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.StorageHandler.DeleteSC(ctx, in, out)
+}
+
+// Api Endpoints for RBAC service
+
+func NewRBACEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "RBAC.ListSA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "RBAC.GetSA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "RBAC.CreateSA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/rbac/service_accounts"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "RBAC.UpdateSA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "RBAC.DeleteSA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for RBAC service
+
+type RBACService interface {
+	ListSA(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetSA(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateSA(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateSA(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteSA(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type rBACService struct {
+	c    client.Client
+	name string
+}
+
+func NewRBACService(name string, c client.Client) RBACService {
+	return &rBACService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *rBACService) ListSA(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "RBAC.ListSA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rBACService) GetSA(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "RBAC.GetSA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rBACService) CreateSA(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "RBAC.CreateSA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rBACService) UpdateSA(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "RBAC.UpdateSA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rBACService) DeleteSA(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "RBAC.DeleteSA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for RBAC service
+
+type RBACHandler interface {
+	ListSA(context.Context, *ResListReq, *CommonResp) error
+	GetSA(context.Context, *ResGetReq, *CommonResp) error
+	CreateSA(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateSA(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteSA(context.Context, *ResDeleteReq, *CommonResp) error
+}
+
+func RegisterRBACHandler(s server.Server, hdlr RBACHandler, opts ...server.HandlerOption) error {
+	type rBAC interface {
+		ListSA(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetSA(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateSA(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateSA(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteSA(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+	}
+	type RBAC struct {
+		rBAC
+	}
+	h := &rBACHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "RBAC.ListSA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "RBAC.GetSA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "RBAC.CreateSA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/rbac/service_accounts"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "RBAC.UpdateSA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "RBAC.DeleteSA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&RBAC{h}, opts...))
+}
+
+type rBACHandler struct {
+	RBACHandler
+}
+
+func (h *rBACHandler) ListSA(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.RBACHandler.ListSA(ctx, in, out)
+}
+
+func (h *rBACHandler) GetSA(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.RBACHandler.GetSA(ctx, in, out)
+}
+
+func (h *rBACHandler) CreateSA(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.RBACHandler.CreateSA(ctx, in, out)
+}
+
+func (h *rBACHandler) UpdateSA(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.RBACHandler.UpdateSA(ctx, in, out)
+}
+
+func (h *rBACHandler) DeleteSA(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.RBACHandler.DeleteSA(ctx, in, out)
+}
+
+// Api Endpoints for HPA service
+
+func NewHPAEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "HPA.ListHPA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "HPA.GetHPA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "HPA.CreateHPA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/hpa"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "HPA.UpdateHPA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "HPA.DeleteHPA",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for HPA service
+
+type HPAService interface {
+	ListHPA(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetHPA(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateHPA(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateHPA(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteHPA(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type hPAService struct {
+	c    client.Client
+	name string
+}
+
+func NewHPAService(name string, c client.Client) HPAService {
+	return &hPAService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *hPAService) ListHPA(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HPA.ListHPA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hPAService) GetHPA(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HPA.GetHPA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hPAService) CreateHPA(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HPA.CreateHPA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hPAService) UpdateHPA(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HPA.UpdateHPA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hPAService) DeleteHPA(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HPA.DeleteHPA", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for HPA service
+
+type HPAHandler interface {
+	ListHPA(context.Context, *ResListReq, *CommonResp) error
+	GetHPA(context.Context, *ResGetReq, *CommonResp) error
+	CreateHPA(context.Context, *ResCreateReq, *CommonResp) error
+	UpdateHPA(context.Context, *ResUpdateReq, *CommonResp) error
+	DeleteHPA(context.Context, *ResDeleteReq, *CommonResp) error
+}
+
+func RegisterHPAHandler(s server.Server, hdlr HPAHandler, opts ...server.HandlerOption) error {
+	type hPA interface {
+		ListHPA(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetHPA(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		CreateHPA(ctx context.Context, in *ResCreateReq, out *CommonResp) error
+		UpdateHPA(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		DeleteHPA(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+	}
+	type HPA struct {
+		hPA
+	}
+	h := &hPAHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HPA.ListHPA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HPA.GetHPA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HPA.CreateHPA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/hpa"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HPA.UpdateHPA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HPA.DeleteHPA",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&HPA{h}, opts...))
+}
+
+type hPAHandler struct {
+	HPAHandler
+}
+
+func (h *hPAHandler) ListHPA(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.HPAHandler.ListHPA(ctx, in, out)
+}
+
+func (h *hPAHandler) GetHPA(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.HPAHandler.GetHPA(ctx, in, out)
+}
+
+func (h *hPAHandler) CreateHPA(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
+	return h.HPAHandler.CreateHPA(ctx, in, out)
+}
+
+func (h *hPAHandler) UpdateHPA(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
+	return h.HPAHandler.UpdateHPA(ctx, in, out)
+}
+
+func (h *hPAHandler) DeleteHPA(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
+	return h.HPAHandler.DeleteHPA(ctx, in, out)
+}
+
+// Api Endpoints for CustomRes service
+
+func NewCustomResEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "CustomRes.ListCRD",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.GetCRD",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.ListCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.GetCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.CreateCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.UpdateCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.DeleteCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for CustomRes service
+
+type CustomResService interface {
+	ListCRD(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCRD(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	ListCObj(ctx context.Context, in *CObjListReq, opts ...client.CallOption) (*CommonResp, error)
+	GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateCObj(ctx context.Context, in *CObjUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type customResService struct {
+	c    client.Client
+	name string
+}
+
+func NewCustomResService(name string, c client.Client) CustomResService {
+	return &customResService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *customResService) ListCRD(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.ListCRD", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) GetCRD(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.GetCRD", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) ListCObj(ctx context.Context, in *CObjListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.ListCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.GetCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.CreateCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) UpdateCObj(ctx context.Context, in *CObjUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.UpdateCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.DeleteCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for CustomRes service
+
+type CustomResHandler interface {
+	ListCRD(context.Context, *ResListReq, *CommonResp) error
+	GetCRD(context.Context, *ResGetReq, *CommonResp) error
+	ListCObj(context.Context, *CObjListReq, *CommonResp) error
+	GetCObj(context.Context, *CObjGetReq, *CommonResp) error
+	CreateCObj(context.Context, *CObjCreateReq, *CommonResp) error
+	UpdateCObj(context.Context, *CObjUpdateReq, *CommonResp) error
+	DeleteCObj(context.Context, *CObjDeleteReq, *CommonResp) error
+}
+
+func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...server.HandlerOption) error {
+	type customRes interface {
+		ListCRD(ctx context.Context, in *ResListReq, out *CommonResp) error
+		GetCRD(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		ListCObj(ctx context.Context, in *CObjListReq, out *CommonResp) error
+		GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error
+		CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error
+		UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error
+		DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error
+	}
+	type CustomRes struct {
+		customRes
+	}
+	h := &customResHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.ListCRD",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.GetCRD",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.ListCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.GetCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.CreateCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.UpdateCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.DeleteCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&CustomRes{h}, opts...))
+}
+
+type customResHandler struct {
+	CustomResHandler
+}
+
+func (h *customResHandler) ListCRD(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.CustomResHandler.ListCRD(ctx, in, out)
+}
+
+func (h *customResHandler) GetCRD(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.CustomResHandler.GetCRD(ctx, in, out)
+}
+
+func (h *customResHandler) ListCObj(ctx context.Context, in *CObjListReq, out *CommonResp) error {
+	return h.CustomResHandler.ListCObj(ctx, in, out)
+}
+
+func (h *customResHandler) GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error {
+	return h.CustomResHandler.GetCObj(ctx, in, out)
+}
+
+func (h *customResHandler) CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error {
+	return h.CustomResHandler.CreateCObj(ctx, in, out)
+}
+
+func (h *customResHandler) UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error {
+	return h.CustomResHandler.UpdateCObj(ctx, in, out)
+}
+
+func (h *customResHandler) DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error {
+	return h.CustomResHandler.DeleteCObj(ctx, in, out)
+}
+
+// Api Endpoints for Resource service
+
+func NewResourceEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "Resource.GetK8SResTemplate",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.Subscribe",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe"},
+			Method:  []string{"GET"},
+			Stream:  true,
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.InvalidateDiscoveryCache",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
+			Method:  []string{"POST"},
+			Body:    "",
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Resource service
+
+type ResourceService interface {
+	// 示例模板接口
+	GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, opts ...client.CallOption) (*CommonResp, error)
+	// 订阅接口
+	Subscribe(ctx context.Context, in *SubscribeReq, opts ...client.CallOption) (Resource_SubscribeService, error)
+	// 主动使 Discover 缓存失效
+	InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type resourceService struct {
+	c    client.Client
+	name string
+}
+
+func NewResourceService(name string, c client.Client) ResourceService {
+	return &resourceService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *resourceService) GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.GetK8SResTemplate", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceService) Subscribe(ctx context.Context, in *SubscribeReq, opts ...client.CallOption) (Resource_SubscribeService, error) {
+	req := c.c.NewRequest(c.name, "Resource.Subscribe", &SubscribeReq{})
+	stream, err := c.c.Stream(ctx, req, opts...)
+	if err != nil {
+		return nil, err
+	}
+	if err := stream.Send(in); err != nil {
+		return nil, err
+	}
+	return &resourceServiceSubscribe{stream}, nil
+}
+
+type Resource_SubscribeService interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	CloseSend() error
+	Close() error
+	Recv() (*SubscribeResp, error)
+}
+
+type resourceServiceSubscribe struct {
+	stream client.Stream
+}
+
+func (x *resourceServiceSubscribe) CloseSend() error {
+	return x.stream.CloseSend()
+}
+
+func (x *resourceServiceSubscribe) Close() error {
+	return x.stream.Close()
+}
+
+func (x *resourceServiceSubscribe) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *resourceServiceSubscribe) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *resourceServiceSubscribe) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *resourceServiceSubscribe) Recv() (*SubscribeResp, error) {
+	m := new(SubscribeResp)
+	err := x.stream.Recv(m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *resourceService) InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.InvalidateDiscoveryCache", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Resource service
+
+type ResourceHandler interface {
+	// 示例模板接口
+	GetK8SResTemplate(context.Context, *GetK8SResTemplateReq, *CommonResp) error
+	// 订阅接口
+	Subscribe(context.Context, *SubscribeReq, Resource_SubscribeStream) error
+	// 主动使 Discover 缓存失效
+	InvalidateDiscoveryCache(context.Context, *InvalidateDiscoveryCacheReq, *CommonResp) error
+}
+
+func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...server.HandlerOption) error {
+	type resource interface {
+		GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error
+		Subscribe(ctx context.Context, stream server.Stream) error
+		InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error
+	}
+	type Resource struct {
+		resource
+	}
+	h := &resourceHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.GetK8SResTemplate",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.Subscribe",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe"},
+		Method:  []string{"GET"},
+		Stream:  true,
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.InvalidateDiscoveryCache",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
+		Method:  []string{"POST"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Resource{h}, opts...))
+}
+
+type resourceHandler struct {
+	ResourceHandler
+}
+
+func (h *resourceHandler) GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error {
+	return h.ResourceHandler.GetK8SResTemplate(ctx, in, out)
+}
+
+func (h *resourceHandler) Subscribe(ctx context.Context, stream server.Stream) error {
+	m := new(SubscribeReq)
+	if err := stream.Recv(m); err != nil {
+		return err
+	}
+	return h.ResourceHandler.Subscribe(ctx, m, &resourceSubscribeStream{stream})
+}
+
+type Resource_SubscribeStream interface {
+	Context() context.Context
+	SendMsg(interface{}) error
+	RecvMsg(interface{}) error
+	Close() error
+	Send(*SubscribeResp) error
+}
+
+type resourceSubscribeStream struct {
+	stream server.Stream
+}
+
+func (x *resourceSubscribeStream) Close() error {
+	return x.stream.Close()
+}
+
+func (x *resourceSubscribeStream) Context() context.Context {
+	return x.stream.Context()
+}
+
+func (x *resourceSubscribeStream) SendMsg(m interface{}) error {
+	return x.stream.Send(m)
+}
+
+func (x *resourceSubscribeStream) RecvMsg(m interface{}) error {
+	return x.stream.Recv(m)
+}
+
+func (x *resourceSubscribeStream) Send(m *SubscribeResp) error {
+	return x.stream.Send(m)
+}
+
+func (h *resourceHandler) InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error {
+	return h.ResourceHandler.InvalidateDiscoveryCache(ctx, in, out)
 }

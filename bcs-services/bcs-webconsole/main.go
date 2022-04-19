@@ -14,32 +14,22 @@
 package main
 
 import (
-	"runtime"
+	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
+
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 func main() {
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	op := options.NewConsoleOption()
-	conf.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	manager := app.NewConsoleManager(op)
-	if err := manager.Init(); err != nil {
-		blog.Fatalf("init console failed, err : %v", err)
+	mgr := app.NewWebConsoleManager(nil)
+	if err := mgr.Init(); err != nil {
+		logger.Errorf("init webconsole error: %s", err)
+		os.Exit(1)
 	}
-	if err := manager.Run(); err != nil {
-		blog.Fatalf("run console failed, err : %v", err)
+
+	if err := mgr.Run(); err != nil {
+		logger.Errorf("run webconsole error: %s", err)
+		os.Exit(1)
 	}
-	blog.Infof("console is running")
-	ch := make(chan bool)
-	<-ch
 }

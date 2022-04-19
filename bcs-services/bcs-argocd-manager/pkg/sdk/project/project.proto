@@ -1,0 +1,204 @@
+syntax = "proto2";
+option go_package = "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project";
+
+package project;
+
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1/generated.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "google/api/annotations.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info : {
+    title : "Bcs Argocd Manager Project API Doc"
+    version : "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+// CRUD for Argocd Project
+message CreateArgocdProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateArgocdProjectRequest"
+      description : "创建项目的请求"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "project",
+    description: "项目的信息"
+  }];
+  optional bool upsert = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "upsert",
+    description: "是否更新，默认为false"
+  }];
+}
+
+message CreateArgocdProjectResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateArgocdProjectResponse"
+      description : "新建项目的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "project",
+    description: "项目的信息"
+  }];
+}
+
+message UpdateArgocdProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateArgocdProjectRequest"
+      description : "更新项目的请求"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "project",
+    description: "项目的信息"
+  }];
+}
+
+message UpdateArgocdProjectResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateArgocdProjectResponse"
+      description : "更新插件的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "project",
+    description: "项目的信息"
+  }];
+}
+
+message DeleteArgocdProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteArgocdProjectRequest"
+      description : "删除项目的请求"
+    }
+  };
+
+  required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "项目的名称(唯一id)"
+  }];
+}
+
+message DeleteArgocdProjectResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteArgocdProjectResponse"
+      description : "删除项目的请求"
+    }
+  };
+
+}
+
+message GetArgocdProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetArgocdProjectRequest"
+      description : "查询项目的请求"
+    }
+  };
+
+  required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "项目的名称(唯一id)"
+  }];
+}
+
+message GetArgocdProjectResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetArgocdProjectResponse"
+      description : "查询插件的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProject project = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "project",
+    description: "项目的信息"
+  }];
+}
+
+message ListArgocdProjectsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListArgocdProjectsRequest"
+      description : "查询项目列表的请求"
+    }
+  };
+}
+
+message ListArgocdProjectsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListArgocdProjectsResponse"
+      description : "查询项目列表的返回"
+    }
+  };
+
+  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdProjectList projects = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projects",
+    description: "项目列表的信息"
+  }];
+}
+
+service Project {
+  rpc CreateArgocdProject(CreateArgocdProjectRequest) returns (CreateArgocdProjectResponse) {
+    option (google.api.http) = {
+      post: "/argocdmanager/v1/project"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "创建项目"
+      summary: "创建项目"
+    };
+  }
+  rpc UpdateArgocdProject(UpdateArgocdProjectRequest) returns (UpdateArgocdProjectResponse) {
+    option (google.api.http) = {
+      put: "/argocdmanager/v1/project"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "更新项目"
+      summary: "更新项目"
+    };
+  }
+  rpc DeleteArgocdProject(DeleteArgocdProjectRequest) returns (DeleteArgocdProjectResponse) {
+    option (google.api.http) = {
+      delete: "/argocdmanager/v1/project/{name}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "删除项目"
+      summary: "删除项目"
+    };
+  }
+  rpc GetArgocdProject(GetArgocdProjectRequest) returns (GetArgocdProjectResponse) {
+    option (google.api.http) = {
+      get: "/argocdmanager/v1/project/{name}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "查询项目"
+      summary: "查询项目"
+    };
+  }
+  rpc ListArgocdProjects(ListArgocdProjectsRequest) returns (ListArgocdProjectsResponse) {
+    option (google.api.http) = {
+      get: "/argocdmanager/v1/projects"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "查询项目列表"
+      summary: "查询项目列表"
+    };
+  }
+}

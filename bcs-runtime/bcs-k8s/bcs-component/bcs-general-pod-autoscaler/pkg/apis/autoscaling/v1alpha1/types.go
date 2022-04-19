@@ -22,7 +22,15 @@ import (
 )
 
 // +genclient
+// +kubebuilder:resource:shortName=gpa
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:printcolumn:JSONPath=.spec.minReplicas,name=MinReplicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.spec.maxReplicas,name=MaxReplicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.desiredReplicas,name=Desired,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.currentReplicas,name=Current,type=integer
+// +kubebuilder:printcolumn:JSONPath=.spec.scaleTargetRef.kind,name=TargetKind,type=string
+// +kubebuilder:printcolumn:JSONPath=.spec.scaleTargetRef.name,name=TargetName,type=string
+// +kubebuilder:subresource:status
 
 // GeneralPodAutoscaler is the configuration for a general pod
 // autoscaler, which automatically manages the replica count of any resource
@@ -37,6 +45,7 @@ type GeneralPodAutoscaler struct {
 	// spec is the specification for the behaviour of the autoscaler.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status.
 	// +optional
+	// +kubebuilder:validation:Required
 	Spec GeneralPodAutoscalerSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 
 	// status is the current information about the autoscaler.
@@ -61,6 +70,7 @@ type GeneralPodAutoscalerSpec struct {
 	// metric is configured.  Scaling is active as long as at least one metric value is
 	// available.
 	// +optional
+	// +kubebuilder:default=1
 	MinReplicas *int32 `json:"minReplicas,omitempty" protobuf:"varint,2,opt,name=minReplicas"`
 
 	// maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
