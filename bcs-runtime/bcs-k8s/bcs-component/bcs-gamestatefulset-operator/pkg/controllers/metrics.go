@@ -14,6 +14,7 @@
 package gamestatefulset
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -91,6 +92,8 @@ var (
 	metricsOnce     sync.Once
 )
 
+var commonLabels = []string{"namespace", "name", "status", "action", "grace"}
+
 // newMetrics new a metrics object for gamestatefulset operator
 func newMetrics() *metrics {
 
@@ -118,7 +121,7 @@ func newMetrics() *metrics {
 			Name:      "pod_create_duration_seconds",
 			Help:      "create duration(seconds) of pod",
 			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-		}, []string{"namespace", "name", "status"})
+		}, []string{"namespace", "name", "status", "action"})
 		prometheus.MustRegister(m.podCreateDuration)
 
 		m.podUpdateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -127,7 +130,7 @@ func newMetrics() *metrics {
 			Name:      "pod_update_duration_seconds",
 			Help:      "update duration(seconds) of pod",
 			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-		}, []string{"namespace", "name", "status"})
+		}, commonLabels)
 		prometheus.MustRegister(m.podUpdateDuration)
 
 		m.podDeleteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -136,7 +139,7 @@ func newMetrics() *metrics {
 			Name:      "pod_delete_duration_seconds",
 			Help:      "delete duration(seconds) of pod",
 			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-		}, []string{"namespace", "name", "status"})
+		}, commonLabels)
 		prometheus.MustRegister(m.podDeleteDuration)
 
 		m.podCreateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -144,7 +147,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "pod_create_duration_seconds_max",
 			Help:      "the max create duration(seconds) of pod",
-		}, []string{"namespace", "name", "status"})
+		}, []string{"namespace", "name", "status", "action"})
 		prometheus.MustRegister(m.podCreateDurationMax)
 
 		m.podCreateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -152,7 +155,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "pod_create_duration_seconds_min",
 			Help:      "the min create duration(seconds) of pod",
-		}, []string{"namespace", "name", "status"})
+		}, []string{"namespace", "name", "status", "action"})
 		prometheus.MustRegister(m.podCreateDurationMin)
 
 		m.podUpdateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -160,7 +163,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "pod_update_duration_seconds_max",
 			Help:      "the max update duration(seconds) of pod",
-		}, []string{"namespace", "name", "status"})
+		}, commonLabels)
 		prometheus.MustRegister(m.podUpdateDurationMax)
 
 		m.podUpdateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -168,7 +171,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "pod_update_duration_seconds_min",
 			Help:      "the min update duration(seconds) of pod",
-		}, []string{"namespace", "name", "status"})
+		}, commonLabels)
 		prometheus.MustRegister(m.podUpdateDurationMin)
 
 		m.podDeleteDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -176,7 +179,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "pod_delete_duration_seconds_max",
 			Help:      "the max delete duration(seconds) of pod",
-		}, []string{"namespace", "name", "status"})
+		}, commonLabels)
 		prometheus.MustRegister(m.podDeleteDurationMax)
 
 		m.podDeleteDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -184,7 +187,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "pod_delete_duration_seconds_min",
 			Help:      "the min delete duration(seconds) of pod",
-		}, []string{"namespace", "name", "status"})
+		}, commonLabels)
 		prometheus.MustRegister(m.podDeleteDurationMin)
 
 		m.replicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -253,26 +256,26 @@ func (m *metrics) collectReconcileDuration(namespace, name, status string, d tim
 // 1.the create duration(seconds) of each pod
 // 2.the max create duration(seconds) of pod
 // 3.the min create duration(seconds) of pod
-func (m *metrics) collectPodCreateDurations(namespace, name, status string, d time.Duration) {
+func (m *metrics) collectPodCreateDurations(namespace, name, status, action string, d time.Duration) {
 	duration := d.Seconds()
-	key := namespace + "/" + name
+	key := fmt.Sprintf("%s/%s", namespace, name)
 
-	m.podCreateDuration.WithLabelValues(namespace, name, status).Observe(duration)
+	m.podCreateDuration.WithLabelValues(namespace, name, status, action).Observe(duration)
 	if duration > m.podCreateDurationMaxVal[key] {
 		m.podCreateDurationMaxVal[key] = duration
-		m.podCreateDurationMax.WithLabelValues(namespace, name, status).Set(duration)
+		m.podCreateDurationMax.WithLabelValues(namespace, name, status, action).Set(duration)
 	}
 
 	if m.podCreateDurationMinVal[key] == float64(0) {
 		m.podCreateDurationMinVal[key] = largeNumber
 		if duration < m.podCreateDurationMinVal[key] {
 			m.podCreateDurationMinVal[key] = duration
-			m.podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+			m.podCreateDurationMin.WithLabelValues(namespace, name, status, action).Set(duration)
 		}
 	} else {
 		if duration < m.podCreateDurationMinVal[key] {
 			m.podCreateDurationMinVal[key] = duration
-			m.podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+			m.podCreateDurationMin.WithLabelValues(namespace, name, status, action).Set(duration)
 		}
 	}
 }
@@ -281,26 +284,25 @@ func (m *metrics) collectPodCreateDurations(namespace, name, status string, d ti
 // 1.the update duration(seconds) of each pod
 // 2.the max update duration(seconds) of pod
 // 3.the min update duration(seconds) of pod
-func (m *metrics) collectPodUpdateDurations(namespace, name, status string, d time.Duration) {
+func (m *metrics) collectPodUpdateDurations(namespace, name, status, action, grace string, d time.Duration) {
 	duration := d.Seconds()
-	key := namespace + "/" + name
-
-	m.podUpdateDuration.WithLabelValues(namespace, name, status).Observe(duration)
+	key := fmt.Sprintf("%s/%s", namespace, name)
+	m.podUpdateDuration.WithLabelValues(namespace, name, status, action, grace).Observe(duration)
 	if duration > m.podUpdateDurationMaxVal[key] {
 		m.podUpdateDurationMaxVal[key] = duration
-		m.podUpdateDurationMax.WithLabelValues(namespace, name, status).Set(duration)
+		m.podUpdateDurationMax.WithLabelValues(namespace, name, status, action, grace).Set(duration)
 	}
 
 	if m.podUpdateDurationMinVal[key] == float64(0) {
 		m.podUpdateDurationMinVal[key] = largeNumber
 		if duration < m.podUpdateDurationMinVal[key] {
 			m.podUpdateDurationMinVal[key] = duration
-			m.podUpdateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+			m.podUpdateDurationMin.WithLabelValues(namespace, name, status, action, grace).Set(duration)
 		}
 	} else {
 		if duration < m.podUpdateDurationMinVal[key] {
 			m.podUpdateDurationMinVal[key] = duration
-			m.podUpdateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+			m.podUpdateDurationMin.WithLabelValues(namespace, name, status, action, grace).Set(duration)
 		}
 	}
 }
@@ -309,26 +311,26 @@ func (m *metrics) collectPodUpdateDurations(namespace, name, status string, d ti
 // 1.the delete duration(seconds) of each pod
 // 2.the max delete duration(seconds) of pod
 // 3.the min delete duration(seconds) of pod
-func (m *metrics) collectPodDeleteDurations(namespace, name, status string, d time.Duration) {
+func (m *metrics) collectPodDeleteDurations(namespace, name, status, action, grace string, d time.Duration) {
 	duration := d.Seconds()
-	key := namespace + "/" + name
+	key := fmt.Sprintf("%s/%s", namespace, name)
 
-	m.podDeleteDuration.WithLabelValues(namespace, name, status).Observe(duration)
+	m.podDeleteDuration.WithLabelValues(namespace, name, status, action, grace).Observe(duration)
 	if duration > m.podDeleteDurationMaxVal[key] {
 		m.podDeleteDurationMaxVal[key] = duration
-		m.podDeleteDurationMax.WithLabelValues(namespace, name, status).Set(duration)
+		m.podDeleteDurationMax.WithLabelValues(namespace, name, status, action, grace).Set(duration)
 	}
 
 	if m.podDeleteDurationMinVal[key] == float64(0) {
 		m.podDeleteDurationMinVal[key] = largeNumber
 		if duration < m.podDeleteDurationMinVal[key] {
 			m.podDeleteDurationMinVal[key] = duration
-			m.podDeleteDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+			m.podDeleteDurationMin.WithLabelValues(namespace, name, status, action, grace).Set(duration)
 		}
 	} else {
 		if duration < m.podDeleteDurationMinVal[key] {
 			m.podDeleteDurationMinVal[key] = duration
-			m.podDeleteDurationMin.WithLabelValues(namespace, name, status).Set(duration)
+			m.podDeleteDurationMin.WithLabelValues(namespace, name, status, action, grace).Set(duration)
 		}
 	}
 }

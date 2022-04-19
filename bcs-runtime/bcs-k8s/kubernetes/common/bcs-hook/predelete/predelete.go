@@ -20,10 +20,12 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
 	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 
 	apps "k8s.io/api/apps/v1"
@@ -104,11 +106,19 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 		return false, err
 	}
 	if len(existHookRuns) == 0 {
+		var ps metrics.PromServer
+		startTime := time.Now()
 		preDeleteHookRun, err := p.createHookRun(metaObj, runtimeObj, preDeleteHook, pod, preDeleteLabels, podNameLabelKey)
 		if err != nil {
 			klog.Warningf("Created PreDelete HookRun failed for pod %s of %s %s/%s, err:%s",
 				pod.Name, objectKind, namespace, name, err)
+			if objectKind == "GameStatefulSet" {
+				ps.CollectHRCreateDurations(namespace, name, "failure", "createHookrun", time.Since(startTime))
+			}
 			return false, err
+		}
+		if objectKind == "GameStatefulSet" {
+			ps.CollectHRCreateDurations(namespace, name, "success", "createHookrun", time.Since(startTime))
 		}
 
 		updatePreDeleteHookCondition(newStatus, pod.Name)

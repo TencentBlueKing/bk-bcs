@@ -16,10 +16,9 @@ package gamestatefulset
 import (
 	"context"
 	"fmt"
+	stsplus "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	"strings"
 	"time"
-
-	stsplus "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -88,12 +87,8 @@ func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.
 		return err
 	}
 	// If we created the PVCs attempt to create the Pod
-	startTime := time.Now()
 	_, err := spc.client.CoreV1().Pods(set.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
-	if err == nil {
-		spc.metrics.collectPodCreateDurations(set.Namespace, set.Name, "success", time.Since(startTime))
-	} else {
-		spc.metrics.collectPodCreateDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
+	if err != nil {
 		klog.Infof("failed to create pod %v", pod.Name)
 	}
 
@@ -131,12 +126,15 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 			return nil
 		}
 		attemptedUpdate = true
+		startTime := time.Now()
 		// commit the update, retrying on conflicts
 		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 		if updateErr == nil {
+			spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, successStatus, updateConflictPodAction, isGrace, time.Since(startTime))
 			klog.Infof("Pod %s/%s is updating successfully in UpdateGameStatefulSetPod", pod.Namespace, pod.Name)
 			return nil
 		}
+		spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, failureStatus, updateConflictPodAction, isGrace, time.Since(startTime))
 		klog.Errorf("Pod %s/%s update err in UpdateGameStatefulSetPod: %+v", pod.Namespace, pod.Name, updateErr)
 		if updated, err := spc.podLister.Pods(set.Namespace).Get(pod.Name); err == nil {
 			// make a copy so we don't mutate the shared cache
@@ -155,13 +153,7 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 
 // DeleteGameStatefulSetPod delete pod according to GameStatefulSet
 func (spc *realGameStatefulSetPodControl) DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
-	startTime := time.Now()
 	err := spc.client.CoreV1().Pods(set.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{})
-	if err == nil {
-		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, "success", time.Since(startTime))
-	} else {
-		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
-	}
 	spc.recordPodEvent("delete", set, pod, err)
 	return err
 }
@@ -195,13 +187,15 @@ func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *sts
 		}
 	}
 
+	startTime := time.Now()
 	err := spc.client.CoreV1().Pods(set.Namespace).Delete(context.TODO(), pod.Name, *metav1.NewDeleteOptions(0))
 	if err != nil {
+		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, failureStatus, forceDeletePodAction, isGrace, time.Since(startTime))
 		klog.Errorf("GameStatefulSet %s/%s's Pod %s/%s force delete error", set.Namespace, set.Name,
 			pod.Namespace, pod.Name)
 		return false, err
 	}
-
+	spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, successStatus, forceDeletePodAction, isGrace, time.Since(startTime))
 	spc.recordPodEvent("force delete", set, pod, err)
 	return true, err
 }

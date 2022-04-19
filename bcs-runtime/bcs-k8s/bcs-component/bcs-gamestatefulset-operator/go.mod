@@ -33,6 +33,7 @@ replace (
 	k8s.io/metrics => k8s.io/metrics v0.20.0
 	k8s.io/mount-utils => k8s.io/mount-utils v0.20.0
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.20.0
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220309021702-fe8a9f6843e1 => 	../../kubernetes/common
 )
 
 require (
