@@ -132,6 +132,8 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		// search for data which is not marked deleted
 		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 		findCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+	} else {
+		findCond = operator.NewBranchCondition(operator.And, opt.Cond)
 	}
 	finder := a.mDriver.Table(resourceType).Find(findCond)
 	if len(projection) != 0 {
@@ -410,6 +412,8 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 		countCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
 		// overriding the deletion flag value
 		data[databaseFieldNameForDeletionFlag] = false
+	} else {
+		countCond = operator.NewBranchCondition(operator.And, opt.Cond)
 	}
 	counter, err := a.mDriver.Table(resourceType).Find(countCond).Count(ctx)
 	if err != nil {
