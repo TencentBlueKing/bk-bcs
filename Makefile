@@ -380,7 +380,7 @@ alert-manager:pre
 	cp ./bcs-services/bcs-alert-manager/pkg/proto/alertmanager/alertmanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/alertmanager.swagger.json
 	cd ./bcs-services/bcs-alert-manager/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
 
-bcs-project:pre
+bcs-project:
 	cd ${BCS_SERVICES_PATH}/bcs-project && make build
 
 # end of bcs-service section
