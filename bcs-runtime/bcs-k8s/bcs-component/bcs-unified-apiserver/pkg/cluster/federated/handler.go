@@ -15,18 +15,19 @@ package federated
 import (
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest/apis"
 )
 
 type Handler struct {
 	clusterId    string
 	members      []string
 	proxyHandler *apiproxy.UpgradeAwareHandler
+	podHander    *apis.PodHandler
 }
 
 // NewHandler create handler
@@ -41,99 +42,38 @@ func NewHandler(clusterId string, members []string) (*Handler, error) {
 		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
 	}
 
+	stor, err := NewPodStor(members)
+	if err != nil {
+		return nil, err
+	}
+
+	podHander := apis.NewPodHandler(stor)
+
 	return &Handler{
 		clusterId:    clusterId,
 		proxyHandler: proxyHandler,
 		members:      members,
+		podHander:    podHander,
 	}, nil
 }
 
 // ServeHTTP serves http request
 func (h *Handler) Serve(c *rest.RequestInfo) {
-	stor, err := NewPodStor(h.members)
+	err := rest.ErrInit
+
+	switch c.Resource {
+	case "pods":
+		err = h.podHander.Serve(c)
+	}
+
+	// 未实现的功能, 使用代理请求
+	if err == rest.ErrInit || err == rest.ErrNotImplemented {
+		h.proxyHandler.ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
 	if err != nil {
 		c.AbortWithError(err)
 		return
 	}
-
-	if c.Resource == "pods" && c.Verb == "list" {
-		listOptions, err := clientutil.GetListOptionsFromQueryParam(c.Request.URL.Query())
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
-
-		if c.TableReq.IsTable {
-			result, err := stor.ListAsTable(c.Request.Context(), c.Namespace, listOptions, c.TableReq.AcceptHeader)
-			if err != nil {
-				c.AbortWithError(err)
-				return
-			}
-			c.Write(result)
-			return
-		}
-		result, err := stor.List(c.Request.Context(), c.Namespace, listOptions)
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
-		c.Write(result)
-		return
-	} else if c.Resource == "pods" && c.Verb == "get" {
-		if c.TableReq.IsTable {
-			result, err := stor.GetTable(c.Request.Context(), c.Namespace, c.Name, &metav1.GetOptions{}, c.TableReq.AcceptHeader)
-			if err != nil {
-				c.AbortWithError(err)
-				return
-			}
-			c.Write(result)
-			return
-		}
-
-		result, err := stor.Get(c.Request.Context(), c.Namespace, c.Name, &metav1.GetOptions{})
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
-		c.Write(result)
-		return
-	} else if c.Resource == "pods" && c.Verb == "delete" {
-		deleteOptions, err := clientutil.GetDeleteOptionsFromReq(c.Request)
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
-
-		result, err := stor.Delete(c.Request.Context(), c.Namespace, c.Name, &deleteOptions)
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
-		c.Write(result)
-		return
-	} else if c.Resource == "pods" && c.Verb == "watch" {
-		listOptions, err := clientutil.GetListOptionsFromQueryParam(c.Request.URL.Query())
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
-		watch, err := stor.Watch(c.Request.Context(), c.Namespace, *listOptions)
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
-		firstChunk := true
-		for event := range watch.ResultChan() {
-			err = rest.AddTypeInformationToObject(event.Object)
-			if err != nil {
-				c.AbortWithError(err)
-				return
-			}
-			c.WriteChunk(event, firstChunk)
-			firstChunk = false
-		}
-		return
-	}
-
-	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
 }

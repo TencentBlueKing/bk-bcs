@@ -13,10 +13,13 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	apirequest "k8s.io/apiserver/pkg/endpoints/request"
 )
@@ -33,35 +36,104 @@ type TableRequest struct {
 	AcceptHeader string
 }
 
+// 未实现的方法Err, 抛到上层处理
+var (
+	ErrNotImplemented = errors.New("NotImplementedError")
+	ErrInit           = errors.New("InitError")
+)
+
+type Options struct {
+	Verb          Verb
+	AcceptHeader  string
+	ListOptions   *metav1.ListOptions
+	DeleteOptions *metav1.DeleteOptions
+	GetOptions    *metav1.GetOptions
+}
+
 type RequestInfo struct {
 	*apirequest.RequestInfo
 	TableReq *TableRequest
 	Writer   http.ResponseWriter
 	Request  *http.Request
+	Options  *Options
 }
 
 func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestInfo, error) {
-	requestInfo, err := NewRequestInfo(req)
+	requestInfo, err := ParseRequestInfo(req)
 	if err != nil {
 		return nil, err
 	}
 
-	tableReq := &TableRequest{}
-	acceptHeader := req.Header.Get("Accept")
-	if strings.Contains(acceptHeader, "as=Table") {
-		tableReq.AcceptHeader = acceptHeader
-		tableReq.IsTable = true
+	options, err := ParseOptions(req, requestInfo.Verb)
+	if err != nil {
+		return nil, err
 	}
+
 	reqInfo := &RequestInfo{
 		RequestInfo: requestInfo,
-		TableReq:    tableReq,
+		Options:     options,
 		Request:     req,
 		Writer:      rw,
 	}
 	return reqInfo, nil
 }
 
-func NewRequestInfo(req *http.Request) (*apirequest.RequestInfo, error) {
+// ParserOptions 解析request头部操作, header等
+func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
+	options := new(Options)
+
+	// 解析参数
+	switch rawVerb {
+	case "list", "watch":
+		listOptions, err := clientutil.GetListOptionsFromQueryParam(req.URL.Query())
+		if err != nil {
+			return nil, err
+		}
+		options.ListOptions = listOptions
+	case "get":
+		// Get 没有参数可解析
+		options.GetOptions = &metav1.GetOptions{}
+	case "delete":
+		deleteOptions, err := clientutil.GetDeleteOptionsFromReq(req)
+		if err != nil {
+			return nil, err
+		}
+		options.DeleteOptions = &deleteOptions
+	}
+
+	acceptHeader := req.Header.Get("Accept")
+	if strings.Contains(acceptHeader, "as=Table") {
+		options.AcceptHeader = acceptHeader
+	}
+
+	// 解析类型
+	switch rawVerb {
+	case "list":
+		if options.AcceptHeader != "" {
+			options.Verb = ListAsTableVerb
+		} else {
+			options.Verb = ListVerb
+		}
+	case "get":
+		// Get 没有参数可解析
+		options.GetOptions = &metav1.GetOptions{}
+		if options.AcceptHeader != "" {
+			options.Verb = GetAsTableVerb
+		} else {
+			options.Verb = GetVerb
+		}
+	case "watch":
+		options.Verb = WatchVerb
+	case "delete":
+		options.Verb = DeleteVerb
+	default:
+		return nil, ErrNotImplemented
+	}
+	return options, nil
+}
+
+// ParseRequestInfo 解析url等
+func ParseRequestInfo(req *http.Request) (*apirequest.RequestInfo, error) {
 	apiPrefixes := sets.NewString(strings.Trim(APIGroupPrefix, "/"))
 	legacyAPIPrefixes := sets.String{}
 	apiPrefixes.Insert(strings.Trim(DefaultLegacyAPIPrefix, "/"))
@@ -74,8 +146,7 @@ func NewRequestInfo(req *http.Request) (*apirequest.RequestInfo, error) {
 
 	requestInfo, err := requestInfoFactory.NewRequestInfo(req)
 	if err != nil {
-		return nil, fmt.Errorf("create info from request %s %s failed, err %s",
-			req.RemoteAddr, req.URL.String(), err.Error())
+		return nil, fmt.Errorf("parse info from request %s %s failed, err %s", req.RemoteAddr, req.URL.String(), err.Error())
 	}
 	return requestInfo, nil
 }

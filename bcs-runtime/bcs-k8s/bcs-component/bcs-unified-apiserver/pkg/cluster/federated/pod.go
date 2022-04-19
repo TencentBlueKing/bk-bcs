@@ -49,7 +49,7 @@ func NewPodStor(members []string) (*PodStor, error) {
 }
 
 // List 查询Pod列表, Json格式返回
-func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListOptions) (*v1.PodList, error) {
+func (p *PodStor) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "PodList"}
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.SelfLink(namespace),
@@ -62,7 +62,7 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListO
 		Items:    []v1.Pod{},
 	}
 	for k, v := range p.k8sClientMap {
-		result, err := v.CoreV1().Pods(namespace).List(ctx, *opts)
+		result, err := v.CoreV1().Pods(namespace).List(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListO
 }
 
 // ListAsTable 查询Pod列表, kubectl格式返回
-func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav1.ListOptions, accept string) (*metav1.Table, error) {
+func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.SelfLink(namespace),
@@ -143,9 +143,9 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav
 		err := v.CoreV1().RESTClient().Get().
 			Namespace(namespace).
 			Resource("pods").
-			VersionedParams(opts, scheme.ParameterCodec).
+			VersionedParams(&opts, scheme.ParameterCodec).
 			Timeout(timeout).
-			SetHeader("Accept", accept).
+			SetHeader("Accept", acceptHeader).
 			Do(ctx).
 			Into(resultTemp)
 		if err != nil {
@@ -171,11 +171,11 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav
 }
 
 // Delete 删除单个Pod
-func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts *metav1.GetOptions) (*v1.Pod, error) {
+func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"}
 
 	for k, v := range p.k8sClientMap {
-		pod, err := v.CoreV1().Pods(namespace).Get(ctx, name, *opts)
+		pod, err := v.CoreV1().Pods(namespace).Get(ctx, name, opts)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				continue
@@ -206,8 +206,8 @@ func (p *PodStor) GetClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
 	return client, nil
 }
 
-func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opts *metav1.DeleteOptions) (*v1.Pod, error) {
-	pod, err := p.Get(ctx, namespace, name, &metav1.GetOptions{})
+func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error) {
+	pod, err := p.Get(ctx, namespace, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -215,14 +215,14 @@ func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opt
 	if err != nil {
 		return nil, err
 	}
-	if err = client.CoreV1().Pods(namespace).Delete(ctx, name, *opts); err != nil {
+	if err = client.CoreV1().Pods(namespace).Delete(ctx, name, opts); err != nil {
 		return nil, err
 	}
 
 	return pod, nil
 }
 
-func (p *PodStor) GetTable(ctx context.Context, namespace string, name string, opts *metav1.GetOptions, accept string) (*metav1.Table, error) {
+func (p *PodStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.SelfLink(namespace),
@@ -250,8 +250,8 @@ func (p *PodStor) GetTable(ctx context.Context, namespace string, name string, o
 		err := v.CoreV1().RESTClient().Get().
 			Namespace(namespace).
 			Resource("pods").
-			VersionedParams(opts, scheme.ParameterCodec).
-			SetHeader("Accept", accept).
+			VersionedParams(&opts, scheme.ParameterCodec).
+			SetHeader("Accept", acceptHeader).
 			SubResource(name).
 			Do(ctx).
 			Into(resultTemp)
