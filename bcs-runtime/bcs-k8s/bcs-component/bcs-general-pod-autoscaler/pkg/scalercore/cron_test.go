@@ -63,7 +63,7 @@ func Test_GetReplicas(t *testing.T) {
 					DesiredReplicas: 1,
 				},
 			},
-			desired: 0,
+			desired: -1,
 		},
 		{
 			name: "single timeRange, in range",
@@ -87,7 +87,7 @@ func Test_GetReplicas(t *testing.T) {
 					DesiredReplicas: 1,
 				},
 			},
-			desired: 0,
+			desired: -1,
 		},
 		{
 			name: "multi timeRange, one match",
@@ -125,7 +125,7 @@ func Test_GetReplicas(t *testing.T) {
 					DesiredReplicas: 1,
 				},
 			},
-			desired: 0,
+			desired: -1,
 		},
 		{
 			name: "single timeRange, in range, in a minute",

@@ -14,6 +14,7 @@
 package gamedeployment
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"strings"
@@ -95,7 +96,8 @@ func (gdc *defaultGameDeploymentControl) cancelHookRuns(canaryCtx *canaryContext
 		isNotCompleted := hr == nil || !hr.Status.Phase.Completed()
 		if hr != nil && !hr.Spec.Terminate && isNotCompleted {
 			klog.Infof("canceling the HookRun %s for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace, canaryCtx.deploy.Name)
-			_, err := gdc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Patch(hr.Name, patchtypes.MergePatchType, []byte(commonhookutil.CancelHookRun))
+			_, err := gdc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Patch(
+				context.TODO(), hr.Name, patchtypes.MergePatchType, []byte(commonhookutil.CancelHookRun), metav1.PatchOptions{})
 			if err != nil {
 				if k8serrors.IsNotFound(err) {
 					klog.Warningf("HookRun %s not found for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace, canaryCtx.deploy.Name)
@@ -114,7 +116,7 @@ func (gdc *defaultGameDeploymentControl) deleteHookRuns(hrs []*hookv1alpha1.Hook
 		if hr.DeletionTimestamp != nil {
 			continue
 		}
-		err := gdc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(hr.Name, nil)
+		err := gdc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(context.TODO(), hr.Name, metav1.DeleteOptions{})
 		if err != nil && !k8serrors.IsNotFound(err) {
 			return err
 		}

@@ -49,11 +49,9 @@ class TestProjectPermission:
         with pytest.raises(PermissionDeniedError) as exec:
             project_permission_obj.can_create(perm_ctx)
         assert exec.value.code == PermissionDeniedError.code
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
-            action_request_list=[
-                ActionResourcesRequest(ProjectAction.CREATE, resource_type=project_permission_obj.resource_type)
-            ],
+            action_request_list=[ActionResourcesRequest(ProjectAction.CREATE, resource_type=ResourceType.Project)],
         )
 
     def test_can_view(self, project_permission_obj, project_id):
@@ -73,12 +71,12 @@ class TestProjectPermission:
         with pytest.raises(PermissionDeniedError) as exec:
             project_permission_obj.can_view(perm_ctx)
         assert exec.value.code == PermissionDeniedError.code
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
                     ProjectAction.VIEW,
-                    resource_type=project_permission_obj.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
                 )
             ],
@@ -90,14 +88,14 @@ class TestProjectPermission:
         perm_ctx = ProjectPermCtx(username=username, project_id=project_id)
         with pytest.raises(PermissionDeniedError) as exec:
             project_permission_obj.can_edit(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
                     ProjectAction.VIEW,
-                    resource_type=project_permission_obj.resource_type,
+                    resource_type=ResourceType.Project,
                     resources=[project_id],
-                )
+                ),
             ],
         )
 
@@ -110,5 +108,5 @@ class TestProjectCreatorAction:
             'name': project_id,
             'creator': bk_user.username,
             'type': ResourceType.Project,
-            'system': settings.APP_ID,
+            'system': settings.BK_IAM_SYSTEM_ID,
         }

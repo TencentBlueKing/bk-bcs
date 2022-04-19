@@ -16,7 +16,6 @@ package bcs
 import (
 	"fmt"
 	"reflect"
-	"sync"
 	"testing"
 	"time"
 
@@ -40,7 +39,6 @@ func TestNodeGroupCache_GetRegisteredNodeGroups(t *testing.T) {
 		registeredGroups       []*NodeGroup
 		instanceToGroup        map[InstanceRef]*NodeGroup
 		instanceToCreationType map[InstanceRef]CreationType
-		cacheMutex             sync.Mutex
 		lastUpdateTime         time.Time
 		getNodes               GetNodes
 	}
@@ -63,8 +61,6 @@ func TestNodeGroupCache_GetRegisteredNodeGroups(t *testing.T) {
 				registeredGroups:       tt.fields.registeredGroups,
 				instanceToGroup:        tt.fields.instanceToGroup,
 				instanceToCreationType: tt.fields.instanceToCreationType,
-				cacheMutex:             tt.fields.cacheMutex,
-				lastUpdateTime:         tt.fields.lastUpdateTime,
 				getNodes:               tt.fields.getNodes,
 			}
 			if got := m.GetRegisteredNodeGroups(); !reflect.DeepEqual(got, tt.want) {
@@ -97,7 +93,6 @@ func TestNodeGroupCache_FindForInstance(t *testing.T) {
 		registeredGroups       []*NodeGroup
 		instanceToGroup        map[InstanceRef]*NodeGroup
 		instanceToCreationType map[InstanceRef]CreationType
-		cacheMutex             sync.Mutex
 		lastUpdateTime         time.Time
 		getNodes               GetNodes
 	}
@@ -141,7 +136,6 @@ func TestNodeGroupCache_FindForInstance(t *testing.T) {
 				registeredGroups:       tt.fields.registeredGroups,
 				instanceToGroup:        tt.fields.instanceToGroup,
 				instanceToCreationType: tt.fields.instanceToCreationType,
-				cacheMutex:             tt.fields.cacheMutex,
 				lastUpdateTime:         tt.fields.lastUpdateTime,
 				getNodes:               tt.fields.getNodes,
 			}
@@ -170,7 +164,6 @@ func TestNodeGroupCache_CheckInstancesTerminateByAs(t *testing.T) {
 		registeredGroups       []*NodeGroup
 		instanceToGroup        map[InstanceRef]*NodeGroup
 		instanceToCreationType map[InstanceRef]CreationType
-		cacheMutex             sync.Mutex
 		lastUpdateTime         time.Time
 		getNodes               GetNodes
 	}
@@ -214,7 +207,6 @@ func TestNodeGroupCache_CheckInstancesTerminateByAs(t *testing.T) {
 				registeredGroups:       tt.fields.registeredGroups,
 				instanceToGroup:        tt.fields.instanceToGroup,
 				instanceToCreationType: tt.fields.instanceToCreationType,
-				cacheMutex:             tt.fields.cacheMutex,
 				lastUpdateTime:         tt.fields.lastUpdateTime,
 				getNodes:               tt.fields.getNodes,
 			}
@@ -281,7 +273,6 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 		registeredGroups       []*NodeGroup
 		instanceToGroup        map[InstanceRef]*NodeGroup
 		instanceToCreationType map[InstanceRef]CreationType
-		cacheMutex             sync.Mutex
 		lastUpdateTime         time.Time
 		getNodes               GetNodes
 	}
@@ -301,7 +292,7 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 			name: "failed to getNodes",
 			fields: fields{
 				registeredGroups: []*NodeGroup{
-					&NodeGroup{
+					{
 						nodeGroupID: "test",
 						client:      m,
 					},
@@ -315,7 +306,7 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 			name: "failed to get node group",
 			fields: fields{
 				registeredGroups: []*NodeGroup{
-					&NodeGroup{
+					{
 						nodeGroupID: "test2",
 						client:      m,
 					},
@@ -329,7 +320,7 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 			name: "maxsize equals to 0",
 			fields: fields{
 				registeredGroups: []*NodeGroup{
-					&NodeGroup{
+					{
 						nodeGroupID: "test3",
 						client:      m,
 					},
@@ -343,7 +334,7 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 			name: "regenerate normal",
 			fields: fields{
 				registeredGroups: []*NodeGroup{
-					&NodeGroup{
+					{
 						nodeGroupID: "test4",
 						client:      m,
 					},
@@ -360,7 +351,6 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 				registeredGroups:       tt.fields.registeredGroups,
 				instanceToGroup:        tt.fields.instanceToGroup,
 				instanceToCreationType: tt.fields.instanceToCreationType,
-				cacheMutex:             tt.fields.cacheMutex,
 				lastUpdateTime:         tt.fields.lastUpdateTime,
 				getNodes:               tt.fields.getNodes,
 			}
@@ -380,7 +370,6 @@ func TestNodeGroupCache_SetNodeGroupMinSize(t *testing.T) {
 		registeredGroups       []*NodeGroup
 		instanceToGroup        map[InstanceRef]*NodeGroup
 		instanceToCreationType map[InstanceRef]CreationType
-		cacheMutex             sync.Mutex
 		lastUpdateTime         time.Time
 		getNodes               GetNodes
 	}
@@ -423,7 +412,6 @@ func TestNodeGroupCache_SetNodeGroupMinSize(t *testing.T) {
 				registeredGroups:       tt.fields.registeredGroups,
 				instanceToGroup:        tt.fields.instanceToGroup,
 				instanceToCreationType: tt.fields.instanceToCreationType,
-				cacheMutex:             tt.fields.cacheMutex,
 				lastUpdateTime:         tt.fields.lastUpdateTime,
 				getNodes:               tt.fields.getNodes,
 			}

@@ -87,7 +87,7 @@
                         <bk-table-column :label="$t('操作')" width="180" :resizable="false" :show-overflow-tooltip="false">
                             <template #default="{ row }">
                                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
-                                <bk-popover placement="bottom" theme="light dropdown" :arrow="false" v-if="row.container_id && $INTERNAL">
+                                <bk-popover placement="bottom" theme="light dropdown" :arrow="false" v-if="row.container_id && $INTERNAL && !isSharedCluster">
                                     <bk-button style="cursor: default;" text class="ml10">{{ $t('日志检索') }}</bk-button>
                                     <div slot="content">
                                         <ul>
@@ -287,7 +287,6 @@
         },
         setup (props, ctx) {
             const { $store, $route, $INTERNAL } = ctx.root
-            console.log(ctx.root)
             const {
                 isLoading,
                 detail,
@@ -312,6 +311,7 @@
             const { name, namespace } = toRefs(props)
             const params = computed(() => {
                 return {
+                    namespace: namespace.value,
                     pod_name_list: [name.value]
                 }
             })
@@ -326,7 +326,7 @@
                     $podId: name.value,
                     $namespaceId: namespace.value
                 })
-                if ($INTERNAL) {
+                if ($INTERNAL && container.value.length) {
                     logLinks.value = await $store.dispatch('dashboard/logLinks', {
                         container_ids: container.value.map(item => item.container_id).join(',')
                     })
@@ -405,7 +405,7 @@
             const clusterId = computed(() => $store.state.curClusterId)
             const terminalWins = new Map()
             const handleShowTerminal = (row) => {
-                const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?container_id=${row.container_id}`
+                const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`
                 if (terminalWins.has(row.container_id)) {
                     const win = terminalWins.get(row.container_id)
                     if (!win.closed) {
@@ -421,6 +421,10 @@
             }
             // 2. 日志检索
             const isDropdownShow = ref(false)
+
+            const isSharedCluster = computed(() => {
+                return $store.getters['cluster/isSharedCluster']
+            })
 
             onMounted(async () => {
                 handleGetDetail()
@@ -450,6 +454,7 @@
                 pagePerms,
                 isDropdownShow,
                 logLinks,
+                isSharedCluster,
                 handleShowYamlPanel,
                 handleGetStorage,
                 handleGetContainer,

@@ -18,9 +18,9 @@ import (
 )
 
 // GetCredentials query for clusterCredentials by clusterId
-func GetCredentials(clusterId string) *models.BcsClusterCredential {
+func GetCredentials(clusterID string) *models.BcsClusterCredential {
 	credential := models.BcsClusterCredential{}
-	GCoreDB.Where(&models.BcsClusterCredential{ClusterId: clusterId}).First(&credential)
+	GCoreDB.Where(&models.BcsClusterCredential{ClusterId: clusterID}).First(&credential)
 	if credential.ID != 0 {
 		return &credential
 	}
@@ -28,10 +28,10 @@ func GetCredentials(clusterId string) *models.BcsClusterCredential {
 }
 
 // SaveCredentials saves the current cluster credentials
-func SaveCredentials(clusterId, serverAddresses, caCertData, userToken, clusterDomain string) error {
+func SaveCredentials(clusterID, serverAddresses, caCertData, userToken, clusterDomain string) error {
 	var credentials models.BcsClusterCredential
 	// Create or update, source: https://github.com/jinzhu/gorm/issues/1307
-	dbScoped := GCoreDB.Where(models.BcsClusterCredential{ClusterId: clusterId}).Assign(
+	dbScoped := GCoreDB.Where(models.BcsClusterCredential{ClusterId: clusterID}).Assign(
 		models.BcsClusterCredential{
 			ServerAddresses: serverAddresses,
 			CaCertData:      caCertData,
@@ -42,6 +42,7 @@ func SaveCredentials(clusterId, serverAddresses, caCertData, userToken, clusterD
 	return dbScoped.Error
 }
 
+// ListCredentials list cluster credentials
 func ListCredentials() []models.BcsClusterCredential {
 	var credentials []models.BcsClusterCredential
 	GCoreDB.Find(&credentials)
@@ -74,14 +75,16 @@ func GetWsCredentials(serverKey string) *models.BcsWsClusterCredentials {
 	return nil
 }
 
+// DelWsCredentials delete ws credentials
 func DelWsCredentials(serverKey string) {
 	credentials := models.BcsWsClusterCredentials{}
 	GCoreDB.Where(&models.BcsWsClusterCredentials{ServerKey: serverKey}).Delete(&credentials)
 }
 
-func GetWsCredentialsByClusterId(clusterId string) []*models.BcsWsClusterCredentials {
+// GetWsCredentialsByClusterId get ws credential by clusterID
+func GetWsCredentialsByClusterId(clusterID string) []*models.BcsWsClusterCredentials {
 	var credentials []*models.BcsWsClusterCredentials
-	query := clusterId + "-%"
+	query := clusterID + "-%"
 	GCoreDB.Where("server_key LIKE ?", query).Find(&credentials)
 	return credentials
 }

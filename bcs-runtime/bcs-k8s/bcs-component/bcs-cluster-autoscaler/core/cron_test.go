@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager/mocks"
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+
 	"github.com/golang/mock/gomock"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
@@ -236,7 +237,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 			MinSize:     0,
 			DesiredSize: 3,
 			TimeRanges: []*clustermanager.TimeRange{
-				&clustermanager.TimeRange{
+				{
 					Schedule:   "* 7-9 * * *",
 					Zone:       "Asia/Shanghai",
 					DesiredNum: 5,
@@ -251,7 +252,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 			MinSize:     0,
 			DesiredSize: 6,
 			TimeRanges: []*clustermanager.TimeRange{
-				&clustermanager.TimeRange{
+				{
 					Schedule:   "* 7-9 * * *",
 					Zone:       "Asia/Shanghai",
 					DesiredNum: 3,
@@ -379,7 +380,7 @@ func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 				ng:          &bcs.NodeGroup{},
 				currentTime: timeutc,
 				timeRanges: []*bcs.TimeRange{
-					&bcs.TimeRange{
+					{
 						Schedule:   "* 7-10 * * *",
 						Zone:       "Asia/Shanghai",
 						DesiredNum: 5,
@@ -395,7 +396,7 @@ func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 				ng:          &bcs.NodeGroup{},
 				currentTime: timeutc,
 				timeRanges: []*bcs.TimeRange{
-					&bcs.TimeRange{
+					{
 						Schedule:   "* 10-11 * * *",
 						Zone:       "Asia/Shanghai",
 						DesiredNum: 5,
@@ -411,12 +412,12 @@ func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 				ng:          &bcs.NodeGroup{},
 				currentTime: timeutc,
 				timeRanges: []*bcs.TimeRange{
-					&bcs.TimeRange{
+					{
 						Schedule:   "* 7-10 * * *",
 						Zone:       "Asia/Shanghai",
 						DesiredNum: 5,
 					},
-					&bcs.TimeRange{
+					{
 						Schedule:   "* 6-9 * * *",
 						Zone:       "Asia/Shanghai",
 						DesiredNum: 7,
@@ -432,12 +433,12 @@ func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 				ng:          &bcs.NodeGroup{},
 				currentTime: timeutc,
 				timeRanges: []*bcs.TimeRange{
-					&bcs.TimeRange{
+					{
 						Schedule:   "* 14-15 * * *",
 						Zone:       "Asia/Shanghai",
 						DesiredNum: 5,
 					},
-					&bcs.TimeRange{
+					{
 						Schedule:   "* 16-19 * * *",
 						Zone:       "Asia/Shanghai",
 						DesiredNum: 7,
@@ -463,7 +464,7 @@ func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 				ng:          &bcs.NodeGroup{},
 				currentTime: timeutc,
 				timeRanges: []*bcs.TimeRange{
-					&bcs.TimeRange{
+					{
 						Schedule:   "* 16-19 * * ",
 						Zone:       "Asia/Shanghai",
 						DesiredNum: 7,

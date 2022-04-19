@@ -172,7 +172,7 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 
 //UpdateService update specified Service, if service does not exist, return error
 func (r *kRegister) UpdateService(svc *register.Service) error {
-	return fmt.Errorf("not implemented")
+	return r.ReplaceTargetByService(svc, svc.Backends)
 }
 
 //GetService get specified service by name, if no service, return nil

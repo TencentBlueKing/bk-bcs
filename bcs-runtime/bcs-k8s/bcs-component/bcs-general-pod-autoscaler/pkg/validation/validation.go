@@ -180,13 +180,13 @@ func validateWebhook(wc *v1beta1.WebhookClientConfig, fldPath *field.Path) field
 		allErrs = append(allErrs, field.Forbidden(fldPath, "must specify at least one service or url"))
 
 	case wc.URL != nil:
-		allErrs = append(allErrs, webhook.ValidateWebhookURL(fldPath.Child("webhook").Child("url"), *wc.URL, false)...)
+		allErrs = append(allErrs, webhook.ValidateWebhookURL(fldPath.Child("url"), *wc.URL, false)...)
 	case wc.Service != nil:
 		var port int32
 		if wc.Service.Port != nil {
 			port = *wc.Service.Port
 		}
-		allErrs = append(allErrs, webhook.ValidateWebhookService(fldPath.Child("webhook").Child("service"), wc.Service.Name, wc.Service.Namespace,
+		allErrs = append(allErrs, webhook.ValidateWebhookService(fldPath.Child("service"), wc.Service.Namespace, wc.Service.Name,
 			wc.Service.Path, port)...)
 	}
 	return allErrs

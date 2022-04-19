@@ -18,18 +18,19 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// CalculateResourceAllocRate calculate resource allocate rate, (existed resource quota) / (cluster total resource)
+// CalculateResourceAllocRate calculate resource allocate rate,
+// (existed resource quota) / (cluster total resource)
 func CalculateResourceAllocRate(
-	quotaList []types.NamespaceQuota, nodeList *k8scorev1.NodeList) (float32, error) {
+	quotaList []types.ResourceQuota, nodeList *k8scorev1.NodeList) (float32, error) {
 	if nodeList == nil || len(nodeList.Items) == 0 {
 		return math.MaxFloat32, nil
 	}

@@ -12,12 +12,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf import settings
 from rest_framework.permissions import BasePermission
 
-from backend.accounts import bcs_perm
-from backend.components import paas_auth, paas_cc
-from backend.iam import legacy_perms as permissions
+from backend.components import paas_cc
+from backend.iam.permissions.resources import ProjectPermCtx, ProjectPermission
 from backend.utils import FancyDict
 from backend.utils.cache import region
 from backend.utils.error_codes import error_codes
@@ -35,17 +33,8 @@ class HasProject(BasePermission):
         if request.user.is_superuser:
             return True
 
-        user_id = request.user.username
-
-        if settings.REGION == 'ce':
-            perm = permissions.ProjectPermission()
-            return perm.can_view(user_id, project_id)
-        else:
-            access_token = request.user.token.access_token
-            result = paas_auth.verify_project(access_token, project_id, user_id)
-            if result.get('code') == 0:
-                return True
-            return False
+        perm_ctx = ProjectPermCtx(username=request.user.username, project_id=project_id)
+        return ProjectPermission().can_view(perm_ctx, raise_exception=False)
 
 
 class HasIAMProject(BasePermission):
@@ -58,21 +47,15 @@ class HasIAMProject(BasePermission):
             return True
 
         access_token = request.user.token.access_token
-        user_id = request.user.username
 
         project_code = self.get_project_code(access_token, project_id)
         if not project_code:
             return False
 
-        if settings.REGION == 'ce':
-            perm = permissions.ProjectPermission()
-            return perm.can_view(user_id, project_id)
-        else:
-            # 实际调用paas_auth.verify_project
-            verify = bcs_perm.verify_project_by_user(
-                access_token=access_token, project_id=project_id, project_code=project_code, user_id=user_id
-            )
-            return verify
+        perm_ctx = ProjectPermCtx(
+            username=request.user.username, project_id=self.get_project_id(access_token, project_id)
+        )
+        return ProjectPermission().can_view(perm_ctx, raise_exception=False)
 
     def get_project_code(self, access_token, project_id):
         """获取project_code
@@ -88,6 +71,22 @@ class HasIAMProject(BasePermission):
             project_code = result["data"]["english_name"]
             region.set(cache_key, project_code)
         return project_code
+
+    def get_project_id(self, access_token, project_id):
+        """获取project_id
+        缓存较长时间
+        # TODO 临时使用
+        """
+        cache_key = f"BK_DEVOPS_BCS:REAL_PROJECT_ID:{project_id}"
+        real_project_id = region.get(cache_key, expiration_time=3600 * 24 * 30)
+        if not real_project_id:
+            # 这里的project_id对应实际的project_id或project_code, paas_cc接口兼容了两种类型的查询
+            result = paas_cc.get_project(access_token, project_id)
+            if result.get("code") != 0:
+                return None
+            real_project_id = result["data"]["project_id"]
+            region.set(cache_key, real_project_id)
+        return real_project_id
 
 
 class ProjectHasBCS(BasePermission):

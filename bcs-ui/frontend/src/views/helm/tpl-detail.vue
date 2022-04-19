@@ -185,9 +185,7 @@
                 },
                 curTplVersions: [],
                 tplsetVerIndex: '',
-                namespaceId: '',
                 answers: {},
-                namespaceList: [],
                 curLabelList: [
                     {
                         key: '',
@@ -212,7 +210,6 @@
             const tplId = this.$route.params.tplId
             this.curTpl = await this.getTplById(tplId)
             this.getTplVersions()
-            this.getNamespaceList()
         },
         methods: {
             /**
@@ -365,22 +362,6 @@
                         this.tplsetVerIndex = versionId
                         this.getTplDetail(versionId, firstVersion)
                     }
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
-
-            /**
-             * 获取命名空间列表
-             */
-            async getNamespaceList () {
-                const projectId = this.projectId
-
-                try {
-                    const res = await this.$store.dispatch('helm/getNamespaceList', {
-                        projectId: projectId
-                    })
-                    this.namespaceList = res.data
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }

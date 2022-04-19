@@ -51,8 +51,9 @@ class App(models.Model):
         ("delete", "Delete"),
     )
 
-    creator = models.CharField(_("创建者"), max_length=32)
-    updator = models.CharField(_("更新者"), max_length=32)
+    # 根据用户管理的限制，允许creator和updater最大长度为64
+    creator = models.CharField("创建者", max_length=64)
+    updator = models.CharField("更新者", max_length=64)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -140,7 +141,6 @@ class App(models.Model):
                 cluster_id=self.cluster_id,
                 namespace=self.namespace,
                 stdlog_data_id=bcs_helm_utils.get_stdlog_data_id(self.project_id),
-                image_pull_secret=bcs_helm_utils.provide_image_pull_secrets(self.namespace),
             )
             content, notes = self.release.render(namespace=self.namespace, bcs_inject_data=bcs_inject_data)
             content = str(content, encoding="utf-8")

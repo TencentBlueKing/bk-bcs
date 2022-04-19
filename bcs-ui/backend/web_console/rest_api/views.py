@@ -23,9 +23,10 @@ from rest_framework.renderers import BrowsableAPIRenderer
 from backend.accounts import bcs_perm
 from backend.components import paas_auth, paas_cc
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.clusters import base as cluster
+from backend.container_service.clusters.base.utils import get_cluster
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
+from backend.utils.funutils import remove_url_domain
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import BKAPIResponse
 from backend.web_console import constants, pod_life_cycle
@@ -114,7 +115,7 @@ class WebConsoleSession(views.APIView):
 
     def get(self, request, project_id, cluster_id):
         """获取session信息"""
-        cluster_data = cluster.get_cluster(request.user.token.access_token, project_id, cluster_id)
+        cluster_data = get_cluster(request.user.token.access_token, project_id, cluster_id)
         self.cluster_name = cluster_data.get("name", "")[:32]
 
         # 检查白名单, 不在名单中再通过权限中心校验
@@ -149,7 +150,7 @@ class WebConsoleSession(views.APIView):
 
         ws_url = f"{bcs_api_url.geturl()}/web_console/projects/{project_id}/clusters/{cluster_id}/ws/?session_id={session_id}&source={source}"  # noqa
 
-        data = {"session_id": session_id, "ws_url": ws_url}
+        data = {"session_id": session_id, "ws_url": remove_url_domain(ws_url)}
         utils.activity_log(project_id, cluster_id, self.cluster_name, request.user.username, True)
 
         return BKAPIResponse(data, message=_("获取session成功"))
@@ -185,7 +186,7 @@ class OpenSession(views.APIView):
 
         ws_url = f"{bcs_api_url.geturl()}/web_console/projects/{context['project_id']}/clusters/{context['cluster_id']}/ws/?session_id={ws_session_id}&source=direct"  # noqa
 
-        data = {"session_id": session_id, "ws_url": ws_url}
+        data = {"session_id": session_id, "ws_url": remove_url_domain(ws_url)}
         return BKAPIResponse(data, message=_("获取ws session成功"))
 
 

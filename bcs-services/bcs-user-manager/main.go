@@ -14,18 +14,21 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
@@ -39,32 +42,30 @@ func main() {
 	defer blog.CloseLogs()
 
 	app.Run(op)
-	//etcd register
-	if op.Etcd.Feature {
-		tlsCfg, err := op.Etcd.GetTLSConfig()
+
+	// etcd registry
+	etcdRegistry, err := turnOnEtcdRegistry(op)
+	if err != nil {
+		blog.Errorf("turnOnEtcdRegistry failed: %v", err.Error())
+		os.Exit(1)
+	}
+	defer func() {
+		if etcdRegistry != nil {
+			// waiting for api gateway to close all connections
+			_ = etcdRegistry.Deregister()
+			time.Sleep(time.Second * 5)
+		}
+	}()
+
+	// sync expired token and notify
+	if op.TokenNotify.Feature {
+		blog.Info("start token notify job")
+		tokenNotify, err := notify.NewTokenNotify(op)
 		if err != nil {
-			blog.Errorf("turn on etcd registry feature but configuration not correct, %s", err.Error())
-			os.Exit(1)
+			blog.Fatalf("new token notify failed, %s", err.Error())
 		}
-		// init go-micro registry
-		eoption := &registry.Options{
-			Name:         "usermanager.bkbcs.tencent.com",
-			Version:      version.BcsVersion,
-			RegistryAddr: strings.Split(op.Etcd.Address, ","),
-			RegAddr:      fmt.Sprintf("%s:%d", op.Address, op.Port),
-			Config:       tlsCfg,
-		}
-		etcdRegistry := registry.NewEtcdRegistry(eoption)
-		if err := etcdRegistry.Register(); err != nil {
-			blog.Errorf("etcd registry feature turn on but register failed, %s", err.Error())
-			os.Exit(1)
-		}
-		defer func() {
-			//when exit, clean registered information
-			if op.Etcd.Feature {
-				etcdRegistry.Deregister()
-			}
-		}()
+		go tokenNotify.Run()
+		defer tokenNotify.Stop()
 	}
 
 	// listening OS shutdown singal
@@ -75,4 +76,41 @@ func main() {
 	blog.Infof("Got OS shutdown signal, shutting down bcs-user-manager server gracefully...")
 
 	return
+}
+
+// register user-manager service to etcd
+func turnOnEtcdRegistry(opt *options.UserManagerOptions) (registry.Registry, error) {
+	if !opt.Etcd.Feature {
+		return nil, nil
+	}
+
+	const (
+		userManager = "usermanager.bkbcs.tencent.com"
+	)
+
+	var tlsCfg *tls.Config
+	if !opt.InsecureEtcd {
+		var err error
+		tlsCfg, err = opt.Etcd.GetTLSConfig()
+		if err != nil {
+			blog.Errorf("turn on etcd registry feature but configuration not correct, %s", err.Error())
+			os.Exit(1)
+		}
+	}
+
+	// init go-micro registry
+	eOption := &registry.Options{
+		Name:         userManager,
+		Version:      version.BcsVersion,
+		RegistryAddr: strings.Split(opt.Etcd.Address, ","),
+		RegAddr:      fmt.Sprintf("%s:%d", opt.Address, opt.Port),
+		Config:       tlsCfg,
+	}
+	etcdRegistry := registry.NewEtcdRegistry(eOption)
+	if err := etcdRegistry.Register(); err != nil {
+		blog.Errorf("etcd registry feature turn on but register failed, %s", err.Error())
+		return nil, err
+	}
+
+	return etcdRegistry, nil
 }

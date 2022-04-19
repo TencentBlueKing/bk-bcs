@@ -72,7 +72,7 @@ func TestBuildBcsCloudProvider(t *testing.T) {
 			want: &Provider{
 				NodeGroupCache: &NodeGroupCache{
 					registeredGroups: []*NodeGroup{
-						&NodeGroup{
+						{
 							InstanceRef: InstanceRef{
 								Name: "test",
 							},
@@ -263,7 +263,7 @@ func TestProvider_Refresh(t *testing.T) {
 			fields: fields{
 				NodeGroupCache: &NodeGroupCache{
 					registeredGroups: []*NodeGroup{
-						&NodeGroup{
+						{
 							nodeGroupID: "test",
 							client:      m,
 						},

@@ -289,7 +289,7 @@
                                         </bcs-popover>
                                     </div>
                                 </template>
-                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')">
+                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')" v-if="!isSharedCluster">
                                     <bcs-popover ref="addNamespaceNode" theme="light" :delay="120000" placement="top-end" ext-cls="add-namespace-popover" :controlled="true" @on-show="showAddNamespace(index)">
                                         <div class="candidate-namespace-name" @click="triggerAddNamespace(index)">
                                             <img src="@/images/plus.svg" class="add-btn" />
@@ -357,6 +357,7 @@
     import yamljs from 'js-yaml'
     import ace from '@/components/ace-editor'
     import { catchErrorHandler } from '@/common/util'
+    import { mapGetters } from 'vuex'
 
     const ARR = [
         'Application',
@@ -511,7 +512,8 @@
             },
             isEn () {
                 return this.$store.state.isEn
-            }
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         created () {
             // router > localStorage > onlineProjectList[0]
@@ -619,7 +621,8 @@
                     const res = await this.$store.dispatch('configuration/getAllNamespaceList', {
                         projectId: this.projectId,
                         group_by: 'cluster_name',
-                        perm_can_use: 1
+                        perm_can_use: 1,
+                        with_perms: false
                     })
 
                     const list = res.data
@@ -939,6 +942,7 @@
                     })
                     this.existList.splice(0, this.existList.length, ...existList)
                     this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list)
+                    this.candidateNamespaceList = this.isSharedCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -1872,15 +1876,7 @@
                             const hasNoProd = !!me.selectedNamespaceList.filter(
                                 item => item.environment !== 'prod'
                             )[0]
-                            me.$router.push({
-                                name: 'deployments',
-                                params: {
-                                    isProdCluster: !hasNoProd,
-                                    projectId: me.projectId,
-                                    projectCode: me.projectCode,
-                                    tplsetId: me.templateId
-                                }
-                            })
+                            me.gotoDeployments(hasNoProd)
                         } catch (e) {
                             console.log(e)
                         } finally {
@@ -1985,15 +1981,7 @@
                             const hasNoProd = !!me.selectedNamespaceList.filter(
                                 item => item.environment !== 'prod'
                             )[0]
-                            me.$router.push({
-                                name: 'deployments',
-                                params: {
-                                    isProdCluster: !hasNoProd,
-                                    projectId: me.projectId,
-                                    projectCode: me.projectCode,
-                                    tplsetId: me.templateId
-                                }
-                            })
+                            me.gotoDeployments(hasNoProd)
                         } catch (e) {
                             console.log(e)
                         } finally {
@@ -2001,6 +1989,23 @@
                         }
                     }
                 })
+            },
+
+            gotoDeployments (hasNoProd) {
+                if (this.isSharedCluster) {
+                    const route = this.$router.resolve({ name: 'dashboardWorkload' })
+                    window.location.href = route.href
+                } else {
+                    this.$router.push({
+                        name: 'deployments',
+                        params: {
+                            isProdCluster: !hasNoProd,
+                            projectId: this.projectId,
+                            projectCode: this.projectCode,
+                            tplsetId: this.templateId
+                        }
+                    })
+                }
             },
 
             /**
@@ -2148,7 +2153,8 @@
                     const res = await this.$store.dispatch('configuration/getAllNamespaceList', {
                         projectId: this.projectId,
                         group_by: 'cluster_name',
-                        perm_can_use: 1
+                        perm_can_use: 1,
+                        with_perms: false
                     })
 
                     const resList = res.data

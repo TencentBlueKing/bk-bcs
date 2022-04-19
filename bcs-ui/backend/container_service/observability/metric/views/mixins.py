@@ -19,12 +19,13 @@ import arrow
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client as activity_client
 from backend.bcs_web.audit_log.constants import ActivityStatus, ActivityType, ResourceType
 from backend.components import paas_cc
+from backend.container_service.clusters.base.utils import append_shared_clusters
 from backend.container_service.observability.metric import constants
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.utils.basic import getitems
 from backend.utils.datetime import get_duration_seconds
 from backend.utils.error_codes import error_codes
@@ -89,27 +90,19 @@ class ServiceMonitorMixin:
         new_items = sorted(new_items, key=lambda x: x['create_time'], reverse=True)
         return new_items
 
-    def _update_service_monitor_perm(self, resources: List[Dict]) -> List[Dict]:
-        """ 更新相关权限信息 """
-        for res in resources:
-            res['permissions']['delete'] = res['permissions']['edit']
-            res['permissions']['delete_msg'] = res['permissions']['edit_msg']
-            if res['namespace'] not in constants.SM_NO_PERM_NAMESPACE:
-                continue
-            res['permissions'] = constants.SM_NO_PERM_MAP
-        return resources
-
     def _validate_namespace_use_perm(self, project_id: str, cluster_id: str, namespaces: List):
         """ 检查是否有命名空间的使用权限 """
-        namespace_map = self._get_namespace_map(project_id)
+        permission = NamespaceScopedPermission()
         for ns in namespaces:
             if ns in constants.SM_NO_PERM_NAMESPACE:
                 raise error_codes.APIError(_('不允许操作命名空间 {}').format(ns))
 
-            namespace_id = namespace_map.get((cluster_id, ns))
             # 检查是否有命名空间的使用权限
-            perm = bcs_perm.Namespace(self.request, project_id, namespace_id)
-            perm.can_use(raise_exception=True)
+            # TODO 针对多个，考虑批量去解
+            perm_ctx = NamespaceScopedPermCtx(
+                username=self.request.user.username, project_id=project_id, cluster_id=cluster_id, name=ns
+            )
+            permission.can_use(perm_ctx)
 
     def _activity_log(
         self,
@@ -140,7 +133,10 @@ class ServiceMonitorMixin:
         :return: {cluster_id: cluster_info}
         """
         resp = paas_cc.get_all_clusters(self.request.user.token.access_token, project_id)
-        clusters = getitems(resp, 'data.results', [])
+        # `data.results` 可能为 None，做类型兼容处理
+        clusters = getitems(resp, 'data.results', []) or []
+        # 添加共享集群
+        clusters = append_shared_clusters(clusters)
         return {i['cluster_id']: i for i in clusters}
 
     def _get_namespace_map(self, project_id: str) -> Dict:
@@ -151,7 +147,8 @@ class ServiceMonitorMixin:
         :return: {(cluster_id, name): id}
         """
         resp = paas_cc.get_namespace_list(self.request.user.token.access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
-        namespaces = getitems(resp, 'data.results', [])
+        # `data.results` 可能为 None，做类型兼容处理
+        namespaces = getitems(resp, 'data.results', []) or []
         return {(i['cluster_id'], i['name']): i['id'] for i in namespaces}
 
     def _single_service_monitor_operate_handler(

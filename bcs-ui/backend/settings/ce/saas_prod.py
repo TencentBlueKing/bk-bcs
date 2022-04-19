@@ -25,14 +25,6 @@ INSTALLED_APPS += [
     "backend.celery_app.CeleryConfig",
 ]
 
-# 可能有带端口的情况，需要去除
-SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
-CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-
-# 兼容老版本平台变量名
-APP_CODE = APP_ID
-APP_SECRET = APP_TOKEN
-
 # 请求官方 API 默认版本号，可选值为："v2" 或 ""；其中，"v2"表示规范化API，""表示未规范化API
 DEFAULT_BK_API_VER = "v2"
 
@@ -132,9 +124,6 @@ PAAS_HOST_BCS = DEVOPS_HOST
 LOGIN_FULL = f"{BK_PAAS_HOST}/login/?c_url={DEVOPS_HOST}/console/bcs/"
 LOGIN_SIMPLE = f"{BK_PAAS_HOST}/login/plain"
 
-# 权限中心前端地址
-BK_IAM_APP_URL = f"{BK_PAAS_HOST}/o/bk_iam"
-
 # 容器服务地址
 DEVOPS_BCS_HOST = f"{BK_PAAS_HOST}/o/{APP_ID}"
 # 容器服务 API 地址
@@ -175,3 +164,5 @@ K8S_VERSION = os.environ.get("BKAPP_K8S_VERSION")
 # cors settings
 CORS_ALLOWED_ORIGINS = get_cors_allowed_origins([DEVOPS_HOST, BK_PAAS_HOST, DEVOPS_BCS_HOST, DEVOPS_BCS_API_URL])
 CORS_ALLOW_CREDENTIALS = True
+
+BCS_API_HOST = BCS_API_SERVER_DOMAIN['prod']

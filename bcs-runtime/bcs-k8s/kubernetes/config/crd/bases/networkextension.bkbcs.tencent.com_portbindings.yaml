@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.0
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: portbindings.networkextension.bkbcs.tencent.com
 spec:
@@ -47,12 +46,24 @@ spec:
                     listenerAttribute:
                       description: IngressListenerAttribute attribute for listener
                       properties:
+                        awsAttribute:
+                          description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          type: array
                         healthCheck:
                           description: ListenerHealthCheck health check setting for
                             listener
                           properties:
                             enabled:
                               type: boolean
+                            healthCheckProtocol:
+                              type: string
                             healthNum:
                               type: integer
                             httpCheckMethod:
@@ -61,6 +72,12 @@ spec:
                               type: string
                             httpCode:
                               type: integer
+                            httpCodeValues:
+                              description: HTTPCodeValues specifies a set of HTTP
+                                response status codes of health check. You can specify
+                                multiple values (for example, "200,202") or a range
+                                of values (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                              type: string
                             intervalTime:
                               type: integer
                             timeout:
@@ -81,6 +98,10 @@ spec:
                       items:
                         description: IngressLoadBalancer loadbalancer for ingress
                         properties:
+                          awsLBType:
+                            type: string
+                          dnsName:
+                            type: string
                           ips:
                             items:
                               type: string
@@ -90,6 +111,8 @@ spec:
                           loadbalancerName:
                             type: string
                           region:
+                            type: string
+                          scheme:
                             type: string
                           type:
                             type: string
