@@ -273,6 +273,8 @@ func (a *Store) Count(ctx context.Context, resourceType string, opt *StoreGetOpt
 		// search for data which is not marked deleted
 		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 		countCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+	} else {
+		countCond = operator.NewBranchCondition(operator.And, opt.Cond)
 	}
 	projection := fieldsToProjection(opt.Fields)
 	finder := a.mDriver.Table(resourceType).Find(countCond)
