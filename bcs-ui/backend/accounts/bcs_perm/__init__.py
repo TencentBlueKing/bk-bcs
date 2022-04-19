@@ -18,7 +18,6 @@ import logging
 
 from django.utils.translation import ugettext_lazy as _
 
-from backend.components.enterprise.bk_login import get_all_users
 from backend.components.ssm import get_client_access_token
 
 # 与资源无关
@@ -144,15 +143,6 @@ class Cluster(PermissionMeta):
 
 def get_access_token():
     return get_client_access_token()
-
-
-def get_all_user():
-    resp = get_all_users()
-    data = resp.get("data") or []
-    users = []
-    for _d in data:
-        users.append({"id": _d.get("bk_username", ""), "name": _d.get("chname", "")})
-    return users
 
 
 try:
