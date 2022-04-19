@@ -60,8 +60,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
-	user-manager cluster-manager tools alert-manager k8s-watch kube-agent \
-	bcs-project
+	user-manager cluster-manager tools alert-manager k8s-watch kube-agent
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
