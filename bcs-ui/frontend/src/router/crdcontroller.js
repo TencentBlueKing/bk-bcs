@@ -49,7 +49,7 @@ const childRoutes = [
     },
 
     {
-        path: ':projectCode/cluster/:clusterId/crdcontroller/:name/instances/:id',
+        path: ':projectCode/cluster/:clusterId/crdcontroller/:chartName/:name/instances/:id',
         name: 'crdcontrollerInstanceDetail',
         component: Detail,
         meta: {

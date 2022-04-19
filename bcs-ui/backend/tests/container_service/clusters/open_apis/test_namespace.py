@@ -17,7 +17,6 @@ from unittest.mock import patch
 import pytest
 
 from backend.tests.testing_utils.base import generate_random_string
-from backend.tests.testing_utils.mocks import bcs_perm
 from backend.utils.basic import getitems
 
 RANDOM_NS_NAME = generate_random_string(8)
@@ -30,7 +29,7 @@ pytestmark = pytest.mark.django_db
 class TestNamespace:
     @pytest.fixture(autouse=True)
     def pre_patch(self):
-        with patch('backend.accounts.bcs_perm.Namespace', new=bcs_perm.FakeNamespace), patch(
+        with patch(
             'backend.resources.namespace.client.get_namespaces_by_cluster_id', new=lambda *args, **kwargs: []
         ), patch('backend.resources.namespace.client.create_cc_namespace', new=lambda *args, **kwargs: FAKE_DATA):
             yield

@@ -20,4 +20,6 @@ type ListOption struct {
 	Offset int64
 	// Limit limit for list results
 	Limit int64
+	// All for all results
+	All bool
 }

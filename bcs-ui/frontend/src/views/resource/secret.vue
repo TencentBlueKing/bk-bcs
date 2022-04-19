@@ -47,12 +47,27 @@
                         <bk-table-column type="selection" width="60" prop="select" :selectable="rowSelectable" />
                         <bk-table-column :label="$t('名称')" prop="name" :show-overflow-tooltip="true" min-width="150">
                             <template slot-scope="{ row }">
-                                <a href="javascript: void(0)" class="bk-text-button biz-text-wrapper biz-resource-title" @click.stop.prevent="showSecretDetail(row, index)">{{row.resourceName}}</a>
+                                <a href="javascript: void(0)"
+                                    class="bk-text-button biz-text-wrapper biz-resource-title"
+                                    v-authority="{
+                                        clickable: webAnnotations.perms[row.iam_ns_id]
+                                            && webAnnotations.perms[row.iam_ns_id].namespace_scoped_view,
+                                        actionId: 'namespace_scoped_view',
+                                        resourceName: row.namespace,
+                                        disablePerms: true,
+                                        permCtx: {
+                                            project_id: projectId,
+                                            cluster_id: row.cluster_id,
+                                            name: row.namespace
+                                        }
+                                    }"
+                                    @click.stop.prevent="showSecretDetail(row, index)"
+                                >{{row.resourceName}}</a>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('所属集群')" prop="cluster_name" min-width="100">
-                            <template slot-scope="{ row }">
-                                {{row.cluster_name || '--'}}
+                            <template>
+                                <div class="cluster-name">{{curSelectedCluster.name || '--'}}</div>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('命名空间')" prop="namespace" min-width="100" />
@@ -79,11 +94,41 @@
                         <bk-table-column :label="$t('操作')" prop="permissions" min-width="150">
                             <template slot-scope="{ row }">
                                 <li style="width: 130px;">
-                                    <span v-if="row.can_update" @click.stop="updateSecret(row)" class="biz-operate">{{$t('更新')}}</span>
+                                    <span v-if="row.can_update"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[row.iam_ns_id]
+                                                && webAnnotations.perms[row.iam_ns_id].namespace_scoped_update,
+                                            actionId: 'namespace_scoped_update',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: row.cluster_id,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click.stop="updateSecret(row)"
+                                        class="biz-operate"
+                                    >{{$t('更新')}}</span>
                                     <bcs-popover :content="row.can_update_msg" v-else placement="left">
                                         <span class="biz-not-operate">{{$t('更新')}}</span>
                                     </bcs-popover>
-                                    <span v-if="row.can_delete" @click.stop="removeSecret(row)" class="biz-operate">{{$t('删除')}}</span>
+                                    <span v-if="row.can_delete"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[row.iam_ns_id]
+                                                && webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete,
+                                            actionId: 'namespace_scoped_delete',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: row.cluster_id,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click.stop="removeSecret(row)"
+                                        class="biz-operate"
+                                    >{{$t('删除')}}</span>
                                     <bcs-popover :content="row.can_delete_msg || $t('不可删除')" v-else placement="left">
                                         <span class="biz-not-operate">{{$t('删除')}}</span>
                                     </bcs-popover>
@@ -294,30 +339,13 @@
                 curSelectedData: [],
                 alreadySelectedNums: 0,
                 curSecretKeyList: [],
-                secretSelectedList: []
+                secretSelectedList: [],
+                webAnnotations: { perms: {} }
             }
         },
         computed: {
             isEn () {
                 return this.$store.state.isEn
-            },
-            isCheckCurPageAll () {
-                if (this.curPageData.length) {
-                    const list = this.curPageData
-                    const selectList = list.filter((item) => {
-                        return item.isChecked === true
-                    })
-                    const canSelectList = list.filter((item) => {
-                        return item.can_delete && item.permissions.use
-                    })
-                    if (selectList.length && (selectList.length === canSelectList.length)) {
-                        return true
-                    } else {
-                        return false
-                    }
-                } else {
-                    return false
-                }
             },
             projectId () {
                 return this.$route.params.projectId
@@ -351,6 +379,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            curSelectedCluster () {
+                return this.searchScopeList.find(item => item.id === this.searchScope) || {}
             }
         },
         watch: {
@@ -415,22 +446,6 @@
             },
 
             /**
-             * 全选/反选当前页
-             */
-            toggleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.curPageData.forEach((item) => {
-                    if (item.can_delete && item.permissions.use) {
-                        item.isChecked = !isChecked
-                    }
-                })
-
-                this.$nextTick(() => {
-                    this.alreadySelectedNums = this.secretList.filter(item => item.isChecked).length
-                })
-            },
-
-            /**
              * 单选
              * @param {array} selection 已经选中的行数
              * @param {object} row 当前选中的行
@@ -469,7 +484,7 @@
                             namespace: item.namespace,
                             name: item.name
                         })
-                        names.push(`${item.cluster_name} / ${item.namespace} / ${item.resourceName}`)
+                        names.push(`${item.cluster_id} / ${item.namespace} / ${item.resourceName}`)
                     })
                 }
                 if (!data.length) {
@@ -524,17 +539,6 @@
              * @param  {Object} secret secret
              */
             async updateSecret (secret) {
-                if (!secret.permissions.use) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: secret.namespace_id,
-                        resource_name: secret.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 this.addSlider.isShow = true
                 this.addSlider.title = `${this.$t('更新')}${secret.name}`
                 this.curSecretName = secret.name
@@ -552,7 +556,7 @@
                         name: this.curSecretName,
                         clusterId: this.clusterId
                     })
-                    const SecretObj = res.data.data[0] || {}
+                    const SecretObj = res.data[0] || {}
                     this.initKeyList(SecretObj)
                 } catch (e) {
                     catchErrorHandler(e, this)
@@ -567,24 +571,13 @@
              * @return {[type]}
              */
             async removeSecret (secret) {
-                if (!secret.permissions.use) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: secret.namespace_id,
-                        resource_name: secret.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 const me = this
                 me.$bkInfo({
                     title: me.$t('确认删除'),
                     clsName: 'biz-remove-dialog max-size',
                     content: me.$createElement('p', {
                         class: 'biz-confirm-desc'
-                    }, `${this.$t('确定要删除Secret')}【${secret.cluster_name} / ${secret.namespace} / ${secret.name}】？`),
+                    }, `${this.$t('确定要删除Secret')}【${secret.cluster_id} / ${secret.namespace} / ${secret.name}】？`),
                     confirmFn () {
                         me.deleteSecret(secret)
                     }
@@ -816,17 +809,6 @@
              * @param  {Number} index 索引
              */
             async showSecretDetail (secret, index) {
-                if (!secret.permissions.view) {
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: secret.namespace_id,
-                        resource_name: secret.namespace,
-                        resource_type: 'namespace'
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 this.secretSlider.title = secret.resourceName
                 this.curSecret = secret
                 this.secretSlider.isShow = true
@@ -868,10 +850,11 @@
                 }
                 try {
                     this.isPageLoading = true
-                    await this.$store.dispatch('resource/getSecretList', {
+                    const res = await this.$store.dispatch('resource/getSecretList', {
                         projectId,
                         params
                     })
+                    this.webAnnotations = res.web_annotations || { perms: {} }
 
                     this.initPageConf()
                     this.curPageData = this.getDataByPage(this.pageConf.curPage)
@@ -996,7 +979,9 @@
             },
 
             rowSelectable (row, index) {
-                return row.can_delete || !row.permissions.use
+                return row.can_delete
+                    && this.webAnnotations.perms[row.iam_ns_id]
+                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete
             }
         }
     }

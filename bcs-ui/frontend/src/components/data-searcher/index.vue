@@ -3,22 +3,16 @@
         <template v-if="localScopeList.length">
             <template v-if="scopeDisabled">
                 <bk-button class="bk-button trigger-btn disabled" style="max-width: 200px;">
-                    <span class="btn-text tc">{{curScope.name}}</span>
+                    <span class="btn-text tc">{{curScopeName}}</span>
                 </bk-button>
             </template>
             <template v-else>
-                <bk-selector
-                    style="width: 220px; float: left; position: relative; right: -1px; z-index: 10;"
+                <ClusterSelect style="width: 220px; float: left; position: relative; right: -1px; z-index: 10;"
+                    v-model="localSearchScope"
+                    searchable
                     :disabled="clusterFixed"
-                    :placeholder="$t('请选择')"
-                    :searchable="true"
-                    :setting-key="'id'"
-                    :display-key="'name'"
-                    :selected.sync="localSearchScope"
-                    :list="scopeList"
-                    :search-placeholder="searchPlaceholder || $t('请选择集群')"
-                    @item-selected="handleSechScope">
-                </bk-selector>
+                    @change="handleSechScope"
+                ></ClusterSelect>
             </template>
         </template>
         <div class="biz-search-input" style="width: 300px;">
@@ -41,7 +35,12 @@
 
 <script>
     //  -- 此组件已经和集群列表强相关 -- !!!注意!!!，有其他不是集群场景的组件，请单独实现
+    import ClusterSelect from '@/components/cluster-selector/cluster-select.vue'
+
     export default {
+        components: {
+            ClusterSelect
+        },
         props: {
             placeholder: {
                 type: String,
@@ -88,13 +87,16 @@
                 isRefresh: false,
                 localKey: this.searchKey,
                 localScopeList: [],
-                curScope: {
-                    id: '',
-                    name: this.$t('全部集群')
-                },
                 placeholderRender: '',
                 keyword: '',
-                localSearchScope: ''
+                localSearchScope: '',
+                curScopeId: ''
+            }
+        },
+        computed: {
+            curScopeName () {
+                const curScope = this.scopeList.find(item => item.id === this.curScopeId)
+                return curScope.name
             }
         },
         watch: {
@@ -125,9 +127,8 @@
             this.placeholderRender = this.placeholder || this.$t('输入关键字，按Enter搜索')
         },
         methods: {
-            handleSechScope (index, data) {
-                this.curScope = data
-                sessionStorage['bcs-cluster'] = this.curScope.id
+            handleSechScope (id) {
+                this.curScopeId = id
                 this.handleSearch()
             },
             initLocalScopeList () {
@@ -136,23 +137,18 @@
                     // 在初始化时，如果已经有值，选中
                     const clusterId = this.localSearchScope || sessionStorage['bcs-cluster']
                     if (clusterId) {
-                        const matchItem = this.localScopeList.find(item => item.id === clusterId)
-                        if (matchItem) {
-                            this.curScope = matchItem
-                        } else {
-                            this.curScope = this.localScopeList[0]
-                        }
+                        this.curScopeId = clusterId
                     } else {
-                        this.curScope = this.localScopeList[0]
+                        this.curScopeId = this.localScopeList[0].id
                     }
 
-                    sessionStorage['bcs-cluster'] = this.curScope.id
-                    this.$emit('update:searchScope', this.curScope.id)
+                    sessionStorage['bcs-cluster'] = this.curScopeId
+                    this.$emit('update:searchScope', this.curScopeId)
                 }
             },
             handleSearch () {
                 this.isTriggerSearch = true
-                this.$emit('update:searchScope', this.curScope.id)
+                this.$emit('update:searchScope', this.curScopeId)
                 this.$emit('update:searchKey', this.localKey)
                 this.$emit('search')
                 this.isRefresh = false

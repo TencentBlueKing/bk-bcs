@@ -45,8 +45,8 @@ local schema = {
       description = "timeout seconds for request to auth module",
       type    = "number",
       minimum = 1,
-      maxnum = 3,
-      default = 1,
+      maxnum = 10,
+      default = 10,
     },
     keepalive = {
       description = "keepalive seconds for request to auth module",

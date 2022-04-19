@@ -13,7 +13,17 @@
 
 package types
 
-import "time"
+import (
+	"time"
+)
+
+type WebConsoleMode string
+
+const (
+	ClusterInternalMode WebConsoleMode = "cluster_internal" // 用户自己集群 inCluster 模式
+	ClusterExternalMode WebConsoleMode = "cluster_external" // 平台集群, 外部模式, 需要设置 AdminClusterId
+	ContainerDirectMode WebConsoleMode = "container_direct" // 直连容器
+)
 
 // WebSocketConfig is config
 type WebSocketConfig struct {
@@ -56,10 +66,10 @@ type Permissions struct {
 }
 
 type APIResponse struct {
-	Result  bool        `json:"result"`
-	Code    int         `json:"code"`
-	Data    interface{} `json:"data"`
-	Message string      `json:"message"`
+	Data      interface{} `json:"data,omitempty"`
+	Code      int         `json:"code"`
+	Message   string      `json:"message"`
+	RequestID string      `json:"request_id"`
 }
 
 // UserPodData 用户的pod数据
@@ -132,4 +142,52 @@ type AuditRecord struct {
 	ClusterID    string      `json:"cluster_id"`
 	UserPodName  string      `json:"user_pod_name"`
 	Username     string      `json:"username"`
+}
+
+// K8sContextByContainerID 通过containerID获取k8s集群信息
+type K8sContextByContainerID struct {
+	Namespace     string
+	PodName       string
+	ContainerName string
+}
+
+// webconsole 连接三要素
+type Container struct {
+	Namespace     string
+	PodName       string
+	ContainerName string
+}
+
+// PodContext
+type PodContext struct {
+	ProjectId      string         `json:"project_id"`
+	Username       string         `json:"username"`
+	AdminClusterId string         `json:"admin_cluster_id"` // kubectld pod 所在集群Id, kubectl api 连接的集群
+	Namespace      string         `json:"namespace"`
+	PodName        string         `json:"pod_name"`
+	ClusterId      string         `json:"cluster_id"` // 目标集群Id
+	ContainerName  string         `json:"container_name"`
+	Commands       []string       `json:"commands"`
+	Mode           WebConsoleMode `json:"mode"`
+	Source         string         `json:"source"`
+}
+
+// TimestampPodContext 带时间戳的 PodContext
+type TimestampPodContext struct {
+	PodContext
+	Timestamp int64 `json:"timestamp"`
+}
+
+// SessionData 存储的客户端
+type SessionData struct {
+	SessionID       string `json:"session_id"`
+	Username        string `json:"username"`
+	ClusterID       string `json:"cluster_id"`
+	Namespace       string `json:"namespace"`
+	ProjectIdOrCode string `json:"project_id_or_code"`
+	Mode            string `json:"mode"`
+	UserPodName     string `json:"user_pod_name"`
+	ProjectID       string `json:"project_id"`
+	Command         string `json:"command"`      //
+	ContainerID     string `json:"container_id"` // 容器ID，指定某个容器
 }

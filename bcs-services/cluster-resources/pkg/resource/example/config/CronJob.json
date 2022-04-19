@@ -1,0 +1,13 @@
+{
+  "kind": "CronJob",
+  "class": "workload",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_cronjob",
+      "alias": "CronJob 简单示例",
+      "description": "简单的 CronJob 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

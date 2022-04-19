@@ -24,9 +24,6 @@ export default {
             const url = `${DEVOPS_BCS_API_URL}/api/perm/apply/subsystem/?client_id=bcs-web-backend&service_code=bcs`
                 + `&project_code=${projectCode}&role_${POLICY_ROLE_MAP[policy]}=${idx}`
             return url
-        },
-        checkPermission (params) {
-            this.$store.dispatch('getResourcePermissions', params)
         }
     }
 }

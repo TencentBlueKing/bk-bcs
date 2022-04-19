@@ -20,9 +20,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -34,7 +34,7 @@ type DeleteAction struct {
 	k8sop     *clusterops.K8SOperator
 	req       *cmproto.DeleteNamespaceReq
 	resp      *cmproto.DeleteNamespaceResp
-	quotaList []types.NamespaceQuota
+	quotaList []cmproto.ResourceQuota
 }
 
 // NewDeleteAction delete namespace
@@ -64,7 +64,7 @@ func (da *DeleteAction) listQuotas() error {
 	return nil
 }
 
-func (da *DeleteAction) deleteQuotaFromCluster(quota *types.NamespaceQuota) error {
+func (da *DeleteAction) deleteQuotaFromCluster(quota *cmproto.ResourceQuota) error {
 	kubeClient, err := da.k8sop.GetClusterClient(quota.ClusterID)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (da *DeleteAction) deleteQuotaFromCluster(quota *types.NamespaceQuota) erro
 	return nil
 }
 
-func (da *DeleteAction) deleteQuotaFromStore(quota *types.NamespaceQuota) error {
+func (da *DeleteAction) deleteQuotaFromStore(quota *cmproto.ResourceQuota) error {
 	return da.model.DeleteQuota(da.ctx, quota.Namespace, quota.FederationClusterID, quota.ClusterID)
 }
 
@@ -109,7 +109,7 @@ func (da *DeleteAction) deleteNamespaceFromStore() error {
 func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Code = code
 	da.resp.Message = msg
-	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle delete namespace reqeust
@@ -124,29 +124,29 @@ func (da *DeleteAction) Handle(ctx context.Context,
 	da.resp = resp
 
 	if err := da.validate(); err != nil {
-		da.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := da.listQuotas(); err != nil {
-		da.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	if !da.req.IsForced {
 		if len(da.quotaList) != 0 {
-			da.setResp(types.BcsErrClusterManagerDBOperation,
+			da.setResp(common.BcsErrClusterManagerDBOperation,
 				"cannot delete namespace which has resourcequota")
 			return
 		}
 	} else {
 		if err := da.deleteQuotaList(); err != nil {
-			da.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return
 		}
 	}
 	if err := da.deleteNamespaceFromStore(); err != nil {
-		da.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	da.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

@@ -14,9 +14,10 @@
 package store
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/prometheus/client_golang/prometheus"
-	"time"
 )
 
 const (
@@ -95,28 +96,42 @@ var (
 		Help:      "Agent ip resource remain",
 	}, []string{"InnerIP", "clusterId"})
 
-	ClusterCpuResouceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterCpuResourceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_cpu_resource_remain",
 		Help:      "Cluster cpu resource remain",
 	}, []string{"clusterId"})
 
-	ClusterMemoryResouceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterCpuResourceAvailable = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: types.MetricsNamespaceScheduler,
+		Subsystem: types.MetricsSubsystemScheduler,
+		Name:      "cluster_cpu_resource_available",
+		Help:      "Cluster cpu resource available",
+	}, []string{"cloudId"})
+
+	ClusterMemoryResourceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_memory_resource_remain",
 		Help:      "Cluster memory resource remain",
 	}, []string{"clusterId"})
 
-	ClusterCpuResouceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterMemoryResourceAvailable = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: types.MetricsNamespaceScheduler,
+		Subsystem: types.MetricsSubsystemScheduler,
+		Name:      "cluster_memory_resource_available",
+		Help:      "Cluster memory resource available",
+	}, []string{"clusterId"})
+
+	ClusterCpuResourceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_cpu_resource_total",
 		Help:      "Cluster cpu resource total",
 	}, []string{"clusterId"})
 
-	ClusterMemoryResouceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterMemoryResourceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_memory_resource_total",
@@ -147,8 +162,10 @@ var (
 
 func init() {
 	prometheus.MustRegister(ObjectResourceInfo, TaskgroupInfo, AgentCpuResourceTotal, AgentMemoryResourceTotal,
-		StorageOperatorTotal, StorageOperatorLatencyMs, StorageOperatorFailedTotal, AgentCpuResourceRemain, AgentMemoryResourceRemain,
-		AgentIpResourceRemain, ClusterCpuResouceRemain, ClusterMemoryResouceRemain, ClusterCpuResouceTotal, ClusterMemoryResouceTotal)
+		StorageOperatorTotal, StorageOperatorLatencyMs, StorageOperatorFailedTotal, AgentCpuResourceRemain,
+		AgentMemoryResourceRemain, AgentIpResourceRemain, ClusterCpuResourceRemain, ClusterMemoryResourceRemain,
+		ClusterCpuResourceTotal, ClusterMemoryResourceTotal, ClusterCpuResourceAvailable,
+		ClusterMemoryResourceAvailable)
 }
 
 func ReportObjectResourceInfoMetrics(resource, ns, name, status string) {
@@ -197,11 +214,14 @@ func ReportAgentInfoMetrics(ip, clusterId string, totalCpu, remainCpu, totalMem,
 	AgentIpResourceRemain.WithLabelValues(ip, clusterId).Set(remainIp)
 }
 
-func ReportClusterInfoMetrics(clusterId string, remainCpu, totalCpu, remainMem, totalMem float64) {
-	ClusterCpuResouceRemain.WithLabelValues(clusterId).Set(remainCpu)
-	ClusterMemoryResouceRemain.WithLabelValues(clusterId).Set(remainMem)
-	ClusterCpuResouceTotal.WithLabelValues(clusterId).Set(totalCpu)
-	ClusterMemoryResouceTotal.WithLabelValues(clusterId).Set(totalMem)
+func ReportClusterInfoMetrics(clusterId string, remainCpu, availableCpu, totalCpu, remainMem,
+	availableMem, totalMem float64) {
+	ClusterCpuResourceRemain.WithLabelValues(clusterId).Set(remainCpu)
+	ClusterMemoryResourceRemain.WithLabelValues(clusterId).Set(remainMem)
+	ClusterCpuResourceTotal.WithLabelValues(clusterId).Set(totalCpu)
+	ClusterMemoryResourceTotal.WithLabelValues(clusterId).Set(totalMem)
+	ClusterCpuResourceAvailable.WithLabelValues(clusterId).Set(availableCpu)
+	ClusterMemoryResourceAvailable.WithLabelValues(clusterId).Set(availableMem)
 }
 
 func ReportStorageOperatorMetrics(operator string, started time.Time, failed bool) {

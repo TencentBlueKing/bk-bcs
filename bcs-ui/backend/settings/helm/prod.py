@@ -39,3 +39,5 @@ from .cors import get_cors_allowed_origins  # noqa
 
 CORS_ALLOWED_ORIGINS = get_cors_allowed_origins([DEVOPS_HOST, BK_PAAS_HOST, DEVOPS_BCS_HOST, DEVOPS_BCS_API_URL])
 CORS_ALLOW_CREDENTIALS = True
+
+BCS_API_HOST = BCS_API_GATEWAY_DOMAIN['prod']

@@ -1,0 +1,53 @@
+base_conf:
+  app_code: ""
+  app_secret: ""
+  time_zone: "Asia/Shanghai"
+  language_code: "zh-hans"
+  run_env: dev
+
+logging:
+  level: info
+  file:  ""
+  stderr: true
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0
+
+bklogin_conf:
+  host: ""
+
+auth_conf:
+  host: ""
+
+bcs_cc_conf:
+  host: ""
+  stage: ""
+
+bcs_conf:
+  host: ""
+  token: ""
+  jwt_public_key: ""
+  verify: false
+
+bcs_env_conf: []
+
+webconsole:
+  mode: internal # external
+  admin_cluster_id: "" # external 模式时的管理集群ID
+  guide_doc_link: "" # 使用文档链接
+  kubectld_image: "" # 镜像路径
+  kubectld_tag: "" # 镜像默认tag
+  kubectld_tag_match: # 镜像Tag对应关系
+
+web:
+  route_prefix: ""
+  host: ""
+
+etcd:
+  endpoints: "127.0.0.1:2379"
+  ca: ""
+  cert: ""
+  key: ""

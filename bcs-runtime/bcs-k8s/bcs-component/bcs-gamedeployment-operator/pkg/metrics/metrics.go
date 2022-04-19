@@ -81,6 +81,9 @@ type Metrics struct {
 	// updatedReadyReplicas is the number of Pods created by the GameDeployment controller from the
 	// GameDeployment version indicated by updateRevision and have a Ready Condition
 	updatedReadyReplicas *prometheus.GaugeVec
+
+	// operatorImageVersion contains the image version of operator pods and CRD version
+	operatorVersion *prometheus.GaugeVec
 }
 
 var metrics *Metrics
@@ -222,6 +225,15 @@ func NewMetrics() *Metrics {
 				"GameDeployment version indicated by updateRevision and have a Ready Condition",
 		}, []string{"gd"})
 		prometheus.MustRegister(m.updatedReadyReplicas)
+
+		m.operatorVersion = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: subsystem,
+			Name:      "operator_version",
+			Help:      "operatorVersion contains the image version of gamedeployment operator pods and the version of CRD",
+		}, []string{"name", "image_version", "crd_version", "git_version", "git_commit", "build_date"})
+		prometheus.MustRegister(m.operatorVersion)
+
 		metrics = m
 	})
 
@@ -295,4 +307,10 @@ func (m *Metrics) CollectRelatedReplicas(gdName string,
 	m.availableReplicas.With(prometheus.Labels{"gd": gdName}).Set(float64(availableReplicas))
 	m.updatedReplicas.With(prometheus.Labels{"gd": gdName}).Set(float64(updatedReplicas))
 	m.updatedReadyReplicas.With(prometheus.Labels{"gd": gdName}).Set(float64(updatedReadyReplicas))
+}
+
+// collectOperatorVersion collects the image version of gamestatefulset operator pods
+func (m *Metrics) CollectOperatorVersion(imageVersion, CRDVersion, gitVersion, gitCommit, buildDate string) {
+	m.operatorVersion.WithLabelValues("GameDeployment", imageVersion, CRDVersion,
+		gitVersion, gitCommit, buildDate).Set(float64(1))
 }

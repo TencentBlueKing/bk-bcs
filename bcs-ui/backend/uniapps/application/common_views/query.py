@@ -122,6 +122,7 @@ class K8SContainerInfo(BaseInstanceView, viewsets.ViewSet):
             ret_data = self.compose_container_data(container_id, container_spec, info, spec, status, labels)
             break
 
+        ret_data['namespace'] = getitems(pod_info, ['data', 'metadata', 'namespace'])
         return ret_data
 
     def compose_pod_params(self, request, project_id, instance_id):
