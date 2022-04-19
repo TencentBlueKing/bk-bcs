@@ -13,7 +13,10 @@
 package clientutil
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -69,4 +72,63 @@ func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 		listOptions.Limit = *limitInt64
 	}
 	return &listOptions, errReturn
+}
+
+// GetDeleteOptionsFromReq 从查询参数获取 DeleteOptions
+func GetDeleteOptionsFromReq(req *http.Request) (metav1.DeleteOptions, error) {
+	var errReturn error = nil
+	deleteOptions := metav1.DeleteOptions{}
+
+	// 优先从 body 获取 DeleteOptions
+	if req.ContentLength > 0 {
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			return deleteOptions, err
+		}
+		err = json.Unmarshal(body, &deleteOptions)
+		if err != nil {
+			return deleteOptions, err
+		}
+		return deleteOptions, nil
+	}
+
+	// body 为空时在从查询参数获取
+	q := req.URL.Query()
+	gracePeriodSecondsStr := q.Get("gracePeriodSeconds")
+	var gracePeriodSecondsInt64 *int64
+	if gracePeriodSecondsStr != "" {
+		t, err := strconv.ParseInt(gracePeriodSecondsStr, 10, 64)
+		if err != nil {
+			errReturn = errors.New("cannot parse 'gracePeriodSeconds'")
+			return metav1.DeleteOptions{}, errReturn
+		}
+		gracePeriodSecondsInt64 = &t
+	} else {
+		gracePeriodSecondsInt64 = nil
+	}
+
+	var dryRun []string
+	dryRunStr := q.Get("dryRun")
+	if dryRunStr == "" {
+		dryRun = nil
+	} else {
+		dryRun = append(dryRun, dryRunStr)
+	}
+
+	var propagationPolicy *metav1.DeletionPropagation
+	propagationPolicyStr := q.Get("propagationPolicy")
+	if propagationPolicyStr == "" {
+		propagationPolicy = nil
+	} else {
+		tmpPP := metav1.DeletionPropagation(propagationPolicyStr)
+		propagationPolicy = &tmpPP
+	}
+
+	deleteOptions = metav1.DeleteOptions{
+		DryRun:             dryRun,
+		GracePeriodSeconds: gracePeriodSecondsInt64,
+		OrphanDependents:   nil, // 1.7 版本后废弃，不再支持
+		PropagationPolicy:  propagationPolicy,
+	}
+	return deleteOptions, errReturn
 }

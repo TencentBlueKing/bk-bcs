@@ -14,6 +14,7 @@ package federated
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -163,6 +164,34 @@ func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts *
 		return pod, nil
 	}
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), name)
+}
+
+func (p *PodStor) GetClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
+	clusterId, ok := pod.Annotations[ClusterIdLabel]
+	if !ok {
+		return nil, errors.New("cluter_id not in annotions")
+	}
+	client, ok := p.k8sClientMap[clusterId]
+	if !ok {
+		return nil, errors.New("cluter_id not in annotions")
+	}
+	return client, nil
+}
+
+func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opts *metav1.DeleteOptions) (*v1.Pod, error) {
+	pod, err := p.Get(ctx, namespace, name, &metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	client, err := p.GetClientByPod(pod)
+	if err != nil {
+		return nil, err
+	}
+	if err = client.CoreV1().Pods(namespace).Delete(ctx, name, *opts); err != nil {
+		return nil, err
+	}
+
+	return pod, nil
 }
 
 func (p *PodStor) GetTable(ctx context.Context, namespace string, name string, opts *metav1.GetOptions, accept string) (*metav1.Table, error) {

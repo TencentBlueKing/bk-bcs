@@ -97,6 +97,20 @@ func (h *Handler) Serve(c *rest.RequestInfo) {
 		}
 		c.Write(result)
 		return
+	} else if c.Resource == "pods" && c.Verb == "delete" {
+		deleteOptions, err := clientutil.GetDeleteOptionsFromReq(c.Request)
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
+
+		result, err := stor.Delete(c.Request.Context(), c.Namespace, c.Name, &deleteOptions)
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
+		c.Write(result)
+		return
 	}
 
 	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
