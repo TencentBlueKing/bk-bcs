@@ -15,7 +15,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -85,7 +84,6 @@ func initConfig() error {
 	}
 
 	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
-	fmt.Println(config.G.ClusterResourceMap, config.G)
 	return nil
 }
 
@@ -98,7 +96,6 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := initConfig(); err != nil {
-			fmt.Println(err)
 			return err
 		}
 
@@ -107,7 +104,6 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if err := Run(bindAddress); err != nil {
-			fmt.Println(err)
 			os.Exit(1)
 		}
 	}

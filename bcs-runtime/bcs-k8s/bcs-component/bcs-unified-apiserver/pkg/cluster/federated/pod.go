@@ -18,12 +18,16 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 )
+
+// BCS 集群ID Label
+const ClusterIdLabel = "bkbcs.tencent.com/cluster-id"
 
 type PodStor struct {
 	members      []string
@@ -42,6 +46,7 @@ func NewPodStor(members []string) (*PodStor, error) {
 	return stor, nil
 }
 
+// List 查询Pod列表, Json格式返回
 func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListOptions) (*v1.PodList, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "PodList"}
 	listMeta := metav1.ListMeta{
@@ -61,13 +66,12 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts *metav1.ListO
 		}
 		for _, item := range result.Items {
 			if item.Annotations == nil {
-				item.Annotations = map[string]string{"bcs_cluster_id": k}
+				item.Annotations = map[string]string{ClusterIdLabel: k}
 			} else {
-				item.Annotations["bcs_cluster_id"] = k
+				item.Annotations[ClusterIdLabel] = k
 			}
+			podList.Items = append(podList.Items, item)
 		}
-
-		podList.Items = append(podList.Items, result.Items...)
 	}
 	return podList, nil
 }
@@ -76,7 +80,7 @@ func (p *PodStor) SelfLink(namespace string) string {
 	return fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace)
 }
 
-// ListAsTable kubectl 返回
+// ListAsTable 查询Pod列表, kubectl格式返回
 func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav1.ListOptions, accept string) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
@@ -116,6 +120,88 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, opts *metav
 			Do(ctx).
 			Into(resultTemp)
 		if err != nil {
+			return nil, err
+		}
+
+		if len(columns) == 1 {
+			columns = append(columns, resultTemp.ColumnDefinitions...)
+		}
+
+		for idx, row := range resultTemp.Rows {
+			cells := []interface{}{clusterId}
+			cells = append(cells, row.Cells...)
+			resultTemp.Rows[idx].Cells = cells
+			rows = append(rows, resultTemp.Rows[idx])
+		}
+	}
+
+	result.ColumnDefinitions = columns
+	result.Rows = rows
+
+	return result, nil
+}
+
+// Delete 删除单个Pod
+func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts *metav1.GetOptions) (*v1.Pod, error) {
+	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"}
+
+	for k, v := range p.k8sClientMap {
+		pod, err := v.CoreV1().Pods(namespace).Get(ctx, name, *opts)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+		if pod.Annotations == nil {
+			pod.Annotations = map[string]string{ClusterIdLabel: k}
+		} else {
+			pod.Annotations[ClusterIdLabel] = k
+		}
+
+		pod.TypeMeta = typeMata
+		return pod, nil
+	}
+	return nil, apierrors.NewNotFound(v1.Resource("pods"), name)
+}
+
+func (p *PodStor) GetTable(ctx context.Context, namespace string, name string, opts *metav1.GetOptions, accept string) (*metav1.Table, error) {
+	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
+	listMeta := metav1.ListMeta{
+		SelfLink:        p.SelfLink(namespace),
+		ResourceVersion: "0",
+	}
+
+	result := &metav1.Table{
+		TypeMeta: typeMata,
+		ListMeta: listMeta,
+	}
+
+	// 联邦集群添加集群Id一列
+	clusterId := metav1.TableColumnDefinition{
+		Name:        "Cluster Id",
+		Type:        "string",
+		Format:      "",
+		Description: "bcs cluster id",
+	}
+	columns := []metav1.TableColumnDefinition{clusterId}
+
+	rows := []metav1.TableRow{}
+
+	for clusterId, v := range p.k8sClientMap {
+		resultTemp := &metav1.Table{}
+		err := v.CoreV1().RESTClient().Get().
+			Namespace(namespace).
+			Resource("pods").
+			VersionedParams(opts, scheme.ParameterCodec).
+			SetHeader("Accept", accept).
+			SubResource(name).
+			Do(ctx).
+			Into(resultTemp)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
 			return nil, err
 		}
 

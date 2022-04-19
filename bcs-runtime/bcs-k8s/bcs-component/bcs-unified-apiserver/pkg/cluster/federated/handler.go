@@ -15,6 +15,7 @@ package federated
 import (
 	"fmt"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
@@ -49,12 +50,13 @@ func NewHandler(clusterId string, members []string) (*Handler, error) {
 
 // ServeHTTP serves http request
 func (h *Handler) Serve(c *rest.RequestInfo) {
+	stor, err := NewPodStor(h.members)
+	if err != nil {
+		c.AbortWithError(err)
+		return
+	}
+
 	if c.Resource == "pods" && c.Verb == "list" {
-		stor, err := NewPodStor(h.members)
-		if err != nil {
-			c.AbortWithError(err)
-			return
-		}
 		listOptions, err := clientutil.GetListOptionsFromQueryParam(c.Request.URL.Query())
 		if err != nil {
 			c.AbortWithError(err)
@@ -71,6 +73,24 @@ func (h *Handler) Serve(c *rest.RequestInfo) {
 			return
 		}
 		result, err := stor.List(c.Request.Context(), c.Namespace, listOptions)
+		if err != nil {
+			c.AbortWithError(err)
+			return
+		}
+		c.Write(result)
+		return
+	} else if c.Resource == "pods" && c.Verb == "get" {
+		if c.TableReq.IsTable {
+			result, err := stor.GetTable(c.Request.Context(), c.Namespace, c.Name, &metav1.GetOptions{}, c.TableReq.AcceptHeader)
+			if err != nil {
+				c.AbortWithError(err)
+				return
+			}
+			c.Write(result)
+			return
+		}
+
+		result, err := stor.Get(c.Request.Context(), c.Namespace, c.Name, &metav1.GetOptions{})
 		if err != nil {
 			c.AbortWithError(err)
 			return
