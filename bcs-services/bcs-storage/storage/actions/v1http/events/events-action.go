@@ -69,6 +69,8 @@ var conditionTagList = [...]string{
 var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typeTag,
 	clusterIDTag, nameSpaceTag, resourceTypeTag, resourceKindTag, resourceNameTag}
 
+var eventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
+
 // Use Mongodb for storage.
 const dbConfig = "mongodb/event"
 
@@ -134,7 +136,7 @@ func CleanEvents() {
 			cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
 			cleaner.WithMaxEntryNum(maxCap)
 			cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
-			cleaner.Run(context.TODO())
+			go cleaner.Run(context.TODO())
 		}
 	}
 }

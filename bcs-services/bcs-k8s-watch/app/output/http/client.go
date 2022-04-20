@@ -77,6 +77,9 @@ const (
 	// request timeout
 	StorageRequestTimeoutSeconds = 5
 
+	// StorageRequestLimit is max entries of request.
+	StorageRequestLimit = 500
+
 	// bcsstorage/v1/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeWatchURLFmt = "%s/bcsstorage/v1/k8s/watch/clusters/%s/namespaces/%s/%s/%s"
 	// handler watch namespace name
@@ -149,7 +152,20 @@ func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
 		return nil, errors.New("event report fail. covnvert fail")
 	}
 
+	eventTime := time.Time{}
+
+	if !event.LastTimestamp.IsZero() {
+		eventTime = event.LastTimestamp.Time
+	} else if !event.FirstTimestamp.IsZero() {
+		eventTime = event.FirstTimestamp.Time
+	} else if !event.EventTime.IsZero() {
+		eventTime = event.EventTime.Time
+	} else if !event.CreationTimestamp.IsZero() {
+		eventTime = event.CreationTimestamp.Time
+	}
+
 	return types.BcsStorageEventIf{
+		ID:        "",
 		Env:       "k8s",
 		Kind:      types.EventKind(event.InvolvedObject.Kind),
 		Level:     types.EventLevel(event.Type),
@@ -157,7 +173,7 @@ func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
 		Type:      event.Reason,
 		Describe:  event.Message,
 		ClusterId: client.ClusterID,
-		EventTime: event.LastTimestamp.Unix(),
+		EventTime: eventTime.Unix(),
 		ExtraInfo: types.EventExtraInfo{
 			Namespace: event.InvolvedObject.Namespace,
 			Name:      event.InvolvedObject.Name,
@@ -201,8 +217,9 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 		return
 	}
 	resp, _, errs := request.
-		Timeout(StorageRequestTimeoutSeconds * time.Second).
+		Timeout(StorageRequestTimeoutSeconds*time.Second).
 		Get(url).
+		Retry(3, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
 		EndStruct(&storageResp)
 
 	if !storageResp.Result {
@@ -237,7 +254,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 	resp, _, errs := request.
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
 		Delete(url).
-		Retry(2, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
+		Retry(3, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
 		EndStruct(&storageResp)
 
 	if !storageResp.Result {
@@ -278,7 +295,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
 		Put(url).
 		Send(body).
-		Retry(2, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
+		Retry(3, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
 		EndStruct(&storageResp)
 
 	if !storageResp.Result || errs != nil {
@@ -345,29 +362,52 @@ func (client *StorageClient) ListNamespaceResource() (data []interface{}, err er
 	const (
 		handlerName = HandlerListNamespaceName
 	)
-	url := fmt.Sprintf(ListNamespaceScopeURLFmt,
-		client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType)
-
-	urlWithParams := fmt.Sprintf("%s?field=resourceName", url)
-
+	urlWithParams := ""
 	if client.ResourceType == ResourceTypeEvent {
-		url, _ = client.GetURL()
+		url, _ := client.GetURL()
 		now := time.Now()
 		duration := time.Duration(1) * time.Hour // event will disappear after 1 hour
 		urlWithParams = fmt.Sprintf(
-			"%s?clusterId=%s&field=data.metadata.name&timeBegin=%d&timeEnd=%d&extra={\"namespace\":\"%s\"}",
+			"%s?clusterId=%s&field=data.metadata.name&timeBegin=%d&timeEnd=%d&extraInfo.namespace=%s",
 			url, client.ClusterID, now.Add(-duration).Unix(), now.Unix(), client.Namespace)
+	} else {
+		url := fmt.Sprintf(ListNamespaceScopeURLFmt,
+			client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType)
+
+		urlWithParams = fmt.Sprintf("%s?field=resourceName", url)
 	}
 
-	glog.V(2).Infof("sync call list namespace resource: %s", urlWithParams)
+	offset := 0
+	for {
+		urlWithLimit := ""
+		if client.ResourceType == ResourceTypeEvent {
+			urlWithLimit = fmt.Sprintf("%s&length=%d&offset=%d", urlWithParams, StorageRequestLimit, offset)
+		} else {
+			urlWithLimit = fmt.Sprintf("%s&limit=%d&offset=%d", urlWithParams, StorageRequestLimit, offset)
+		}
 
-	data, err = client.listResource(urlWithParams, handlerName)
+		glog.V(2).Infof("sync call list namespace resource: %s", urlWithLimit)
+		dataTmp, err := client.listResource(urlWithLimit, handlerName)
+		if err != nil {
+			data = nil
+			glog.Errorf("list namespace resource fail: %v", err)
+			return data, err
+		}
+		data = append(data, dataTmp...)
+		if len(dataTmp) == StorageRequestLimit {
+			offset += StorageRequestLimit
+			continue
+		}
+		break
+	}
+
 	if client.ResourceType == ResourceTypeEvent {
 		for i := range data {
 			data[i].(map[string]interface{})["resourceName"] = data[i].(map[string]interface{})["data"].(map[string]interface{})["metadata"].(map[string]interface{})["name"]
 			delete(data[i].(map[string]interface{}), "data")
 		}
 	}
+
 	return
 }
 
