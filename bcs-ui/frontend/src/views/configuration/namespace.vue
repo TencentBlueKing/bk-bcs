@@ -193,44 +193,38 @@
                         <!-- 配额 start -->
                         <template v-if="curProject.kind !== 2">
                             <div class="quota-option">
-                                <label class="bk-label label" style="width: 100%;">
-                                    {{$t('配额设置')}}
-                                    <bk-switcher v-if="!isSharedCluster" class="quota-switcher" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
-                                </label>
+                                {{$t('配额设置')}}
+                                <bk-switcher v-if="!isSharedCluster" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
                             </div>
                         </template>
 
-                        <template v-if="showQuota">
+                        <div class="quota-config" v-if="showQuota">
                             <!-- 内存 -->
-                            <bcs-form-item class="requestsMem-item" label="MEM" :required="true">
-                                <div class="requestsMem-content">
-                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="1" :max-value="400" />
-                                    <bcs-input
-                                        v-model="quotaData.requestsMem"
-                                        type="number"
-                                        :min="1"
-                                        :max="400"
-                                        @blur="handleBlurRequestsMem">
-                                    </bcs-input>
-                                    G
-                                </div>
+                            <bcs-form-item class="mr10" label="MEM" :required="true">
+                                <bcs-input
+                                    v-model="quotaData.requestsMem"
+                                    type="number"
+                                    :min="1"
+                                    @blur="handleBlurRequestsMem">
+                                    <template slot="append">
+                                        <div class="group-text">G</div>
+                                    </template>
+                                </bcs-input>
                             </bcs-form-item>
 
                             <!-- CPU -->
-                            <bcs-form-item class="requestsCpu-item" label="CPU" :required="true">
-                                <div class="requestsCpu-content">
-                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="1" :max-value="400" />
-                                    <bcs-input
-                                        v-model="quotaData.requestsCpu"
-                                        type="number"
-                                        :min="1"
-                                        :max="400"
-                                        @blur="handleBlurRequestsCpu">
-                                    </bcs-input>
-                                    核
-                                </div>
+                            <bcs-form-item label="CPU" :required="true">
+                                <bcs-input
+                                    v-model="quotaData.requestsCpu"
+                                    type="number"
+                                    :min="1"
+                                    @blur="handleBlurRequestsCpu">
+                                    <template slot="append">
+                                        <div class="group-text">{{$t('核')}}</div>
+                                    </template>
+                                </bcs-input>
                             </bcs-form-item>
-                        </template>
+                        </div>
                         <!-- 配额 end -->
 
                         <!-- 变量 start -->
@@ -390,7 +384,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bk-form-item flex-item" style="margin: 30px 0;">
+                        <div class="bk-form-item flex-item" style="margin-top: 30px;">
                             <div class="left">
                                 <label class="bk-label label">
                                     {{$t('配额')}}
@@ -399,40 +393,34 @@
                             </div>
                         </div>
 
-                        <div class="bk-form-item requestsMem-item" style="margin-top: 32px;">
-                            <div class="quota-label-tip">
-                                <span class="title">MEM</span>
-                            </div>
-                            <div class="bk-form-content">
-                                <div class="requestsMem-content">
-                                    <bcs-slider v-model="quotaData.requestsMem" :min-value="0" :max-value="400" />
-                                    <bcs-input
-                                        v-model="quotaData.requestsMem"
-                                        type="number"
-                                        :min="0"
-                                        :max="400"
-                                        @blur="handleBlurRequestsMem">
-                                    </bcs-input>
-                                    G
+                        <div class="quota-config mt10">
+                            <div class="bk-form-item mr10">
+                                <div class="label">
+                                    MEM
                                 </div>
+                                <bcs-input
+                                    v-model="quotaData.requestsMem"
+                                    type="number"
+                                    :min="0"
+                                    @blur="handleBlurRequestsMem">
+                                    <template slot="append">
+                                        <div class="group-text">G</div>
+                                    </template>
+                                </bcs-input>
                             </div>
-                        </div>
-                        <div class="bk-form-item requestsCpu-item" style="margin-top: 18px;">
-                            <div class="quota-label-tip">
-                                <span class="title">CPU</span>
-                            </div>
-                            <div class="bk-form-content">
-                                <div class="requestsCpu-content">
-                                    <bcs-slider v-model="quotaData.requestsCpu" :min-value="0" :max-value="400" />
-                                    <bcs-input
-                                        v-model="quotaData.requestsCpu"
-                                        type="number"
-                                        :min="0"
-                                        :max="400"
-                                        @blur="handleBlurRequestsCpu">
-                                    </bcs-input>
-                                    核
+                            <div class="bk-form-item">
+                                <div class="label">
+                                    CPU
                                 </div>
+                                <bcs-input
+                                    v-model="quotaData.requestsCpu"
+                                    type="number"
+                                    :min="0"
+                                    @blur="handleBlurRequestsCpu">
+                                    <template slot="append">
+                                        <div class="group-text">{{$t('核')}}</div>
+                                    </template>
+                                </bcs-input>
                             </div>
                         </div>
                         <div class="action-inner">
@@ -1022,6 +1010,7 @@
             toggleShowQuota (v) {
                 this.showQuota = v
                 this.quotaData.requestsCpu = 1
+                this.quotaData.requestsMem = 1
             },
 
             /**

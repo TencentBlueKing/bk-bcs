@@ -18,22 +18,28 @@
         <div class="cluster-node-operate">
             <div class="left">
                 <template v-if="!nodeMenu">
-                    <bcs-button theme="primary"
-                        icon="plus"
-                        class="add-node mr10"
-                        v-authority="{
-                            clickable: webAnnotations.perms[localClusterId]
-                                && webAnnotations.perms[localClusterId].cluster_manage,
-                            actionId: 'cluster_manage',
-                            resourceName: curSelectedCluster.clusterName,
-                            disablePerms: true,
-                            permCtx: {
-                                project_id: curProject.project_id,
-                                cluster_id: localClusterId
-                            }
-                        }"
-                        @click="handleAddNode"
-                    >{{$t('添加节点')}}</bcs-button>
+                    <span v-bk-tooltips="{
+                        disabled: !isImportCluster,
+                        content: $t('kubeconfig导入集群，节点管理功能不可用')
+                    }">
+                        <bcs-button theme="primary"
+                            icon="plus"
+                            class="add-node mr10"
+                            v-authority="{
+                                clickable: webAnnotations.perms[localClusterId]
+                                    && webAnnotations.perms[localClusterId].cluster_manage,
+                                actionId: 'cluster_manage',
+                                resourceName: curSelectedCluster.clusterName,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: curProject.project_id,
+                                    cluster_id: localClusterId
+                                }
+                            }"
+                            :disabled="isImportCluster"
+                            @click="handleAddNode"
+                        >{{$t('添加节点')}}</bcs-button>
+                    </span>
                     <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
                         <apply-host class="mr10"
                             theme="primary"
@@ -61,12 +67,22 @@
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                         <li @click="handleBatchEnableNodes">{{$t('允许调度')}}</li>
                         <li @click="handleBatchStopNodes">{{$t('停止调度')}}</li>
-                        <li @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
+                        <li :disabled="isImportCluster"
+                            v-bk-tooltips="{
+                                disabled: !isImportCluster,
+                                content: $t('kubeconfig导入集群，节点管理功能不可用')
+                            }"
+                            @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
                         <div style="width: 100px; height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
                             <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
                         </div>
                         <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
-                        <li @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
+                        <li :disabled="isImportCluster"
+                            v-bk-tooltips="{
+                                disabled: !isImportCluster,
+                                content: $t('kubeconfig导入集群，节点管理功能不可用')
+                            }"
+                            @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
                         <!-- <li>{{$t('导出')}}</li> -->
                     </ul>
                 </bcs-dropdown-menu>
@@ -368,12 +384,18 @@
                                     {{ $t('pod迁移') }}
                                 </bk-button>
                             </template>
-                            <bk-button text class="mr10"
-                                v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
-                                @click="handleDeleteNode(row)"
-                            >
-                                {{ $t('删除') }}
-                            </bk-button>
+                            <span v-bk-tooltips="{
+                                disabled: !isImportCluster,
+                                content: $t('kubeconfig导入集群，节点管理功能不可用')
+                            }">
+                                <bk-button text class="mr10"
+                                    v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                                    :disabled="isImportCluster"
+                                    @click="handleDeleteNode(row)"
+                                >
+                                    {{ $t('删除') }}
+                                </bk-button>
+                            </span>
                             <bk-button text
                                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
                                 @click="handleRetry(row)"
@@ -686,7 +708,10 @@
             const curSelectedCluster = computed(() => {
                 return clusterList.value.find(item => item.clusterID === localClusterId.value) || {}
             })
-           
+            // 导入集群
+            const isImportCluster = computed(() => {
+                return curSelectedCluster.value.clusterCategory === 'importer'
+            })
             // 全量表格数据
             const tableData = ref<any[]>([])
             
@@ -1044,11 +1069,15 @@
                 removeNodeDialog.value.isConfirming = false
             }
             const addClusterNode = async (clusterId: string, nodeIps: string[]) => {
+                stop()
                 const result = await addNode({
                     clusterId,
                     nodeIps
                 })
-                result && handleGetNodeData()
+                result && await handleGetNodeData()
+                if (tableData.value.length) {
+                    start()
+                }
             }
             // 节点重试
             const handleRetry = (row) => {
@@ -1114,7 +1143,7 @@
             }
             // 重新添加节点
             const handleBatchReAddNodes = () => {
-                if (!selections.value.length) return
+                if (!selections.value.length || isImportCluster.value) return
 
                 bkComfirmInfo({
                     title: $i18n.t('确认重新添加节点'),
@@ -1134,6 +1163,7 @@
             }
             // 批量删除节点
             const handleBatchDeleteNodes = () => {
+                if (isImportCluster.value) return
                 bkComfirmInfo({
                     title: $i18n.t('确认删除节点'),
                     subTitle: $i18n.t('确认是否删除 {ip} 等 {num} 个节点', {
@@ -1399,7 +1429,8 @@
                 handleBatchPodScheduler,
                 podDisabled,
                 webAnnotations,
-                curProject
+                curProject,
+                isImportCluster
             }
         }
     })
