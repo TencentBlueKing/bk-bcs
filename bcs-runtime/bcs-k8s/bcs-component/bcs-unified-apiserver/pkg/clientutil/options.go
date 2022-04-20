@@ -14,13 +14,13 @@ package clientutil
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -75,60 +75,47 @@ func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 }
 
 // GetDeleteOptionsFromReq 从查询参数获取 DeleteOptions
-func GetDeleteOptionsFromReq(req *http.Request) (metav1.DeleteOptions, error) {
-	var errReturn error = nil
-	deleteOptions := metav1.DeleteOptions{}
-
+func GetDeleteOptionsFromReq(req *http.Request) (*metav1.DeleteOptions, error) {
 	// 优先从 body 获取 DeleteOptions
 	if req.ContentLength > 0 {
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			return deleteOptions, err
+			return nil, err
 		}
+		deleteOptions := metav1.DeleteOptions{}
 		err = json.Unmarshal(body, &deleteOptions)
 		if err != nil {
-			return deleteOptions, err
+			return nil, err
 		}
-		return deleteOptions, nil
+		return &deleteOptions, nil
 	}
 
 	// body 为空时在从查询参数获取
+	deleteOptions := &metav1.DeleteOptions{
+		OrphanDependents: nil, // 1.7 版本后废弃，不再支持
+		DryRun:           []string{},
+	}
+
 	q := req.URL.Query()
 	gracePeriodSecondsStr := q.Get("gracePeriodSeconds")
-	var gracePeriodSecondsInt64 *int64
 	if gracePeriodSecondsStr != "" {
 		t, err := strconv.ParseInt(gracePeriodSecondsStr, 10, 64)
 		if err != nil {
-			errReturn = errors.New("cannot parse 'gracePeriodSeconds'")
-			return metav1.DeleteOptions{}, errReturn
+			return nil, errors.Errorf("cannot parse 'gracePeriodSeconds', err: %s", err)
 		}
-		gracePeriodSecondsInt64 = &t
-	} else {
-		gracePeriodSecondsInt64 = nil
+		deleteOptions.GracePeriodSeconds = &t
 	}
 
-	var dryRun []string
 	dryRunStr := q.Get("dryRun")
-	if dryRunStr == "" {
-		dryRun = nil
-	} else {
-		dryRun = append(dryRun, dryRunStr)
+	if dryRunStr != "" {
+		deleteOptions.DryRun = append(deleteOptions.DryRun, dryRunStr)
 	}
 
-	var propagationPolicy *metav1.DeletionPropagation
 	propagationPolicyStr := q.Get("propagationPolicy")
-	if propagationPolicyStr == "" {
-		propagationPolicy = nil
-	} else {
+	if propagationPolicyStr != "" {
 		tmpPP := metav1.DeletionPropagation(propagationPolicyStr)
-		propagationPolicy = &tmpPP
+		deleteOptions.PropagationPolicy = &tmpPP
 	}
 
-	deleteOptions = metav1.DeleteOptions{
-		DryRun:             dryRun,
-		GracePeriodSeconds: gracePeriodSecondsInt64,
-		OrphanDependents:   nil, // 1.7 版本后废弃，不再支持
-		PropagationPolicy:  propagationPolicy,
-	}
-	return deleteOptions, errReturn
+	return deleteOptions, nil
 }

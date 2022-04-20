@@ -13,10 +13,10 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -88,7 +88,7 @@ func (c *RequestContext) WriteChunk(obj watch.Event, firstChunk bool) {
 func AddTypeInformationToObject(obj runtime.Object) error {
 	gvks, _, err := scheme.Scheme.ObjectKinds(obj)
 	if err != nil {
-		return fmt.Errorf("missing apiVersion or kind and cannot assign it; %w", err)
+		return errors.Errorf("missing apiVersion or kind and cannot assign it; %e", err)
 	}
 
 	for _, gvk := range gvks {

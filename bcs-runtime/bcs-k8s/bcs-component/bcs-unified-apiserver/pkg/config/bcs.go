@@ -37,6 +37,7 @@ type BCSConf struct {
 	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
 }
 
+// Init
 func (c *BCSConf) Init() error {
 	// only for development
 	c.Host = ""
@@ -48,6 +49,7 @@ func (c *BCSConf) Init() error {
 	return nil
 }
 
+// InitJWTPubKey
 func (c *BCSConf) InitJWTPubKey() error {
 	if c.JWTPubKey == "" {
 		return nil

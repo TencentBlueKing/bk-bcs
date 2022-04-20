@@ -87,6 +87,7 @@ func initConfig() error {
 	return nil
 }
 
+// NewUnifiedAPIServer APIServer命令行
 func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   cmdName,
@@ -114,6 +115,7 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 	return cmd
 }
 
+// Run 运行服务
 func Run(bindAddress string) error {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()

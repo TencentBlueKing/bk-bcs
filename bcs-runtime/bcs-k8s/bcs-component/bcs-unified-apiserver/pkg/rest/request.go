@@ -95,7 +95,7 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 		if err != nil {
 			return nil, err
 		}
-		options.DeleteOptions = &deleteOptions
+		options.DeleteOptions = deleteOptions
 	}
 
 	acceptHeader := req.Header.Get("Accept")
@@ -151,6 +151,7 @@ func ParseRequestInfo(req *http.Request) (*apirequest.RequestInfo, error) {
 // HandlerFunc defines the handler used by rest middleware as return value.
 type HandlerFunc func(*RequestContext)
 
+// Handler Rest Handle Interface
 type Handler interface {
 	Serve(*RequestContext)
 }

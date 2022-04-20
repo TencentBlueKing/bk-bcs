@@ -37,6 +37,7 @@ func NewHandler() (*Handler, error) {
 	return &Handler{}, nil
 }
 
+// ClusterFactory 不同的 cluster_id 生成对应的 Handler
 func ClusterFactory(clusterId string) (rest.Handler, error) {
 	cluster, ok := config.G.GetMember(clusterId)
 	if !ok {
