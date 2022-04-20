@@ -22,12 +22,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
 
+// Handler shared cluster hander
 type Handler struct {
 	clusterId    string
 	proxyHandler *apiproxy.UpgradeAwareHandler
 }
 
-// NewHandler create handler
+// NewHandler create shared cluster handler
 func NewHandler(clusterId string) (*Handler, error) {
 	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
 	if err != nil {

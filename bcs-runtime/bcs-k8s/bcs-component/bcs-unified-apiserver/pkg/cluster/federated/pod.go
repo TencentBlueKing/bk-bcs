@@ -31,11 +31,13 @@ import (
 // BCS 集群ID Label
 const ClusterIdLabel = "bkbcs.tencent.com/cluster-id"
 
+// PodStor PodInterface 实现
 type PodStor struct {
 	members      []string
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
+// NewPodStor
 func NewPodStor(members []string) (*PodStor, error) {
 	stor := &PodStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
 	for _, k := range members {
@@ -52,7 +54,7 @@ func NewPodStor(members []string) (*PodStor, error) {
 func (p *PodStor) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "PodList"}
 	listMeta := metav1.ListMeta{
-		SelfLink:        p.SelfLink(namespace),
+		SelfLink:        p.selfLink(namespace, ""),
 		ResourceVersion: "0",
 	}
 
@@ -78,15 +80,18 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts metav1.ListOp
 	return podList, nil
 }
 
-func (p *PodStor) SelfLink(namespace string) string {
-	return fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace)
+func (p *PodStor) selfLink(namespace, name string) string {
+	if name == "" {
+		return fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace)
+	}
+	return fmt.Sprintf("/api/v1/namespaces/%s/pods/%s", namespace, name)
 }
 
 // ListAsTable 查询Pod列表, kubectl格式返回
 func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
-		SelfLink:        p.SelfLink(namespace),
+		SelfLink:        p.selfLink(namespace, ""),
 		ResourceVersion: "0",
 	}
 
@@ -171,7 +176,7 @@ func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts m
 func (p *PodStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
-		SelfLink:        p.SelfLink(namespace),
+		SelfLink:        p.selfLink(namespace, name),
 		ResourceVersion: "0",
 	}
 
@@ -226,7 +231,7 @@ func (p *PodStor) GetAsTable(ctx context.Context, namespace string, name string,
 	return result, nil
 }
 
-func (p *PodStor) GetClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
+func (p *PodStor) getClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
 	clusterId, ok := pod.Annotations[ClusterIdLabel]
 	if !ok {
 		return nil, errors.New("cluter_id not in annotions")
@@ -244,7 +249,7 @@ func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opt
 	if err != nil {
 		return nil, err
 	}
-	client, err := p.GetClientByPod(pod)
+	client, err := p.getClientByPod(pod)
 	if err != nil {
 		return nil, err
 	}

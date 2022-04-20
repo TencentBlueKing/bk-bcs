@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest/apis"
 )
 
+// Handler federated cluster hander
 type Handler struct {
 	clusterId    string
 	members      []string
@@ -30,7 +31,7 @@ type Handler struct {
 	podHander    *apis.PodHandler
 }
 
-// NewHandler create handler
+// NewHandler create federated cluster handler
 func NewHandler(clusterId string, members []string) (*Handler, error) {
 	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
 	if err != nil {

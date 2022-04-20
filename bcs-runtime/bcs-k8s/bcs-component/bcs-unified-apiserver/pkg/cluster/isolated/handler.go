@@ -21,12 +21,13 @@ import (
 	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 )
 
+// Handler isolated cluster hander
 type Handler struct {
 	clusterId    string
 	proxyHandler *apiproxy.UpgradeAwareHandler
 }
 
-// NewHandler create handler
+// NewHandler create isolated cluster handler
 func NewHandler(clusterId string) (*Handler, error) {
 	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
 	if err != nil {
