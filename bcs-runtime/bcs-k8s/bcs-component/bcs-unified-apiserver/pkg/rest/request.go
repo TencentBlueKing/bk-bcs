@@ -31,17 +31,13 @@ const (
 	APIGroupPrefix = "/apis"
 )
 
-type TableRequest struct {
-	IsTable      bool
-	AcceptHeader string
-}
-
 // 未实现的方法Err, 抛到上层处理
 var (
 	ErrNotImplemented = errors.New("NotImplementedError")
 	ErrInit           = errors.New("InitError")
 )
 
+// Options K8S Rest Reqeust Options
 type Options struct {
 	Verb          Verb
 	AcceptHeader  string
@@ -50,15 +46,16 @@ type Options struct {
 	GetOptions    *metav1.GetOptions
 }
 
-type RequestInfo struct {
+// RequestContext K8S Rest Request Context
+type RequestContext struct {
 	*apirequest.RequestInfo
-	TableReq *TableRequest
-	Writer   http.ResponseWriter
-	Request  *http.Request
-	Options  *Options
+	Writer  http.ResponseWriter
+	Request *http.Request
+	Options *Options
 }
 
-func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestInfo, error) {
+// NewRequestContext Make RequestContext from http.Request
+func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestContext, error) {
 	requestInfo, err := ParseRequestInfo(req)
 	if err != nil {
 		return nil, err
@@ -69,7 +66,7 @@ func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestInfo,
 		return nil, err
 	}
 
-	reqInfo := &RequestInfo{
+	reqInfo := &RequestContext{
 		RequestInfo: requestInfo,
 		Options:     options,
 		Request:     req,
@@ -151,9 +148,9 @@ func ParseRequestInfo(req *http.Request) (*apirequest.RequestInfo, error) {
 	return requestInfo, nil
 }
 
-// HandlerFunc defines the handler used by gin middleware as return value.
-type HandlerFunc func(*RequestInfo)
+// HandlerFunc defines the handler used by rest middleware as return value.
+type HandlerFunc func(*RequestContext)
 
 type Handler interface {
-	Serve(*RequestInfo)
+	Serve(*RequestContext)
 }

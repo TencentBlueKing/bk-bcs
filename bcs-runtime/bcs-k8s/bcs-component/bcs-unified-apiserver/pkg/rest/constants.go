@@ -12,13 +12,14 @@
 
 package rest
 
+// K8S 的操作类型
 type Verb string
 
 const (
 	ListVerb        = "list"
-	ListAsTableVerb = "listAsTable"
+	ListAsTableVerb = "listAsTable" // kubectl 列表返回
 	GetVerb         = "get"
-	GetAsTableVerb  = "getAsTable"
+	GetAsTableVerb  = "getAsTable" // kubectl 列表返回
 	DeleteVerb      = "delete"
 	WatchVerb       = "watch"
 )

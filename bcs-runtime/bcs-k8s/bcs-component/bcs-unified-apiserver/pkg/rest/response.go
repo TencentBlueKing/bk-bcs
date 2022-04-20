@@ -25,10 +25,12 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-func (c *RequestInfo) AbortWithError(err error) {
+// AbortWithError K8S风格错误返回
+func (c *RequestContext) AbortWithError(err error) {
 	AbortWithError(c.Writer, err)
 }
 
+// AbortWithError K8S风格错误返回
 func AbortWithError(rw http.ResponseWriter, err error) {
 	var status metav1.Status
 
@@ -48,14 +50,16 @@ func AbortWithError(rw http.ResponseWriter, err error) {
 	json.NewEncoder(rw).Encode(status)
 }
 
-func (c *RequestInfo) Write(obj runtime.Object) {
+// Write Json Body 返回
+func (c *RequestContext) Write(obj runtime.Object) {
 	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	c.Writer.Header().Set("Cache-Control", "no-cache, no-store")
 	c.Writer.WriteHeader(http.StatusOK)
 	json.NewEncoder(c.Writer).Encode(obj)
 }
 
-func (c *RequestInfo) WriteChunk(obj watch.Event, firstChunk bool) {
+// WriteChunk 按 Chunk 返回, Watch方式使用
+func (c *RequestContext) WriteChunk(obj watch.Event, firstChunk bool) {
 	flusher, ok := c.Writer.(http.Flusher)
 	if !ok {
 		panic("expected http.ResponseWriter to be an http.Flusher")
@@ -80,6 +84,7 @@ func (c *RequestInfo) WriteChunk(obj watch.Event, firstChunk bool) {
 	flusher.Flush()
 }
 
+// AddTypeInformationToObject 自动添加APIVersion, Kind信息
 func AddTypeInformationToObject(obj runtime.Object) error {
 	gvks, _, err := scheme.Scheme.ObjectKinds(obj)
 	if err != nil {

@@ -13,6 +13,7 @@
 
 package config
 
+// ClusterKind 集群类型
 type ClusterKind string
 
 var (
@@ -21,18 +22,11 @@ var (
 	FederatedCluter ClusterKind = "federated"
 )
 
+// ClusterResource 集群配置
 type ClusterResource struct {
 	Kind      string   `yaml:"kind"`
 	Member    string   `yaml:"member"`
 	Members   []string `yaml:"members"`
 	Master    string   `yaml:"master"`
 	ClusterId string   `yaml:"cluster_id"`
-}
-
-func (c *ClusterResource) GetMember() string {
-	return c.Member
-}
-
-func (c *ClusterResource) GetMemberList() []string {
-	return c.Members
 }

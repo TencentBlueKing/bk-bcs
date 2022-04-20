@@ -27,6 +27,7 @@ const (
 	UatCluster   BCSClusterEnv = "uat"   // uat 环境
 )
 
+// BCSConf 配置
 type BCSConf struct {
 	Host         string         `yaml:"host"`
 	Token        string         `yaml:"token"`

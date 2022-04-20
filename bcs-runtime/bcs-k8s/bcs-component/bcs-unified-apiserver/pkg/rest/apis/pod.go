@@ -40,7 +40,7 @@ func NewPodHandler(handler PodInterface) *PodHandler {
 	return &PodHandler{handler: handler}
 }
 
-func (h *PodHandler) Serve(c *rest.RequestInfo) error {
+func (h *PodHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
 		err error

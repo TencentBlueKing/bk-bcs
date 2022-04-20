@@ -47,6 +47,6 @@ func NewHandler(clusterId string) (*Handler, error) {
 }
 
 // Serve 目前是直接透明代理
-func (h *Handler) Serve(c *rest.RequestInfo) {
+func (h *Handler) Serve(c *rest.RequestContext) {
 	h.proxyHandler.ServeHTTP(c.Writer, c.Request)
 }

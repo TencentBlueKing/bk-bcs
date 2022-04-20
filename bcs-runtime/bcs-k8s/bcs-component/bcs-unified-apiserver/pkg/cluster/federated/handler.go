@@ -59,7 +59,7 @@ func NewHandler(clusterId string, members []string) (*Handler, error) {
 }
 
 // ServeHTTP serves http request
-func (h *Handler) Serve(c *rest.RequestInfo) {
+func (h *Handler) Serve(c *rest.RequestContext) {
 	err := rest.ErrInit
 
 	switch c.Resource {

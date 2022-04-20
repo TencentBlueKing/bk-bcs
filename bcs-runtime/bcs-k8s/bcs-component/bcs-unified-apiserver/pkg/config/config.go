@@ -94,6 +94,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	return nil
 }
 
+// InitClusterResources
 func (c *Configurations) InitClusterResources() error {
 	c.ClusterResourceMap = make(map[string]*ClusterResource)
 	for _, v := range c.ClusterResources {
@@ -102,6 +103,7 @@ func (c *Configurations) InitClusterResources() error {
 	return nil
 }
 
+// GetMember
 func (c *Configurations) GetMember(clusterId string) (*ClusterResource, bool) {
 	resource, ok := c.ClusterResourceMap[clusterId]
 	if !ok {
