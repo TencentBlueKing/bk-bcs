@@ -12,6 +12,7 @@
 local BKUserCli = require("apisix.plugins.bkbcs-auth.bkbcs")
 local core = require("apisix.core")
 local ngx = ngx
+local attr = {}
 
 local schema = {
   type = "object",
@@ -26,13 +27,13 @@ local schema = {
       description = "bk bcs module name",
       type        = "string",
       minLength   = 2,
-      maxLength   = 15,
+      maxLength   = 64,
     },
     token = {
       description = "token for auth module api request",
       type        = "string",
       minLength   = 16,
-      maxLength   = 32,
+      maxLength   = 64,
       pattern     = "^[0-9a-zA-Z-.]+$",
     },
     retry_count = {
@@ -56,10 +57,17 @@ local schema = {
       default = 60,
     },
   },
-  required = {"bkbcs_auth_endpoints", "token", "module"},
+  required = {"bkbcs_auth_endpoints", "module"},
   additionalProperties = false,
 }
 
+local attr_schema = {
+  type = "object",
+  properties = {
+      gateway_token = {type = "string", description = "token for auth module api request"},
+      usermanager_upstream_name = {type = "string", default = "usermanager", description = "upstream name for usermanager"},
+  }
+}
 
 local plugin_name = "bkbcs-auth"
 
@@ -83,6 +91,10 @@ function _M.rewrite(conf, apictx)
   if conf == nil then
     return 503, {code = 503, result = false, message = "no plugin conf"}
   end
+  if conf.token == nil then
+    conf.token = attr.token
+  end
+  conf["usermanager_upstream_name"] = attr.usermanager_upstream_name
   if conf.bkbcs_auth_endpoints == nil or conf.token == nil then
     core.log.error("bkbcs auth rewrite configuration: ", core.json.encode(conf))
     return 503, {code = 503, result = false, message = "plugin configuration fatal"}
@@ -109,6 +121,16 @@ function _M.rewrite(conf, apictx)
   if not ok then
     core.log.warn("token is not allow to access to [", ngx.req.get_method(), "]", ngx.var.uri)
     return 401, {code = 401, result = false, message = "Resource is Unauthorized"}
+  end
+end
+
+function _M.init()
+  local local_conf = core.config.local_conf()
+  attr = core.table.try_read_attr(local_conf, "plugin_attr", plugin_name)
+  local ok, err = core.schema.check(attr_schema, attr)
+  if not ok then
+    core.log.error("failed to check the plugin_attr[", plugin_name, "]", ": ", err)
+    return
   end
 end
 

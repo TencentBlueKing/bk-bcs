@@ -406,7 +406,7 @@ func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []r
 		}
 		newBackends[backend.Target] = backend.Weight
 	}
-	if len(upstream.Nodes) == 0 && len(newBackends) == 0 {
+	if len(*upstream.MapStructedNodes) == 0 && len(newBackends) == 0 {
 		blog.Infof("service %s upstream no changed", svc.Name)
 		return nil
 	}
