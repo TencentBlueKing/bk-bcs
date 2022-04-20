@@ -52,7 +52,7 @@ class K8SClient(BCSClientBase):
     @cached_property
     def _context_for_shared_cluster(self):
         return {
-            "host": f"{settings.BCS_API_GATEWAY_DOMAIN[self._bcs_server_stag]}/clusters/{self.cluster.id}",
+            "host": f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/clusters/{self.cluster.id}",
             "user_token": settings.BCS_API_GATEWAY_AUTHORIZATION,
         }
 
@@ -328,7 +328,7 @@ class K8SClient(BCSClientBase):
 
     def get_events(self, params):
         # storage可以获取比较长的event信息，因此，通过storage查询event
-        url = f"{settings.BCS_API_GATEWAY_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
+        url = f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
         resp = http_get(url, params=params, headers=self.headers)
         return resp
 
@@ -339,7 +339,10 @@ class K8SClient(BCSClientBase):
 
     @property
     def _headers_for_bcs_agent_api(self):
-        return {"Authorization": getattr(settings, "BCS_AUTH_TOKEN", ""), "Content-Type": "application/json"}
+        return {
+            "Authorization": f'Bearer {getattr(settings, "BCS_APIGW_TOKEN", "")}',
+            "Content-Type": "application/json",
+        }
 
     def query_cluster(self):
         """获取bke_cluster_id, identifier"""

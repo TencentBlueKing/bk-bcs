@@ -73,7 +73,7 @@ class BCSClientBase:
     @property
     def _bcs_server_host(self):
         """通过不同的stag映射不同的bcs server原生地址"""
-        host = settings.BCS_API_GATEWAY_DOMAIN[self._bcs_server_stag]
+        host = settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]
         return host
 
     @property

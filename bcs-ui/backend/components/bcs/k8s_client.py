@@ -45,7 +45,10 @@ class K8SAPIClient(BCSClientBase):
 
     @property
     def _headers_for_bcs_agent_api(self):
-        return {"Authorization": getattr(settings, "BCS_AUTH_TOKEN", ""), "Content-Type": "application/json"}
+        return {
+            "Authorization": f'Bearer {getattr(settings, "BCS_APIGW_TOKEN", "")}',
+            "Content-Type": "application/json",
+        }
 
     @cached_property
     def api_client(self):

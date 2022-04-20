@@ -466,16 +466,17 @@ DIRECT_ON_FUNC_CODE = ['HAS_IMAGE_SECRET']
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # 访问 bcs-api 服务需要的token
-BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
+BCS_APIGW_TOKEN = os.environ.get("BCS_APIGW_TOKEN", "")
 # 访问 bcs-api-gateway 服务需要的AUTHORIZATION
 BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
 # 直连新版bcs api的地址
-BCS_API_GATEWAY_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
+BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
+
 
 # cluster manager的代理配置
 CLUSTER_MANAGER_PROXY = {
     # cluster manager 服务的 host
-    "HOST": BCS_API_GATEWAY_DOMAIN["prod"],
+    "HOST": BCS_APIGW_DOMAIN["prod"],
     # 访问 cluster manager 的 token
     "TOKEN": os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", ""),
     # 前端访问的前缀

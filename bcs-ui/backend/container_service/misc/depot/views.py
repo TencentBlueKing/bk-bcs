@@ -150,3 +150,9 @@ class ImageDetailViewSet(SystemViewSet):
         }
 
         return Response(data)
+
+
+try:
+    from .views_ext import *  # noqa
+except ImportError as e:
+    logger.debug("Load extension failed: %s", e)
