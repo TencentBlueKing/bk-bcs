@@ -29,9 +29,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
 
-// Handler handler for http request
+// Handler handler for cluster api request
 type Handler struct{}
 
+// NewHandler Make Unified Cluster Handler
 func NewHandler() (*Handler, error) {
 	return &Handler{}, nil
 }

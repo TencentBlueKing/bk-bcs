@@ -82,33 +82,6 @@ func (p *PodStor) SelfLink(namespace string) string {
 	return fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace)
 }
 
-func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-
-	for _, v := range p.k8sClientMap {
-		watch, err := v.CoreV1().RESTClient().Get().
-			Namespace(namespace).
-			Resource("pods").
-			VersionedParams(&opts, scheme.ParameterCodec).
-			Timeout(timeout).
-			SetHeader("Accept", "application/json").
-			Watch(ctx)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				continue
-			}
-			return nil, err
-		}
-
-		return watch, nil
-	}
-	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
-}
-
 // ListAsTable 查询Pod列表, kubectl格式返回
 func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
@@ -170,7 +143,7 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeade
 	return result, nil
 }
 
-// Delete 删除单个Pod
+// Get 获取单个Pod, Json格式返回
 func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"}
 
@@ -194,34 +167,7 @@ func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts m
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), name)
 }
 
-func (p *PodStor) GetClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
-	clusterId, ok := pod.Annotations[ClusterIdLabel]
-	if !ok {
-		return nil, errors.New("cluter_id not in annotions")
-	}
-	client, ok := p.k8sClientMap[clusterId]
-	if !ok {
-		return nil, errors.New("cluter_id not in annotions")
-	}
-	return client, nil
-}
-
-func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error) {
-	pod, err := p.Get(ctx, namespace, name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	client, err := p.GetClientByPod(pod)
-	if err != nil {
-		return nil, err
-	}
-	if err = client.CoreV1().Pods(namespace).Delete(ctx, name, opts); err != nil {
-		return nil, err
-	}
-
-	return pod, nil
-}
-
+// GetAsTable 获取单个Pod, Table格式返回
 func (p *PodStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
@@ -278,4 +224,61 @@ func (p *PodStor) GetAsTable(ctx context.Context, namespace string, name string,
 	result.Rows = rows
 
 	return result, nil
+}
+
+func (p *PodStor) GetClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
+	clusterId, ok := pod.Annotations[ClusterIdLabel]
+	if !ok {
+		return nil, errors.New("cluter_id not in annotions")
+	}
+	client, ok := p.k8sClientMap[clusterId]
+	if !ok {
+		return nil, errors.New("cluter_id not in annotions")
+	}
+	return client, nil
+}
+
+// Delete 删除单个Pod
+func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error) {
+	pod, err := p.Get(ctx, namespace, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	client, err := p.GetClientByPod(pod)
+	if err != nil {
+		return nil, err
+	}
+	if err = client.CoreV1().Pods(namespace).Delete(ctx, name, opts); err != nil {
+		return nil, err
+	}
+
+	return pod, nil
+}
+
+// Watch 获取 Pod 列表
+func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+	opts.Watch = true
+
+	for _, v := range p.k8sClientMap {
+		watch, err := v.CoreV1().RESTClient().Get().
+			Namespace(namespace).
+			Resource("pods").
+			VersionedParams(&opts, scheme.ParameterCodec).
+			Timeout(timeout).
+			SetHeader("Accept", "application/json").
+			Watch(ctx)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+
+		return watch, nil
+	}
+	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
 }
