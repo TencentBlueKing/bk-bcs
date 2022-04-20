@@ -26,6 +26,7 @@ type Configurations struct {
 	Base               *BaseConf                   `yaml:"base_conf"`
 	Logging            *LogConf                    `yaml:"logging"`
 	BCS                *BCSConf                    `yaml:"bcs_conf"`
+	APIServer          *APIServer                  `yaml:"apiserver"`
 	BCSEnvMap          map[BCSClusterEnv]*BCSConf  `yaml:"-"`
 	BCSEnvConf         []*BCSConf                  `yaml:"bcs_env_conf"`
 	ClusterResources   []*ClusterResource          `yaml:"cluster_resources"`

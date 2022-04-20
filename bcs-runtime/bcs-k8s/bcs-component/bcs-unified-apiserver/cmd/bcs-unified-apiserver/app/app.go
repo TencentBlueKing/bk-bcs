@@ -134,7 +134,7 @@ func Run(bindAddress string) error {
 
 	r := mux.NewRouter()
 
-	r.Handle("/clusters/{cluster_id}/{uri:.*}", clusterHandler)
+	r.Handle("/{uri:.*}", clusterHandler)
 
 	srv := &http.Server{
 		Handler: r,

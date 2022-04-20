@@ -65,7 +65,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	zap.L().Info("receive request", zap.String("client", req.RemoteAddr), zap.String("method", req.Method), zap.String("path", req.URL.Path))
 
 	vars := mux.Vars(req)
-	clusterId := vars["cluster_id"]
+	clusterId := config.G.APIServer.ClusterId
 	uri := vars["uri"]
 	// rewrite url to k8s api path
 	req.URL.Path = "/" + uri
