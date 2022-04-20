@@ -15,11 +15,11 @@
 package customresource
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
@@ -50,7 +50,7 @@ func TestCObj(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(cobjManifest4Test)
@@ -58,7 +58,8 @@ func TestCObj(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		CRDName:   handler.CRDName4Test,
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.CreateCObj(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -86,7 +87,8 @@ func TestCObj(t *testing.T) {
 		CRDName:   handler.CRDName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
-		Manifest:  updateManifest,
+		RawData:   updateManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.UpdateCObj(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -98,6 +100,7 @@ func TestCObj(t *testing.T) {
 		CRDName:   handler.CRDName4Test,
 		CobjName:  cobjName4Test,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 	getResp := clusterRes.CommonResp{}
 	err = h.GetCObj(ctx, &getReq, &getResp)
@@ -125,6 +128,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	hdlr := New()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	listReq := clusterRes.CObjListReq{
 		ProjectID: envs.TestProjectID,
@@ -133,7 +137,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 		Namespace: envs.TestSharedClusterNS,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = hdlr.ListCObj(context.TODO(), &listReq, &listResp)
+	err = hdlr.ListCObj(ctx, &listReq, &listResp)
 	// 新创建的 CRD 对应的 CObj 不被共享集群支持
 	assert.NotNil(t, err)
 }

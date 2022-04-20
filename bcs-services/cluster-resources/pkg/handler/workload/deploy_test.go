@@ -15,24 +15,26 @@
 package workload
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestDeploy(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
@@ -71,15 +73,120 @@ func TestDeploy(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+var deployManifest4FormTest = map[string]interface{}{
+	"apiVersion": "apps/v1",
+	"kind":       "Deployment",
+	"metadata": map[string]interface{}{
+		"name":      "deployment-test-" + stringx.Rand(example.RandomSuffixLength, example.SuffixCharset),
+		"namespace": envs.TestNamespace,
+		"labels": map[string]interface{}{
+			"app": "busybox",
+		},
+	},
+	"spec": map[string]interface{}{
+		"replicas": int64(2),
+		"selector": map[string]interface{}{
+			"matchLabels": map[string]interface{}{
+				"app": "busybox",
+			},
+		},
+		"template": map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"labels": map[string]interface{}{
+					"app": "busybox",
+				},
+			},
+			"spec": map[string]interface{}{
+				"containers": []interface{}{
+					map[string]interface{}{
+						"name":  "busybox",
+						"image": "busybox:latest",
+						"ports": []interface{}{
+							map[string]interface{}{
+								"containerPort": int64(80),
+							},
+						},
+						"command": []interface{}{
+							"/bin/sh",
+							"-c",
+						},
+						"args": []interface{}{
+							"echo hello",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestDeployWithForm(t *testing.T) {
+	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
+
+	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
+
+	// Create by form data
+	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(deployManifest4FormTest))
+	createReq := clusterRes.ResCreateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		RawData:   formData,
+		Format:    action.FormDataFormat,
+	}
+	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Update
+	_ = mapx.SetItems(deployManifest4FormTest, "spec.replicas", int64(3))
+	formData, _ = pbstruct.Map2pbStruct(workload.ParseDeploy(deployManifest4FormTest))
+	updateReq := clusterRes.ResUpdateReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+		RawData:   formData,
+		Format:    action.FormDataFormat,
+	}
+	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+
+	// Get FormData
+	getReq := clusterRes.ResGetReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName.(string),
+		Format:    action.FormDataFormat,
+	}
+	getResp := clusterRes.CommonResp{}
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.Nil(t, err)
+
+	// Get Manifest
+	getReq, getResp = handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.Nil(t, err)
+
+	respData := getResp.Data.AsMap()
+	assert.Equal(t, "Deployment", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, float64(3), mapx.Get(respData, "manifest.spec.replicas", 0))
+
+	// Delete
+	deleteReq := handler.GenResDeleteReq(resName.(string))
+	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
+	assert.Nil(t, err)
+}
+
 func TestDeployInSharedCluster(t *testing.T) {
 	// 在共享集群中新建命名空间
 	err := handler.GetOrCreateNS(envs.TestSharedClusterNS)
 	assert.Nil(t, err)
 
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 	// 设置为共享集群项目属命名空间
 	err = mapx.SetItems(manifest, "metadata.namespace", envs.TestSharedClusterNS)
@@ -90,7 +197,8 @@ func TestDeployInSharedCluster(t *testing.T) {
 	createReq := clusterRes.ResCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -110,7 +218,8 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
 		Name:      resName.(string),
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -121,6 +230,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
 		Name:      resName.(string),
+		Format:    action.ManifestFormat,
 	}
 	err = h.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -136,11 +246,11 @@ func TestDeployInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestDeployInSharedClusterNotPerm(t *testing.T) {
+func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
@@ -148,7 +258,8 @@ func TestDeployInSharedClusterNotPerm(t *testing.T) {
 	createReq := clusterRes.ResCreateReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err := h.CreateDeploy(ctx, &createReq, &clusterRes.CommonResp{})
 	assert.NotNil(t, err)
@@ -168,7 +279,8 @@ func TestDeployInSharedClusterNotPerm(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestNamespace,
 		Name:      resName.(string),
-		Manifest:  createManifest,
+		RawData:   createManifest,
+		Format:    action.ManifestFormat,
 	}
 	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.NotNil(t, err)

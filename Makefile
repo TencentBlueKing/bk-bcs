@@ -18,7 +18,6 @@ WORKSPACE=$(shell pwd)
 BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_NETWORK_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-network
 BCS_COMPONENT_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-component
-BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_MESOS_PATH=${WORKSPACE}/bcs-runtime/bcs-mesos
 BCS_CONF_COMPONENT_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-component
 BCS_CONF_NETWORK_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-network
@@ -384,6 +383,12 @@ alert-manager:pre
 	cp -R ./bcs-services/bcs-alert-manager/pkg/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/swagger-ui
 	cp ./bcs-services/bcs-alert-manager/pkg/proto/alertmanager/alertmanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/alertmanager.swagger.json
 	cd ./bcs-services/bcs-alert-manager/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
+
+# TODO: add to bcs-services when support go 1.17
+project:
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-project ${PACKAGEPATH}/bcs-services
+	cd ${BCS_SERVICES_PATH}/bcs-project &&  go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project/bcs-project-service ./main.go
 
 # end of bcs-service section
 

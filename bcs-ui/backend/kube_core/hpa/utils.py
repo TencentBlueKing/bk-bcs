@@ -21,6 +21,7 @@ from backend.bcs_web.audit_log import client as activity_client
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.resources.constants import K8sResourceKind
 from backend.resources.exceptions import DeleteResourceError
 from backend.resources.hpa import client as hpa_client
 from backend.resources.hpa.formatter import HPAFormatter
@@ -95,7 +96,7 @@ def get_deployment_hpa(request, project_id, cluster_id, ns_name, deployments):
     """通过deployment查询HPA关联信息"""
     hpa_list = get_cluster_hpa_list(request, project_id, cluster_id, namespace=ns_name)
 
-    hpa_deployment_list = [i["deployment_name"] for i in hpa_list]
+    hpa_deployment_list = [i["ref_name"] for i in hpa_list if i["ref_kind"] == K8sResourceKind.Deployment.value]
 
     for deployment in deployments:
         if deployment["resourceName"] in hpa_deployment_list:

@@ -23,49 +23,49 @@ import (
 
 // 检查配置加载情况，若默认配置修改，需要同步调整该单元测试
 func TestLoadConf(t *testing.T) { //nolint:cyclop
-	conf, err := config.LoadConf("../../" + conf.DefaultConfPath)
+	c, err := config.LoadConf("../../" + conf.DefaultConfPath)
 	if err != nil {
 		t.Errorf("Load default conf error: %v", err)
 	}
 	// 检查 debug 配置
-	if conf.Debug != false {
-		t.Errorf("Conf debug, Excepted: false, Result: %v", conf.Debug)
+	if c.Debug != false {
+		t.Errorf("Conf debug, Excepted: false, Result: %v", c.Debug)
 	}
 	// 检查 etcd 配置
 	etcdEndpoints := "127.0.0.1:2379"
-	if conf.Etcd.EtcdEndpoints != etcdEndpoints {
-		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, conf.Etcd.EtcdEndpoints)
+	if c.Etcd.EtcdEndpoints != etcdEndpoints {
+		t.Errorf("Conf etcd.endpoints, Excepted: %v, Result: %v", etcdEndpoints, c.Etcd.EtcdEndpoints)
 	}
 	// 检查 server 配置
 	address, httpPort := "", 9091
-	if conf.Server.Address != address {
-		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, conf.Server.Address)
+	if c.Server.Address != address {
+		t.Errorf("Conf server.address, Excepted: %v, Result: %v", address, c.Server.Address)
 	}
-	if conf.Server.HTTPPort != httpPort {
-		t.Errorf("Conf server.httpPort, Excepted: %v, Result: %v", httpPort, conf.Server.HTTPPort)
+	if c.Server.HTTPPort != httpPort {
+		t.Errorf("Conf server.httpPort, Excepted: %v, Result: %v", httpPort, c.Server.HTTPPort)
 	}
 	// 检查 client 配置
-	if clientCert := ""; conf.Client.Cert != clientCert {
-		t.Errorf("Conf client.cert, Excepted: %v, Result: %v", clientCert, conf.Client.Cert)
+	if clientCert := ""; c.Client.Cert != clientCert {
+		t.Errorf("Conf client.cert, Excepted: %v, Result: %v", clientCert, c.Client.Cert)
 	}
 	// 检查 swagger 配置
-	if swaggerDir := ""; conf.Swagger.Dir != swaggerDir {
-		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, conf.Swagger.Dir)
+	if swaggerDir := ""; c.Swagger.Dir != swaggerDir {
+		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, c.Swagger.Dir)
 	}
 	// 检查 log 配置
 	level, fileName := "info", "cr.log"
-	if conf.Log.Level != level {
-		t.Errorf("Conf log.level, Excepted: %v, Result: %v", level, conf.Log.Level)
+	if c.Log.Level != level {
+		t.Errorf("Conf log.level, Excepted: %v, Result: %v", level, c.Log.Level)
 	}
-	if conf.Log.Name != fileName {
-		t.Errorf("Conf log.name, Excepted: %v, Result: %v", fileName, conf.Log.Name)
+	if c.Log.Name != fileName {
+		t.Errorf("Conf log.name, Excepted: %v, Result: %v", fileName, c.Log.Name)
 	}
 	// 检查 redis 配置
 	redisAddress, redisPwd := "127.0.0.1:6379", ""
-	if conf.Redis.Address != redisAddress {
-		t.Errorf("Conf redis.host, Excepted: %v, Result: %v", redisAddress, conf.Redis.Address)
+	if c.Redis.Address != redisAddress {
+		t.Errorf("Conf redis.host, Excepted: %v, Result: %v", redisAddress, c.Redis.Address)
 	}
-	if conf.Redis.Password != redisPwd {
-		t.Errorf("Conf redis.password, Excepted: %v, Result: %v", redisPwd, conf.Redis.Password)
+	if c.Redis.Password != redisPwd {
+		t.Errorf("Conf redis.password, Excepted: %v, Result: %v", redisPwd, c.Redis.Password)
 	}
 }

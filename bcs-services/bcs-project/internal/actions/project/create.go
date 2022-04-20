@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
@@ -42,12 +42,12 @@ func NewCreateAction(model store.ProjectModel) *CreateAction {
 }
 
 // Do create project request
-func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (*pm.Project, *errorx.ProjectError) {
+func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest) (*pm.Project, error) {
 	ca.ctx = ctx
 	ca.req = req
 
 	if err := ca.validate(); err != nil {
-		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
+		return nil, errorx.NewParamErr(err)
 	}
 
 	// 如果有传递项目ID，则以传递的为准，否则动态生成32位的字符串作为项目ID
@@ -56,24 +56,26 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 	}
 
 	if err := ca.createProject(); err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 
 	p, err := ca.model.GetProject(ca.ctx, ca.req.ProjectID)
 	if err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 	// 返回项目信息
-	return p, errorx.New(errcode.Success, errcode.SuccessMsg)
+	return p, nil
 }
 
 func (ca *CreateAction) createProject() error {
 	timeStr := time.Now().Format(time.RFC3339)
+	// 从 context 中获取 username
+	username := auth.GetUserFromCtx(ca.ctx)
 	p := &pm.Project{
 		ProjectID:   ca.req.ProjectID,
 		Name:        ca.req.Name,
 		ProjectCode: ca.req.ProjectCode,
-		Creator:     ca.req.Creator,
+		Creator:     username,
 		ProjectType: ca.req.ProjectType,
 		UseBKRes:    ca.req.UseBKRes,
 		Description: ca.req.Description,
@@ -90,7 +92,7 @@ func (ca *CreateAction) createProject() error {
 		IsSecret:    ca.req.IsSecret,
 		CreateTime:  timeStr,
 		UpdateTime:  timeStr,
-		Managers:    ca.req.Creator,
+		Managers:    username,
 	}
 	return ca.model.CreateProject(ca.ctx, p)
 }

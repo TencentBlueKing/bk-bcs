@@ -14,7 +14,9 @@
 package dynamic
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -22,6 +24,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
 
 	"github.com/emicklei/go-restful"
 )
@@ -354,6 +358,19 @@ func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
+func CleanDynamic() {
+	dynamicDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
+	tables, err := dynamicDBClient.ListTableNames(context.TODO())
+	if err != nil {
+		blog.Errorf("list table name failed, err: %v", err)
+		return
+	}
+	for _, table := range tables {
+		cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), table, time.Hour)
+		go cleaner.Run(context.TODO())
+	}
+}
+
 func init() {
 	// for k8s
 	// Namespace resources.
@@ -543,4 +560,6 @@ func init() {
 		Path:    customResourceIndexPath,
 		Params:  nil,
 		Handler: lib.MarkProcess(DeleteCustomResourcesIndex)})
+
+	actions.RegisterDaemonFunc(CleanDynamic)
 }

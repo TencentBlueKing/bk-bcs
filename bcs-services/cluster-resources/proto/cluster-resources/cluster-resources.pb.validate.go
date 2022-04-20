@@ -475,6 +475,8 @@ func (m *HealthzReq) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for RaiseErr
+
 	if len(errors) > 0 {
 		return HealthzReqMultiError(errors)
 	}
@@ -1108,6 +1110,17 @@ func (m *ResGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _ResGetReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResGetReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ResGetReqMultiError(errors)
 	}
@@ -1190,6 +1203,11 @@ var _ResGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResGetReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
+var _ResGetReq_Format_InLookup = map[string]struct{}{
+	"manifest": {},
+	"formData": {},
+}
+
 // Validate checks the field values on ResCreateReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1235,11 +1253,11 @@ func (m *ResCreateReq) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetManifest()).(type) {
+		switch v := interface{}(m.GetRawData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, ResCreateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -1247,20 +1265,31 @@ func (m *ResCreateReq) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, ResCreateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ResCreateReqValidationError{
-				field:  "Manifest",
+				field:  "RawData",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
+	}
+
+	if _, ok := _ResCreateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResCreateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {
@@ -1340,6 +1369,11 @@ var _ interface {
 } = ResCreateReqValidationError{}
 
 var _ResCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResCreateReq_Format_InLookup = map[string]struct{}{
+	"manifest": {},
+	"formData": {},
+}
 
 // Validate checks the field values on ResUpdateReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -1430,11 +1464,11 @@ func (m *ResUpdateReq) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetManifest()).(type) {
+		switch v := interface{}(m.GetRawData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, ResUpdateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -1442,20 +1476,31 @@ func (m *ResUpdateReq) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, ResUpdateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ResUpdateReqValidationError{
-				field:  "Manifest",
+				field:  "RawData",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
+	}
+
+	if _, ok := _ResUpdateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResUpdateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {
@@ -1539,6 +1584,11 @@ var _ResUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 var _ResUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResUpdateReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+var _ResUpdateReq_Format_InLookup = map[string]struct{}{
+	"manifest": {},
+	"formData": {},
+}
 
 // Validate checks the field values on ResDeleteReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -2311,6 +2361,28 @@ func (m *GetK8SResTemplateReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetK8SResTemplateReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return GetK8SResTemplateReqMultiError(errors)
 	}
@@ -2391,6 +2463,8 @@ var _ interface {
 } = GetK8SResTemplateReqValidationError{}
 
 var _GetK8SResTemplateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _GetK8SResTemplateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjListReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -2637,6 +2711,17 @@ func (m *CObjGetReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _CObjGetReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjGetReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return CObjGetReqMultiError(errors)
 	}
@@ -2717,6 +2802,11 @@ var _CObjGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _CObjGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
+var _CObjGetReq_Format_InLookup = map[string]struct{}{
+	"manifest": {},
+	"formData": {},
+}
+
 // Validate checks the field values on CObjCreateReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -2773,11 +2863,11 @@ func (m *CObjCreateReq) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetManifest()).(type) {
+		switch v := interface{}(m.GetRawData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, CObjCreateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -2785,20 +2875,31 @@ func (m *CObjCreateReq) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, CObjCreateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return CObjCreateReqValidationError{
-				field:  "Manifest",
+				field:  "RawData",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
+	}
+
+	if _, ok := _CObjCreateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjCreateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {
@@ -2879,6 +2980,11 @@ var _ interface {
 } = CObjCreateReqValidationError{}
 
 var _CObjCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjCreateReq_Format_InLookup = map[string]struct{}{
+	"manifest": {},
+	"formData": {},
+}
 
 // Validate checks the field values on CObjUpdateReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -2969,11 +3075,11 @@ func (m *CObjUpdateReq) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetManifest()).(type) {
+		switch v := interface{}(m.GetRawData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, CObjUpdateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -2981,20 +3087,31 @@ func (m *CObjUpdateReq) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, CObjUpdateReqValidationError{
-					field:  "Manifest",
+					field:  "RawData",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return CObjUpdateReqValidationError{
-				field:  "Manifest",
+				field:  "RawData",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
+	}
+
+	if _, ok := _CObjUpdateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjUpdateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {
@@ -3077,6 +3194,11 @@ var _ interface {
 var _CObjUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _CObjUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _CObjUpdateReq_Format_InLookup = map[string]struct{}{
+	"manifest": {},
+	"formData": {},
+}
 
 // Validate checks the field values on CObjDeleteReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -3983,3 +4105,304 @@ var _ interface {
 } = InvalidateDiscoveryCacheReqValidationError{}
 
 var _InvalidateDiscoveryCacheReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on FormRenderPreviewReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *FormRenderPreviewReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FormRenderPreviewReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FormRenderPreviewReqMultiError, or nil if none found.
+func (m *FormRenderPreviewReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FormRenderPreviewReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_FormRenderPreviewReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := FormRenderPreviewReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := FormRenderPreviewReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := FormRenderPreviewReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetFormData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FormRenderPreviewReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FormRenderPreviewReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFormData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FormRenderPreviewReqValidationError{
+				field:  "FormData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return FormRenderPreviewReqMultiError(errors)
+	}
+	return nil
+}
+
+// FormRenderPreviewReqMultiError is an error wrapping multiple validation
+// errors returned by FormRenderPreviewReq.ValidateAll() if the designated
+// constraints aren't met.
+type FormRenderPreviewReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FormRenderPreviewReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FormRenderPreviewReqMultiError) AllErrors() []error { return m }
+
+// FormRenderPreviewReqValidationError is the validation error returned by
+// FormRenderPreviewReq.Validate if the designated constraints aren't met.
+type FormRenderPreviewReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FormRenderPreviewReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FormRenderPreviewReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FormRenderPreviewReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FormRenderPreviewReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FormRenderPreviewReqValidationError) ErrorName() string {
+	return "FormRenderPreviewReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FormRenderPreviewReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFormRenderPreviewReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FormRenderPreviewReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FormRenderPreviewReqValidationError{}
+
+var _FormRenderPreviewReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on GetResFormSchemaReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetResFormSchemaReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetResFormSchemaReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetResFormSchemaReqMultiError, or nil if none found.
+func (m *GetResFormSchemaReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetResFormSchemaReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_GetResFormSchemaReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetResFormSchemaReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetResFormSchemaReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := GetResFormSchemaReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetResFormSchemaReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetResFormSchemaReqMultiError is an error wrapping multiple validation
+// errors returned by GetResFormSchemaReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetResFormSchemaReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetResFormSchemaReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetResFormSchemaReqMultiError) AllErrors() []error { return m }
+
+// GetResFormSchemaReqValidationError is the validation error returned by
+// GetResFormSchemaReq.Validate if the designated constraints aren't met.
+type GetResFormSchemaReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResFormSchemaReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResFormSchemaReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResFormSchemaReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResFormSchemaReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResFormSchemaReqValidationError) ErrorName() string {
+	return "GetResFormSchemaReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResFormSchemaReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResFormSchemaReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResFormSchemaReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResFormSchemaReqValidationError{}
+
+var _GetResFormSchemaReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")

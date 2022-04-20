@@ -37,6 +37,7 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -51,6 +52,7 @@ import (
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
 	workloadHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/workload"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -92,6 +94,7 @@ func (crSvc *clusterResourcesService) Init() error {
 		crSvc.initHandler,
 		crSvc.initHTTPService,
 		crSvc.initMetricService,
+		crSvc.initComponentClient,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -338,5 +341,33 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 			crSvc.stopCh <- struct{}{}
 		}
 	}()
+	return nil
+}
+
+// 初始化依赖组件 Client
+func (crSvc *clusterResourcesService) initComponentClient() (err error) {
+	var tlsConf *tls.Config
+	if crSvc.conf.Discovery.Cert != "" || crSvc.conf.Discovery.Key != "" || crSvc.conf.Discovery.Ca != "" {
+		tlsConf, err = ssl.ClientTslConfVerity(
+			crSvc.conf.Discovery.Ca, crSvc.conf.Discovery.Cert, crSvc.conf.Discovery.Key, crSvc.conf.Discovery.CertPwd,
+		)
+		if err != nil {
+			log.Error(crSvc.ctx, "load discovery client tls config failed: %v", err)
+			return err
+		}
+		log.Info(crSvc.ctx, "load discovery client tls config successfully")
+	}
+	// ClusterManager
+	if crSvc.conf.Discovery.CallCMWithTLS {
+		cluster.InitCMClient(crSvc.microRtr, tlsConf)
+	} else {
+		cluster.InitCMClient(crSvc.microRtr, nil)
+	}
+	// ProjectManager
+	if crSvc.conf.Discovery.CallProjWithTLS {
+		project.InitProjClient(crSvc.microRtr, tlsConf)
+	} else {
+		project.InitProjClient(crSvc.microRtr, nil)
+	}
 	return nil
 }

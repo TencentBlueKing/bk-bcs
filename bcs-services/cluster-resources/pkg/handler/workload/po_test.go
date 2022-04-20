@@ -15,7 +15,6 @@
 package workload
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,9 +29,9 @@ import (
 
 func TestPod(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_pod")
+	manifest, _ := example.LoadDemoManifest("workload/simple_pod", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

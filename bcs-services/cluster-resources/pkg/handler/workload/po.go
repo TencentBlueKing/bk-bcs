@@ -49,8 +49,8 @@ func (h *Handler) ListPo(
 func (h *Handler) GetPo(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Get(
-		ctx, req.Namespace, req.Name, metav1.GetOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Po).Get(
+		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
 }
@@ -59,8 +59,8 @@ func (h *Handler) GetPo(
 func (h *Handler) CreatePo(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Create(
-		ctx, req.Manifest, true, metav1.CreateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Po).Create(
+		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -69,8 +69,8 @@ func (h *Handler) CreatePo(
 func (h *Handler) UpdatePo(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Update(
-		ctx, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Po).Update(
+		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -79,7 +79,7 @@ func (h *Handler) UpdatePo(
 func (h *Handler) DeletePo(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Po).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", res.Po).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -88,7 +88,7 @@ func (h *Handler) DeletePo(
 func (h *Handler) ListPoPVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.PVC)
@@ -99,7 +99,7 @@ func (h *Handler) ListPoPVC(
 func (h *Handler) ListPoCM(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.CM)
@@ -110,7 +110,7 @@ func (h *Handler) ListPoCM(
 func (h *Handler) ListPoSecret(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.Secret)
@@ -121,7 +121,7 @@ func (h *Handler) ListPoSecret(
 func (h *Handler) ReschedulePo(
 	ctx context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 

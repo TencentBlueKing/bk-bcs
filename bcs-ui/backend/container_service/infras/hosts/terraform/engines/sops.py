@@ -14,13 +14,29 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, List, Tuple
 
+import attr
+
 from backend.components import sops
 from backend.container_service.infras.hosts.constants import APPLY_HOST_TEMPLATE_ID, SOPS_BIZ_ID
 
 
-def create_and_start_host_application(
-    cc_app_id: str, username: str, region: str, cvm_type: str, disk_size: int, replicas: int, vpc_name: str
-) -> Tuple[int, str]:
+@attr.dataclass
+class HostData:
+    region: str
+    vpc_name: str
+    cvm_type: str
+    disk_type: str
+    disk_size: int
+    replicas: int
+    zone_id: str
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> "HostData":
+        fields = [f.name for f in attr.fields(cls)]
+        return cls(**{k: v for k, v in init_data.items() if k in fields})
+
+
+def create_and_start_host_application(cc_app_id: str, username: str, host_data: HostData) -> Tuple[int, str]:
     """创建并启动申请主机任务流程"""
     client = sops.SopsClient()
     # 组装创建任务参数
@@ -30,11 +46,13 @@ def create_and_start_host_application(
         constants={
             "${appID}": cc_app_id,
             "${user}": username,
-            "${qcloudRegionId}": region,
-            "${cvm_type}": cvm_type,
-            "${diskSize}": disk_size,
-            "${replicas}": replicas,
-            "${vpc_name}": vpc_name,
+            "${qcloudRegionId}": host_data.region,
+            "${cvm_type}": host_data.cvm_type,
+            "${diskSize}": host_data.disk_size,
+            "${replicas}": host_data.replicas,
+            "${vpc_name}": host_data.vpc_name,
+            "${zone_id}": host_data.zone_id,
+            "${disk_type}": host_data.disk_type,
         },
     )
     # 创建任务

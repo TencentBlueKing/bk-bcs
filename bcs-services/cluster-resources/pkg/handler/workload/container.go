@@ -30,7 +30,7 @@ import (
 func (h *Handler) ListContainer(
 	ctx context.Context, req *clusterRes.ContainerListReq, resp *clusterRes.CommonListResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListContainerAPIResp(ctx, req.ClusterID, req.Namespace, req.PodName)
@@ -41,7 +41,7 @@ func (h *Handler) ListContainer(
 func (h *Handler) GetContainer(
 	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildGetContainerAPIResp(ctx, req.ClusterID, req.Namespace, req.PodName, req.ContainerName)
@@ -52,7 +52,7 @@ func (h *Handler) GetContainer(
 func (h *Handler) GetContainerEnvInfo(
 	ctx context.Context, req *clusterRes.ContainerGetReq, resp *clusterRes.CommonListResp,
 ) error {
-	if err := perm.CheckNSAccess(ctx, req.ProjectID, req.ClusterID, req.Namespace); err != nil {
+	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 

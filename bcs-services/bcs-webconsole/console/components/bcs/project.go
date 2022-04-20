@@ -39,7 +39,7 @@ func (p *Project) String() string {
 	} else {
 		displayCode = p.Code
 	}
-	return fmt.Sprintf("<%s, %s|%s|%d>", p.Name, displayCode, p.ProjectId, p.CcBizID)
+	return fmt.Sprintf("project<%s, %s|%s|%d>", p.Name, displayCode, p.ProjectId, p.CcBizID)
 }
 
 // GetProject 通过project_id获取项目信息

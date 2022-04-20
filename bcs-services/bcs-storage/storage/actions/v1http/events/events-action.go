@@ -15,6 +15,7 @@ package events
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -30,6 +31,7 @@ import (
 )
 
 const (
+	tablePrefix   = "event_"
 	tableName     = "event"
 	dataTag       = "data"
 	extraTag      = "extra"
@@ -66,6 +68,8 @@ var conditionTagList = [...]string{
 	"extraInfo.name", "extraInfo.namespace", "extraInfo.kind"}
 var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typeTag,
 	clusterIDTag, nameSpaceTag, resourceTypeTag, resourceKindTag, resourceNameTag}
+
+var eventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/event"
@@ -121,10 +125,20 @@ func WatchEvent(req *restful.Request, resp *restful.Response) {
 func CleanEvents() {
 	maxCap := apiserver.GetAPIResource().Conf.EventMaxCap
 	maxTime := apiserver.GetAPIResource().Conf.EventMaxTime
-	cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), tableName, time.Hour)
-	cleaner.WithMaxEntryNum(maxCap)
-	cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
-	cleaner.Run(context.TODO())
+	eventDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
+	tables, err := eventDBClient.ListTableNames(context.TODO())
+	if err != nil {
+		blog.Errorf("list table name failed, err: %v", err)
+		return
+	}
+	for _, table := range tables {
+		if strings.HasPrefix(table, tableName) {
+			cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
+			cleaner.WithMaxEntryNum(maxCap)
+			cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
+			go cleaner.Run(context.TODO())
+		}
+	}
 }
 
 func init() {

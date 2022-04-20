@@ -4,7 +4,7 @@ FROM centos:centos7
 RUN yum install -y gettext
 
 # install openresty & apisix
-RUN yum install -y yum-utils && yum-config-manager --releasever 7 --add-repo https://openresty.org/package/centos/openresty.repo && yum-config-manager --releasever 7 --add-repo https://repos.apiseven.com/packages/centos/apache-apisix.repo && yum install -y apisix-2.11.0
+RUN yum install -y yum-utils && yum-config-manager --releasever 7 --add-repo https://openresty.org/package/centos/openresty.repo && yum-config-manager --releasever 7 --add-repo https://repos.apiseven.com/packages/centos/apache-apisix.repo && yum install -y apisix-2.13.0
 #install apisix plugin
 COPY ./apisix/ /usr/local/apisix/apisix/plugins/
 #apisix configuration

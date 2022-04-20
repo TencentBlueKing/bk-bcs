@@ -27,4 +27,8 @@ const (
 	NoPerm = 4
 	// Unauth 未认证/认证失败
 	Unauth = 5
+	// NoIAMPerm 权限中心鉴权失败（特殊错误码，前端有相关逻辑）
+	NoIAMPerm = 40300
+	// ComponentErr 依赖组件异常
+	ComponentErr = 6
 )

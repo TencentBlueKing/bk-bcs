@@ -25,6 +25,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/klog"
 
 	autoscalingv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
@@ -117,6 +118,8 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	if faResp.Response == nil {
 		return 0, fmt.Errorf("received empty response")
 	}
+	klog.Infof("Webhook Response: Scale: %v, Replicas: %v, CurrentReplicas: %v",
+		faResp.Response.Scale, faResp.Response.Replicas, currentReplicas)
 	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
 	if faResp.Response.Scale {
 		metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook",
@@ -129,7 +132,7 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 		webhookMetric, int64(currentReplicas), int64(currentReplicas))
 	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook",
 		currentReplicas)
-	return currentReplicas, nil
+	return -1, nil
 
 }
 

@@ -42,10 +42,7 @@ type PortPoolItem struct {
 
 // GetKey get port pool item key
 func (ppi *PortPoolItem) GetKey() string {
-	tmpIDs := make([]string, len(ppi.LoadBalancerIDs))
-	copy(tmpIDs, ppi.LoadBalancerIDs)
-	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return GetPoolItemKey(ppi.ItemName, ppi.LoadBalancerIDs)
 }
 
 // Validate do validation
@@ -85,10 +82,15 @@ type PortPoolItemStatus struct {
 
 // GetKey get port pool item key
 func (ppis *PortPoolItemStatus) GetKey() string {
-	tmpIDs := make([]string, len(ppis.LoadBalancerIDs))
-	copy(tmpIDs, ppis.LoadBalancerIDs)
+	return GetPoolItemKey(ppis.ItemName, ppis.LoadBalancerIDs)
+}
+
+// GetPoolItemKey get port pool item key
+func GetPoolItemKey(itemName string, loadBalancerIDs []string) string {
+	tmpIDs := make([]string, len(loadBalancerIDs))
+	copy(tmpIDs, loadBalancerIDs)
 	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return itemName + "-" + strings.Join(tmpIDs, ",")
 }
 
 // PortPoolStatus defines the observed state of PortPool

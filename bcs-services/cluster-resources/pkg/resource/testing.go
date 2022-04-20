@@ -27,3 +27,31 @@ func NewMockClusterConfig(clusterID string) *ClusterConf {
 	conf, _ := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	return &ClusterConf{conf, clusterID}
 }
+
+// ConvertInt2Int64 示例模板中加载出的数据，数字类型为 int，而 dynamicClient 返回结果中为 int64，
+// 从而导致模板加载的数据无法被解析。这里使用递归的方式，强制转换，仅用于表单化解析/渲染单元测试！
+func ConvertInt2Int64(raw map[string]interface{}) {
+	for key, val := range raw {
+		switch v := val.(type) {
+		case map[string]interface{}:
+			ConvertInt2Int64(v)
+		case []interface{}:
+			newList := []interface{}{}
+			for _, item := range v {
+				if it, ok := item.(map[string]interface{}); ok {
+					ConvertInt2Int64(it)
+					newList = append(newList, it)
+				} else if it, ok := item.(int); ok {
+					newList = append(newList, int64(it))
+				} else {
+					newList = append(newList, it)
+				}
+			}
+			raw[key] = newList
+		case int:
+			raw[key] = int64(v)
+		default:
+			continue
+		}
+	}
+}

@@ -25,7 +25,7 @@ import (
 
 const (
 	// defaultHandlerQueueSize is default queue size of Handler.
-	defaultHandlerQueueSize = 1024
+	defaultHandlerQueueSize = 102400
 
 	// defaultHandleInterval is default interval of handle.
 	defaultHandleInterval = 500 * time.Millisecond

@@ -1,4 +1,4 @@
-FROM mirrors.tencent.com/archieai-test/micro-gateway-apisix:latest
+FROM bk-micro-gateway-apisix:latest
 
 #install apisix plugin
 COPY ./apisix/ /usr/local/apisix/apisix/plugins/

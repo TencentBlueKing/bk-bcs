@@ -70,6 +70,15 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "raiseErr",
+            "description": "raiseErr. 存在依赖服务异常的情况，是否返回错误（默认只在响应体中标记）",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
         "tags": [
           "Basic"
         ]
@@ -394,6 +403,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -556,6 +572,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -568,6 +591,58 @@
         "summary": "GetK8SResTemplate API",
         "description": "获取 K8S 资源模版",
         "operationId": "Resource_GetK8SResTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema": {
+      "get": {
+        "summary": "Get resource's form schema API",
+        "description": "获取指定资源表单 Schema",
+        "operationId": "Resource_GetResFormSchema",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -685,6 +760,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesInvalidateDiscoveryCacheReq"
+            }
           }
         ],
         "tags": [
@@ -837,6 +920,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -1043,6 +1133,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1247,6 +1344,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -1453,6 +1557,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1657,6 +1768,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -1863,6 +1981,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2067,6 +2192,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -2273,6 +2405,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2477,6 +2616,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -2683,6 +2829,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2888,6 +3041,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3092,6 +3252,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -3312,6 +3479,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3466,6 +3640,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3515,6 +3696,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -3623,6 +3811,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -3886,6 +4081,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -4182,6 +4384,52 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview": {
+      "post": {
+        "summary": "Form data render preview API",
+        "description": "表单化数据渲染预览",
+        "operationId": "Resource_FormDataRenderPreview",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesFormRenderPreviewReq"
+            }
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims": {
       "post": {
         "summary": "CreatePVC API",
@@ -4365,6 +4613,13 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4611,6 +4866,13 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5119,9 +5381,13 @@
           "type": "string",
           "title": "CRD 名称"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "创建单个自定义资源请求体",
@@ -5150,9 +5416,13 @@
           "type": "string",
           "title": "命名空间"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "更新单个自定义资源请求体",
@@ -5241,6 +5511,29 @@
       "description": "Echo API 响应",
       "title": "EchoResp"
     },
+    "clusterresourcesFormRenderPreviewReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "kind": {
+          "type": "string",
+          "title": "资源类型"
+        },
+        "formData": {
+          "type": "object",
+          "title": "表单化数据"
+        }
+      },
+      "description": "表单数据渲染为 Manifest 预览",
+      "title": "FormRenderPreviewReq"
+    },
     "clusterresourcesHealthzResp": {
       "type": "object",
       "properties": {
@@ -5262,6 +5555,21 @@
       },
       "description": "Healthz API 响应",
       "title": "HealthzResp"
+    },
+    "clusterresourcesInvalidateDiscoveryCacheReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        }
+      },
+      "description": "主动使集群 Discovery 缓存失效",
+      "title": "InvalidateDiscoveryCacheReq"
     },
     "clusterresourcesPingResp": {
       "type": "object",
@@ -5286,9 +5594,13 @@
           "type": "string",
           "title": "集群 ID"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "创建单个 k8s 资源请求体",
@@ -5313,9 +5625,13 @@
           "type": "string",
           "title": "资源名称"
         },
-        "manifest": {
+        "rawData": {
           "type": "object",
           "title": "资源配置信息"
+        },
+        "format": {
+          "type": "string",
+          "title": "资源配置格式（manifest/formData）"
         }
       },
       "description": "更新单个 k8s 资源请求体",

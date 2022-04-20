@@ -35,7 +35,7 @@
                 :label-width="100"
                 :model="formdata"
                 :rules="rules">
-                <bk-form-item property="region" :label="$t('所属地域')" :required="true" :desc="defaultInfo.areaDesc" style="margin-right: 1px;">
+                <bk-form-item property="region" :label="$t('所属地域')" :required="true" :desc="defaultInfo.areaDesc">
                     <bk-selector :placeholder="$t('请选择地域')"
                         :selected.sync="formdata.region"
                         :list="areaList"
@@ -59,9 +59,19 @@
                             @click="formdata.networkKey = 'underlay'">underlay</bcs-button>
                     </div>
                 </bk-form-item>
-                <bk-form-item ext-cls="mt20" property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc">
+                <bk-form-item property="zone_id" :label="$t('园区')" :required="true">
+                    <bk-selector :placeholder="$t('请选择园区')"
+                        :selected.sync="formdata.zone_id"
+                        :list="zoneList"
+                        :searchable="true"
+                        setting-key="value"
+                        display-key="label"
+                        search-key="label"
+                    >
+                    </bk-selector>
+                </bk-form-item>
+                <bk-form-item property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc">
                     <bk-selector :placeholder="$t('请选择VPC')"
-                        style="padding-top: 3px;"
                         :selected.sync="formdata.vpc_name"
                         :list="vpcList"
                         :searchable="true"
@@ -72,9 +82,19 @@
                     </bk-selector>
                 </bk-form-item>
                 <bk-form-item ext-cls="has-append-item" :label="$t('数据盘')" property="disk_size">
-                    <bk-input v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('请输入50的倍数的数值')">
-                        <div class="group-text" slot="append">GB</div>
-                    </bk-input>
+                    <div class="disk-inner">
+                        <bcs-select class="w200" v-model="formdata.disk_type" :clearable="false">
+                            <bcs-option v-for="item in diskTypeList"
+                                :key="item.value"
+                                :id="item.value"
+                                :name="item.label"
+                            >
+                            </bcs-option>
+                        </bcs-select>
+                        <bk-input v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('请输入50的倍数的数值')">
+                            <div class="group-text" slot="append">GB</div>
+                        </bk-input>
+                    </div>
                 </bk-form-item>
                 <bk-form-item :label="$t('需求数量')">
                     <bk-number-input
@@ -179,12 +199,16 @@
                 isFirstLoadData: true,
                 areaList: [],
                 vpcList: [],
+                zoneList: [],
+                diskTypeList: [],
                 formdata: {
                     region: '',
                     disk_size: 50,
                     replicas: 1,
                     cvm_type: '',
                     vpc_name: '',
+                    zone_id: '',
+                    disk_type: '',
                     networkKey: 'overlay'
                 },
                 rules: {
@@ -336,6 +360,7 @@
                         this.formdata.vpc_name = ''
                         this.vpcList = []
                         await this.fetchVPC()
+                        await this.fetchZone()
                     }
                 }
             },
@@ -350,6 +375,7 @@
         },
         async created () {
             await this.getBizMaintainers()
+
             if (!this.hasAuth) return
             if (this.isBackfill) {
                 this.defaultInfo = {
@@ -360,6 +386,7 @@
                 }
             }
             this.getApplyHostStatus()
+            this.fetchDiskType()
         },
         beforeDestroy () {
             clearTimeout(this.timer) && (this.timer = null)
@@ -428,6 +455,53 @@
             async changeNetwork (index, data) {
                 this.vpcList = []
                 await this.fetchVPC()
+            },
+
+            /**
+             * 获取园区列表
+             */
+            async fetchZone () {
+                if (!this.formdata.region) return
+
+                try {
+                    const data = await this.$store.dispatch('cluster/getZoneList', {
+                        projectId: this.projectId,
+                        region: this.formdata.region
+                    })
+                    this.zoneList = data.data
+                    if (this.clusterInfo.zone_id && this.isBackfill) {
+                        const zone = this.zoneList.find(item => item.value === this.clusterInfo.zone_id)
+                        if (zone) {
+                            this.formdata.zone_id = zone.value
+                        }
+                    } else if (this.zoneList.length) {
+                        this.formdata.zone_id = this.zoneList[0].value
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
+            },
+
+            /**
+             * 获取数据盘类型列表
+             */
+            async fetchDiskType () {
+                try {
+                    const data = await this.$store.dispatch('cluster/getDiskTypeList', {
+                        projectId: this.projectId
+                    })
+                    this.diskTypeList = data.data
+                    if (this.clusterInfo.disk_type && this.isBackfill) {
+                        const diskType = this.diskTypeList.find(item => item.value === this.clusterInfo.disk_type)
+                        if (diskType) {
+                            this.formdata.disk_type = diskType.value
+                        }
+                    } else if (this.diskTypeList.length) {
+                        this.formdata.disk_type = this.diskTypeList[1].value
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
             },
 
             async fetchVPC () {
@@ -619,6 +693,8 @@
     flex-wrap: wrap;
     /deep/ .bk-form-item {
         flex: 0 0 50%;
+        margin-top: 0;
+        margin-bottom: 20px;
         &.custom-item {
             flex: 0 0 100%;
             .bk-form-content {
@@ -649,11 +725,18 @@
         }
         .bk-button-group {
             width: 100%;
+            display: block;
             .network-btn {
                 width: 50%;
             }
             .network-zIndex {
                 z-index: 1;
+            }
+        }
+        .disk-inner {
+            display: flex;
+            .w200 {
+                width: 200px;
             }
         }
         .form-item-inner {

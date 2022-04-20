@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
@@ -40,7 +41,7 @@ func (h *Handler) ListCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
@@ -61,12 +62,12 @@ func (h *Handler) GetCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, metav1.GetOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Format, metav1.GetOptions{},
 	)
 	return err
 }
@@ -74,24 +75,32 @@ func (h *Handler) GetCObj(
 // CreateCObj ...
 func (h *Handler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
-) error {
-	manifest := req.Manifest.AsMap()
-	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
-
+) (err error) {
 	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
+
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	if err != nil {
+		return err
+	}
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return err
+	}
+	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
+
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, namespace); err != nil {
 		return err
 	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
-	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildCreateAPIResp(
-		ctx, req.ClusterID, kind, apiVersion, req.Manifest, namespace != "", metav1.CreateOptions{},
+		ctx, req.ClusterID, kind, apiVersion, manifest, namespace != "", metav1.CreateOptions{},
 	)
 	return err
 }
@@ -104,15 +113,24 @@ func (h *Handler) UpdateCObj(
 	if err != nil {
 		return err
 	}
+	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
+
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	if err != nil {
+		return err
+	}
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return err
+	}
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
-	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
-		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Manifest, metav1.UpdateOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, manifest, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -128,7 +146,7 @@ func (h *Handler) DeleteCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)

@@ -29,8 +29,8 @@ import (
 )
 
 // CheckNSAccess 检查该 API 能否访问指定命名空间
-func CheckNSAccess(ctx context.Context, projectID, clusterID, namespace string) error {
-	clusterInfo, err := cluster.GetClusterInfo(clusterID)
+func CheckNSAccess(ctx context.Context, clusterID, namespace string) error {
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func CheckNSAccess(ctx context.Context, projectID, clusterID, namespace string) 
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, projectID, clusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil
@@ -46,7 +46,7 @@ func CheckNSAccess(ctx context.Context, projectID, clusterID, namespace string) 
 
 // CheckSubscribable 检查指定参数能否进行订阅
 func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error {
-	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -63,15 +63,15 @@ func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error 
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, req.ProjectID, req.ClusterID, req.Namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, req.ClusterID, req.Namespace) {
 		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil
 }
 
 // CheckCObjAccess 检查指定 CObj 是否可查看/操作
-func CheckCObjAccess(ctx context.Context, projectID, clusterID, crdName, namespace string) error {
-	clusterInfo, err := cluster.GetClusterInfo(clusterID)
+func CheckCObjAccess(ctx context.Context, clusterID, crdName, namespace string) error {
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func CheckCObjAccess(ctx context.Context, projectID, clusterID, crdName, namespa
 		return errorx.New(errcode.NoPerm, "共享集群暂时只支持查询部分自定义资源")
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, projectID, clusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil

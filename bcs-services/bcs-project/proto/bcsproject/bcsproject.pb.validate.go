@@ -600,6 +600,16 @@ func (m *ProjectResponse) Validate() error {
 
 	// no validation rules for RequestID
 
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -846,6 +856,16 @@ func (m *ListProjectsResponse) Validate() error {
 
 	// no validation rules for RequestID
 
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListProjectsResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -904,3 +924,493 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListProjectsResponseValidationError{}
+
+// Validate checks the field values on Perms with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Perms) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetPerms()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PermsValidationError{
+				field:  "Perms",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// PermsValidationError is the validation error returned by Perms.Validate if
+// the designated constraints aren't met.
+type PermsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PermsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PermsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PermsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PermsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PermsValidationError) ErrorName() string { return "PermsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PermsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPerms.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PermsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PermsValidationError{}
+
+// Validate checks the field values on ListAuthorizedProjReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAuthorizedProjReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// ListAuthorizedProjReqValidationError is the validation error returned by
+// ListAuthorizedProjReq.Validate if the designated constraints aren't met.
+type ListAuthorizedProjReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAuthorizedProjReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAuthorizedProjReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAuthorizedProjReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAuthorizedProjReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAuthorizedProjReqValidationError) ErrorName() string {
+	return "ListAuthorizedProjReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAuthorizedProjReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAuthorizedProjReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAuthorizedProjReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAuthorizedProjReqValidationError{}
+
+// Validate checks the field values on ListAuthorizedProjResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAuthorizedProjResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListAuthorizedProjRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	return nil
+}
+
+// ListAuthorizedProjRespValidationError is the validation error returned by
+// ListAuthorizedProjResp.Validate if the designated constraints aren't met.
+type ListAuthorizedProjRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAuthorizedProjRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAuthorizedProjRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAuthorizedProjRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAuthorizedProjRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAuthorizedProjRespValidationError) ErrorName() string {
+	return "ListAuthorizedProjRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAuthorizedProjRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAuthorizedProjResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAuthorizedProjRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAuthorizedProjRespValidationError{}
+
+// Validate checks the field values on HealthzRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *HealthzRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// HealthzRequestValidationError is the validation error returned by
+// HealthzRequest.Validate if the designated constraints aren't met.
+type HealthzRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HealthzRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HealthzRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HealthzRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HealthzRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HealthzRequestValidationError) ErrorName() string { return "HealthzRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e HealthzRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHealthzRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HealthzRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HealthzRequestValidationError{}
+
+// Validate checks the field values on HealthzResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *HealthzResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Status
+
+	// no validation rules for MongoStatus
+
+	return nil
+}
+
+// HealthzResponseValidationError is the validation error returned by
+// HealthzResponse.Validate if the designated constraints aren't met.
+type HealthzResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HealthzResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HealthzResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HealthzResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HealthzResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HealthzResponseValidationError) ErrorName() string { return "HealthzResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e HealthzResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHealthzResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HealthzResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HealthzResponseValidationError{}
+
+// Validate checks the field values on PingRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *PingRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// PingRequestValidationError is the validation error returned by
+// PingRequest.Validate if the designated constraints aren't met.
+type PingRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PingRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PingRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PingRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PingRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PingRequestValidationError) ErrorName() string { return "PingRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PingRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPingRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PingRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PingRequestValidationError{}
+
+// Validate checks the field values on PingResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *PingResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Ret
+
+	return nil
+}
+
+// PingResponseValidationError is the validation error returned by
+// PingResponse.Validate if the designated constraints aren't met.
+type PingResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PingResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PingResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PingResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PingResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PingResponseValidationError) ErrorName() string { return "PingResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PingResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPingResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PingResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PingResponseValidationError{}

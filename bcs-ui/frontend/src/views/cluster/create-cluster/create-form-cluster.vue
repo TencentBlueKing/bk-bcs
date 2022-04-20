@@ -135,6 +135,7 @@
             const handleGetTemplateList = async () => {
                 templateLoading.value = true
                 templateList.value = await $store.dispatch('clustermanager/fetchCloudList')
+                basicInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
             // 版本列表

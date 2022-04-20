@@ -28,7 +28,7 @@ import (
 func (h *Handler) ListPVC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PVC).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PVC).List(
 		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -38,8 +38,8 @@ func (h *Handler) ListPVC(
 func (h *Handler) GetPVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PVC).Get(
-		ctx, req.Namespace, req.Name, metav1.GetOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PVC).Get(
+		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
 }
@@ -48,8 +48,8 @@ func (h *Handler) GetPVC(
 func (h *Handler) CreatePVC(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PVC).Create(
-		ctx, req.Manifest, true, metav1.CreateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PVC).Create(
+		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -58,8 +58,8 @@ func (h *Handler) CreatePVC(
 func (h *Handler) UpdatePVC(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PVC).Update(
-		ctx, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PVC).Update(
+		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -68,7 +68,7 @@ func (h *Handler) UpdatePVC(
 func (h *Handler) DeletePVC(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.PVC).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", res.PVC).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

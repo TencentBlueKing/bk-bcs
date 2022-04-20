@@ -37,7 +37,7 @@ func New() *Handler {
 func (h *Handler) ListIng(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Ing).List(
 		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -47,8 +47,8 @@ func (h *Handler) ListIng(
 func (h *Handler) GetIng(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Get(
-		ctx, req.Namespace, req.Name, metav1.GetOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Ing).Get(
+		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
 }
@@ -57,8 +57,8 @@ func (h *Handler) GetIng(
 func (h *Handler) CreateIng(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Create(
-		ctx, req.Manifest, true, metav1.CreateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Ing).Create(
+		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
 }
@@ -67,8 +67,8 @@ func (h *Handler) CreateIng(
 func (h *Handler) UpdateIng(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Update(
-		ctx, req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Ing).Update(
+		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
 }
@@ -77,7 +77,7 @@ func (h *Handler) UpdateIng(
 func (h *Handler) DeleteIng(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Ing).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", res.Ing).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

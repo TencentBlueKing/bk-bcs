@@ -126,7 +126,11 @@ func (mgr *WatcherManager) AddEvent(obj interface{}) {
 		return
 	}
 
-	if strings.HasSuffix(crdObj.Spec.Group, ".kubefed.io") || crdObj.Spec.Group == resources.BkbcsGroupName {
+	if strings.HasSuffix(crdObj.Spec.Group, ".kubefed.io") ||
+		crdObj.Spec.Group == resources.BkbcsGroupName ||
+		crdObj.Name == resources.TkexGameDeploymentName ||
+		crdObj.Name == resources.TkexGameStatefulSetName {
+		glog.Infof("run watcher for crd: %s", crdObj.Name)
 		mgr.runCrdWatcher(crdObj)
 		return
 	}
@@ -149,7 +153,15 @@ func (mgr *WatcherManager) DeleteEvent(obj interface{}) {
 // runCrdWatcher run a crd watcher and writer handler
 func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourceDefinition) {
 	groupVersion := obj.Spec.Group + "/" + obj.Spec.Version
-	if kubefedClient, ok := resources.CrdClientList[groupVersion]; ok {
+	crdName := obj.Name
+
+	crdClient, ok := resources.CrdClientList[groupVersion]
+
+	if !ok {
+		crdClient, ok = resources.CrdClientList[crdName]
+	}
+
+	if ok {
 		var runtimeObject k8sruntime.Object
 		var namespaced bool
 		if obj.Spec.Scope == "Cluster" {
@@ -165,7 +177,7 @@ func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourc
 		mgr.writer.Handlers[obj.Spec.Names.Kind].Run(stopChan)
 
 		// init and run watcher
-		watcher := NewWatcher(&kubefedClient, mgr.watchResource.Namespace, obj.Spec.Names.Kind, obj.Spec.Names.Plural, runtimeObject, mgr.writer, mgr.watchers, namespaced) // nolint
+		watcher := NewWatcher(&crdClient, mgr.watchResource.Namespace, obj.Spec.Names.Kind, obj.Spec.Names.Plural, runtimeObject, mgr.writer, mgr.watchers, namespaced) // nolint
 		watcher.stopChan = stopChan
 		mgr.crdWatchers[obj.Spec.Names.Kind] = watcher
 		glog.Infof("watcher manager, start list-watcher[%+v]", obj.Spec.Names.Kind)
@@ -198,8 +210,22 @@ func (mgr *WatcherManager) Run(stopCh <-chan struct{}) {
 		// run netservice watcher.
 		go mgr.netserviceWatcher.Run(stopCh)
 	}
-	// run synchronizer.
-	go mgr.synchronizer.Run(stopCh)
+
+	// synchronizer run once
+	var count = 0
+	for {
+		if count >= 5 {
+			panic("synchronizer run failed")
+		}
+		if err := mgr.synchronizer.RunOnce(); err != nil {
+			glog.Errorf("synchronizer sync failed: %v", err)
+			time.Sleep(5 * time.Minute)
+		} else {
+			glog.Infof("synchronizer sync done.")
+			break
+		}
+		count++
+	}
 }
 
 // StopCrdWatchers stop all crd watcher and writer handler

@@ -21,7 +21,8 @@ from rest_framework import response, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.components import data as apigw_data
-from backend.components import paas_cc, prometheus
+from backend.components import paas_cc
+from backend.components import bcs_monitor as prometheus
 from backend.container_service.clusters import serializers as cluster_serializers
 from backend.container_service.clusters.utils import use_prometheus_source
 from backend.container_service.clusters.views.metric_handler import get_namespace_metric, get_node_metric

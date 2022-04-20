@@ -179,3 +179,16 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 
 	return nil
 }
+
+// SetNodeGroupMinSize sets minsize of the nodegroup
+func (m *NodeGroupCache) SetNodeGroupMinSize(groupID string, num int) error {
+	m.cacheMutex.Lock()
+	defer m.cacheMutex.Unlock()
+	for i, ng := range m.registeredGroups {
+		if ng.nodeGroupID == groupID {
+			m.registeredGroups[i].minSize = num
+			break
+		}
+	}
+	return nil
+}

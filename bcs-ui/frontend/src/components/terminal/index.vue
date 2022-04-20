@@ -114,7 +114,7 @@
                         this.terminalWins.postMessage({
                             clusterId: clusterId,
                             clusterName: cluster.name
-                        }, DEVOPS_BCS_HOST)
+                        }, location.origin)
                         this.terminalWins.focus()
                     } else {
                         this.terminalWins = window.open(url, '')

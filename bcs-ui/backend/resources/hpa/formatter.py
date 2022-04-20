@@ -17,8 +17,6 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from django.conf import settings
-
 from backend.resources.hpa.utils import HPAMetricsParser
 from backend.resources.utils.format import ResourceDefaultFormatter
 from backend.templatesets.legacy_apps.instance import constants as instance_constants
@@ -124,7 +122,6 @@ class HPAFormatter(ResourceDefaultFormatter):
 
         annotations = resource_dict.get("metadata", {}).get("annotations") or {}
         namespace = resource_dict["metadata"]["namespace"]
-        deployment_name = resource_dict["spec"]["scaleTargetRef"]["name"]
 
         current_metrics = get_current_metrics(resource_dict)
 
@@ -145,8 +142,8 @@ class HPAFormatter(ResourceDefaultFormatter):
             "source_type": application_constants.SOURCE_TYPE_MAP.get(source_type),
             "creator": annotations.get(instance_constants.ANNOTATIONS_CREATOR, ""),
             "create_time": annotations.get(instance_constants.ANNOTATIONS_CREATE_TIME, ""),
-            "deployment_name": deployment_name,
-            "resource_kind": 'deployment',
+            "ref_name": getitems(resource_dict, "spec.scaleTargetRef.name", ""),
+            "ref_kind": getitems(resource_dict, "spec.scaleTargetRef.kind", ""),
         }
 
         data["update_time"] = annotations.get(instance_constants.ANNOTATIONS_UPDATE_TIME, data["create_time"])

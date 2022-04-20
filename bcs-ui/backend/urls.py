@@ -20,6 +20,7 @@ from backend.utils import healthz
 from backend.utils.views import LoginSuccessView, VueTemplateView
 
 urlpatterns = [
+    url("", include("django_prometheus.urls")),
     url(r"^admin/", admin.site.urls),
     url(r"^api/healthz/", healthz.healthz_view),
     url(r"^api/test/sentry/", healthz.test_sentry),
@@ -102,6 +103,6 @@ except ImportError:
 urlpatterns_vue = [
     # fallback to vue view
     url(r"^login_success.html", never_cache(LoginSuccessView.as_view())),
-    url(r"^(?P<project_code>[\w\-]+)", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
+    url(r"^(?P<project_code>[\w\-]+)?", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
 ]
 urlpatterns += urlpatterns_vue
