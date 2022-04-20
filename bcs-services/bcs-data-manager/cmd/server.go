@@ -491,8 +491,8 @@ func (s *Server) initClusterManager() (*cmanager.ClusterManagerClient, error) {
 	if err != nil || cmConn == nil {
 		return nil, fmt.Errorf("get cluster manager client error:%v", err)
 	}
-	cmCli := cm.NewClusterManagerClient(cmConn)
-	_, err = cmCli.ListCluster(s.ctx, &cm.ListClusterReq{})
+	cmCli := cli.NewGrpcClientWithHeader(s.ctx, cmConn)
+	_, err = cmCli.Cli.ListCluster(cmCli.Ctx, &cm.ListClusterReq{})
 	if err != nil {
 		return nil, fmt.Errorf("dial cm failed:%v", err)
 	}

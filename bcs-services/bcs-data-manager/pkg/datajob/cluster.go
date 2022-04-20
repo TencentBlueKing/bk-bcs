@@ -111,6 +111,7 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		blog.Errorf("do cluster day policy failed, get cluster metrics err, length not equal 1, metrics:%v", hourMetrics)
 		return
 	}
+	hourMetric := hourMetrics[0]
 	workloadCount := getWorkloadCount(opts, clients)
 	clusterMetric := &common.ClusterMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
@@ -127,10 +128,10 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		NodeCount:          node,
 		AvailableNodeCount: availableNode,
 		WorkloadCount:      workloadCount,
-		MinNode:            hourMetrics[0].MinNode,
-		MaxNode:            hourMetrics[0].MaxNode,
-		MinInstance:        hourMetrics[0].MinInstance,
-		MaxInstance:        hourMetrics[0].MaxInstance,
+		MinNode:            hourMetric.MinNode,
+		MaxNode:            hourMetric.MaxNode,
+		MinInstance:        hourMetric.MinInstance,
+		MaxInstance:        hourMetric.MaxInstance,
 		MinUsageNode:       minUsageNode,
 		NodeQuantile:       nodeQuantile,
 		TotalCPU:           totalCPU,
@@ -157,7 +158,6 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
-	minUsageNode := ""
 	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients.monitorClient, clients.cmCli)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
@@ -187,6 +187,7 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		blog.Errorf("do cluster hour policy failed, get cluster metrics err, length not equal 1, metrics:%v", minuteMetrics)
 		return
 	}
+	minuteMetric := minuteMetrics[0]
 	workloadCount := getWorkloadCount(opts, clients)
 	clusterMetric := &common.ClusterMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
@@ -203,10 +204,10 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		NodeCount:          node,
 		AvailableNodeCount: availableNode,
 		WorkloadCount:      workloadCount,
-		MinNode:            minuteMetrics[0].MinNode,
-		MaxNode:            minuteMetrics[0].MaxNode,
-		MinInstance:        minuteMetrics[0].MinInstance,
-		MaxInstance:        minuteMetrics[0].MaxInstance,
+		MinNode:            minuteMetric.MinNode,
+		MaxNode:            minuteMetric.MaxNode,
+		MinInstance:        minuteMetric.MinInstance,
+		MaxInstance:        minuteMetric.MaxInstance,
 		MinUsageNode:       minUsageNode,
 		NodeQuantile:       nodeQuantile,
 		TotalCPU:           totalCPU,
@@ -233,9 +234,7 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
-	minUsageNode := ""
-	nodeQuantile := make([]*bcsdatamanager.NodeQuantile, 0)
-	minUsageNode, nodeQuantile, err = p.MetricGetter.GetClusterNodeMetrics(opts, clients.monitorClient, clients.cmCli)
+	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients.monitorClient, clients.cmCli)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
@@ -251,7 +250,6 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.
 	}
 
 	workloadCount := getWorkloadCount(opts, clients)
-
 	clusterMetric := &common.ClusterMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -269,7 +267,7 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.
 		WorkloadCount:      workloadCount,
 		MinNode: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinNode",
-			MetricName: "MaxNode",
+			MetricName: "MinNode",
 			Value:      float64(node),
 			Period:     common.FormatTime(opts.CurrentTime, opts.Dimension).String(),
 		},

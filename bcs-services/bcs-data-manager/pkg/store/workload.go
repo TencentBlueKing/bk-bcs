@@ -30,9 +30,13 @@ import (
 var (
 	modelWorkloadIndexes = []drivers.Index{
 		{
-			Name: common.WorkloadTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: CreateTimeKey, Value: 1},
+			},
+		},
+		{
+			Name: common.WorkloadTableName + "_idx",
+			Key: bson.D{
 				bson.E{Key: BucketTimeKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: ProjectIDKey, Value: 1},
@@ -40,9 +44,48 @@ var (
 				bson.E{Key: NamespaceKey, Value: 1},
 				bson.E{Key: WorkloadTypeKey, Value: 1},
 				bson.E{Key: WorkloadNameKey, Value: 1},
-				bson.E{Key: MetricTimeKey, Value: 1},
 			},
 			Unique: true,
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: BucketTimeKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: ClusterIDKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: ProjectIDKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: DimensionKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: NamespaceKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: WorkloadNameKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: WorkloadTypeKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
 		},
 	}
 )

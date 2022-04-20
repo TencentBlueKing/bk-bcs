@@ -23,7 +23,7 @@ import (
 
 func TestGetClusterIDList(t *testing.T) {
 	ctx := context.Background()
-	cmCli := &mock.MockCm{}
+	cmCli := mock.NewMockCm()
 	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
 	clusterList, err := getter.GetClusterIDList(ctx, cmCli)
 	assert.Equal(t, nil, err)
@@ -32,8 +32,8 @@ func TestGetClusterIDList(t *testing.T) {
 
 func TestGetNamespaceList(t *testing.T) {
 	ctx := context.Background()
-	cmCli := &mock.MockCm{}
-	storageCli := &mock.MockStorage{}
+	cmCli := mock.NewMockCm()
+	storageCli := mock.NewMockStorage()
 	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
 	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli)
 	assert.Equal(t, nil, err)
@@ -42,7 +42,7 @@ func TestGetNamespaceList(t *testing.T) {
 
 func TestGetProjectIDList(t *testing.T) {
 	ctx := context.Background()
-	cmCli := &mock.MockCm{}
+	cmCli := mock.NewMockCm()
 	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
 	projectList, err := getter.GetProjectIDList(ctx, cmCli)
 	assert.Equal(t, nil, err)
@@ -52,7 +52,7 @@ func TestGetProjectIDList(t *testing.T) {
 func TestGetWorkloadList(t *testing.T) {
 	ctx := context.Background()
 	storageCli := &mock.MockStorage{}
-	cmCli := &mock.MockCm{}
+	cmCli := mock.NewMockCm()
 	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
 	workloadList, err := getter.GetWorkloadList(ctx, cmCli, storageCli)
 	assert.Equal(t, nil, err)

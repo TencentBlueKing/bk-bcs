@@ -29,9 +29,13 @@ import (
 var (
 	modelPublicIndexes = []drivers.Index{
 		{
-			Name: common.PublicTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: CreateTimeKey, Value: 1},
+			},
+		},
+		{
+			Name: common.PublicTableName + "_idx",
+			Key: bson.D{
 				bson.E{Key: ObjectTypeKey, Value: 1},
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
@@ -41,6 +45,7 @@ var (
 			},
 			Unique: true,
 		},
+
 	}
 )
 

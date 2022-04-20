@@ -14,9 +14,9 @@ package datajob
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 )
@@ -43,12 +43,12 @@ type DataJob struct {
 type Clients struct {
 	monitorClient bcsmonitor.ClientInterface
 	bcsStorageCli bcsapi.Storage
-	cmCli         cm.ClusterManagerClient
+	cmCli         *cmanager.ClusterManagerClientWithHeader
 }
 
 // NewClients init dataJob clients
 func NewClients(monitorClient bcsmonitor.ClientInterface, bcsStorageCli bcsapi.Storage,
-	cmCli cm.ClusterManagerClient) *Clients {
+	cmCli *cmanager.ClusterManagerClientWithHeader) *Clients {
 	return &Clients{monitorClient: monitorClient, cmCli: cmCli, bcsStorageCli: bcsStorageCli}
 }
 

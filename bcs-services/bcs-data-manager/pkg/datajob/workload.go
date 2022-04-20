@@ -98,6 +98,7 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		blog.Errorf("do workload day policy failed, get workload metrics err, length not equal 1, metrics:%v", hourMetrics)
 		return
 	}
+	hourMetric := hourMetrics[0]
 	workloadMetric := &common.WorkloadMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
@@ -108,16 +109,16 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		MemoryUsage:        memoryUsage,
 		MemoryUsageAmount:  memoryUsed,
 		InstanceCount:      instanceCount,
-		MaxCPUUsageTime:    hourMetrics[len(hourMetrics)-1].MaxCPUUsageTime,
-		MinCPUUsageTime:    hourMetrics[len(hourMetrics)-1].MinCPUUsageTime,
-		MaxMemoryUsageTime: hourMetrics[len(hourMetrics)-1].MaxMemoryUsageTime,
-		MinMemoryUsageTime: hourMetrics[len(hourMetrics)-1].MinMemoryUsageTime,
-		MaxInstanceTime:    hourMetrics[len(hourMetrics)-1].MaxInstanceTime,
-		MinInstanceTime:    hourMetrics[len(hourMetrics)-1].MinInstanceTime,
-		MinMemoryTime:      hourMetrics[len(hourMetrics)-1].MinMemoryTime,
-		MaxMemoryTime:      hourMetrics[len(hourMetrics)-1].MaxMemoryTime,
-		MinCPUTime:         hourMetrics[len(hourMetrics)-1].MinCPUTime,
-		MaxCPUTime:         hourMetrics[len(hourMetrics)-1].MaxCPUTime,
+		MaxCPUUsageTime:    hourMetric.MaxCPUUsageTime,
+		MinCPUUsageTime:    hourMetric.MinCPUUsageTime,
+		MaxMemoryUsageTime: hourMetric.MaxMemoryUsageTime,
+		MinMemoryUsageTime: hourMetric.MinMemoryUsageTime,
+		MaxInstanceTime:    hourMetric.MaxInstanceTime,
+		MinInstanceTime:    hourMetric.MinInstanceTime,
+		MinMemoryTime:      hourMetric.MinMemoryTime,
+		MaxMemoryTime:      hourMetric.MaxMemoryTime,
+		MinCPUTime:         hourMetric.MinCPUTime,
+		MaxCPUTime:         hourMetric.MaxCPUTime,
 	}
 	err = p.store.InsertWorkloadInfo(ctx, workloadMetric, opts)
 	if err != nil {
@@ -158,7 +159,7 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 		blog.Errorf("do workload hour policy failed, get workload metrics err, length not equal 1, metrics:%v", minuteMetrics)
 		return
 	}
-
+	minuteMetric := minuteMetrics[0]
 	workloadMetric := &common.WorkloadMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
@@ -169,16 +170,16 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 		MemoryUsage:        memoryUsage,
 		MemoryUsageAmount:  memoryUsed,
 		InstanceCount:      instanceCount,
-		MaxCPUUsageTime:    minuteMetrics[len(minuteMetrics)-1].MaxCPUUsageTime,
-		MinCPUUsageTime:    minuteMetrics[len(minuteMetrics)-1].MinCPUUsageTime,
-		MaxMemoryUsageTime: minuteMetrics[len(minuteMetrics)-1].MaxMemoryUsageTime,
-		MinMemoryUsageTime: minuteMetrics[len(minuteMetrics)-1].MinMemoryUsageTime,
-		MaxInstanceTime:    minuteMetrics[len(minuteMetrics)-1].MaxInstanceTime,
-		MinInstanceTime:    minuteMetrics[len(minuteMetrics)-1].MinInstanceTime,
-		MinMemoryTime:      minuteMetrics[len(minuteMetrics)-1].MinMemoryTime,
-		MaxMemoryTime:      minuteMetrics[len(minuteMetrics)-1].MaxMemoryTime,
-		MinCPUTime:         minuteMetrics[len(minuteMetrics)-1].MinCPUTime,
-		MaxCPUTime:         minuteMetrics[len(minuteMetrics)-1].MaxCPUTime,
+		MaxCPUUsageTime:    minuteMetric.MaxCPUUsageTime,
+		MinCPUUsageTime:    minuteMetric.MinCPUUsageTime,
+		MaxMemoryUsageTime: minuteMetric.MaxMemoryUsageTime,
+		MinMemoryUsageTime: minuteMetric.MinMemoryUsageTime,
+		MaxInstanceTime:    minuteMetric.MaxInstanceTime,
+		MinInstanceTime:    minuteMetric.MinInstanceTime,
+		MinMemoryTime:      minuteMetric.MinMemoryTime,
+		MaxMemoryTime:      minuteMetric.MaxMemoryTime,
+		MinCPUTime:         minuteMetric.MinCPUTime,
+		MaxCPUTime:         minuteMetric.MaxCPUTime,
 	}
 	err = p.store.InsertWorkloadInfo(ctx, workloadMetric, opts)
 	if err != nil {
@@ -271,8 +272,7 @@ func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *common
 			Period:     opts.CurrentTime.String(),
 		},
 	}
-	err = p.store.InsertWorkloadInfo(ctx, workloadMetric, opts)
-	if err != nil {
+	if err = p.store.InsertWorkloadInfo(ctx, workloadMetric, opts); err != nil {
 		blog.Errorf("insert workload info err:%v", err)
 	}
 }

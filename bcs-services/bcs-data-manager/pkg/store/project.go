@@ -30,15 +30,38 @@ import (
 var (
 	modelProjectIndexes = []drivers.Index{
 		{
-			Name: common.ProjectTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: CreateTimeKey, Value: 1},
+			},
+		},
+		{
+			Name: common.ProjectTableName + "_idx",
+			Key: bson.D{
 				bson.E{Key: BucketTimeKey, Value: 1},
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
-				bson.E{Key: MetricTimeKey, Value: 1},
 			},
 			Unique: true,
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: BucketTimeKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: ProjectIDKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: DimensionKey, Value: 1},
+			},
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
 		},
 	}
 )

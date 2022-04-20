@@ -97,7 +97,7 @@ func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 		blog.Errorf("do namespace day policy failed, get namespace metrics err, length not equal 1, metrics:%v", hourMetrics)
 		return
 	}
-
+	hourMetric := hourMetrics[0]
 	workloadCount := getWorkloadCount(opts, clients)
 	namespaceMetric := &common.NamespaceMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
@@ -110,12 +110,12 @@ func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 		WorkloadCount:      workloadCount,
 		CPUUsageAmount:     CPUUsed,
 		MemoryUsageAmount:  memoryUsed,
-		MaxCPUUsageTime:    hourMetrics[len(hourMetrics)-1].MaxCPUUsageTime,
-		MinCPUUsageTime:    hourMetrics[len(hourMetrics)-1].MinCPUUsageTime,
-		MaxMemoryUsageTime: hourMetrics[len(hourMetrics)-1].MaxMemoryUsageTime,
-		MinMemoryUsageTime: hourMetrics[len(hourMetrics)-1].MinMemoryUsageTime,
-		MinWorkloadUsage:   hourMetrics[len(hourMetrics)-1].MinWorkloadUsage,
-		MaxWorkloadUsage:   hourMetrics[len(hourMetrics)-1].MaxWorkloadUsage,
+		MaxCPUUsageTime:    hourMetric.MaxCPUUsageTime,
+		MinCPUUsageTime:    hourMetric.MinCPUUsageTime,
+		MaxMemoryUsageTime: hourMetric.MaxMemoryUsageTime,
+		MinMemoryUsageTime: hourMetric.MinMemoryUsageTime,
+		MinWorkloadUsage:   hourMetric.MinWorkloadUsage,
+		MaxWorkloadUsage:   hourMetric.MaxWorkloadUsage,
 	}
 	err = p.store.InsertNamespaceInfo(ctx, namespaceMetric, opts)
 	if err != nil {
@@ -155,7 +155,7 @@ func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *common.
 			"metrics:%v", minuteMetrics)
 		return
 	}
-
+	minuteMetric := minuteMetrics[0]
 	workloadCount := getWorkloadCount(opts, clients)
 	namespaceMetric := &common.NamespaceMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
@@ -168,12 +168,12 @@ func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *common.
 		WorkloadCount:      workloadCount,
 		CPUUsageAmount:     CPUUsed,
 		MemoryUsageAmount:  memoryUsed,
-		MaxCPUUsageTime:    minuteMetrics[len(minuteMetrics)-1].MaxCPUUsageTime,
-		MinCPUUsageTime:    minuteMetrics[len(minuteMetrics)-1].MinCPUUsageTime,
-		MaxMemoryUsageTime: minuteMetrics[len(minuteMetrics)-1].MaxMemoryUsageTime,
-		MinMemoryUsageTime: minuteMetrics[len(minuteMetrics)-1].MinMemoryUsageTime,
-		MinWorkloadUsage:   minuteMetrics[len(minuteMetrics)-1].MinWorkloadUsage,
-		MaxWorkloadUsage:   minuteMetrics[len(minuteMetrics)-1].MaxWorkloadUsage,
+		MaxCPUUsageTime:    minuteMetric.MaxCPUUsageTime,
+		MinCPUUsageTime:    minuteMetric.MinCPUUsageTime,
+		MaxMemoryUsageTime: minuteMetric.MaxMemoryUsageTime,
+		MinMemoryUsageTime: minuteMetric.MinMemoryUsageTime,
+		MinWorkloadUsage:   minuteMetric.MinWorkloadUsage,
+		MaxWorkloadUsage:   minuteMetric.MaxWorkloadUsage,
 	}
 	err = p.store.InsertNamespaceInfo(ctx, namespaceMetric, opts)
 	if err != nil {

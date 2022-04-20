@@ -30,12 +30,15 @@ func (m *MockQueue) Publish(data *broker.Message) error {
 }
 
 // Subscribe mock queue
-func (m *MockQueue) Subscribe(handler msgqueue.Handler, filters []msgqueue.Filter, resourceType string) (msgqueue.UnSub, error) {
+func (m *MockQueue) Subscribe(handler msgqueue.Handler, filters []msgqueue.Filter,
+	resourceType string) (msgqueue.UnSub, error) {
 	args := m.Called(handler, filters, resourceType)
 	return args.Get(0).(msgqueue.UnSub), args.Error(1)
 }
+
 // SubscribeWithQueueName mock queue
-func (m *MockQueue) SubscribeWithQueueName(handler msgqueue.Handler, filters []msgqueue.Filter, queueName, topic string) (msgqueue.UnSub, error) {
+func (m *MockQueue) SubscribeWithQueueName(handler msgqueue.Handler, filters []msgqueue.Filter, queueName,
+	topic string) (msgqueue.UnSub, error) {
 	args := m.Called(handler, filters, queueName, topic)
 	return args.Get(0).(msgqueue.UnSub), args.Error(1)
 }
@@ -51,6 +54,7 @@ func (m *MockQueue) Stop() {
 
 }
 
+// NewMockQueue new mock queue
 func NewMockQueue() *MockQueue {
 	return &MockQueue{}
 }

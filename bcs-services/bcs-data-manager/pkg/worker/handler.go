@@ -20,7 +20,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
@@ -157,8 +156,8 @@ func (h *DataJobHandler) handleOneJob(job msgqueue.HandlerData) {
 		return
 	}
 	defer cmConn.Close()
-	cmCli := cm.NewClusterManagerClient(cmConn)
-	client := datajob.NewClients(h.clients.BcsMonitorClient, h.clients.BcsStorageCli, cmCli)
+	cliWithHeader := h.clients.CmCli.NewGrpcClientWithHeader(context.Background(), cmConn)
+	client := datajob.NewClients(h.clients.BcsMonitorClient, h.clients.BcsStorageCli, cliWithHeader)
 	dataJob.SetClient(client)
 	dataJob.DoPolicy(h.stopCtx)
 }

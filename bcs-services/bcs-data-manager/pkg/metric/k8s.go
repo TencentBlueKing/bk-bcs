@@ -13,8 +13,8 @@
 package metric
 
 import (
-	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
@@ -89,10 +89,10 @@ func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *common.JobCommonOpts,
 
 // GetK8sNodeCount get k8s node count
 func (g *MetricGetter) getK8sNodeCount(opts *common.JobCommonOpts,
-	cmCli cm.ClusterManagerClient) (int64, int64, error) {
+	cmCli *cmanager.ClusterManagerClientWithHeader) (int64, int64, error) {
 	var nodeCount, availableNode int64
-	ctx := context.Background()
-	nodes, err := cmCli.ListNodesInCluster(ctx, &cm.ListNodesInClusterRequest{
+
+	nodes, err := cmCli.Cli.ListNodesInCluster(cmCli.Ctx, &cm.ListNodesInClusterRequest{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {

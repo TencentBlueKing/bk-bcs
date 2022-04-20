@@ -19,7 +19,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
@@ -150,6 +149,7 @@ func (p *Producer) PublicProducer(dimension string) {
 		blog.Errorf("send public job to msg queue error, opts: %v, err: %v", opts, err)
 		return
 	}
+	blog.Infof("[producer] send public job success")
 }
 
 // ProjectProducer is the function to produce project data job and send to message queue
@@ -160,8 +160,8 @@ func (p *Producer) ProjectProducer(dimension string) {
 		return
 	}
 	defer cmConn.Close()
-	cmCli := cm.NewClusterManagerClient(cmConn)
-	projectList, err := p.resourceGetter.GetProjectIDList(p.ctx, cmCli)
+	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
+	projectList, err := p.resourceGetter.GetProjectIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
 	if err != nil || projectList == nil {
 		blog.Errorf("get projectIDList error: %v", err)
 		return
@@ -179,6 +179,7 @@ func (p *Producer) ProjectProducer(dimension string) {
 			return
 		}
 	}
+	blog.Infof("[producer] send project job success, count: %d", len(projectList))
 }
 
 // ClusterProducer is the function to produce cluster data job and send to message queue
@@ -189,8 +190,8 @@ func (p *Producer) ClusterProducer(dimension string) {
 		return
 	}
 	defer cmConn.Close()
-	cmCli := cm.NewClusterManagerClient(cmConn)
-	clusterList, err := p.resourceGetter.GetClusterIDList(p.ctx, cmCli)
+	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
+	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
 	if err != nil || clusterList == nil {
 		blog.Errorf("get clusterList error: %v", err)
 		return
@@ -210,6 +211,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 			return
 		}
 	}
+	blog.Infof("[producer] send cluster job success, count: %d", len(clusterList))
 }
 
 // NamespaceProducer is the function to produce namespace data job and send to message queue
@@ -220,8 +222,8 @@ func (p *Producer) NamespaceProducer(dimension string) {
 		return
 	}
 	defer cmConn.Close()
-	cmCli := cm.NewClusterManagerClient(cmConn)
-	namespaceList, err := p.resourceGetter.GetNamespaceList(p.ctx, cmCli, p.storageCli)
+	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
+	namespaceList, err := p.resourceGetter.GetNamespaceList(cliWithHeader.Ctx, cliWithHeader.Cli, p.storageCli)
 	if err != nil || namespaceList == nil {
 		blog.Errorf("get namespace list error: %v", err)
 		return
@@ -242,6 +244,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 			return
 		}
 	}
+	blog.Infof("[producer] send namespace job success, count: %d", len(namespaceList))
 }
 
 // WorkloadProducer is the function to produce workload data job and send to message queue
@@ -252,8 +255,8 @@ func (p *Producer) WorkloadProducer(dimension string) {
 		return
 	}
 	defer cmConn.Close()
-	cmCli := cm.NewClusterManagerClient(cmConn)
-	workloadList, err := p.resourceGetter.GetWorkloadList(p.ctx, cmCli, p.storageCli)
+	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
+	workloadList, err := p.resourceGetter.GetWorkloadList(cliWithHeader.Ctx, cliWithHeader.Cli, p.storageCli)
 	if err != nil || workloadList == nil {
 		blog.Errorf("get workload list error: %v", err)
 		return
@@ -276,7 +279,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 			return
 		}
 	}
-
+	blog.Infof("[producer] send workload job success, count: %d", len(workloadList))
 }
 
 // SendJob is the function to send data job to msg queue

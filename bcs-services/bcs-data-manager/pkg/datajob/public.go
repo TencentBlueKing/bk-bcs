@@ -49,19 +49,19 @@ func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *common
 	}
 	chPool := make(chan struct{}, 50)
 	wg := sync.WaitGroup{}
-	for key, _ := range workloadList {
+	for key := range workloadList {
 		wg.Add(1)
 		chPool <- struct{}{}
 		go func(key int) {
 			defer wg.Done()
 			maxCPUUsage := workloadList[key].MaxCPUUsageTime.Value
 			maxMemoryUsage := workloadList[key].MaxMemoryUsageTime.Value
-			maxCpu := workloadList[key].MaxCPUTime.Value
+			maxCPU := workloadList[key].MaxCPUTime.Value
 			maxMemory := workloadList[key].MaxMemoryTime.Value
-			suggestCpu := maxCPUUsage * maxCpu * 2
+			suggestCPU := maxCPUUsage * maxCPU * 2
 			suggestMemory := maxMemoryUsage * maxMemory * 2
 			workloadPublicMetric := &common.WorkloadPublicMetrics{
-				SuggestCPU:    suggestCpu,
+				SuggestCPU:    suggestCPU,
 				SuggestMemory: suggestMemory,
 			}
 			workloadPublic := &common.PublicData{
@@ -83,11 +83,11 @@ func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *common
 				WorkloadType: workloadList[key].WorkloadType,
 				Name:         workloadList[key].Name,
 			}
-
 			err := p.store.InsertPublicInfo(ctx, workloadPublic, workloadOpts)
 			if err != nil {
 				blog.Errorf("insert workload public data error: %v", err)
 			}
+			<-chPool
 		}(key)
 	}
 	wg.Wait()

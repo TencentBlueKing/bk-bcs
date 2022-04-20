@@ -122,7 +122,7 @@ func (c *BcsMonitorClient) LabelValues(labelName string, selectors []string,
 		return nil, err
 	}
 	result := &LabelResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
@@ -152,7 +152,7 @@ func (c *BcsMonitorClient) Labels(selectors []string, startTime, endTime time.Ti
 		return nil, err
 	}
 	result := &LabelResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
@@ -174,7 +174,7 @@ func (c *BcsMonitorClient) Query(promql string, time time.Time) (*QueryResponse,
 		return nil, err
 	}
 	result := &QueryResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
@@ -199,7 +199,7 @@ func (c *BcsMonitorClient) QueryByPost(promql string, time time.Time) (*QueryRes
 		return nil, err
 	}
 	result := &QueryResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
@@ -222,7 +222,7 @@ func (c *BcsMonitorClient) QueryRange(promql string, startTime, endTime time.Tim
 		return nil, err
 	}
 	result := &QueryRangeResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
@@ -248,7 +248,7 @@ func (c *BcsMonitorClient) QueryRangeByPost(promql string, startTime, endTime ti
 		return nil, err
 	}
 	result := &QueryRangeResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
@@ -274,7 +274,7 @@ func (c *BcsMonitorClient) Series(selectors []string, startTime, endTime time.Ti
 		return nil, err
 	}
 	result := &SeriesResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
@@ -303,7 +303,7 @@ func (c *BcsMonitorClient) SeriesByPost(selectors []string, startTime, endTime t
 		return nil, err
 	}
 	result := &SeriesResponse{}
-	err = json.Unmarshal(rsp, &result)
+	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
 		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)

@@ -13,8 +13,8 @@
 package metric
 
 import (
-	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"strconv"
 
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -35,8 +35,8 @@ type Server interface {
 		int64, int64, float64, error)
 	GetInstanceCount(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (int64, error)
 	GetClusterNodeMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface,
-		cmCli cm.ClusterManagerClient) (string, []*bcsdatamanager.NodeQuantile, error)
-	GetClusterNodeCount(opts *common.JobCommonOpts, cmCli cm.ClusterManagerClient) (int64, int64, error)
+		cmCli *cmanager.ClusterManagerClientWithHeader) (string, []*bcsdatamanager.NodeQuantile, error)
+	GetClusterNodeCount(opts *common.JobCommonOpts, cmCli *cmanager.ClusterManagerClientWithHeader) (int64, int64, error)
 }
 
 // MetricGetter metric getter
@@ -70,12 +70,11 @@ func (g *MetricGetter) GetClusterMemoryMetrics(opts *common.JobCommonOpts,
 
 // GetClusterNodeMetrics get cluster node metrics
 func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts, client bcsmonitor.ClientInterface,
-	cmCli cm.ClusterManagerClient) (string, []*bcsdatamanager.NodeQuantile, error) {
+	cmCli *cmanager.ClusterManagerClientWithHeader) (string, []*bcsdatamanager.NodeQuantile, error) {
 	var minUsageNode string
 	nodeQuantie := make([]*bcsdatamanager.NodeQuantile, 0)
 
-	ctx := context.Background()
-	cluster, err := cmCli.GetCluster(ctx, &cm.GetClusterReq{
+	cluster, err := cmCli.Cli.GetCluster(cmCli.Ctx, &cm.GetClusterReq{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
@@ -126,7 +125,7 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts, client 
 
 // GetClusterNodeCount get cluster node count
 func (g *MetricGetter) GetClusterNodeCount(opts *common.JobCommonOpts,
-	cmCli cm.ClusterManagerClient) (int64, int64, error) {
+	cmCli *cmanager.ClusterManagerClientWithHeader) (int64, int64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
 		return g.getK8sNodeCount(opts, cmCli)

@@ -21,7 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	bcsCm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/discovery"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
@@ -89,14 +89,13 @@ func NewClusterManagerClient(opts *Options) *ClusterManagerClient {
 	return cmClient
 }
 
-// GetClusterManagerConnWithUrl get conn with url
-func (cm *ClusterManagerClient) GetClusterManagerConnWithUrl() (*grpc.ClientConn, error) {
+// GetClusterManagerConnWithURL get conn with url
+func (cm *ClusterManagerClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) {
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
 	}
 	if len(cm.opts.AuthToken) != 0 {
-		blog.Infof("add token")
 		header["Authorization"] = fmt.Sprintf("Bearer %s", cm.opts.AuthToken)
 	}
 	md := metadata.New(header)
@@ -131,7 +130,7 @@ type ClusterManagerClient struct {
 }
 
 // GetClusterManagerClient get cm client
-func (cm *ClusterManagerClient) GetClusterManagerClient() (cm.ClusterManagerClient, error) {
+func (cm *ClusterManagerClient) GetClusterManagerClient() (bcsCm.ClusterManagerClient, error) {
 	if cm == nil {
 		return nil, errServerNotInit
 	}
@@ -164,7 +163,7 @@ func (cm *ClusterManagerClient) GetClusterManagerConn() (*grpc.ClientConn, error
 	}
 
 	if cm.opts.Address != "" {
-		return cm.GetClusterManagerConnWithUrl()
+		return cm.GetClusterManagerConnWithURL()
 	}
 
 	// get bcs-cluster-manager server from etcd registry
@@ -209,4 +208,24 @@ func (cm *ClusterManagerClient) Stop() {
 
 	cm.discovery.Stop()
 	cm.cancel()
+}
+
+// ClusterManagerClientWithHeader client for cluster manager
+type ClusterManagerClientWithHeader struct {
+	Cli bcsCm.ClusterManagerClient
+	Ctx context.Context
+}
+
+// NewGrpcClientWithHeader new client with grpc header
+func (cm *ClusterManagerClient) NewGrpcClientWithHeader(ctx context.Context,
+	conn *grpc.ClientConn) *ClusterManagerClientWithHeader {
+	header := make(map[string]string)
+	if len(cm.opts.AuthToken) != 0 {
+		header["Authorization"] = fmt.Sprintf("Bearer %s", cm.opts.AuthToken)
+	}
+	md := metadata.New(header)
+	return &ClusterManagerClientWithHeader{
+		Ctx: metadata.NewOutgoingContext(ctx, md),
+		Cli: bcsCm.NewClusterManagerClient(conn),
+	}
 }
