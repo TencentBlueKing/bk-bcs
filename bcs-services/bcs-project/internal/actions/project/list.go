@@ -98,9 +98,7 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 }
 
 type ListAuthorizedProject struct {
-	ctx   context.Context
 	model store.ProjectModel
-	req   *proto.ListProjectsRequest
 }
 
 // NewListAuthorizedProj new list authorized project action
@@ -111,7 +109,7 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 }
 
 func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
-	username := auth.GetUserFromCtx(lap.ctx)
+	username := auth.GetUserFromCtx(ctx)
 	ids, err := perm.ListAuthorizedProjectIDs(username)
 	// 没有权限的项目时，返回为空，并记录信息
 	if ids == nil || err != nil {
@@ -119,7 +117,7 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthori
 		return nil, nil
 	}
 	// 通过 project id 获取项目详情
-	projects, total, err := lap.model.ListProjectByIDs(lap.ctx, ids, &page.Pagination{All: true})
+	projects, total, err := lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
 	if err != nil {
 		return nil, err
 	}
