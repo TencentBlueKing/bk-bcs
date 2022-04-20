@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="cluster-template-title">
-            <span class="title">{{ $t('集群模板') }}</span>
+            <span class="title">{{ $t('云服务商') }}</span>
             <!-- <bcs-button size="small" @click="handleCreateTemplate">{{ $t('新建集群模板') }}</bcs-button> -->
         </div>
         <bcs-table class="mt15"
@@ -24,7 +24,7 @@
             v-bkloading="{ isLoading }"
             @page-change="pageChange"
             @page-limit-change="pageSizeChange">
-            <bcs-table-column :label="$t('模板名称')">
+            <bcs-table-column :label="$t('名称')">
                 <template #default="{ row }">
                     <bcs-button text @click="handleShowDetail(row)">{{ row.name }}</bcs-button>
                 </template>

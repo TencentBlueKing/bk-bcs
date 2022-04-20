@@ -4,7 +4,7 @@
             <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                 <bk-input class="w640" v-model="basicInfo.clusterName"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('模板名称')" property="provider" error-display-type="normal" required>
+            <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
                 <bcs-select :loading="templateLoading" class="w640" v-model="basicInfo.provider" :clearable="false">
                     <bcs-option v-for="item in templateList"
                         :key="item.cloudID"
@@ -46,6 +46,11 @@
                     <bk-table-column :label="$t('内网IP')" prop="bk_host_innerip"></bk-table-column>
                     <bk-table-column :label="$t('机房')" prop="idc_name"></bk-table-column>
                     <bk-table-column :label="$t('机型')" prop="svr_device_class"></bk-table-column>
+                    <bk-table-column :label="$t('操作')" width="100">
+                        <template #default="{ row }">
+                            <bcs-button text @click="handleRemoveServer(row)">{{$t('移除')}}</bcs-button>
+                        </template>
+                    </bk-table-column>
                 </bk-table>
             </bk-form-item>
             <bk-form-item>
@@ -95,15 +100,23 @@
             const { $i18n, $route, $bkMessage, $store } = ctx.root
             const { goHome } = useGoHome()
             const basicFormRef = ref<any>(null)
-            const basicInfo = ref({
-                clusterName: '',
-                description: '',
-                provider: '',
+            const basicInfo = ref<{
+                clusterName: string;
+                description: string;
+                provider: string;
                 clusterBasicSettings: {
-                    version: ''
-                },
-                ipList: []
-            })
+                    version: string;
+                };
+                ipList: any[];
+            }>({
+                    clusterName: '',
+                    description: '',
+                    provider: '',
+                    clusterBasicSettings: {
+                        version: ''
+                    },
+                    ipList: []
+                })
             const templateList = ref<any[]>([])
             const versionList = computed(() => {
                 const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
@@ -137,7 +150,7 @@
                         validator (val) {
                             return val.length % 2 !== 0
                         },
-                        trigger: 'change'
+                        trigger: 'blur'
                     }
                 ]
             })
@@ -184,14 +197,13 @@
                 showIpSelector.value = true
             }
             const handleChooseServer = (data) => {
-                if (data.length % 2 === 0) {
-                    $bkMessage({
-                        theme: 'warning',
-                        message: $i18n.t('仅支持奇数个服务器')
-                    })
-                    return
-                }
-                basicInfo.value.ipList = data
+                data.forEach(item => {
+                    const index = basicInfo.value.ipList.findIndex(ipData => ipData.bk_cloud_id === item.bk_cloud_id
+                        && ipData.bk_host_innerip === item.bk_host_innerip)
+                    if (index === -1) {
+                        basicInfo.value.ipList.push(item)
+                    }
+                })
                 showIpSelector.value = false
             }
             const handleShowConfirmDialog = async () => {
@@ -261,6 +273,13 @@
                 basicInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
+            const handleRemoveServer = async (row) => {
+                const index = basicInfo.value.ipList.findIndex(item => item.bk_cloud_id === row.bk_cloud_id
+                    && item.bk_host_innerip === row.bk_host_innerip)
+                if (index > -1) {
+                    basicInfo.value.ipList.splice(index, 1)
+                }
+            }
             onMounted(() => {
                 handleGetTemplateList()
             })
@@ -283,7 +302,8 @@
                 handleCreateCluster,
                 handleCancel,
                 toggleSettings,
-                handleGetTemplateList
+                handleGetTemplateList,
+                handleRemoveServer
             }
         }
     })

@@ -14,7 +14,7 @@
                     </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
-            <bk-form-item :label="$t('模板名称')" property="provider" error-display-type="normal" required>
+            <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
                 <bcs-select :loading="templateLoading" class="w640"
                     v-model="importClusterInfo.provider"
                     :clearable="false">
