@@ -37,7 +37,12 @@ class PodMetricViewSet(SystemViewSet):
         """
         params = self.params_validate(self.serializer_class)
         return query_metric_func(
-            cluster_id, params['namespace'], params['pod_name_list'], params['start_at'], params['end_at']
+            cluster_id,
+            params['namespace'],
+            params['pod_name_list'],
+            params['start_at'],
+            params['end_at'],
+            bk_biz_id=self.request.project.cc_app_id,
         )
 
     @action(methods=['POST'], url_path='cpu_usage', detail=False)
