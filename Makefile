@@ -381,8 +381,10 @@ alert-manager:pre
 
 # TODO: add to bcs-services when support go 1.17
 project:
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project/swagger
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-project ${PACKAGEPATH}/bcs-services
+	cp -R ${BCS_SERVICES_PATH}/bcs-project/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-project/swagger/swagger-ui
+	cp ${BCS_SERVICES_PATH}/bcs-project/proto/bcsproject/bcsproject.swagger.json ${PACKAGEPATH}/bcs-services/bcs-project/swagger/bcsproject.swagger.json
 	cd ${BCS_SERVICES_PATH}/bcs-project &&  go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project/bcs-project-service ./main.go
 
 # end of bcs-service section
