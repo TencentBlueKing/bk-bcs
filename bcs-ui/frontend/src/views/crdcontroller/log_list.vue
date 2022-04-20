@@ -291,8 +291,8 @@
                                                 <div slot="content">
                                                     <p>1. 请填写文件的绝对路径，不支持目录</p>
                                                     <p>2. 支持通配符，但通配符仅支持文件级别的</p>
-                                                    <p>有效的示例: /data/log/*/*.log, /data/test.log, /data/log/log.*</p>
-                                                    <p>无效的示例: /data/log/*, /data/log</p>
+                                                    <p>有效的示例: /data/log/*/*.log; /data/test.log; /data/log/log.*</p>
+                                                    <p>无效的示例: /data/log/*; /data/log</p>
                                                 </div>
                                             </bcs-popover>
                                         </div>
@@ -426,8 +426,8 @@
                                                                     <div slot="content">
                                                                         <p>1. 请填写文件的绝对路径，不支持目录</p>
                                                                         <p>2. 支持通配符，但通配符仅支持文件级别的</p>
-                                                                        <p>有效的示例: /data/log/*/*.log, /data/test.log, /data/log/log.*</p>
-                                                                        <p>无效的示例: /data/log/*, /data/log</p>
+                                                                        <p>有效的示例: /data/log/*/*.log; /data/test.log; /data/log/log.*</p>
+                                                                        <p>无效的示例: /data/log/*; /data/log</p>
                                                                     </div>
                                                                 </bcs-popover>
                                                             </div>
@@ -556,8 +556,8 @@
                                                                     <div slot="content">
                                                                         <p>1. 请填写文件的绝对路径，不支持目录</p>
                                                                         <p>2. 支持通配符，但通配符仅支持文件级别的</p>
-                                                                        <p>有效的示例: /data/log/*/*.log, /data/test.log, /data/log/log.*</p>
-                                                                        <p>无效的示例: /data/log/*, /data/log</p>
+                                                                        <p>有效的示例: /data/log/*/*.log; /data/test.log; /data/log/log.*</p>
+                                                                        <p>无效的示例: /data/log/*; /data/log</p>
                                                                     </div>
                                                                 </bcs-popover>
                                                             </div>
