@@ -23,7 +23,8 @@ import {
     addClusterNode,
     deleteClusterNode,
     clusterDetail,
-    modifyCluster
+    modifyCluster,
+    importCluster
 } from '@/api/base'
 
 export default {
@@ -53,7 +54,7 @@ export default {
             const data = await deleteCluster({
                 ...params,
                 operator: ctx.rootState.user?.username
-            }).catch(() => false)
+            }).then(() => true).catch(() => false)
             return data
         },
         async retryCluster (ctx, params) {
@@ -89,7 +90,7 @@ export default {
             const data = await deleteClusterNode({
                 ...params,
                 operator: ctx.rootState.user?.username
-            }).catch(() => false)
+            }).then(() => true).catch(() => false)
             return data
         },
         async clusterDetail (ctx, params) {
@@ -98,6 +99,10 @@ export default {
         },
         async modifyCluster (ctx, params) {
             const data = await modifyCluster(params).then(() => true).catch(() => false)
+            return data
+        },
+        async importCluster (ctx, params) {
+            const data = await importCluster(params).then(() => true).catch(() => false)
             return data
         }
     }

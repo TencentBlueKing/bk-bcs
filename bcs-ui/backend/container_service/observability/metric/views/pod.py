@@ -18,7 +18,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components import prometheus as prom
+from backend.components import bcs_monitor as prom
 from backend.container_service.observability.metric.constants import METRICS_DEFAULT_NAMESPACE
 from backend.container_service.observability.metric.serializers import FetchPodMetricSLZ
 

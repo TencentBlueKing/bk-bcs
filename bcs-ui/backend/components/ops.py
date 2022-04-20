@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 - 节点安装
 - 节点删除
 - 集群删除
+TODO OPS 模块在对接 ClusterManager 后可以废弃
 """
 import json
 import logging
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 APIGW = 'bcs_ops'
 ENV = 'prod'
-API_HOST = '{APIGW_HOST}/api/apigw/{APIGW}/{STAG}'
+API_HOST = '{APIGW_HOST}/api/{APIGW}/{STAG}'
 
 FUNCTION_PATH_MAP = {
     'create_cluster': '/v1/install_cluster',

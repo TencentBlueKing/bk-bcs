@@ -139,9 +139,9 @@ class BCSClusterClient:
         ctx_cluster = CtxCluster.create(id=self.cluster_id, project_id=self.project_id, token=self.access_token)
         env_name = BcsAPIEnvironmentQuerier(ctx_cluster).do()
         return {
-            'server_address': f"{settings.BCS_API_SERVER_DOMAIN[env_name]}/clusters/{self.cluster_id}",
+            'server_address': f"{settings.BCS_API_GATEWAY_DOMAIN[env_name]}/clusters/{self.cluster_id}",
             'identifier': self.cluster_id,
-            'user_token': settings.BCS_API_GW_AUTH_TOKEN,
+            'user_token': settings.BCS_API_GATEWAY_AUTHORIZATION,
         }
 
     def make_kubectl_options(self):

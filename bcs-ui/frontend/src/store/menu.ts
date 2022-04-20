@@ -3,7 +3,7 @@ const node = window.i18n.t('节点')
 const namespace = window.i18n.t('命名空间')
 const templateset = window.i18n.t('模板集')
 const variable = window.i18n.t('变量管理')
-const metric = window.i18n.t('Metric管理')
+// const metric = window.i18n.t('Metric管理')
 const app = window.i18n.t('应用')
 const network = window.i18n.t('网络')
 const resource = window.i18n.t('配置')
@@ -12,7 +12,7 @@ const publicImage = window.i18n.t('公共镜像')
 const projectImage = window.i18n.t('项目镜像')
 const operateAudit = window.i18n.t('操作审计')
 const eventQuery = window.i18n.t('事件查询')
-const monitor = window.i18n.t('监控中心')
+const monitor = window.i18n.t('容器监控')
 const release = window.i18n.t('Release列表')
 const chart = window.i18n.t('Chart仓库')
 const crdcontroller = window.i18n.t('组件库')
@@ -231,12 +231,12 @@ const menu: IMenu = {
             id: 'VARIABLE',
             routeName: 'var'
         },
-        {
-            name: metric,
-            icon: 'bcs-icon-control-center',
-            id: 'METRICS',
-            routeName: 'metricManage'
-        },
+        // {
+        //     name: metric,
+        //     icon: 'bcs-icon-control-center',
+        //     id: 'METRICS',
+        //     routeName: 'metricManage'
+        // },
         { type: 'line' },
         {
             name: 'Helm',
