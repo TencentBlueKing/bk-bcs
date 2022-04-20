@@ -32,6 +32,7 @@ var (
 			Key: bson.D{
 				bson.E{Key: CreateTimeKey, Value: 1},
 			},
+			Name: CreateTimeKey + "_1",
 		},
 		{
 			Name: common.PublicTableName + "_idx",
@@ -45,7 +46,6 @@ var (
 			},
 			Unique: true,
 		},
-
 	}
 )
 

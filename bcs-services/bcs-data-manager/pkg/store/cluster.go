@@ -33,6 +33,7 @@ var (
 			Key: bson.D{
 				bson.E{Key: CreateTimeKey, Value: 1},
 			},
+			Name: CreateTimeKey + "_1",
 		},
 		{
 			Name: common.ClusterTableName + "_idx",
@@ -48,26 +49,31 @@ var (
 			Key: bson.D{
 				bson.E{Key: BucketTimeKey, Value: 1},
 			},
+			Name: BucketTimeKey + "_1",
 		},
 		{
 			Key: bson.D{
 				bson.E{Key: ClusterIDKey, Value: 1},
 			},
+			Name: ClusterIDKey + "_1",
 		},
 		{
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 			},
+			Name: ProjectIDKey + "_1",
 		},
 		{
 			Key: bson.D{
 				bson.E{Key: DimensionKey, Value: 1},
 			},
+			Name: DimensionKey + "_1",
 		},
 		{
 			Key: bson.D{
 				bson.E{Key: MetricTimeKey, Value: 1},
 			},
+			Name: MetricTimeKey + "_1",
 		},
 	}
 )
