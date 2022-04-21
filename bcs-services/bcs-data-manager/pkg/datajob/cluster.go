@@ -81,7 +81,6 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
-	minUsageNode := ""
 	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients.monitorClient, clients.cmCli)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)

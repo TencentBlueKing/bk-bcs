@@ -71,7 +71,7 @@ func TestProjectDayPolicy_CalculateCpu(t *testing.T) {
 	}
 }
 
-func TestProjectDayPolicy_ImplementPolicy(t *testing.T) {
+func Test_ProjectDayPolicy(t *testing.T) {
 	db := newTestMongo()
 	projectPolicy := NewProjectDayPolicy(&metric.MetricGetter{}, db)
 	opts := &common.JobCommonOpts{
@@ -84,7 +84,7 @@ func TestProjectDayPolicy_ImplementPolicy(t *testing.T) {
 	projectPolicy.ImplementPolicy(ctx, opts, nil)
 }
 
-func TestProjectDayPolicy_calculateMemory(t *testing.T) {
+func Test_calculateMemory(t *testing.T) {
 	type fields struct {
 		MetricGetter metric.Server
 		store        store.Server
@@ -118,7 +118,7 @@ func TestProjectDayPolicy_calculateMemory(t *testing.T) {
 	}
 }
 
-func TestProjectDayPolicy_calculateProjectNodeCount(t *testing.T) {
+func Test_calculateProjectNodeCount(t *testing.T) {
 	type fields struct {
 		MetricGetter metric.Server
 		store        store.Server

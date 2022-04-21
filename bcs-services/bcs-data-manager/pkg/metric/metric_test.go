@@ -39,7 +39,7 @@ func newMonitor() bcsmonitor.ClientInterface {
 	return monitorCli
 }
 
-func TestMetricGetter_GetClusterCPUMetrics(t *testing.T) {
+func Test_GetClusterCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:  common.ClusterType,
@@ -54,7 +54,7 @@ func TestMetricGetter_GetClusterCPUMetrics(t *testing.T) {
 	fmt.Println(getter.GetClusterCPUMetrics(opts, monitorCli))
 }
 
-func TestMetricGetter_GetClusterMemoryMetrics(t *testing.T) {
+func Test_GetClusterMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:  common.ClusterType,
@@ -69,15 +69,15 @@ func TestMetricGetter_GetClusterMemoryMetrics(t *testing.T) {
 	fmt.Println(getter.GetClusterMemoryMetrics(opts, monitorCli))
 }
 
-func TestMetricGetter_GetClusterNodeCount(t *testing.T) {
+func Test_GetClusterNodeCount(t *testing.T) {
 
 }
 
-func TestMetricGetter_GetClusterNodeMetrics(t *testing.T) {
+func Test_GetClusterNodeMetrics(t *testing.T) {
 
 }
 
-func TestMetricGetter_GetInstanceCount(t *testing.T) {
+func Test_GetInstanceCount(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:  common.ClusterType,
@@ -117,7 +117,7 @@ func TestMetricGetter_GetInstanceCount(t *testing.T) {
 	fmt.Println(getter.GetInstanceCount(opts3, monitorCli))
 }
 
-func TestMetricGetter_GetNamespaceCPUMetrics(t *testing.T) {
+func Test_GetNamespaceCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:  common.NamespaceType,
@@ -133,7 +133,7 @@ func TestMetricGetter_GetNamespaceCPUMetrics(t *testing.T) {
 	fmt.Println(getter.GetNamespaceCPUMetrics(opts, monitorCli))
 }
 
-func TestMetricGetter_GetNamespaceInstanceCount(t *testing.T) {
+func Test_GetNamespaceInstanceCount(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:  common.NamespaceType,
@@ -149,7 +149,7 @@ func TestMetricGetter_GetNamespaceInstanceCount(t *testing.T) {
 	fmt.Println(getter.GetInstanceCount(opts, monitorCli))
 }
 
-func TestMetricGetter_GetNamespaceMemoryMetrics(t *testing.T) {
+func Test_GetNamespaceMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:  common.NamespaceType,
@@ -165,11 +165,11 @@ func TestMetricGetter_GetNamespaceMemoryMetrics(t *testing.T) {
 	fmt.Println(getter.GetNamespaceMemoryMetrics(opts, monitorCli))
 }
 
-func TestMetricGetter_GetNamespaceResourceLimit(t *testing.T) {
+func Test_GetNamespaceResourceLimit(t *testing.T) {
 
 }
 
-func TestMetricGetter_GetWorkloadCPUMetrics(t *testing.T) {
+func Test_GetWorkloadCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:   common.WorkloadType,
@@ -187,7 +187,7 @@ func TestMetricGetter_GetWorkloadCPUMetrics(t *testing.T) {
 	fmt.Println(getter.GetWorkloadCPUMetrics(opts, monitorCli))
 }
 
-func TestMetricGetter_GetWorkloadMemoryMetrics(t *testing.T) {
+func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &common.JobCommonOpts{
 		ObjectType:   common.WorkloadType,
@@ -217,5 +217,4 @@ func TestPodName(t *testing.T) {
 	fmt.Println(regx2.MatchString("prometheus-operator-prometheus-node-exporter-thpmd"))
 	regx3 := regexp.MustCompile("prometheus-prometheus-operator-prometheus" + "-[0-9a-z]*$")
 	fmt.Println(regx3.MatchString("prometheus-prometheus-operator-prometheus-0"))
-
 }

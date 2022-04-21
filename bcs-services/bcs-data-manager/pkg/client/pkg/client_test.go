@@ -33,7 +33,7 @@ func TestNewClientWithConfiguration(t *testing.T) {
 
 }
 
-func Test_dataManager_GetClusterInfo(t *testing.T) {
+func Test_GetClusterInfo(t *testing.T) {
 	client := NewDataManagerCli(&Config{
 		APIServer: "",
 		AuthToken: "",
@@ -46,7 +46,7 @@ func Test_dataManager_GetClusterInfo(t *testing.T) {
 	assert.NotNil(t, rsp)
 }
 
-func Test_dataManager_GetClusterInfoList(t *testing.T) {
+func Test_GetClusterInfoList(t *testing.T) {
 	client := NewDataManagerCli(&Config{
 		APIServer: "127.0.0.1:8081",
 		AuthToken: "",
@@ -59,7 +59,7 @@ func Test_dataManager_GetClusterInfoList(t *testing.T) {
 	assert.NotNil(t, rsp)
 }
 
-func Test_dataManager_GetNamespaceInfo(t *testing.T) {
+func Test_GetNamespaceInfo(t *testing.T) {
 	client := NewDataManagerCli(&Config{
 		APIServer: "127.0.0.1:8081",
 		AuthToken: "",
@@ -72,7 +72,7 @@ func Test_dataManager_GetNamespaceInfo(t *testing.T) {
 	assert.NotNil(t, rsp)
 }
 
-func Test_dataManager_GetNamespaceInfoList(t *testing.T) {
+func Test_GetNamespaceInfoList(t *testing.T) {
 	client := NewDataManagerCli(&Config{
 		APIServer: "127.0.0.1:8081",
 		AuthToken: "",
@@ -85,7 +85,7 @@ func Test_dataManager_GetNamespaceInfoList(t *testing.T) {
 	assert.NotNil(t, rsp)
 }
 
-func Test_dataManager_GetProjectInfo(t *testing.T) {
+func Test_GetProjectInfo(t *testing.T) {
 	client := NewDataManagerCli(&Config{
 		APIServer: "127.0.0.1:8081",
 		AuthToken: "",
@@ -98,7 +98,7 @@ func Test_dataManager_GetProjectInfo(t *testing.T) {
 	assert.NotNil(t, rsp)
 }
 
-func Test_dataManager_GetWorkloadInfo(t *testing.T) {
+func Test_GetWorkloadInfo(t *testing.T) {
 	client := NewDataManagerCli(&Config{
 		APIServer: "127.0.0.1:8081",
 		AuthToken: "",
@@ -111,7 +111,7 @@ func Test_dataManager_GetWorkloadInfo(t *testing.T) {
 	assert.NotNil(t, rsp)
 }
 
-func Test_dataManager_GetWorkloadInfoList(t *testing.T) {
+func Test_GetWorkloadInfoList(t *testing.T) {
 	client := NewDataManagerCli(&Config{
 		APIServer: "127.0.0.1:8081",
 		AuthToken: "",

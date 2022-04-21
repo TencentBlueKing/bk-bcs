@@ -38,15 +38,15 @@ func TestNewWorkloadMinutePolicy(t *testing.T) {
 
 }
 
-func TestWorkloadDayPolicy_ImplementPolicy(t *testing.T) {
+func TestWorkloadDayPolicy(t *testing.T) {
 
 }
 
-func TestWorkloadHourPolicy_ImplementPolicy(t *testing.T) {
+func TestWorkloadHourPolicy(t *testing.T) {
 
 }
 
-func TestWorkloadMinutePolicy_ImplementPolicy(t *testing.T) {
+func TestWorkloadMinutePolicy(t *testing.T) {
 	opts := &common.JobCommonOpts{
 		ObjectType:   common.WorkloadType,
 		ClusterID:    "BCS-K8S-15091",

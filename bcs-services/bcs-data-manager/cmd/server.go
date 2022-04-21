@@ -326,12 +326,12 @@ func (s *Server) initMicro() error {
 func (s *Server) initSignalHandler() {
 	// listen system signal
 	// to run in the container, should not trap SIGTERM
-	interupt := make(chan os.Signal, 10)
-	signal.Notify(interupt, syscall.SIGINT)
+	interrupt := make(chan os.Signal, 10)
+	signal.Notify(interrupt, syscall.SIGINT)
 	go func() {
 		select {
-		case e := <-interupt:
-			blog.Infof("receive interupt %s, do close", e.String())
+		case e := <-interrupt:
+			blog.Infof("receive interrupt %s, do close", e.String())
 			s.close()
 		case <-s.stopCh:
 			blog.Infof("stop channel, do close")
@@ -370,7 +370,7 @@ func (s *Server) initWorker() error {
 	selectClusters := strings.Split(s.opt.FilterRules.ClusterIDs, ",")
 	blog.Infof("selected cluster: %v", selectClusters)
 	resourceGetter := common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters)
-	s.producer = worker.NewProducer(msgQueue, producerCron, cmCli, storageCli, s.ctx, resourceGetter)
+	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, storageCli, resourceGetter)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
 		return err

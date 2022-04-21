@@ -203,14 +203,12 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	total = int64(len(workloadList))
 
 	page := int(request.Page)
-	startIndex := 0
-	endIndex := 0
 	size := int(request.Size)
 	if size == 0 {
 		size = DefaultSize
 	}
-	endIndex = (page + 1) * size
-	startIndex = page * size
+	endIndex := (page + 1) * size
+	startIndex := page * size
 	if startIndex >= len(workloadList) {
 		return nil, total, nil
 	}

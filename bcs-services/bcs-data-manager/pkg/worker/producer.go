@@ -39,9 +39,8 @@ type Producer struct {
 }
 
 // NewProducer new producer
-func NewProducer(msgQueue msgqueue.MessageQueue, cron *cron.Cron, cmClient *cmanager.ClusterManagerClient,
-	storeCli bcsapi.Storage, rootCtx context.Context,
-	getter common.GetterInterface) *Producer {
+func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *cron.Cron,
+	cmClient *cmanager.ClusterManagerClient, storeCli bcsapi.Storage, getter common.GetterInterface) *Producer {
 	ctx, cancel := context.WithCancel(rootCtx)
 	return &Producer{
 		msgQueue:       msgQueue,

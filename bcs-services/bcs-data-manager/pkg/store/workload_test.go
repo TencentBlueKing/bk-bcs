@@ -23,7 +23,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestModelWorkload_GetRawWorkloadInfo(t *testing.T) {
+func Test_GetRawWorkloadInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -82,7 +82,7 @@ func TestModelWorkload_GetRawWorkloadInfo(t *testing.T) {
 	}
 }
 
-func TestModelWorkload_GetWorkloadInfo(t *testing.T) {
+func Test_GetWorkloadInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -120,7 +120,7 @@ func TestModelWorkload_GetWorkloadInfo(t *testing.T) {
 	}
 }
 
-func TestModelWorkload_GetWorkloadInfoList(t *testing.T) {
+func Test_GetWorkloadInfoList(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -156,7 +156,7 @@ func TestModelWorkload_GetWorkloadInfoList(t *testing.T) {
 	}
 }
 
-func TestModelWorkload_InsertWorkloadInfo(t *testing.T) {
+func Test_InsertWorkloadInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
