@@ -14,6 +14,7 @@ package apis
 
 import (
 	"context"
+	"encoding/json"
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +30,8 @@ type DeploymentInterface interface {
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*appsv1.Deployment, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
+	Create(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.CreateOptions) (*appsv1.Deployment, error)
+	Update(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.UpdateOptions) (*appsv1.Deployment, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.Deployment, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -46,20 +49,27 @@ func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 		obj runtime.Object
 		err error
 	)
+	ctx := c.Request.Context()
 	switch c.Options.Verb {
 	case rest.ListVerb:
-		obj, err = h.handler.List(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
+		obj, err = h.handler.List(ctx, c.Namespace, *c.Options.ListOptions)
 	case rest.ListAsTableVerb:
-		obj, err = h.handler.ListAsTable(c.Request.Context(), c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
+		obj, err = h.handler.ListAsTable(ctx, c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
 	case rest.GetVerb:
-		obj, err = h.handler.Get(c.Request.Context(), c.Namespace, c.Name, *c.Options.GetOptions)
+		obj, err = h.handler.Get(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
 	case rest.GetAsTableVerb:
-		obj, err = h.handler.GetAsTable(c.Request.Context(), c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
+		obj, err = h.handler.GetAsTable(ctx, c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
+	case rest.CreateVerb:
+		newObj := appsv1.Deployment{}
+		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
+			return err
+		}
+		obj, err = h.handler.Create(ctx, c.Namespace, &newObj, *c.Options.CreateOptions)
 	case rest.DeleteVerb:
-		obj, err = h.handler.Delete(c.Request.Context(), c.Namespace, c.Name, *c.Options.DeleteOptions)
+		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	case rest.WatchVerb:
 		// watch 需要特殊处理 chunk
-		watch, err := h.handler.Watch(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
+		watch, err := h.handler.Watch(ctx, c.Namespace, *c.Options.ListOptions)
 		if err != nil {
 			return err
 		}

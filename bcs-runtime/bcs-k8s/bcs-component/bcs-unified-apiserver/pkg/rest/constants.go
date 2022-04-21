@@ -20,6 +20,9 @@ const (
 	ListAsTableVerb = "listAsTable" // kubectl 列表返回
 	GetVerb         = "get"
 	GetAsTableVerb  = "getAsTable" // kubectl 列表返回
+	CreateVerb      = "create"
+	UpdateVerb      = "update"
+	PatchVerb       = "patch"
 	DeleteVerb      = "delete"
 	WatchVerb       = "watch"
 )

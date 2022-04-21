@@ -74,6 +74,16 @@ func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 	return &listOptions, errReturn
 }
 
+// MakeCreateOptions 组装 Create 参数
+func MakeCreateOptions(q url.Values) (*metav1.CreateOptions, error) {
+	opts := &metav1.CreateOptions{}
+	fieldManager := q.Get("fieldManager")
+	if fieldManager == "" {
+		opts.FieldManager = fieldManager
+	}
+	return opts, nil
+}
+
 // GetDeleteOptionsFromReq 从查询参数获取 DeleteOptions
 func GetDeleteOptionsFromReq(req *http.Request) (*metav1.DeleteOptions, error) {
 	// 优先从 body 获取 DeleteOptions

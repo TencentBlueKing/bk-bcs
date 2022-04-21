@@ -44,6 +44,7 @@ type Options struct {
 	ListOptions   *metav1.ListOptions
 	DeleteOptions *metav1.DeleteOptions
 	GetOptions    *metav1.GetOptions
+	CreateOptions *metav1.CreateOptions
 }
 
 // RequestContext K8S Rest Request Context
@@ -96,6 +97,12 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 			return nil, err
 		}
 		options.DeleteOptions = deleteOptions
+	case "create":
+		createOptions, err := clientutil.MakeCreateOptions(req.URL.Query())
+		if err != nil {
+			return nil, err
+		}
+		options.CreateOptions = createOptions
 	}
 
 	acceptHeader := req.Header.Get("Accept")
@@ -123,6 +130,10 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 		options.Verb = WatchVerb
 	case "delete":
 		options.Verb = DeleteVerb
+	case "create":
+		options.Verb = CreateVerb
+	case "patch":
+		options.Verb = PatchVerb
 	default:
 		return nil, ErrNotImplemented
 	}

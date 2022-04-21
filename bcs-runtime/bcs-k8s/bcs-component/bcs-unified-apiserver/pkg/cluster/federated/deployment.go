@@ -33,7 +33,7 @@ type DeploymentStor struct {
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
-// NewPodStor
+// NewDeploymentStor
 func NewDeploymentStor(masterClientId string, members []string) (*DeploymentStor, error) {
 	stor := &DeploymentStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
 	for _, k := range members {
@@ -111,8 +111,38 @@ func (s *DeploymentStor) GetAsTable(ctx context.Context, namespace string, name 
 	return result, nil
 }
 
-// Delete 删除单个Pod
+// Create 创建 Deployment
+func (s *DeploymentStor) Create(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.CreateOptions) (*appsv1.Deployment, error) {
+	result, err := s.masterClient.AppsV1().Deployments(namespace).Create(ctx, deployment, opts)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// Update 更新 Deployment
+func (s *DeploymentStor) Update(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.UpdateOptions) (*appsv1.Deployment, error) {
+	result, err := s.masterClient.AppsV1().Deployments(namespace).Update(ctx, deployment, opts)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// Delete 删除单个Deployment
 func (s *DeploymentStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.Deployment, error) {
+	result, err := s.masterClient.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.masterClient.AppsV1().Deployments(namespace).Delete(ctx, name, opts); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (s *DeploymentStor) DeleteCollection(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.Deployment, error) {
 	return nil, nil
 }
 
