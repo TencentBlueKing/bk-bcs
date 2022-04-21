@@ -23,25 +23,25 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
 
-// PodInterface Pod Handler 需要实现的方法
-type PodInterface interface {
-	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
+// ConfigMapInterface ConfigMap Handler 需要实现的方法
+type ConfigMapInterface interface {
+	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.ConfigMapList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
-	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error)
+	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.ConfigMap, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
-	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error)
+	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.ConfigMap, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 }
 
-type PodHandler struct {
-	handler PodInterface
+type ConfigMapHandler struct {
+	handler ConfigMapInterface
 }
 
-func NewPodHandler(handler PodInterface) *PodHandler {
-	return &PodHandler{handler: handler}
+func NewConfigMapHandler(handler ConfigMapInterface) *ConfigMapHandler {
+	return &ConfigMapHandler{handler: handler}
 }
 
-func (h *PodHandler) Serve(c *rest.RequestContext) error {
+func (h *ConfigMapHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
 		err error

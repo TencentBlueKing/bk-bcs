@@ -15,7 +15,7 @@ package apis
 import (
 	"context"
 
-	v1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -23,25 +23,25 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
 
-// PodInterface Pod Handler 需要实现的方法
-type PodInterface interface {
-	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
+// StatefulSetInterface StatefulSet Handler 需要实现的方法
+type StatefulSetInterface interface {
+	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*appsv1.StatefulSet, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
-	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error)
+	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*appsv1.StatefulSet, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
-	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error)
+	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.StatefulSet, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 }
 
-type PodHandler struct {
-	handler PodInterface
+type StatefulSetHandler struct {
+	handler StatefulSetInterface
 }
 
-func NewPodHandler(handler PodInterface) *PodHandler {
-	return &PodHandler{handler: handler}
+func NewStatefulSetHandler(handler StatefulSetInterface) *StatefulSetHandler {
+	return &StatefulSetHandler{handler: handler}
 }
 
-func (h *PodHandler) Serve(c *rest.RequestContext) error {
+func (h *StatefulSetHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
 		err error

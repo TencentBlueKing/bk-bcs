@@ -23,25 +23,25 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
 
-// PodInterface Pod Handler 需要实现的方法
-type PodInterface interface {
-	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
+// SecretInterface Secret Handler 需要实现的方法
+type SecretInterface interface {
+	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.SecretList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
-	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error)
+	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Secret, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
-	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error)
+	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Secret, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 }
 
-type PodHandler struct {
-	handler PodInterface
+type SecretHandler struct {
+	handler SecretInterface
 }
 
-func NewPodHandler(handler PodInterface) *PodHandler {
-	return &PodHandler{handler: handler}
+func NewSecretHandler(handler SecretInterface) *SecretHandler {
+	return &SecretHandler{handler: handler}
 }
 
-func (h *PodHandler) Serve(c *rest.RequestContext) error {
+func (h *SecretHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
 		err error

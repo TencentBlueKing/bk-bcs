@@ -14,8 +14,10 @@ package clientutil
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
+	"github.com/clusternet/clusternet/pkg/wrappers/clientgo"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -56,6 +58,28 @@ func GetKubeClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 		Host:        host,
 		BearerToken: bcsConf.Token,
 	}
+
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return k8sClient, nil
+}
+
+// GetClusternetClientByClusterId 通过集群 ID 获取 k8s client 对象, 使用clusternet shadow apis
+func GetClusternetClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
+	bcsConf := GetBCSConfByClusterId(clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsConf.Token,
+	}
+
+	// This is the ONLY place you need to wrap for Clusternet
+	config.Wrap(func(rt http.RoundTripper) http.RoundTripper {
+		return clientgo.NewClusternetTransport(config.Host, rt)
+	})
 
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
