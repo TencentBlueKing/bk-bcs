@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,7 +19,7 @@ import (
 	"github.com/containernetworking/cni/pkg/version"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netagent/cmd/bcs-eni-cni/eni"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-cloudnetwork/pkg/constant"
 )
 
 func init() {
@@ -31,6 +31,6 @@ func init() {
 
 func main() {
 	obj := eni.New()
-	obj.SetEniPrefix(constant.EniPrefix)
+	obj.SetEniPrefix(constant.ENI_PREFIX)
 	skel.PluginMain(obj.CNIAdd, obj.CNIDel, version.All)
 }

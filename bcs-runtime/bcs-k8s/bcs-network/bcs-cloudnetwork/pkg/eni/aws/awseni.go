@@ -26,6 +26,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-cloudnetwork/pkg/enilimit"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/internal/constant"
 	cloud "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/cloud/v1"
 )
@@ -126,6 +127,16 @@ func (c *Client) validate() error {
 // GetENILimit get eni limit
 func (c *Client) GetENILimit() (int, int, error) {
 	instanceType := aws.StringValue(c.instance.InstanceType)
+	getter, err := enilimit.NewGetterFromEnv()
+	if err != nil {
+		blog.Warnf("get eni limit from env failed, err %s, lookup default map", err.Error())
+	}
+	if getter != nil {
+		eniNum, ipNum, found := getter.GetLimit(instanceType)
+		if found {
+			return eniNum, ipNum, nil
+		}
+	}
 	eniNum, ok := constant.AwsEniNumLimit[instanceType]
 	if !ok {
 		return -1, -1, fmt.Errorf("unknown instance type %s", instanceType)
