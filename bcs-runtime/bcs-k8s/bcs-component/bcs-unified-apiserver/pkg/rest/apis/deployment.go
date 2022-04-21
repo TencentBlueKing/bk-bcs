@@ -62,23 +62,19 @@ func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 		obj, err = h.handler.Get(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
 	case rest.GetAsTableVerb:
 		obj, err = h.handler.GetAsTable(ctx, c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
-	case rest.CreateVerb:
+	case rest.CreateVerb: // kubectl create 操作
 		newObj := appsv1.Deployment{}
 		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
 			return err
 		}
 		obj, err = h.handler.Create(ctx, c.Namespace, &newObj, *c.Options.CreateOptions)
-	case rest.UpdateVerb:
+	case rest.UpdateVerb: // kubectl replace  操作
 		newObj := appsv1.Deployment{}
 		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
 			return err
 		}
 		obj, err = h.handler.Update(ctx, c.Namespace, &newObj, *c.Options.UpdateOptions)
-	case rest.PatchVerb:
-		newObj := appsv1.Deployment{}
-		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
-			return err
-		}
+	case rest.PatchVerb: // kubectl edit/apply 操作
 		data, rErr := ioutil.ReadAll(c.Request.Body)
 		if rErr != nil {
 			return rErr
