@@ -77,11 +77,11 @@ type ContainerHealthz struct {
 
 // Probe ...
 type Probe struct {
-	PeriodSecs       int64    `structs:"periodSecs"`
-	InitialDelaySecs int64    `structs:"initialDelaySecs"`
-	TimeoutSecs      int64    `structs:"timeoutSecs"`
-	SuccessThreshold int64    `structs:"successThreshold"`
-	FailureThreshold int64    `structs:"failureThreshold"`
+	PeriodSecs       int64    `structs:"periodSecs"`       // 检查间隔
+	InitialDelaySecs int64    `structs:"initialDelaySecs"` // 初始延时
+	TimeoutSecs      int64    `structs:"timeoutSecs"`      // 超时时间
+	SuccessThreshold int64    `structs:"successThreshold"` // 成功阈值
+	FailureThreshold int64    `structs:"failureThreshold"` // 失败阈值
 	Type             string   `structs:"type"`
 	Path             string   `structs:"path"`
 	Port             int64    `structs:"port"`
@@ -102,14 +102,14 @@ type ResRequirement struct {
 
 // SecurityCtx ...
 type SecurityCtx struct {
-	Privileged               bool         `structs:"privileged"`
-	AllowPrivilegeEscalation bool         `structs:"allowPrivilegeEscalation"`
-	RunAsNonRoot             bool         `structs:"runAsNonRoot"`
-	ReadOnlyRootFilesystem   bool         `structs:"readOnlyRootFilesystem"`
-	RunAsUser                int64        `structs:"runAsUser"`
-	RunAsGroup               int64        `structs:"runAsGroup"`
-	ProcMount                string       `structs:"procMount"`
-	Capabilities             Capabilities `structs:"capabilities"`
+	Privileged               bool         `structs:"privileged"`               // 特权模式
+	AllowPrivilegeEscalation bool         `structs:"allowPrivilegeEscalation"` // 允许提权
+	RunAsNonRoot             bool         `structs:"runAsNonRoot"`             // 以非 Root 方式运行
+	ReadOnlyRootFilesystem   bool         `structs:"readOnlyRootFilesystem"`   // 只读 Root 文件系统
+	RunAsUser                int64        `structs:"runAsUser"`                // 运行用户
+	RunAsGroup               int64        `structs:"runAsGroup"`               // 用户组
+	ProcMount                string       `structs:"procMount"`                // 掩码挂载
+	Capabilities             Capabilities `structs:"capabilities"`             // 权限信息
 	SELinuxOpt               SELinuxOpt   `structs:"seLinuxOpt" mapstructure:"seLinuxOptions"`
 }
 

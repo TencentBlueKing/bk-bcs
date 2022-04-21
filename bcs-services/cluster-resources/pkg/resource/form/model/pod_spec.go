@@ -142,8 +142,8 @@ type SELinuxOpt struct {
 
 // SpecOther ...
 type SpecOther struct {
-	RestartPolicy              string   `structs:"restartPolicy"`
-	TerminationGracePeriodSecs int64    `structs:"terminationGracePeriodSecs"`
+	RestartPolicy              string   `structs:"restartPolicy"`              // 重启策略，其中 CJ，Job 没有 Always
+	TerminationGracePeriodSecs int64    `structs:"terminationGracePeriodSecs"` // 终止容忍期
 	ImagePullSecrets           []string `structs:"imagePullSecrets"`
 	SAName                     string   `structs:"saName"`
 }

@@ -37,14 +37,14 @@ type DeploySpec struct {
 
 // DeployReplicas ...
 type DeployReplicas struct {
-	Cnt                  int64  `structs:"cnt"`
-	UpdateStrategy       string `structs:"updateStrategy"`
-	MaxSurge             int64  `structs:"maxSurge"`
-	MSUnit               string `structs:"msUnit"`
-	MaxUnavailable       int64  `structs:"maxUnavailable"`
-	MUAUnit              string `structs:"muaUnit"`
-	MinReadySecs         int64  `structs:"minReadySecs"`
-	ProgressDeadlineSecs int64  `structs:"progressDeadlineSecs"`
+	Cnt                  int64  `structs:"cnt"`                  // 副本数量
+	UpdateStrategy       string `structs:"updateStrategy"`       // 更新策略
+	MaxSurge             int64  `structs:"maxSurge"`             // 最大调度 Pod 数量
+	MSUnit               string `structs:"msUnit"`               // 最大调度 Pod 数量单位（个/%）
+	MaxUnavailable       int64  `structs:"maxUnavailable"`       // 最大不可用数量
+	MUAUnit              string `structs:"muaUnit"`              // 最大不可用数量单位（个/%）
+	MinReadySecs         int64  `structs:"minReadySecs"`         // 最小就绪时间
+	ProgressDeadlineSecs int64  `structs:"progressDeadlineSecs"` // 进程截止时间
 }
 
 // WorkloadVolume ...
@@ -61,4 +61,145 @@ type WorkloadVolume struct {
 type ContainerGroup struct {
 	InitContainers []Container `structs:"initContainers"`
 	Containers     []Container `structs:"containers"`
+}
+
+// DS DaemonSet 表单化建模
+type DS struct {
+	APIVersion     string         `structs:"apiVersion"`
+	Kind           string         `structs:"kind"`
+	Metadata       Metadata       `structs:"metadata"`
+	Spec           DSSpec         `structs:"spec"`
+	Volume         WorkloadVolume `structs:"volume"`
+	ContainerGroup ContainerGroup `structs:"containerGroup"`
+}
+
+// DSSpec ...
+type DSSpec struct {
+	Replicas   DSReplicas     `structs:"replicas"`
+	NodeSelect NodeSelect     `structs:"nodeSelect"`
+	Affinity   Affinity       `structs:"affinity"`
+	Toleration Toleration     `structs:"toleration"`
+	Networking Networking     `structs:"networking"`
+	Security   PodSecurityCtx `structs:"security"`
+	Other      SpecOther      `structs:"other"`
+}
+
+// DSReplicas ...
+type DSReplicas struct {
+	UpdateStrategy string `structs:"updateStrategy"`
+	MaxUnavailable int64  `structs:"maxUnavailable"`
+	MUAUnit        string `structs:"muaUnit"`
+	MinReadySecs   int64  `structs:"minReadySecs"`
+}
+
+// STS StatefulSet 表单化建模
+type STS struct {
+	APIVersion     string         `structs:"apiVersion"`
+	Kind           string         `structs:"kind"`
+	Metadata       Metadata       `structs:"metadata"`
+	Spec           STSSpec        `structs:"spec"`
+	Volume         WorkloadVolume `structs:"volume"`
+	ContainerGroup ContainerGroup `structs:"containerGroup"`
+}
+
+// STSSpec ...
+type STSSpec struct {
+	Replicas   STSReplicas    `structs:"replicas"`
+	NodeSelect NodeSelect     `structs:"nodeSelect"`
+	Affinity   Affinity       `structs:"affinity"`
+	Toleration Toleration     `structs:"toleration"`
+	Networking Networking     `structs:"networking"`
+	Security   PodSecurityCtx `structs:"security"`
+	Other      SpecOther      `structs:"other"`
+}
+
+// STSReplicas ...
+type STSReplicas struct {
+	Cnt            int64  `structs:"cnt"`
+	UpdateStrategy string `structs:"updateStrategy"`
+	PodManPolicy   string `structs:"podManPolicy"`
+}
+
+// CJ CronJob 表单化建模
+type CJ struct {
+	APIVersion     string         `structs:"apiVersion"`
+	Kind           string         `structs:"kind"`
+	Metadata       Metadata       `structs:"metadata"`
+	Spec           CJSpec         `structs:"spec"`
+	Volume         WorkloadVolume `structs:"volume"`
+	ContainerGroup ContainerGroup `structs:"containerGroup"`
+}
+
+// CJSpec ...
+type CJSpec struct {
+	JobManage  CJJobManage    `structs:"jobManage"`
+	NodeSelect NodeSelect     `structs:"nodeSelect"`
+	Affinity   Affinity       `structs:"affinity"`
+	Toleration Toleration     `structs:"toleration"`
+	Networking Networking     `structs:"networking"`
+	Security   PodSecurityCtx `structs:"security"`
+	Other      SpecOther      `structs:"other"`
+}
+
+// CJJobManage ...
+type CJJobManage struct {
+	Schedule                   string `structs:"schedule"`                   // 调度规则
+	ConcurrencyPolicy          string `structs:"concurrencyPolicy"`          // 并发策略
+	Suspend                    bool   `structs:"suspend"`                    // 暂停
+	Completions                int64  `structs:"completions"`                // 需完成数
+	Parallelism                int64  `structs:"parallelism"`                // 并发数
+	BackoffLimit               int64  `structs:"backoffLimit"`               // 重试次数
+	ActiveDDLSecs              int64  `structs:"activeDDLSecs"`              // 活跃终止时间
+	SuccessfulJobsHistoryLimit int64  `structs:"successfulJobsHistoryLimit"` // 历史累计成功数
+	FailedJobsHistoryLimit     int64  `structs:"failedJobsHistoryLimit"`     // 历史累计失败数
+	StartingDDLSecs            int64  `structs:"startingDDLSecs"`            // 运行截止时间
+}
+
+// Job 表单化建模
+type Job struct {
+	APIVersion     string         `structs:"apiVersion"`
+	Kind           string         `structs:"kind"`
+	Metadata       Metadata       `structs:"metadata"`
+	Spec           JobSpec        `structs:"spec"`
+	Volume         WorkloadVolume `structs:"volume"`
+	ContainerGroup ContainerGroup `structs:"containerGroup"`
+}
+
+// JobSpec ...
+type JobSpec struct {
+	JobManage  JobManage      `structs:"jobManage"`
+	NodeSelect NodeSelect     `structs:"nodeSelect"`
+	Affinity   Affinity       `structs:"affinity"`
+	Toleration Toleration     `structs:"toleration"`
+	Networking Networking     `structs:"networking"`
+	Security   PodSecurityCtx `structs:"security"`
+	Other      SpecOther      `structs:"other"`
+}
+
+// JobManage ...
+type JobManage struct {
+	Completions   int64 `structs:"completions"`   // 需完成数
+	Parallelism   int64 `structs:"parallelism"`   // 并发数
+	BackoffLimit  int64 `structs:"backoffLimit"`  // 重试次数
+	ActiveDDLSecs int64 `structs:"activeDDLSecs"` // 活跃终止时间
+}
+
+// Po Pod 表单化建模
+type Po struct {
+	APIVersion     string         `structs:"apiVersion"`
+	Kind           string         `structs:"kind"`
+	Metadata       Metadata       `structs:"metadata"`
+	Spec           PoSpec         `structs:"spec"`
+	Volume         WorkloadVolume `structs:"volume"`
+	ContainerGroup ContainerGroup `structs:"containerGroup"`
+}
+
+// PoSpec ...
+type PoSpec struct {
+	NodeSelect NodeSelect     `structs:"nodeSelect"`
+	Affinity   Affinity       `structs:"affinity"`
+	Toleration Toleration     `structs:"toleration"`
+	Networking Networking     `structs:"networking"`
+	Security   PodSecurityCtx `structs:"security"`
+	Other      SpecOther      `structs:"other"`
 }
