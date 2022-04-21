@@ -18,11 +18,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -140,7 +137,7 @@ func (s *DeploymentStor) Patch(ctx context.Context, namespace string, name strin
 }
 
 // Delete 删除单个Deployment
-func (s *DeploymentStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.Deployment, error) {
+func (s *DeploymentStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error) {
 	result, err := s.masterClient.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -149,37 +146,22 @@ func (s *DeploymentStor) Delete(ctx context.Context, namespace string, name stri
 	if err := s.masterClient.AppsV1().Deployments(namespace).Delete(ctx, name, opts); err != nil {
 		return nil, err
 	}
-	return result, nil
-}
 
-func (s *DeploymentStor) DeleteCollection(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.Deployment, error) {
-	return nil, nil
-}
-
-// Watch 获取 Pod 列表
-func (s *DeploymentStor) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	// deployment 删除是返回 标准 status 数据格式
+	detailStatus := &metav1.StatusDetails{
+		Name:  name,
+		Group: "apps",
+		Kind:  "deployments",
+		UID:   result.UID,
 	}
-	opts.Watch = true
-
-	for _, v := range s.k8sClientMap {
-		watch, err := v.CoreV1().RESTClient().Get().
-			Namespace(namespace).
-			Resource("pods").
-			VersionedParams(&opts, scheme.ParameterCodec).
-			Timeout(timeout).
-			SetHeader("Accept", "application/json").
-			Watch(ctx)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				continue
-			}
-			return nil, err
-		}
-
-		return watch, nil
+	status := &metav1.Status{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Status",
+			APIVersion: "v1",
+		},
+		Status:  metav1.StatusSuccess,
+		Details: detailStatus,
 	}
-	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
+
+	return status, nil
 }

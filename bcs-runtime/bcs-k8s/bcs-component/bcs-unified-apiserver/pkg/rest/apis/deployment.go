@@ -21,7 +21,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
@@ -35,8 +34,7 @@ type DeploymentInterface interface {
 	Create(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.CreateOptions) (*appsv1.Deployment, error)
 	Update(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.UpdateOptions) (*appsv1.Deployment, error)
 	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*appsv1.Deployment, error)
-	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.Deployment, error)
-	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
+	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error)
 }
 
 type DeploymentHandler struct {
@@ -82,22 +80,6 @@ func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions, c.Subresource)
 	case rest.DeleteVerb:
 		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
-	case rest.WatchVerb:
-		// watch 需要特殊处理 chunk
-		watch, err := h.handler.Watch(ctx, c.Namespace, *c.Options.ListOptions)
-		if err != nil {
-			return err
-		}
-		firstChunk := true
-		for event := range watch.ResultChan() {
-			err = rest.AddTypeInformationToObject(event.Object)
-			if err != nil {
-				return err
-			}
-			c.WriteChunk(event, firstChunk)
-			firstChunk = false
-		}
-		return nil
 	default:
 		// 未实现的功能
 		return rest.ErrNotImplemented
