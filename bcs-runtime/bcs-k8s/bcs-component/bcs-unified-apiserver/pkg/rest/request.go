@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	apirequest "k8s.io/apiserver/pkg/endpoints/request"
 )
@@ -41,10 +42,13 @@ var (
 type Options struct {
 	Verb          Verb
 	AcceptHeader  string
+	PatchType     types.PatchType
 	ListOptions   *metav1.ListOptions
 	DeleteOptions *metav1.DeleteOptions
 	GetOptions    *metav1.GetOptions
 	CreateOptions *metav1.CreateOptions
+	UpdateOptions *metav1.UpdateOptions
+	PatchOptions  *metav1.PatchOptions
 }
 
 // RequestContext K8S Rest Request Context
@@ -103,6 +107,16 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 			return nil, err
 		}
 		options.CreateOptions = createOptions
+	case "update":
+		options.UpdateOptions = &metav1.UpdateOptions{}
+	case "patch":
+		patchOptions, err := clientutil.MakePatchOptions(req.URL.Query())
+		if err != nil {
+			return nil, err
+		}
+		options.PatchOptions = patchOptions
+		// PatchType 从头部获取
+		options.PatchType = types.PatchType(req.Header.Get("Content-Type"))
 	}
 
 	acceptHeader := req.Header.Get("Accept")
@@ -132,6 +146,8 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 		options.Verb = DeleteVerb
 	case "create":
 		options.Verb = CreateVerb
+	case "update":
+		options.Verb = UpdateVerb
 	case "patch":
 		options.Verb = PatchVerb
 	default:

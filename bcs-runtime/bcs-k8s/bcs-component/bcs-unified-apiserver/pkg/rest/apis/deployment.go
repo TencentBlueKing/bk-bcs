@@ -15,10 +15,12 @@ package apis
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
@@ -32,6 +34,7 @@ type DeploymentInterface interface {
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
 	Create(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.CreateOptions) (*appsv1.Deployment, error)
 	Update(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.UpdateOptions) (*appsv1.Deployment, error)
+	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*appsv1.Deployment, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.Deployment, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 }
@@ -65,6 +68,22 @@ func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 			return err
 		}
 		obj, err = h.handler.Create(ctx, c.Namespace, &newObj, *c.Options.CreateOptions)
+	case rest.UpdateVerb:
+		newObj := appsv1.Deployment{}
+		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
+			return err
+		}
+		obj, err = h.handler.Update(ctx, c.Namespace, &newObj, *c.Options.UpdateOptions)
+	case rest.PatchVerb:
+		newObj := appsv1.Deployment{}
+		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
+			return err
+		}
+		data, rErr := ioutil.ReadAll(c.Request.Body)
+		if rErr != nil {
+			return rErr
+		}
+		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions, c.Subresource)
 	case rest.DeleteVerb:
 		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	case rest.WatchVerb:

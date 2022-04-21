@@ -78,7 +78,17 @@ func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 func MakeCreateOptions(q url.Values) (*metav1.CreateOptions, error) {
 	opts := &metav1.CreateOptions{}
 	fieldManager := q.Get("fieldManager")
-	if fieldManager == "" {
+	if fieldManager != "" {
+		opts.FieldManager = fieldManager
+	}
+	return opts, nil
+}
+
+// MakeCreateOpMakePatchOptionstions 组装 Patch 参数
+func MakePatchOptions(q url.Values) (*metav1.PatchOptions, error) {
+	opts := &metav1.PatchOptions{}
+	fieldManager := q.Get("fieldManager")
+	if fieldManager != "" {
 		opts.FieldManager = fieldManager
 	}
 	return opts, nil

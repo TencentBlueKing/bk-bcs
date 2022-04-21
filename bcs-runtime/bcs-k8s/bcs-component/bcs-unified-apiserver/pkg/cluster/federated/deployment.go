@@ -21,6 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -123,6 +124,15 @@ func (s *DeploymentStor) Create(ctx context.Context, namespace string, deploymen
 // Update 更新 Deployment
 func (s *DeploymentStor) Update(ctx context.Context, namespace string, deployment *appsv1.Deployment, opts metav1.UpdateOptions) (*appsv1.Deployment, error) {
 	result, err := s.masterClient.AppsV1().Deployments(namespace).Update(ctx, deployment, opts)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// Patch Edit/Apply Deployment
+func (s *DeploymentStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*appsv1.Deployment, error) {
+	result, err := s.masterClient.AppsV1().Deployments(namespace).Patch(ctx, name, pt, data, opts, subresources...)
 	if err != nil {
 		return nil, err
 	}
