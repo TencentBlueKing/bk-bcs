@@ -14,12 +14,9 @@ package federated
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -60,19 +57,11 @@ func (s *DeploymentStor) List(ctx context.Context, namespace string, opts metav1
 	if err != nil {
 		return nil, err
 	}
-	rest.AddTypeInformationToObject(result)
 
 	return result, nil
 }
 
-func (s *DeploymentStor) selfLink(namespace, name string) string {
-	if name == "" {
-		return fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace)
-	}
-	return fmt.Sprintf("/api/v1/namespaces/%s/pods/%s", namespace, name)
-}
-
-// ListAsTable 查询 DeploymentStor 列表, kubectl格式返回
+// ListAsTable 查询 Deployment 列表, kubectl 格式返回
 func (s *DeploymentStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
@@ -92,87 +81,34 @@ func (s *DeploymentStor) ListAsTable(ctx context.Context, namespace string, acce
 		return nil, err
 	}
 
-	rest.AddTypeInformationToObject(result)
-
 	return result, nil
 }
 
-// Get 获取单个Pod, Json格式返回
+// Get 获取单个 Deployment, Json格式返回
 func (s *DeploymentStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*appsv1.Deployment, error) {
-	// typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "Pod"}
-
-	return nil, apierrors.NewNotFound(v1.Resource("pods"), name)
-}
-
-// GetAsTable 获取单个Pod, Table格式返回
-func (s *DeploymentStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
-	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
-	listMeta := metav1.ListMeta{
-		SelfLink:        s.selfLink(namespace, name),
-		ResourceVersion: "0",
+	result, err := s.masterClient.AppsV1().Deployments(namespace).Get(ctx, name, opts)
+	if err != nil {
+		return nil, err
 	}
-
-	result := &metav1.Table{
-		TypeMeta: typeMata,
-		ListMeta: listMeta,
-	}
-
-	// 联邦集群添加集群Id一列
-	clusterId := metav1.TableColumnDefinition{
-		Name:        "Cluster Id",
-		Type:        "string",
-		Format:      "",
-		Description: "bcs cluster id",
-	}
-	columns := []metav1.TableColumnDefinition{clusterId}
-
-	rows := []metav1.TableRow{}
-
-	for clusterId, v := range s.k8sClientMap {
-		resultTemp := &metav1.Table{}
-		err := v.CoreV1().RESTClient().Get().
-			Namespace(namespace).
-			Resource("pods").
-			VersionedParams(&opts, scheme.ParameterCodec).
-			SetHeader("Accept", acceptHeader).
-			SubResource(name).
-			Do(ctx).
-			Into(resultTemp)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				continue
-			}
-			return nil, err
-		}
-
-		if len(columns) == 1 {
-			columns = append(columns, resultTemp.ColumnDefinitions...)
-		}
-
-		for idx, row := range resultTemp.Rows {
-			cells := []interface{}{clusterId}
-			cells = append(cells, row.Cells...)
-			resultTemp.Rows[idx].Cells = cells
-			rows = append(rows, resultTemp.Rows[idx])
-		}
-	}
-
-	result.ColumnDefinitions = columns
-	result.Rows = rows
-
 	return result, nil
 }
 
-func (s *DeploymentStor) getClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
-	clusterId, ok := pod.Annotations[ClusterIdLabel]
-	if !ok {
-		return nil, errors.New("cluter_id not in annotions")
+// GetAsTable 获取单个 Deployment, Table 格式返回
+func (s *DeploymentStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+	result := &metav1.Table{}
+	err := s.masterClient.AppsV1().RESTClient().Get().
+		Namespace(namespace).
+		Resource("deployments").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		SetHeader("Accept", acceptHeader).
+		SubResource(name).
+		Do(ctx).
+		Into(result)
+	if err != nil {
+		return nil, err
 	}
-	client, ok := s.k8sClientMap[clusterId]
-	if !ok {
-		return nil, errors.New("cluter_id not in annotions")
-	}
-	return client, nil
+
+	return result, nil
 }
 
 // Delete 删除单个Pod

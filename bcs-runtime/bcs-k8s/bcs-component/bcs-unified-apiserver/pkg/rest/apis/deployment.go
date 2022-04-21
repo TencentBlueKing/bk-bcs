@@ -81,6 +81,7 @@ func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 	if err != nil {
 		return err
 	}
+	rest.AddTypeInformationToObject(obj)
 	c.Write(obj)
 	return nil
 }
