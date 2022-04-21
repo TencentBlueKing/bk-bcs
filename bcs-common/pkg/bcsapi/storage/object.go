@@ -43,6 +43,11 @@ type MesosApplication struct {
 	Data *kubebkbcsv2.Application
 }
 
+type MesosDeployment struct {
+	CommonDataHeader
+	Data *kubebkbcsv2.Deployment
+}
+
 type K8sNode struct {
 	CommonDataHeader
 	Data *corev1.Node

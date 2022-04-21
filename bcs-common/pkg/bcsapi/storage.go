@@ -55,23 +55,23 @@ type Storage interface {
 	// QueryK8SNamespace query all namespace in specified cluster
 	QueryK8SNamespace(cluster string) ([]*storage.Namespace, error)
 	// QueryK8SDeployment query all deployment in specified cluster
-	QueryK8SDeployment(cluster string) ([]*storage.Deployment, error)
+	QueryK8SDeployment(cluster, namespace string) ([]*storage.Deployment, error)
 	// QueryK8SDaemonset query all daemonset in specified cluster
-	QueryK8SDaemonSet(cluster string) ([]*storage.DaemonSet, error)
+	QueryK8SDaemonSet(cluster, namespace string) ([]*storage.DaemonSet, error)
 	// QueryK8SStatefulSet query all statefulset in specified cluster
-	QueryK8SStatefulSet(cluster string) ([]*storage.StatefulSet, error)
+	QueryK8SStatefulSet(cluster, namespace string) ([]*storage.StatefulSet, error)
 	// QueryK8SGameDeployment query all gamedeployment in specified cluster
-	QueryK8SGameDeployment(cluster string) ([]*storage.GameDeployment, error)
+	QueryK8SGameDeployment(cluster, namespace string) ([]*storage.GameDeployment, error)
 	// QueryK8SGameStatefulSet query all gamestatefulset in specified cluster
-	QueryK8SGameStatefulSet(cluster string) ([]*storage.GameStatefulSet, error)
+	QueryK8SGameStatefulSet(cluster, namespace string) ([]*storage.GameStatefulSet, error)
 	// QueryK8SNode query all node in specified cluster
 	QueryK8SNode(cluster string) ([]*storage.K8sNode, error)
 	// QueryMesosNamespace query all namespace in specified cluster
 	QueryMesosNamespace(cluster string) ([]*storage.Namespace, error)
 	//QueryMesosDeployment query all deployment in specified cluster
-	QueryMesosDeployment(cluster string) ([]*storage.Deployment, error)
+	QueryMesosDeployment(cluster, namespace string) ([]*storage.MesosDeployment, error)
 	//QueryMesosApplication query all application in specified cluster
-	QueryMesosApplication(cluster string) ([]*storage.MesosApplication, error)
+	QueryMesosApplication(cluster, namespace string) ([]*storage.MesosApplication, error)
 }
 
 // NewStorage create bcs-storage api implementation
@@ -102,7 +102,7 @@ type StorageCli struct {
 }
 
 func (c *StorageCli) QueryK8SNode(cluster string) ([]*storage.K8sNode, error) {
-	subPath := "/query/k8s/dynamic/clusters/%s/node"
+	subPath := "/k8s/dynamic/cluster_resources/clusters/%s/Node"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -118,8 +118,11 @@ func (c *StorageCli) QueryK8SNode(cluster string) ([]*storage.K8sNode, error) {
 	return k8sNodes, nil
 }
 
-func (c *StorageCli) QueryMesosApplication(cluster string) ([]*storage.MesosApplication, error) {
-	subPath := "/query/mesos/dynamic/clusters/%s/application"
+func (c *StorageCli) QueryMesosApplication(cluster, namespace string) ([]*storage.MesosApplication, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/mesos/dynamic/namespace_resources/clusters/%s/namespaces/"+namespace+"/Application"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -135,13 +138,16 @@ func (c *StorageCli) QueryMesosApplication(cluster string) ([]*storage.MesosAppl
 	return applications, nil
 }
 
-func (c *StorageCli) QueryMesosDeployment(cluster string) ([]*storage.Deployment, error) {
-	subPath := "/query/mesos/dynamic/clusters/%s/deployment"
+func (c *StorageCli) QueryMesosDeployment(cluster, namespace string) ([]*storage.MesosDeployment, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/mesos/dynamic/namespace_resources/clusters/%s/namespaces/"+namespace+"/Deployment"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
 	}
-	var deployments []*storage.Deployment
+	var deployments []*storage.MesosDeployment
 	if err := json.Unmarshal(response.Data, &deployments); err != nil {
 		return nil, fmt.Errorf("deployment slice decode err: %s", err.Error())
 	}
@@ -153,7 +159,7 @@ func (c *StorageCli) QueryMesosDeployment(cluster string) ([]*storage.Deployment
 }
 
 func (c *StorageCli) QueryMesosNamespace(cluster string) ([]*storage.Namespace, error) {
-	subPath := "/query/mesos/dynamic/clusters/%s/namespace"
+	subPath := "/mesos/dynamic/cluster_resources/clusters/%s/Namespace"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -169,8 +175,11 @@ func (c *StorageCli) QueryMesosNamespace(cluster string) ([]*storage.Namespace, 
 	return namespaces, nil
 }
 
-func (c *StorageCli) QueryK8SGameStatefulSet(cluster string) ([]*storage.GameStatefulSet, error) {
-	subPath := "/k8s/dynamic/all_resources/clusters/%s/GameStatefulSet"
+func (c *StorageCli) QueryK8SGameStatefulSet(cluster, namespace string) ([]*storage.GameStatefulSet, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/GameStatefulSet"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -186,8 +195,11 @@ func (c *StorageCli) QueryK8SGameStatefulSet(cluster string) ([]*storage.GameSta
 	return gamestatefulsets, nil
 }
 
-func (c *StorageCli) QueryK8SGameDeployment(cluster string) ([]*storage.GameDeployment, error) {
-	subPath := "/k8s/dynamic/all_resources/clusters/%s/GameDeployment"
+func (c *StorageCli) QueryK8SGameDeployment(cluster, namespace string) ([]*storage.GameDeployment, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/GameDeployment"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -203,8 +215,11 @@ func (c *StorageCli) QueryK8SGameDeployment(cluster string) ([]*storage.GameDepl
 	return gamedeployments, nil
 }
 
-func (c *StorageCli) QueryK8SStatefulSet(cluster string) ([]*storage.StatefulSet, error) {
-	subPath := "/query/k8s/dynamic/clusters/%s/statefulset"
+func (c *StorageCli) QueryK8SStatefulSet(cluster, namespace string) ([]*storage.StatefulSet, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/StatefulSet"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -220,8 +235,11 @@ func (c *StorageCli) QueryK8SStatefulSet(cluster string) ([]*storage.StatefulSet
 	return statefulsets, nil
 }
 
-func (c *StorageCli) QueryK8SDaemonSet(cluster string) ([]*storage.DaemonSet, error) {
-	subPath := "/query/k8s/dynamic/clusters/%s/daemonset"
+func (c *StorageCli) QueryK8SDaemonSet(cluster, namespace string) ([]*storage.DaemonSet, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Daemonset"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -237,8 +255,11 @@ func (c *StorageCli) QueryK8SDaemonSet(cluster string) ([]*storage.DaemonSet, er
 	return daemonsets, nil
 }
 
-func (c *StorageCli) QueryK8SDeployment(cluster string) ([]*storage.Deployment, error) {
-	subPath := "/query/k8s/dynamic/clusters/%s/deployment"
+func (c *StorageCli) QueryK8SDeployment(cluster, namespace string) ([]*storage.Deployment, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Deployment"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -255,7 +276,7 @@ func (c *StorageCli) QueryK8SDeployment(cluster string) ([]*storage.Deployment, 
 }
 
 func (c *StorageCli) QueryK8SNamespace(cluster string) ([]*storage.Namespace, error) {
-	subPath := "/query/k8s/dynamic/clusters/%s/namespace"
+	subPath := "/k8s/dynamic/cluster_resources/clusters/%s/Namespace"
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
