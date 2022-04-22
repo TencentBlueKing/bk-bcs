@@ -17,16 +17,35 @@ package workload
 import (
 	"strings"
 
+	"github.com/fatih/structs"
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // ParsePo ...
 func ParsePo(manifest map[string]interface{}) map[string]interface{} {
-	// TODO Pod 解析逻辑
-	return map[string]interface{}{}
+	po := model.Po{}
+	po.APIVersion, po.Kind = common.ParseAPIVersionKind(manifest)
+	common.ParseMetadata(manifest, &po.Metadata)
+	ParsePoSpec(manifest, &po.Spec)
+	ParseWorkloadVolume(manifest, &po.Volume)
+	ParseContainerGroup(manifest, &po.ContainerGroup)
+	return structs.Map(po)
+}
+
+// ParsePoSpec ...
+func ParsePoSpec(manifest map[string]interface{}, spec *model.PoSpec) {
+	tmplSpec, _ := mapx.GetItems(manifest, "spec")
+	podSpec, _ := tmplSpec.(map[string]interface{})
+	ParseNodeSelect(podSpec, &spec.NodeSelect)
+	ParseAffinity(podSpec, &spec.Affinity)
+	ParseToleration(podSpec, &spec.Toleration)
+	ParseNetworking(podSpec, &spec.Networking)
+	ParsePodSecurityCtx(podSpec, &spec.Security)
+	ParseSpecOther(podSpec, &spec.Other)
 }
 
 // ParseNodeSelect ...

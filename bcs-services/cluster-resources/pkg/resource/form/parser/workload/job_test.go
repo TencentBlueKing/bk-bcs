@@ -12,19 +12,36 @@
  * limitations under the License.
  */
 
-package parser
+package workload
 
 import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
-// Kind2ParseFuncMap 各资源类型对应 ParseFunc
-var Kind2ParseFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
-	res.Deploy: workload.ParseDeploy,
-	res.DS:     workload.ParseDS,
-	res.STS:    workload.ParseSTS,
-	res.CJ:     workload.ParseCJ,
-	res.Job:    workload.ParseJob,
-	res.Po:     workload.ParsePo,
+var lightJobManifest = map[string]interface{}{
+	"apiVersion": "apps/v1",
+	"kind":       "Job",
+	"spec": map[string]interface{}{
+		"completions":           int64(3),
+		"parallelism":           int64(1),
+		"backoffLimit":          int64(5),
+		"activeDeadlineSeconds": int64(720),
+	},
+}
+
+var exceptedJobManage = model.JobManage{
+	Completions:   3,
+	Parallelism:   1,
+	BackoffLimit:  5,
+	ActiveDDLSecs: 720,
+}
+
+func TestParseJobManage(t *testing.T) {
+	jm := model.JobManage{}
+	ParseJobManage(lightJobManifest, &jm)
+	assert.Equal(t, exceptedJobManage, jm)
 }
