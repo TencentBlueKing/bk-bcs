@@ -35,6 +35,7 @@ type Handler struct {
 	serviceHandler     *apis.ServiceHandler
 	configmapHandler   *apis.ConfigMapHandler
 	secretHandler      *apis.SecretHandler
+	clusterHandler     *apis.ClusterHandler
 }
 
 // NewHandler create federated cluster handler
@@ -99,6 +100,12 @@ func (h *Handler) Register(clusterId string, members []string) error {
 	}
 	h.secretHandler = apis.NewSecretHandler(secretStor)
 
+	clusterStor, err := NewClusterStor(clusterId, members)
+	if err != nil {
+		return err
+	}
+	h.clusterHandler = apis.NewClusterHandler(clusterStor)
+
 	return nil
 }
 
@@ -119,6 +126,10 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 		err = h.configmapHandler.Serve(c)
 	case "secrets":
 		err = h.secretHandler.Serve(c)
+	}
+
+	if !c.IsResourceRequest {
+		err = h.clusterHandler.Serve(c)
 	}
 
 	// 未实现的功能, 使用代理请求
