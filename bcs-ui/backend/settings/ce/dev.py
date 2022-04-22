@@ -98,4 +98,4 @@ BCS_CC_OPER_PROJECT_NAMESPACE = "/projects/{project_id}/clusters/null/namespaces
 
 HELM_MERELY_REPO_URL = os.environ.get("BKAPP_HARBOR_CHARTS_DOMAIN")
 
-BCS_SERVER_HOST = {"prod": os.environ.get("BKAPP_BCS_API_DOMAIN")}
+BCS_APIGW_DOMAIN = {"prod": os.environ.get("BKAPP_BCS_API_DOMAIN")}

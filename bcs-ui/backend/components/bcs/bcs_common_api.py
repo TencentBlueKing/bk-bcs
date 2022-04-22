@@ -99,6 +99,6 @@ class BCSClient(BCSClientBase):
         """获取事件
         注意需要针对不同的环境进行查询
         """
-        url = f"{settings.BCS_API_GATEWAY_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
+        url = f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
         resp = http_get(url, params=params, headers=self.headers)
         return resp

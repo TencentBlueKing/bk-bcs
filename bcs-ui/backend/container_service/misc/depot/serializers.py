@@ -39,6 +39,6 @@ class AvailableTagSLZ(serializers.Serializer):
 
 
 class ImageDetailSLZ(serializers.Serializer):
-    limit = serializers.IntegerField(required=False)
-    offset = serializers.IntegerField(required=False)
+    limit = serializers.IntegerField(default=10)
+    offset = serializers.IntegerField(default=10)
     image_repo = serializers.CharField(required=True)

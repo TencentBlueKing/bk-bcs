@@ -131,7 +131,7 @@ class AvailableTagsViewSet(BaseImageTagsViewSet):
 
 
 class ImageDetailViewSet(SystemViewSet):
-    def detail(self, request, project_id):
+    def get(self, request, project_id):
         params = self.params_validate(ImageDetailSLZ)
         # 前端传递的格式为/项目名/仓库名/镜像，需要转换为 镜像
         resp_data = self.list_image_tags(params["image_repo"])
@@ -141,6 +141,7 @@ class ImageDetailViewSet(SystemViewSet):
         ]
         latest_tag = resp_data["records"][-1]
         data = {
+            "tags": tags,
             "modified": latest_tag["lastModifiedDate"],
             "modifiedBy": latest_tag["lastModifiedBy"],
             "imageName": params["image_repo"].split("/", 3)[-1],
@@ -150,3 +151,9 @@ class ImageDetailViewSet(SystemViewSet):
         }
 
         return Response(data)
+
+
+try:
+    from .views_ext import *  # noqa
+except ImportError as e:
+    logger.debug("Load extension failed: %s", e)
