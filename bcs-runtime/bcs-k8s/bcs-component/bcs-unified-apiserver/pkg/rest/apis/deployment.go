@@ -37,14 +37,17 @@ type DeploymentInterface interface {
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error)
 }
 
+// DeploymentHandler
 type DeploymentHandler struct {
 	handler DeploymentInterface
 }
 
+// NewDeploymentHandler
 func NewDeploymentHandler(handler DeploymentInterface) *DeploymentHandler {
 	return &DeploymentHandler{handler: handler}
 }
 
+// Deployment Resource Verb Handler
 func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object

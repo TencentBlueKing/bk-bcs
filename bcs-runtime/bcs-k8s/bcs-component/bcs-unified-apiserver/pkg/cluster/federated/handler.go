@@ -32,6 +32,7 @@ type Handler struct {
 	podHander          *apis.PodHandler
 	deploymentHandler  *apis.DeploymentHandler
 	statefulSetHandler *apis.StatefulSetHandler
+	serviceHandler     *apis.ServiceHandler
 }
 
 // NewHandler create federated cluster handler
@@ -58,6 +59,7 @@ func NewHandler(clusterId string, members []string) (*Handler, error) {
 	return h, nil
 }
 
+// Register 注册对应的资源实现
 func (h *Handler) Register(clusterId string, members []string) error {
 	stor, err := NewPodStor(members)
 	if err != nil {
@@ -77,6 +79,12 @@ func (h *Handler) Register(clusterId string, members []string) error {
 	}
 	h.statefulSetHandler = apis.NewStatefulSetHandler(statefulsetStor)
 
+	serviceStor, err := NewServiceStor(clusterId, members)
+	if err != nil {
+		return err
+	}
+	h.serviceHandler = apis.NewServiceHandler(serviceStor)
+
 	return nil
 }
 
@@ -91,6 +99,8 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 		err = h.deploymentHandler.Serve(c)
 	case "statefulsets":
 		err = h.statefulSetHandler.Serve(c)
+	case "services":
+		err = h.serviceHandler.Serve(c)
 	}
 
 	// 未实现的功能, 使用代理请求

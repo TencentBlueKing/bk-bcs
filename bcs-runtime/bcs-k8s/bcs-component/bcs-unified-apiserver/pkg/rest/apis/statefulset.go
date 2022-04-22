@@ -37,14 +37,17 @@ type StatefulSetInterface interface {
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error)
 }
 
+// StatefulSetHandler
 type StatefulSetHandler struct {
 	handler StatefulSetInterface
 }
 
+// NewStatefulSetHandler
 func NewStatefulSetHandler(handler StatefulSetInterface) *StatefulSetHandler {
 	return &StatefulSetHandler{handler: handler}
 }
 
+// StatefulSet Resource Verb Handler
 func (h *StatefulSetHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
