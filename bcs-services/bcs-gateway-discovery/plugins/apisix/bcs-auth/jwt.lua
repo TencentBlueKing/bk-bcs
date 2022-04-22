@@ -37,10 +37,13 @@ end
 
 
 local function get_secret(conf)
+    if not conf.private_key then
+        core.log.error("no jwt private key provided, conf:"..core.json.encode(conf, true))
+        core.response.exit(500, plugin_error_msg)
+    end
     local auth_secret = ngx_decode_base64(conf.private_key)
     if not auth_secret then
-        core.log.error("base64 decode private_key key failed. key[", conf.private_key, "] ")
-        core.response.exit(500, plugin_error_msg)
+        return conf.private_key
     end
     return auth_secret
 end
