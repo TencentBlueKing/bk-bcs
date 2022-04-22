@@ -33,6 +33,7 @@ type Handler struct {
 	deploymentHandler  *apis.DeploymentHandler
 	statefulSetHandler *apis.StatefulSetHandler
 	serviceHandler     *apis.ServiceHandler
+	configmapHandler   *apis.ConfigMapHandler
 }
 
 // NewHandler create federated cluster handler
@@ -85,6 +86,12 @@ func (h *Handler) Register(clusterId string, members []string) error {
 	}
 	h.serviceHandler = apis.NewServiceHandler(serviceStor)
 
+	configMapStor, err := NewConfigMapStor(clusterId, members)
+	if err != nil {
+		return err
+	}
+	h.configmapHandler = apis.NewConfigMapHandler(configMapStor)
+
 	return nil
 }
 
@@ -101,6 +108,8 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 		err = h.statefulSetHandler.Serve(c)
 	case "services":
 		err = h.serviceHandler.Serve(c)
+	case "configmaps":
+		err = h.configmapHandler.Serve(c)
 	}
 
 	// 未实现的功能, 使用代理请求
