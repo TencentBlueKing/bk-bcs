@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 CURATOR_VALUES_TEMPLATE = ""
 
 # public repo url
-PUBLIC_REPO_URL = f'{settings.HELM_MERELY_REPO_URL}/chartrepo/public/'
+PUBLIC_REPO_URL = f'{settings.HELM_REPO_DOMAIN}/chartrepo/public/'
 
 try:
     from .constants_ext import *  # type: ignore  # noqa

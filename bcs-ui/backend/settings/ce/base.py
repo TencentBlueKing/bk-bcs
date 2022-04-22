@@ -286,7 +286,6 @@ SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
 
 # REPO 相关配置
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-HELM_MERELY_REPO_URL = HELM_REPO_DOMAIN
 BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
 # 默认 BKCC 设备供应方，社区版默认 '0'
