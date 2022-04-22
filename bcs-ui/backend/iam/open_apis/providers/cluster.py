@@ -73,12 +73,7 @@ class ClusterProvider(ResourceProvider):
         """支持模糊搜索集群名"""
         clusters = self._list_clusters_by_project(project_id=filter_obj.parent['id'])
         # 针对搜索关键字过滤集群
-        clusters = [
-            {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in clusters
-            if filter_obj.keyword in cluster['name']
-        ]
-
+        clusters = [cluster for cluster in clusters if filter_obj.keyword in cluster['display_name']]
         return ListResult(results=clusters[page_obj.slice_from : page_obj.slice_to], count=len(clusters))
 
     def _list_clusters_by_project(self, project_id: str) -> List[Dict[str, str]]:
