@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -41,6 +42,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/wrapper"
@@ -115,8 +117,13 @@ func (p *ProjectService) Run() error {
 // init server and client tls config
 func (p *ProjectService) initTLSConfig() error {
 	if len(p.opt.Server.Cert) != 0 && len(p.opt.Server.Key) != 0 && len(p.opt.Server.Ca) != 0 {
+		// 获取 cert paasword
+		serverCertPwd := static.ServerCertPwd
+		if p.opt.Server.CertPwd != "" {
+			serverCertPwd = p.opt.Server.CertPwd
+		}
 		tlsConfig, err := ssl.ServerTslConfVerityClient(p.opt.Server.Ca, p.opt.Server.Cert,
-			p.opt.Server.Key, p.opt.Server.CertPwd)
+			p.opt.Server.Key, serverCertPwd)
 		if err != nil {
 			logging.Error("load project server tls config failed, err %s", err.Error())
 			return err
@@ -126,8 +133,13 @@ func (p *ProjectService) initTLSConfig() error {
 	}
 
 	if len(p.opt.Client.Cert) != 0 && len(p.opt.Client.Key) != 0 && len(p.opt.Client.Ca) != 0 {
+		// 获取 cert paasword
+		clientCertPwd := static.ClientCertPwd
+		if p.opt.Client.CertPwd != "" {
+			clientCertPwd = p.opt.Server.CertPwd
+		}
 		tlsConfig, err := ssl.ClientTslConfVerity(p.opt.Client.Ca, p.opt.Client.Cert,
-			p.opt.Client.Key, p.opt.Client.CertPwd)
+			p.opt.Client.Key, clientCertPwd)
 		if err != nil {
 			logging.Error("load project client tls config failed, err %s", err.Error())
 			return err
@@ -233,7 +245,7 @@ func (p *ProjectService) initMicro() error {
 // init http gateway
 func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	gwMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		runtime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			OrigName:     true,
 			EmitDefaults: true,
@@ -344,14 +356,4 @@ func (p *ProjectService) initMetric() error {
 		}
 	}()
 	return nil
-}
-
-// CustomMatcher for http header
-func CustomMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
-	}
 }

@@ -61,3 +61,8 @@ iam:
   iamHost: ""
   bkPaaSHost: ""
   debug: false
+actionExemptPerm:
+  create: false
+  read: false
+  update: false
+  delete: false

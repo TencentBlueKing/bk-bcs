@@ -53,6 +53,10 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 
 // CanCreateProject ...
 func CanCreateProject(username string) error {
+	// 判断是否校验权限
+	if config.GlobalConf.ActionExemptPerm.Create {
+		return nil
+	}
 	// 判断是否有创建权限
 	permClient, err := NewPermClient()
 	if err != nil {
@@ -71,6 +75,10 @@ func CanCreateProject(username string) error {
 
 // CanViewProject ...
 func CanViewProject(username string, projectID string) error {
+	// 判断是否校验权限
+	if config.GlobalConf.ActionExemptPerm.Read {
+		return nil
+	}
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
@@ -88,6 +96,11 @@ func CanViewProject(username string, projectID string) error {
 
 // CanEditProject ...
 func CanEditProject(username, projectID string) error {
+	// 判断是否校验权限
+	if config.GlobalConf.ActionExemptPerm.Update {
+		return nil
+	}
+
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
@@ -105,6 +118,11 @@ func CanEditProject(username, projectID string) error {
 
 // CanEditProject ...
 func CanDeleteProject(username string, projectID string) error {
+	// 判断是否校验权限
+	if config.GlobalConf.ActionExemptPerm.Delete {
+		return nil
+	}
+
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)

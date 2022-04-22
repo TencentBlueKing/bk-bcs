@@ -71,3 +71,8 @@ func NewIAMOPErr(msg ...interface{}) *ProjectError {
 func NewRequestIAMErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(RequestIAMErr, RequestIAMErrMsg, msg...)
 }
+
+// NotFoundHeaderUserErr ...
+func NewNotFoundHeaderUserErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(NotFoundHeaderUserErr, NotFoundHeaderUserErrMsg, msg...)
+}

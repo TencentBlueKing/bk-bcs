@@ -98,16 +98,25 @@ type IAMConfig struct {
 	Debug       bool   `yaml:"debug" usage:"debug mode"`
 }
 
+// ActionExemptPermConfig 用于标识操作是否开启权限
+type ActionExemptPermConfig struct {
+	Create bool `yaml:"create" usage:"exempt create action perm"`
+	Read   bool `yaml:"read" usage:"exempt read action perm"`
+	Update bool `yaml:"update" usage:"exempt update action perm"`
+	Delete bool `yaml:"delete" usage:"exempt delete action perm"`
+}
+
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
-	Etcd    EtcdConfig    `yaml:"etcd"`
-	Mongo   MongoConfig   `yaml:"mongo"`
-	Log     LogConfig     `yaml:"log"`
-	Swagger SwaggerConfig `yaml:"swagger"`
-	Server  ServerConfig  `yaml:"server"`
-	Client  ClientConfig  `yaml:"client"`
-	JWT     JWTConfig     `yaml:"jwt"`
-	IAM     IAMConfig     `yaml:"iam"`
+	Etcd             EtcdConfig             `yaml:"etcd"`
+	Mongo            MongoConfig            `yaml:"mongo"`
+	Log              LogConfig              `yaml:"log"`
+	Swagger          SwaggerConfig          `yaml:"swagger"`
+	Server           ServerConfig           `yaml:"server"`
+	Client           ClientConfig           `yaml:"client"`
+	JWT              JWTConfig              `yaml:"jwt"`
+	IAM              IAMConfig              `yaml:"iam"`
+	ActionExemptPerm ActionExemptPermConfig `yaml:"actionExemptPerm"`
 }
 
 // GlobalConf 项目配置信息，全局都可以使用
