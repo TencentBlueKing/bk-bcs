@@ -492,6 +492,9 @@ SHARED_CLUSTER_NS_PREFIX = ""
 # API 密钥前端渲染用
 BCS_API_HOST = ""
 
+# 基础性能查询数据源
+PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
+
 try:
     from .base_ext import *  # noqa
 except ImportError as e:

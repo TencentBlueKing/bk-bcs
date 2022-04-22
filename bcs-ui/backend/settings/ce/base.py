@@ -302,9 +302,6 @@ BK_MONITOR_QUERY_HOST = os.environ.get(
     'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
 )
 
-# 基础性能查询数据源
-PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
-
 # 蓝鲸 opentelemetry trace 配置
 # 是否开启 OTLP, 默认不开启
 OPEN_OTLP = False
