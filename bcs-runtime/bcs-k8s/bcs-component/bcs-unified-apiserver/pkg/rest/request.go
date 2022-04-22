@@ -148,8 +148,9 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 		options.Verb = CreateVerb
 	case "update":
 		options.Verb = UpdateVerb
-	case "patch":
-		options.Verb = PatchVerb
+	// clusternet patch 有问题, 先过滤
+	// case "patch":
+	// 	options.Verb = PatchVerb
 	default:
 		return nil, ErrNotImplemented
 	}
