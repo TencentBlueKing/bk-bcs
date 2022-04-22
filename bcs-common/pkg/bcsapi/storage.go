@@ -31,6 +31,8 @@ const (
 	storagePath             = "bcsstorage/v1"
 	customResourcePath      = "bcsstorage/v1/dynamic/customresources/%s"
 	customResourceIndexPath = "bcsstorage/v1/dynamic/customresources/%s/index/%s"
+
+	storageRequestLimit = 500
 )
 
 // Storage interface definition for bcs-storage
@@ -38,7 +40,7 @@ type Storage interface {
 	// search all taskgroup by clusterID
 	QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, error)
 	// query all pod information in specified cluster
-	QueryK8SPod(cluster string) ([]*storage.Pod, error)
+	QueryK8SPod(cluster, namespace string) ([]*storage.Pod, error)
 	// GetIPPoolDetailInfo get all underlay ip information
 	GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, error)
 	// ListCustomResource list custom resources, Unmarshalled to dest.
@@ -103,14 +105,27 @@ type StorageCli struct {
 
 func (c *StorageCli) QueryK8SNode(cluster string) ([]*storage.K8sNode, error) {
 	subPath := "/k8s/dynamic/cluster_resources/clusters/%s/Node"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
 	var k8sNodes []*storage.K8sNode
-	if err := json.Unmarshal(response.Data, &k8sNodes); err != nil {
-		return nil, fmt.Errorf("k8sNode slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var k8sNodesTmp []*storage.K8sNode
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &k8sNodesTmp); err != nil {
+			return nil, fmt.Errorf("k8sNodes slice decode err: %s", err.Error())
+		}
+		k8sNodes = append(k8sNodes, k8sNodesTmp...)
+		if len(k8sNodesTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(k8sNodes) == 0 {
 		blog.V(5).Infof("query kubernetes empty k8sNodes in cluster %s", cluster)
 		return nil, nil
@@ -122,15 +137,29 @@ func (c *StorageCli) QueryMesosApplication(cluster, namespace string) ([]*storag
 	if namespace == "" {
 		return nil, fmt.Errorf("namespace is empty")
 	}
-	subPath := "/mesos/dynamic/namespace_resources/clusters/%s/namespaces/"+namespace+"/Application"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
+	subPath := "/mesos/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Application"
+
 	var applications []*storage.MesosApplication
-	if err := json.Unmarshal(response.Data, &applications); err != nil {
-		return nil, fmt.Errorf("application slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var applicationsTmp []*storage.MesosApplication
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &applicationsTmp); err != nil {
+			return nil, fmt.Errorf("applications slice decode err: %s", err.Error())
+		}
+		applications = append(applications, applicationsTmp...)
+		if len(applicationsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(applications) == 0 {
 		blog.V(5).Infof("query mesos empty application in cluster %s", cluster)
 		return nil, nil
@@ -142,15 +171,29 @@ func (c *StorageCli) QueryMesosDeployment(cluster, namespace string) ([]*storage
 	if namespace == "" {
 		return nil, fmt.Errorf("namespace is empty")
 	}
-	subPath := "/mesos/dynamic/namespace_resources/clusters/%s/namespaces/"+namespace+"/Deployment"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
+	subPath := "/mesos/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Deployment"
+
 	var deployments []*storage.MesosDeployment
-	if err := json.Unmarshal(response.Data, &deployments); err != nil {
-		return nil, fmt.Errorf("deployment slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var deploymentsTmp []*storage.MesosDeployment
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &deploymentsTmp); err != nil {
+			return nil, fmt.Errorf("deployments slice decode err: %s", err.Error())
+		}
+		deployments = append(deployments, deploymentsTmp...)
+		if len(deploymentsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(deployments) == 0 {
 		blog.V(5).Infof("query mesos empty deployment in cluster %s", cluster)
 		return nil, nil
@@ -160,14 +203,27 @@ func (c *StorageCli) QueryMesosDeployment(cluster, namespace string) ([]*storage
 
 func (c *StorageCli) QueryMesosNamespace(cluster string) ([]*storage.Namespace, error) {
 	subPath := "/mesos/dynamic/cluster_resources/clusters/%s/Namespace"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
 	var namespaces []*storage.Namespace
-	if err := json.Unmarshal(response.Data, &namespaces); err != nil {
-		return nil, fmt.Errorf("namespace slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var namespacesTmp []*storage.Namespace
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &namespacesTmp); err != nil {
+			return nil, fmt.Errorf("namespace slice decode err: %s", err.Error())
+		}
+		namespaces = append(namespaces, namespacesTmp...)
+		if len(namespacesTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(namespaces) == 0 {
 		blog.V(5).Infof("query mesos empty namespace in cluster %s", cluster)
 		return nil, nil
@@ -180,14 +236,28 @@ func (c *StorageCli) QueryK8SGameStatefulSet(cluster, namespace string) ([]*stor
 		return nil, fmt.Errorf("namespace is empty")
 	}
 	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/GameStatefulSet"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
+
 	var gamestatefulsets []*storage.GameStatefulSet
-	if err := json.Unmarshal(response.Data, &gamestatefulsets); err != nil {
-		return nil, fmt.Errorf("gamestatefulset slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var gamestatefulsetsTmp []*storage.GameStatefulSet
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &gamestatefulsetsTmp); err != nil {
+			return nil, fmt.Errorf("gamestatefulset slice decode err: %s", err.Error())
+		}
+		gamestatefulsets = append(gamestatefulsets, gamestatefulsetsTmp...)
+		if len(gamestatefulsetsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(gamestatefulsets) == 0 {
 		blog.V(5).Infof("query kubernetes empty gamestatefulsets in cluster %s", cluster)
 		return nil, nil
@@ -200,14 +270,28 @@ func (c *StorageCli) QueryK8SGameDeployment(cluster, namespace string) ([]*stora
 		return nil, fmt.Errorf("namespace is empty")
 	}
 	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/GameDeployment"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
+
 	var gamedeployments []*storage.GameDeployment
-	if err := json.Unmarshal(response.Data, &gamedeployments); err != nil {
-		return nil, fmt.Errorf("gamedeployment slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var gamedeploymentsTmp []*storage.GameDeployment
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &gamedeploymentsTmp); err != nil {
+			return nil, fmt.Errorf("gamedeployments slice decode err: %s", err.Error())
+		}
+		gamedeployments = append(gamedeployments, gamedeploymentsTmp...)
+		if len(gamedeploymentsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(gamedeployments) == 0 {
 		blog.V(5).Infof("query kubernetes empty gamedeployments in cluster %s", cluster)
 		return nil, nil
@@ -220,14 +304,28 @@ func (c *StorageCli) QueryK8SStatefulSet(cluster, namespace string) ([]*storage.
 		return nil, fmt.Errorf("namespace is empty")
 	}
 	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/StatefulSet"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
+
 	var statefulsets []*storage.StatefulSet
-	if err := json.Unmarshal(response.Data, &statefulsets); err != nil {
-		return nil, fmt.Errorf("statefulset slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var statefulsetsTmp []*storage.StatefulSet
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &statefulsetsTmp); err != nil {
+			return nil, fmt.Errorf("statefulsets slice decode err: %s", err.Error())
+		}
+		statefulsets = append(statefulsets, statefulsetsTmp...)
+		if len(statefulsetsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(statefulsets) == 0 {
 		blog.V(5).Infof("query kubernetes empty statefulsets in cluster %s", cluster)
 		return nil, nil
@@ -240,14 +338,28 @@ func (c *StorageCli) QueryK8SDaemonSet(cluster, namespace string) ([]*storage.Da
 		return nil, fmt.Errorf("namespace is empty")
 	}
 	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Daemonset"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
+
 	var daemonsets []*storage.DaemonSet
-	if err := json.Unmarshal(response.Data, &daemonsets); err != nil {
-		return nil, fmt.Errorf("daemonset slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var daemonsetsTmp []*storage.DaemonSet
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &daemonsetsTmp); err != nil {
+			return nil, fmt.Errorf("daemonsets slice decode err: %s", err.Error())
+		}
+		daemonsets = append(daemonsets, daemonsetsTmp...)
+		if len(daemonsetsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(daemonsets) == 0 {
 		blog.V(5).Infof("query kubernetes empty daemonsets in cluster %s", cluster)
 		return nil, nil
@@ -260,14 +372,28 @@ func (c *StorageCli) QueryK8SDeployment(cluster, namespace string) ([]*storage.D
 		return nil, fmt.Errorf("namespace is empty")
 	}
 	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Deployment"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
+
 	var deployments []*storage.Deployment
-	if err := json.Unmarshal(response.Data, &deployments); err != nil {
-		return nil, fmt.Errorf("deployment slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var deploymentsTmp []*storage.Deployment
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &deploymentsTmp); err != nil {
+			return nil, fmt.Errorf("deployments slice decode err: %s", err.Error())
+		}
+		deployments = append(deployments, deploymentsTmp...)
+		if len(deploymentsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(deployments) == 0 {
 		blog.V(5).Infof("query kubernetes empty deployments in cluster %s", cluster)
 		return nil, nil
@@ -277,6 +403,28 @@ func (c *StorageCli) QueryK8SDeployment(cluster, namespace string) ([]*storage.D
 
 func (c *StorageCli) QueryK8SNamespace(cluster string) ([]*storage.Namespace, error) {
 	subPath := "/k8s/dynamic/cluster_resources/clusters/%s/Namespace"
+
+	var deployments []*storage.Deployment
+	offset := 0
+	for {
+		var deploymentsTmp []*storage.Deployment
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &deploymentsTmp); err != nil {
+			return nil, fmt.Errorf("deployments slice decode err: %s", err.Error())
+		}
+		deployments = append(deployments, deploymentsTmp...)
+		if len(deploymentsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
+	}
+
 	response, err := c.query(cluster, subPath)
 	if err != nil {
 		return nil, err
@@ -349,19 +497,31 @@ func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, 
 }
 
 // QueryK8SPod query all pod information in specified cluster
-func (c *StorageCli) QueryK8SPod(cluster string) ([]*storage.Pod, error) {
-	subPath := "/query/k8s/dynamic/clusters/%s/pod"
-	response, err := c.query(cluster, subPath)
-	if err != nil {
-		return nil, err
-	}
-	//decode destination object
+func (c *StorageCli) QueryK8SPod(cluster, namespace string) ([]*storage.Pod, error) {
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Pod"
 	var pods []*storage.Pod
-	if err := json.Unmarshal(response.Data, &pods); err != nil {
-		return nil, fmt.Errorf("pod slice decode err: %s", err.Error())
+	offset := 0
+	for {
+		var podsTmp []*storage.Pod
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &podsTmp); err != nil {
+			return nil, fmt.Errorf("pods slice decode err: %s", err.Error())
+		}
+		pods = append(pods, podsTmp...)
+		if len(podsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
 	}
+
 	if len(pods) == 0 {
-		//No taskgroup data retrieve from bcs-storage
+		//No pod data retrieve from bcs-storage
 		blog.V(5).Infof("query kubernetes empty pods in cluster %s", cluster)
 		return nil, nil
 	}
