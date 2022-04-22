@@ -1,82 +1,98 @@
 <template>
-    <bcs-navigation navigation-type="top-bottom" :need-menu="false">
-        <template slot="side-header">
-            <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
-            <span class="title-desc bcs-title-desc" @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
-        </template>
-        <template #header>
-            <div class="bcs-navigation-header">
-                <div class="nav-left">
-                    <bcs-select ref="projectSelectRef" class="header-select" :clearable="false" searchable
-                        :value="curProjectCode"
-                        v-show="$route.name !== 'projectManage'"
-                        @change="handleProjectChange">
-                        <bcs-option v-for="option in onlineProjectList"
-                            :key="option.project_code"
-                            :id="option.project_code"
-                            :name="option.project_name">
-                        </bcs-option>
-                        <template #extension>
-                            <div class="extension-item" @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
-                            <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
-                        </template>
-                    </bcs-select>
-                    <bcs-popover ref="clusterManagePopover" theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
-                        <div class="cluster-manage-angle">
-                            <a>{{ $t('集群管理') }}</a>
-                            <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
-                        </div>
-                        <template slot="content">
-                            <ul class="cluster-manage-angle-content">
-                                <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
-                                <li :class="[
-                                        'angle-item',
-                                        {
-                                            active: isSharedCluster,
-                                            disable: !firstShareCluster
-                                        }]"
-                                    @click="handleGotoShareCluster"
-                                >{{$t('共享集群')}}<span class="beta">beta</span>
-                                </li>
-                            </ul>
-                        </template>
-                    </bcs-popover>
-                </div>
-                <div class="nav-right">
-                    <div class="header-help" @click="handleGotoHelp">
-                        <i class="bcs-icon bcs-icon-help-2"></i>
+    <div>
+        <bcs-navigation navigation-type="top-bottom" :need-menu="false">
+            <template slot="side-header">
+                <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
+                <span class="title-desc bcs-title-desc" @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
+            </template>
+            <template #header>
+                <div class="bcs-navigation-header">
+                    <div class="nav-left">
+                        <bcs-select ref="projectSelectRef" class="header-select" :clearable="false" searchable
+                            :value="curProjectCode"
+                            v-show="$route.name !== 'projectManage'"
+                            @change="handleProjectChange">
+                            <bcs-option v-for="option in onlineProjectList"
+                                :key="option.project_code"
+                                :id="option.project_code"
+                                :name="option.project_name">
+                            </bcs-option>
+                            <template #extension>
+                                <div class="extension-item" @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
+                                <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
+                            </template>
+                        </bcs-select>
+                        <bcs-popover ref="clusterManagePopover" theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                            <div class="cluster-manage-angle">
+                                <a>{{ $t('集群管理') }}</a>
+                                <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
+                            </div>
+                            <template slot="content">
+                                <ul class="cluster-manage-angle-content">
+                                    <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
+                                    <li :class="[
+                                            'angle-item',
+                                            {
+                                                active: isSharedCluster,
+                                                disable: !firstShareCluster
+                                            }]"
+                                        @click="handleGotoShareCluster"
+                                    >{{$t('共享集群')}}<span class="beta">beta</span>
+                                    </li>
+                                </ul>
+                            </template>
+                        </bcs-popover>
                     </div>
-                    <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 20" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
-                        <div class="header-user">
-                            {{user.username}}
-                            <i class="bk-icon icon-down-shape"></i>
-                        </div>
-                        <template slot="content">
-                            <ul class="bcs-navigation-admin">
-                                <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
-                                <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
-                                <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
-                            </ul>
-                        </template>
-                    </bcs-popover>
+                    <div class="nav-right">
+                        <bcs-popover theme="light navigation-message" style="margin-right: 14px;" offset="0, 20" placement="bottom" :arrow="false">
+                            <div class="header-user">
+                                <i id="siteHelp" class="bcs-icon bcs-icon-help-2"></i>
+                            </div>
+                            <template slot="content">
+                                <ul class="bcs-navigation-admin">
+                                    <li class="nav-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
+                                    <li class="nav-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
+                                </ul>
+                            </template>
+                        </bcs-popover>
+                        <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 20" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+                            <div class="header-user">
+                                {{user.username}}
+                                <i class="bk-icon icon-down-shape"></i>
+                            </div>
+                            <template slot="content">
+                                <ul class="bcs-navigation-admin">
+                                    <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
+                                    <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
+                                    <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
+                                </ul>
+                            </template>
+                        </bcs-popover>
+                    </div>
                 </div>
-            </div>
-        </template>
-        <template #default>
-            <slot></slot>
-        </template>
-    </bcs-navigation>
+            </template>
+            <template #default>
+                <slot></slot>
+            </template>
+        </bcs-navigation>
+        <system-log v-model="showSystemLog"></system-log>
+    </div>
 </template>
 <script>
     import { BCS_CLUSTER } from '@/common/constant'
     import { mapGetters } from 'vuex'
     import useGoHome from '@/common/use-gohome'
     import { bus } from '@/common/bus'
+    import systemLog from '@/components/system-log/index.vue'
 
     export default {
         name: "Navigation",
+        components: {
+            systemLog
+        },
         data () {
             return {
+                showSystemLog: false
             }
         },
         computed: {
@@ -157,9 +173,19 @@
                 this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()
                 this.$emit('create-project')
             },
+            
             handleGotoHelp () {
                 window.open(window.BCS_CONFIG?.doc?.help)
             },
+
+            /**
+             * 打开版本日志弹框
+             */
+            handleShowSystemLog () {
+                console.log(this.showSystemLog, 'this.showSystemLog')
+                this.showSystemLog = true
+            },
+
             // 跳转首页
             handleGoHome () {
                 const { goHome } = useGoHome()
