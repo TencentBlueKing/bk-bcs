@@ -78,7 +78,7 @@ func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 			return rErr
 		}
 		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions, c.Subresource)
-	case rest.DeleteVerb:
+	case rest.DeleteVerb: // kubectl delete 操作
 		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	default:
 		// 未实现的功能
