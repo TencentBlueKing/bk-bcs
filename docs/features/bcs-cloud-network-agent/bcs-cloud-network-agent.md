@@ -24,6 +24,7 @@ export AWS_ACCESS_KEY_ID=xxxxxxxxxxxxxxxx
 export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxx
 export AWS_SUBNETS=subnetid-1,subnetid-2
 export AWS_SECURITY_GROUPS=sg-xxxx1,sg-xxxx2
+export EXTRA_ENI_LIMITATION="{\"c5a.8xlarge\":{\"maxEniNum\":8,\"maxIPNum\":8}}"
 ```
 
 * AWS_REGION: aws云区域
@@ -32,6 +33,7 @@ export AWS_SECURITY_GROUPS=sg-xxxx1,sg-xxxx2
 * AWS_SECRET_ACCESS_KEY: aws api访问key
 * AWS_SUBNETS: 弹性网卡IP所属子网id
 * AWS_SECURITY_GROUPS: 弹性网卡绑定的安全组
+* EXTRA_ENI_LIMITATION: 额外机型的弹性网卡限制，如果配置了该环境变量，则会先从该环境变量中匹配机型
 
 ### 通用参数
 
