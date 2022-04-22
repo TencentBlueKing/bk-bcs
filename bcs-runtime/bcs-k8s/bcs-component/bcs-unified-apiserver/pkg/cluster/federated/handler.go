@@ -26,11 +26,12 @@ import (
 
 // Handler federated cluster hander
 type Handler struct {
-	clusterId         string
-	members           []string
-	proxyHandler      *apiproxy.UpgradeAwareHandler
-	podHander         *apis.PodHandler
-	deploymentHandler *apis.DeploymentHandler
+	clusterId          string
+	members            []string
+	proxyHandler       *apiproxy.UpgradeAwareHandler
+	podHander          *apis.PodHandler
+	deploymentHandler  *apis.DeploymentHandler
+	statefulSetHandler *apis.StatefulSetHandler
 }
 
 // NewHandler create federated cluster handler
@@ -70,6 +71,12 @@ func (h *Handler) Register(clusterId string, members []string) error {
 	}
 	h.deploymentHandler = apis.NewDeploymentHandler(deployStor)
 
+	statefulsetStor, err := NewStatefulSetStor(clusterId, members)
+	if err != nil {
+		return err
+	}
+	h.statefulSetHandler = apis.NewStatefulSetHandler(statefulsetStor)
+
 	return nil
 }
 
@@ -82,6 +89,8 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 		err = h.podHander.Serve(c)
 	case "deployments":
 		err = h.deploymentHandler.Serve(c)
+	case "statefulsets":
+		err = h.statefulSetHandler.Serve(c)
 	}
 
 	// 未实现的功能, 使用代理请求

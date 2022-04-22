@@ -66,7 +66,7 @@ func (h *DeploymentHandler) Serve(c *rest.RequestContext) error {
 			return err
 		}
 		obj, err = h.handler.Create(ctx, c.Namespace, &newObj, *c.Options.CreateOptions)
-	case rest.UpdateVerb: // kubectl replace  操作
+	case rest.UpdateVerb: // kubectl replace 操作
 		newObj := appsv1.Deployment{}
 		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
 			return err

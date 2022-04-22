@@ -14,23 +14,27 @@ package apis
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
+	types "k8s.io/apimachinery/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
 
 // StatefulSetInterface StatefulSet Handler 需要实现的方法
 type StatefulSetInterface interface {
-	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*appsv1.StatefulSet, error)
+	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*appsv1.StatefulSetList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*appsv1.StatefulSet, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
-	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*appsv1.StatefulSet, error)
-	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
+	Create(ctx context.Context, namespace string, deployment *appsv1.StatefulSet, opts metav1.CreateOptions) (*appsv1.StatefulSet, error)
+	Update(ctx context.Context, namespace string, deployment *appsv1.StatefulSet, opts metav1.UpdateOptions) (*appsv1.StatefulSet, error)
+	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*appsv1.StatefulSet, error)
+	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error)
 }
 
 type StatefulSetHandler struct {
@@ -46,33 +50,36 @@ func (h *StatefulSetHandler) Serve(c *rest.RequestContext) error {
 		obj runtime.Object
 		err error
 	)
+	ctx := c.Request.Context()
 	switch c.Options.Verb {
 	case rest.ListVerb:
-		obj, err = h.handler.List(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
+		obj, err = h.handler.List(ctx, c.Namespace, *c.Options.ListOptions)
 	case rest.ListAsTableVerb:
-		obj, err = h.handler.ListAsTable(c.Request.Context(), c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
+		obj, err = h.handler.ListAsTable(ctx, c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
 	case rest.GetVerb:
-		obj, err = h.handler.Get(c.Request.Context(), c.Namespace, c.Name, *c.Options.GetOptions)
+		obj, err = h.handler.Get(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
 	case rest.GetAsTableVerb:
-		obj, err = h.handler.GetAsTable(c.Request.Context(), c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
-	case rest.DeleteVerb:
-		obj, err = h.handler.Delete(c.Request.Context(), c.Namespace, c.Name, *c.Options.DeleteOptions)
-	case rest.WatchVerb:
-		// watch 需要特殊处理 chunk
-		watch, err := h.handler.Watch(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
-		if err != nil {
+		obj, err = h.handler.GetAsTable(ctx, c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
+	case rest.CreateVerb: // kubectl create 操作
+		newObj := appsv1.StatefulSet{}
+		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
 			return err
 		}
-		firstChunk := true
-		for event := range watch.ResultChan() {
-			err = rest.AddTypeInformationToObject(event.Object)
-			if err != nil {
-				return err
-			}
-			c.WriteChunk(event, firstChunk)
-			firstChunk = false
+		obj, err = h.handler.Create(ctx, c.Namespace, &newObj, *c.Options.CreateOptions)
+	case rest.UpdateVerb: // kubectl replace 操作
+		newObj := appsv1.StatefulSet{}
+		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
+			return err
 		}
-		return nil
+		obj, err = h.handler.Update(ctx, c.Namespace, &newObj, *c.Options.UpdateOptions)
+	case rest.PatchVerb: // kubectl edit/apply 操作
+		data, rErr := ioutil.ReadAll(c.Request.Body)
+		if rErr != nil {
+			return rErr
+		}
+		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions, c.Subresource)
+	case rest.DeleteVerb: // kubectl delete 操作
+		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	default:
 		// 未实现的功能
 		return rest.ErrNotImplemented
@@ -81,6 +88,7 @@ func (h *StatefulSetHandler) Serve(c *rest.RequestContext) error {
 	if err != nil {
 		return err
 	}
+	rest.AddTypeInformationToObject(obj)
 	c.Write(obj)
 	return nil
 }
