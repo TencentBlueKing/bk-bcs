@@ -495,6 +495,11 @@ BCS_API_HOST = ""
 # 基础性能查询数据源
 PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
 
+# 蓝鲸监控 unify-query 地址
+BK_MONITOR_QUERY_HOST = os.environ.get(
+    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
+)
+
 try:
     from .base_ext import *  # noqa
 except ImportError as e:

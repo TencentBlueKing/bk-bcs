@@ -297,10 +297,6 @@ CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")
 # 可能有带端口的情况，需要去除
 SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-# 蓝鲸监控 unify-query 地址
-BK_MONITOR_QUERY_HOST = os.environ.get(
-    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
-)
 
 # 蓝鲸 opentelemetry trace 配置
 # 是否开启 OTLP, 默认不开启
