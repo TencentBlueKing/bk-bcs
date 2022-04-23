@@ -149,6 +149,9 @@ var NoInjectProjClusterEndpoints = []string{
 	"Basic.Ping",
 	"Basic.Healthz",
 	"Basic.Echo",
+	// 订阅 API 比较特殊，单独走 Info 注入逻辑
+	"Resource.Subscribe",
+	// Example & Tmpl API 不需要 Info 注入
 	"Resource.GetK8SResTemplate",
 	"Resource.GetResFormSchema",
 }
