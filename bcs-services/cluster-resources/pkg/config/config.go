@@ -63,15 +63,14 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 
 // ClusterResourcesConf ClusterResources 服务启动配置
 type ClusterResourcesConf struct {
-	Debug     bool          `yaml:"debug"`
-	Etcd      EtcdConf      `yaml:"etcd"`
-	Server    ServerConf    `yaml:"server"`
-	Client    ClientConf    `yaml:"client"`
-	Discovery DiscoveryConf `yaml:"discovery"`
-	Swagger   SwaggerConf   `yaml:"swagger"`
-	Log       LogConf       `yaml:"log"`
-	Redis     RedisConf     `yaml:"redis"`
-	Global    GlobalConf    `yaml:"crGlobal"`
+	Debug   bool        `yaml:"debug"`
+	Etcd    EtcdConf    `yaml:"etcd"`
+	Server  ServerConf  `yaml:"server"`
+	Client  ClientConf  `yaml:"client"`
+	Swagger SwaggerConf `yaml:"swagger"`
+	Log     LogConf     `yaml:"log"`
+	Redis   RedisConf   `yaml:"redis"`
+	Global  GlobalConf  `yaml:"crGlobal"`
 }
 
 // 初始化 BCS AuthToken
@@ -166,16 +165,6 @@ type ClientConf struct {
 	CertPwd string `yaml:"certPwd" usage:"Client Cert Password"`
 	Key     string `yaml:"key" usage:"Client Key"`
 	Ca      string `yaml:"ca" usage:"Client CA"`
-}
-
-// DiscoveryConf 服务发现配置
-type DiscoveryConf struct {
-	Cert            string `yaml:"cert" usage:"Client Cert"`
-	CertPwd         string `yaml:"certPwd" usage:"Client Cert Password"`
-	Key             string `yaml:"key" usage:"Client Key"`
-	Ca              string `yaml:"ca" usage:"Client CA"`
-	CallCMWithTLS   bool   `yaml:"callCMWithTLS" usage:"ClusterManager 请求是否使用 tlsConfig"` // nolint:tagliatelle
-	CallProjWithTLS bool   `yaml:"callProjWithTLS" usage:"BCSProject 请求是否使用 tlsConfig"`   // nolint:tagliatelle
 }
 
 // SwaggerConf Swagger 配置

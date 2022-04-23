@@ -41,15 +41,6 @@ client:
   key: ""
   ca: ""
 
-# 服务发现 Client 配置
-discovery:
-  cert: ""
-  certPwd: ""
-  key: ""
-  ca: ""
-  callCMWithTLS: false
-  callProjWithTLS: false
-
 # Swagger 配置信息
 swagger:
   # 生产环境为 false

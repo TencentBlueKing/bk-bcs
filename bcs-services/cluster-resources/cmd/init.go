@@ -346,28 +346,9 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 
 // 初始化依赖组件 Client
 func (crSvc *clusterResourcesService) initComponentClient() (err error) {
-	var tlsConf *tls.Config
-	if crSvc.conf.Discovery.Cert != "" || crSvc.conf.Discovery.Key != "" || crSvc.conf.Discovery.Ca != "" {
-		tlsConf, err = ssl.ClientTslConfVerity(
-			crSvc.conf.Discovery.Ca, crSvc.conf.Discovery.Cert, crSvc.conf.Discovery.Key, crSvc.conf.Discovery.CertPwd,
-		)
-		if err != nil {
-			log.Error(crSvc.ctx, "load discovery client tls config failed: %v", err)
-			return err
-		}
-		log.Info(crSvc.ctx, "load discovery client tls config successfully")
-	}
 	// ClusterManager
-	if crSvc.conf.Discovery.CallCMWithTLS {
-		cluster.InitCMClient(crSvc.microRtr, tlsConf)
-	} else {
-		cluster.InitCMClient(crSvc.microRtr, nil)
-	}
+	cluster.InitCMClient(crSvc.microRtr, crSvc.clientTLSConfig)
 	// ProjectManager
-	if crSvc.conf.Discovery.CallProjWithTLS {
-		project.InitProjClient(crSvc.microRtr, tlsConf)
-	} else {
-		project.InitProjClient(crSvc.microRtr, nil)
-	}
+	project.InitProjClient(crSvc.microRtr, crSvc.clientTLSConfig)
 	return nil
 }
