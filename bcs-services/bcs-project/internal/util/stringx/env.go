@@ -12,11 +12,14 @@
  * limitations under the License.
  */
 
-package auth
+package stringx
 
-const (
-	// UserType 用户态类型
-	UserType = "user"
-	// UserTypeClient 非用户态类型
-	UserTypeClient = "client"
-)
+import "os"
+
+// GetEnv 读取环境变量，支持默认值
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}

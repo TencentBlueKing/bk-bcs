@@ -18,6 +18,8 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/envs"
 )
 
 // EtcdConfig 依赖的 etcd 服务的配置
@@ -42,6 +44,7 @@ type MongoConfig struct {
 
 // ServerConfig 服务的配置
 type ServerConfig struct {
+	UseLocalIP      bool   `yaml:"useLocalIP" usage:"是否使用 Local IP"`
 	Address         string `yaml:"address" usage:"server address"`
 	InsecureAddress string `yaml:"insecureAddress" usage:"insecurue server address"`
 	Port            int    `yaml:"port" usage:"grpc port"`
@@ -101,7 +104,7 @@ type IAMConfig struct {
 // ActionExemptPermConfig 用于标识操作是否开启权限
 type ActionExemptPermConfig struct {
 	Create bool `yaml:"create" usage:"exempt create action perm"`
-	Read   bool `yaml:"read" usage:"exempt read action perm"`
+	View   bool `yaml:"view" usage:"exempt view action perm"`
 	Update bool `yaml:"update" usage:"exempt update action perm"`
 	Delete bool `yaml:"delete" usage:"exempt delete action perm"`
 }
@@ -119,6 +122,15 @@ type ProjectConfig struct {
 	ActionExemptPerm ActionExemptPermConfig `yaml:"actionExemptPerm"`
 }
 
+func (conf *ProjectConfig) initServerAddress() error {
+	// 若指定使用 LOCAL_IP 且环境变量中 LOCAL_IP 有值，则替换掉 Server.Address
+	if conf.Server.UseLocalIP && envs.LocalIP != "" {
+		conf.Server.Address = envs.LocalIP
+		conf.Server.InsecureAddress = envs.LocalIP
+	}
+	return nil
+}
+
 // GlobalConf 项目配置信息，全局都可以使用
 var GlobalConf *ProjectConfig
 
@@ -132,6 +144,8 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+	// 初始化服务地址
+	conf.initServerAddress()
 	// 用于后续的使用
 	GlobalConf = conf
 	return conf, nil

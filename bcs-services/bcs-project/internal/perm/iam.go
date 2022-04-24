@@ -76,7 +76,7 @@ func CanCreateProject(username string) error {
 // CanViewProject ...
 func CanViewProject(username string, projectID string) error {
 	// 判断是否校验权限
-	if config.GlobalConf.ActionExemptPerm.Read {
+	if config.GlobalConf.ActionExemptPerm.View {
 		return nil
 	}
 	permClient, err := NewPermClient()

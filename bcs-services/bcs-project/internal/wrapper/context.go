@@ -66,7 +66,7 @@ func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 			if (*authUser).UserType != auth.UserType {
 				username, ok = md.Get(headerkey.UsernameKey)
 				if !ok {
-					return errorx.NewNotFoundHeaderUserErr()
+					return errorx.NewAuthErr("not found username from header")
 				}
 			}
 		}

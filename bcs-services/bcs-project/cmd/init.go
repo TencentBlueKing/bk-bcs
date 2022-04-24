@@ -136,7 +136,7 @@ func (p *ProjectService) initTLSConfig() error {
 		// 获取 cert paasword
 		clientCertPwd := static.ClientCertPwd
 		if p.opt.Client.CertPwd != "" {
-			clientCertPwd = p.opt.Server.CertPwd
+			clientCertPwd = p.opt.Client.CertPwd
 		}
 		tlsConfig, err := ssl.ClientTslConfVerity(p.opt.Client.Ca, p.opt.Client.Cert,
 			p.opt.Client.Key, clientCertPwd)

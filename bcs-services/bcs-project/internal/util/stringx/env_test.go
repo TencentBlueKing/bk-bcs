@@ -12,11 +12,20 @@
  * limitations under the License.
  */
 
-package auth
+package stringx
 
-const (
-	// UserType 用户态类型
-	UserType = "user"
-	// UserTypeClient 非用户态类型
-	UserTypeClient = "client"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestGetEnv(t *testing.T) {
+	// 不存在的环境变量
+	ret := GetEnv("NOT_EXISTS_ENV_KEY", "ENV_VAL")
+	assert.Equal(t, "ENV_VAL", ret)
+
+	// 已存在的环境变量
+	ret = GetEnv("PATH", "")
+	assert.NotEqual(t, "", ret)
+}
