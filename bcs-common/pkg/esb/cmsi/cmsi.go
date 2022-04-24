@@ -38,7 +38,6 @@ func NewClientInterface(host string, tlsConf *tls.Config) *Client {
 		cli = paasclient.NewRESTClient().
 			WithRateLimiter(throttle.NewTokenBucket(1000, 1000))
 	}
-
 	return &Client{
 		host:   host,
 		client: cli,
