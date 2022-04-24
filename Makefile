@@ -114,11 +114,6 @@ micro-gateway:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-micro-gateway ${PACKAGEPATH}/bcs-services
 	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-micro-gateway/
 
-gateway-container: gateway
-	cd ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/ && docker build -t bcs/apisix:${GITTAG} -f Dockerfile.apisix .
-	cd ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/ && docker build -t bcs/bcs-gateway-discovery:${GITTAG} -f Dockerfile.gateway .
-
-
 client:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-client ${PACKAGEPATH}/bcs-services
