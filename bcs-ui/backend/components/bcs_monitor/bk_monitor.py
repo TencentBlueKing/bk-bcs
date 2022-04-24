@@ -441,7 +441,7 @@ def get_pod_memory_usage_range(cluster_id, namespace, pod_name_list, start, end,
     pod_name_list = "|".join(pod_name_list)
 
     porm_query = f"""
-        sum by (pod_name) (container_memory_rss{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{ pod_name_list }",
+        sum by (pod_name) (container_memory_working_set_bytes{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{ pod_name_list }",
         container_name!="", container_name!="POD"}})
         """  # noqa
     resp = query_range(porm_query, start, end, step)
@@ -512,7 +512,7 @@ def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_
     step = (end - start) // 60
 
     prom_query = f"""
-        sum by(container_name) (container_memory_rss{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }",pod_name=~"{pod_name}",
+        sum by(container_name) (container_memory_working_set_bytes{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }",pod_name=~"{pod_name}",
         container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
