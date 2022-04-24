@@ -500,6 +500,9 @@ BK_MONITOR_QUERY_HOST = os.environ.get(
     'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
 )
 
+# 是否支持使用 Mesos 服务
+SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
+
 try:
     from .base_ext import *  # noqa
 except ImportError as e:
