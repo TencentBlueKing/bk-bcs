@@ -31,6 +31,7 @@ import (
 // 3. flow control.
 func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 	return func(req *restful.Request, resp *restful.Response) {
+		logTracer := blog.WithID("markProcess", blog.GetTraceFromRequest(req.Request).ID())
 		apiConf := apiserver.GetAPIResource().Conf
 		entranceTime := time.Now()
 		// print request body to log
@@ -41,10 +42,10 @@ func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 			req.Request.Body = ioutil.NopCloser(strings.NewReader(stringBody))
 		}
 		// print log when a request comes in and returns
-		blog.Infof("Receive %s %s?%s, body: %s",
+		logTracer.Infof("Receive %s %s?%s, body: %s",
 			req.Request.Method, req.Request.URL.Path, req.Request.URL.RawQuery, stringBody)
 		f(req, resp)
-		blog.Infof("Return [%d] %s %s", resp.StatusCode(), req.Request.Method, req.Request.URL.Path)
+		logTracer.Infof("Return [%d] %s %s", resp.StatusCode(), req.Request.Method, req.Request.URL.Path)
 		if apiConf.PrintManager {
 			// Count request time
 			if req.Request.Method == "GET" {

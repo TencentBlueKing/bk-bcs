@@ -60,12 +60,13 @@ func PostAlarm(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PostAlarm"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	errFunc := func(err error) {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,
@@ -94,12 +95,13 @@ func ListAlarm(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "ListAlarm"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	errFunc := func(err error) {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			Data:    []string{},

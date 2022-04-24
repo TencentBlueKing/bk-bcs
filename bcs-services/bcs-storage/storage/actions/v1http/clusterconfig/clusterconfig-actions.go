@@ -50,13 +50,14 @@ func GetClusterConfig(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetClusterConfig"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := generateData(req, getCls)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -71,12 +72,13 @@ func PutClusterConfig(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutClusterConfig"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := putClsConfig(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,
@@ -86,7 +88,7 @@ func PutClusterConfig(req *restful.Request, resp *restful.Response) {
 	r, err := generateData(req, getCls)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -101,13 +103,14 @@ func GetServiceConfig(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetServiceConfig"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := generateData(req, getMultiCls)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -122,13 +125,14 @@ func GetStableVersion(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetStableVersion"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	version, err := getStableVersion(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -143,12 +147,13 @@ func PutStableVersion(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutStableVersion"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := putStableVersion(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,

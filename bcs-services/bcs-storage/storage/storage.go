@@ -99,6 +99,7 @@ func (s *StorageServer) initFilterFunctions() []restful.FilterFunction {
 	})
 
 	filterFunctions = append(filterFunctions, trestful.NewOTFilter(opentracing.GlobalTracer()))
+	filterFunctions = append(filterFunctions, blog.NewLTFilter())
 	filterFunctions = append(filterFunctions, middle.MetricsMiddleHandler(mdlw))
 
 	return filterFunctions

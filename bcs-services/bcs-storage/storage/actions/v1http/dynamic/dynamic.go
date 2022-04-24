@@ -36,13 +36,14 @@ func GetNamespaceResources(req *restful.Request, resp *restful.Response) {
 		handler = "GetNamespaceResources"
 	)
 
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := getNamespaceResources(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -53,6 +54,7 @@ func GetNamespaceResources(req *restful.Request, resp *restful.Response) {
 	if len(r) == 0 {
 		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
+		logTracer.Errorf("err: %v", err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageResourceNotExist,
@@ -67,12 +69,13 @@ func PutNamespaceResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutNamespaceResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := putNamespaceResources(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,
@@ -87,12 +90,13 @@ func DeleteNamespaceResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteNamespaceResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := deleteNamespaceResources(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -107,13 +111,14 @@ func GetClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetClusterResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := getClusterResources(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -124,6 +129,7 @@ func GetClusterResources(req *restful.Request, resp *restful.Response) {
 	if len(r) == 0 {
 		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
+		logTracer.Errorf("err: %v", err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageResourceNotExist,
@@ -138,12 +144,13 @@ func PutClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutClusterResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := putClusterResources(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,
@@ -158,12 +165,13 @@ func DeleteClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteClusterResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := deleteClusterResources(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -178,13 +186,14 @@ func ListNamespaceResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "ListNamespaceResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := listNamespaceResources(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			Data:    []string{},
@@ -200,13 +209,14 @@ func ListClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "ListClusterResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := listClusterResources(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			Data:    []string{},
@@ -222,12 +232,13 @@ func DeleteBatchNamespaceResource(req *restful.Request, resp *restful.Response) 
 	const (
 		handler = "DeleteBatchNamespaceResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := deleteBatchNamespaceResource(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -242,12 +253,13 @@ func DeleteBatchClusterResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteBatchClusterResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := deleteClusterNamespaceResource(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -262,13 +274,14 @@ func GetCustomResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetCustomResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, extra, err := getCustomResources(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -283,12 +296,13 @@ func PutCustomResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutCustomResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := putCustomResources(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,
@@ -303,12 +317,13 @@ func DeleteCustomResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteCustomResources"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := deleteCustomResources(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -323,12 +338,13 @@ func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "CreateCustomResourcesIndex"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := createCustomResourcesIndex(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -343,12 +359,13 @@ func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "CreateCustomResourcesIndex"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := deleteCustomResourcesIndex(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,

@@ -45,13 +45,14 @@ func K8SGetWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "K8SGetWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := get(req, k8sEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -66,12 +67,13 @@ func K8SPutWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "K8SPutWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := put(req, k8sEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageRestRequestDataIsNotJson,
@@ -86,12 +88,13 @@ func K8SDeleteWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "K8SDeleteWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := remove(req, k8sEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -106,13 +109,14 @@ func K8SListWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "K8SListWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := list(req, k8sEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			Data:    []string{},
@@ -128,13 +132,14 @@ func MesosGetWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "MesosGetWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := get(req, mesosEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageGetResourceFail,
@@ -149,12 +154,13 @@ func MesosPutWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "MesosPutWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := put(req, mesosEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageRestRequestDataIsNotJson,
@@ -169,12 +175,13 @@ func MesosDeleteWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "MesosDeleteWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := remove(req, mesosEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStorageDeleteResourceFail,
@@ -189,13 +196,14 @@ func MesosListWatchResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "MesosListWatchResource"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := list(req, mesosEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			Data:    []string{},

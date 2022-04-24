@@ -205,9 +205,10 @@ func (rd *reqDynamic) get(condition *operator.Condition) ([]operator.M, error) {
 		Cond:   condition,
 	}
 
+	logTracer := blog.WithID("doQuery", blog.GetTraceFromRequest(rd.req.Request).ID())
 	mList, err := rd.store.Get(rd.req.Request.Context(), rd.getTable(), getOption)
 	if err != nil {
-		blog.Errorf("Failed to query. err: %v", err)
+		logTracer.Errorf("Failed to query. err: %v", err)
 		return nil, fmt.Errorf("failed to query. err: %v", err)
 	}
 
