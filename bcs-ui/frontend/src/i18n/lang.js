@@ -2043,5 +2043,7 @@ export default {
     '可用容器网络IP {num} 个': [],
     '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点': [],
     '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点': [],
-    '当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}': ['']
+    '当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}': [''],
+    '产品文档': ['Documentation'],
+    '版本日志': ['ChangeLogs']
 }

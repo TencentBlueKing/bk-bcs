@@ -1565,6 +1565,13 @@ export default {
                 {},
                 config
             )
+        },
+
+        /**
+         * 获取版本日志列表
+         */
+        getVersionsLogList () {
+            return http.get(`${DEVOPS_BCS_API_URL}/version_logs/`)
         }
     }
 }
