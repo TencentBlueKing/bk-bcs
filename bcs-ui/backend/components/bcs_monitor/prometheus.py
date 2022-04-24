@@ -416,7 +416,7 @@ def get_pod_network_transmit(cluster_id, namespace, pod_name_list, start, end, b
 
 def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_name, start, end, bk_biz_id=None):
     """获取CPU总使用率
-    start, end单位为毫秒，和数据平台保持一致
+    start, end单位为毫秒, 和数据平台保持一致
     """
     step = (end - start) // 60
 
