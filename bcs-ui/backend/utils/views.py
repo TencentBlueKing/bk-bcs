@@ -295,7 +295,7 @@ def make_bkmonitor_url(project: dict) -> str:
     if not project:
         return ""
 
-    url = f'{settings.BKMONITOR_HOST}/?bizId={project["cc_app_id"]}#/k8s'
+    url = f"{getattr(settings,'BKMONITOR_HOST', '')}/?bizId={project['cc_app_id']}#/k8s"
     return url
 
 
@@ -304,7 +304,7 @@ def make_bklog_url(project: dict) -> str:
     if not project:
         return ""
 
-    url = f'{settings.BKLOG_HOST}/#/retrieve/?bizId={project["cc_app_id"]}'
+    url = f"{getattr(settings, 'BKLOG_HOST', '')}/#/retrieve/?bizId={project['cc_app_id']}"
     return url
 
 

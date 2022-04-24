@@ -129,9 +129,6 @@ IS_USE_BCS_TLS = True
 K8S_VERSION = os.environ.get('BKAPP_K8S_VERSION')
 MESOS_VERSION = os.environ.get('BKAPP_MESOS_VERSION')
 
-# 是否支持使用 Mesos 服务
-SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
-
 # admin 权限用户
 ADMIN_USERNAME = 'admin'
 # BCS 默认业务
