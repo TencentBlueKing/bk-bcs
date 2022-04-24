@@ -467,8 +467,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # 访问 bcs-api 服务需要的token
 BCS_APIGW_TOKEN = os.environ.get("BCS_APIGW_TOKEN", "")
-# 访问 bcs-api-gateway 服务需要的AUTHORIZATION
-BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
+
 # 直连新版bcs api的地址
 BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
 
@@ -478,7 +477,7 @@ CLUSTER_MANAGER_PROXY = {
     # cluster manager 服务的 host
     "HOST": BCS_APIGW_DOMAIN["prod"],
     # 访问 cluster manager 的 token
-    "TOKEN": os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", ""),
+    "TOKEN": os.environ.get("BCS_APIGW_TOKEN", ""),
     # 前端访问的前缀
     "PREFIX_PATH": "api/cluster_manager/proxy/",
 }

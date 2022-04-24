@@ -71,5 +71,5 @@ class BcsKubeConfigurationService:
         """获取访问集群 apiserver 所需的鉴权信息，包含 user_token、server_address_path 等"""
         return {
             "host": f"{settings.BCS_APIGW_DOMAIN[env_name]}/clusters/{self.cluster.id}",
-            "user_token": settings.BCS_API_GATEWAY_AUTHORIZATION,
+            "user_token": settings.BCS_APIGW_TOKEN,
         }

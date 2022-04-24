@@ -45,15 +45,15 @@ class K8SClient(BCSClientBase):
             'server_address': f'{self._bcs_server_host}{server_address_path}',
             'server_address_path': server_address_path,
             'identifier': self.cluster_id,
-            'user_token': settings.BCS_API_GATEWAY_AUTHORIZATION,
+            'user_token': settings.BCS_APIGW_TOKEN,
             'host': f'{self._bcs_server_host}{server_address_path}',
         }
 
     @cached_property
     def _context_for_shared_cluster(self):
         return {
-            "host": f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/clusters/{self.cluster.id}",
-            "user_token": settings.BCS_API_GATEWAY_AUTHORIZATION,
+            "host": f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/clusters/{self.cluster_id}",
+            "user_token": settings.BCS_APIGW_TOKEN,
         }
 
     @cached_property
