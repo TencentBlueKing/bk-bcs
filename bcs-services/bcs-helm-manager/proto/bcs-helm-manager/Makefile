@@ -18,8 +18,6 @@ $(SWAGGEROBJ):$(PROTO)
 
 %.pb.go: %.proto
 	protoc -I../../third_party --proto_path=. --go_out=plugins=grpc:. --validate_out=lang=go:. $<
-	# sed -i '' 's/json:"-"/json:"-" bson:"-"/g' bcs-helm-manager.pb.go
-	# sed -i '' 's/json:"ID,omitempty"/json:"ID,omitempty" bson:"_id,omitempty"/g' bcs-helm-manager.pb.go
 
 %.pb.gw.go: %.proto
 	protoc -I../../third_party --proto_path=. --micro_out=. \
