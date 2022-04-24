@@ -25,6 +25,9 @@ require (
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go v1.34.28
+	github.com/aws/aws-sdk-go-v2 v1.13.0
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.16.0
+	github.com/aws/smithy-go v1.10.0
 	github.com/containernetworking/cni v0.6.0
 	github.com/containernetworking/plugins v0.6.0
 	github.com/coreos/etcd v3.3.25+incompatible

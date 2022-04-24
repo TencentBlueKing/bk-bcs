@@ -1,0 +1,29 @@
+获取session成功: "获取session成功"
+
+申请pod资源失败{err}: "申请pod资源失败, 错误详情: {{ .err }}, 请稍后再试"
+
+获取session失败{}: "获取session失败{{ .err }}"
+
+session_id不合法或已经过期: "session_id不合法或已经过期"
+
+连接已经断开: "连接已经断开"
+
+BCS Console 网络断开，请检查网络: "BCS Console 网络断开，请检查网络"
+
+重新加载: "重新加载"
+
+container_id不正确，请检查参数{}: "container_id不正确，请检查参数{{ .params }}"
+
+k8s客户端初始化失败{}: "k8s客户端初始化失败{{ .err }}"
+
+container_id或namespace/pod_name/container_name不能同时为空: "container_id或namespace/pod_name/container_name不能同时为空"
+
+BCS Console 已经{}分钟无操作: "BCS Console 已经{{ .time }}分钟无操作"
+
+BCS Console 使用已经超过{}小时，请重新登录 : "BCS Console 使用已经超过{{ .time }}小时，请重新登录"
+
+container_id不正确，请检查参数: "container_id不正确，请检查参数"
+
+guideMessage: "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替"
+
+mgrGuideMessage: "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab"

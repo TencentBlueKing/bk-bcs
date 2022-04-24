@@ -1,0 +1,1272 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": 4806,
+    "iteration": 1640338049416,
+    "links": [],
+    "panels": [
+        {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 13,
+            "panels": [],
+            "title": "Pod 监控",
+            "type": "row"
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": null,
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 7,
+                "w": 24,
+                "x": 0,
+                "y": 1
+            },
+            "hiddenSeries": false,
+            "id": 2,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "dataLinks": []
+            },
+            "percentage": false,
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_replicas{cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "Desired Replicas",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_ready_replicas{cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "Ready Replicas",
+                    "refId": "B"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_current_replicas{cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "Current Replicas",
+                    "refId": "C"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_updated_replicas{cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "Updated Replicas",
+                    "refId": "D"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_updated_ready_replicas{cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "Updated Ready Replicas",
+                    "refId": "E"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "各状态副本数量",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": null,
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "hiddenSeries": false,
+            "id": 4,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "dataLinks": []
+            },
+            "percentage": false,
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_count{status=\"success\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "成功总次数",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_count{status=\"failure\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "失败总次数",
+                    "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "Pod 创建情况",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "datasource": null,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "id": 6,
+            "options": {
+                "displayMode": "lcd",
+                "fieldOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "defaults": {
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": [],
+                    "values": false
+                },
+                "orientation": "vertical",
+                "showUnfilled": true
+            },
+            "pluginVersion": "6.7.3",
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.001 s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} - bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.01 s",
+                    "refId": "B"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} - ignoring (le) bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.1 s",
+                    "refId": "C"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} - ignoring (le) bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.5 s",
+                    "refId": "D"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} - ignoring (le) bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "1 s",
+                    "refId": "E"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"+inf\"} - ignoring (le) bkbcs_gamedeployment_pod_create_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "+inf s",
+                    "refId": "F"
+                }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "Pod 创建时间分布",
+            "type": "bargauge"
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": "BK-BCS-Prometheus",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 16
+            },
+            "hiddenSeries": false,
+            "id": 8,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "dataLinks": []
+            },
+            "percentage": false,
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_count{status=\"success\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "成功总次数",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_count{status=\"failure\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "失败总次数",
+                    "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "Pod 更新情况",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "datasource": "BK-BCS-Prometheus",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 16
+            },
+            "id": 11,
+            "options": {
+                "displayMode": "lcd",
+                "fieldOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "defaults": {
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": [],
+                    "values": false
+                },
+                "orientation": "vertical",
+                "showUnfilled": true
+            },
+            "pluginVersion": "6.7.3",
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.001 s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} - bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.01 s",
+                    "refId": "B"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} - ignoring (le) bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.1 s",
+                    "refId": "C"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} - ignoring (le) bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.5 s",
+                    "refId": "D"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} - ignoring (le) bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "1 s",
+                    "refId": "E"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"+inf\"} - ignoring (le) bkbcs_gamedeployment_pod_update_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "+inf s",
+                    "refId": "F"
+                }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "Pod 更新时间分布",
+            "type": "bargauge"
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": "BK-BCS-Prometheus",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 24
+            },
+            "hiddenSeries": false,
+            "id": 10,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "dataLinks": []
+            },
+            "percentage": false,
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_count{status=\"success\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "成功总次数",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_count{status=\"failure\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "失败总次数",
+                    "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "Pod 删除情况",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "datasource": "BK-BCS-Prometheus",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 24
+            },
+            "id": 9,
+            "options": {
+                "displayMode": "lcd",
+                "fieldOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "defaults": {
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": [],
+                    "values": false
+                },
+                "orientation": "vertical",
+                "showUnfilled": true
+            },
+            "pluginVersion": "6.7.3",
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.001 s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} - bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.01 s",
+                    "refId": "B"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} - ignoring (le) bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.1 s",
+                    "refId": "C"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} - ignoring (le) bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.5 s",
+                    "refId": "D"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} - ignoring (le) bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "1 s",
+                    "refId": "E"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"+inf\"} - ignoring (le) bkbcs_gamedeployment_pod_delete_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "+inf s",
+                    "refId": "F"
+                }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "Pod 删除时间分布",
+            "type": "bargauge"
+        },
+        {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 32
+            },
+            "id": 15,
+            "panels": [],
+            "title": "HookRun 监控",
+            "type": "row"
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": "BK-BCS-Prometheus",
+            "description": "1 表示该 hookrun 正在运行，由于 Prometheus 的抓取间隔为 30s，因此 hookrun 运行时间小于 30s 的将在此 panel 中被忽略",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 33
+            },
+            "hiddenSeries": false,
+            "id": 17,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "dataLinks": []
+            },
+            "percentage": false,
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "expr": "round(delta(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\"}[1m]) / 60 > 0)",
+                    "interval": "",
+                    "legendFormat": "",
+                    "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "现存 hookrun 情况",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": "BK-BCS-Prometheus",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 33
+            },
+            "hiddenSeries": false,
+            "id": 19,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "dataLinks": []
+            },
+            "percentage": false,
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "expr": "bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"success\",cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "成功总次数",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_hook_hookrun_exec_duration_seconds_count{status=\"failure\",cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "失败总次数",
+                    "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "hookrun 调谐次数",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "datasource": "BK-BCS-Prometheus",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 41
+            },
+            "id": 26,
+            "options": {
+                "displayMode": "lcd",
+                "fieldOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "defaults": {
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": [],
+                    "values": false
+                },
+                "orientation": "vertical",
+                "showUnfilled": true
+            },
+            "pluginVersion": "6.7.3",
+            "targets": [
+                {
+                    "expr": "(count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} < 30) or vector(0))",
+                    "interval": "",
+                    "legendFormat": "0~30s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "(count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} < 60) or vector(0))- (count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} < 30) or vector(0))",
+                    "interval": "",
+                    "legendFormat": "30~60s",
+                    "refId": "B"
+                },
+                {
+                    "expr": "(count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} < 300) or vector(0)) - (count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} < 60) or vector(0))",
+                    "interval": "",
+                    "legendFormat": "60~300s",
+                    "refId": "C"
+                },
+                {
+                    "expr": "(count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} < 600) or vector(0)) - (count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} < 300) or vector(0))",
+                    "interval": "",
+                    "legendFormat": "300~600s",
+                    "refId": "D"
+                },
+                {
+                    "expr": "(count(bkbcs_hook_hookrun_survive_time_seconds{cluster_id=\"$cluster_id\",exported_namespace=\"$namespace\",owner=\"GameDeployment|$gamedeployment\",phase=\"Successful\"} >= 600) or vector(0))",
+                    "interval": "",
+                    "legendFormat": ">600s",
+                    "refId": "E"
+                }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "hookrun 运行成功耗时分布",
+            "type": "bargauge"
+        },
+        {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 49
+            },
+            "id": 21,
+            "panels": [],
+            "title": "Operator 调谐监控",
+            "type": "row"
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": "BK-BCS-Prometheus",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 50
+            },
+            "hiddenSeries": false,
+            "id": 23,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "dataLinks": []
+            },
+            "percentage": false,
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_count{status=\"success\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "成功总次数",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_count{status=\"failure\",cluster_id=\"$cluster_id\",gd=\"$namespace/$gamedeployment\"}",
+                    "interval": "",
+                    "legendFormat": "失败总次数",
+                    "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "Operator 调谐情况",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "datasource": null,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 50
+            },
+            "id": 24,
+            "options": {
+                "displayMode": "lcd",
+                "fieldOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "defaults": {
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": [],
+                    "values": false
+                },
+                "orientation": "vertical",
+                "showUnfilled": true
+            },
+            "pluginVersion": "6.7.3",
+            "targets": [
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.001 s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} - bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.001\"}",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.01 s",
+                    "refId": "B"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} - ignoring (le) bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.01\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.1 s",
+                    "refId": "C"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} - ignoring (le) bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "0.5 s",
+                    "refId": "D"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} - ignoring (le) bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"0.5\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "1 s",
+                    "refId": "E"
+                },
+                {
+                    "expr": "bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"+inf\"} - ignoring (le) bkbcs_gamedeployment_reconcile_duration_seconds_bucket{cluster_id=\"$cluster_id\",status=\"success\",gd=\"$namespace/$gamedeployment\",le=\"1\"} ",
+                    "format": "heatmap",
+                    "interval": "",
+                    "legendFormat": "+inf s",
+                    "refId": "F"
+                }
+            ],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "Operator 调谐时间分布",
+            "type": "bargauge"
+        }
+    ],
+    "refresh": false,
+    "schemaVersion": 22,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+        "list": [
+            {
+                "allValue": null,
+                "current": {
+                    "text": "BCS-K8S-25891",
+                    "value": [
+                        "BCS-K8S-25891"
+                    ]
+                },
+                "datasource": "BK-BCS-Prometheus",
+                "definition": "label_values(bkbcs_gamedeployment_reconcile_duration_seconds_sum{}, cluster_id)",
+                "hide": 0,
+                "includeAll": false,
+                "index": -1,
+                "label": null,
+                "multi": true,
+                "name": "cluster_id",
+                "options": [],
+                "query": "label_values(bkbcs_gamedeployment_reconcile_duration_seconds_sum{}, cluster_id)",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "tagValuesQuery": "",
+                "tags": [],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+            },
+            {
+                "allValue": null,
+                "current": {
+                    "text": "default",
+                    "value": "default"
+                },
+                "datasource": "BK-BCS-Prometheus",
+                "definition": "label_values(bkbcs_gamedeployment_reconcile_duration_seconds_sum{}, gd)",
+                "hide": 0,
+                "includeAll": false,
+                "index": -1,
+                "label": null,
+                "multi": true,
+                "name": "namespace",
+                "options": [],
+                "query": "label_values(bkbcs_gamedeployment_reconcile_duration_seconds_sum{}, gd)",
+                "refresh": 1,
+                "regex": "/(\\S*)\\//",
+                "skipUrlSync": false,
+                "sort": 1,
+                "tagValuesQuery": "",
+                "tags": [],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+            },
+            {
+                "allValue": null,
+                "current": {
+                    "text": "test-gamedeploy",
+                    "value": "test-gamedeploy"
+                },
+                "datasource": "BK-BCS-Prometheus",
+                "definition": "label_values(bkbcs_gamedeployment_reconcile_duration_seconds_sum{}, gd)",
+                "hide": 0,
+                "includeAll": false,
+                "index": -1,
+                "label": null,
+                "multi": true,
+                "name": "gamedeployment",
+                "options": [],
+                "query": "label_values(bkbcs_gamedeployment_reconcile_duration_seconds_sum{}, gd)",
+                "refresh": 1,
+                "regex": "/\\/(\\S*)/",
+                "skipUrlSync": false,
+                "sort": 1,
+                "tagValuesQuery": "",
+                "tags": [],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+            }
+        ]
+    },
+    "time": {
+        "from": "now-3h",
+        "to": "now"
+    },
+    "timepicker": {
+        "refresh_intervals": [
+            "5s",
+            "10s",
+            "30s",
+            "1m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "1d"
+        ]
+    },
+    "timezone": "",
+    "title": "GameWorkload / GameDeployment",
+    "uid": "31qu5ET7z",
+    "variables": {
+        "list": []
+    },
+    "version": 12
+}

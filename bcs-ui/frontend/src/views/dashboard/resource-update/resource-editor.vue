@@ -180,7 +180,7 @@
                             editorErr.value = ''
 
                             emitChange(emitValue, event)
-                        } catch (err) {
+                        } catch (err: any) {
                             editorErr.value = err?.message || String(err)
                         }
                     })
@@ -228,7 +228,7 @@
                     }
                     const editor = getEditor()
                     if (editor) return editor.setValue(value)
-                } catch (err) {
+                } catch (err: any) {
                     editorErr.value = err?.message || String(err)
                 }
             }

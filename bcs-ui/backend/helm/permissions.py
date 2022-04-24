@@ -13,9 +13,8 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from collections import namedtuple
 
-from backend.accounts import bcs_perm
+from backend.iam.permissions.resources.cluster import ClusterPermCtx, ClusterPermission
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +28,5 @@ def with_function_controller_check(permission_cls):
 
 
 def check_cluster_perm(user, project_id, cluster_id, raise_exception=True, request=None):
-    if request is None:
-        Request = namedtuple('Request', 'user')
-        request = Request(user=user)
-    perm = bcs_perm.Cluster(request, project_id, cluster_id)
-    perm.can_use(raise_exception=True)
+    perm_ctx = ClusterPermCtx(username=user.username, project_id=project_id, cluster_id=cluster_id)
+    ClusterPermission().can_view(perm_ctx)

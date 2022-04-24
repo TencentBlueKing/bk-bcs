@@ -198,4 +198,10 @@
 </script>
 <style scoped lang="postcss">
     @import './index.css';
+    /deep/ .bk-form-checkbox {
+        display: flex;
+        .bk-checkbox-text {
+            flex: 1;
+        }
+    }
 </style>

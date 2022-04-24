@@ -3,7 +3,7 @@ import { json2Query } from '@/common/util'
 import router from '@/router'
 import store from '@/store'
 
-const methodsWithoutData = ['get', 'head', 'options']
+const methodsWithoutData = ['get', 'head', 'options', 'delete']
 const defaultConfig = { needRes: false }
 
 export const request = (method, url) => (params = {}, config = {}) => {
@@ -49,7 +49,7 @@ export const request = (method, url) => (params = {}, config = {}) => {
 
         return Promise.resolve(res.data)
     }).catch((err) => {
-        console.log('request error', err)
+        console.error('request error', err)
         return Promise.reject(err)
     })
 }

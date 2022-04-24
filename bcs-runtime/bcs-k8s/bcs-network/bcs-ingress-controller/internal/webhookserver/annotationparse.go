@@ -18,8 +18,14 @@ import (
 )
 
 const (
+	// DelimiterSemicolon is the delimiter for semicolon
 	DelimiterSemicolon = ";"
-	DelimiterEnter     = "\n"
+	// DelimiterEnter is the delimiter for enter
+	DelimiterEnter = "\n"
+	// DelimiterPort is the delimiter for port
+	DelimiterPort = "/"
+	// HostPortType is the host port in container
+	HostPortType = "hostport"
 )
 
 type annotationPort struct {
@@ -27,6 +33,7 @@ type annotationPort struct {
 	poolName      string
 	protocol      string
 	portIntOrStr  string
+	hostPort      bool
 }
 
 func parserAnnotation(value string) ([]*annotationPort, error) {
@@ -68,12 +75,27 @@ func parserAnnotation(value string) ([]*annotationPort, error) {
 		if !isProtocolValid(protocol) {
 			return nil, fmt.Errorf("protocol %s is invalid", protocol)
 		}
+		portStr, hostPort := parsePortStr(portStr)
 		retPorts = append(retPorts, &annotationPort{
 			poolNamespace: poolNamespace,
 			poolName:      poolName,
 			protocol:      protocol,
 			portIntOrStr:  portStr,
+			hostPort:      hostPort,
 		})
 	}
 	return retPorts, nil
+}
+
+// parsePortStr parse port and port type
+// example: 8080 or 8080/hostport
+func parsePortStr(portStr string) (port string, hostPort bool) {
+	if !strings.Contains(portStr, DelimiterPort) {
+		return portStr, false
+	}
+	portStrs := strings.Split(portStr, DelimiterPort)
+	if len(portStrs) == 2 && strings.ToLower(portStrs[1]) == HostPortType {
+		return portStrs[0], true
+	}
+	return portStr, false
 }

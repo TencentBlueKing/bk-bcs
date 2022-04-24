@@ -1,0 +1,34 @@
+apiVersion: discovery.k8s.io/v1beta1
+kind: EndpointSlice
+metadata:
+  name: example-abc
+  labels:
+    kubernetes.io/service-name: test-svc
+addressType: IPv4
+ports:
+  - name: http
+    protocol: TCP
+    port: 8000
+endpoints:
+  - addresses:
+    - "10.64.200.79"
+    conditions:
+      ready: true
+---
+apiVersion: discovery.k8s.io/v1beta1
+kind: EndpointSlice
+metadata:
+  name: example-abc-22
+  labels:
+    kubernetes.io/service-name: test-svc2
+addressType: IPv4
+ports:
+  - name: http
+    protocol: TCP
+    port: 8000
+endpoints:
+  - addresses:
+    - "10.64.200.12"
+    conditions:
+      ready: true
+

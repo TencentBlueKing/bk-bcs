@@ -45,7 +45,6 @@ class TestNodeMetric:
         assert response.json()['code'] == 0
         assert response.json()['data'] == {
             'provider': 'Prometheus',
-            'id': 1,
             'dockerVersion': 'v1',
             'osVersion': 'v2',
             'cpu_count': '8',

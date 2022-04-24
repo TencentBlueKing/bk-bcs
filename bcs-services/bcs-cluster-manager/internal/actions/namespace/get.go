@@ -14,13 +14,14 @@ package namespace
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // GetAction action for get cluster
@@ -39,13 +40,6 @@ func NewGetAction(model store.ClusterManagerModel) *GetAction {
 	}
 }
 
-func (ga *GetAction) validate() error {
-	if err := ga.req.Validate(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (ga *GetAction) listQuotas(namespace, federationClusterID string) ([]*cmproto.ResourceQuota, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"namespace":           namespace,
@@ -56,6 +50,7 @@ func (ga *GetAction) listQuotas(namespace, federationClusterID string) ([]*cmpro
 		return nil, err
 	}
 	var retQuotaList []*cmproto.ResourceQuota
+	now := time.Now().Format(time.RFC3339)
 	for _, quota := range quotas {
 		retQuotaList = append(retQuotaList, &cmproto.ResourceQuota{
 			Namespace:           quota.Namespace,
@@ -63,8 +58,8 @@ func (ga *GetAction) listQuotas(namespace, federationClusterID string) ([]*cmpro
 			ClusterID:           quota.ClusterID,
 			Region:              quota.Region,
 			ResourceQuota:       quota.ResourceQuota,
-			CreateTime:          quota.CreateTime.String(),
-			UpdateTime:          quota.UpdateTime.String(),
+			CreateTime:          now,
+			UpdateTime:          now,
 		})
 	}
 	return retQuotaList, nil
@@ -86,8 +81,8 @@ func (ga *GetAction) getNamespace() error {
 		BusinessID:          ns.BusinessID,
 		Labels:              ns.Labels,
 		MaxQuota:            ns.MaxQuota,
-		CreateTime:          ns.CreateTime.String(),
-		UpdateTime:          ns.UpdateTime.String(),
+		CreateTime:          ns.CreateTime,
+		UpdateTime:          ns.UpdateTime,
 		QuotaList:           quotaList,
 	}
 	return nil
@@ -96,7 +91,7 @@ func (ga *GetAction) getNamespace() error {
 func (ga *GetAction) setResp(code uint32, msg string) {
 	ga.resp.Code = code
 	ga.resp.Message = msg
-	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 	ga.resp.Data = ga.ns
 }
 
@@ -110,14 +105,14 @@ func (ga *GetAction) Handle(ctx context.Context, req *cmproto.GetNamespaceReq, r
 	ga.req = req
 	ga.resp = resp
 
-	if err := ga.validate(); err != nil {
-		ga.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+	if err := req.Validate(); err != nil {
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := ga.getNamespace(); err != nil {
-		ga.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	ga.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

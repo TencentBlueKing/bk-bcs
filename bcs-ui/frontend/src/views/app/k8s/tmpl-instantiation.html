@@ -8,7 +8,7 @@
     </div>
     <div class="biz-content-wrapper">
         <app-exception v-if="exceptionCode" :type="exceptionCode.code" :text="exceptionCode.msg"></app-exception>
-        <div v-else class="biz-configuration-instantiation-wrapper" v-bkloading="{isLoading: createInstanceLoading}">
+        <div v-else class="biz-configuration-instantiation-wrapper" v-bkloading="{isLoading: createInstanceLoading, extCls: 'content-loading'}">
             <div class="biz-configuration-instantiation-header">
                 <div class="left">
                     <svg style="display: none;">
@@ -106,7 +106,7 @@
             </div>
             <transition name="fade">
                 <div class="biz-configuration-instantiation-content" v-if="previewShow"
-                    v-bkloading="{isLoading: previewLoading}">
+                    v-bkloading="{isLoading: previewLoading, extCls: 'content-loading'}">
                     <div class="header">
                         {{previewTitle}}
                     </div>

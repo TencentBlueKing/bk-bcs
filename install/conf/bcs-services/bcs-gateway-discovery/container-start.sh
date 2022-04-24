@@ -13,4 +13,4 @@ fi
 
 #starting module
 cd /data/bcs/${module}
-/data/bcs/${module}/${module} $@
+exec /data/bcs/${module}/${module} $@

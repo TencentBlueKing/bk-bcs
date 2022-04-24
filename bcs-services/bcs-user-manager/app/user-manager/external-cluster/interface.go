@@ -13,6 +13,7 @@
 
 package external_cluster
 
+// ExternalCluster sync cluster credentials interface
 type ExternalCluster interface {
 	SyncClusterCredentials() error
 }

@@ -35,7 +35,7 @@
                 :label-width="100"
                 :model="formdata"
                 :rules="rules">
-                <bk-form-item property="region" :label="$t('所属地域')" :required="true" :desc="defaultInfo.areaDesc" style="margin-right: 1px;">
+                <bk-form-item property="region" :label="$t('所属地域')" :required="true" :desc="defaultInfo.areaDesc">
                     <bk-selector :placeholder="$t('请选择地域')"
                         :selected.sync="formdata.region"
                         :list="areaList"
@@ -59,7 +59,18 @@
                             @click="formdata.networkKey = 'underlay'">underlay</bcs-button>
                     </div>
                 </bk-form-item>
-                <bk-form-item ext-cls="mt0" property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc" style="padding-top: 20px;">
+                <bk-form-item property="zone_id" :label="$t('园区')" :required="true">
+                    <bk-selector :placeholder="$t('请选择园区')"
+                        :selected.sync="formdata.zone_id"
+                        :list="zoneList"
+                        :searchable="true"
+                        setting-key="value"
+                        display-key="label"
+                        search-key="label"
+                    >
+                    </bk-selector>
+                </bk-form-item>
+                <bk-form-item property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc">
                     <bk-selector :placeholder="$t('请选择VPC')"
                         :selected.sync="formdata.vpc_name"
                         :list="vpcList"
@@ -71,9 +82,19 @@
                     </bk-selector>
                 </bk-form-item>
                 <bk-form-item ext-cls="has-append-item" :label="$t('数据盘')" property="disk_size">
-                    <bk-input v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('请输入50的倍数的数值')">
-                        <div class="group-text" slot="append">GB</div>
-                    </bk-input>
+                    <div class="disk-inner">
+                        <bcs-select class="w200" v-model="formdata.disk_type" :clearable="false">
+                            <bcs-option v-for="item in diskTypeList"
+                                :key="item.value"
+                                :id="item.value"
+                                :name="item.label"
+                            >
+                            </bcs-option>
+                        </bcs-select>
+                        <bk-input v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('请输入50的倍数的数值')">
+                            <div class="group-text" slot="append">GB</div>
+                        </bk-input>
+                    </div>
                 </bk-form-item>
                 <bk-form-item :label="$t('需求数量')">
                     <bk-number-input
@@ -178,12 +199,16 @@
                 isFirstLoadData: true,
                 areaList: [],
                 vpcList: [],
+                zoneList: [],
+                diskTypeList: [],
                 formdata: {
                     region: '',
                     disk_size: 50,
                     replicas: 1,
                     cvm_type: '',
                     vpc_name: '',
+                    zone_id: '',
+                    disk_type: '',
                     networkKey: 'overlay'
                 },
                 rules: {
@@ -335,6 +360,7 @@
                         this.formdata.vpc_name = ''
                         this.vpcList = []
                         await this.fetchVPC()
+                        await this.fetchZone()
                     }
                 }
             },
@@ -349,6 +375,7 @@
         },
         async created () {
             await this.getBizMaintainers()
+
             if (!this.hasAuth) return
             if (this.isBackfill) {
                 this.defaultInfo = {
@@ -359,6 +386,7 @@
                 }
             }
             this.getApplyHostStatus()
+            this.fetchDiskType()
         },
         beforeDestroy () {
             clearTimeout(this.timer) && (this.timer = null)
@@ -379,13 +407,12 @@
                 if (!this.clusterId) return
 
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterInfo', {
-                        projectId: this.projectId,
-                        clusterId: this.clusterId
+                    const res = await this.$store.dispatch('clustermanager/clusterDetail', {
+                        $clusterId: this.clusterId
                     })
                     this.clusterInfo = res.data || {}
-                    if (this.clusterInfo.network_type && this.isBackfill) {
-                        this.formdata.networkKey = this.clusterInfo.network_type
+                    if (this.clusterInfo.networkType && this.isBackfill) {
+                        this.formdata.networkKey = this.clusterInfo.networkType
                         this.defaultInfo.networkKey = this.formdata.networkKey
                     }
                 } catch (e) {
@@ -397,20 +424,16 @@
              */
             async getAreas () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getAreaList', {
-                        projectId: this.projectId,
-                        data: {
-                            coes: 'tke'
-                        }
+                    const list = await this.$store.dispatch('clustermanager/fetchCloudRegion', {
+                        $cloudId: 'tencentCloud'
                     })
-                    const list = res.data.results || []
                     this.areaList = list.map(item => ({
-                        areaId: item.id,
-                        areaName: item.name,
-                        showName: item.chinese_name.replace('TKE-', '')
+                        areaId: item.cloudID,
+                        areaName: item.region,
+                        showName: item.regionName
                     }))
-                    if (this.clusterInfo.area_id && this.isBackfill) {
-                        const area = this.areaList.find(item => item.areaId === this.clusterInfo.area_id)
+                    if (this.clusterInfo.region && this.isBackfill) {
+                        const area = this.areaList.find(item => item.areaName === this.clusterInfo.region)
                         if (area) {
                             this.formdata.region = area.areaName
                         }
@@ -434,38 +457,79 @@
                 await this.fetchVPC()
             },
 
+            /**
+             * 获取园区列表
+             */
+            async fetchZone () {
+                if (!this.formdata.region) return
+
+                try {
+                    const data = await this.$store.dispatch('cluster/getZoneList', {
+                        projectId: this.projectId,
+                        region: this.formdata.region
+                    })
+                    this.zoneList = data.data
+                    if (this.clusterInfo.zone_id && this.isBackfill) {
+                        const zone = this.zoneList.find(item => item.value === this.clusterInfo.zone_id)
+                        if (zone) {
+                            this.formdata.zone_id = zone.value
+                        }
+                    } else if (this.zoneList.length) {
+                        this.formdata.zone_id = this.zoneList[0].value
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
+            },
+
+            /**
+             * 获取数据盘类型列表
+             */
+            async fetchDiskType () {
+                try {
+                    const data = await this.$store.dispatch('cluster/getDiskTypeList', {
+                        projectId: this.projectId
+                    })
+                    this.diskTypeList = data.data
+                    if (this.clusterInfo.disk_type && this.isBackfill) {
+                        const diskType = this.diskTypeList.find(item => item.value === this.clusterInfo.disk_type)
+                        if (diskType) {
+                            this.formdata.disk_type = diskType.value
+                        }
+                    } else if (this.diskTypeList.length) {
+                        this.formdata.disk_type = this.diskTypeList[1].value
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
+            },
+
             async fetchVPC () {
                 if (!this.formdata.region) {
                     return
                 }
                 try {
-                    const res = await this.$store.dispatch('cluster/getVPC', {
-                        projectId: this.projectId,
-                        data: {
-                            region_name: this.formdata.region,
-                            network_type: this.formdata.networkKey
-                        }
+                    const data = await this.$store.dispatch('clustermanager/fetchCloudVpc', {
+                        cloudID: 'tencentCloud',
+                        region: this.formdata.region,
+                        networkType: this.formdata.networkKey
                     })
-                    const vpc = res.data || {}
-                    const vpcList = []
-                    Object.keys(vpc).forEach(key => {
-                        vpcList.push({
-                            vpcId: vpc[key],
-                            vpcName: key
-                        })
-                    })
+                    const vpcList = data.map(item => ({
+                        vpcId: item.vpcID,
+                        vpcName: item.vpcName
+                    }))
                     this.vpcList.splice(0, this.vpcList.length, ...vpcList)
-                    if (this.clusterInfo.vpc_id && this.isBackfill) {
-                        const vpc = this.vpcList.find(item => item.vpcId === this.clusterInfo.vpc_id)
+                    if (this.clusterInfo.vpcID && this.isBackfill) {
+                        const vpc = this.vpcList.find(item => item.vpcId === this.clusterInfo.vpcID)
                         if (vpc) {
                             this.formdata.vpc_name = vpc.vpcId
                         } else {
                             // 回填不上则直接显示当前vpc id
                             this.vpcList.unshift({
-                                vpcId: this.clusterInfo.vpc_id,
-                                vpcName: this.clusterInfo.vpc_id
+                                vpcId: this.clusterInfo.vpcID,
+                                vpcName: this.clusterInfo.vpcID
                             })
-                            this.formdata.vpc_name = this.clusterInfo.vpc_id
+                            this.formdata.vpc_name = this.clusterInfo.vpcID
                         }
                     } else if (this.vpcList.length) {
                         // 默认选中第一个
@@ -629,6 +693,8 @@
     flex-wrap: wrap;
     /deep/ .bk-form-item {
         flex: 0 0 50%;
+        margin-top: 0;
+        margin-bottom: 20px;
         &.custom-item {
             flex: 0 0 100%;
             .bk-form-content {
@@ -659,11 +725,18 @@
         }
         .bk-button-group {
             width: 100%;
+            display: block;
             .network-btn {
                 width: 50%;
             }
             .network-zIndex {
                 z-index: 1;
+            }
+        }
+        .disk-inner {
+            display: flex;
+            .w200 {
+                width: 200px;
             }
         }
         .form-item-inner {

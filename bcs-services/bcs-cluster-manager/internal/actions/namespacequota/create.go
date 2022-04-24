@@ -28,7 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -40,7 +39,7 @@ type CreateAction struct {
 	ctx              context.Context
 	model            store.ClusterManagerModel
 	k8sop            *clusterops.K8SOperator
-	ns               *types.Namespace
+	ns               *cmproto.Namespace
 	req              *cmproto.CreateNamespaceQuotaReq
 	resp             *cmproto.CreateNamespaceQuotaResp
 	quota            *k8scorev1.ResourceQuota
@@ -105,10 +104,10 @@ func (ca *CreateAction) listNodesFromCluster(cluster string) (*k8scorev1.NodeLis
 	return nodeList, err
 }
 
-func (ca *CreateAction) listQuotasByCluster(cluster string) ([]types.NamespaceQuota, error) {
+func (ca *CreateAction) listQuotasByCluster(cluster string) ([]cmproto.ResourceQuota, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"federationClusterID": ca.req.FederationClusterID,
-		"clusterID":           cluster,
+		"federationclusterid": ca.req.FederationClusterID,
+		"clusterid":           cluster,
 	})
 	quotaList, err := ca.model.ListQuota(ca.ctx, cond, &storeopt.ListOption{})
 	if err != nil {
@@ -122,9 +121,9 @@ func (ca *CreateAction) allocateOneCluster() error {
 	// 计算已经分配的quota与集群总资源的比值，最后算出比值最小的集群
 	condM := operator.M{
 		"region":              ca.req.Region,
-		"federationClusterID": ca.req.FederationClusterID,
-		"engineType":          common.ClusterEngineTypeK8s,
-		"clusterType":         common.ClusterTypeSingle,
+		"federationclusterid": ca.req.FederationClusterID,
+		"enginetype":          common.ClusterEngineTypeK8s,
+		"clustertype":         common.ClusterTypeSingle,
 	}
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	clusterList, err := ca.model.ListCluster(ca.ctx, cond, &storeopt.ListOption{})
@@ -165,9 +164,9 @@ func (ca *CreateAction) allocateOneCluster() error {
 
 // create namespace resoucequota to store
 func (ca *CreateAction) createQuotaToStore() error {
-	createTime := time.Now()
+	createTime := time.Now().Format(time.RFC3339)
 	ca.quota.ClusterName = ca.allocatedCluster
-	newQuota := &types.NamespaceQuota{
+	newQuota := &cmproto.ResourceQuota{
 		Namespace:           ca.req.Namespace,
 		FederationClusterID: ca.req.FederationClusterID,
 		ClusterID:           ca.allocatedCluster,
@@ -185,7 +184,7 @@ func (ca *CreateAction) createQuotaToStore() error {
 func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
-	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 	ca.resp.Data = &cmproto.CreateNamespaceQuotaResp_CreateNamespaceQuotaRespData{
 		ClusterID: ca.allocatedCluster,
 	}
@@ -203,18 +202,18 @@ func (ca *CreateAction) Handle(
 	ca.resp = resp
 
 	if err := ca.validate(); err != nil {
-		ca.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 
 	if err := ca.getNamespaceFromStore(); err != nil {
-		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
 	if len(ca.req.ClusterID) == 0 {
 		if err := ca.allocateOneCluster(); err != nil {
-			ca.setResp(types.BcsErrClusterManagerAllocateClusterInCreateQuota, err.Error())
+			ca.setResp(common.BcsErrClusterManagerAllocateClusterInCreateQuota, err.Error())
 			return
 		}
 	} else {
@@ -224,11 +223,11 @@ func (ca *CreateAction) Handle(
 
 	isExisted, err := ca.isQuotaExisted(ca.allocatedCluster)
 	if err != nil {
-		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	if isExisted {
-		ca.setResp(types.BcsErrClusterManagerResourceDuplicated,
+		ca.setResp(common.BcsErrClusterManagerResourceDuplicated,
 			fmt.Sprintf("quota %s/%s/%s is duplicated",
 				ca.req.Namespace, ca.req.FederationClusterID, ca.allocatedCluster))
 		return
@@ -240,13 +239,13 @@ func (ca *CreateAction) Handle(
 			Labels: ca.ns.Labels,
 		},
 	}, ca.quota); err != nil {
-		ca.setResp(types.BcsErrClusterManagerK8SOpsFailed, err.Error())
+		ca.setResp(common.BcsErrClusterManagerK8SOpsFailed, err.Error())
 		return
 	}
 	if err := ca.createQuotaToStore(); err != nil {
-		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	ca.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

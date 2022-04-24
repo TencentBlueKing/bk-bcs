@@ -40,6 +40,9 @@ class DiscovererCache:
     def set_content(self, content: str):
         self.rd_client.set(self.cache_key, content)
 
+    def invalidate(self):
+        self.rd_client.delete(self.cache_key)
+
 
 class BcsLazyDiscoverer(LazyDiscoverer):
     """

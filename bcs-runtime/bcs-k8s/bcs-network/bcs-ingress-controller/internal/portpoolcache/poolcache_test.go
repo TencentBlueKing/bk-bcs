@@ -56,7 +56,7 @@ func TestCacheAllocate(t *testing.T) {
 	}
 	expectItem := AllocatedPortItem{
 		PoolKey:     "test1.ns1",
-		PoolItemKey: "lb1,lb2",
+		PoolItemKey: networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}),
 		Protocol:    "TCP",
 		StartPort:   30000,
 		EndPort:     0,
@@ -72,7 +72,7 @@ func TestCacheAllocate(t *testing.T) {
 	}
 	expectItem = AllocatedPortItem{
 		PoolKey:     "test1.ns1",
-		PoolItemKey: "lb1,lb2",
+		PoolItemKey: networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}),
 		Protocol:    "TCP",
 		StartPort:   30001,
 		EndPort:     0,
@@ -82,7 +82,7 @@ func TestCacheAllocate(t *testing.T) {
 		t.Fatalf("expect %v, but get %v", expectItem, cachePortItem)
 	}
 
-	cache.ReleasePortBinding("test1.ns1", "lb1,lb2", "TCP", 30001, 0)
+	cache.ReleasePortBinding("test1.ns1", networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}), "TCP", 30001, 0)
 
 	if cache.portPoolMap["test1.ns1"].ItemList[0].PortListMap["TCP"].AllocatedPortNum != 1 {
 		t.Fatalf("allocated port number %d is not 1",
@@ -104,7 +104,7 @@ func TestDeletePortPoolItem(t *testing.T) {
 		EndPort:         31000,
 		Status:          constant.PortBindingStatusReady,
 	}
-	cache.DeletePortPoolItem("test1.ns1", "lb1,lb2")
+	cache.DeletePortPoolItem("test1.ns1", networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}))
 	if !reflect.DeepEqual(cache.portPoolMap["test1.ns1"].ItemList[0].ItemStatus, testItem) {
 		t.Fatalf("expect %v but get %v", testItem, cache.portPoolMap["test1.ns1"].ItemList[0].ItemStatus)
 	}
@@ -117,14 +117,14 @@ func TestSetPortBindingUsed(t *testing.T) {
 		t.Fatalf("failed to get new cache")
 	}
 
-	cache.SetPortBindingUsed("test1.ns1", "lb1,lb2", "TCP", 30000, 0)
+	cache.SetPortBindingUsed("test1.ns1", networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}), "TCP", 30000, 0)
 	_, cachePortItem, err := cache.AllocatePortBinding("test1.ns1", "TCP")
 	if err != nil {
 		t.Fatalf("allocate port binding failed, err %s", err.Error())
 	}
 	expectItem := AllocatedPortItem{
 		PoolKey:     "test1.ns1",
-		PoolItemKey: "lb1,lb2",
+		PoolItemKey: networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}),
 		Protocol:    "TCP",
 		StartPort:   30001,
 		EndPort:     0,
@@ -141,11 +141,11 @@ func TestIsItemExisted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get new cache")
 	}
-	if !cache.IsItemExisted("test1.ns1", "lb1,lb2") {
-		t.Fatalf("pool test1.ns1, item lb1,lb2 should be existed")
+	if !cache.IsItemExisted("test1.ns1", networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"})) {
+		t.Fatalf("pool test1.ns1, item item1-lb1,lb2 should be existed")
 	}
-	if cache.IsItemExisted("test1.ns1", "lb1,lb22") {
-		t.Fatalf("pool test1.ns1, item lb1,lb2 should not be existed")
+	if cache.IsItemExisted("test1.ns1", "item1-lb1,lb22") {
+		t.Fatalf("pool test1.ns1, item item1-lb1,lb2 should not be existed")
 	}
 }
 
@@ -156,7 +156,7 @@ func TestAllocateAllProtocolPortBinding(t *testing.T) {
 		t.Fatalf("failed to get new cache")
 	}
 
-	cache.SetPortBindingUsed("test1.ns1", "lb1,lb2", "TCP", 30000, 0)
+	cache.SetPortBindingUsed("test1.ns1", networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}), "TCP", 30000, 0)
 	_, mapItem, err := cache.AllocateAllProtocolPortBinding("test1.ns1")
 	if err != nil {
 		t.Fatalf("allocate port binding failed, err %s", err.Error())
@@ -164,7 +164,7 @@ func TestAllocateAllProtocolPortBinding(t *testing.T) {
 	expectMap := map[string]AllocatedPortItem{
 		"TCP": {
 			PoolKey:     "test1.ns1",
-			PoolItemKey: "lb1,lb2",
+			PoolItemKey: networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}),
 			Protocol:    "TCP",
 			StartPort:   30001,
 			EndPort:     0,
@@ -172,7 +172,7 @@ func TestAllocateAllProtocolPortBinding(t *testing.T) {
 		},
 		"UDP": {
 			PoolKey:     "test1.ns1",
-			PoolItemKey: "lb1,lb2",
+			PoolItemKey: networkextensionv1.GetPoolItemKey("item1", []string{"lb1", "lb2"}),
 			Protocol:    "UDP",
 			StartPort:   30001,
 			EndPort:     0,

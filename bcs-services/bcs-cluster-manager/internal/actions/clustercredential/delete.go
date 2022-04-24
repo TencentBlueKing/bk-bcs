@@ -17,8 +17,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // DeleteAction action for delete clustercredentail
@@ -51,7 +51,7 @@ func (da *DeleteAction) deleteCredential() error {
 func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Code = code
 	da.resp.Message = msg
-	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle delete cluster credential
@@ -66,12 +66,12 @@ func (da *DeleteAction) Handle(
 	da.resp = resp
 
 	if err := da.validate(); err != nil {
-		da.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := da.deleteCredential(); err != nil {
-		da.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 	}
-	da.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

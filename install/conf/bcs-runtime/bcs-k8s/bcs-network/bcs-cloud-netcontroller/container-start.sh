@@ -6,7 +6,7 @@ cd /data/bcs/${module}
 chmod +x ${module}
 
 # ready to start
-/data/bcs/${module}/${module} $@
+exec /data/bcs/${module}/${module} $@
 
 # ./bcs-cloud-netcontroller --help
 # Usage of ./bcs-cloud-netcontroller:

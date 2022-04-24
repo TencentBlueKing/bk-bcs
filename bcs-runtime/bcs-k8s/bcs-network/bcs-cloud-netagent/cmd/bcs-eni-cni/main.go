@@ -19,6 +19,7 @@ import (
 	"github.com/containernetworking/cni/pkg/version"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netagent/cmd/bcs-eni-cni/eni"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/internal/constant"
 )
 
 func init() {
@@ -30,5 +31,6 @@ func init() {
 
 func main() {
 	obj := eni.New()
+	obj.SetEniPrefix(constant.EniPrefix)
 	skel.PluginMain(obj.CNIAdd, obj.CNIDel, version.All)
 }

@@ -82,6 +82,7 @@ class ResourceType(str, StructuredEnum):
     # CustomResource
     CRD = EnumField('crd', _('自定义资源定义'))
     CustomObject = EnumField('customobject', _('自定义对象'))
+    ResourceQuota = EnumField('resourcequota', 'resourcequota')
 
 
 ResourceTypes = dict(ResourceType.get_choices())

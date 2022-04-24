@@ -1,0 +1,13 @@
+{
+  "kind": "Ingress",
+  "class": "network",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_ingress",
+      "alias": "Ingress 简单示例",
+      "description": "简单的 Ingress 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

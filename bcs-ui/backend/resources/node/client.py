@@ -101,6 +101,16 @@ class Node(ResourceClient):
         # 当有操作失败的，抛出异常
         async_run(tasks)
 
+    def set_nodes_schedule_status(self, unschedulable: bool, node_names: List[str]):
+        """设置节点调度状态
+
+        unschedulable: 节点是否可以调度
+        node_names: 节点名称, 允许多个, 格式[节点名称]
+        """
+        tasks = [functools.partial(self.patch, {"spec": {"unschedulable": unschedulable}}, n) for n in node_names]
+        # 如有失败, 则抛出异常
+        async_run(tasks)
+
     def filter_nodes_field_data(
         self,
         field: str,

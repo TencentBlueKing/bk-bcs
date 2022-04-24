@@ -22,6 +22,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
@@ -138,17 +139,23 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	}
 	glog.Info("get storage service done")
 
-	glog.Info("getting netservice now...")
-	netservice, netserviceZKRD, err := bcs.GetNetService(config.BCS.NetServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints, false)
-	if err != nil {
-		panic(err)
-	}
-	glog.Info("get netservice done")
+	var (
+		netservice     *bcs.InnerService
+		netserviceZKRD *RegisterDiscover.RegDiscover
+	)
+	if !config.WatchResource.DisableNetservice {
+		glog.Info("getting netservice now...")
+		netservice, netserviceZKRD, err = bcs.GetNetService(config.BCS.NetServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints, false)
+		if err != nil {
+			panic(err)
+		}
+		glog.Info("get netservice done")
 
-	// waiting for netservice discovery
-	time.Sleep(5 * time.Second)
-	if len(netservice.Servers()) == 0 {
-		glog.Infof("got non netservice address this moment")
+		// waiting for netservice discovery
+		time.Sleep(5 * time.Second)
+		if len(netservice.Servers()) == 0 {
+			glog.Infof("got non netservice address this moment")
+		}
 	}
 
 	// init server actions && register web server && register metrics server
@@ -172,7 +179,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	glog.Info("start http server successful")
 
 	// init resourceList to watch
-	err = resources.InitResourceList(&config.K8s, config.ParseFilter())
+	err = resources.InitResourceList(&config.K8s, config.ParseFilter(), &config.WatchResource)
 	if err != nil {
 		panic(err)
 	}
@@ -193,7 +200,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create watcher manager.
 	glog.Info("creating watcher manager now...")
-	watcherMgr, err := k8s.NewWatcherManager(clusterID, writer, &config.K8s, storageService, netservice, stopChan)
+	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, writer, &config.K8s, storageService, netservice, stopChan)
 	if err != nil {
 		panic(err)
 	}
@@ -208,8 +215,10 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	// stop all kubefed watchers
 	watcherMgr.StopCrdWatchers()
 
-	// stop service discovery.
-	netserviceZKRD.Stop()
+	if !config.WatchResource.DisableNetservice {
+		// stop service discovery.
+		netserviceZKRD.Stop()
+	}
 
 	return nil
 }

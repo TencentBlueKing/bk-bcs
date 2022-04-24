@@ -645,16 +645,6 @@
              * @param  {number} index 索引
              */
             const removeCrdInstance = async (crdInstance, index) => {
-                // if (crdInstance.permissions && !crdInstance.permissions.use) {
-                //     await this.$store.dispatch('getResourcePermissions', {
-                //         project_id: this.projectId,
-                //         policy_code: 'use',
-                //         resource_code: crdInstance.namespace,
-                //         resource_name: crdInstance.namespace_name,
-                //         resource_type: 'namespace'
-                //     })
-                // }
-
                 const crdKind = state.crdKind
                 const crdId = crdInstance.id
 
@@ -711,7 +701,7 @@
                     return false
                 }
 
-                if (state.curCrdInstance.polaris.name && !/^[\w-.]{1,128}$/.test(state.curCrdInstance.polaris.name)) {
+                if (state.curCrdInstance.polaris.name && !/^[\w-.:]{1,128}$/.test(state.curCrdInstance.polaris.name)) {
                     ctx.root.$bkMessage({
                         theme: 'error',
                         message: $i18n.t('Polaris信息名只允许数字、英文字母、.、-、_, 限制128个字符'),

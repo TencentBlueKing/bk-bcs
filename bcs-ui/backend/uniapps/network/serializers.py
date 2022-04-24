@@ -49,8 +49,6 @@ class NginxIngressSLZ(serializers.ModelSerializer):
     protocol_type = serializers.CharField(max_length=32, required=False)
     ip_info = serializers.JSONField(required=True)
     detail = serializers.JSONField(required=False)
-    creator = serializers.CharField(max_length=16, required=False)
-    updator = serializers.CharField(max_length=16, required=False)
     namespace = serializers.CharField()
 
     class Meta:

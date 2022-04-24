@@ -116,7 +116,7 @@ func (c *Client) Lock(id string, opts ...lock.LockOption) error {
 
 	m := cc.NewMutex(s, lpath)
 
-	if err := m.Lock(context.Background()); err != nil {
+	if err := m.Lock(context.TODO()); err != nil {
 		return err
 	}
 

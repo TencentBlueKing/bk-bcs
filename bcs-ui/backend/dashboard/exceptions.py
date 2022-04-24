@@ -75,3 +75,17 @@ class OwnerReferencesNotExist(DashboardBaseError):
 
     message = "OwnerReferences Not Exist"
     code = 4005006
+
+
+class ActionUnsupported(DashboardBaseError):
+    """ 不支持指定的 Action """
+
+    message = "action unsupported"
+    code = 4005007
+
+
+class ResourceTypeUnsupported(DashboardBaseError):
+    """ 不支持的用于资源视图鉴权的资源类型 """
+
+    message = "resource type for dashboard perm validate unsupported"
+    code = 4005008

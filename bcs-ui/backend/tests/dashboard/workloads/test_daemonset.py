@@ -26,18 +26,18 @@ class TestDaemonSet:
     """ 测试 DaemonSet 相关接口 """
 
     manifest = load_demo_manifest('workloads/simple_daemonset')
-    name = getitems(manifest, 'metadata.name')
-    batch_url = f'{DAU_PREFIX}/workloads/daemonsets/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/daemonsets/{name}/'
+    create_url = f'{DAU_PREFIX}/workloads/daemonsets/'
+    list_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/workloads/daemonsets/'
+    inst_url = f"{list_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """
-        response = api_client.post(self.batch_url, data={'manifest': self.manifest})
+        response = api_client.post(self.create_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_list(self, api_client):
         """ 测试获取资源列表接口 """
-        response = api_client.get(self.batch_url)
+        response = api_client.get(self.list_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'DaemonSetList'
 
@@ -45,17 +45,17 @@ class TestDaemonSet:
         """ 测试更新资源接口 """
         # 修改 daemonset 配置中的 label
         self.manifest['spec']['template']['metadata']['labels']['test'] = 'test'
-        response = api_client.put(self.detail_url, data={'manifest': self.manifest})
+        response = api_client.put(self.inst_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client):
         """ 测试获取单个资源接口 """
-        response = api_client.get(self.detail_url)
+        response = api_client.get(self.inst_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'DaemonSet'
         assert getitems(response.data, 'manifest.spec.template.metadata.labels.test') == 'test'
 
     def test_destroy(self, api_client):
         """ 测试删除单个资源 """
-        response = api_client.delete(self.detail_url)
+        response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0

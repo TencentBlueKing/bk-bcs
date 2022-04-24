@@ -14,8 +14,10 @@
 package gamestatefulset
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	stsplus "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
@@ -62,8 +64,9 @@ func NewRealGameStatefulSetPodControl(
 	pvcLister corelisters.PersistentVolumeClaimLister,
 	nodeLister corelisters.NodeLister,
 	recorder record.EventRecorder,
+	metrics *metrics,
 ) GameStatefulSetPodControlInterface {
-	return &realGameStatefulSetPodControl{client, podLister, pvcLister, nodeLister, recorder}
+	return &realGameStatefulSetPodControl{client, podLister, pvcLister, nodeLister, recorder, metrics}
 }
 
 // realGameStatefulSetPodControl implements GameStatefulSetPodControlInterface using a clientset.Interface to communicate with the
@@ -74,9 +77,10 @@ type realGameStatefulSetPodControl struct {
 	pvcLister  corelisters.PersistentVolumeClaimLister
 	nodeLister corelisters.NodeLister
 	recorder   record.EventRecorder
+	metrics    *metrics
 }
 
-// UpdateGameStatefulSetPod create pod according to definition in GameStatefulSet
+// CreateGameStatefulSetPod create pod according to definition in GameStatefulSet
 func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
 	// Create the Pod's PVCs prior to creating the Pod
 	if err := spc.createPersistentVolumeClaims(set, pod); err != nil {
@@ -84,7 +88,15 @@ func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.
 		return err
 	}
 	// If we created the PVCs attempt to create the Pod
-	_, err := spc.client.CoreV1().Pods(set.Namespace).Create(pod)
+	startTime := time.Now()
+	_, err := spc.client.CoreV1().Pods(set.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
+	if err == nil {
+		spc.metrics.collectPodCreateDurations(set.Namespace, set.Name, "success", time.Since(startTime))
+	} else {
+		spc.metrics.collectPodCreateDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
+		klog.Infof("failed to create pod %v", pod.Name)
+	}
+
 	// sink already exists errors
 	if apierrors.IsAlreadyExists(err) {
 		return err
@@ -120,7 +132,7 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		}
 		attemptedUpdate = true
 		// commit the update, retrying on conflicts
-		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(pod)
+		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 		if updateErr == nil {
 			klog.Infof("Pod %s/%s is updating successfully in UpdateGameStatefulSetPod", pod.Namespace, pod.Name)
 			return nil
@@ -143,7 +155,13 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 
 // DeleteGameStatefulSetPod delete pod according to GameStatefulSet
 func (spc *realGameStatefulSetPodControl) DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
-	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, nil)
+	startTime := time.Now()
+	err := spc.client.CoreV1().Pods(set.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{})
+	if err == nil {
+		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, "success", time.Since(startTime))
+	} else {
+		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, "failure", time.Since(startTime))
+	}
 	spc.recordPodEvent("delete", set, pod, err)
 	return err
 }
@@ -177,7 +195,7 @@ func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *sts
 		}
 	}
 
-	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, metav1.NewDeleteOptions(0))
+	err := spc.client.CoreV1().Pods(set.Namespace).Delete(context.TODO(), pod.Name, *metav1.NewDeleteOptions(0))
 	if err != nil {
 		klog.Errorf("GameStatefulSet %s/%s's Pod %s/%s force delete error", set.Namespace, set.Name,
 			pod.Namespace, pod.Name)
@@ -231,7 +249,8 @@ func (spc *realGameStatefulSetPodControl) createPersistentVolumeClaims(set *stsp
 		_, err := spc.pvcLister.PersistentVolumeClaims(claim.Namespace).Get(claim.Name)
 		switch {
 		case apierrors.IsNotFound(err):
-			_, err := spc.client.CoreV1().PersistentVolumeClaims(claim.Namespace).Create(&claim)
+			_, err := spc.client.CoreV1().PersistentVolumeClaims(claim.Namespace).Create(context.TODO(),
+				&claim, metav1.CreateOptions{})
 			if err != nil {
 				errs = append(errs, fmt.Errorf("Failed to create PVC %s: %s", claim.Name, err))
 			}

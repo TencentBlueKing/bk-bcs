@@ -41,6 +41,7 @@ type portEntry struct {
 	poolName      string
 	protocol      string
 	port          int
+	hostPort      bool
 }
 
 // combine container port info into port entry format
@@ -51,6 +52,7 @@ func getPortEntryListFromPod(pod *k8scorev1.Pod, annotationPorts []*annotationPo
 			poolNamespace: port.poolNamespace,
 			poolName:      port.poolName,
 			protocol:      port.protocol,
+			hostPort:      port.hostPort,
 		}
 		if len(port.poolNamespace) == 0 {
 			tmpEntry.poolNamespace = pod.GetNamespace()
@@ -361,6 +363,7 @@ func (s *Server) generatePortsAnnotationPatch(pod *k8scorev1.Pod,
 				StartPort:             item.StartPort,
 				EndPort:               item.EndPort,
 				RsStartPort:           portEntry.port,
+				HostPort:              portEntry.hostPort,
 			}
 			generatedPortList = append(generatedPortList, tmpPort)
 		}

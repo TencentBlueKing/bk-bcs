@@ -40,7 +40,7 @@ class BcsApiAuth(AuthBase):
 
     def __call__(self, r: PreparedRequest):
         # 从配置文件读取访问系统的通用 Token，置入请求头中
-        auth_token = getattr(settings, "BCS_AUTH_TOKEN", "")
+        auth_token = f'Bearer {getattr(settings, "BCS_APIGW_TOKEN", "")}'
         r.headers['Authorization'] = auth_token
         r.headers['Content-Type'] = 'application/json'
 

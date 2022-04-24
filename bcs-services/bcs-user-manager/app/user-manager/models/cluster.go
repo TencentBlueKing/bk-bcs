@@ -15,6 +15,7 @@ package models
 
 import "time"
 
+// BcsCluster table
 type BcsCluster struct {
 	ID               string    `json:"id" gorm:"primary_key"`
 	ClusterType      uint      `json:"cluster_type"`
@@ -32,6 +33,7 @@ type BcsRegisterToken struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// BcsClusterCredential table
 type BcsClusterCredential struct {
 	ID              uint      `json:"id" gorm:"primary_key"`
 	ClusterId       string    `json:"cluster_id" gorm:"unique;not null"`
@@ -43,6 +45,7 @@ type BcsClusterCredential struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
+// BcsWsClusterCredentials table
 type BcsWsClusterCredentials struct {
 	ID            uint   `gorm:"primary_key"`
 	ServerKey     string `gorm:"unique;not null"`

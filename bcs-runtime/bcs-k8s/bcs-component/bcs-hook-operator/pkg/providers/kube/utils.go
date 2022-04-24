@@ -14,10 +14,12 @@
 package kube
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -107,7 +109,7 @@ func (p *Provider) handleFunction(dr dynamic.ResourceInterface, name string, met
 }
 
 func (p *Provider) handle(dr dynamic.ResourceInterface, name, function string, field v1alpha1.Field) error {
-	res, err := dr.Get(name, metav1.GetOptions{})
+	res, err := dr.Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed to get Kubernetes object %s. Error: %v", name, err)
 	}
@@ -140,7 +142,7 @@ func (p *Provider) handle(dr dynamic.ResourceInterface, name, function string, f
 		key := strings.Replace(strings.Join(paths[2:], "."), "/", "~1", -1)
 		patchData := []byte(fmt.Sprintf("[{ \"op\": \"add\", \"path\": \"/%s/%s/%s\", \"value\": \"%s\"}]",
 			paths[0], paths[1], key, field.Value))
-		_, err = dr.Patch(name, types.JSONPatchType, patchData, metav1.UpdateOptions{})
+		_, err = dr.Patch(context.TODO(), name, types.JSONPatchType, patchData, metav1.PatchOptions{})
 		if err != nil {
 			return fmt.Errorf("Failed to patch %s. PatchData: %s, Error: %v", name, string(patchData), err)
 		}

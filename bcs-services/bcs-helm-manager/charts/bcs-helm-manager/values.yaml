@@ -1,0 +1,195 @@
+# Default values for bcs-helm-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+etcd:
+  enabled: true
+
+  ## Authentication parameters
+  ##
+  auth:
+    ## Role-based access control parameters
+    ## ref: https://etcd.io/docs/current/op-guide/authentication/
+    ##
+    rbac:
+      ## @param auth.rbac.enabled Switch to enable RBAC authentication
+      ##
+      enabled: false
+
+    ## TLS authentication for client-to-server communications
+    ## ref: https://etcd.io/docs/current/op-guide/security/
+    ##
+    client:
+      ## @param auth.client.secureTransport Switch to encrypt client-to-server communications using TLS certificates
+      ##
+      secureTransport: false
+      ## @param auth.client.useAutoTLS Switch to automatically create the TLS certificates
+      ##
+      useAutoTLS: false
+      ## @param auth.client.existingSecret Name of the existing secret containing the TLS certificates for client-to-server communications
+      ##
+      existingSecret: ""
+      ## @param auth.client.enableAuthentication Switch to enable host authentication using TLS certificates. Requires existing secret
+      ##
+      enableAuthentication: false
+      ## @param auth.client.certFilename Name of the file containing the client certificate
+      ##
+      certFilename: cert.pem
+      ## @param auth.client.certKeyFilename Name of the file containing the client certificate private key
+      ##
+      certKeyFilename: key.pem
+      ## @param auth.client.caFilename Name of the file containing the client CA certificate
+      ## If not specified and `auth.client.enableAuthentication=true` or `auth.rbac.enabled=true`, the default is is `ca.crt`
+      ##
+      caFilename: ""
+
+## MongoDB&reg; chart configuration
+## ref: https://github.com/bitnami/charts/blob/master/bitnami/mongodb/values.yaml
+##
+mongodb:
+  ## @param mongodb.enabled Whether to install or not the MongoDB&reg; chart
+  ## To use an external database set this to false and configure the externaldb parameters
+  ##
+  enabled: true
+  ## MongoDB&reg; Authentication parameters
+  ##
+  auth:
+    ## @param mongodb.auth.enabled Whether to enable auth or not for the MongoDB&reg; chart
+    ## ref: https://docs.mongodb.com/manual/tutorial/enable-authentication/
+    ##
+    enabled: true
+    ## @param mongodb.auth.rootPassword MongoDB&reg; admin password
+    ## ref: https://github.com/bitnami/bitnami-docker-mongodb/blob/master/README.md#setting-the-root-password-on-first-run
+    ##
+    rootPassword: ""
+    ## @param mongodb.auth.username MongoDB&reg; custom user
+    ## ref: https://github.com/bitnami/bitnami-docker-mongodb/blob/master/README.md#creating-a-user-and-database-on-first-run
+    ##
+    username: helmmanager
+    ## @param mongodb.auth.database MongoDB&reg; custom database
+    ##
+    database: helmmanager
+    ## @param mongodb.auth.password MongoDB&reg; custom password
+    ##
+    password: secret_password
+
+externalEtcd:
+  address: "http://127.0.0.1:2379"
+  ca: /data/bcs/cert/etcd/etcd-ca.pem
+  cert: /data/bcs/cert/etcd/etcd.pem
+  key: /data/bcs/cert/etcd/etcd-key.pem
+
+externalMongo:
+  host: localhost
+  port: 27017
+  username: helmmanager
+  password: secret_password
+  database: helmmanager
+  authDatabase: admin
+
+helmmanager:
+  service:
+    grpcPort: 8080
+    httpPort: 8081
+    metricPort: 8082
+
+  repo:
+    url:
+    username:
+    password:
+    encrypted: false
+
+  release:
+    api:
+    token:
+
+  log:
+    dir: /data/bcs/logs/bcs
+    verbosity: 3
+    maxSize: 500
+    maxNum: 10
+
+  tls:
+    ca: /data/bcs/cert/bcs/bcs-ca.crt
+    server:
+      cert: /data/bcs/cert/bcs/bcs-server.crt
+      key: /data/bcs/cert/bcs/bcs-server.key
+    client:
+      cert: /data/bcs/cert/bcs/bcs-client.crt
+      key: /data/bcs/cert/bcs/bcs-client.key
+
+  swagger:
+    dir: /data/bcs/swagger
+
+  mongo:
+    connectTimeout: 5
+    maxPoolSize: 0
+    minPoolSize: 0
+    encrypted: false
+
+image:
+  registry: ""
+  repository: /bcs/bcs-helm-manager
+  tag: ""
+  pullPolicy: Always
+
+volumes:
+  - name: cert-config
+    configMap:
+      name: bk-bcs-certs
+  - name: etcd-cert
+    configMap:
+      name: bcs-etcd-cert
+
+volumeMounts:
+  - name: cert-config
+    mountPath: /data/bcs/cert/bcs
+  - name: etcd-cert
+    mountPath: /data/bcs/cert/etcd
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-helm-manager"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+#   memory: 128Mi
+
+service:
+  type: ClusterIP
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

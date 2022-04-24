@@ -34,6 +34,5 @@ def is_app_open_api_trusted(app_code: str) -> bool:
     """
     func_code = "TRUSTED_APPS_FOR_OPEN_API"
     enabled, wlist = get_func_controller(func_code)
-    # 追加默认的蓝鲸应用: ["bk_bcs_monitor", "bk_harbor", "bk_bcs", "workbench"]
-    wlist.extend(["bk_bcs_monitor", "bk_harbor", "bk_bcs", "workbench"])
+    wlist.extend(["bk_bcs_monitor", "bk_harbor", "bk_bcs", "workbench", "helm-plugin"])
     return enabled or app_code in wlist

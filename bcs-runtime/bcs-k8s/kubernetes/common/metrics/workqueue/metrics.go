@@ -102,11 +102,11 @@ func (prometheusMetricsProvider) NewAddsMetric(name string) workqueue.CounterMet
 	return adds.WithLabelValues(name)
 }
 
-func (prometheusMetricsProvider) NewLatencyMetric(name string) workqueue.SummaryMetric {
+func (prometheusMetricsProvider) NewLatencyMetric(name string) workqueue.HistogramMetric {
 	return latency.WithLabelValues(name)
 }
 
-func (prometheusMetricsProvider) NewWorkDurationMetric(name string) workqueue.SummaryMetric {
+func (prometheusMetricsProvider) NewWorkDurationMetric(name string) workqueue.HistogramMetric {
 	return workDuration.WithLabelValues(name)
 }
 
@@ -114,7 +114,7 @@ func (prometheusMetricsProvider) NewUnfinishedWorkSecondsMetric(name string) wor
 	return unfinished.WithLabelValues(name)
 }
 
-func (prometheusMetricsProvider) NewLongestRunningProcessorMicrosecondsMetric(name string) workqueue.SettableGaugeMetric {
+func (prometheusMetricsProvider) NewLongestRunningProcessorSecondsMetric(name string) workqueue.SettableGaugeMetric {
 	return longestRunningProcessor.WithLabelValues(name)
 }
 

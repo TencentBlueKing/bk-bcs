@@ -14,7 +14,11 @@ package utils
 
 import (
 	"net/http"
+	"runtime/debug"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/kirito41dd/xslice"
 )
 
 // SplitAddrString split address string
@@ -30,4 +34,59 @@ func GetXRequestIDFromHTTPRequest(req *http.Request) string {
 		return ""
 	}
 	return req.Header.Get("X-Request-Id")
+}
+
+// RecoverPrintStack capture panic and print stack
+func RecoverPrintStack(proc string) {
+	if r := recover(); r != nil {
+		blog.Errorf("[%s][recover] panic: %v, stack %v\n", proc, r, string(debug.Stack()))
+		return
+	}
+
+	return
+}
+
+// StringInSlice returns true if given string in slice
+func StringInSlice(s string, l []string) bool {
+	for _, objStr := range l {
+		if s == objStr {
+			return true
+		}
+	}
+	return false
+}
+
+// StringContainInSlice returns true if given string contain in slice
+func StringContainInSlice(s string, l []string) bool {
+	for _, objStr := range l {
+		if strings.Contains(s, objStr) {
+			return true
+		}
+	}
+	return false
+}
+
+
+// IntInSlice return true if i in l
+func IntInSlice(i int, l []int) bool {
+	for _, obj := range l {
+		if i == obj {
+			return true
+		}
+	}
+	return false
+}
+
+// SplitStringsChunks split strings chunk
+func SplitStringsChunks(strList []string, limit int) [][]string {
+	if limit <= 0 || len(strList) == 0 {
+		return nil
+	}
+	i := xslice.SplitToChunks(strList, limit)
+	ss, ok := i.([][]string)
+	if !ok {
+		return nil
+	}
+
+	return ss
 }

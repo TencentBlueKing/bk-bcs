@@ -17,7 +17,7 @@ from typing import Dict, Optional
 from backend.components import paas_cc
 from backend.components.base import ComponentAuth
 from backend.components.bcs.k8s import K8SClient
-from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.utils.basic import getitems
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode

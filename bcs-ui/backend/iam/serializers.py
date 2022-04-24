@@ -23,12 +23,10 @@ class ResourceActionSLZ(serializers.Serializer):
     perm_ctx = serializers.JSONField(default=dict)
 
     def validate(self, data):
-        resource_type, action = data['action_id'].split('_')
-
+        # data['action_id'] like namespace_view, namespace_scoped_view
+        resource_type = data['action_id'].split('_', 1)[0]
         if resource_type not in ResourceType.get_values():
             raise ValidationError(f"invalid action_id({data['action_id']})")
-
-        data.update({'resource_type': resource_type, 'action': action})
         return data
 
 

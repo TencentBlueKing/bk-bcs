@@ -12,9 +12,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.components import paas_cc
 from backend.components.bcs import k8s
-from backend.container_service.clusters.models import NodeStatus
+from backend.container_service.clusters.base.utils import get_cluster_nodes
 from backend.utils.errcodes import ErrorCode
 from backend.utils.exceptions import APIError
 
@@ -33,13 +32,7 @@ def k8s_containers(request, project_id, cluster_id, host_ips):
 
 
 def get_node_metric(request, access_token, project_id, cluster_id, cluster_type):
-    node = paas_cc.get_node_list(access_token, project_id, cluster_id, params={"limit": 10000})
-    if node.get('code') != 0:
-        raise APIError(node.get('message'))
-    # 过滤掉状态为removed的机器
-    node_data = [
-        info for info in node.get("data", {}).get("results") or [] if info.get("status") not in [NodeStatus.Removed]
-    ]
+    node_data = get_cluster_nodes(access_token, project_id, cluster_id)
     # 重新组装数据
     node = {
         "count": len(node_data),

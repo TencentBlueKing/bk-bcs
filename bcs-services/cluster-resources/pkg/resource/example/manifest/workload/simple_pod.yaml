@@ -1,0 +1,14 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-test
+  namespace: default
+  labels:
+    foo: bar
+spec:
+  containers:
+  - name: busybox
+    image: busybox:latest
+    command:
+      - echo
+      - hello

@@ -29,7 +29,7 @@ type Options struct {
 
 // LockOptions options for lock
 type LockOptions struct {
-	TTL time.Duration
+	TTL  time.Duration
 }
 
 // LockOption option function for lock

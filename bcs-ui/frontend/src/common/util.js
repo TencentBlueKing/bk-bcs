@@ -568,8 +568,29 @@ export const copyText = (text, errorMsg) => {
     textarea.select()
     if (document.execCommand('copy')) {
         document.execCommand('copy')
-    } else {
+    } else if (errorMsg) {
         errorMsg('浏览器不支持此功能，请使用谷歌浏览器。')
     }
     document.body.removeChild(textarea)
+}
+
+export const deepEqual = (x, y) => {
+    // 指向同一内存时
+    if (x === y) {
+        return true
+    } else if ((typeof x === "object" && x != null) && (typeof y === "object" && y != null)) {
+        if (Object.keys(x).length !== Object.keys(y).length) {
+            return false
+        }
+        for (const prop in x) {
+            if (y.hasOwnProperty(prop)) {
+                if (!deepEqual(x[prop], y[prop])) return false
+            } else {
+                return false
+            }
+        }
+        return true
+    } else {
+        return false
+    }
 }

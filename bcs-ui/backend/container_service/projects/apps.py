@@ -19,3 +19,12 @@ from django.apps import AppConfig
 class AppsConfig(AppConfig):
     name = "backend.container_service.projects"
     verbose_name = "backend.container_service.projects"
+
+    def ready(self):
+        try:
+            # 加载蓝鲸 opentelemetry trace 功能
+            from backend.opentelemetry.trace import BluekingInstrumentor
+
+            BluekingInstrumentor().instrument()
+        except ImportError:
+            pass

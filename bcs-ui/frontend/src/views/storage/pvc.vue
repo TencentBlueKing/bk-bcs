@@ -15,7 +15,6 @@
 
             <template v-if="!exceptionCode && !isInitLoading">
                 <div class="biz-panel-header">
-                    <bk-button class="left" theme="primary" @click="handleGotoDashboard">{{$t('切换到资源视图')}}</bk-button>
                     <div class="right">
                         <searcher
                             :placeholder="$t('输入名称，按Enter搜索')"
@@ -95,8 +94,6 @@
                     curPage: 1,
                     show: true
                 },
-
-                clusterList: [],
                 dataListTmp: [],
                 dataList: []
             }
@@ -110,6 +107,16 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList.map(item => {
+                    return {
+                        id: item.cluster_id,
+                        cluster_id: item.cluster_id,
+                        cluster_name: item.name,
+                        name: item.name
+                    }
+                })
             }
         },
         watch: {
@@ -128,19 +135,6 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    const list = res.data.results || []
-                    const clusterList = []
-                    list.forEach(item => {
-                        clusterList.push({
-                            id: item.cluster_id,
-                            cluster_id: item.cluster_id,
-                            cluster_name: item.name,
-                            name: item.name
-                        })
-                    })
-
-                    this.clusterList.splice(0, this.clusterList.length, ...clusterList)
                     if (this.clusterList.length) {
                         const clusterIds = this.clusterList.map(item => item.id)
                         // 使用当前缓存

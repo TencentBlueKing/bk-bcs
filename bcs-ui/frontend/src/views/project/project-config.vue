@@ -13,7 +13,7 @@
             <bk-form-item :label="$t('编排类型')" required>
                 <bk-radio-group v-model="kind">
                     <bk-radio :value="1" disabled>K8S</bk-radio>
-                    <bk-radio :value="2" disabled v-if="$INTERNAL">Mesos</bk-radio>
+                    <!-- <bk-radio :value="2" disabled v-if="$INTERNAL">Mesos</bk-radio> -->
                 </bk-radio-group>
             </bk-form-item>
             <bk-form-item :label="$t('关联CMDB业务')" required>

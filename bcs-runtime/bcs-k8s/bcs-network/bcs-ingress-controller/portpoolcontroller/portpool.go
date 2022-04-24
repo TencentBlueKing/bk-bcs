@@ -115,10 +115,8 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 			updateItemStatus, retry = poolItemHandler.ensurePortPoolItem(tmpItem, nil)
 			newItemStatusList = append(newItemStatusList, updateItemStatus)
 		} else {
-			if tmpItemStatus.Status != constant.PortPoolItemStatusReady || tmpItem.EndPort > tmpItemStatus.EndPort {
-				updateItemStatus, retry = poolItemHandler.ensurePortPoolItem(tmpItem, tmpItemStatus)
-				updateItemStatusMap[updateItemStatus.GetKey()] = updateItemStatus
-			}
+			updateItemStatus, retry = poolItemHandler.ensurePortPoolItem(tmpItem, tmpItemStatus)
+			updateItemStatusMap[updateItemStatus.GetKey()] = updateItemStatus
 		}
 		if retry {
 			shouldRetry = true

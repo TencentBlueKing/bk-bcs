@@ -13,17 +13,18 @@
 package imageloader
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsgsapi "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	bcsgstkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	bcsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	bcssche "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
-	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers"
-	bcsgslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	bcsgsapi "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/tkex/v1alpha1"
+	bcsgstkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/tkex/v1alpha1"
+	bcsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
+	bcssche "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned/scheme"
+	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/informers/externalversions"
+	bcsgslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/listers/tkex/v1alpha1"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/api/admission/v1beta1"
@@ -34,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
-	kubeletapi "k8s.io/kubernetes/pkg/kubelet/apis"
 )
 
 var (
@@ -59,9 +59,9 @@ func (b *bcsgsWorkload) Name() string {
 // Init inits the workload's informer.
 func (b *bcsgsWorkload) Init(i *imageLoader) error {
 	b.name = metav1.GroupVersionKind{
-		Group:   bcsgsapi.GroupName,
-		Version: bcsgsapi.Version,
-		Kind:    bcsgsapi.Kind,
+		Group:   bcsgsapi.GroupVersion.Group,
+		Version: bcsgsapi.GroupVersion.Version,
+		Kind:    "GameStatefulSet",
 	}.String()
 	b.i = i
 
@@ -252,7 +252,7 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		//event.Name = gs.Name + "-imageloadfailed"
 		event.Namespace = gs.Namespace
 		event.InvolvedObject = corev1.ObjectReference{
-			Kind:            bcsgsapi.Kind,
+			Kind:            "GameStatefulSet",
 			Namespace:       gs.Namespace,
 			Name:            gs.Name,
 			UID:             gs.UID,
@@ -274,9 +274,11 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/%s\",\"value\":\"1\"}",
 			imagePreloadDoneLabel) + "]"
 	_, err = b.client.TkexV1alpha1().GameStatefulSets(gs.Namespace).Patch(
+		context.Background(),
 		gs.Name,
 		types.JSONPatchType,
-		[]byte(updatePatch))
+		[]byte(updatePatch),
+		metav1.PatchOptions{})
 	if err != nil {
 		blog.Errorf("execute update failed: %v", err)
 		return err
@@ -312,7 +314,7 @@ func applyPatchToGS(old *bcsgstkexv1alpha1.GameStatefulSet, patch string) (*bcsg
 func (b *bcsgsWorkload) generateJobByDiff(
 	gs *bcsgstkexv1alpha1.GameStatefulSet, diffContainers []corev1.Container) (*batchv1.Job, error) {
 	job := newJob(diffContainers)
-	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower(bcsgsapi.Kind), gs.Namespace, gs.Name)
+	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower("GameStatefulSet"), gs.Namespace, gs.Name)
 	// add fields to set anti affinity
 	job.Labels[jobNameLabel] = job.Name
 	job.Labels[workloadInsNameLabel] = gs.Name
@@ -341,7 +343,7 @@ func (b *bcsgsWorkload) generateJobByDiff(
 				{
 					Namespaces:    []string{gs.Namespace},
 					LabelSelector: gs.Spec.Selector,
-					TopologyKey:   kubeletapi.LabelHostname,
+					TopologyKey:   corev1.LabelHostname,
 				},
 			},
 		},
@@ -354,7 +356,7 @@ func (b *bcsgsWorkload) generateJobByDiff(
 							jobNameLabel: job.Name,
 						},
 					},
-					TopologyKey: kubeletapi.LabelHostname,
+					TopologyKey: corev1.LabelHostname,
 				},
 			},
 		},
@@ -368,7 +370,7 @@ func (b *bcsgsWorkload) nodesOfGS(gs *bcsgstkexv1alpha1.GameStatefulSet) []strin
 	// get all pods of the gs
 	set := labels.Set(gs.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
-	pods, err := b.i.k8sClient.CoreV1().Pods(gs.Namespace).List(listOptions)
+	pods, err := b.i.k8sClient.CoreV1().Pods(gs.Namespace).List(context.Background(), listOptions)
 	if err != nil {
 		blog.Errorf("get pods of bcsgs(%s-%s) failed: %v", gs.Namespace, gs.Name, err)
 		return ret

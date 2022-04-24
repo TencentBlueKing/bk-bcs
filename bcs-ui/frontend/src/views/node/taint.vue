@@ -107,7 +107,7 @@
                             }
                         })
                     })
-                    handleCancel(true)
+                    ctx.emit('confirm')
                 } catch (e) {
                     console.log(e)
                 } finally {

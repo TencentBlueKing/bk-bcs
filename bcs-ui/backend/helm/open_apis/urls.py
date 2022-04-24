@@ -62,4 +62,5 @@ urlpatterns = [
         r"^charts/(?P<chart_name>[\w\-]+)/$",
         views.DeleteChartOrVersion.as_view({"delete": "delete"}),
     ),
+    url(r"^repo/$", views.ChartRepoViewSet.as_view({"get": "retrieve"})),
 ]

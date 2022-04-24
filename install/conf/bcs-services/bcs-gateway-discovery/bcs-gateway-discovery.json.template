@@ -15,6 +15,7 @@
   "amdin_token": "${adminToken}",
   "admin_api": "${adminAPI}",
   "auth_token": "${gatewayToken}",
+  "gateway_metrics_enabled": ${gatewayMetricsEnabled},
   "modules": "${zkModules}",
   "etcdRegistry": {
     "etcd_feature": true,

@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	docker "github.com/fsouza/go-dockerclient"
+	dockertypes "github.com/docker/docker/api/types"
 )
 
 func (s *SidecarController) syncContainerCache() {
@@ -39,10 +39,10 @@ func (s *SidecarController) syncContainerCache() {
 func (s *SidecarController) syncContainerCacheOnce() {
 	s.containerCacheMutex.Lock()
 	defer s.containerCacheMutex.Unlock()
-	s.containerCache = make(map[string]*docker.Container)
+	s.containerCache = make(map[string]*dockertypes.ContainerJSON)
 
 	//list all running containers
-	apiContainers, err := s.client.ListContainers(docker.ListContainersOptions{All: true})
+	apiContainers, err := s.client.ContainerList(context.Background(), dockertypes.ContainerListOptions{All: true})
 	if err != nil {
 		blog.Errorf("docker ListContainers failed: %s", err.Error())
 		return
@@ -59,13 +59,13 @@ func (s *SidecarController) syncContainerCacheOnce() {
 	}
 }
 
-func (s *SidecarController) inspectContainer(ID string) *docker.Container {
+func (s *SidecarController) inspectContainer(ID string) *dockertypes.ContainerJSON {
 	inspectChan := make(chan interface{}, 1)
 	timer := time.NewTimer(3 * time.Second)
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go func() {
 		defer close(inspectChan)
-		c, err := s.client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: ID, Context: ctx})
+		c, err := s.client.ContainerInspect(ctx, ID)
 		if err != nil {
 			inspectChan <- err
 			return
@@ -83,12 +83,12 @@ func (s *SidecarController) inspectContainer(ID string) *docker.Container {
 			blog.Errorf("docker InspectContainer %s failed: %s", ID, err.Error())
 			return nil
 		}
-		c, ok := obj.(*docker.Container)
+		c, ok := obj.(dockertypes.ContainerJSON)
 		if !ok {
-			blog.Errorf("docker InspectContainer %s failed with type(%T) returned, expected *docker.Container", ID, obj)
+			blog.Errorf("docker InspectContainer %s failed with type(%T) returned, expected dockertypes.ContainerJSON", ID, obj)
 			return nil
 		}
-		return c
+		return &c
 	case <-timer.C:
 		cancelFunc()
 		blog.Errorf("Inspect container %s timeout unexpected, check whether pod is working properly with sharePID mode.", ID)

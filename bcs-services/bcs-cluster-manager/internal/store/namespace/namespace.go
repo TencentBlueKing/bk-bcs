@@ -19,15 +19,18 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	namespaceKeyName                = "name"
-	namespaceKeyFederationClusterID = "federationClusterID"
+	namespaceKeyFederationClusterID = "federationClusterid"
 	namespaceTableName              = "namespace"
 	defaultNamespaceListLength      = 1000
 )
@@ -37,8 +40,8 @@ var (
 		{
 			Name: namespaceTableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: "name", Value: 1},
-				bson.E{Key: "federationClusterID", Value: 1},
+				bson.E{Key: namespaceKeyName, Value: 1},
+				bson.E{Key: namespaceKeyFederationClusterID, Value: 1},
 			},
 			Unique: true,
 		},
@@ -121,12 +124,9 @@ func (m *ModelNamespace) DeleteNamespace(ctx context.Context, name, federationCl
 		namespaceKeyName:                name,
 		namespaceKeyFederationClusterID: federationClusterID,
 	})
-	deleteCounter, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
 		return err
-	}
-	if deleteCounter == 0 {
-		return fmt.Errorf("no namespace delete with name %s federation cluster id %s", name, federationClusterID)
 	}
 	return nil
 }

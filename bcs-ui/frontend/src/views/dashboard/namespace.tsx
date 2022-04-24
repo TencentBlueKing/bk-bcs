@@ -67,7 +67,10 @@ export default defineComponent({
         watch(resourceVersion, (newVersion, oldVersion) => {
             if (newVersion && newVersion !== oldVersion) {
                 stop()
-                initParams('Namespace', resourceVersion.value)
+                initParams({
+                    kind: 'Namespace',
+                    resource_version: resourceVersion.value
+                })
                 resourceVersion.value && start()
             }
         })

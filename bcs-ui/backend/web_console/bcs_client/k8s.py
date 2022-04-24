@@ -91,7 +91,7 @@ class KubectlInternalClient(K8SClientBase):
 
 
 class KubectlExternalClient(KubectlInternalClient):
-    """kubectl容器启动在公共集群"""
+    """kubectl容器启动在共享集群"""
 
     MODE = "k8s_kubectl_external"
 

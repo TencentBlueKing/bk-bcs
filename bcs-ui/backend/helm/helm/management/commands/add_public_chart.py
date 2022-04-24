@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
     def get_all_projects(self, access_token):
         """获取所有项目信息"""
-        projects = paas_cc.get_projects(access_token)
+        projects = paas_cc.get_projects(access_token, query_params={'desire_all_data': 1})
         if projects.get('code') != 0:
             self.stdout.write(projects.get('message'))
             return
