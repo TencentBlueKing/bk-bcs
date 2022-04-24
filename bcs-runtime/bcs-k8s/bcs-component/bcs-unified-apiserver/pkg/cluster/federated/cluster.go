@@ -71,11 +71,6 @@ func (s *ClusterStor) GetServerGroups(ctx context.Context) (*metav1.APIGroupList
 	}
 	filtedGroups := []metav1.APIGroup{}
 	for _, group := range result.Groups {
-		// corev1 API
-		// if group.Name == "" {
-		// 	filtedGroups = append(filtedGroups, group)
-		// }
-
 		// deployment, statefulsets apis
 		if group.Name == "apps" {
 			filtedGroups = append(filtedGroups, group)

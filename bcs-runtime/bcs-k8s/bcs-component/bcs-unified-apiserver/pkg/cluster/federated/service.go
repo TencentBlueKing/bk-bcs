@@ -147,7 +147,7 @@ func (s *ServiceStor) Delete(ctx context.Context, namespace string, name string,
 		return nil, err
 	}
 
-	// Service 删除是返回 标准 status 数据格式
+	// Service 删除是返回标准 status 数据格式
 	detailStatus := &metav1.StatusDetails{
 		Name:  name,
 		Group: "apps",

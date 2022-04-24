@@ -147,7 +147,7 @@ func (s *StatefulSetStor) Delete(ctx context.Context, namespace string, name str
 		return nil, err
 	}
 
-	// StatefulSet 删除是返回 标准 status 数据格式
+	// StatefulSet 删除是返回标准 status 数据格式
 	detailStatus := &metav1.StatusDetails{
 		Name:  name,
 		Group: "apps",
