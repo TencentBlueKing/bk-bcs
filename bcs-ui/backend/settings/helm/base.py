@@ -160,8 +160,8 @@ DEVOPS_CI_API_HOST = os.environ.get('DEVOPS_CI_API_URL')
 DEVOPS_BCS_API_URL = os.environ.get('BKAPP_BCS_UI_API_URL')
 DEVOPS_ARTIFACTORY_HOST = os.environ.get('BKAPP_ARTIFACTORY_ADDR')
 
-# bcs-api-gateway api 配置
-BCS_API_PRE_URL = os.environ.get('BCS_API_GATEWAY_PROD_DOMAIN')
+# TODO 旧蓝鲸网关地址, 先废弃置空
+BCS_API_PRE_URL = ''
 
 BK_PAAS_HOST = os.environ.get('BK_PAAS_URL', "http://bk-paas.example.com")
 BK_PAAS_INNER_HOST = BK_PAAS_HOST
