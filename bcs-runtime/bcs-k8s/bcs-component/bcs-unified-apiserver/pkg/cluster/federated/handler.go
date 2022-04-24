@@ -128,9 +128,9 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 		err = h.secretHandler.Serve(c)
 	}
 
-	if !c.IsResourceRequest {
-		err = h.clusterHandler.Serve(c)
-	}
+	// if !c.IsResourceRequest {
+	// 	err = h.clusterHandler.Serve(c)
+	// }
 
 	// 未实现的功能, 使用代理请求
 	if err == rest.ErrInit || err == rest.ErrNotImplemented {
