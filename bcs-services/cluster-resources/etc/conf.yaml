@@ -22,6 +22,7 @@ etcd:
 
 # Server 配置信息
 server:
+  useLocalIP: false
   address: ""
   insecureAddress: ""
   port: 9090
