@@ -110,8 +110,8 @@ gateway:pre
 	cd bcs-services/bcs-gateway-discovery && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./main.go
 
 micro-gateway:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-micro-gateway ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-micro-gateway
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-gateway-discovery/* ${PACKAGEPATH}/bcs-services/bcs-micro-gateway/
 	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-micro-gateway/
 
 client:pre
