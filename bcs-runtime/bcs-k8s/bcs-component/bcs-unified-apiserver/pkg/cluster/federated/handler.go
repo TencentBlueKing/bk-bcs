@@ -35,6 +35,7 @@ type Handler struct {
 	serviceHandler     *apis.ServiceHandler
 	configmapHandler   *apis.ConfigMapHandler
 	secretHandler      *apis.SecretHandler
+	eventHandler       *apis.EventHandler
 	clusterHandler     *apis.ClusterHandler
 }
 
@@ -100,6 +101,12 @@ func (h *Handler) Register(clusterId string, members []string) error {
 	}
 	h.secretHandler = apis.NewSecretHandler(secretStor)
 
+	eventStor, err := NewEventStor(clusterId, members)
+	if err != nil {
+		return err
+	}
+	h.eventHandler = apis.NewEventHandler(eventStor)
+
 	clusterStor, err := NewClusterStor(clusterId, members)
 	if err != nil {
 		return err
@@ -126,6 +133,8 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 		err = h.configmapHandler.Serve(c)
 	case "secrets":
 		err = h.secretHandler.Serve(c)
+	case "events":
+		err = h.eventHandler.Serve(c)
 	}
 
 	// 未实现的功能, 使用代理请求
