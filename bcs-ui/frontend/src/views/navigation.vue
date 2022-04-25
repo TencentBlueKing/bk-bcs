@@ -182,7 +182,6 @@
              * 打开版本日志弹框
              */
             handleShowSystemLog () {
-                console.log(this.showSystemLog, 'this.showSystemLog')
                 this.showSystemLog = true
             },
 

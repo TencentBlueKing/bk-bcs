@@ -68,7 +68,7 @@
                 this.latestBcsVerSion = this.list[0]?.version || ''
                 this.isLoading = false
                 const curBcsVerSion = localStorage.getItem('bcs_supermen')
-                if (curBcsVerSion !== this.latestBcsVerSion) {
+                if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
                     this.$emit('input', true)
                 }
             },
