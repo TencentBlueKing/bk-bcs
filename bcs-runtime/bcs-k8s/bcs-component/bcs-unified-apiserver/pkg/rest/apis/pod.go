@@ -35,14 +35,17 @@ type PodInterface interface {
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 }
 
+// PodHandler
 type PodHandler struct {
 	handler PodInterface
 }
 
+// NewPodHandler
 func NewPodHandler(handler PodInterface) *PodHandler {
 	return &PodHandler{handler: handler}
 }
 
+// Pod Resource Verb Handler
 func (h *PodHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
