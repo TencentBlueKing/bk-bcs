@@ -25,6 +25,7 @@ mongo:
   minpoolsize: 1
   encrypted: false
 server:
+  useLocalIP: false
   address: "127.0.0.1"
   insecureAddress: "127.0.0.1"
   port: 8090
@@ -61,3 +62,8 @@ iam:
   iamHost: ""
   bkPaaSHost: ""
   debug: false
+actionExemptPerm:
+  create: false
+  view: false
+  update: false
+  delete: false
