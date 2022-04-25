@@ -1,0 +1,2154 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Helm Manager API Doc",
+    "version": "0.1.0"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/helmmanager/v1/available": {
+      "get": {
+        "summary": "查询helm-manager服务是否可用",
+        "description": "查询helm-manager服务是否可用",
+        "operationId": "HelmManager_Available",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerAvailableResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/chart/{projectID}/{repository}": {
+      "get": {
+        "summary": "批量查询chart包",
+        "description": "批量查询chart包",
+        "operationId": "HelmManager_ListChart",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListChartResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repository",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 查询者",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/chart/{projectID}/{repository}/{name}/detail/{version}": {
+      "get": {
+        "summary": "查询指定版本的chart包详细信息",
+        "description": "查询指定版本的chart包详细信息",
+        "operationId": "HelmManager_GetChartDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetChartDetailResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repository",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "description": "chart版本",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 查询者",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/chart/{projectID}/{repository}/{name}/version": {
+      "get": {
+        "summary": "查询chart包的版本列表",
+        "description": "查询chart包的版本列表",
+        "operationId": "HelmManager_ListChartVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListChartVersionResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repository",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 查询者",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/release/{clusterID}": {
+      "get": {
+        "summary": "查询指定集群的chart release信息",
+        "description": "查询指定集群的chart release信息",
+        "operationId": "HelmManager_ListRelease",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListReleaseResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace. 查询目标namespace, 默认是全部",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "name. 查询目标name, 默认是全部",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail": {
+      "get": {
+        "summary": "查询指定release详细信息",
+        "description": "查询指定release的详细信息",
+        "operationId": "HelmManager_GetReleaseDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetReleaseDetailResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "查询目标namespace, 默认是全部",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "查询目标name, 默认是全部",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install": {
+      "post": {
+        "summary": "执行指定集群的chart release install",
+        "description": "执行指定集群的chart release install",
+        "operationId": "HelmManager_InstallRelease",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerInstallReleaseResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在的namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart release名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerInstallReleaseReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/rollback": {
+      "post": {
+        "summary": "执行指定集群的chart release rollback",
+        "description": "执行指定集群的chart release rollback",
+        "operationId": "HelmManager_RollbackRelease",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerRollbackReleaseResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在的namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart release名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerRollbackReleaseReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/uninstall": {
+      "post": {
+        "summary": "执行指定集群的chart release uninstall",
+        "description": "执行指定集群的chart release uninstall",
+        "operationId": "HelmManager_UninstallRelease",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUninstallReleaseResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在的namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart release名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUninstallReleaseReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/upgrade": {
+      "post": {
+        "summary": "执行指定集群的chart release upgrade",
+        "description": "执行指定集群的chart release upgrade",
+        "operationId": "HelmManager_UpgradeRelease",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpgradeReleaseResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在的namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart release名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpgradeReleaseReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/repository/{projectID}": {
+      "get": {
+        "summary": "查询仓库列表",
+        "description": "查询仓库列表",
+        "operationId": "HelmManager_ListRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "name",
+            "description": "name. 仓库名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": "type. 仓库类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "delete": {
+        "summary": "批量删除仓库",
+        "description": "批量删除仓库",
+        "operationId": "HelmManager_DeleteRepositories",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteRepositoriesResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteRepositoriesReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/repository/{projectID}/{name}": {
+      "get": {
+        "summary": "查询仓库",
+        "description": "查询仓库",
+        "operationId": "HelmManager_GetRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除仓库",
+        "description": "删除仓库",
+        "operationId": "HelmManager_DeleteRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteRepositoryReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "post": {
+        "summary": "创建仓库",
+        "description": "创建仓库",
+        "operationId": "HelmManager_CreateRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerCreateRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerCreateRepositoryReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "put": {
+        "summary": "更新仓库",
+        "description": "更新仓库",
+        "operationId": "HelmManager_UpdateRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpdateRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpdateRepositoryReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "helmmanagerAvailableResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "查询helm-manager服务是否可用返回",
+      "title": "AvailableResp"
+    },
+    "helmmanagerChart": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "repository": {
+          "type": "string",
+          "description": "仓库名称",
+          "title": "repository"
+        },
+        "type": {
+          "type": "string",
+          "description": "仓库类型",
+          "title": "type"
+        },
+        "key": {
+          "type": "string",
+          "description": "chart key",
+          "title": "key"
+        },
+        "name": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "name"
+        },
+        "latestVersion": {
+          "type": "string",
+          "description": "最新的chart version",
+          "title": "latestVersion"
+        },
+        "latestAppVersion": {
+          "type": "string",
+          "description": "最新的app version",
+          "title": "latestAppVersion"
+        },
+        "latestDescription": {
+          "type": "string",
+          "description": "最新的description",
+          "title": "latestDescription"
+        },
+        "createBy": {
+          "type": "string",
+          "description": "创建者",
+          "title": "createBy"
+        },
+        "updateBy": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updateBy"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        }
+      }
+    },
+    "helmmanagerChartDetail": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "chart版本",
+          "title": "version"
+        },
+        "readme": {
+          "type": "string",
+          "description": "chart自述",
+          "title": "readme"
+        },
+        "valuesFile": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "values文件列表",
+          "title": "valuesFile"
+        },
+        "contents": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/helmmanagerFileContent"
+          }
+        }
+      }
+    },
+    "helmmanagerChartListData": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页数",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "每页数量",
+          "title": "size"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/helmmanagerChart"
+          },
+          "description": "查询的仓库信息",
+          "title": "data"
+        }
+      }
+    },
+    "helmmanagerChartVersion": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart name",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "chart version",
+          "title": "version"
+        },
+        "appVersion": {
+          "type": "string",
+          "description": "chart app version",
+          "title": "appVersion"
+        },
+        "description": {
+          "type": "string",
+          "description": "chart description",
+          "title": "description"
+        },
+        "createBy": {
+          "type": "string",
+          "description": "创建者",
+          "title": "createBy"
+        },
+        "updateBy": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updateBy"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        }
+      }
+    },
+    "helmmanagerChartVersionListData": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页数",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "每页数量",
+          "title": "size"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/helmmanagerChartVersion"
+          },
+          "description": "查询的chart版本列表",
+          "title": "data"
+        }
+      }
+    },
+    "helmmanagerCreateRepositoryReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "仓库名称",
+          "title": "name"
+        },
+        "type": {
+          "type": "string",
+          "description": "仓库类型",
+          "title": "type"
+        },
+        "remote": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为远程仓库",
+          "title": "remote"
+        },
+        "remoteURL": {
+          "type": "string",
+          "description": "远程仓库地址",
+          "title": "remoteURL"
+        },
+        "username": {
+          "type": "string",
+          "description": "用户名",
+          "title": "username"
+        },
+        "password": {
+          "type": "string",
+          "description": "密码",
+          "title": "password"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        },
+        "takeover": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为接管已存在的repo",
+          "title": "takeover"
+        },
+        "remoteUsername": {
+          "type": "string",
+          "description": "远程仓库username",
+          "title": "remoteUsername"
+        },
+        "remotePassword": {
+          "type": "string",
+          "description": "远程仓库password",
+          "title": "remotePassword"
+        }
+      },
+      "description": "创建仓库的参数",
+      "title": "CreateRepositoryReq"
+    },
+    "helmmanagerCreateRepositoryResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerRepository",
+          "description": "创建的仓库信息",
+          "title": "data"
+        }
+      },
+      "description": "创建仓库的返回",
+      "title": "CreateRepositoryResp"
+    },
+    "helmmanagerDeleteRepositoriesReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "仓库名称列表",
+          "title": "name"
+        }
+      },
+      "description": "批量删除仓库的参数",
+      "title": "DeleteRepositoriesReq"
+    },
+    "helmmanagerDeleteRepositoriesResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "批量删除仓库的返回",
+      "title": "DeleteRepositoriesResp"
+    },
+    "helmmanagerDeleteRepositoryReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "仓库名称",
+          "title": "name"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "删除仓库的参数",
+      "title": "DeleteRepositoryReq"
+    },
+    "helmmanagerDeleteRepositoryResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除仓库的返回",
+      "title": "DeleteRepositoryResp"
+    },
+    "helmmanagerFileContent": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "文件名",
+          "title": "name"
+        },
+        "path": {
+          "type": "string",
+          "description": "文件相对chart包入口的路径",
+          "title": "path"
+        },
+        "content": {
+          "type": "string",
+          "description": "文件内容",
+          "title": "content"
+        }
+      }
+    },
+    "helmmanagerGetChartDetailResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerChartDetail",
+          "description": "查询指定版本的chart包详细信息",
+          "title": "data"
+        }
+      },
+      "description": "查询指定版本的chart包详细信息的返回",
+      "title": "GetChartDetailResp"
+    },
+    "helmmanagerGetReleaseDetailResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerReleaseDetail",
+          "description": "指定release信息",
+          "title": "data"
+        }
+      },
+      "description": "查询指定release信息的返回",
+      "title": "GetReleaseDetailResp"
+    },
+    "helmmanagerGetRepositoryResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerRepository",
+          "description": "查询的仓库信息",
+          "title": "data"
+        }
+      },
+      "description": "查询仓库的返回",
+      "title": "GetRepositoryResp"
+    },
+    "helmmanagerInstallReleaseReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "所在的namespace",
+          "title": "namespace"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "chart所属仓库的projectID",
+          "title": "projectID"
+        },
+        "repository": {
+          "type": "string",
+          "description": "chart所属的仓库",
+          "title": "repository"
+        },
+        "chart": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "chart"
+        },
+        "version": {
+          "type": "string",
+          "description": "chart版本",
+          "title": "version"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "values文件, 越靠后优先级越高",
+          "title": "values"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "额外的参数",
+          "title": "args"
+        },
+        "bcsSysVar": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "部署指定的chart version到release的参数",
+      "title": "InstallReleaseReq"
+    },
+    "helmmanagerInstallReleaseResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerReleaseDetail",
+          "description": "install的release detail",
+          "title": "data"
+        }
+      },
+      "description": "部署指定的chart version到release的返回",
+      "title": "ListReleaseResp"
+    },
+    "helmmanagerListChartResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerChartListData",
+          "description": "查询的chart的信息",
+          "title": "data"
+        }
+      },
+      "description": "批量查询chart的返回",
+      "title": "ListChartResp"
+    },
+    "helmmanagerListChartVersionResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerChartVersionListData",
+          "description": "查询的chart的版本信息",
+          "title": "data"
+        }
+      },
+      "description": "查询chart版本的返回",
+      "title": "ListChartVersionResp"
+    },
+    "helmmanagerListReleaseResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerReleaseListData",
+          "description": "指定集群的chart release信息",
+          "title": "data"
+        }
+      },
+      "description": "查询指定集群的chart release信息的返回",
+      "title": "ListReleaseResp"
+    },
+    "helmmanagerListRepositoryResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerRepositoryListData",
+          "description": "查询的仓库信息",
+          "title": "data"
+        }
+      },
+      "description": "批量查询仓库的返回",
+      "title": "ListRepositoryResp"
+    },
+    "helmmanagerRelease": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "所在的namespace",
+          "title": "namespace"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int64",
+          "description": "所处于的版本",
+          "title": "revision"
+        },
+        "status": {
+          "type": "string",
+          "description": "当前的状态",
+          "title": "status"
+        },
+        "chart": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "chart"
+        },
+        "appVersion": {
+          "type": "string",
+          "description": "所处于的app version",
+          "title": "appVersion"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart的版本",
+          "title": "chartVersion"
+        }
+      }
+    },
+    "helmmanagerReleaseDetail": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "所在的namespace",
+          "title": "namespace"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int64",
+          "description": "所处于的版本",
+          "title": "revision"
+        },
+        "status": {
+          "type": "string",
+          "description": "当前的状态",
+          "title": "status"
+        },
+        "chart": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "chart"
+        },
+        "appVersion": {
+          "type": "string",
+          "description": "所处于的app version",
+          "title": "appVersion"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart的版本",
+          "title": "chartVersion"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "当前revision部署时的values文件",
+          "title": "values"
+        }
+      }
+    },
+    "helmmanagerReleaseListData": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页数",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "每页数量",
+          "title": "size"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/helmmanagerRelease"
+          },
+          "description": "查询的chart release列表",
+          "title": "data"
+        }
+      }
+    },
+    "helmmanagerRepository": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "仓库名称",
+          "title": "name"
+        },
+        "type": {
+          "type": "string",
+          "description": "仓库类型",
+          "title": "type"
+        },
+        "remote": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为远程仓库",
+          "title": "remote"
+        },
+        "remoteURL": {
+          "type": "string",
+          "description": "远程仓库地址",
+          "title": "remoteURL"
+        },
+        "username": {
+          "type": "string",
+          "description": "用户名",
+          "title": "username"
+        },
+        "password": {
+          "type": "string",
+          "description": "密码",
+          "title": "password"
+        },
+        "createBy": {
+          "type": "string",
+          "description": "创建者",
+          "title": "createBy"
+        },
+        "updateBy": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updateBy"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "remoteUsername": {
+          "type": "string",
+          "description": "远程仓库username",
+          "title": "remoteUsername"
+        },
+        "remotePassword": {
+          "type": "string",
+          "description": "远程仓库password",
+          "title": "remotePassword"
+        },
+        "repoURL": {
+          "type": "string",
+          "description": "当前仓库的url",
+          "title": "repoURL"
+        }
+      }
+    },
+    "helmmanagerRepositoryListData": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": "页数",
+          "title": "page"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": "每页数量",
+          "title": "size"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/helmmanagerRepository"
+          },
+          "description": "查询的仓库信息",
+          "title": "data"
+        }
+      }
+    },
+    "helmmanagerRollbackReleaseReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "所在的namespace",
+          "title": "namespace"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int64",
+          "description": "要回滚到的revision",
+          "title": "revision"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      },
+      "description": "release回滚的参数",
+      "title": "RollbackReleaseReq"
+    },
+    "helmmanagerRollbackReleaseResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "release回滚的返回",
+      "title": "RollbackReleaseResp"
+    },
+    "helmmanagerUninstallReleaseReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "所在的namespace",
+          "title": "namespace"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      },
+      "description": "从release卸载指定的chart version的参数",
+      "title": "UninstallReleaseReq"
+    },
+    "helmmanagerUninstallReleaseResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "从release卸载指定的chart version的返回",
+      "title": "UninstallReleaseResp"
+    },
+    "helmmanagerUpdateRepositoryReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目id",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "仓库名称",
+          "title": "name"
+        },
+        "type": {
+          "type": "string",
+          "description": "仓库类型",
+          "title": "type"
+        },
+        "remote": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为远程仓库",
+          "title": "remote"
+        },
+        "remoteURL": {
+          "type": "string",
+          "description": "远程仓库地址",
+          "title": "remoteURL"
+        },
+        "username": {
+          "type": "string",
+          "description": "用户名",
+          "title": "username"
+        },
+        "password": {
+          "type": "string",
+          "description": "密码",
+          "title": "password"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "更新仓库的参数",
+      "title": "UpdateRepositoryReq"
+    },
+    "helmmanagerUpdateRepositoryResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerRepository",
+          "description": "更新的仓库信息",
+          "title": "data"
+        }
+      },
+      "description": "更新仓库的返回",
+      "title": "UpdateRepositoryResp"
+    },
+    "helmmanagerUpgradeReleaseReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "所在的namespace",
+          "title": "namespace"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "chart所属仓库的projectID",
+          "title": "projectID"
+        },
+        "repository": {
+          "type": "string",
+          "description": "chart所属的仓库",
+          "title": "repository"
+        },
+        "chart": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "chart"
+        },
+        "version": {
+          "type": "string",
+          "description": "chart版本",
+          "title": "version"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "values文件, 越靠后优先级越高",
+          "title": "values"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "额外的参数",
+          "title": "args"
+        },
+        "bcsSysVar": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "从release升级指定的chart version的参数",
+      "title": "UpgradeReleaseReq"
+    },
+    "helmmanagerUpgradeReleaseResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerReleaseDetail",
+          "description": "upgrade的release detail",
+          "title": "data"
+        }
+      },
+      "description": "从release升级指定的chart version的返回",
+      "title": "UpgradeReleaseResp"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

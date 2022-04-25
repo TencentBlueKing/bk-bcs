@@ -12,7 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
 import logging
 from typing import Dict, List, Optional
 
@@ -21,14 +20,7 @@ from django.conf import settings
 from requests import PreparedRequest
 from requests.auth import AuthBase
 
-from backend.components.base import (
-    BaseCompError,
-    BaseHttpClient,
-    BkApiClient,
-    response_handler,
-    update_request_body,
-    update_url_parameters,
-)
+from backend.components.base import BaseCompError, BaseHttpClient, BkApiClient, response_handler
 from backend.utils.errcodes import ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -77,7 +69,7 @@ class BkRepoAuth(AuthBase):
         r.headers.update(
             {
                 "X-BKREPO-UID": self.username or settings.ADMIN_USERNAME,
-                "authorization": f"Platform {settings.BK_REPO_AUTHORIZATION}",
+                "authorization": settings.BK_REPO_AUTHORIZATION,
                 "Content-Type": "application/json",
             }
         )

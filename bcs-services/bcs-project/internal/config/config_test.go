@@ -39,4 +39,16 @@ func TestLoadConfig(t *testing.T) {
 	// log config
 	expectedLogFileName := "project.log"
 	assert.Equal(t, expectedLogFileName, c.Log.Name)
+
+	// jwt config
+	expectedPublicKeyFile := "../../test/jwt/app.rsa.pub"
+	assert.Equal(t, expectedPublicKeyFile, c.JWT.PublicKeyFile)
+
+	// iam config
+	expectedDefaultUseGWHost := true
+	assert.Equal(t, expectedDefaultUseGWHost, c.IAM.UseGWHost)
+
+	// exempt action perm, default all action need perm
+	expectedActionPerm := true
+	assert.Equal(t, expectedActionPerm, !c.ActionExemptPerm.Create)
 }

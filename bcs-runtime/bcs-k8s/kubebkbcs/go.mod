@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs
 
-go 1.14
+go 1.17
 
 require (
 	k8s.io/api v0.20.0
