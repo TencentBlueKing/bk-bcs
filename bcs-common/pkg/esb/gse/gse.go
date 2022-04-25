@@ -44,7 +44,7 @@ func NewClient(host string, tlsConf *tls.Config) *Client {
 
 // Client client for gse service
 type Client struct {
-	host string
+	host          string
 	defaultHeader http.Header
 	client        *paasclient.RESTClient
 	baseReq       BaseReq

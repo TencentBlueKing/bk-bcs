@@ -25,7 +25,7 @@ const (
 	// FlagKeyKubeconfigMode mode for proxy to get all kubeconfigs, available [secret, file]
 	FlagKeyKubeconfigMode = "kubeconfig-mode"
 	// FlagKeyKubeconfigSecretName k8s secret name for proxy to get all kubeconfigs when use secret mode
-	FlagKeyKubeconfigSecretName = "kubeconfig-secretname"
+	FlagKeyKubeconfigSecretName = "kubeconfig-secretname" // nolint
 	// FlagKeyKubeconfigSecretNamespace k8s secret namespace for proxy to get all kubeconfigs when use secret mode
 	FlagKeyKubeconfigSecretNamespace = "kubeconfig-secretnamespace"
 	// FlagKeyKubeconfigDir is the directory which holds all kubeconfigs for different namespaces
