@@ -35,6 +35,8 @@ var (
 	// Used for flags.
 	cfgFile     string
 	bindAddress string
+	tlsCertFile string
+	tlsKeyFile  string
 )
 
 const (
@@ -111,7 +113,10 @@ func NewUnifiedAPIServer(ctx context.Context) *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVar(&bindAddress, "bind-address", "0.0.0.0:8088", "The IP address on which to listen for the --secure-port port.")
-	flags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/config.yml)")
+	flags.StringVar(&tlsCertFile, "tls-cert-file", "", "TLS Certificate for https server")
+	flags.StringVar(&tlsKeyFile, "tls-key-file", "", "TLS Key for the https server")
+	flags.StringVar(&cfgFile, "config", "", "config file (dfefault is $HOME/config.yml)")
+
 	return cmd
 }
 
@@ -142,5 +147,12 @@ func Run(bindAddress string) error {
 		Handler: r,
 	}
 	sugar.Infof("Using config file:%s", viper.ConfigFileUsed())
+
+	if tlsCertFile != "" && tlsKeyFile != "" {
+		sugar.Infof("start serve https://%s", bindAddress)
+		return srv.ServeTLS(ln, tlsCertFile, tlsKeyFile)
+	}
+
+	sugar.Infof("start serve http://%s", bindAddress)
 	return srv.Serve(ln)
 }
