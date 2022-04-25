@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -49,6 +50,7 @@ type Options struct {
 	CreateOptions *metav1.CreateOptions
 	UpdateOptions *metav1.UpdateOptions
 	PatchOptions  *metav1.PatchOptions
+	PodLogOptions *v1.PodLogOptions
 }
 
 // RequestContext K8S Rest Request Context
@@ -66,7 +68,7 @@ func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestConte
 		return nil, err
 	}
 
-	options, err := ParseOptions(req, requestInfo.Verb)
+	options, err := ParseOptions(req, requestInfo, requestInfo.Verb)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +83,7 @@ func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestConte
 }
 
 // ParserOptions 解析request头部操作, header等
-func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
+func ParseOptions(req *http.Request, reqInfo *apirequest.RequestInfo, rawVerb string) (*Options, error) {
 	options := new(Options)
 
 	// 解析参数
@@ -95,6 +97,13 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 	case "get":
 		// Get 没有参数可解析
 		options.GetOptions = &metav1.GetOptions{}
+		if reqInfo.Subresource == "log" {
+			podLogOptions, err := clientutil.MakePodLogOptions(req.URL.Query())
+			if err != nil {
+				return nil, err
+			}
+			options.PodLogOptions = podLogOptions
+		}
 	case "delete":
 		deleteOptions, err := clientutil.GetDeleteOptionsFromReq(req)
 		if err != nil {
@@ -133,9 +142,9 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 			options.Verb = ListVerb
 		}
 	case "get":
-		// Get 没有参数可解析
-		options.GetOptions = &metav1.GetOptions{}
-		if options.AcceptHeader != "" {
+		if reqInfo.Subresource == "log" {
+			options.Verb = GetLogsVerb
+		} else if options.AcceptHeader != "" {
 			options.Verb = GetAsTableVerb
 		} else {
 			options.Verb = GetVerb

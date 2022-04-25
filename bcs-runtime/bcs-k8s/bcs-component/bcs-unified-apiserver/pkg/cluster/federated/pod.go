@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	restclient "k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 )
@@ -284,6 +285,19 @@ func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListO
 		}
 
 		return watch, nil
+	}
+	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
+}
+
+func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error) {
+	for _, v := range p.k8sClientMap {
+		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+		}
+		return v.CoreV1().Pods(namespace).GetLogs(name, opts), nil
 	}
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
 }

@@ -19,6 +19,7 @@ const (
 	ListVerb        = "list"
 	ListAsTableVerb = "listAsTable" // kubectl 列表返回
 	GetVerb         = "get"
+	GetLogsVerb     = "getLogs"    // pod 标准输出
 	GetAsTableVerb  = "getAsTable" // kubectl 列表返回
 	CreateVerb      = "create"
 	UpdateVerb      = "update"
