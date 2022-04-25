@@ -46,3 +46,6 @@ plugin_attr:
   bcs-dynamic-route:
     gateway_token: ${gatewayToken}
     sync_cluster_credential_interval: 60
+  bkbcs-auth:
+    gateway_token: ${gatewayToken}
+    usermanager_upstream_name: usermanager

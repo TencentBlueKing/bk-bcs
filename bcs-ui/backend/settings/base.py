@@ -467,18 +467,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # 访问 bcs-api 服务需要的token
 BCS_APIGW_TOKEN = os.environ.get("BCS_APIGW_TOKEN", "")
-# 访问 bcs-api-gateway 服务需要的AUTHORIZATION
-BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
 # 直连新版bcs api的地址
 BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
-
 
 # cluster manager的代理配置
 CLUSTER_MANAGER_PROXY = {
     # cluster manager 服务的 host
     "HOST": BCS_APIGW_DOMAIN["prod"],
     # 访问 cluster manager 的 token
-    "TOKEN": os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", ""),
+    "TOKEN": BCS_APIGW_TOKEN,
     # 前端访问的前缀
     "PREFIX_PATH": "api/cluster_manager/proxy/",
 }
@@ -491,6 +488,17 @@ SHARED_CLUSTER_NS_PREFIX = ""
 
 # API 密钥前端渲染用
 BCS_API_HOST = ""
+
+# 基础性能查询数据源
+PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
+
+# 蓝鲸监控 unify-query 地址
+BK_MONITOR_QUERY_HOST = os.environ.get(
+    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
+)
+
+# 是否支持使用 Mesos 服务
+SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
 
 try:
     from .base_ext import *  # noqa

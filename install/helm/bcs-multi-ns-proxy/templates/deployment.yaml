@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-multi-ns-proxy.fullname" . }}
+  labels:
+    {{- include "bcs-multi-ns-proxy.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "bcs-multi-ns-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bcs-multi-ns-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-multi-ns-proxy.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          - /data/bcs/bcs-multi-ns-proxy/bcs-multi-ns-proxy
+          args:
+          - --proxy-port
+          - '443'
+          - --proxy-address
+          - "$(MY_POD_IP)"
+          - --proxy-servercert
+          - /data/bcs/cert/cert.pem
+          - --proxy-serverkey
+          - /data/bcs/cert/key.pem
+          - --kubeconfig-mode
+          - secret
+          - --kubeconfig-secretname
+          - "{{ .Values.kubeconfig.secretname }}"
+          - --kubeconfig-secretnamespace
+          - "$(MY_POD_NAMESPACE)"
+          - --kubeconfig-defaultns
+          - "{{ .Values.kubeconfig.defaultns }}"
+          ports:
+            - name: http
+              containerPort: 443
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: server-certs
+              mountPath: /data/bcs/cert
+              readOnly: true
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: server-certs
+          secret:
+            secretName: {{ include "bcs-multi-ns-proxy.fullname" . }}-servercerts

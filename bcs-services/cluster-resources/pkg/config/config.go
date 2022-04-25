@@ -45,6 +45,8 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 		return nil, err
 	}
 	for _, f := range []func() error{
+		// 初始化 Server.Address
+		conf.initServerAddress,
 		// 初始化 AuthToken
 		conf.initAuthToken,
 		// 初始化 jwt 公钥
@@ -63,19 +65,27 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 
 // ClusterResourcesConf ClusterResources 服务启动配置
 type ClusterResourcesConf struct {
-	Debug     bool          `yaml:"debug"`
-	Etcd      EtcdConf      `yaml:"etcd"`
-	Server    ServerConf    `yaml:"server"`
-	Client    ClientConf    `yaml:"client"`
-	Discovery DiscoveryConf `yaml:"discovery"`
-	Swagger   SwaggerConf   `yaml:"swagger"`
-	Log       LogConf       `yaml:"log"`
-	Redis     RedisConf     `yaml:"redis"`
-	Global    GlobalConf    `yaml:"crGlobal"`
+	Debug   bool        `yaml:"debug"`
+	Etcd    EtcdConf    `yaml:"etcd"`
+	Server  ServerConf  `yaml:"server"`
+	Client  ClientConf  `yaml:"client"`
+	Swagger SwaggerConf `yaml:"swagger"`
+	Log     LogConf     `yaml:"log"`
+	Redis   RedisConf   `yaml:"redis"`
+	Global  GlobalConf  `yaml:"crGlobal"`
+}
+
+func (c *ClusterResourcesConf) initServerAddress() error {
+	// 若指定使用 LOCAL_IP 且环境变量中 LOCAL_IP 有值，则替换掉 Server.Address
+	if c.Server.UseLocalIP && envs.LocalIP != "" {
+		c.Server.Address = envs.LocalIP
+		c.Server.InsecureAddress = envs.LocalIP
+	}
+	return nil
 }
 
 // 初始化 BCS AuthToken
-func (c *ClusterResourcesConf) initAuthToken() (err error) {
+func (c *ClusterResourcesConf) initAuthToken() error {
 	// 若指定从环境变量读取 BCS AuthToken，则丢弃配置文件中的值
 	if c.Global.BCSAPIGW.ReadAuthTokenFromEnv {
 		c.Global.BCSAPIGW.AuthToken = envs.BCSApiGWAuthToken
@@ -84,7 +94,7 @@ func (c *ClusterResourcesConf) initAuthToken() (err error) {
 }
 
 // 初始化 jwt 公钥
-func (c *ClusterResourcesConf) initJWTPubKey() (err error) {
+func (c *ClusterResourcesConf) initJWTPubKey() error {
 	if c.Global.Auth.JWTPubKey == "" {
 		return nil
 	}
@@ -147,6 +157,7 @@ type EtcdConf struct {
 
 // ServerConf Server 配置
 type ServerConf struct {
+	UseLocalIP       bool   `yaml:"useLocalIP" usage:"是否使用 Local IP"`
 	Address          string `yaml:"address" usage:"服务启动地址"`
 	InsecureAddress  string `yaml:"insecureAddress" usage:"服务启动地址（非安全）"`
 	Port             int    `yaml:"port" usage:"GRPC 服务端口"`
@@ -166,16 +177,6 @@ type ClientConf struct {
 	CertPwd string `yaml:"certPwd" usage:"Client Cert Password"`
 	Key     string `yaml:"key" usage:"Client Key"`
 	Ca      string `yaml:"ca" usage:"Client CA"`
-}
-
-// DiscoveryConf 服务发现配置
-type DiscoveryConf struct {
-	Cert            string `yaml:"cert" usage:"Client Cert"`
-	CertPwd         string `yaml:"certPwd" usage:"Client Cert Password"`
-	Key             string `yaml:"key" usage:"Client Key"`
-	Ca              string `yaml:"ca" usage:"Client CA"`
-	CallCMWithTLS   bool   `yaml:"callCMWithTLS" usage:"ClusterManager 请求是否使用 tlsConfig"` // nolint:tagliatelle
-	CallProjWithTLS bool   `yaml:"callProjWithTLS" usage:"BCSProject 请求是否使用 tlsConfig"`   // nolint:tagliatelle
 }
 
 // SwaggerConf Swagger 配置

@@ -134,7 +134,10 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
         core.log.error("no verify key for apigw jwt token, jwt token:"..jwt_str)
         core.response.exit(500, "BCS Auth Plugin Error")
     end
-    key = ngx_decode_base64(key)
+    local decode_res = ngx_decode_base64(key)
+    if decode_res ~= nil then
+        key = decode_res
+    end
     local verified = resty_jwt:verify_jwt_obj(key, jwt_obj)
     if not verified then
         core.log.error("verify apigw jwt token failed, jwt token:"..jwt_str)

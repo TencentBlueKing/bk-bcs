@@ -281,9 +281,6 @@ BCS_APP_ID = 1
 BCS_APP_CODE = APP_CODE
 BCS_APP_SECRET = SECRET_KEY
 
-# 是否支持使用 Mesos 服务
-SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
-
 # REPO 相关配置
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
 BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
@@ -297,13 +294,6 @@ CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")
 # 可能有带端口的情况，需要去除
 SESSION_COOKIE_DOMAIN = "." + parse.urlparse(BK_PAAS_HOST).netloc.split(":")[0]
 CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
-# 蓝鲸监控 unify-query 地址
-BK_MONITOR_QUERY_HOST = os.environ.get(
-    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
-)
-
-# 基础性能查询数据源
-PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
 
 # 蓝鲸 opentelemetry trace 配置
 # 是否开启 OTLP, 默认不开启

@@ -22,6 +22,7 @@ etcd:
 
 # Server 配置信息
 server:
+  useLocalIP: false
   address: ""
   insecureAddress: ""
   port: 9090
@@ -40,15 +41,6 @@ client:
   certPwd: ""
   key: ""
   ca: ""
-
-# 服务发现 Client 配置
-discovery:
-  cert: ""
-  certPwd: ""
-  key: ""
-  ca: ""
-  callCMWithTLS: false
-  callProjWithTLS: false
 
 # Swagger 配置信息
 swagger:
