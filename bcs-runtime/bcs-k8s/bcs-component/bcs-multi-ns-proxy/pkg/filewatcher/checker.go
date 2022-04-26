@@ -18,10 +18,12 @@ import (
 	"go.uber.org/zap"
 )
 
+// Handler event handler
 type Handler interface {
 	OnEvent(event Event) error
 }
 
+// Watcher watchs event for configs
 type Watcher struct {
 	checkPeriod time.Duration
 	handlers    []Handler
@@ -31,6 +33,7 @@ type Watcher struct {
 	lister Lister
 }
 
+// NewWatcher create new watcher
 func NewWatcher(lister Lister, checkPeriod time.Duration) *Watcher {
 	return &Watcher{
 		checkPeriod: checkPeriod,
@@ -40,10 +43,12 @@ func NewWatcher(lister Lister, checkPeriod time.Duration) *Watcher {
 	}
 }
 
+// RegisterHandler register event handler
 func (w *Watcher) RegisterHandler(h Handler) {
 	w.handlers = append(w.handlers, h)
 }
 
+// WatchLoop start watch loop
 func (w *Watcher) WatchLoop() {
 	w.doNotify()
 
@@ -84,6 +89,7 @@ func (w *Watcher) doNotify() {
 	}
 }
 
+// Stop stops watch loop
 func (w *Watcher) Stop() {
 	w.stopCh <- struct{}{}
 }
