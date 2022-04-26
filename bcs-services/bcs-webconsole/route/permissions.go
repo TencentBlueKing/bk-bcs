@@ -55,6 +55,12 @@ func PermissionRequired() gin.HandlerFunc {
 			return
 		}
 
+		// 管理员凭证, 按项目
+		if config.G.ValidateCred(config.CredentialManager, authCtx.Username, config.ScopeProjectCode, authCtx.ProjectCode) {
+			c.Next()
+			return
+		}
+
 		if err := initContextWithIAMProject(c, authCtx); err != nil {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
