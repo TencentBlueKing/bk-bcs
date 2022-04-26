@@ -55,6 +55,7 @@ class LBController:
         return labels
 
 
+# TODO: 下个迭代重构LB的相关功能，注意去掉不相关的信息
 def convert_ip_data(access_token: str, project_id: str, cluster_id: str, ip_data: Dict[str, bool]) -> Dict[str, bool]:
     """转换为ip信息
     NOTE: 历史数据可能为{ip_id: 是否使用}，需要把ip_id转换为ip
@@ -72,6 +73,7 @@ def convert_ip_data(access_token: str, project_id: str, cluster_id: str, ip_data
     _ip_data = {}
     for ip, used in ip_data.items():
         try:
+            # 临时数据中IP为节点ID，需要转换为对应的IP
             ip_id = int(ip)
             if node_id_ip.get(ip_id):
                 _ip_data[node_id_ip[ip_id]] = used
