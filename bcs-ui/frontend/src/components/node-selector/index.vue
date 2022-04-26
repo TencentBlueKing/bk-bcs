@@ -370,6 +370,7 @@
                     // 重新根据选择的 host 设置到 hostListCache 中
                     selectedHosts.forEach(item => {
                         this.hostListCache[item.inner_ip] = item
+                    })
 
                     this.remainCount = Object.keys(this.hostListCache).length
                 }, 0)
