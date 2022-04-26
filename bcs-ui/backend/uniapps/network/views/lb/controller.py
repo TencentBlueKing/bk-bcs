@@ -56,27 +56,29 @@ class LBController:
 
 
 # TODO: 下个迭代重构LB的相关功能，注意去掉不相关的信息
-def convert_ip_data(access_token: str, project_id: str, cluster_id: str, ip_data: Dict[str, bool]) -> Dict[str, bool]:
+def convert_ip_used_data(
+    access_token: str, project_id: str, cluster_id: str, ip_used_data: Dict[str, bool]
+) -> Dict[str, bool]:
     """转换为ip信息
     NOTE: 历史数据可能为{ip_id: 是否使用}，需要把ip_id转换为ip
 
     :param access_token: access_token
     :param project_id: 项目ID
     :param cluster_id: 集群ID
-    :param ip_data: IP信息，格式为{ip: True}
+    :param ip_used_data: IP信息，格式为{ip: True}
 
     :return: 返回IP信息
     """
     nodes = PaaSCCClient(auth=ComponentAuth(access_token)).get_node_list(project_id, cluster_id)
     node_id_ip = {info["id"]: info["inner_ip"] for info in nodes["results"] or []}
     # 通过ip id, 获取ip
-    _ip_data = {}
-    for ip, used in ip_data.items():
+    _ip_used_data = {}
+    for ip, used in ip_used_data.items():
         try:
             # 临时数据中IP为节点ID，需要转换为对应的IP
             ip_id = int(ip)
             if node_id_ip.get(ip_id):
-                _ip_data[node_id_ip[ip_id]] = used
+                _ip_used_data[node_id_ip[ip_id]] = used
         except ValueError:
-            _ip_data[ip] = used
-    return _ip_data
+            _ip_used_data[ip] = used
+    return _ip_used_data

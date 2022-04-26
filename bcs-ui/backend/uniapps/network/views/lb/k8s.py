@@ -39,7 +39,7 @@ from backend.uniapps.network.views.charts.releases import HelmReleaseMixin
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 
-from .controller import LBController, convert_ip_data
+from .controller import LBController, convert_ip_used_data
 
 logger = logging.getLogger(__name__)
 
@@ -249,8 +249,8 @@ class NginxIngressRetrieveUpdateViewSet(NginxIngressBase, HelmReleaseMixin):
         cluster_id_name_map = self.get_cluster_id_name_map(access_token, project_id)
         data["cluster_name"] = cluster_id_name_map[data["cluster_id"]]["name"]
         ip_info = json.loads(data["ip_info"])
-        ip_data = convert_ip_data(access_token, project_id, data["cluster_id"], ip_info)
-        render_ip_info = [{"id": ip, "inner_ip": ip, "unshared": used} for ip, used in ip_data.items()]
+        ip_used_data = convert_ip_used_data(access_token, project_id, data["cluster_id"], ip_info)
+        render_ip_info = [{"id": ip, "inner_ip": ip, "unshared": used} for ip, used in ip_used_data.items()]
         data["ip_info"] = json.dumps(render_ip_info)
 
         # 添加release对应的版本及values内容
@@ -264,14 +264,14 @@ class NginxIngressRetrieveUpdateViewSet(NginxIngressBase, HelmReleaseMixin):
     def get_ip_list(self, request, data, lb_conf):
         """比较先前和现在节点的获取要添加和删除的节点信息"""
         used_ip_info = json.loads(lb_conf.ip_info)
-        ip_data = convert_ip_data(
+        ip_used_data = convert_ip_used_data(
             request.user.token.access_token, lb_conf.project_id, lb_conf.cluster_id, used_ip_info
         )
         updated_ip_info = data["ip_info"]
         # 要更新和已经使用的ip的交集，用于后续处理需要添加label和删除label的节点
-        inter_ip_list = set([ip for ip in ip_data if ip in updated_ip_info])
+        inter_ip_list = set([ip for ip in ip_used_data if ip in updated_ip_info])
         # 要删除label的节点
-        del_label_ip_list = list(set(ip_data) - inter_ip_list)
+        del_label_ip_list = list(set(ip_used_data) - inter_ip_list)
         # 要添加label的节点
         add_label_ip_list = list(set(updated_ip_info.keys()) - inter_ip_list)
 
@@ -365,13 +365,13 @@ class NginxIngressRetrieveUpdateViewSet(NginxIngressBase, HelmReleaseMixin):
         # 标识LB被删除
         self.delete_lb_conf(lb_conf)
         # 删除节点标签
-        ip_data = convert_ip_data(
+        ip_used_data = convert_ip_used_data(
             request.user.token.access_token, lb_conf.project_id, lb_conf.cluster_id, json.loads(lb_conf.ip_info)
         )
         ctx_cluster = CtxCluster.create(
             token=request.user.token.access_token, id=lb_conf.cluster_id, project_id=project_id
         )
-        LBController(ctx_cluster).delete_labels(ip_data)
+        LBController(ctx_cluster).delete_labels(ip_used_data)
         # 删除helm release
         release = self.get_helm_release(
             lb_conf.cluster_id, K8S_LB_CHART_NAME, namespace_id=lb_conf.namespace_id, namespace=lb_conf.namespace

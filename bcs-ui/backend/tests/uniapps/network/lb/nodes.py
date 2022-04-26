@@ -20,7 +20,7 @@ from mock import patch
 from backend.resources.node.client import Node
 from backend.tests.testing_utils.base import generate_random_string
 from backend.uniapps.network.constants import K8S_LB_LABEL
-from backend.uniapps.network.views.lb.nodes import LBController, convert_ip_data
+from backend.uniapps.network.views.lb.controller import LBController, convert_ip_used_data
 
 FAKE_IP_ID = 1
 FAKE_INNER_IP = "127.0.0.1"
@@ -89,12 +89,15 @@ class TestLbController:
 
 
 @pytest.mark.parametrize(
-    "ip_data, converted_ip_data",
+    "ip_used_data, converted_ip_used_data",
     [({str(FAKE_IP_ID): True}, {FAKE_INNER_IP: True}), ({FAKE_INNER_IP: True}, {FAKE_INNER_IP: True})],
 )
-def test_convert_ip_data(request_user, project_id, cluster_id, ip_data, converted_ip_data):
+def test_convert_ip_used_data(request_user, project_id, cluster_id, ip_used_data, converted_ip_used_data):
     with patch(
         "backend.uniapps.network.views.lb.nodes.PaaSCCClient.get_node_list",
         return_value={"results": [{"id": 1, "inner_ip": FAKE_INNER_IP}]},
     ):
-        assert convert_ip_data(request_user.token.access_token, project_id, cluster_id, ip_data) == converted_ip_data
+        assert (
+            convert_ip_used_data(request_user.token.access_token, project_id, cluster_id, ip_used_data)
+            == converted_ip_used_data
+        )
