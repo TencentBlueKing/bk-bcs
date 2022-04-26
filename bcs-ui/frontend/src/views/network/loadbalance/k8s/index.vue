@@ -408,7 +408,7 @@
             handlerSelectNode (data) {
                 const nodeList = data.map(item => {
                     return {
-                        id: item.id,
+                        id: item.inner_ip,
                         inner_ip: item.inner_ip,
                         unshared: false
                     }
