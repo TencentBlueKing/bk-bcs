@@ -227,7 +227,7 @@ func run() {
 		os.Exit(1)
 	}
 	go func() {
-		if runErr := validator.Run(webhookOptions, gdClient); runErr != nil {
+		if runErr := validator.Run(webhookOptions, gdClient, stopCh); runErr != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", runErr)
 			os.Exit(1)
 		}

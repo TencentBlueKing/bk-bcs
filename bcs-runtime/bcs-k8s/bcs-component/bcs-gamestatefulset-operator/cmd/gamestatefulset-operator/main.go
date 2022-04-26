@@ -220,7 +220,7 @@ func run() {
 		os.Exit(1)
 	}
 	go func() {
-		if runErr := validator.Run(webhookOptions, gstsClient); runErr != nil {
+		if runErr := validator.Run(webhookOptions, gstsClient, stopCh); runErr != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", runErr)
 			os.Exit(1)
 		}
