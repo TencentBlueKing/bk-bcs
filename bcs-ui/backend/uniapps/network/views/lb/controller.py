@@ -12,16 +12,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import json
 from typing import Dict, List
 
-from backend.container_service.clusters.base import utils as cluster_utils
+from backend.components.base import ComponentAuth
+from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.node.client import Node
 from backend.uniapps.network.constants import K8S_LB_LABEL, LBLabelOp
 
 
-class LoadbalancerLabels:
+class LBController:
     def __init__(self, ctx_cluster: CtxCluster):
         self.node_client = Node(ctx_cluster)
 
@@ -55,19 +55,26 @@ class LoadbalancerLabels:
         return labels
 
 
-def convert_ips(access_token: str, project_id: str, cluster_id: str, lb_ips: Dict) -> Dict:
+def convert_ip_data(access_token: str, project_id: str, cluster_id: str, ip_data: Dict[str, bool]) -> Dict[str, bool]:
     """转换为ip信息
     NOTE: 历史数据可能为{ip_id: 是否使用}，需要把ip_id转换为ip
+
+    :param access_token: access_token
+    :param project_id: 项目ID
+    :param cluster_id: 集群ID
+    :param ip_data: IP信息，格式为{ip: True}
+
+    :return: 返回IP信息
     """
-    nodes = cluster_utils.get_cluster_nodes(access_token, project_id, cluster_id)
-    node_id_ip = {info["id"]: info["inner_ip"] for info in nodes}
+    nodes = PaaSCCClient(auth=ComponentAuth(access_token)).get_node_list(project_id, cluster_id)
+    node_id_ip = {info["id"]: info["inner_ip"] for info in nodes["results"] or []}
     # 通过ip id, 获取ip
-    _ips = {}
-    for ip, used in lb_ips.items():
-        if not ip.isdigit():
-            _ips[ip] = used
-            continue
-        # 如果为字符串数字，则为ID，需要转换为ip
-        if node_id_ip.get(int(ip)):
-            _ips[node_id_ip[int(ip)]] = used
-    return _ips
+    _ip_data = {}
+    for ip, used in ip_data.items():
+        try:
+            ip_id = int(ip)
+            if node_id_ip.get(ip_id):
+                _ip_data[node_id_ip[ip_id]] = used
+        except ValueError:
+            _ip_data[ip] = used
+    return _ip_data

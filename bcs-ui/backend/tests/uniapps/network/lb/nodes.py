@@ -20,14 +20,14 @@ from mock import patch
 from backend.resources.node.client import Node
 from backend.tests.testing_utils.base import generate_random_string
 from backend.uniapps.network.constants import K8S_LB_LABEL
-from backend.uniapps.network.views.lb.nodes import LoadbalancerLabels, convert_ips
+from backend.uniapps.network.views.lb.nodes import LBController, convert_ip_data
 
 FAKE_IP_ID = 1
 FAKE_INNER_IP = "127.0.0.1"
 FAKE_NODE_NAME = generate_random_string(8)
 
 
-class TestLbLabels:
+class TestLbController:
     @pytest.fixture
     def client(self, ctx_cluster):
         return Node(ctx_cluster)
@@ -64,7 +64,7 @@ class TestLbLabels:
         client.delete_wait_finished(FAKE_NODE_NAME)
 
     def test_add_lb_labels(self, client, create_and_delete_node, ctx_cluster):
-        LoadbalancerLabels(ctx_cluster).add_labels(FAKE_INNER_IP)
+        LBController(ctx_cluster).add_labels(FAKE_INNER_IP)
         # 查询label
         node_labels = client.filter_nodes_field_data("labels", filter_node_names=[FAKE_NODE_NAME])
         labels = node_labels[FAKE_INNER_IP]
@@ -75,13 +75,13 @@ class TestLbLabels:
 
     def test_del_lb_labels(self, client, create_and_delete_node, ctx_cluster):
         # 先添加lb的标签
-        LoadbalancerLabels(ctx_cluster).add_labels(FAKE_INNER_IP)
+        LBController(ctx_cluster).add_labels(FAKE_INNER_IP)
         # 检查标签存在
         node_labels = client.filter_nodes_field_data("labels", filter_node_names=[FAKE_NODE_NAME])
         labels = node_labels[FAKE_INNER_IP]
         assert set(K8S_LB_LABEL.keys()).issubset(set(labels.keys()))
         # 删除标签
-        LoadbalancerLabels(ctx_cluster).delete_labels(FAKE_INNER_IP)
+        LBController(ctx_cluster).delete_labels(FAKE_INNER_IP)
         # 检查标签已经删除
         node_labels = client.filter_nodes_field_data("labels", filter_node_names=[FAKE_NODE_NAME])
         labels = node_labels[FAKE_INNER_IP]
@@ -89,12 +89,12 @@ class TestLbLabels:
 
 
 @pytest.mark.parametrize(
-    "ip_info, converted_ips",
+    "ip_data, converted_ip_data",
     [({str(FAKE_IP_ID): True}, {FAKE_INNER_IP: True}), ({FAKE_INNER_IP: True}, {FAKE_INNER_IP: True})],
 )
-def test_convert_ips(request_user, project_id, cluster_id, ip_info, converted_ips):
+def test_convert_ip_data(request_user, project_id, cluster_id, ip_data, converted_ip_data):
     with patch(
-        "backend.uniapps.network.views.lb.nodes.cluster_utils.get_cluster_nodes",
-        return_value=[{"id": 1, "inner_ip": FAKE_INNER_IP}],
+        "backend.uniapps.network.views.lb.nodes.PaaSCCClient.get_node_list",
+        return_value={"results": [{"id": 1, "inner_ip": FAKE_INNER_IP}]},
     ):
-        assert convert_ips(request_user.token.access_token, project_id, cluster_id, ip_info) == converted_ips
+        assert convert_ip_data(request_user.token.access_token, project_id, cluster_id, ip_data) == converted_ip_data
