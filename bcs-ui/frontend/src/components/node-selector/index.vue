@@ -286,7 +286,7 @@
 
                     const list = res || []
                     list.forEach(item => {
-                        if (this.hostListCache[`${item.inner_ip}`]) {
+                        if (this.hostListCache[item.inner_ip]) {
                             item.isChecked = true
                         }
                     })
@@ -364,12 +364,12 @@
 
                     // 清除 hostListCache
                     hosts.forEach(item => {
-                        delete this.hostListCache[`${item.inner_ip}`]
+                        delete this.hostListCache[item.inner_ip]
                     })
 
                     // 重新根据选择的 host 设置到 hostListCache 中
                     selectedHosts.forEach(item => {
-                        this.hostListCache[`${item.inner_ip}`] = item
+                        this.hostListCache[item.inner_ip] = item
                     })
 
                     this.remainCount = Object.keys(this.hostListCache).length
