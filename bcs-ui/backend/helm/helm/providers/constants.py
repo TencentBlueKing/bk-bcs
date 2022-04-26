@@ -21,9 +21,6 @@ logger = logging.getLogger(__name__)
 CURATOR_VALUES_TEMPLATE = ""
 
 # public repo url
-PUBLIC_REPO_URL = f'{settings.HELM_REPO_DOMAIN}/chartrepo/public/'
-
-try:
-    from .constants_ext import *  # type: ignore  # noqa
-except ImportError:
-    logger.debug('Load extension for constants failed')
+PUBLIC_REPO_URL = (
+    f"{settings.HELM_REPO_DOMAIN}/{settings.BK_REPO_SHARED_PROJECT_NAME}/{settings.BK_REPO_SHARED_CHART_DEPOT_NAME}/"
+)

@@ -158,3 +158,18 @@ class RepositorySyncSLZ(serializers.Serializer):
 
 class ChartVersionParamsSLZ(serializers.Serializer):
     version_list = serializers.ListField(child=serializers.CharField(), default=[])
+
+
+class ChartParamsSLZ(serializers.Serializer):
+    is_public_repo = serializers.BooleanField(default=False)
+
+
+class ChartVersionDetailSLZ(serializers.ModelSerializer):
+    data = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChartVersion
+        fields = ("id", "name", "version", "data")
+
+    def get_data(self, obj):
+        return obj.to_json()
