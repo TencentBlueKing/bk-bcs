@@ -107,7 +107,7 @@ func (c *Configurations) ReadCred(name string, content []byte) error {
 	}
 	c.Credentials[name] = cred
 	for _, v := range c.Credentials[name] {
-		if err := v.InitMatcher(); err != nil {
+		if err := v.InitCred(); err != nil {
 			return err
 		}
 	}
@@ -115,10 +115,10 @@ func (c *Configurations) ReadCred(name string, content []byte) error {
 }
 
 // ValidateCred 校验凭证是否合法
-func (c *Configurations) ValidateCred(appCode, projectCode string) bool {
+func (c *Configurations) ValidateCred(credType CredentialType, credName string, scopeType ScopeType, scopeValue string) bool {
 	for _, creds := range c.Credentials {
 		for _, cred := range creds {
-			if cred.MatcheAppCode(appCode, projectCode) {
+			if cred.Matches(credType, credName, scopeType, scopeValue) {
 				return true
 			}
 		}
