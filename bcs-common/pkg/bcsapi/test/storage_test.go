@@ -8,24 +8,24 @@ import (
 
 func TestStorageCli_QueryK8SGameDeployment(t *testing.T) {
 	tlsconfig, err := ssl.ClientTslConfVerity(
-		"",
-		"",
-		"",
-		"")
+		"xxx",
+		"xxx",
+		"xxx",
+		"xxx")
 
 	if err != nil {
 		t.Errorf("ssl.ClientTslConfVerity err: %v", err)
 	}
 
 	config := &bcsapi.Config{
-		Hosts:     []string{"9.143.98.44:8081"},
+		Hosts:     []string{"xxx:xxx"},
 		TLSConfig: tlsconfig,
 		Gateway:   true,
 	}
 
 	client := bcsapi.NewClient(config)
 	s := client.Storage()
-	mesosNamespaces, err := s.QueryMesosNamespace("BCS-MESOS-20042")
+	mesosNamespaces, err := s.QueryMesosNamespace("xxx")
 	if err != nil {
 		return
 	}
