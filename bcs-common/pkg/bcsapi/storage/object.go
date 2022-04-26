@@ -3,7 +3,7 @@ package storage
 import (
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1"
 	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamestatefulset/v1alpha1"
-	kubebkbcsv2 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
+	schedtype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/types"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -40,13 +40,15 @@ type GameStatefulSet struct {
 
 type MesosApplication struct {
 	CommonDataHeader
-	Data *kubebkbcsv2.Application
+	Data *schedtype.Application
 }
 
 type MesosDeployment struct {
 	CommonDataHeader
-	Data *kubebkbcsv2.Deployment
+	Data *schedtype.Deployment
 }
+
+type MesosNamespace string
 
 type K8sNode struct {
 	CommonDataHeader
