@@ -31,7 +31,7 @@ type Configurations struct {
 	BCS         *BCSConf                   `yaml:"bcs_conf"`
 	BCSCC       *BCSCCConf                 `yaml:"bcs_cc_conf"`
 	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
-	Credentials []*Credential              `yaml:"credentials"`
+	Credentials map[string][]*Credential   `yaml:"-"`
 	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
 	Redis       *RedisConf                 `yaml:"redis"`
 	WebConsole  *WebConsoleConf            `yaml:"webconsole"`
@@ -75,6 +75,8 @@ func (c *Configurations) Init() error {
 	c.WebConsole = &WebConsoleConf{}
 	c.WebConsole.Init()
 
+	c.Credentials = map[string][]*Credential{}
+
 	c.Web = &WebConf{}
 	c.Web.Init()
 
@@ -94,7 +96,7 @@ func init() {
 	G.Init()
 }
 
-func (c *Configurations) ReadCred(content []byte) error {
+func (c *Configurations) ReadCred(name string, content []byte) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
@@ -103,8 +105,8 @@ func (c *Configurations) ReadCred(content []byte) error {
 	if err != nil {
 		return err
 	}
-	c.Credentials = cred
-	for _, v := range c.Credentials {
+	c.Credentials[name] = cred
+	for _, v := range c.Credentials[name] {
 		if err := v.InitMatcher(); err != nil {
 			return err
 		}
@@ -113,9 +115,11 @@ func (c *Configurations) ReadCred(content []byte) error {
 }
 
 func (c *Configurations) ValidateCred(appCode, projectCode string) bool {
-	for _, cred := range c.Credentials {
-		if cred.Matches(appCode, projectCode) {
-			return true
+	for _, creds := range c.Credentials {
+		for _, cred := range creds {
+			if cred.MatcheAppCode(appCode, projectCode) {
+				return true
+			}
 		}
 	}
 	return false

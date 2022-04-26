@@ -23,10 +23,10 @@ import (
 
 // 权限控制
 const (
-	CredentialBasicAuth   = "basic_auth"
-	CredentialBearerToken = "bearer_token"
-	CredentialAppCode     = "app_code"
-	CredentialUsername    = "username"
+	CredentialBasicAuth   = "basic_auth"   // Basic验证
+	CredentialBearerToken = "bearer_token" // Token验证
+	CredentialAppCode     = "app_code"     // 蓝鲸App
+	CredentialManager     = "manager"      // 管理员
 )
 
 // Scope 权限控制，格式如cluster_id: "RE_BCS-K8S-40000", 多个取且关系
@@ -50,6 +50,7 @@ type Credential struct {
 	ProjectId      string           `yaml:"project_id"`
 	CredentialType string           `yaml:"credential_type"`
 	Credential     string           `yaml:"credential"`
+	CredentialList []string         `yaml:"credential_list"`
 	Scopes         []Scope          `yaml:"scopes"` // 多个取或关系
 	scopeMatcher   []*LabelMatchers `yaml:"-"`
 	ExpireTime     time.Time        `yaml:"expire_time"`
@@ -79,7 +80,12 @@ func (c *Credential) InitMatcher() error {
 	return nil
 }
 
-func (c *Credential) Matches(appCode, projectCode string) bool {
+func (c *Credential) MatcheAppCode(appCode, projectCode string) bool {
+	// 必须是 AppCode 类型
+	if c.CredentialType != CredentialAppCode {
+		return false
+	}
+
 	if !c.Enabled {
 		return false
 	}
