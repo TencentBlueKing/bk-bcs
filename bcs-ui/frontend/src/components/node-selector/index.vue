@@ -143,7 +143,7 @@
 
                 showStagTip: false,
                 exceptionCode: null,
-                curProject: null,
+                curProject: [],
                 nodeMetric: {}
             }
         },
@@ -384,7 +384,7 @@
              */
             removeHost (host, index) {
                 this.hostList.splice(index, 1)
-                delete this.hostListCache[`${host.inner_ip}-${host.asset_id}`]
+                delete this.hostListCache[`${host.inner_ip}`]
             }
         }
     }
