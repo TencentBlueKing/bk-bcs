@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"os"
 	"strings"
 	"text/template"
 
@@ -72,19 +73,22 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 
 // 获取资源对应 APIVersion 并更新 Renderer 配置
 func (r *ManifestRenderer) setAPIVersion() error {
-	switch r.Kind {
-	case res.CJ:
-		r.APIVersion = res.DefaultCJGroupVersion
-	case res.HPA:
-		r.APIVersion = res.DefaultHPAGroupVersion
-	default:
-		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
-		if err != nil {
-			return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
+	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version（HPA 除外）
+	r.APIVersion = mapx.Get(r.FormData, "apiVersion", "").(string)
+	if r.APIVersion == "" {
+		switch r.Kind {
+		case res.HPA:
+			r.APIVersion = res.DefaultHPAGroupVersion
+		default:
+			// 使用 Preferred Version
+			resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
+			if err != nil {
+				return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
+			}
+			r.APIVersion = resInfo.Group + "/" + resInfo.Version
 		}
-		r.APIVersion = resInfo.Group + "/" + resInfo.Version
+		r.FormData["apiVersion"] = r.APIVersion
 	}
-	r.FormData["apiVersion"] = r.APIVersion
 	return nil
 }
 
@@ -115,7 +119,7 @@ func (r *ManifestRenderer) cleanFormData() error {
 
 // 加载模板并初始化
 func (r *ManifestRenderer) initTemplate() (err error) {
-	r.Tmpl, err = initTemplate(envs.FormFileBaseDir + "/tmpl/*")
+	r.Tmpl, err = initTemplate(envs.FormFileBaseDir+"/tmpl/", "*")
 	return err
 }
 
@@ -151,7 +155,7 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 	}
 
 	// 2. 加载模板并初始化
-	r.Tmpl, err = initTemplate(envs.FormFileBaseDir + "/schema/*")
+	r.Tmpl, err = initTemplate(envs.FormFileBaseDir+"/schema/", "*")
 	if err != nil {
 		return nil, errorx.New(errcode.General, "加载模板失败：%v", err)
 	}
@@ -167,9 +171,11 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 }
 
 // 模板初始化（含挂载 include 方法等）
-func initTemplate(tmplPattern string) (*template.Template, error) {
+func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 	funcMap := newTmplFuncMap()
-	tmpl, err := template.New(stringx.Rand(TmplRandomNameLength, "")).Funcs(funcMap).ParseGlob(tmplPattern)
+	tmpl, err := template.New(
+		stringx.Rand(TmplRandomNameLength, ""),
+	).Funcs(funcMap).ParseFS(os.DirFS(baseDir), tmplPattern)
 	if err != nil {
 		return nil, err
 	}
