@@ -82,48 +82,52 @@ func NewMultiCredConf(filePaths []string) (*MultiCredConf, error) {
 	return multiCredConf, nil
 }
 
+// Watch 监听多个文件变化
 func (m *MultiCredConf) Watch() error {
 	var eg errgroup.Group
 
-	for name := range m.confMap {
-		eg.Go(func() error {
-			return m.watch(name)
-		})
+	for name, conf := range m.confMap {
+		w, err := m.watch(name, conf, &eg)
+		if err != nil {
+			return err
+		}
+		m.watcherMap[name] = w
 	}
+
 	if err := eg.Wait(); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Watch 监听多个文件变化
-func (m *MultiCredConf) watch(name string) error {
-	conf := m.confMap[name]
+// watch 监听单个文件变化
+func (m *MultiCredConf) watch(name string, conf microConf.Config, eg *errgroup.Group) (microConf.Watcher, error) {
 	w, err := conf.Watch("credentials")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	m.watcherMap[name] = w
-
-	for {
-		value, err := w.Next()
-		if err != nil {
-			if err.Error() == source.ErrWatcherStopped.Error() {
-				return nil
+	eg.Go(func() error {
+		for {
+			value, err := w.Next()
+			if err != nil {
+				if err.Error() == source.ErrWatcherStopped.Error() {
+					return nil
+				}
+				return err
 			}
-			return err
+			// watch 会传入 null 空值
+			if string(value.Bytes()) == "null" {
+				continue
+			}
+			if err := config.G.ReadCred(name, value.Bytes()); err != nil {
+				logger.Errorf("reload credential error, %s", err)
+			}
+			logger.Infof("reload credential conf from %s, len=%d", name, len(config.G.Credentials[name]))
 		}
-		// watch 会传入 null 空值
-		if string(value.Bytes()) == "null" {
-			continue
-		}
-		if err := config.G.ReadCred(name, value.Bytes()); err != nil {
-			logger.Errorf("reload credential error, %s", err)
-		}
-		logger.Infof("reload credential conf from %s, len=%d", name, len(config.G.Credentials[name]))
-	}
+	})
 
+	return w, nil
 }
 
 // Stop 停止所有监听
