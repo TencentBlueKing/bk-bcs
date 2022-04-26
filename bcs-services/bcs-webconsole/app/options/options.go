@@ -38,6 +38,7 @@ type MultiCredConf struct {
 	confMap    map[string]microConf.Config
 }
 
+// makeMicroConf 配置文件
 func makeMicroConf(filePath string) (microConf.Config, error) {
 	conf, err := microConf.NewConfig(
 		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),

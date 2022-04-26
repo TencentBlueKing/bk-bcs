@@ -114,6 +114,7 @@ func (c *Configurations) ReadCred(name string, content []byte) error {
 	return nil
 }
 
+// ValidateCred 校验凭证是否合法
 func (c *Configurations) ValidateCred(appCode, projectCode string) bool {
 	for _, creds := range c.Credentials {
 		for _, cred := range creds {
