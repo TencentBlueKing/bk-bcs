@@ -20,6 +20,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/transport"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 )
@@ -36,11 +37,29 @@ func makeTarget(serverAddress string) (*url.URL, error) {
 	if !strings.HasSuffix(serverAddress, "/") {
 		serverAddress = serverAddress + "/"
 	}
-	ipAddress, err := url.Parse(serverAddress)
+	target, err := url.Parse(serverAddress)
 	if err != nil {
 		return nil, err
 	}
-	return ipAddress, nil
+	return target, nil
+}
+
+// makeUpgradeTransport creates a transport that explicitly bypasses HTTP2 support
+// for proxy connections that must upgrade.
+func makeUpgradeTransport(config *rest.Config) (proxy.UpgradeRequestRoundTripper, error) {
+	transportConfig, err := config.TransportConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// 添加 BearerToken 等鉴权
+	upgrader, err := transport.HTTPWrappersForConfig(transportConfig, proxy.MirrorRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	// config.Transport is don't matter, only use upgrader
+	return proxy.NewUpgradeRequestRoundTripper(config.Transport, upgrader), nil
 }
 
 // makeUpgradeAwareHandler creates a new proxy handler for an kube-apiserver
@@ -54,7 +73,13 @@ func makeUpgradeAwareHandler(config *rest.Config) (*proxy.UpgradeAwareHandler, e
 		return nil, err
 	}
 
+	upgradeTransport, err := makeUpgradeTransport(config)
+	if err != nil {
+		return nil, err
+	}
+
 	apiProxy := proxy.NewUpgradeAwareHandler(target, apiTransport, false, false, &responder{})
+	apiProxy.UpgradeTransport = upgradeTransport
 	apiProxy.UseRequestLocation = true
 	apiProxy.AppendLocationPath = true
 	return apiProxy, nil
@@ -87,9 +112,6 @@ func NewProxyHandler(clusterId string) (*ProxyHandler, error) {
 
 // ServeHTTP
 func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// 重新设置自定义权限的 BearerToken
-	req.Header.Set("Authorization", "Bearer "+h.config.BearerToken)
-
 	// exec 需要 Upgrade
 	if req.Header.Get("X-Stream-Protocol-Version") != "" {
 		h.handler.UpgradeRequired = true
