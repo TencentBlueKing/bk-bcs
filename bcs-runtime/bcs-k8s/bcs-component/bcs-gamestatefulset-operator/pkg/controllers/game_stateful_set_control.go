@@ -61,8 +61,8 @@ const (
 
 var (
 	isGrace         string
-	createPodAction string
-	deletePodAction string
+	createPodAction = "createOrScaleUpGameStatefulSet"
+	deletePodAction = "deleteOrScaleDownGameStatefulSet"
 )
 
 // GameStatefulSetControlInterface implements the control logic for updating StatefulSets and their children Pods. It is implemented
@@ -161,19 +161,9 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(
 	// get the current, and update revisions
 	currentRevision, updateRevision, collisionCount, err := ssc.getGameStatefulSetRevisions(
 		set, revisions, getPodsRevisions(pods))
-	fmt.Println("cur revisions: ", currentRevision.Name)
-	fmt.Println("upd revisions: ", updateRevision.Name)
 	if err != nil {
 		return err
 	}
-	if currentRevision.Name == updateRevision.Name {
-		createPodAction = "createOrScaleUpGameStatefulSet"
-		deletePodAction = "deleteOrScaleDownGameStatefulSet"
-	} else {
-		createPodAction = "rollingUpdate"
-		deletePodAction = "rollingUpdate"
-	}
-
 	hrList, err := ssc.getHookRunsForGameStatefulSet(set)
 	if err != nil {
 		return err
@@ -531,7 +521,6 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				currentRevision.Name,
 				updateRevision.Name, ord)
 		}
-		fmt.Println("replicas after", ord, replicas[ord].Labels)
 	}
 
 	// find the first unhealthy Pod
@@ -630,11 +619,13 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			startTime := time.Now()
 			if err := ssc.podControl.CreateGameStatefulSetPod(set, replicas[i]); err != nil {
 				ssc.metrics.collectPodCreateDurations(set.Namespace, set.Name, failureStatus, createPodAction, time.Since(startTime))
+				createPodAction = "createOrScaleUpGameStatefulSet"
 				klog.Errorf("Operator create new Pod %s controlled by GameStatefulSet %s/%s failed, %s",
 					replicas[i].Name, set.Namespace, set.Name, err.Error())
 				return status, err
 			}
 			ssc.metrics.collectPodCreateDurations(set.Namespace, set.Name, successStatus, createPodAction, time.Since(startTime))
+			createPodAction = "createOrScaleUpGameStatefulSet"
 			klog.Infof("GameStatefulSet %s/%s is creating Pod %s", set.Namespace, set.Name, replicas[i].Name)
 			status.Replicas++
 			ssc.renewStatus(status, replicas[i], currentRevision, updateRevision, 1)
@@ -827,7 +818,6 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 
 	switch set.Spec.UpdateStrategy.Type {
 	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
-		fmt.Println("inplace updating...")
 		for target := replicasCount - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
 				updatedPods++
@@ -928,7 +918,6 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 		}
 	// RollingUpdate handle here
 	case gstsv1alpha1.RollingUpdateGameStatefulSetStrategyType:
-		fmt.Println("rolling updating...")
 		// we terminate the Pod with the largest ordinal that does not match the update revision.
 		for target := replicasCount - 1; target >= updateMin; target-- {
 
@@ -965,10 +954,12 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 					err := ssc.podControl.DeleteGameStatefulSetPod(set, replicas[target])
 					status.CurrentReplicas--
 					if err != nil {
-						ssc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, failureStatus, deletePodAction, isGrace, time.Since(startTime))
+						ssc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, failureStatus, "rollingUpdate", isGrace, time.Since(startTime))
+						createPodAction = "rollingUpdate"
 						return status, err
 					}
-					ssc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, successStatus, deletePodAction, isGrace, time.Since(startTime))
+					ssc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, successStatus, "rollingUpdate", isGrace, time.Since(startTime))
+					createPodAction = "rollingUpdate"
 					if !ssc.continueUpdate(set, monotonic, maxUnavailable, unavailablePods, updatedPods, podsToUpdate) {
 						return status, nil
 					}
