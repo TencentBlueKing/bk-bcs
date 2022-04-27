@@ -21,7 +21,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -304,7 +303,7 @@ func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, op
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
 }
 
-func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*apiproxy.UpgradeAwareHandler, error) {
+func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*proxy.ProxyHandler, error) {
 	for k, v := range p.k8sClientMap {
 		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, opts)
 		if err != nil {
@@ -313,17 +312,12 @@ func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts 
 			}
 			return nil, err
 		}
-		kubeConf, err := clientutil.GetKubeConfByClusterId(k)
+
+		proxyHandler, err := proxy.NewProxyHandler(k)
 		if err != nil {
-			return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
+			return nil, err
 		}
 
-		proxyHandler, err := proxy.NewProxyHandlerFromConfig(kubeConf)
-		// exec 需要开启 Upgrade
-		proxyHandler.UpgradeRequired = true
-		if err != nil {
-			return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
-		}
 		return proxyHandler, nil
 	}
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), name)

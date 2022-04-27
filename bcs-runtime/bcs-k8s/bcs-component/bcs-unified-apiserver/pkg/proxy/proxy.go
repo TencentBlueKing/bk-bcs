@@ -17,8 +17,11 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/rest"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 )
 
 type responder struct{}
@@ -28,7 +31,7 @@ func (r *responder) Error(w http.ResponseWriter, req *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
-// makeTarget, 提取连接地址
+// makeTarget 提取连接地址
 func makeTarget(serverAddress string) (*url.URL, error) {
 	if !strings.HasSuffix(serverAddress, "/") {
 		serverAddress = serverAddress + "/"
@@ -40,8 +43,8 @@ func makeTarget(serverAddress string) (*url.URL, error) {
 	return ipAddress, nil
 }
 
-// NewProxyHandlerFromConfig creates a new proxy handler for an kube-apiserver
-func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler, error) {
+// makeUpgradeAwareHandler creates a new proxy handler for an kube-apiserver
+func makeUpgradeAwareHandler(config *rest.Config) (*proxy.UpgradeAwareHandler, error) {
 	target, err := makeTarget(config.Host)
 	if err != nil {
 		return nil, err
@@ -55,4 +58,43 @@ func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler,
 	apiProxy.UseRequestLocation = true
 	apiProxy.AppendLocationPath = true
 	return apiProxy, nil
+}
+
+// ProxyHandler 代理请求
+type ProxyHandler struct {
+	handler *proxy.UpgradeAwareHandler
+	config  *rest.Config
+}
+
+// NewProxyHandler
+func NewProxyHandler(clusterId string) (*ProxyHandler, error) {
+	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
+	if err != nil {
+		return nil, errors.Wrapf(err, "build %s proxy handler", clusterId)
+	}
+
+	proxyHandler, err := makeUpgradeAwareHandler(kubeConf)
+	if err != nil {
+		return nil, errors.Wrapf(err, "build %s proxy handler from config %s", clusterId, kubeConf)
+	}
+
+	handler := &ProxyHandler{
+		config:  kubeConf,
+		handler: proxyHandler,
+	}
+	return handler, nil
+}
+
+// ServeHTTP
+func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// 重新设置自定义权限的 BearerToken
+	req.Header.Set("Authorization", "Bearer "+h.config.BearerToken)
+
+	// exec 需要 Upgrade
+	if req.Header.Get("X-Stream-Protocol-Version") != "" {
+		h.handler.UpgradeRequired = true
+	}
+
+	// 代理请求处理
+	h.handler.ServeHTTP(w, req)
 }

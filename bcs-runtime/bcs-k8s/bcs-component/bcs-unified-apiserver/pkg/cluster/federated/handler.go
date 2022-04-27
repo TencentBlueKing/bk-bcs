@@ -13,12 +13,8 @@
 package federated
 
 import (
-	"fmt"
-
 	v1 "k8s.io/api/core/v1"
-	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest/apis"
@@ -28,7 +24,7 @@ import (
 type Handler struct {
 	clusterId          string
 	members            []string
-	proxyHandler       *apiproxy.UpgradeAwareHandler
+	proxyHandler       *proxy.ProxyHandler
 	podHander          *apis.PodHandler
 	deploymentHandler  *apis.DeploymentHandler
 	statefulSetHandler *apis.StatefulSetHandler
@@ -41,14 +37,9 @@ type Handler struct {
 
 // NewHandler create federated cluster handler
 func NewHandler(clusterId string, members []string) (*Handler, error) {
-	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
+	proxyHandler, err := proxy.NewProxyHandler(clusterId)
 	if err != nil {
-		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
-	}
-
-	proxyHandler, err := proxy.NewProxyHandlerFromConfig(kubeConf)
-	if err != nil {
-		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
+		return nil, err
 	}
 
 	h := &Handler{
