@@ -35,20 +35,33 @@ const ClusterIdLabel = "bkbcs.tencent.com/cluster-id"
 
 // PodStor PodInterface 实现
 type PodStor struct {
-	members      []string
-	k8sClientMap map[string]*kubernetes.Clientset
+	members         []string
+	k8sClientMap    map[string]*kubernetes.Clientset
+	proxyHandlerMap map[string]*proxy.ProxyHandler
 }
 
 // NewPodStor
 func NewPodStor(members []string) (*PodStor, error) {
-	stor := &PodStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
+	stor := &PodStor{
+		members:         members,
+		k8sClientMap:    make(map[string]*kubernetes.Clientset),
+		proxyHandlerMap: make(map[string]*proxy.ProxyHandler),
+	}
+
 	for _, k := range members {
 		k8sClient, err := clientutil.GetKubeClientByClusterId(k)
 		if err != nil {
 			return nil, err
 		}
 		stor.k8sClientMap[k] = k8sClient
+
+		proxyHandler, err := proxy.NewProxyHandler(k)
+		if err != nil {
+			return nil, err
+		}
+		stor.proxyHandlerMap[k] = proxyHandler
 	}
+
 	return stor, nil
 }
 
@@ -313,12 +326,7 @@ func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts 
 			return nil, err
 		}
 
-		proxyHandler, err := proxy.NewProxyHandler(k)
-		if err != nil {
-			return nil, err
-		}
-
-		return proxyHandler, nil
+		return p.proxyHandlerMap[k], nil
 	}
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), name)
 }
