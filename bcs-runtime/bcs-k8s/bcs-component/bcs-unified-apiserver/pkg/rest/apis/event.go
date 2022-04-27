@@ -18,7 +18,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
@@ -26,8 +25,9 @@ import (
 // EventInterface Event Handler 需要实现的方法
 type EventInterface interface {
 	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.EventList, error)
+	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Event, error)
-	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
+	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
 }
 
 // EventHandler
@@ -51,24 +51,12 @@ func (h *EventHandler) Serve(c *rest.RequestContext) error {
 	switch c.Options.Verb {
 	case rest.ListVerb:
 		obj, err = h.handler.List(ctx, c.Namespace, *c.Options.ListOptions)
+	case rest.ListAsTableVerb:
+		obj, err = h.handler.ListAsTable(ctx, c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
 	case rest.GetVerb:
 		obj, err = h.handler.Get(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
-	case rest.WatchVerb:
-		// watch 需要特殊处理 chunk
-		watch, err := h.handler.Watch(ctx, c.Namespace, *c.Options.ListOptions)
-		if err != nil {
-			return err
-		}
-		firstChunk := true
-		for event := range watch.ResultChan() {
-			err = rest.AddTypeInformationToObject(event.Object)
-			if err != nil {
-				return err
-			}
-			c.WriteChunk(event, firstChunk)
-			firstChunk = false
-		}
-		return nil
+	case rest.GetAsTableVerb:
+		obj, err = h.handler.GetAsTable(ctx, c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
 	default:
 		// 未实现的功能
 		return rest.ErrNotImplemented
@@ -77,6 +65,7 @@ func (h *EventHandler) Serve(c *rest.RequestContext) error {
 	if err != nil {
 		return err
 	}
+	rest.AddTypeInformationToObject(obj)
 	c.Write(obj)
 	return nil
 }

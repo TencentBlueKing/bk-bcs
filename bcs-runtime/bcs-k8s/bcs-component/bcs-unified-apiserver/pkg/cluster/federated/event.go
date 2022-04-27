@@ -20,7 +20,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 
@@ -48,14 +47,12 @@ func NewEventStor(masterClientId string, members []string) (*EventStor, error) {
 
 // List 查询Event列表, Json格式返回
 func (p *EventStor) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.EventList, error) {
-	typeMata := metav1.TypeMeta{}
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.selfLink(namespace, ""),
 		ResourceVersion: "0",
 	}
 
 	EventList := &v1.EventList{
-		TypeMeta: typeMata,
 		ListMeta: listMeta,
 		Items:    []v1.Event{},
 	}
@@ -76,6 +73,65 @@ func (p *EventStor) List(ctx context.Context, namespace string, opts metav1.List
 	return EventList, nil
 }
 
+// ListAsTable 查询 Event 列表, kubectl格式返回
+func (p *EventStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
+	listMeta := metav1.ListMeta{
+		SelfLink:        p.selfLink(namespace, ""),
+		ResourceVersion: "0",
+	}
+
+	result := &metav1.Table{
+		ListMeta: listMeta,
+	}
+
+	// 联邦集群添加集群Id一列
+	clusterId := metav1.TableColumnDefinition{
+		Name:        "Cluster Id",
+		Type:        "string",
+		Format:      "",
+		Description: "bcs cluster id",
+	}
+	columns := []metav1.TableColumnDefinition{clusterId}
+
+	rows := []metav1.TableRow{}
+
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+
+	for clusterId, v := range p.k8sClientMap {
+		resultTemp := &metav1.Table{}
+		err := v.CoreV1().RESTClient().Get().
+			Namespace(namespace).
+			Resource("events").
+			VersionedParams(&opts, scheme.ParameterCodec).
+			Timeout(timeout).
+			SetHeader("Accept", acceptHeader).
+			Do(ctx).
+			Into(resultTemp)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(columns) == 1 {
+			columns = append(columns, resultTemp.ColumnDefinitions...)
+		}
+
+		for idx, row := range resultTemp.Rows {
+			cells := []interface{}{clusterId}
+			cells = append(cells, row.Cells...)
+			resultTemp.Rows[idx].Cells = cells
+			rows = append(rows, resultTemp.Rows[idx])
+		}
+	}
+
+	result.ColumnDefinitions = columns
+	result.Rows = rows
+
+	return result, nil
+}
+
 func (p *EventStor) selfLink(namespace, name string) string {
 	if name == "" {
 		return fmt.Sprintf("/api/v1/namespaces/%s/events", namespace)
@@ -85,9 +141,6 @@ func (p *EventStor) selfLink(namespace, name string) string {
 
 // Get 获取单个Event, Json格式返回
 func (p *EventStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Event, error) {
-	fmt.Println("")
-	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "Event"}
-
 	for k, v := range p.k8sClientMap {
 		Event, err := v.CoreV1().Events(namespace).Get(ctx, name, opts)
 		if err != nil {
@@ -101,29 +154,43 @@ func (p *EventStor) Get(ctx context.Context, namespace string, name string, opts
 		} else {
 			Event.Annotations[ClusterIdLabel] = k
 		}
-
-		Event.TypeMeta = typeMata
 		return Event, nil
 	}
 	return nil, apierrors.NewNotFound(v1.Resource("Events"), name)
 }
 
-// Watch 获取 Event 列表
-func (p *EventStor) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+// GetAsTable 获取单个Event, Table格式返回
+func (p *EventStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+	listMeta := metav1.ListMeta{
+		SelfLink:        p.selfLink(namespace, name),
+		ResourceVersion: "0",
 	}
-	opts.Watch = true
 
-	for _, v := range p.k8sClientMap {
-		watch, err := v.CoreV1().RESTClient().Get().
+	result := &metav1.Table{
+		ListMeta: listMeta,
+	}
+
+	// 联邦集群添加集群Id一列
+	clusterId := metav1.TableColumnDefinition{
+		Name:        "Cluster Id",
+		Type:        "string",
+		Format:      "",
+		Description: "bcs cluster id",
+	}
+	columns := []metav1.TableColumnDefinition{clusterId}
+
+	rows := []metav1.TableRow{}
+
+	for clusterId, v := range p.k8sClientMap {
+		resultTemp := &metav1.Table{}
+		err := v.CoreV1().RESTClient().Get().
 			Namespace(namespace).
 			Resource("events").
 			VersionedParams(&opts, scheme.ParameterCodec).
-			Timeout(timeout).
-			SetHeader("Accept", "application/json").
-			Watch(ctx)
+			SetHeader("Accept", acceptHeader).
+			SubResource(name).
+			Do(ctx).
+			Into(resultTemp)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				continue
@@ -131,7 +198,20 @@ func (p *EventStor) Watch(ctx context.Context, namespace string, opts metav1.Lis
 			return nil, err
 		}
 
-		return watch, nil
+		if len(columns) == 1 {
+			columns = append(columns, resultTemp.ColumnDefinitions...)
+		}
+
+		for idx, row := range resultTemp.Rows {
+			cells := []interface{}{clusterId}
+			cells = append(cells, row.Cells...)
+			resultTemp.Rows[idx].Cells = cells
+			rows = append(rows, resultTemp.Rows[idx])
+		}
 	}
-	return nil, apierrors.NewNotFound(v1.Resource("events"), "")
+
+	result.ColumnDefinitions = columns
+	result.Rows = rows
+
+	return result, nil
 }
