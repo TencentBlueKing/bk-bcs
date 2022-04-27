@@ -44,8 +44,8 @@ func makeTarget(serverAddress string) (*url.URL, error) {
 	return target, nil
 }
 
-// makeUpgradeTransport creates a transport that explicitly bypasses HTTP2 support
-// for proxy connections that must upgrade.
+// makeUpgradeTransport creates a transport for proxy connections that must upgrade.
+// reference implementation https://github.com/kubernetes/kubectl/blob/master/pkg/proxy/proxy_server.go#L153 and remove tlsConfig
 func makeUpgradeTransport(config *rest.Config) (proxy.UpgradeRequestRoundTripper, error) {
 	transportConfig, err := config.TransportConfig()
 	if err != nil {
