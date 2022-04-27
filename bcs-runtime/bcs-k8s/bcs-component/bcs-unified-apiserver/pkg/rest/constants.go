@@ -26,4 +26,5 @@ const (
 	PatchVerb       = "patch"
 	DeleteVerb      = "delete"
 	WatchVerb       = "watch"
+	ExecVerb        = "exec" // pod remotecommand
 )

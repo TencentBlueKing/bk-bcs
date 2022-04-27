@@ -18,6 +18,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/apimachinery/pkg/watch"
 	restclient "k8s.io/client-go/rest"
 
@@ -29,10 +30,11 @@ type PodInterface interface {
 	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error)
-	GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
+	GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error)
+	Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*apiproxy.UpgradeAwareHandler, error)
 }
 
 // PodHandler
@@ -92,6 +94,14 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 			c.WriteChunk(event, firstChunk)
 			firstChunk = false
 		}
+		return nil
+	case rest.ExecVerb:
+		// remotecommand 直接使用透明代理
+		proxy, err := h.handler.Exec(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
+		if err != nil {
+			return err
+		}
+		proxy.ServeHTTP(c.Writer, c.Request)
 		return nil
 	default:
 		// 未实现的功能

@@ -154,7 +154,12 @@ func ParseOptions(req *http.Request, reqInfo *apirequest.RequestInfo, rawVerb st
 	case "delete":
 		options.Verb = DeleteVerb
 	case "create":
-		options.Verb = CreateVerb
+		if reqInfo.Subresource == "exec" {
+			options.GetOptions = &metav1.GetOptions{}
+			options.Verb = ExecVerb
+		} else {
+			options.Verb = CreateVerb
+		}
 	case "update":
 		options.Verb = UpdateVerb
 	// clusternet patch 有问题, 先过滤
