@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def get_incremental_charts_and_hash_value(project_code, username, password, start_time):
     """获取chart，并且计算chart对应的hash值"""
-    client = BkRepoClient(username, password=password)
+    client = BkRepoClient(username=username, password=password)
     charts_info = client.list_charts(project_code, project_code, start_time=start_time)
     if not charts_info:
         return None, None
