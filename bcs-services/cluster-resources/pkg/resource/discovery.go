@@ -159,7 +159,7 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 		return liveResources, err
 	}
 	if liveResources == nil || len(liveResources.APIResources) == 0 {
-		log.Warn(d.ctx, "cluster: %s, skip caching %s discovery info due to no res found", d.clusterID, groupVersion)
+		log.Warn(d.ctx, "cluster: %s, skip caching %s discovery info, no res found", d.clusterID, groupVersion)
 		return liveResources, err
 	}
 	if err = d.writeCache(groupVersion, liveResources); err != nil {
