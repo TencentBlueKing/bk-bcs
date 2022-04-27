@@ -108,8 +108,4 @@ urlpatterns = [
         r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/container/registry/domian/$',
         views.ContainerRegistryDomainView.as_view({'get': 'retrieve'}),
     ),
-    url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/apps/(?P<app_id>\d+)/clear_injected/$',
-        views.ClearAppInjectDataView.as_view({'put': 'update'}),
-    ),
 ]
