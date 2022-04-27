@@ -303,6 +303,7 @@ func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListO
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
 }
 
+// GetLogs kubectl logs 命令
 func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error) {
 	for _, v := range p.k8sClientMap {
 		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
@@ -316,6 +317,7 @@ func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, op
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
 }
 
+// Exec kubectl exec 命令
 func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*proxy.ProxyHandler, error) {
 	for k, v := range p.k8sClientMap {
 		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, opts)
