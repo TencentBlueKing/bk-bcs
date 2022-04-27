@@ -23,24 +23,9 @@ REPO_ID = "(?P<repo_id>[0-9]+)"
 urlpatterns = [
     # repository
     url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/helm/repositories/$',
-        views.RepositoryCreateView.as_view({'post': 'create'}),
-        name='api.helm.helm_repositories_create',
-    ),
-    url(
         r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/helm/repositories/lists/detailed',
         views.RepositoryView.as_view({'get': 'list_detailed'}),
         name='api.helm.helm_repositories_list_detailed',
-    ),
-    url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/helm/repositories/lists/minimal$',
-        views.RepositoryView.as_view({'get': 'list_minimal'}),
-        name='api.helm.helm_repositories_list_minimal',
-    ),
-    url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/helm/repositories/(?P<repo_id>[0-9]+)/$',
-        views.RepositoryView.as_view({'get': 'retrieve', 'delete': 'destroy', 'put': 'update'}),
-        name='api.helm.helm_repositories_delete',
     ),
     # 用户可能并不关心 chart 属于那个 repo，只是想从所有的chart中找某个chart
     url(

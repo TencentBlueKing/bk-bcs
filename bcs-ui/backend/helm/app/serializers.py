@@ -911,14 +911,6 @@ class AppCreatePreviewSLZ(AppMixin, serializers.Serializer):
         )
 
 
-class ClusterImportSLZ(serializers.Serializer):
-    cluster_id = serializers.CharField()
-
-
-class ClusterKubeConfigSLZ(serializers.Serializer):
-    cluster_id = serializers.CharField()
-
-
 class SyncDict2YamlToolSLZ(serializers.Serializer):
     dict = serializers.JSONField(initial={}, style={"base_template": "textarea.html", "rows": 10})
     yaml = YamlField(
@@ -957,68 +949,6 @@ class SyncYaml2DictToolSLZ(serializers.Serializer):
             "yaml",
             "dict",
         )
-
-
-class ClusterHelmInitSLZ(serializers.Serializer):
-    cluster_id = serializers.CharField(write_only=True)
-    public_repos = RepoSLZ(read_only=True, many=True)
-    private_repos = RepoSLZ(read_only=True, many=True)
-    initialized = serializers.BooleanField(read_only=True)
-
-    class Meta:
-        fields = (
-            "cluster_id",
-            "public_repos",
-            "private_repos",
-            "initialized",
-        )
-
-
-class AppCreatePreviewDiffWithClusterSLZ(AppCreatePreviewSLZ):
-    difference = serializers.JSONField(read_only=True)
-
-    class Meta:
-        fields = (
-            "name",
-            "namespace_info",
-            "chart_version",
-            "answers",
-            "customs",
-            "valuefile",
-            "content",
-            "notes",
-            "difference",
-        )
-        read_only_fields = (
-            "content",
-            "notes",
-            "difference",
-        )
-
-    def create(self, validated_data):
-        data = super(AppCreatePreviewDiffWithClusterSLZ, self).create(validated_data)
-        namespace_info = self.get_ns_info_by_id(validated_data["namespace_info"])
-
-        check_cluster_perm(
-            user=self.context["request"].user,
-            project_id=namespace_info["project_id"],
-            cluster_id=namespace_info["cluster_id"],
-            request=self.context["request"],
-        )
-
-        with save_to_temporary_dir(data["content"]) as tempdir:
-            with make_kubectl_client(
-                project_id=self.project_id, cluster_id=namespace_info["cluster_id"], access_token=self.access_token
-            ) as (client, err):
-                if err:
-                    raise serializers.ValidationError("make kubectl client failed, %s", err)
-
-                args = ["kubediff", "--kubeconfig", client.kubeconfig, "--json", "--no-error-on-diff", tempdir]
-                difference = subprocess.check_output(args)
-                difference = json.loads(difference)
-                data.update(difference=difference)
-
-        return data
 
 
 class AppStateSLZ(serializers.Serializer):
@@ -1156,3 +1086,7 @@ class ReleaseListSLZ(serializers.ModelSerializer):
             "sys_variables",
             "unique_ns",
         )
+
+
+class ReleaseParamsSLZ(serializers.Serializer):
+    version = serializers.CharField()

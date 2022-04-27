@@ -30,10 +30,6 @@ urlpatterns = [
         views.AppCreatePreviewView.as_view({'post': 'create'}),
     ),
     url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/apps/create_preview_diff_with_cluster/$',
-        views.AppCreatePreviewDiffWithClusterView.as_view({'post': 'create'}),
-    ),
-    url(
         r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/apps/(?P<app_id>\d+)/release_preview/$',
         views.AppReleasePreviewView.as_view({'post': 'create'}),
     ),
@@ -83,24 +79,9 @@ urlpatterns = [
         ),
         views.AppUpdateChartVersionView.as_view({'get': 'retrieve'}),
     ),
-    # cluster import to bke-server
-    url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/cluster_importer/$',
-        views.ClusterImporterView.as_view({'post': 'create'}),
-    ),
-    # cluster kubectl config context
-    url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/cluster_kubeconfig/$',
-        views.ClusterKubeConfigView.as_view({'post': 'create'}),
-    ),
     # backend function as tools
     url(r'^api/bcs/k8s/tools/sync_dict2yaml/$', views.SyncDict2YamlToolView.as_view({'post': 'create'})),
     url(r'^api/bcs/k8s/tools/sync_yaml2dict/$', views.SyncYaml2DictToolView.as_view({'post': 'create'})),
-    # cluster init helm environment
-    url(
-        r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/helm_init/$',
-        views.ClusterHelmInitView.as_view({'get': 'retrieve', 'post': 'create'}),
-    ),
     url(
         r'^api/bcs/k8s/configuration/(?P<project_id>\w{32})/apps/(?P<app_id>\d+)/state/$',
         views.AppStateView.as_view({'get': 'retrieve'}),

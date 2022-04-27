@@ -35,12 +35,10 @@ from . import serializers
 from .constants import DEFAULT_CHART_REPO_PROJECT_NAME
 from .models.chart import Chart, ChartVersion, ChartVersionSnapshot
 from .models.repo import Repository
-from .providers.repo_provider import add_repo
 from .serializers import (
     ChartVersionSLZ,
     ChartVersionTinySLZ,
     ChartWithVersionRepoSLZ,
-    CreateRepoSLZ,
     MinimalRepoSLZ,
     RepositorySyncSLZ,
     RepoSLZ,
@@ -132,49 +130,6 @@ class RepositoryView(FilterByProjectMixin, viewsets.ModelViewSet):
         """List all repositories"""
         serializer = RepoSLZ(self.get_queryset(), many=True)
         return Response({'count': self.get_queryset().count(), 'results': serializer.data})
-
-    def list_minimal(self, request, *args, **kwargs):
-        """List all repositories minimally"""
-        serializer = MinimalRepoSLZ(self.get_queryset(), many=True)
-        return Response({'count': self.get_queryset().count(), 'results': serializer.data})
-
-    def retrieve(self, request, project_id, *args, **kwargs):
-        """Retrieve certain Chart Repository"""
-        repo_id = kwargs.get('repo_id')
-        serializer = RepoSLZ(self.queryset.get(project_id=project_id, id=repo_id))
-        return Response(data=serializer.data)
-
-    def destroy(self, request, project_id, *args, **kwargs):
-        """Destroy Chart Repository"""
-        repo_id = kwargs.get('repo_id')
-        try:
-            self.queryset.get(project_id=project_id, id=repo_id).delete()
-        except Exception as e:
-            raise error_codes.CheckFailed.f("Delete Chart Repo failed: {}".format(e))
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@with_code_wrapper
-class RepositoryCreateView(FilterByProjectMixin, viewsets.ViewSet):
-    """Viewset for creating helm chart repository management"""
-
-    serializer_class = CreateRepoSLZ
-
-    def create(self, request, project_id, *args, **kwargs):
-        """Create Repository (support all kind of repo create)"""
-        serializer = CreateRepoSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        data = serializer.data
-        new_chart_repo = add_repo(
-            project_id,
-            provider_name=data.get('provider'),
-            user=self.request.user,
-            name=data["name"],
-            url=data.get("url"),
-        )
-
-        return Response(status=status.HTTP_201_CREATED, data=RepoSLZ(new_chart_repo).data)
 
 
 @with_code_wrapper
