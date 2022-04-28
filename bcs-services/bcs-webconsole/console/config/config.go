@@ -126,6 +126,19 @@ func (c *Configurations) ValidateCred(credType CredentialType, credName string, 
 	return false
 }
 
+// IsManager, 校验固定的 manager 和 动态凭证
+func (c *Configurations) IsManager(username, clusterId string) bool {
+	if _, ok := c.Base.ManagerMap[username]; ok {
+		return true
+	}
+
+	if c.ValidateCred(CredentialManager, username, ScopeClusterId, clusterId) {
+		return true
+	}
+
+	return false
+}
+
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
 	c.mtx.Lock()
