@@ -33,10 +33,15 @@ type GetterInterface interface {
 	GetClusterIDList(ctx context.Context, client cm.ClusterManagerClient) ([]*ClusterMeta, error)
 	// GetNamespaceList get namespace list
 	GetNamespaceList(ctx context.Context, cmCli cm.ClusterManagerClient,
-		storageCli bcsapi.Storage) ([]*NamespaceMeta, error)
-	// GetWorkloadList get workload list
-	GetWorkloadList(ctx context.Context, cmCli cm.ClusterManagerClient,
-		storageCli bcsapi.Storage) ([]*WorkloadMeta, error)
+		k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error)
+	// GetNamespaceListByCluster get namespace list by cluster
+	GetNamespaceListByCluster(clusterMeta *ClusterMeta,
+		k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error)
+	// GetK8sWorkloadList get k8s workload list by namespace
+	GetK8sWorkloadList(namespace []*NamespaceMeta,
+		k8sStorageCli bcsapi.Storage) ([]*WorkloadMeta, error)
+	// GetMesosWorkloadList get mesos workload list by cluster
+	GetMesosWorkloadList(cluster *ClusterMeta, mesosStorageCli bcsapi.Storage) ([]*WorkloadMeta, error)
 }
 
 // ResourceGetter common resource getter
@@ -72,8 +77,8 @@ func (g *ResourceGetter) GetProjectIDList(ctx context.Context, cmCli cm.ClusterM
 			projectMap[cluster.ProjectID] = true
 		}
 	}
-	for projectId := range projectMap {
-		projectList = append(projectList, projectId)
+	for projectID := range projectMap {
+		projectList = append(projectList, projectID)
 	}
 	return projectList, nil
 }
@@ -86,7 +91,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context, cmCli cm.ClusterM
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
 	for _, cluster := range clusterList.Data {
-		if !g.needFilter || g.clusterIDs[cluster.ClusterID] {
+		if (!g.needFilter || g.clusterIDs[cluster.ClusterID]) && cluster.Status != "DELETED" {
 			clusterMeta := &ClusterMeta{
 				ProjectID:   cluster.ProjectID,
 				ClusterID:   cluster.ClusterID,
@@ -100,7 +105,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context, cmCli cm.ClusterM
 
 // GetNamespaceList get namespace list
 func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterManagerClient,
-	storageCli bcsapi.Storage) ([]*NamespaceMeta, error) {
+	k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error) {
 	namespaceMetaList := make([]*NamespaceMeta, 0)
 	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{})
 	if err != nil {
@@ -118,7 +123,7 @@ func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterM
 			case Kubernetes:
 				go func(cluster cm.Cluster) {
 					defer wg.Done()
-					namespaces := GetK8sNamespaceList(cluster.ClusterID, cluster.ProjectID, storageCli)
+					namespaces := GetK8sNamespaceList(cluster.ClusterID, cluster.ProjectID, k8sStorageCli)
 					lock.Lock()
 					namespaceMetaList = append(namespaceMetaList, namespaces...)
 					lock.Unlock()
@@ -127,7 +132,7 @@ func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterM
 			case Mesos:
 				go func(cluster cm.Cluster) {
 					defer wg.Done()
-					namespaces := GetMesosNamespaceList(cluster.ClusterID, cluster.ProjectID, storageCli)
+					namespaces := GetMesosNamespaceList(cluster.ClusterID, cluster.ProjectID, mesosStorageCli)
 					lock.Lock()
 					namespaceMetaList = append(namespaceMetaList, namespaces...)
 					lock.Unlock()
@@ -144,56 +149,60 @@ func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterM
 	return namespaceMetaList, err
 }
 
-// GetWorkloadList get workload list
-func (g *ResourceGetter) GetWorkloadList(ctx context.Context, cmCli cm.ClusterManagerClient,
-	storageCli bcsapi.Storage) ([]*WorkloadMeta, error) {
-	workloadMetaList := make([]*WorkloadMeta, 0)
-	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{})
+// GetNamespaceListByCluster get namespace list by cluster
+func (g *ResourceGetter) GetNamespaceListByCluster(clusterMeta *ClusterMeta,
+	k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error) {
+	switch clusterMeta.ClusterType {
+	case Kubernetes:
+		return GetK8sNamespaceList(clusterMeta.ClusterID, clusterMeta.ProjectID, k8sStorageCli), nil
+	case Mesos:
+		return GetMesosNamespaceList(clusterMeta.ClusterID, clusterMeta.ProjectID, mesosStorageCli), nil
+	default:
+		return nil, fmt.Errorf("wrong cluster engine type : %s", clusterMeta.ClusterType)
+	}
+}
+
+// GetK8sWorkloadList get workload list by namespace
+func (g *ResourceGetter) GetK8sWorkloadList(namespace []*NamespaceMeta,
+	k8sStorageCli bcsapi.Storage) ([]*WorkloadMeta, error) {
+	workloadList := make([]*WorkloadMeta, 0)
+	for _, namespaceMeta := range namespace {
+		workloads := GetK8sWorkloadList(namespaceMeta.ClusterID, namespaceMeta.ProjectID, namespaceMeta.Name,
+			k8sStorageCli)
+		workloadList = append(workloadList, workloads...)
+	}
+	return workloadList, nil
+}
+
+// GetMesosWorkloadList get workload list by cluster
+func (g *ResourceGetter) GetMesosWorkloadList(cluster *ClusterMeta,
+	mesosStorageCli bcsapi.Storage) ([]*WorkloadMeta, error) {
+	workloadList := make([]*WorkloadMeta, 0)
+	applications, err := mesosStorageCli.QueryMesosApplication(cluster.ClusterID)
 	if err != nil {
-		return nil, fmt.Errorf("get cluster list err: %v", err)
+		return workloadList, fmt.Errorf("get cluster %s application list error: %v", cluster.ClusterID, err)
 	}
-	wg := sync.WaitGroup{}
-	lock := &sync.Mutex{}
-	chPool := make(chan struct{}, 100)
-	for _, cluster := range clusterList.Data {
-		if !g.needFilter || g.clusterIDs[cluster.ClusterID] {
-			wg.Add(1)
-			chPool <- struct{}{}
-			clusterObj := *cluster
-			switch cluster.EngineType {
-			case Kubernetes:
-				go func(cluster cm.Cluster) {
-					defer wg.Done()
-					workloads := GetK8sWorkloadList(cluster.ClusterID, cluster.ProjectID, storageCli)
-					lock.Lock()
-					workloadMetaList = append(workloadMetaList, workloads...)
-					lock.Unlock()
-					<-chPool
-				}(clusterObj)
-			case Mesos:
-				go func(cluster cm.Cluster) {
-					defer wg.Done()
-					workloads := GetMesosWorkloadList(cluster.ClusterID, cluster.ProjectID, storageCli)
-					lock.Lock()
-					workloadMetaList = append(workloadMetaList, workloads...)
-					lock.Unlock()
-					<-chPool
-				}(clusterObj)
-			default:
-				wg.Done()
-				<-chPool
-				return nil, fmt.Errorf("wrong cluster engine type : %s", cluster.EngineType)
-			}
-		}
+	for _, application := range applications {
+		workloadMeta := generateCommonWorkloadList(cluster.ClusterID, cluster.ProjectID, Mesos, MesosApplicationType,
+			application.CommonDataHeader)
+		workloadList = append(workloadList, workloadMeta)
 	}
-	wg.Wait()
-	return workloadMetaList, nil
+	deployments, err := mesosStorageCli.QueryMesosDeployment(cluster.ClusterID)
+	if err != nil {
+		return workloadList, fmt.Errorf("get cluster %s deployment list error: %v", cluster.ClusterID, err)
+	}
+	for _, deployment := range deployments {
+		workloadMeta := generateCommonWorkloadList(cluster.ClusterID, cluster.ProjectID, Mesos, MesosDeployment,
+			deployment.CommonDataHeader)
+		workloadList = append(workloadList, workloadMeta)
+	}
+	return workloadList, nil
 }
 
 // GetK8sWorkloadList get k8s workload list
-func GetK8sWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage) []*WorkloadMeta {
+func GetK8sWorkloadList(clusterID, projectID, namespace string, storageCli bcsapi.Storage) []*WorkloadMeta {
 	workloadList := make([]*WorkloadMeta, 0)
-	deployments, err := storageCli.QueryK8SDeployment(clusterID)
+	deployments, err := storageCli.QueryK8SDeployment(clusterID, namespace)
 	if err != nil {
 		blog.Errorf("get cluster %s deployment list error: %v", clusterID, err)
 	} else {
@@ -203,7 +212,7 @@ func GetK8sWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage) 
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
-	statefulSets, err := storageCli.QueryK8SStatefulSet(clusterID)
+	statefulSets, err := storageCli.QueryK8SStatefulSet(clusterID, namespace)
 	if err != nil {
 		blog.Errorf("get cluster %s statefulSet list error: %v", clusterID, err)
 	} else {
@@ -213,7 +222,7 @@ func GetK8sWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage) 
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
-	daemonSets, err := storageCli.QueryK8SDaemonSet(clusterID)
+	daemonSets, err := storageCli.QueryK8SDaemonSet(clusterID, namespace)
 	if err != nil {
 		blog.Errorf("get cluster %s daemonSet list error: %v", clusterID, err)
 	} else {
@@ -223,7 +232,7 @@ func GetK8sWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage) 
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
-	gameDeployments, err := storageCli.QueryK8SGameDeployment(clusterID)
+	gameDeployments, err := storageCli.QueryK8SGameDeployment(clusterID, namespace)
 	if err != nil {
 		blog.Errorf("get cluster %s game deployment list error: %v", clusterID, err)
 	} else {
@@ -233,7 +242,7 @@ func GetK8sWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage) 
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
-	gameStatefulSets, err := storageCli.QueryK8SGameStatefulSet(clusterID)
+	gameStatefulSets, err := storageCli.QueryK8SGameStatefulSet(clusterID, namespace)
 	if err != nil {
 		blog.Errorf("get cluster %s game stateful set list error: %v", clusterID, err)
 	} else {
@@ -255,11 +264,9 @@ func GetMesosWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage
 		return workloadList
 	}
 	for _, application := range applications {
-		if application.Data.OwnerReferences == nil || len(application.Data.GetOwnerReferences()) == 0 {
-			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Mesos, MesosApplicationType,
-				application.CommonDataHeader)
-			workloadList = append(workloadList, workloadMeta)
-		}
+		workloadMeta := generateCommonWorkloadList(clusterID, projectID, Mesos, MesosApplicationType,
+			application.CommonDataHeader)
+		workloadList = append(workloadList, workloadMeta)
 	}
 	deployments, err := storageCli.QueryMesosDeployment(clusterID)
 	if err != nil {
@@ -307,7 +314,7 @@ func GetMesosNamespaceList(clusterID, projectID string, storageCli bcsapi.Storag
 			ProjectID:   projectID,
 			ClusterID:   clusterID,
 			ClusterType: Mesos,
-			Name:        namespace.ResourceName,
+			Name:        string(*namespace),
 		}
 		namespaceList = append(namespaceList, namespaceMeta)
 	}
@@ -323,18 +330,6 @@ func generateCommonWorkloadList(clusterID, projectID, clusterType, workloadType 
 		Namespace:    commonHeader.Namespace,
 		ResourceType: workloadType,
 		Name:         commonHeader.ResourceName,
-	}
-	return workloadMeta
-}
-
-func generateGameWorkloadList(clusterID, projectID, clusterType, namespace, resourceType, name string) *WorkloadMeta {
-	workloadMeta := &WorkloadMeta{
-		ProjectID:    projectID,
-		ClusterID:    clusterID,
-		ClusterType:  clusterType,
-		Namespace:    namespace,
-		ResourceType: resourceType,
-		Name:         name,
 	}
 	return workloadMeta
 }

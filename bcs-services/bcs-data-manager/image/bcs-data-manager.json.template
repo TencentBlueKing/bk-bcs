@@ -4,6 +4,7 @@
   "alsologtostderr": true,
   "bcsApiConf":{
     "bcsApiGatewayUrl": "${bcsApiGatewayUrl}",
+    "oldBcsApiGwUrl":"${oldBcsApiGwUrl}",
     "adminToken": "${bcsAdminToken}",
     "grpcGwAddress":"${grpcGwAddress}"
   },

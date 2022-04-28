@@ -37,7 +37,7 @@ func NewProjectDayPolicy(getter metric.Server, store store.Server) *ProjectDayPo
 }
 
 // ImplementPolicy project day implement
-func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
+func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
 	bucketTime, err := common.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), common.DimensionHour)
 	if err != nil {
 		blog.Errorf("do day project policy error, get bucket err:%v", err)

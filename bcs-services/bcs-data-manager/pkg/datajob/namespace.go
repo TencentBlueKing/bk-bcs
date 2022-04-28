@@ -67,16 +67,16 @@ func NewNamespaceMinutePolicy(getter metric.Server, store store.Server) *Namespa
 }
 
 // ImplementPolicy day policy implement
-func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients.monitorClient)
+func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace day policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients.monitorClient)
+	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace day policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace day policy error, opts: %v, err: %v", opts, err)
 	}
@@ -98,7 +98,11 @@ func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 		return
 	}
 	hourMetric := hourMetrics[0]
-	workloadCount := getWorkloadCount(opts, clients)
+	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	if err != nil {
+		blog.Errorf("do namespace day policy failed, get namespace workload count err: %v", err)
+	}
 	namespaceMetric := &common.NamespaceMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -124,16 +128,17 @@ func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 }
 
 // ImplementPolicy hour policy implement
-func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients.monitorClient)
+func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts,
+	clients *common.Clients) {
+	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace hour policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients.monitorClient)
+	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace hour policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace hour policy error, opts: %v, err: %v", opts, err)
 	}
@@ -156,7 +161,11 @@ func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *common.
 		return
 	}
 	minuteMetric := minuteMetrics[0]
-	workloadCount := getWorkloadCount(opts, clients)
+	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	if err != nil {
+		blog.Errorf("do namespace hour policy failed, get namespace workload count err: %v", err)
+	}
 	namespaceMetric := &common.NamespaceMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -182,21 +191,26 @@ func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *common.
 }
 
 // ImplementPolicy minute policy implement
-func (p *NamespaceMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients.monitorClient)
+func (p *NamespaceMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts,
+	clients *common.Clients) {
+	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace minute policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients.monitorClient)
+	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace minute policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace minute policy error, opts: %v, err: %v", opts, err)
 	}
 
-	workloadCount := getWorkloadCount(opts, clients)
+	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	if err != nil {
+		blog.Errorf("do namespace minute policy failed, get namespace workload count err: %v", err)
+	}
 	namespaceMetric := &common.NamespaceMetrics{
 		Index:             common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:              primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),

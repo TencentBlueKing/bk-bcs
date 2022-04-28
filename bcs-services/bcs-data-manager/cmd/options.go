@@ -53,9 +53,10 @@ type EtcdOption struct {
 
 // BcsAPIConfig contains several bcs module endpoint
 type BcsAPIConfig struct {
-	BcsAPIGwURL   string `json:"bcsApiGatewayUrl"`
-	AdminToken    string `json:"adminToken"`
-	GrpcGWAddress string `json:"grpcGwAddress"`
+	BcsAPIGwURL    string `json:"bcsApiGatewayUrl"`
+	OldBcsAPIGwURL string `json:"oldBcsApiGwUrl"`
+	AdminToken     string `json:"adminToken"`
+	GrpcGWAddress  string `json:"grpcGwAddress"`
 }
 
 // ServerConfig option for server

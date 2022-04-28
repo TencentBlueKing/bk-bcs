@@ -14,29 +14,27 @@ package metric
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"strconv"
 
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 // Server metric interface
 type Server interface {
-	GetWorkloadCPUMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (float64, float64, float64, error)
-	GetWorkloadMemoryMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (int64, int64, float64, error)
-	GetNamespaceCPUMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (float64, float64, float64, error)
-	GetNamespaceMemoryMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (int64, int64, float64, error)
-	GetClusterCPUMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (float64,
+	GetWorkloadCPUMetrics(opts *common.JobCommonOpts, clients *common.Clients) (float64, float64, float64, error)
+	GetWorkloadMemoryMetrics(opts *common.JobCommonOpts, clients *common.Clients) (int64, int64, float64, error)
+	GetNamespaceCPUMetrics(opts *common.JobCommonOpts, clients *common.Clients) (float64, float64, float64, error)
+	GetNamespaceMemoryMetrics(opts *common.JobCommonOpts, clients *common.Clients) (int64, int64, float64, error)
+	GetClusterCPUMetrics(opts *common.JobCommonOpts, clients *common.Clients) (float64,
 		float64, float64, float64, error)
-	GetClusterMemoryMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (int64,
+	GetClusterMemoryMetrics(opts *common.JobCommonOpts, clients *common.Clients) (int64,
 		int64, int64, float64, error)
-	GetInstanceCount(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface) (int64, error)
-	GetClusterNodeMetrics(opts *common.JobCommonOpts, cli bcsmonitor.ClientInterface,
-		cmCli *cmanager.ClusterManagerClientWithHeader) (string, []*bcsdatamanager.NodeQuantile, error)
-	GetClusterNodeCount(opts *common.JobCommonOpts, cmCli *cmanager.ClusterManagerClientWithHeader) (int64, int64, error)
+	GetInstanceCount(opts *common.JobCommonOpts, clients *common.Clients) (int64, error)
+	GetClusterNodeMetrics(opts *common.JobCommonOpts,
+		clients *common.Clients) (string, []*bcsdatamanager.NodeQuantile, error)
+	GetClusterNodeCount(opts *common.JobCommonOpts, clients *common.Clients) (int64, int64, error)
 }
 
 // MetricGetter metric getter
@@ -44,12 +42,12 @@ type MetricGetter struct{}
 
 // GetClusterCPUMetrics get cluster cpu metrics
 func (g *MetricGetter) GetClusterCPUMetrics(opts *common.JobCommonOpts,
-	client bcsmonitor.ClientInterface) (float64, float64, float64, float64, error) {
+	clients *common.Clients) (float64, float64, float64, float64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		return g.getK8sClusterCPUMetrics(opts, client)
+		return g.getK8sClusterCPUMetrics(opts, clients)
 	case common.Mesos:
-		return g.getMesosClusterCPUMetrics(opts, client)
+		return g.getMesosClusterCPUMetrics(opts, clients)
 	default:
 		return 0, 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
@@ -57,24 +55,24 @@ func (g *MetricGetter) GetClusterCPUMetrics(opts *common.JobCommonOpts,
 
 // GetClusterMemoryMetrics get cluster memory metrics
 func (g *MetricGetter) GetClusterMemoryMetrics(opts *common.JobCommonOpts,
-	client bcsmonitor.ClientInterface) (int64, int64, int64, float64, error) {
+	clients *common.Clients) (int64, int64, int64, float64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		return g.getK8sClusterMemoryMetrics(opts, client)
+		return g.getK8sClusterMemoryMetrics(opts, clients)
 	case common.Mesos:
-		return g.getMesosClusterMemoryMetrics(opts, client)
+		return g.getMesosClusterMemoryMetrics(opts, clients)
 	default:
 		return 0, 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
 // GetClusterNodeMetrics get cluster node metrics
-func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts, client bcsmonitor.ClientInterface,
-	cmCli *cmanager.ClusterManagerClientWithHeader) (string, []*bcsdatamanager.NodeQuantile, error) {
+func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts,
+	clients *common.Clients) (string, []*bcsdatamanager.NodeQuantile, error) {
 	var minUsageNode string
 	nodeQuantie := make([]*bcsdatamanager.NodeQuantile, 0)
 
-	cluster, err := cmCli.Cli.GetCluster(cmCli.Ctx, &cm.GetClusterReq{
+	cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
@@ -86,7 +84,7 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts, client 
 		queryCond = fmt.Sprintf("%s,instance!=\"%s:9100\"", queryCond, cluster.Data.Master[key].InnerIP)
 	}
 	nodeCpuQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
-	nodeCpuUsageList, err := client.QueryByPost(nodeCpuQuery, opts.CurrentTime)
+	nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCpuQuery, opts.CurrentTime)
 	if err != nil {
 		return minUsageNode, nodeQuantie, err
 	}
@@ -105,7 +103,7 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts, client 
 		}
 	}
 
-	nodeQuantieResponse, err := client.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
+	nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
 		"0.5", nodeCpuQuery), opts.CurrentTime)
 	if err != nil {
 		return minUsageNode, nodeQuantie, err
@@ -125,12 +123,12 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts, client 
 
 // GetClusterNodeCount get cluster node count
 func (g *MetricGetter) GetClusterNodeCount(opts *common.JobCommonOpts,
-	cmCli *cmanager.ClusterManagerClientWithHeader) (int64, int64, error) {
+	clients *common.Clients) (int64, int64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		return g.getK8sNodeCount(opts, cmCli)
+		return g.getK8sNodeCount(opts, clients)
 	case common.Mesos:
-		return g.getMesosNodeCount(opts, cmCli)
+		return g.getMesosNodeCount(opts, clients)
 	default:
 		return 0, 0, fmt.Errorf("wrong clusterType:%s", opts.ClusterType)
 	}
@@ -138,12 +136,12 @@ func (g *MetricGetter) GetClusterNodeCount(opts *common.JobCommonOpts,
 
 // GetNamespaceCPUMetrics get namespace cpu metrics
 func (g *MetricGetter) GetNamespaceCPUMetrics(opts *common.JobCommonOpts,
-	client bcsmonitor.ClientInterface) (float64, float64, float64, error) {
+	clients *common.Clients) (float64, float64, float64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		return g.getK8sNamespaceCPUMetrics(opts, client)
+		return g.getK8sNamespaceCPUMetrics(opts, clients)
 	case common.Mesos:
-		return g.getMesosNamespaceCPUMetrics(opts, client)
+		return g.getMesosNamespaceCPUMetrics(opts, clients)
 	default:
 		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
@@ -151,12 +149,12 @@ func (g *MetricGetter) GetNamespaceCPUMetrics(opts *common.JobCommonOpts,
 
 // GetNamespaceMemoryMetrics get namespace memory metric
 func (g *MetricGetter) GetNamespaceMemoryMetrics(opts *common.JobCommonOpts,
-	client bcsmonitor.ClientInterface) (int64, int64, float64, error) {
+	clients *common.Clients) (int64, int64, float64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		return g.getK8sNamespaceMemoryMetrics(opts, client)
+		return g.getK8sNamespaceMemoryMetrics(opts, clients)
 	case common.Mesos:
-		return g.getMesosNamespaceMemoryMetrics(opts, client)
+		return g.getMesosNamespaceMemoryMetrics(opts, clients)
 	default:
 		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
@@ -164,31 +162,31 @@ func (g *MetricGetter) GetNamespaceMemoryMetrics(opts *common.JobCommonOpts,
 
 // GetNamespaceResourceLimit get namespace resource limit
 func (g *MetricGetter) GetNamespaceResourceLimit(opts *common.JobCommonOpts,
-	client bcsmonitor.ClientInterface) (float64, int64, float64, int64, error) {
+	clients *common.Clients) (float64, int64, float64, int64, error) {
 	var requestCPU, limitCPU float64
 	var requestMemory, limitMemory int64
-	requestCPUResponse, err := client.QueryByPost(fmt.Sprintf(NamespaceResourceQuota,
+	requestCPUResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NamespaceResourceQuota,
 		fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace), "requests.cpu"),
 		opts.CurrentTime)
 	if err != nil {
 		return requestCPU, requestMemory, limitCPU, limitMemory, fmt.Errorf("get namespace metrics error: %v", err)
 	}
 	requestCPU = GetFloatData(requestCPUResponse)
-	limitCPUResponse, err := client.QueryByPost(
+	limitCPUResponse, err := clients.MonitorClient.QueryByPost(
 		fmt.Sprintf(NamespaceResourceQuota, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace), "limit.cpu"),
 		opts.CurrentTime)
 	if err != nil {
 		return requestCPU, requestMemory, limitCPU, limitMemory, fmt.Errorf("get namespace metrics error: %v", err)
 	}
 	limitCPU = GetFloatData(limitCPUResponse)
-	requestMemoryResponse, err := client.QueryByPost(fmt.Sprintf(NamespaceResourceQuota,
+	requestMemoryResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NamespaceResourceQuota,
 		fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace), "requests.memory"),
 		opts.CurrentTime)
 	if err != nil {
 		return requestCPU, requestMemory, limitCPU, limitMemory, fmt.Errorf("get namespace metrics error: %v", err)
 	}
 	requestMemory = GetInt64Data(requestMemoryResponse)
-	limitMemoryResponse, err := client.QueryByPost(fmt.Sprintf(NamespaceResourceQuota,
+	limitMemoryResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NamespaceResourceQuota,
 		fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace), "limit.memory"),
 		opts.CurrentTime)
 	if err != nil {
@@ -200,9 +198,9 @@ func (g *MetricGetter) GetNamespaceResourceLimit(opts *common.JobCommonOpts,
 
 // GetNamespaceInstanceCount get namespace instance count
 func (g *MetricGetter) GetNamespaceInstanceCount(opts *common.JobCommonOpts,
-	client bcsmonitor.ClientInterface) (int64, error) {
+	clients *common.Clients) (int64, error) {
 	var count int64
-	response, err := client.QueryByPost(
+	response, err := clients.MonitorClient.QueryByPost(
 		fmt.Sprintf(WorkloadInstance, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace), PodSumCondition),
 		opts.CurrentTime)
 	if err != nil {
@@ -223,33 +221,33 @@ func (g *MetricGetter) GetNamespaceInstanceCount(opts *common.JobCommonOpts,
 }
 
 // GetWorkloadCPUMetrics get workload cpu metrics
-func (g *MetricGetter) GetWorkloadCPUMetrics(opts *common.JobCommonOpts, client bcsmonitor.ClientInterface) (float64,
+func (g *MetricGetter) GetWorkloadCPUMetrics(opts *common.JobCommonOpts, clients *common.Clients) (float64,
 	float64, float64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		return g.getK8SWorkloadCPU(opts, client)
+		return g.getK8SWorkloadCPU(opts, clients)
 	case common.Mesos:
-		return g.getMesosWorkloadCPU(opts, client)
+		return g.getMesosWorkloadCPU(opts, clients)
 	default:
 		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
 // GetWorkloadMemoryMetrics get workload memory metrics
-func (g *MetricGetter) GetWorkloadMemoryMetrics(opts *common.JobCommonOpts, client bcsmonitor.ClientInterface) (int64,
+func (g *MetricGetter) GetWorkloadMemoryMetrics(opts *common.JobCommonOpts, clients *common.Clients) (int64,
 	int64, float64, error) {
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		return g.getK8sWorkloadMemory(opts, client)
+		return g.getK8sWorkloadMemory(opts, clients)
 	case common.Mesos:
-		return g.getMesosWorkloadMemory(opts, client)
+		return g.getMesosWorkloadMemory(opts, clients)
 	default:
 		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
 // GetInstanceCount get instance count
-func (g *MetricGetter) GetInstanceCount(opts *common.JobCommonOpts, client bcsmonitor.ClientInterface) (int64, error) {
+func (g *MetricGetter) GetInstanceCount(opts *common.JobCommonOpts, clients *common.Clients) (int64, error) {
 	var count int64
 	var query string
 	podSumCondition := PodSumCondition
@@ -269,7 +267,7 @@ func (g *MetricGetter) GetInstanceCount(opts *common.JobCommonOpts, client bcsmo
 		return count, fmt.Errorf("wrong object type: %s", opts.ObjectType)
 	}
 
-	response, err := client.QueryByPost(query, opts.CurrentTime)
+	response, err := clients.MonitorClient.QueryByPost(query, opts.CurrentTime)
 	if err != nil {
 		return count, fmt.Errorf("get pod metrics error: %v", err)
 	}

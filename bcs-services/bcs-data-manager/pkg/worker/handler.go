@@ -49,7 +49,8 @@ type HandlerOptions struct {
 type HandleClients struct {
 	Store            store.Server
 	BcsMonitorClient bcsmonitor.ClientInterface
-	BcsStorageCli    bcsapi.Storage
+	K8sStorageCli    bcsapi.Storage
+	MesosStorageCli  bcsapi.Storage
 	CmCli            *cmanager.ClusterManagerClient
 }
 
@@ -115,29 +116,30 @@ func (h *DataJobHandler) HandleQueue(ctx context.Context, data []byte) error {
 		blog.Errorf("Unmarshal handler data failed: %v", err)
 		return err
 	}
-
-	select {
-	case h.jobListCh <- *dataJobHandlerData:
-	case <-time.After(time.Second * 1):
-		blog.Info("handle queue has been discarded")
-	}
+	h.jobListCh <- *dataJobHandlerData
 	return nil
 }
 
 func (h *DataJobHandler) handleJob() {
 	chPool := make(chan struct{}, h.concurrency)
+	var handleJobCount int64
 	for job := range h.jobListCh {
 		select {
 		case <-h.stopCtx.Done():
 			blog.Info("handleJob has been stopped")
 			return
 		default:
+			handleJobCount++
 		}
+		chPool <- struct{}{}
 		go func(job msgqueue.HandlerData) {
-			chPool <- struct{}{}
 			h.handleOneJob(job)
 			<-chPool
 		}(job)
+		if handleJobCount%1000 == 0 {
+			blog.Infof("jobListChan length:%d", len(h.jobListCh))
+			blog.Infof("handle job count: %d", handleJobCount)
+		}
 	}
 }
 
@@ -157,7 +159,8 @@ func (h *DataJobHandler) handleOneJob(job msgqueue.HandlerData) {
 	}
 	defer cmConn.Close()
 	cliWithHeader := h.clients.CmCli.NewGrpcClientWithHeader(context.Background(), cmConn)
-	client := datajob.NewClients(h.clients.BcsMonitorClient, h.clients.BcsStorageCli, cliWithHeader)
+	client := common.NewClients(h.clients.BcsMonitorClient, h.clients.K8sStorageCli,
+		h.clients.MesosStorageCli, cliWithHeader)
 	dataJob.SetClient(client)
 	dataJob.DoPolicy(h.stopCtx)
 }

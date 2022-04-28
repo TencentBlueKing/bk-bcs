@@ -183,14 +183,19 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	if dimension == "" {
 		dimension = common.DimensionMinute
 	}
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		ClusterIDKey:    request.ClusterID,
-		DimensionKey:    dimension,
-		NamespaceKey:    request.Namespace,
-		WorkloadTypeKey: request.WorkloadType,
-	})
+	cond := make([]*operator.Condition, 0)
+	cond = append(cond,
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			ClusterIDKey:    request.ClusterID,
+			DimensionKey:    dimension,
+			NamespaceKey:    request.Namespace,
+			WorkloadTypeKey: request.WorkloadType,
+		}), operator.NewLeafCondition(operator.Gte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+		}))
+	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempWorkloadList := make([]map[string]string, 0)
-	err = m.DB.Table(m.TableName).Find(cond).WithProjection(map[string]int{WorkloadNameKey: 1}).
+	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{WorkloadNameKey: 1}).
 		All(ctx, &tempWorkloadList)
 	if err != nil {
 		blog.Errorf("get cluster id list error")
@@ -319,6 +324,26 @@ func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *common.Job
 	return retWorkload, nil
 }
 
+// GetWorkloadCount get raw workload data
+func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *common.JobCommonOpts,
+	bucket string, after time.Time) (int64, error) {
+	err := ensureTable(ctx, &m.Public)
+	if err != nil {
+		return 0, err
+	}
+	cond := m.generateCond(opts, bucket)
+	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+		MetricTimeKey: primitive.NewDateTimeFromTime(after),
+	}))
+	conds := operator.NewBranchCondition(operator.And, cond...)
+	retWorkload := make([]*common.WorkloadData, 0)
+	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retWorkload)
+	if err != nil {
+		return 0, err
+	}
+	return int64(len(retWorkload)), nil
+}
+
 func (m *ModelWorkload) generateWorkloadResponse(public common.WorkloadPublicMetrics,
 	metricSlice []*common.WorkloadMetrics, clusterID, namespace, dimension, workloadType, workloadName, startTime,
 	endTime string) *bcsdatamanager.Workload {
@@ -331,19 +356,19 @@ func (m *ModelWorkload) generateWorkloadResponse(public common.WorkloadPublicMet
 		WorkloadType:  workloadType,
 		WorkloadName:  workloadName,
 		Metrics:       nil,
-		SuggestCPU:    strconv.FormatFloat(public.SuggestCPU, 'f', 6, 64),
-		SuggestMemory: strconv.FormatFloat(public.SuggestMemory, 'f', 6, 64),
+		SuggestCPU:    strconv.FormatFloat(public.SuggestCPU, 'f', 2, 64),
+		SuggestMemory: strconv.FormatFloat(public.SuggestMemory, 'f', 2, 64),
 	}
 	responseMetrics := make([]*bcsdatamanager.WorkloadMetrics, 0)
 	for _, metric := range metricSlice {
 		responseMetric := &bcsdatamanager.WorkloadMetrics{
 			Time:               metric.Time.Time().String(),
-			CPURequest:         strconv.FormatFloat(metric.CPURequest, 'f', 6, 64),
+			CPURequest:         strconv.FormatFloat(metric.CPURequest, 'f', 2, 64),
 			MemoryRequest:      strconv.FormatInt(metric.MemoryRequest, 10),
-			CPUUsageAmount:     strconv.FormatFloat(metric.CPUUsageAmount, 'f', 6, 64),
+			CPUUsageAmount:     strconv.FormatFloat(metric.CPUUsageAmount, 'f', 2, 64),
 			MemoryUsageAmount:  strconv.FormatInt(metric.MemoryUsageAmount, 10),
-			CPUUsage:           strconv.FormatFloat(metric.CPUUsage, 'f', 6, 64),
-			MemoryUsage:        strconv.FormatFloat(metric.MemoryUsage, 'f', 6, 64),
+			CPUUsage:           strconv.FormatFloat(metric.CPUUsage, 'f', 4, 64),
+			MemoryUsage:        strconv.FormatFloat(metric.MemoryUsage, 'f', 4, 64),
 			MaxCPUUsageTime:    metric.MaxCPUUsageTime,
 			MinCPUUsageTime:    metric.MinCPUUsageTime,
 			MaxMemoryUsageTime: metric.MaxMemoryUsageTime,
@@ -463,7 +488,7 @@ func (m *ModelWorkload) generateCond(opts *common.JobCommonOpts, bucket string) 
 			WorkloadTypeKey: opts.WorkloadType,
 		}))
 	}
-	if opts.Namespace != "" {
+	if opts.Name != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			WorkloadNameKey: opts.Name,
 		}))

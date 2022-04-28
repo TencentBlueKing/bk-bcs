@@ -37,7 +37,7 @@ func NewPublicDayPolicy(getter metric.Server, store store.Server) *PublicDayPoli
 }
 
 // ImplementPolicy PublicDayPolicy implement
-func (p *PublicDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
+func (p *PublicDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
 	bucket, _ := common.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), common.DimensionDay)
 	p.insertWorkloadPublic(ctx, opts, bucket)
 }

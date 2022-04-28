@@ -164,12 +164,18 @@ func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 	if dimension == "" {
 		dimension = common.DimensionMinute
 	}
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		ClusterIDKey: request.ClusterID,
-		DimensionKey: dimension,
-	})
+	cond := make([]*operator.Condition, 0)
+	cond = append(cond,
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			ClusterIDKey: request.ClusterID,
+			DimensionKey: dimension,
+		}), operator.NewLeafCondition(operator.Gte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+		}),
+	)
+	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempNamespaceList := make([]map[string]string, 0)
-	err = m.DB.Table(m.TableName).Find(cond).WithProjection(map[string]int{NamespaceKey: 1, "_id": 0}).
+	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{NamespaceKey: 1, "_id": 0}).
 		All(ctx, &tempNamespaceList)
 	if err != nil {
 		blog.Errorf("get namespace list error")
@@ -319,20 +325,20 @@ func (m *ModelNamespace) generateNamespaceResponse(public common.NamespacePublic
 		EndTime:       endTime,
 		Namespace:     namespace,
 		Metrics:       nil,
-		SuggestCPU:    strconv.FormatFloat(public.SuggestCPU, 'f', 6, 64),
-		SuggestMemory: strconv.FormatFloat(public.SuggestMemory, 'f', 6, 64),
+		SuggestCPU:    strconv.FormatFloat(public.SuggestCPU, 'f', 2, 64),
+		SuggestMemory: strconv.FormatFloat(public.SuggestMemory, 'f', 2, 64),
 		ResourceLimit: public.ResourceLimit,
 	}
 	responseMetrics := make([]*bcsdatamanager.NamespaceMetrics, 0)
 	for _, metric := range metricSlice {
 		responseMetric := &bcsdatamanager.NamespaceMetrics{
 			Time:               metric.Time.Time().String(),
-			CPURequest:         strconv.FormatFloat(metric.CPURequest, 'f', 6, 64),
+			CPURequest:         strconv.FormatFloat(metric.CPURequest, 'f', 2, 64),
 			MemoryRequest:      strconv.FormatInt(metric.MemoryRequest, 10),
-			CPUUsageAmount:     strconv.FormatFloat(metric.CPUUsageAmount, 'f', 6, 64),
+			CPUUsageAmount:     strconv.FormatFloat(metric.CPUUsageAmount, 'f', 2, 64),
 			MemoryUsageAmount:  strconv.FormatInt(metric.MemoryUsageAmount, 10),
-			CPUUsage:           strconv.FormatFloat(metric.CPUUsage, 'f', 6, 64),
-			MemoryUsage:        strconv.FormatFloat(metric.MemoryUsage, 'f', 6, 64),
+			CPUUsage:           strconv.FormatFloat(metric.CPUUsage, 'f', 4, 64),
+			MemoryUsage:        strconv.FormatFloat(metric.MemoryUsage, 'f', 4, 64),
 			MaxCPUUsageTime:    metric.MaxCPUUsageTime,
 			MinCPUUsageTime:    metric.MinCPUUsageTime,
 			MaxMemoryUsageTime: metric.MaxMemoryUsageTime,

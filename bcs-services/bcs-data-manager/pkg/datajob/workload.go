@@ -67,16 +67,16 @@ func NewWorkloadMinutePolicy(getter metric.Server, store store.Server) *Workload
 }
 
 // ImplementPolicy day policy implement
-func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients.monitorClient)
+func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients.monitorClient)
+	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
 	}
@@ -127,16 +127,16 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 }
 
 // ImplementPolicy hour policy implement
-func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients.monitorClient)
+func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload hour policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients.monitorClient)
+	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload hour policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload hour policy error, opts: %v, err: %v", opts, err)
 	}
@@ -188,16 +188,17 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 }
 
 // ImplementPolicy minute policy implement
-func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients.monitorClient)
+func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts,
+	clients *common.Clients) {
+	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload minute policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients.monitorClient)
+	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload minute policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload minute policy error, opts: %v, err: %v", opts, err)
 	}

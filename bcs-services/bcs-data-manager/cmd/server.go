@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
@@ -355,7 +356,7 @@ func (s *Server) initWorker() error {
 		blog.Errorf("init queue err:%v", err)
 		return err
 	}
-	storageCli, err := s.initStorageCli()
+	k8sStorageCli, mesosStorageCli, err := s.initStorageCli()
 	if err != nil {
 		blog.Errorf("init storage cli err:%v", err)
 		return err
@@ -370,7 +371,7 @@ func (s *Server) initWorker() error {
 	selectClusters := strings.Split(s.opt.FilterRules.ClusterIDs, ",")
 	blog.Infof("selected cluster: %v", selectClusters)
 	resourceGetter := common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters)
-	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, storageCli, resourceGetter)
+	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli, resourceGetter)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
 		return err
@@ -379,7 +380,8 @@ func (s *Server) initWorker() error {
 	handlerClients := worker.HandleClients{
 		Store:            s.store,
 		BcsMonitorClient: bcsMonitorCli,
-		BcsStorageCli:    storageCli,
+		K8sStorageCli:    k8sStorageCli,
+		MesosStorageCli:  mesosStorageCli,
 		CmCli:            cmCli,
 	}
 	consumers := make([]worker.Consumer, 0)
@@ -395,17 +397,14 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	if len(schemas) != 2 {
 		return nil, fmt.Errorf("passwd contain special char(//)")
 	}
-
 	accountServers := strings.Split(schemas[1], "@")
 	if len(accountServers) != 2 {
 		return nil, fmt.Errorf("queue account or passwd contain special char(@)")
 	}
-
 	accounts := strings.Split(accountServers[0], ":")
 	if len(accounts) != 2 {
 		return nil, fmt.Errorf("queue account or passwd contain special char(:)")
 	}
-
 	pwd := accounts[1]
 	if pwd != "" {
 		realPwd, _ := encrypt.DesDecryptFromBase([]byte(pwd))
@@ -460,7 +459,9 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 			EnableAckWait:     true,
 			AckWaitDuration:   time.Duration(30) * time.Second,
 			MaxInFlight:       0,
-			QueueArguments:    map[string]interface{}{"x-message-ttl": 12000},
+			QueueArguments: map[string]interface{}{
+				"x-message-ttl": 1800000,
+			},
 		})
 	msgQueue, err := msgqueue.NewMsgQueue(commonOption, exchangeOption, natStreamingOption, publishOption, subscribeOption)
 	if err != nil {
@@ -515,23 +516,49 @@ func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
 	return bcsMonitorCli
 }
 
-func (s *Server) initStorageCli() (bcsapi.Storage, error) {
+func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
-	config := &bcsapi.Config{
+	k8sStorageConfig := &bcsapi.Config{
 		Hosts:     []string{s.opt.BcsAPIConf.BcsAPIGwURL},
 		TLSConfig: s.clientTLSConfig,
 		AuthToken: string(realAuthToken),
 		Gateway:   true,
 	}
-	client := bcsapi.NewClient(config)
-	storageCli := client.Storage()
-	_, err := storageCli.QueryK8SGameDeployment("xxx")
-	if err != nil {
-		blog.Infof("init storage cli error: %v", err)
-		return nil, err
+	k8sStorageCli := &bcsapi.StorageCli{
+		Config: k8sStorageConfig,
 	}
-	blog.Infof("init storage cli success")
-	return storageCli, nil
+	if k8sStorageConfig.TLSConfig != nil {
+		k8sStorageCli.Client = restclient.NewRESTClientWithTLS(k8sStorageConfig.TLSConfig)
+	} else {
+		k8sStorageCli.Client = restclient.NewRESTClient()
+	}
+	k8sTransport := &http.Transport{}
+	k8sStorageCli.Client.WithTransport(k8sTransport)
+	_, err := k8sStorageCli.QueryK8SDeployment("test", "test")
+	if err != nil {
+		blog.Errorf("init k8s storage cli error: %v", err)
+		return nil, nil, err
+	}
+	blog.Infof("init k8s storage cli success")
+
+	mesosStorageConfig := &bcsapi.Config{
+		Hosts:     []string{s.opt.BcsAPIConf.OldBcsAPIGwURL},
+		AuthToken: string(realAuthToken),
+		Gateway:   true,
+	}
+	mesosStorageCli := &bcsapi.StorageCli{
+		Config: mesosStorageConfig,
+	}
+	mesosStorageCli.Client = restclient.NewRESTClient()
+	mesosTransport := &http.Transport{}
+	mesosStorageCli.Client.WithTransport(mesosTransport)
+	_, err = mesosStorageCli.QueryMesosDeployment("test")
+	if err != nil {
+		blog.Errorf("init mesos storage cli error: %v", err)
+		return nil, nil, err
+	}
+	blog.Infof("init mesos storage cli success")
+	return k8sStorageCli, mesosStorageCli, nil
 }
 
 func (s *Server) initExtraModules() {

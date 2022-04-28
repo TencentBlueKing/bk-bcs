@@ -13,6 +13,9 @@
 package common
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"time"
 
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
@@ -321,4 +324,19 @@ type JobCommonOpts struct {
 	Name         string
 	Dimension    string
 	CurrentTime  time.Time
+}
+
+// Clients clients for dataJob
+type Clients struct {
+	MonitorClient   bcsmonitor.ClientInterface
+	K8sStorageCli   bcsapi.Storage
+	MesosStorageCli bcsapi.Storage
+	CmCli           *cmanager.ClusterManagerClientWithHeader
+}
+
+// NewClients init dataJob clients
+func NewClients(monitorClient bcsmonitor.ClientInterface, k8sStorageCli, mesosStorageCli bcsapi.Storage,
+	cmCli *cmanager.ClusterManagerClientWithHeader) *Clients {
+	return &Clients{MonitorClient: monitorClient, CmCli: cmCli,
+		K8sStorageCli: k8sStorageCli, MesosStorageCli: mesosStorageCli}
 }

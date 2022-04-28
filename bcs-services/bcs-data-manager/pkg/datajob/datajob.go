@@ -14,10 +14,6 @@ package datajob
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 )
 
@@ -29,27 +25,14 @@ type IDataJob interface {
 
 // Policy interface
 type Policy interface {
-	ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients)
+	ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients)
 }
 
 // DataJob dataJob struct
 type DataJob struct {
 	Opts      common.JobCommonOpts
 	jobPolicy Policy
-	clients   *Clients
-}
-
-// Clients clients for dataJob
-type Clients struct {
-	monitorClient bcsmonitor.ClientInterface
-	bcsStorageCli bcsapi.Storage
-	cmCli         *cmanager.ClusterManagerClientWithHeader
-}
-
-// NewClients init dataJob clients
-func NewClients(monitorClient bcsmonitor.ClientInterface, bcsStorageCli bcsapi.Storage,
-	cmCli *cmanager.ClusterManagerClientWithHeader) *Clients {
-	return &Clients{monitorClient: monitorClient, cmCli: cmCli, bcsStorageCli: bcsStorageCli}
+	clients   *common.Clients
 }
 
 // DoPolicy do dataJob policy
@@ -63,6 +46,6 @@ func (j *DataJob) SetPolicy(policy Policy) {
 }
 
 // SetClient set dataJob clients
-func (j *DataJob) SetClient(clients *Clients) {
+func (j *DataJob) SetClient(clients *common.Clients) {
 	j.clients = clients
 }

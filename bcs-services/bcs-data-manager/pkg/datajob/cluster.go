@@ -67,25 +67,25 @@ func NewClusterMinutePolicy(getter metric.Server, store store.Server) *ClusterMi
 }
 
 // ImplementPolicy day policy implement
-func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients.monitorClient)
+func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
 	totalMemory, memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.
-		GetClusterMemoryMetrics(opts, clients.monitorClient)
+		GetClusterMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
-	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients.monitorClient, clients.cmCli)
+	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
-	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients.cmCli)
+	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
@@ -111,7 +111,11 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		return
 	}
 	hourMetric := hourMetrics[0]
-	workloadCount := getWorkloadCount(opts, clients)
+	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	if err != nil {
+		blog.Errorf("do cluster day policy failed, get cluster workload count err: %v", err)
+	}
 	clusterMetric := &common.ClusterMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -143,25 +147,25 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 }
 
 // ImplementPolicy hour policy implement
-func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients.monitorClient)
+func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
 	totalMemory, memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.
-		GetClusterMemoryMetrics(opts, clients.monitorClient)
+		GetClusterMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
-	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients.monitorClient, clients.cmCli)
+	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
-	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients.cmCli)
+	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
@@ -187,7 +191,11 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		return
 	}
 	minuteMetric := minuteMetrics[0]
-	workloadCount := getWorkloadCount(opts, clients)
+	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	if err != nil {
+		blog.Errorf("do cluster hour policy failed, get cluster workload count err: %v", err)
+	}
 	clusterMetric := &common.ClusterMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -219,25 +227,25 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 }
 
 // ImplementPolicy minute policy implement
-func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *Clients) {
-	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients.monitorClient)
+func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts,
+	clients *common.Clients) {
+	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
-	totalMemory, memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.
-		GetClusterMemoryMetrics(opts, clients.monitorClient)
+	totalMemory, memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetClusterMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
-	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients.monitorClient)
+	instanceCount, err := p.MetricGetter.GetInstanceCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
-	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients.monitorClient, clients.cmCli)
+	minUsageNode, nodeQuantile, err := p.MetricGetter.GetClusterNodeMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
-	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients.cmCli)
+	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
@@ -247,8 +255,11 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.
 		avgLoadCPU = CPUUsed / float64(availableNode)
 		avgLoadMemory = memoryUsed / availableNode
 	}
-
-	workloadCount := getWorkloadCount(opts, clients)
+	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	if err != nil {
+		blog.Errorf("do cluster minute policy failed, get cluster workload count err: %v", err)
+	}
 	clusterMetric := &common.ClusterMetrics{
 		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -293,8 +304,7 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.
 		TotalCPU:     totalCPU,
 		TotalMemory:  totalMemory,
 	}
-	err = p.store.InsertClusterInfo(ctx, clusterMetric, opts)
-	if err != nil {
+	if err = p.store.InsertClusterInfo(ctx, clusterMetric, opts); err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
 }

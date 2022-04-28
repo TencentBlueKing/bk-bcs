@@ -14,6 +14,7 @@ package worker
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -29,27 +30,30 @@ import (
 
 // Producer produce data job
 type Producer struct {
-	msgQueue       msgqueue.MessageQueue
-	cron           *cron.Cron
-	CMClient       *cmanager.ClusterManagerClient
-	storageCli     bcsapi.Storage
-	ctx            context.Context
-	cancel         context.CancelFunc
-	resourceGetter common.GetterInterface
+	msgQueue        msgqueue.MessageQueue
+	cron            *cron.Cron
+	CMClient        *cmanager.ClusterManagerClient
+	k8sStorageCli   bcsapi.Storage
+	mesosStorageCli bcsapi.Storage
+	ctx             context.Context
+	cancel          context.CancelFunc
+	resourceGetter  common.GetterInterface
 }
 
 // NewProducer new producer
 func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *cron.Cron,
-	cmClient *cmanager.ClusterManagerClient, storeCli bcsapi.Storage, getter common.GetterInterface) *Producer {
+	cmClient *cmanager.ClusterManagerClient, k8sStorageCli, mesosStorageCli bcsapi.Storage,
+	getter common.GetterInterface) *Producer {
 	ctx, cancel := context.WithCancel(rootCtx)
 	return &Producer{
-		msgQueue:       msgQueue,
-		cron:           cron,
-		CMClient:       cmClient,
-		storageCli:     storeCli,
-		ctx:            ctx,
-		cancel:         cancel,
-		resourceGetter: getter,
+		msgQueue:        msgQueue,
+		cron:            cron,
+		CMClient:        cmClient,
+		k8sStorageCli:   k8sStorageCli,
+		mesosStorageCli: mesosStorageCli,
+		ctx:             ctx,
+		cancel:          cancel,
+		resourceGetter:  getter,
 	}
 }
 
@@ -153,6 +157,8 @@ func (p *Producer) PublicProducer(dimension string) {
 
 // ProjectProducer is the function to produce project data job and send to message queue
 func (p *Producer) ProjectProducer(dimension string) {
+	startTime := time.Now()
+	jobTime := common.FormatTime(time.Now(), dimension)
 	cmConn, err := p.CMClient.GetClusterManagerConn()
 	if err != nil {
 		blog.Errorf("get cm conn error:%v", err)
@@ -168,7 +174,7 @@ func (p *Producer) ProjectProducer(dimension string) {
 	for _, project := range projectList {
 		opts := common.JobCommonOpts{
 			ProjectID:   project,
-			CurrentTime: common.FormatTime(time.Now(), dimension),
+			CurrentTime: jobTime,
 			Dimension:   dimension,
 			ObjectType:  common.ProjectType,
 		}
@@ -178,11 +184,14 @@ func (p *Producer) ProjectProducer(dimension string) {
 			return
 		}
 	}
-	blog.Infof("[producer] send project job success, count: %d", len(projectList))
+	blog.Infof("[producer] send project job success, count: %d, jobTime:%v, startTime:%v, currentTime:%v, cost:%v",
+		len(projectList), jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
 // ClusterProducer is the function to produce cluster data job and send to message queue
 func (p *Producer) ClusterProducer(dimension string) {
+	jobTime := common.FormatTime(time.Now(), dimension)
+	startTime := time.Now()
 	cmConn, err := p.CMClient.GetClusterManagerConn()
 	if err != nil {
 		blog.Errorf("get cm conn error:%v", err)
@@ -200,7 +209,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 			ProjectID:   cluster.ProjectID,
 			ClusterID:   cluster.ClusterID,
 			ClusterType: cluster.ClusterType,
-			CurrentTime: common.FormatTime(time.Now(), dimension),
+			CurrentTime: jobTime,
 			Dimension:   dimension,
 			ObjectType:  common.ClusterType,
 		}
@@ -210,11 +219,14 @@ func (p *Producer) ClusterProducer(dimension string) {
 			return
 		}
 	}
-	blog.Infof("[producer] send cluster job success, count: %d", len(clusterList))
+	blog.Infof("[producer] send cluster job success, count: %d, jobTime:%v, startTime:%v, currentTime:%v, cost:%v",
+		len(clusterList), jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
 // NamespaceProducer is the function to produce namespace data job and send to message queue
 func (p *Producer) NamespaceProducer(dimension string) {
+	jobTime := common.FormatTime(time.Now(), dimension)
+	startTime := time.Now()
 	cmConn, err := p.CMClient.GetClusterManagerConn()
 	if err != nil {
 		blog.Errorf("get cm conn error:%v", err)
@@ -222,7 +234,8 @@ func (p *Producer) NamespaceProducer(dimension string) {
 	}
 	defer cmConn.Close()
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	namespaceList, err := p.resourceGetter.GetNamespaceList(cliWithHeader.Ctx, cliWithHeader.Cli, p.storageCli)
+	namespaceList, err := p.resourceGetter.GetNamespaceList(cliWithHeader.Ctx, cliWithHeader.Cli,
+		p.k8sStorageCli, p.mesosStorageCli)
 	if err != nil || namespaceList == nil {
 		blog.Errorf("get namespace list error: %v", err)
 		return
@@ -233,7 +246,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 			ProjectID:   namespace.ProjectID,
 			ClusterType: namespace.ClusterType,
 			Namespace:   namespace.Name,
-			CurrentTime: common.FormatTime(time.Now(), dimension),
+			CurrentTime: jobTime,
 			Dimension:   dimension,
 			ObjectType:  common.NamespaceType,
 		}
@@ -243,11 +256,14 @@ func (p *Producer) NamespaceProducer(dimension string) {
 			return
 		}
 	}
-	blog.Infof("[producer] send namespace job success, count: %d", len(namespaceList))
+	blog.Infof("[producer] send all namespace job, count:%d, jobTime:%v, startTime:%v, "+
+		"currentTime:%v, cost:%v", len(namespaceList), jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
 // WorkloadProducer is the function to produce workload data job and send to message queue
 func (p *Producer) WorkloadProducer(dimension string) {
+	jobTime := common.FormatTime(time.Now(), dimension)
+	startTime := time.Now()
 	cmConn, err := p.CMClient.GetClusterManagerConn()
 	if err != nil {
 		blog.Errorf("get cm conn error:%v", err)
@@ -255,30 +271,74 @@ func (p *Producer) WorkloadProducer(dimension string) {
 	}
 	defer cmConn.Close()
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	workloadList, err := p.resourceGetter.GetWorkloadList(cliWithHeader.Ctx, cliWithHeader.Cli, p.storageCli)
-	if err != nil || workloadList == nil {
-		blog.Errorf("get workload list error: %v", err)
+	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
+	if err != nil || clusterList == nil {
+		blog.Errorf("get clusterList error: %v", err)
 		return
 	}
-	for _, workload := range workloadList {
-		opts := common.JobCommonOpts{
-			ProjectID:    workload.ProjectID,
-			ClusterID:    workload.ClusterID,
-			ClusterType:  workload.ClusterType,
-			Namespace:    workload.Namespace,
-			WorkloadType: workload.ResourceType,
-			Name:         workload.Name,
-			CurrentTime:  common.FormatTime(time.Now(), dimension),
-			Dimension:    dimension,
-			ObjectType:   common.WorkloadType,
+	var totalWorkload int
+	countCh := make(chan int, 100)
+	go func() {
+		for count := range countCh {
+			totalWorkload = totalWorkload + count
 		}
-		err := p.SendJob(opts)
-		if err != nil {
-			blog.Errorf("send workload job to msg queue error, opts: %v, err: %v", opts, err)
-			return
-		}
+	}()
+	chPool := make(chan struct{}, 100)
+	wg := sync.WaitGroup{}
+	for key := range clusterList {
+		chPool <- struct{}{}
+		wg.Add(1)
+		go func(clusterMeta *common.ClusterMeta) {
+			defer wg.Done()
+			workloadList := make([]*common.WorkloadMeta, 0)
+			switch clusterMeta.ClusterType {
+			case common.Kubernetes:
+				namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(clusterMeta, p.k8sStorageCli, p.mesosStorageCli)
+				if err != nil {
+					blog.Errorf("get workload list error: %v", err)
+					<-chPool
+					return
+				}
+				if workloadList, err = p.resourceGetter.GetK8sWorkloadList(namespaceList, p.k8sStorageCli); err != nil {
+					blog.Errorf("get workload list error: %v", err)
+					<-chPool
+					return
+				}
+			case common.Mesos:
+				if workloadList, err = p.resourceGetter.GetMesosWorkloadList(clusterMeta, p.mesosStorageCli); err != nil {
+					blog.Errorf("get workload list error: %v", err)
+					<-chPool
+					return
+				}
+			}
+			for _, workload := range workloadList {
+				opts := common.JobCommonOpts{
+					ProjectID:    workload.ProjectID,
+					ClusterID:    workload.ClusterID,
+					ClusterType:  workload.ClusterType,
+					Namespace:    workload.Namespace,
+					WorkloadType: workload.ResourceType,
+					Name:         workload.Name,
+					CurrentTime:  jobTime,
+					Dimension:    dimension,
+					ObjectType:   common.WorkloadType,
+				}
+				if err = p.SendJob(opts); err != nil {
+					blog.Errorf("send workload job to msg queue error, opts: %v, err: %v", opts, err)
+					<-chPool
+					return
+				}
+			}
+			blog.Infof("[producer] send workload job success, count: %d", len(workloadList))
+			<-chPool
+			countCh <- len(workloadList)
+		}(clusterList[key])
 	}
-	blog.Infof("[producer] send workload job success, count: %d", len(workloadList))
+	wg.Wait()
+	close(chPool)
+	close(countCh)
+	blog.Infof("[producer] send all workload job, count:%d, jobTime:%v, startTime:%v, "+
+		"currentTime:%v, cost:%v", totalWorkload, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
 // SendJob is the function to send data job to msg queue

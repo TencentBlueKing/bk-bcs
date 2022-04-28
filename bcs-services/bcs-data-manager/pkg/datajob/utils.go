@@ -16,22 +16,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 )
 
-func getWorkloadCount(opts *common.JobCommonOpts, clients *Clients) int64 {
+func getClusterWorkloadCount(opts *common.JobCommonOpts, clients *common.Clients) int64 {
 	workloadList := make([]*common.WorkloadMeta, 0)
 	switch opts.ClusterType {
 	case common.Kubernetes:
-		workloadList = common.GetK8sWorkloadList(opts.ClusterID, opts.ProjectID, clients.bcsStorageCli)
-	case common.Mesos:
-		workloadList = common.GetMesosWorkloadList(opts.ClusterID, opts.ProjectID, clients.bcsStorageCli)
-	}
-	if opts.ObjectType == common.NamespaceType {
-		result := workloadList[:0]
-		for index := range workloadList {
-			if workloadList[index].Namespace == opts.Namespace {
-				result = append(result, workloadList[index])
-			}
+		namespaceList := common.GetK8sNamespaceList(opts.ClusterID, opts.ProjectID, clients.K8sStorageCli)
+		for _, namespace := range namespaceList {
+			workloads := common.GetK8sWorkloadList(opts.ClusterID, opts.ProjectID, namespace.Name,
+				clients.K8sStorageCli)
+			workloadList = append(workloadList, workloads...)
 		}
-		return int64(len(result))
+	case common.Mesos:
+		workloads := common.GetMesosWorkloadList(opts.ClusterID, opts.ProjectID,
+			clients.K8sStorageCli)
+		workloadList = append(workloadList, workloads...)
 	}
 	return int64(len(workloadList))
 }

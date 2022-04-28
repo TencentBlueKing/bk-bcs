@@ -14,6 +14,7 @@ package store
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
@@ -41,6 +42,8 @@ type Server interface {
 	InsertClusterInfo(ctx context.Context, metrics *common.ClusterMetrics, opts *common.JobCommonOpts) error
 	InsertNamespaceInfo(ctx context.Context, metrics *common.NamespaceMetrics, opts *common.JobCommonOpts) error
 	InsertWorkloadInfo(ctx context.Context, metrics *common.WorkloadMetrics, opts *common.JobCommonOpts) error
+	GetWorkloadCount(ctx context.Context, opts *common.JobCommonOpts, bucket string,
+		after time.Time) (int64, error)
 	InsertPublicInfo(ctx context.Context, metrics *common.PublicData, opts *common.JobCommonOpts) error
 }
 

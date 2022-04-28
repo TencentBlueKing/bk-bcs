@@ -154,12 +154,17 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	if dimension == "" {
 		dimension = common.DimensionMinute
 	}
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		ProjectIDKey: request.ProjectID,
-		DimensionKey: dimension,
-	})
+	cond := make([]*operator.Condition, 0)
+	cond = append(cond,
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			ProjectIDKey: request.ProjectID,
+			DimensionKey: dimension,
+		}), operator.NewLeafCondition(operator.Gte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+		}))
+	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempClusterList := make([]map[string]string, 0)
-	err = m.DB.Table(m.TableName).Find(cond).WithProjection(map[string]int{ClusterIDKey: 1, "_id": 0}).
+	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ClusterIDKey: 1, "_id": 0}).
 		WithSort(map[string]interface{}{ClusterIDKey: 1}).All(ctx, &tempClusterList)
 	if err != nil {
 		blog.Errorf("get cluster id list error")
@@ -292,17 +297,17 @@ func (m *ModelCluster) generateClusterResponse(metricSlice []*common.ClusterMetr
 			NodeCount:          strconv.FormatInt(metric.NodeCount, 10),
 			AvailableNodeCount: strconv.FormatInt(metric.AvailableNodeCount, 10),
 			MinUsageNode:       metric.MinUsageNode,
-			TotalCPU:           strconv.FormatFloat(metric.TotalCPU, 'f', 6, 64),
+			TotalCPU:           strconv.FormatFloat(metric.TotalCPU, 'f', 2, 64),
 			TotalMemory:        strconv.FormatInt(metric.TotalMemory, 10),
-			TotalLoadCPU:       strconv.FormatFloat(metric.TotalLoadCPU, 'f', 6, 64),
+			TotalLoadCPU:       strconv.FormatFloat(metric.TotalLoadCPU, 'f', 2, 64),
 			TotalLoadMemory:    strconv.FormatInt(metric.TotalLoadMemory, 10),
-			AvgLoadCPU:         strconv.FormatFloat(metric.AvgLoadCPU, 'f', 6, 64),
+			AvgLoadCPU:         strconv.FormatFloat(metric.AvgLoadCPU, 'f', 2, 64),
 			AvgLoadMemory:      strconv.FormatInt(metric.AvgLoadMemory, 10),
-			CPUUsage:           strconv.FormatFloat(metric.CPUUsage, 'f', 6, 64),
-			MemoryUsage:        strconv.FormatFloat(metric.MemoryUsage, 'f', 6, 64),
+			CPUUsage:           strconv.FormatFloat(metric.CPUUsage, 'f', 4, 64),
+			MemoryUsage:        strconv.FormatFloat(metric.MemoryUsage, 'f', 4, 64),
 			WorkloadCount:      strconv.FormatInt(metric.WorkloadCount, 10),
 			InstanceCount:      strconv.FormatInt(metric.InstanceCount, 10),
-			CpuRequest:         strconv.FormatFloat(metric.CpuRequest, 'f', 6, 64),
+			CpuRequest:         strconv.FormatFloat(metric.CpuRequest, 'f', 2, 64),
 			MemoryRequest:      strconv.FormatInt(metric.MemoryRequest, 10),
 			MinNode:            metric.MinNode,
 			MaxNode:            metric.MaxNode,
