@@ -2736,5 +2736,41 @@ export default {
     ],
     "请确认是否批量允许调度": [
         "Confirm batch dispatch"
+    ],
+    "service对象不存在": [
+        "The service object does not exist"
+    ],
+    "匹配表达式(expressions)": [
+        "Matching expression (Expressions)"
+    ],
+    "无指标信息": [
+        "No indicator information"
+    ],
+    "系统指标无法修改": [
+        "System indicators cannot be modified"
+    ],
+    "系统指标无法删除": [
+        "System indicators cannot be deleted"
+    ],
+    "Docker数据目录": [
+        "Docker data directory"
+    ],
+    "Docker版本": [
+        "Docker version"
+    ],
+    "kubelet数据目录": [
+        "Kubelet data directory"
+    ],
+    "仅支持奇数个服务器": [
+        "Only support the strange server"
+    ],
+    "展开更多设置": [
+        "Expand more settings"
+    ],
+    "集群Pod网段": [
+        "Cluster POD network segment"
+    ],
+    "集群Service网段": [
+        "Cluster service network segment"
     ]
 }
