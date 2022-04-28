@@ -55,6 +55,12 @@ func PermissionRequired() gin.HandlerFunc {
 			return
 		}
 
+		// 管理员凭证, 按项目
+		if config.G.ValidateCred(config.CredentialManager, authCtx.Username, config.ScopeProjectCode, authCtx.ProjectCode) {
+			c.Next()
+			return
+		}
+
 		if err := initContextWithIAMProject(c, authCtx); err != nil {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
@@ -143,7 +149,7 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
-		if !config.G.ValidateCred(authCtx.BindAPIGW.App.AppCode, authCtx.ProjectCode) {
+		if !config.G.ValidateCred(config.CredentialAppCode, authCtx.BindAPIGW.App.AppCode, config.ScopeProjectCode, authCtx.ProjectCode) {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
 				Message:   fmt.Sprintf("app %s have no permission, %s, %s", authCtx.BindAPIGW.App.AppCode, authCtx.BindProject, authCtx.BindCluster),
