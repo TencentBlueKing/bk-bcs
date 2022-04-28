@@ -34,7 +34,7 @@ import (
 
 const (
 	// 重试次数
-	RetryTimes = 5
+	RetryTimes = 10
 	// 检查间隔，单位：秒
 	CheckInterval = 30
 	// 依赖服务检查失败退出码
@@ -115,7 +115,7 @@ func (c *DependencyServiceChecker) DoAndExit() {
 	os.Exit(ExitCode)
 }
 
-// 对依赖服务进行一次检查，任一服务不可用，都返回错误
+// 对依赖服务进行一次检查，任意服务不可用，都返回错误
 func (c *DependencyServiceChecker) doOnce() error {
 	// 检查 Redis 服务，若服务异常，则返回错误
 	rds := redis.NewStandaloneClient(&c.conf.Redis)

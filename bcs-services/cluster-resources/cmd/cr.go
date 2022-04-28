@@ -32,7 +32,7 @@ import (
 
 var (
 	showVersion  = flag.Bool("version", false, "show version info only")
-	checkService = flag.Bool("checkService", false, "check dependency service status (redis, cluster-manger...)")
+	checkService = flag.Bool("checkService", false, "check dependency service status (redis, clusterManger...)")
 	confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
 )
 
@@ -60,7 +60,7 @@ func Start() {
 	logger.Info(fmt.Sprintf("ConfigFilePath: %s", *confFilePath))
 	logger.Info(fmt.Sprintf("VersionBuildInfo: {%s}", version.GetVersion()))
 
-	// 若指定了只检查依赖服务，则检查通过后以零值退出，不通过则以非零值退出
+	// 若指定了只检查依赖服务，则检查通过后以零值退出，否则以非零值退出
 	if *checkService {
 		NewDependencyServiceChecker(crConf).DoAndExit()
 	}
