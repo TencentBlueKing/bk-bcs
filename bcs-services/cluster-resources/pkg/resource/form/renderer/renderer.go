@@ -73,20 +73,14 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 
 // 获取资源对应 APIVersion 并更新 Renderer 配置
 func (r *ManifestRenderer) setAPIVersion() error {
-	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version（HPA 除外）
+	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
 	r.APIVersion = mapx.Get(r.FormData, "apiVersion", "").(string)
 	if r.APIVersion == "" {
-		switch r.Kind {
-		case res.HPA:
-			r.APIVersion = res.DefaultHPAGroupVersion
-		default:
-			// 使用 Preferred Version
-			resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
-			if err != nil {
-				return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
-			}
-			r.APIVersion = resInfo.Group + "/" + resInfo.Version
+		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
+		if err != nil {
+			return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
 		}
+		r.APIVersion = resInfo.Group + "/" + resInfo.Version
 		r.FormData["apiVersion"] = r.APIVersion
 	}
 	return nil
