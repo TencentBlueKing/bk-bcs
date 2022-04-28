@@ -37,13 +37,14 @@ def list_auth_projects(access_token: str, username: str = '') -> Dict:
 
     # 如果是 any, 表示所有项目
     if ProjectFilter.op_is_any(perm_filter):
-        if settings.REGION == 'ce':
-            client = PaaSCCClient(auth=ComponentAuth(access_token))
-            projects = client.list_all_projects()
-        else:
-            # 非 ce 版本可能项目过多, 先不做返回
+        if settings.REGION != 'ce':
+            # 非 ce 版本可能项目很多, PaaSCCClient 接口拉取超时, 降级处理不返回
             logger.error(f'{username} project filter match any!')
             return {'code': 0, 'data': []}
+
+        client = PaaSCCClient(auth=ComponentAuth(access_token))
+        projects = client.list_all_projects()
+
     else:
         project_id_list = perm_filter.get('value')
         if not project_id_list:
