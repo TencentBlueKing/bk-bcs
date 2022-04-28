@@ -104,7 +104,6 @@
             bus.$off('show-apply-perm-modal-async')
         },
         mounted () {
-            document.title = this.$t('容器服务')
             window.$loginModal = this.$refs.login
         },
         methods: {
@@ -118,6 +117,7 @@
                     console.error(err)
                 })
                 this.isLoading = false
+                document.title = this.$t('容器服务')
             },
             handleCreateProject () {
                 this.showCreateDialog = true
