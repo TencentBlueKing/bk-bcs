@@ -83,8 +83,14 @@ func (c *Credential) InitCred() error {
 
 	// 初始化凭证, 可为多个
 	c.credentialKeys = make(map[string]struct{})
-	c.credentialKeys[c.Credential] = struct{}{}
+	// 不能为空值
+	if c.Credential != "" {
+		c.credentialKeys[c.Credential] = struct{}{}
+	}
 	for _, v := range c.CredentialList {
+		if v == "" {
+			continue
+		}
 		c.credentialKeys[v] = struct{}{}
 	}
 
