@@ -201,13 +201,13 @@
                         <LoadingIcon
                             v-if="['INITIALIZATION', 'DELETING'].includes(row.status)"
                         >
-                            {{ nodeStatusMap[row.status.toLowerCase()] }}
+                            <span class="bcs-ellipsis">{{ nodeStatusMap[row.status.toLowerCase()] }}</span>
                         </LoadingIcon>
                         <StatusIcon :status="row.status"
                             :status-color-map="nodeStatusColorMap"
                             v-else
                         >
-                            {{ nodeStatusMap[row.status.toLowerCase()] }}
+                            <span class="bcs-ellipsis">{{ nodeStatusMap[row.status.toLowerCase()] }}</span>
                         </StatusIcon>
                     </template>
                 </bcs-table-column>

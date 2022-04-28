@@ -100,7 +100,7 @@
     import useGoHome from '@/common/use-gohome'
     import { bus } from '@/common/bus'
     import systemLog from '@/components/system-log/index.vue'
-    import { locale } from 'bk-magic-vue'
+    // import { locale } from 'bk-magic-vue'
 
     export default {
         name: "Navigation",
@@ -255,9 +255,10 @@
             },
             handleChangeLang (item) {
                 document.cookie = `blueking_language=${item.id};`
-                this.activeLangId = item.id
-                this.$i18n.locale = this.activeLangId
-                locale.getCurLang().bk.lang = this.activeLangId
+                window.location.reload()
+                // this.activeLangId = item.id
+                // this.$i18n.locale = this.activeLangId
+                // locale.getCurLang().bk.lang = this.activeLangId
             }
         }
     }

@@ -2727,5 +2727,14 @@ export default {
     '确认删除节点': ['Confirm delete node'],
     "已解锁": ['Unlocked'],
     "已锁定": ['Locked'],
-    "确定要删除Service【": ['Confirm delete Service【']
+    "确定要删除Service【": ['Confirm delete Service【'],
+    "确认重新添加节点": [
+        "Confirm the re-added node"
+    ],
+    "请确认是否批量停止调度": [
+        "Confirm batch stop dispatch"
+    ],
+    "请确认是否批量允许调度": [
+        "Confirm batch dispatch"
+    ]
 }
