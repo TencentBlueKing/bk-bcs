@@ -35,7 +35,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('创建者')" prop="creator"></bk-table-column>
-            <bk-table-column label="操作" width="120">
+            <bk-table-column :label="$t('操作')" width="120">
                 <template #default="{ row }">
                     <bk-button class="mr10" theme="primary" text @click="handleEditProject(row)">{{$t('编辑项目')}}</bk-button>
                     <!-- <bk-button theme="primary" text>{{$t('申请监控中心')}}</bk-button> -->

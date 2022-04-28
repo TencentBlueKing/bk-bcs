@@ -44,9 +44,25 @@
                         </bcs-popover>
                     </div>
                     <div class="nav-right">
-                        <bcs-popover theme="light navigation-message" style="margin-right: 14px;" offset="0, 20" placement="bottom" :arrow="false">
-                            <div class="header-user">
-                                <i id="siteHelp" class="bcs-icon bcs-icon-help-2"></i>
+                        <bcs-popover theme="light navigation-message" class="mr10" offset="0, 20" placement="bottom" :arrow="false">
+                            <div class="flag-box">
+                                <i :class="['bcs-icon', curLang.icon]"></i>
+                            </div>
+                            <template slot="content">
+                                <ul class="bcs-navigation-admin">
+                                    <li v-for="(item, index) in langs" :key="index"
+                                        :class="['nav-item', { active: activeLangId === item.id }]"
+                                        @click="handleChangeLang(item)"
+                                    >
+                                        <i :class="['bcs-icon mr5', item.icon]"></i>
+                                        {{item.name}}
+                                    </li>
+                                </ul>
+                            </template>
+                        </bcs-popover>
+                        <bcs-popover theme="light navigation-message" class="mr5" offset="0, 20" placement="bottom" :arrow="false">
+                            <div class="flag-box">
+                                <i id="siteHelp" class="bcs-icon bcs-icon-help-document-fill"></i>
                             </div>
                             <template slot="content">
                                 <ul class="bcs-navigation-admin">
@@ -84,6 +100,7 @@
     import useGoHome from '@/common/use-gohome'
     import { bus } from '@/common/bus'
     import systemLog from '@/components/system-log/index.vue'
+    import { locale } from 'bk-magic-vue'
 
     export default {
         name: "Navigation",
@@ -92,10 +109,26 @@
         },
         data () {
             return {
-                showSystemLog: false
+                showSystemLog: false,
+                activeLangId: this.$i18n.locale,
+                langs: [
+                    {
+                        icon: 'bcs-icon-lang-en',
+                        name: 'English',
+                        id: 'en-US'
+                    },
+                    {
+                        icon: 'bcs-icon-lang-ch',
+                        name: '中文',
+                        id: "zh-CN"
+                    }
+                ]
             }
         },
         computed: {
+            curLang () {
+                return this.langs.find(item => item.id === this.activeLangId)
+            },
             user () {
                 return this.$store.state.user
             },
@@ -219,6 +252,12 @@
                 this.$store.commit('updateViewMode', 'cluster')
                 this.$store.commit('cluster/forceUpdateClusterList', this.$store.state.cluster.allClusterList)
                 this.$store.dispatch('getFeatureFlag')
+            },
+            handleChangeLang (item) {
+                document.cookie = `blueking_language=${item.id};`
+                this.activeLangId = item.id
+                this.$i18n.locale = this.activeLangId
+                locale.getCurLang().bk.lang = this.activeLangId
             }
         }
     }
@@ -253,6 +292,13 @@
     align-items:center;
     padding:0 20px;
     list-style:none;
+    .bcs-icon {
+        font-size: 18px;
+    }
+    &.active {
+        color:#3A84FF;
+        background-color:#F0F1F5;
+    }
     &:hover {
         color:#3A84FF;
         cursor:pointer;
@@ -405,7 +451,25 @@
             }
             &:hover {
                 cursor:pointer;
-                color:#D3D9E4;
+                color:#3a84ff;
+            }
+        }
+        /deep/ .flag-box {
+            align-items: center;
+            border-radius: 50%;
+            color: #979ba5;
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 16px;
+            height: 32px;
+            justify-content: center;
+            position: relative;
+            transition: background .15s;
+            width: 32px;
+            &:hover {
+                background: #f0f1f5;
+                color: #3a84ff;
+                z-index: 1;
             }
         }
     }
