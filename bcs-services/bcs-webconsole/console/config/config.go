@@ -126,7 +126,7 @@ func (c *Configurations) ValidateCred(credType CredentialType, credName string, 
 	return false
 }
 
-// IsManager, 校验固定的 manager 和 动态凭证
+// IsManager 校验固定的 manager 和 集群维度动态凭证
 func (c *Configurations) IsManager(username, clusterId string) bool {
 	if _, ok := c.Base.ManagerMap[username]; ok {
 		return true
