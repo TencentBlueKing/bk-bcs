@@ -1968,7 +1968,7 @@ export default {
         "Container arrangement engine based on the MESOS framework"
     ],
     "申请权限": [
-        "request for access"
+        "Request for access"
     ],
     "前往iwiki查看": [
         "Go to IWIKI to view"
@@ -2772,5 +2772,11 @@ export default {
     ],
     "集群Service网段": [
         "Cluster service network segment"
+    ],
+    "续期API密钥": [
+        "Renewal API key"
+    ],
+    "复制示例成功": [
+        "Copy example success"
     ]
 }
