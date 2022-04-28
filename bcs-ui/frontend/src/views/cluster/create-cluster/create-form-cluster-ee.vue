@@ -1,6 +1,6 @@
 <template>
     <section class="create-form-cluster">
-        <bk-form :label-width="100" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
+        <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
             <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                 <bk-input class="w640" v-model="basicInfo.clusterName"></bk-input>
             </bk-form-item>
@@ -89,6 +89,7 @@
     import IpSelector from '@/components/ip-selector/selector-dialog.vue'
     import useGoHome from '@/common/use-gohome'
     import KeyValue from '@/components/key-value.vue'
+    import useFormLabel from '@/common/use-form-label'
 
     export default defineComponent({
         name: 'CreateFormCluster',
@@ -280,10 +281,13 @@
                     basicInfo.value.ipList.splice(index, 1)
                 }
             }
+            const { labelWidth, initFormLabelWidth } = useFormLabel()
             onMounted(() => {
                 handleGetTemplateList()
+                initFormLabelWidth(basicFormRef.value)
             })
             return {
+                labelWidth,
                 keyAdvice,
                 templateLoading,
                 expanded,
