@@ -2,7 +2,7 @@
     <div class="biz-container app-container" v-bkloading="{ isLoading, zIndex: 10 }">
         <!-- isLoading为解决当前集群和项目信息未设置时界面依赖时序问题 -->
         <template v-if="curProject && curProject.kind !== 0 && !isLoading">
-            <SideNav class="biz-side-bar"></SideNav>
+            <SideNav class="biz-side-bar" :key="$i18n.locale"></SideNav>
             <div class="bcs-content">
                 <ContentHeader
                     :title="$route.meta.title"

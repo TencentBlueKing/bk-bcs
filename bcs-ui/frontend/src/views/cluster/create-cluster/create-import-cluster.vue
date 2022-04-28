@@ -1,6 +1,6 @@
 <template>
     <section class="create-import-cluster">
-        <bk-form :label-width="130" :model="importClusterInfo" :rules="formRules" class="import-form" ref="importFormRef">
+        <bk-form :label-width="labelWidth" :model="importClusterInfo" :rules="formRules" class="import-form" ref="importFormRef">
             <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                 <bk-input v-model="importClusterInfo.clusterName"></bk-input>
             </bk-form-item>
@@ -80,6 +80,7 @@
     import Ace from '@/components/ace-editor'
     import useGoHome from '@/common/use-gohome'
     import useConfig from '@/common/use-config'
+    import useFormLabel from '@/common/use-form-label'
 
     export default defineComponent({
         name: 'CreateImportCluster',
@@ -199,10 +200,13 @@
                 importClusterInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
+            const { labelWidth, initFormLabelWidth } = useFormLabel()
             onMounted(() => {
                 handleGetTemplateList()
+                initFormLabelWidth(importFormRef.value)
             })
             return {
+                labelWidth,
                 templateList,
                 importClusterInfo,
                 importFormRef,

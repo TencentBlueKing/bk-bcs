@@ -48,10 +48,10 @@
                                         {{getHostStatus(host.status)}}
                                     </td>
                                     <td>
-                                        {{ nodeMetric[host.inner_ip].container_count }}
+                                        {{ nodeMetric[host.inner_ip] ? nodeMetric[host.inner_ip].container_count : 0 }}
                                     </td>
                                     <td>
-                                        {{ nodeMetric[host.inner_ip].pod_count }}
+                                        {{ nodeMetric[host.inner_ip] ? nodeMetric[host.inner_ip].pod_count : 0 }}
                                     </td>
                                 </tr>
                             </template>

@@ -129,6 +129,7 @@
     @import '@/css/reset.css';
     @import '@/css/app.css';
     @import '@/css/animation.css';
+    @import '@/fonts/style.css';
 
     .app-container {
         min-width: 1280px;
