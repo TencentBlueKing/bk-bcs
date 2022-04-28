@@ -19,7 +19,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
+	restclient "k8s.io/client-go/rest"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
 
@@ -31,35 +33,55 @@ type PodInterface interface {
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
+	GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error)
+	Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*proxy.ProxyHandler, error)
 }
 
+// PodHandler
 type PodHandler struct {
 	handler PodInterface
 }
 
+// NewPodHandler
 func NewPodHandler(handler PodInterface) *PodHandler {
 	return &PodHandler{handler: handler}
 }
 
+// Pod Resource Verb Handler
 func (h *PodHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
 		err error
 	)
+	ctx := c.Request.Context()
+
 	switch c.Options.Verb {
 	case rest.ListVerb:
-		obj, err = h.handler.List(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
+		obj, err = h.handler.List(ctx, c.Namespace, *c.Options.ListOptions)
 	case rest.ListAsTableVerb:
-		obj, err = h.handler.ListAsTable(c.Request.Context(), c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
+		obj, err = h.handler.ListAsTable(ctx, c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
 	case rest.GetVerb:
-		obj, err = h.handler.Get(c.Request.Context(), c.Namespace, c.Name, *c.Options.GetOptions)
+		obj, err = h.handler.Get(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
 	case rest.GetAsTableVerb:
-		obj, err = h.handler.GetAsTable(c.Request.Context(), c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
+		obj, err = h.handler.GetAsTable(ctx, c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
 	case rest.DeleteVerb:
-		obj, err = h.handler.Delete(c.Request.Context(), c.Namespace, c.Name, *c.Options.DeleteOptions)
+		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
+	case rest.GetLogsVerb: // 处理 Pod 日志流
+		restReq, err := h.handler.GetLogs(ctx, c.Namespace, c.Name, c.Options.PodLogOptions)
+		if err != nil {
+			return err
+		}
+		logs, err := restReq.Stream(ctx)
+		if err != nil {
+			return err
+		}
+		defer logs.Close()
+
+		c.WriteStream(logs)
+		return nil
 	case rest.WatchVerb:
 		// watch 需要特殊处理 chunk
-		watch, err := h.handler.Watch(c.Request.Context(), c.Namespace, *c.Options.ListOptions)
+		watch, err := h.handler.Watch(ctx, c.Namespace, *c.Options.ListOptions)
 		if err != nil {
 			return err
 		}
@@ -72,6 +94,14 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 			c.WriteChunk(event, firstChunk)
 			firstChunk = false
 		}
+		return nil
+	case rest.ExecVerb:
+		// remotecommand 直接使用透明代理
+		proxy, err := h.handler.Exec(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
+		if err != nil {
+			return err
+		}
+		proxy.ServeHTTP(c.Writer, c.Request)
 		return nil
 	default:
 		// 未实现的功能

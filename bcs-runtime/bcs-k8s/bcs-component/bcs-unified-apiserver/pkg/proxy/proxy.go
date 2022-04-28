@@ -13,16 +13,16 @@
 package proxy
 
 import (
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
-	utilnet "k8s.io/apimachinery/pkg/util/net"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 )
 
 type responder struct{}
@@ -32,54 +32,39 @@ func (r *responder) Error(w http.ResponseWriter, req *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
-func extractIPAddress(serverAddress string) (*url.URL, error) {
+// makeTarget 提取连接地址
+func makeTarget(serverAddress string) (*url.URL, error) {
 	if !strings.HasSuffix(serverAddress, "/") {
 		serverAddress = serverAddress + "/"
 	}
-	ipAddress, err := url.Parse(serverAddress)
+	target, err := url.Parse(serverAddress)
 	if err != nil {
 		return nil, err
 	}
-	return ipAddress, nil
+	return target, nil
 }
 
-// makeUpgradeTransport creates a transport that explicitly bypasses HTTP2 support
-// for proxy connections that must upgrade.
-func makeUpgradeTransport(config *rest.Config, keepalive time.Duration) (proxy.UpgradeRequestRoundTripper, error) {
+// makeUpgradeTransport creates a transport for proxy connections that must upgrade.
+// reference implementation https://github.com/kubernetes/kubectl/blob/master/pkg/proxy/proxy_server.go#L153 and remove tlsConfig
+func makeUpgradeTransport(config *rest.Config) (proxy.UpgradeRequestRoundTripper, error) {
 	transportConfig, err := config.TransportConfig()
 	if err != nil {
 		return nil, err
 	}
-	tlsConfig, err := transport.TLSConfigFor(transportConfig)
-	if err != nil {
-		return nil, err
-	}
-	dialer := &net.Dialer{
-		Timeout:   30 * time.Second,
-		KeepAlive: keepalive,
-	}
-	rt := utilnet.SetOldTransportDefaults(&http.Transport{
-		TLSClientConfig: tlsConfig,
-		Dial: func(network, addr string) (net.Conn, error) {
-			// resolve domain to real apiserver address
-			ipAddress, err := extractIPAddress(config.Host)
-			if err != nil {
-				return nil, err
-			}
-			return dialer.Dial(network, ipAddress.Host)
-		},
-	})
 
+	// 添加 BearerToken 等鉴权
 	upgrader, err := transport.HTTPWrappersForConfig(transportConfig, proxy.MirrorRequest)
 	if err != nil {
 		return nil, err
 	}
-	return proxy.NewUpgradeRequestRoundTripper(rt, upgrader), nil
+
+	// config.Transport is don't matter, only use upgrader
+	return proxy.NewUpgradeRequestRoundTripper(config.Transport, upgrader), nil
 }
 
-// NewProxyHandlerFromConfig creates a new proxy handler for an kube-apiserver
-func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler, error) {
-	target, err := extractIPAddress(config.Host)
+// makeUpgradeAwareHandler creates a new proxy handler for an kube-apiserver
+func makeUpgradeAwareHandler(config *rest.Config) (*proxy.UpgradeAwareHandler, error) {
+	target, err := makeTarget(config.Host)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +72,8 @@ func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler,
 	if err != nil {
 		return nil, err
 	}
-	upgradeTransport, err := makeUpgradeTransport(config, 0)
+
+	upgradeTransport, err := makeUpgradeTransport(config)
 	if err != nil {
 		return nil, err
 	}
@@ -97,4 +83,40 @@ func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler,
 	apiProxy.UseRequestLocation = true
 	apiProxy.AppendLocationPath = true
 	return apiProxy, nil
+}
+
+// ProxyHandler 代理请求
+type ProxyHandler struct {
+	handler *proxy.UpgradeAwareHandler
+	config  *rest.Config
+}
+
+// NewProxyHandler
+func NewProxyHandler(clusterId string) (*ProxyHandler, error) {
+	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
+	if err != nil {
+		return nil, errors.Wrapf(err, "build %s proxy handler", clusterId)
+	}
+
+	proxyHandler, err := makeUpgradeAwareHandler(kubeConf)
+	if err != nil {
+		return nil, errors.Wrapf(err, "build %s proxy handler from config %s", clusterId, kubeConf)
+	}
+
+	handler := &ProxyHandler{
+		config:  kubeConf,
+		handler: proxyHandler,
+	}
+	return handler, nil
+}
+
+// ServeHTTP
+func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// exec 需要 Upgrade
+	if req.Header.Get("X-Stream-Protocol-Version") != "" {
+		h.handler.UpgradeRequired = true
+	}
+
+	// 代理请求处理
+	h.handler.ServeHTTP(w, req)
 }

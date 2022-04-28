@@ -13,6 +13,7 @@
 package rest
 
 import (
+	"io"
 	"net/http"
 	"strings"
 
@@ -82,6 +83,43 @@ func (c *RequestContext) WriteChunk(obj watch.Event, firstChunk bool) {
 	eJsonStr = strings.Replace(eJsonStr, "Object", "object", 1)
 	c.Writer.Write([]byte(eJsonStr))
 	flusher.Flush()
+}
+
+// WriteStream 处理日志流
+func (c *RequestContext) WriteStream(reader io.ReadCloser) {
+	c.Writer.Header().Set("Transfer-Encoding", "chunked")
+	c.Writer.WriteHeader(http.StatusOK)
+
+	if _, err := io.Copy(flushOnWrite(c.Writer), reader); err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// flushOnWrite flush On Write
+func flushOnWrite(w io.Writer) io.Writer {
+	if fw, ok := w.(writeFlusher); ok {
+		return &flushWriter{fw}
+	}
+	return w
+}
+
+type flushWriter struct {
+	w writeFlusher
+}
+
+type writeFlusher interface {
+	Flush()
+	Write([]byte) (int, error)
+}
+
+// Write flush write
+func (fw *flushWriter) Write(p []byte) (int, error) {
+	n, err := fw.w.Write(p)
+	if n > 0 {
+		fw.w.Flush()
+	}
+	return n, err
 }
 
 // AddTypeInformationToObject 自动添加APIVersion, Kind信息
