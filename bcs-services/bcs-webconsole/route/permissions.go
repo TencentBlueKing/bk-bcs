@@ -49,14 +49,8 @@ func PermissionRequired() gin.HandlerFunc {
 
 		c.Set("auth_context", authCtx)
 
-		// 管理员不校验权限
-		if config.G.Base.IsManager(authCtx.Username) {
-			c.Next()
-			return
-		}
-
-		// 管理员凭证, 按项目
-		if config.G.ValidateCred(config.CredentialManager, authCtx.Username, config.ScopeProjectCode, authCtx.ProjectCode) {
+		// 管理员不校验权限, 包含管理员凭证
+		if config.G.IsManager(authCtx.Username, authCtx.ClusterId) {
 			c.Next()
 			return
 		}
