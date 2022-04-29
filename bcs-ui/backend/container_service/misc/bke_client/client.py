@@ -141,7 +141,7 @@ class BCSClusterClient:
         return {
             'server_address': f"{settings.BCS_APIGW_DOMAIN[env_name]}/clusters/{self.cluster_id}",
             'identifier': self.cluster_id,
-            'user_token': settings.BCS_API_GATEWAY_AUTHORIZATION,
+            'user_token': settings.BCS_APIGW_TOKEN,
         }
 
     def make_kubectl_options(self):

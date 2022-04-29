@@ -37,23 +37,42 @@ func GetUserFromCtx(ctx context.Context) string {
 	return username
 }
 
+type AuthUser struct {
+	Username string
+	UserType string
+	ClientID string
+}
+
 // ParseUserFromJWT 通过 jwt token 解析当前用户
-func ParseUserFromJWT(jwtToken string) (string, error) {
+func ParseUserFromJWT(jwtToken string) (*AuthUser, error) {
+	claims, err := parseClaims(jwtToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthUser{
+		Username: claims.UserName,
+		UserType: claims.SubType,
+		ClientID: claims.ClientID,
+	}, nil
+}
+
+func parseClaims(jwtToken string) (*jwt.UserClaimsInfo, error) {
 	// 组装 jwt client
 	jwtOpt, err := getJWTOpt()
 	if err != nil {
-		return "", errorx.NewAuthErr("parse jwt key error", err.Error())
+		return nil, errorx.NewAuthErr("parse jwt key error", err.Error())
 	}
 	jwtClient, err := jwt.NewJWTClient(*jwtOpt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	// 解析token
 	claims, err := jwtClient.JWTDecode(jwtToken)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return claims.UserName, nil
+	return claims, nil
 }
 
 func getJWTOpt() (*jwt.JWTOptions, error) {

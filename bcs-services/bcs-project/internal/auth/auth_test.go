@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package wrapper
+package auth
 
 import (
 	"fmt"
@@ -21,7 +21,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	constant "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 )
@@ -56,6 +55,6 @@ func newJWTToken() string {
 
 func TestParseUsername(t *testing.T) {
 	jwtToken := newJWTToken()
-	username, _ := auth.ParseUserFromJWT(jwtToken)
-	assert.Equal(t, username, adminName)
+	userAuth, _ := ParseUserFromJWT(jwtToken)
+	assert.Equal(t, userAuth.Username, adminName)
 }

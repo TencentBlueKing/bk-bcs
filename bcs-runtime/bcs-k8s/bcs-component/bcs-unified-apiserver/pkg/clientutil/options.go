@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,6 +75,26 @@ func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 	return &listOptions, errReturn
 }
 
+// MakeCreateOptions 组装 Create 参数
+func MakeCreateOptions(q url.Values) (*metav1.CreateOptions, error) {
+	opts := &metav1.CreateOptions{}
+	fieldManager := q.Get("fieldManager")
+	if fieldManager != "" {
+		opts.FieldManager = fieldManager
+	}
+	return opts, nil
+}
+
+// MakeCreateOpMakePatchOptionstions 组装 Patch 参数
+func MakePatchOptions(q url.Values) (*metav1.PatchOptions, error) {
+	opts := &metav1.PatchOptions{}
+	fieldManager := q.Get("fieldManager")
+	if fieldManager != "" {
+		opts.FieldManager = fieldManager
+	}
+	return opts, nil
+}
+
 // GetDeleteOptionsFromReq 从查询参数获取 DeleteOptions
 func GetDeleteOptionsFromReq(req *http.Request) (*metav1.DeleteOptions, error) {
 	// 优先从 body 获取 DeleteOptions
@@ -118,4 +139,69 @@ func GetDeleteOptionsFromReq(req *http.Request) (*metav1.DeleteOptions, error) {
 	}
 
 	return deleteOptions, nil
+}
+
+// MakePodLogOptions 从查询参数获取 PodLogOptions
+func MakePodLogOptions(q url.Values) (*v1.PodLogOptions, error) {
+	options := &v1.PodLogOptions{
+		Container: q.Get("container"),
+	}
+
+	if queryTail := q.Get("tailLines"); queryTail != "" {
+		t, err := strconv.ParseInt(queryTail, 10, 64)
+		if err != nil {
+			return nil, errors.New("cannot parse 'tailLines'")
+		}
+		options.TailLines = &t
+	}
+
+	if limitBytesStr := q.Get("limitBytes"); limitBytesStr != "" {
+		t, err := strconv.ParseInt(limitBytesStr, 10, 64)
+		if err != nil {
+			return nil, errors.New("cannot parse 'limitBytes'")
+		}
+		options.LimitBytes = &t
+	}
+
+	if sinceSecondsStr := q.Get("sinceSeconds"); sinceSecondsStr != "" {
+		t, err := strconv.ParseInt(sinceSecondsStr, 10, 64)
+		if err != nil {
+			return nil, errors.New("cannot parse 'sinceSeconds'")
+		}
+		options.SinceSeconds = &t
+	}
+
+	if followStr := strings.ToLower(q.Get("follow")); followStr != "" {
+		follow, err := strconv.ParseBool(followStr)
+		if err != nil {
+			return nil, errors.New("cannot parse 'follow'")
+		}
+		options.Follow = follow
+	}
+
+	if InsecureSkipTLSVerifyBackendStr := strings.ToLower(q.Get("insecureSkipTLSVerifyBackend")); InsecureSkipTLSVerifyBackendStr != "" {
+		InsecureSkipTLSVerifyBackend, err := strconv.ParseBool(InsecureSkipTLSVerifyBackendStr)
+		if err != nil {
+			return nil, errors.New("cannot parse 'insecureSkipTLSVerifyBackend'")
+		}
+		options.InsecureSkipTLSVerifyBackend = InsecureSkipTLSVerifyBackend
+	}
+
+	if previousStr := strings.ToLower(q.Get("previous")); previousStr != "" {
+		previous, err := strconv.ParseBool(previousStr)
+		if err != nil {
+			return nil, errors.New("cannot parse 'previous'")
+		}
+		options.Previous = previous
+	}
+
+	if timestampsStr := strings.ToLower(q.Get("timestamps")); timestampsStr != "" {
+		timestamps, err := strconv.ParseBool(timestampsStr)
+		if err != nil {
+			return nil, errors.New("cannot parse 'previous'")
+		}
+		options.Timestamps = timestamps
+	}
+
+	return options, nil
 }

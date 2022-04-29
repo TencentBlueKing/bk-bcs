@@ -63,7 +63,7 @@ local attr_schema = {
     type = "object",
     properties = {
         gateway_token = {type = "string", description = "gateway token for access clustermanager via apisix"},
-        sync_cluster_credential_interval = {type = "integer", default = 60, description = "time interval for syncing cluster credential (s)"},
+        sync_cluster_credential_interval = {type = "integer", default = 10, description = "time interval for syncing cluster credential (s)"},
         gateway_insecure_port = {type = "integer", default = 8000, description = "apisix gateway insecure port"},
         cm_timeout = {description = "timeout seconds for request to clustermanager module", type = "number", minimum = 1, maxnum = 10, default = 10},
         cm_keepalive = {description = "keepalive seconds for request to clustermanager module", type = "number", minimum = 1, maxnum = 60, default = 60},
@@ -198,16 +198,24 @@ local function periodly_sync_cluster_credentials_in_master()
             type = "roundrobin",
             scheme = "https",
         }
+        if cluster_credential["clientCert"] and cluster_credential["clientKey"] then
+            upstream["tls"] = {
+                client_cert = cluster_credential["clientCert"], 
+                client_key = cluster_credential["clientKey"],
+            }
+        end
         local upstream_nodes = {}
         local addresses = stringx.split(cluster_credential["serverAddress"], ",")
         for i, address in ipairs(addresses) do
             local splited = stringx.split(address, "://")
+            local scheme = "https"
             if #splited ~= 2 then
                 upstream_nodes[i] = {
                     host = address,
                     weight = 100,
                 }
             else
+                scheme = splited[1]
                 upstream_nodes[i] = {
                     host = splited[2],
                     weight = 100,
@@ -217,7 +225,13 @@ local function periodly_sync_cluster_credentials_in_master()
             local host, port = core.utils.parse_addr(upstream_nodes[i].host)
             upstream_nodes[i].host = host
             if not port then
-                upstream_nodes[i].port = 443
+                if scheme == "http" then
+                    core.log.warn("apiserver port auto-derived as 80 with scheme http")
+                    upstream_nodes[i].port = 80
+                else
+                    core.log.warn("apiserver port auto-derived as 443 with scheme "..scheme)
+                    upstream_nodes[i].port = 443
+                end
             else
                 upstream_nodes[i].port = port
             end
@@ -312,7 +326,9 @@ end
 -- proxy to apiserver directly
 local function traffic_to_cluster_apiserver(conf, ctx, cluster_credential, upstream_uri)
     ctx.var.upstream_uri = "/" .. upstream_uri
-    core.request.set_header(ctx, "Authorization", "Bearer " .. cluster_credential["user_token"])
+    if cluster_credential["user_token"] then
+        core.request.set_header(ctx, "Authorization", "Bearer " .. cluster_credential["user_token"])
+    end
     cluster_credential["upstream"]["timeout"] = conf.timeout
     return set_upstream(cluster_credential["upstream"], ctx)
 end

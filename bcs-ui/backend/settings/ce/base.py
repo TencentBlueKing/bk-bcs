@@ -281,9 +281,6 @@ BCS_APP_ID = 1
 BCS_APP_CODE = APP_CODE
 BCS_APP_SECRET = SECRET_KEY
 
-# 是否支持使用 Mesos 服务
-SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
-
 # REPO 相关配置
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
 BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')

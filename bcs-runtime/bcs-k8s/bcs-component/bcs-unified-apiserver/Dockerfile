@@ -9,6 +9,6 @@ RUN make tidy build
 
 FROM alpine
 RUN apk --update --no-cache add ca-certificates bash vim
-COPY --from=builder /go/src/bcs-unified-apiserver/bcs-unified-apiserver /bcs-unified-apiserver
+COPY --from=builder /go/src/bcs-unified-apiserver/_output/bcs-unified-apiserver /bcs-unified-apiserver
 ENTRYPOINT ["/bcs-unified-apiserver"]
 CMD []

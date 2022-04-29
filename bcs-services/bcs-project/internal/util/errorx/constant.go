@@ -53,4 +53,8 @@ const (
 	RequestIAMErr = commErr.AdditionErrorCode + 508
 	// RequestIAMErrMsg ...
 	RequestIAMErrMsg = "request iam api error"
+	// NotFoundHeaderUserErr header中没有发现username
+	NotFoundHeaderUserErr = commErr.AdditionErrorCode + 406
+	// NotFoundUserFromHeaderMsg
+	NotFoundHeaderUserErrMsg = "not found username from header"
 )

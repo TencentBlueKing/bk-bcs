@@ -129,9 +129,6 @@ IS_USE_BCS_TLS = True
 K8S_VERSION = os.environ.get('BKAPP_K8S_VERSION')
 MESOS_VERSION = os.environ.get('BKAPP_MESOS_VERSION')
 
-# 是否支持使用 Mesos 服务
-SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
-
 # admin 权限用户
 ADMIN_USERNAME = 'admin'
 # BCS 默认业务
@@ -163,9 +160,8 @@ DEVOPS_CI_API_HOST = os.environ.get('DEVOPS_CI_API_URL')
 DEVOPS_BCS_API_URL = os.environ.get('BKAPP_BCS_UI_API_URL')
 DEVOPS_ARTIFACTORY_HOST = os.environ.get('BKAPP_ARTIFACTORY_ADDR')
 
-# bcs-api-gateway api 配置
-BCS_API_PRE_URL = os.environ.get('BCS_API_GATEWAY_PROD_DOMAIN')
-BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
+# TODO 旧蓝鲸网关地址, 先废弃置空
+BCS_API_PRE_URL = ''
 
 BK_PAAS_HOST = os.environ.get('BK_PAAS_URL', "http://bk-paas.example.com")
 BK_PAAS_INNER_HOST = BK_PAAS_HOST

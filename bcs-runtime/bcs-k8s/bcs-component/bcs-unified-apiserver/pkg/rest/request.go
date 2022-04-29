@@ -19,7 +19,9 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	apirequest "k8s.io/apiserver/pkg/endpoints/request"
 )
@@ -41,9 +43,14 @@ var (
 type Options struct {
 	Verb          Verb
 	AcceptHeader  string
+	PatchType     types.PatchType
 	ListOptions   *metav1.ListOptions
 	DeleteOptions *metav1.DeleteOptions
 	GetOptions    *metav1.GetOptions
+	CreateOptions *metav1.CreateOptions
+	UpdateOptions *metav1.UpdateOptions
+	PatchOptions  *metav1.PatchOptions
+	PodLogOptions *v1.PodLogOptions
 }
 
 // RequestContext K8S Rest Request Context
@@ -61,7 +68,7 @@ func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestConte
 		return nil, err
 	}
 
-	options, err := ParseOptions(req, requestInfo.Verb)
+	options, err := ParseOptions(req, requestInfo, requestInfo.Verb)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +83,7 @@ func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestConte
 }
 
 // ParserOptions 解析request头部操作, header等
-func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
+func ParseOptions(req *http.Request, reqInfo *apirequest.RequestInfo, rawVerb string) (*Options, error) {
 	options := new(Options)
 
 	// 解析参数
@@ -90,12 +97,35 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 	case "get":
 		// Get 没有参数可解析
 		options.GetOptions = &metav1.GetOptions{}
+		if reqInfo.Subresource == "log" {
+			podLogOptions, err := clientutil.MakePodLogOptions(req.URL.Query())
+			if err != nil {
+				return nil, err
+			}
+			options.PodLogOptions = podLogOptions
+		}
 	case "delete":
 		deleteOptions, err := clientutil.GetDeleteOptionsFromReq(req)
 		if err != nil {
 			return nil, err
 		}
 		options.DeleteOptions = deleteOptions
+	case "create":
+		createOptions, err := clientutil.MakeCreateOptions(req.URL.Query())
+		if err != nil {
+			return nil, err
+		}
+		options.CreateOptions = createOptions
+	case "update":
+		options.UpdateOptions = &metav1.UpdateOptions{}
+	case "patch":
+		patchOptions, err := clientutil.MakePatchOptions(req.URL.Query())
+		if err != nil {
+			return nil, err
+		}
+		options.PatchOptions = patchOptions
+		// PatchType 从头部获取
+		options.PatchType = types.PatchType(req.Header.Get("Content-Type"))
 	}
 
 	acceptHeader := req.Header.Get("Accept")
@@ -112,9 +142,9 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 			options.Verb = ListVerb
 		}
 	case "get":
-		// Get 没有参数可解析
-		options.GetOptions = &metav1.GetOptions{}
-		if options.AcceptHeader != "" {
+		if reqInfo.Subresource == "log" {
+			options.Verb = GetLogsVerb
+		} else if options.AcceptHeader != "" {
 			options.Verb = GetAsTableVerb
 		} else {
 			options.Verb = GetVerb
@@ -123,6 +153,18 @@ func ParseOptions(req *http.Request, rawVerb string) (*Options, error) {
 		options.Verb = WatchVerb
 	case "delete":
 		options.Verb = DeleteVerb
+	case "create":
+		if reqInfo.Subresource == "exec" {
+			options.GetOptions = &metav1.GetOptions{}
+			options.Verb = ExecVerb
+		} else {
+			options.Verb = CreateVerb
+		}
+	case "update":
+		options.Verb = UpdateVerb
+	// clusternet patch 有问题, 先过滤
+	// case "patch":
+	// 	options.Verb = PatchVerb
 	default:
 		return nil, ErrNotImplemented
 	}

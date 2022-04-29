@@ -379,7 +379,7 @@ def get_pod_memory_usage_range(cluster_id, namespace, pod_name_list, start, end,
     pod_name_list = "|".join(pod_name_list)
 
     porm_query = f"""
-        sum by (pod_name) (container_memory_rss{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{ pod_name_list }",
+        sum by (pod_name) (container_memory_working_set_bytes{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{ pod_name_list }",
         container_name!="", container_name!="POD"}})
         """  # noqa
     resp = query_range(porm_query, start, end, step)
@@ -416,13 +416,13 @@ def get_pod_network_transmit(cluster_id, namespace, pod_name_list, start, end, b
 
 def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_name, start, end, bk_biz_id=None):
     """获取CPU总使用率
-    start, end单位为毫秒，和数据平台保持一致
+    start, end单位为毫秒, 和数据平台保持一致
     """
     step = (end - start) // 60
 
     prom_query = f"""
         sum by(container_name) (rate(container_cpu_usage_seconds_total{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true""}}[2m])) * 100
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}}[2m])) * 100
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)
@@ -436,7 +436,7 @@ def get_container_cpu_limit(cluster_id, namespace, pod_name, container_name, bk_
 
     prom_query = f"""
         max by(container_name) (container_spec_cpu_quota{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true""}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query(prom_query)
@@ -450,8 +450,8 @@ def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_
     step = (end - start) // 60
 
     prom_query = f"""
-        sum by(container_name) (container_memory_rss{{cluster_id="{cluster_id}", namespace=~"{ namespace }",pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true""}})
+        sum by(container_name) (container_memory_working_set_bytes{{cluster_id="{cluster_id}", namespace=~"{ namespace }",pod_name=~"{pod_name}",
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)
@@ -465,7 +465,7 @@ def get_container_memory_limit(cluster_id, namespace, pod_name, container_name, 
 
     prom_query = f"""
         max by(container_name) (container_spec_memory_limit_bytes{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true""}}) > 0
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}}) > 0
         """  # noqa
 
     resp = query(prom_query)
