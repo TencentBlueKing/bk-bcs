@@ -17,12 +17,8 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.dashboard.examples.serializers import FetchResourceDemoManifestSLZ
-from backend.dashboard.examples.utils import (
-    get_example_lang_from_cookie,
-    load_demo_manifest,
-    load_resource_references,
-    load_resource_template,
-)
+from backend.dashboard.examples.utils import load_demo_manifest, load_resource_references, load_resource_template
+from backend.utils.i18n import get_lang_from_cookies
 
 
 class TemplateViewSet(SystemViewSet):
@@ -32,7 +28,7 @@ class TemplateViewSet(SystemViewSet):
     def manifests(self, request, project_id, cluster_id):
         """指定资源类型的 Demo 配置信息"""
         params = self.params_validate(FetchResourceDemoManifestSLZ)
-        lang = get_example_lang_from_cookie(request)
+        lang = get_lang_from_cookies(request.COOKIES)
         config = load_resource_template(lang, params['kind'])
         config['references'] = load_resource_references(lang, params['kind'])
         for t in config['items']:

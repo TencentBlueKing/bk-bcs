@@ -16,19 +16,15 @@ import json
 from typing import Dict
 
 import yaml
-from django.conf import settings
 from django.utils.crypto import get_random_string
-from django.utils.translation import ugettext_lazy as _
 
 from backend.dashboard.examples.constants import (
     DEMO_RESOURCE_MANIFEST_DIR,
     EXAMPLE_CONFIG_DIR,
-    EXAMPLE_LANG_MAP,
     RANDOM_SUFFIX_LENGTH,
     RESOURCE_REFERENCES_DIR,
     SUFFIX_ALLOWED_CHARS,
 )
-from backend.dashboard.exceptions import LanguageForExampleUnsupported
 
 
 def load_resource_template(lang: str, kind: str) -> Dict:
@@ -52,11 +48,3 @@ def load_demo_manifest(file_path: str) -> Dict:
     random_suffix = get_random_string(length=RANDOM_SUFFIX_LENGTH, allowed_chars=SUFFIX_ALLOWED_CHARS)
     manifest['metadata']['name'] = f"{manifest['metadata']['name']}-{random_suffix}"
     return manifest
-
-
-def get_example_lang_from_cookie(request) -> str:
-    """从 Cookie 获取示例文件/配置语言版本"""
-    bk_lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, 'zh-CN').lower()
-    if bk_lang not in EXAMPLE_LANG_MAP:
-        raise LanguageForExampleUnsupported(_('语言版本 {} 不受支持').format(bk_lang))
-    return EXAMPLE_LANG_MAP[bk_lang]
