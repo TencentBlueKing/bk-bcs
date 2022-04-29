@@ -2199,7 +2199,7 @@ export default {
         "The API key is bound to the personal account, and the permissions control of the Blue Whale Permissions Center can be used. Click {0} to view and set your API key permissions"
     ],
     "{num}天": [
-        "{num} God"
+        "{num} Day"
     ],
     "当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}": [
         "The current cluster has added nodes (including MASTER) {nodes}, and the number of nodes can also be added {remainNodes}"
@@ -2229,7 +2229,7 @@ export default {
         "Container management platform"
     ],
     "需要申请的权限": [
-        "Power that needs to be applied"
+        "Permission required to apply"
     ],
     "关联的资源实例": [
         "Associated resource instance"
