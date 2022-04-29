@@ -37,11 +37,11 @@
                 </div>
             </bk-form-item>
             <bk-form-item :label="$t('选择Master')" property="ipList" error-display-type="normal" required>
-                <bk-button class="mb10" @click="handleShowIpSelector">
+                <bk-button @click="handleShowIpSelector">
                     <i class="bcs-icon bcs-icon-plus" style="position: relative;top: -1px;"></i>
                     {{$t('选择服务器')}}
                 </bk-button>
-                <bk-table class="ip-list" :data="basicInfo.ipList" v-if="basicInfo.ipList.length">
+                <bk-table class="ip-list mt10" :data="basicInfo.ipList" v-if="basicInfo.ipList.length">
                     <bk-table-column type="index" :label="$t('序列')" width="60"></bk-table-column>
                     <bk-table-column :label="$t('内网IP')" prop="bk_host_innerip"></bk-table-column>
                     <bk-table-column :label="$t('机房')" prop="idc_name"></bk-table-column>
