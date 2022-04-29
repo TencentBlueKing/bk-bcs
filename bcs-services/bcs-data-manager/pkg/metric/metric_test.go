@@ -26,10 +26,12 @@ import (
 
 func newMonitor() bcsmonitor.ClientInterface {
 	opt := bcsmonitor.BcsMonitorClientOpt{
-		Schema:   "http",
-		Endpoint: "",
-		UserName: "",
-		Password: "",
+		Schema:    "",
+		Endpoint:  "",
+		UserName:  "",
+		Password:  "",
+		AppCode:   "",
+		AppSecret: "",
 	}
 	requester := bcsmonitor.NewRequester()
 	monitorCli := bcsmonitor.NewBcsMonitorClient(opt, requester)
@@ -49,9 +51,10 @@ func Test_GetClusterCPUMetrics(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	_, _, _, _, err := getter.GetClusterCPUMetrics(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, _, _, _, err := getter.GetClusterCPUMetrics(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetClusterCPUMetrics(opts, monitorCli))
+	fmt.Println(getter.GetClusterCPUMetrics(opts, clients))
 }
 
 func Test_GetClusterMemoryMetrics(t *testing.T) {
@@ -64,9 +67,10 @@ func Test_GetClusterMemoryMetrics(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	_, _, _, _, err := getter.GetClusterMemoryMetrics(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, _, _, _, err := getter.GetClusterMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetClusterMemoryMetrics(opts, monitorCli))
+	fmt.Println(getter.GetClusterMemoryMetrics(opts, clients))
 }
 
 func Test_GetClusterNodeCount(t *testing.T) {
@@ -88,9 +92,10 @@ func Test_GetInstanceCount(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	_, err := getter.GetInstanceCount(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, err := getter.GetInstanceCount(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetInstanceCount(opts, monitorCli))
+	fmt.Println(getter.GetInstanceCount(opts, clients))
 	opts2 := &common.JobCommonOpts{
 		ObjectType:  common.ClusterType,
 		ClusterID:   "BCS-K8S-15171",
@@ -99,9 +104,9 @@ func Test_GetInstanceCount(t *testing.T) {
 		Namespace:   "thanos",
 		CurrentTime: time.Time{},
 	}
-	_, err = getter.GetInstanceCount(opts2, monitorCli)
+	_, err = getter.GetInstanceCount(opts2, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetInstanceCount(opts2, monitorCli))
+	fmt.Println(getter.GetInstanceCount(opts2, clients))
 	opts3 := &common.JobCommonOpts{
 		ObjectType:   common.WorkloadType,
 		ClusterID:    "BCS-K8S-15171",
@@ -112,9 +117,9 @@ func Test_GetInstanceCount(t *testing.T) {
 		Name:         "testdeploy",
 		CurrentTime:  time.Time{},
 	}
-	_, err = getter.GetInstanceCount(opts3, monitorCli)
+	_, err = getter.GetInstanceCount(opts3, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetInstanceCount(opts3, monitorCli))
+	fmt.Println(getter.GetInstanceCount(opts3, clients))
 }
 
 func Test_GetNamespaceCPUMetrics(t *testing.T) {
@@ -128,9 +133,10 @@ func Test_GetNamespaceCPUMetrics(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	_, _, _, err := getter.GetNamespaceCPUMetrics(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, _, _, err := getter.GetNamespaceCPUMetrics(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetNamespaceCPUMetrics(opts, monitorCli))
+	fmt.Println(getter.GetNamespaceCPUMetrics(opts, clients))
 }
 
 func Test_GetNamespaceInstanceCount(t *testing.T) {
@@ -144,9 +150,10 @@ func Test_GetNamespaceInstanceCount(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	_, err := getter.GetInstanceCount(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, err := getter.GetInstanceCount(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetInstanceCount(opts, monitorCli))
+	fmt.Println(getter.GetInstanceCount(opts, clients))
 }
 
 func Test_GetNamespaceMemoryMetrics(t *testing.T) {
@@ -160,9 +167,10 @@ func Test_GetNamespaceMemoryMetrics(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	_, _, _, err := getter.GetNamespaceMemoryMetrics(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, _, _, err := getter.GetNamespaceMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetNamespaceMemoryMetrics(opts, monitorCli))
+	fmt.Println(getter.GetNamespaceMemoryMetrics(opts, clients))
 }
 
 func Test_GetNamespaceResourceLimit(t *testing.T) {
@@ -182,9 +190,10 @@ func Test_GetWorkloadCPUMetrics(t *testing.T) {
 		CurrentTime:  time.Time{},
 	}
 	getter := &MetricGetter{}
-	_, _, _, err := getter.GetWorkloadCPUMetrics(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, _, _, err := getter.GetWorkloadCPUMetrics(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetWorkloadCPUMetrics(opts, monitorCli))
+	fmt.Println(getter.GetWorkloadCPUMetrics(opts, clients))
 }
 
 func Test_GetWorkloadMemoryMetrics(t *testing.T) {
@@ -200,10 +209,11 @@ func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 		CurrentTime:  time.Now(),
 	}
 	getter := &MetricGetter{}
-	_, _, _, err := getter.GetWorkloadMemoryMetrics(opts, monitorCli)
+	clients := common.NewClients(monitorCli, nil, nil, nil)
+	_, _, _, err := getter.GetWorkloadMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
-	fmt.Println(getter.GetWorkloadMemoryMetrics(opts, monitorCli))
-	fmt.Println(getter.GetInstanceCount(opts, monitorCli))
+	fmt.Println(getter.GetWorkloadMemoryMetrics(opts, clients))
+	fmt.Println(getter.GetInstanceCount(opts, clients))
 	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.Name)
 	test, err := monitorCli.QueryByPost(fmt.Sprintf("sum(container_spec_memory_limit_bytes{%s})by(pod_name)", podCondition), opts.CurrentTime)
 	fmt.Println(err)

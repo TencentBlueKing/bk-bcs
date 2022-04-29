@@ -38,11 +38,19 @@ var (
 		{
 			Name: common.ProjectTableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: BucketTimeKey, Value: 1},
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: BucketTimeKey, Value: 1},
 			},
 			Unique: true,
+		},
+		{
+			Name: common.ProjectTableName + "_get_idx",
+			Key: bson.D{
+				bson.E{Key: ProjectIDKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
 		},
 		{
 			Key: bson.D{

@@ -21,7 +21,7 @@ import (
 
 var (
 	header        = http.Header{}
-	testOps       = BcsMonitorClientOpt{Schema: "", Endpoint: "", Password: "", UserName: ""}
+	testOps       = BcsMonitorClientOpt{Schema: "", Endpoint: "", Password: "", UserName: "", AppCode: "", AppSecret: ""}
 	testRequester = NewRequester()
 )
 

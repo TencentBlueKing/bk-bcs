@@ -114,6 +114,8 @@ type DataManagerOptions struct {
 	BcsAPIConf     BcsAPIConfig       `json:"bcsApiConf"`
 	Debug          bool               `json:"debug"`
 	FilterRules    ClusterFilterRules `json:"filterRules"`
+	AppCode        string             `json:"appCode"`
+	AppSecret      string             `json:"appSecret"`
 }
 
 // ClusterFilterRules rules for cluster filter

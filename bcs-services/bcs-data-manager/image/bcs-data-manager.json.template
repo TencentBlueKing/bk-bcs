@@ -2,6 +2,8 @@
   "log_dir": "${log_dir}",
   "v": "${bcsDataManagerVerbosity}",
   "alsologtostderr": true,
+  "appCode":"${bcsDataManagerAppCode}",
+  "appSecret":"${bcsDataManagerAppSecret}",
   "bcsApiConf":{
     "bcsApiGatewayUrl": "${bcsApiGatewayUrl}",
     "oldBcsApiGwUrl":"${oldBcsApiGwUrl}",

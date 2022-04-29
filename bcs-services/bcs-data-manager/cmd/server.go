@@ -502,11 +502,14 @@ func (s *Server) initClusterManager() (*cmanager.ClusterManagerClient, error) {
 
 func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
 	realPassword, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsMonitorConf.Password))
+	realAppSecret, _ := encrypt.DesDecryptFromBase([]byte(s.opt.AppSecret))
 	bcsMonitorOpts := bcsmonitor.BcsMonitorClientOpt{
-		Schema:   s.opt.BcsMonitorConf.Schema,
-		Endpoint: s.opt.BcsMonitorConf.BcsMonitorEndpoints,
-		UserName: s.opt.BcsMonitorConf.User,
-		Password: string(realPassword),
+		Schema:    s.opt.BcsMonitorConf.Schema,
+		Endpoint:  s.opt.BcsMonitorConf.BcsMonitorEndpoints,
+		UserName:  s.opt.BcsMonitorConf.User,
+		Password:  string(realPassword),
+		AppCode:   s.opt.AppCode,
+		AppSecret: string(realAppSecret),
 	}
 	bcsMonitorRequester := bcsmonitor.NewRequester()
 	bcsMonitorCli := bcsmonitor.NewBcsMonitorClient(bcsMonitorOpts, bcsMonitorRequester)

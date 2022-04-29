@@ -44,10 +44,12 @@ type BcsMonitorClient struct {
 
 // BcsMonitorClientOpt is the opts
 type BcsMonitorClientOpt struct {
-	Schema   string
-	Endpoint string
-	UserName string // basic auth username
-	Password string // basic auth password
+	Schema    string
+	Endpoint  string
+	UserName  string // basic auth username
+	Password  string // basic auth password
+	AppCode   string
+	AppSecret string
 }
 
 // Requester is the interface to do request
@@ -117,6 +119,7 @@ func (c *BcsMonitorClient) LabelValues(labelName string, selectors []string,
 	if queryString != "" {
 		url = fmt.Sprintf("%s?%s", url, queryString)
 	}
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -147,6 +150,7 @@ func (c *BcsMonitorClient) Labels(selectors []string, startTime, endTime time.Ti
 	if queryString != "" {
 		url = fmt.Sprintf("%s?%s", url, queryString)
 	}
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -169,6 +173,7 @@ func (c *BcsMonitorClient) Query(promql string, time time.Time) (*QueryResponse,
 		queryString = c.setQuery(queryString, "time", fmt.Sprintf("%d", time.Unix()))
 	}
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, QueryPath, queryString)
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -194,6 +199,7 @@ func (c *BcsMonitorClient) QueryByPost(promql string, time time.Time) (*QueryRes
 	url := fmt.Sprintf("%s%s", c.completeEndpoint, QueryPath)
 	header := c.defaultHeader.Clone()
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "POST", header, []byte(queryString))
 	if err != nil {
 		return nil, err
@@ -217,6 +223,7 @@ func (c *BcsMonitorClient) QueryRange(promql string, startTime, endTime time.Tim
 	queryString = c.setQuery(queryString, "end", fmt.Sprintf("%d", endTime.Unix()))
 	queryString = c.setQuery(queryString, "step", step.String())
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, QueryRangePath, queryString)
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -243,6 +250,7 @@ func (c *BcsMonitorClient) QueryRangeByPost(promql string, startTime, endTime ti
 	url := fmt.Sprintf("%s%s", c.completeEndpoint, QueryRangePath)
 	header := c.defaultHeader
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "POST", c.defaultHeader, []byte(queryString))
 	if err != nil {
 		return nil, err
@@ -269,6 +277,7 @@ func (c *BcsMonitorClient) Series(selectors []string, startTime, endTime time.Ti
 		queryString = c.setQuery(queryString, "end", fmt.Sprintf("%d", endTime.Unix()))
 	}
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, SeriesPath, queryString)
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -298,6 +307,7 @@ func (c *BcsMonitorClient) SeriesByPost(selectors []string, startTime, endTime t
 	url := fmt.Sprintf("%s%s", c.completeEndpoint, SeriesPath)
 	header := c.defaultHeader
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
+	url = c.addAppMessage(url)
 	rsp, err := c.requestClient.DoRequest(url, "POST", header, []byte(queryString))
 	if err != nil {
 		return nil, err
@@ -323,4 +333,12 @@ func (c *BcsMonitorClient) setSelectors(queryString string, selectors []string) 
 		queryString = c.setQuery(queryString, "match[]", selector)
 	}
 	return queryString
+}
+
+func (c *BcsMonitorClient) addAppMessage(url string) string {
+	if c.opts.AppCode != "" && c.opts.AppSecret != "" {
+		addStr := fmt.Sprintf("app_code=%s&app_secret=%s", c.opts.AppCode, c.opts.AppSecret)
+		url = fmt.Sprintf("%s?%s", url, addStr)
+	}
+	return url
 }
