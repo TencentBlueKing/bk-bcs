@@ -37,14 +37,14 @@ class FakeKubeConfigurationService:
 
 
 def generate_core_dynamic_client(*args, **kwargs) -> CoreDynamicClient:
-    """ 生成测试用的 DynamicClient """
+    """生成测试用的 DynamicClient"""
     config = FakeKubeConfigurationService().make_configuration()
     discoverer_cache = DiscovererCache(cache_key=f"osrcp-cluster_id.json")
     return CoreDynamicClient(client.ApiClient(config), cache_file=discoverer_cache, discoverer=BcsLazyDiscoverer)
 
 
 def get_dynamic_client(*args, **kwargs) -> CoreDynamicClient:
-    """ 获取测试用的 CoreDynamicClient """
+    """获取测试用的 CoreDynamicClient"""
     if kwargs.get('use_cache'):
         return _get_dynamic_client(*args, **kwargs)
     # 直接生成新的 DynamicClient

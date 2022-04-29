@@ -16,7 +16,7 @@ from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnu
 
 
 class DashboardAction(str, StructuredEnum):
-    """ 资源视图方法对应权限类型 """
+    """资源视图方法对应权限类型"""
 
     View = EnumField('view', label='查看类')
     Create = EnumField('create', label='创建类')

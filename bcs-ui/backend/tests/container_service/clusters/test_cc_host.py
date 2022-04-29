@@ -22,7 +22,7 @@ API_URL_PREFIX = f'/api/projects/{TEST_PROJECT_ID}/cc'
 
 
 def fake_fetch_topo(*args, **kwargs):
-    """ 返回测试用 topo 数据 """
+    """返回测试用 topo 数据"""
     return [
         {
             "default": 0,
@@ -79,7 +79,7 @@ def fake_fetch_topo(*args, **kwargs):
 
 
 def fake_fetch_all_hosts(*args, **kwargs):
-    """ 返回测试用主机数据（省略非必须字段） """
+    """返回测试用主机数据（省略非必须字段）"""
     return [
         # 被使用的
         {
@@ -119,7 +119,7 @@ def fake_fetch_all_hosts(*args, **kwargs):
 
 
 def fake_get_project_cluster_resource(*args, **kwargs):
-    """ 返回测试用的项目，集群数据 """
+    """返回测试用的项目，集群数据"""
     return [
         {
             "cluster_list": [
@@ -138,7 +138,7 @@ def fake_get_project_cluster_resource(*args, **kwargs):
 
 
 def fake_get_all_cluster_hosts(*args, **kwargs):
-    """ 返回测试用的集群节点信息 """
+    """返回测试用的集群节点信息"""
     return [
         {"cluster_id": "BCS-K8S-1001", "inner_ip": "127.0.0.1", "status": "normal"},
         {"cluster_id": "BCS-K8S-1001", "inner_ip": "127.0.0.16", "status": "normal"},
@@ -146,7 +146,7 @@ def fake_get_all_cluster_hosts(*args, **kwargs):
 
 
 def fake_get_agent_status(*args, **kwargs):
-    """ 返回测试用 Agent 状态信息 """
+    """返回测试用 Agent 状态信息"""
     return [
         {"ip": "127.0.0.1", "bk_cloud_id": 0, "bk_agent_alive": 1},
         {"ip": "127.0.0.2", "bk_cloud_id": 0, "bk_agent_alive": 0},
@@ -157,17 +157,17 @@ def fake_get_agent_status(*args, **kwargs):
 
 
 class TestCCAPI:
-    """ 测试 CMDB API 相关接口 """
+    """测试 CMDB API 相关接口"""
 
     @mock.patch('backend.container_service.clusters.cc_host.views.cc.BizTopoQueryService.fetch', new=fake_fetch_topo)
     def test_get_biz_inst_topology(self, api_client):
-        """ 测试创建资源接口 """
+        """测试创建资源接口"""
         response = api_client.get(f'{API_URL_PREFIX}/topology/')
         assert response.json()['code'] == 0
 
     @pytest.fixture()
     def patch_list_hosts_api_call(self):
-        """ mock cmdb, paas_cc, gse 接口 """
+        """mock cmdb, paas_cc, gse 接口"""
         with mock.patch(
             'backend.container_service.clusters.cc_host.views.cc.get_application_name',
             new=lambda *args, **kwargs: 'test-app-name',
@@ -186,7 +186,7 @@ class TestCCAPI:
             yield
 
     def test_list_hosts(self, api_client, patch_list_hosts_api_call):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         params = {'limit': 4, 'offset': 0, 'ip_list': [], 'set_id': 5001, 'module_id': 5003}
         response = api_client.post(f'{API_URL_PREFIX}/hosts/', data=params)
         assert response.json()['code'] == 0
@@ -197,7 +197,7 @@ class TestCCAPI:
         assert resp_data['results'][-1]['cluster_id'] == 'BCS-K8S-1001'
 
     def test_list_hosts_with_fuzzy_ip_match(self, api_client, patch_list_hosts_api_call):
-        """ 测试按 ip 过滤（模糊）"""
+        """测试按 ip 过滤（模糊）"""
         # 匹配 127.0.0.1， 127.0.0.16
         params = {'limit': 10, 'offset': 0, 'ip_list': ['127.0.0.1'], 'fuzzy': True}
         response = api_client.post(f'{API_URL_PREFIX}/hosts/', data=params)
@@ -207,7 +207,7 @@ class TestCCAPI:
         assert set([h['bk_host_innerip'] for h in resp_data['results']]) == {'127.0.0.1', '127.0.0.16'}
 
     def test_list_hosts_with_ip_match(self, api_client, patch_list_hosts_api_call):
-        """ 测试按 ip 过滤（精确）"""
+        """测试按 ip 过滤（精确）"""
         params = {'limit': 10, 'offset': 0, 'ip_list': ['127.0.0.1', '127.0.0.2']}
         response = api_client.post(f'{API_URL_PREFIX}/hosts/', data=params)
         assert response.json()['code'] == 0

@@ -29,7 +29,7 @@ def daemonset_configs():
 
 class TestDaemonsetFormatter:
     def test_format_dict(self, daemonset_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = DaemonSetFormatter().format_dict(daemonset_configs['normal'])
         assert set(result.keys()) == {'images', 'age', 'createTime', 'updateTime'}
         assert result['images'] == ['k8s.gcr.io/kube-proxy:v1.20.2']

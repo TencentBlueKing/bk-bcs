@@ -21,7 +21,7 @@ from backend.resources.namespace.client import Namespace
 
 
 class NamespaceViewSet(SystemViewSet):
-    """ Namespace 相关接口 """
+    """Namespace 相关接口"""
 
     def list(self, request, project_id, cluster_id):
         client = Namespace(request.ctx_cluster)

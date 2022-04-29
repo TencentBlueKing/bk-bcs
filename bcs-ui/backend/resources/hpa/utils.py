@@ -36,7 +36,7 @@ class HPAMetricsParser:
         self.metrics = []
 
     def parse(self) -> str:
-        """ 获取 HPA Metrics 信息 """
+        """获取 HPA Metrics 信息"""
         if not self.specs:
             return '<none>'
 
@@ -60,7 +60,7 @@ class HPAMetricsParser:
         return ', '.join(self.metrics)
 
     def _parse_external_metric(self, idx: int, spec: Dict) -> str:
-        """ 解析来源自 External 的指标信息 """
+        """解析来源自 External 的指标信息"""
         current = '<unknown>'
         if getitems(spec, 'external.target.averageValue') is not None:
             if len(self.statuses) > idx:
@@ -74,14 +74,14 @@ class HPAMetricsParser:
             return f"{current}/{getitems(spec, 'external.target.value')}"
 
     def _parse_pods_metric(self, idx: int, spec: Dict) -> str:
-        """ 解析来源自 Pods 的指标信息 """
+        """解析来源自 Pods 的指标信息"""
         current = '<unknown>'
         if len(self.statuses) > idx and self.statuses[idx].get('pods') is not None:
             current = getitems(self.statuses[idx], 'pods.current.averageValue')
         return f"{current}/{getitems(spec, 'pods.target.averageValue')}"
 
     def _parse_object_metric(self, idx: int, spec: Dict) -> str:
-        """ 解析来源自 Object 的指标信息 """
+        """解析来源自 Object 的指标信息"""
         current = '<unknown>'
         if getitems(spec, 'object.target.averageValue') is not None:
             if len(self.statuses) > idx:
@@ -95,7 +95,7 @@ class HPAMetricsParser:
             return f"{current}/{getitems(spec, 'object.target.value')}"
 
     def _parse_resource_metric(self, idx: int, spec: Dict) -> str:
-        """ 解析来源自 Resource 的指标信息 """
+        """解析来源自 Resource 的指标信息"""
         current = '<unknown>'
         if getitems(spec, 'resource.target.averageValue') is not None:
             if len(self.statuses) > idx:
@@ -113,7 +113,7 @@ class HPAMetricsParser:
             return f'{current}/{target}'
 
     def _parse_container_resource_metric(self, idx: int, spec: Dict) -> str:
-        """ 解析来源自 ContainerResource 的指标信息 """
+        """解析来源自 ContainerResource 的指标信息"""
         current = '<unknown>'
         if getitems(spec, 'containerResource.target.averageValue') is not None:
             if len(self.statuses) > idx:

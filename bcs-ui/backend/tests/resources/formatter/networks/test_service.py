@@ -29,7 +29,7 @@ def service_configs():
 
 class TestServiceFormatter:
     def test_format_dict(self, service_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = ServiceFormatter().format_dict(service_configs['normal'])
         assert set(result.keys()) == {'externalIP', 'ports', 'age', 'createTime', 'updateTime'}
         assert result['externalIP'] == ['127.xxx.xxx.xx9', 'localhost']

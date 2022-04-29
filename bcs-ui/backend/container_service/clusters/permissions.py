@@ -19,7 +19,7 @@ from backend.container_service.clusters.constants import ClusterType
 
 
 class AccessClusterPermission(BasePermission):
-    """ 拦截所有共享集群相关的请求 """
+    """拦截所有共享集群相关的请求"""
 
     message = '当前请求的 API 在共享集群中不可用'
 
@@ -29,7 +29,7 @@ class AccessClusterPermission(BasePermission):
 
 
 class AccessClusterPermMixin:
-    """ 集群接口访问权限控制 """
+    """集群接口访问权限控制"""
 
     def get_permissions(self):
         # 禁用共享集群相关请求

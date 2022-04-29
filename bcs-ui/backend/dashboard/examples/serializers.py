@@ -19,6 +19,6 @@ from backend.dashboard.examples.constants import RES_KIND_WITH_DEMO_MANIFEST
 
 
 class FetchResourceDemoManifestSLZ(serializers.Serializer):
-    """ 获取指定资源配置模版 """
+    """获取指定资源配置模版"""
 
     kind = serializers.ChoiceField(label=_('资源类型'), choices=RES_KIND_WITH_DEMO_MANIFEST)

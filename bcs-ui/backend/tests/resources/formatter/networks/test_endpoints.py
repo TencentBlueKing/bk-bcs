@@ -29,7 +29,7 @@ def endpoints_configs():
 
 class TestEndpointsFormatter:
     def test_format_dict(self, endpoints_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = EndpointsFormatter().format_dict(endpoints_configs['normal'])
         assert set(result.keys()) == {'endpoints', 'age', 'createTime', 'updateTime'}
         assert result['endpoints'] == [
