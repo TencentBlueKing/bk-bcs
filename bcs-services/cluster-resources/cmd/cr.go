@@ -32,7 +32,7 @@ import (
 
 var (
 	showVersion  = flag.Bool("version", false, "show version info only")
-	checkService = flag.Bool("checkService", false, "check dependency service status (redis, clusterManger...)")
+	checkService = flag.Bool("checkService", false, "check dependency service status (redis, clusterManager...)")
 	confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
 )
 
