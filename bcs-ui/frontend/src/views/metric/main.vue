@@ -187,7 +187,7 @@
                                 </template>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('操作')" prop="permissions" width="190">
+                        <bk-table-column :label="$t('操作')" prop="permissions" width="200">
                             <template slot-scope="{ row }">
                                 <div class="act">
                                     <div v-bk-tooltips.left="{

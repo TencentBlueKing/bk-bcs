@@ -65,7 +65,6 @@
   },
   "dependencies": {
     "@blueking/paas-login": "0.0.10",
-    "@icon-cool/bk-icon-bk-bcs": "0.0.5",
     "@vue/composition-api": "1.1.5",
     "axios": "~0.19.0",
     "base-64": "^0.1.0",

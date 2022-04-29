@@ -55,6 +55,7 @@ const childRoutes = [
         name: 'createFormCluster',
         component: CreateFormCluster,
         meta: {
+            menuId: 'CLUSTER',
             title: window.i18n.t('自建集群')
         }
     },
@@ -64,6 +65,7 @@ const childRoutes = [
         name: 'createFormClusterEE',
         component: CreateFormClusterEE,
         meta: {
+            menuId: 'CLUSTER',
             title: window.i18n.t('自建集群')
         }
     },
@@ -73,6 +75,7 @@ const childRoutes = [
         name: 'createImportCluster',
         component: CreateImportCluster,
         meta: {
+            menuId: 'CLUSTER',
             title: window.i18n.t('导入集群')
         }
     },

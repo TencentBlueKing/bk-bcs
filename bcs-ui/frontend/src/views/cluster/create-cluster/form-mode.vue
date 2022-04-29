@@ -1,5 +1,5 @@
 <template>
-    <bk-form :label-width="100" :model="formData" :rules="rules" ref="formMode">
+    <bk-form :label-width="labelWidth" :model="formData" :rules="rules" ref="formMode">
         <bk-form-item :label="$t('版本')" property="version" error-display-type="normal" required>
             <bcs-select v-model="formData.clusterBasicSettings.version" searchable :clearable="false">
                 <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
@@ -119,6 +119,10 @@
             environment: {
                 type: String,
                 default: ''
+            },
+            labelWidth: {
+                type: Number,
+                default: 100
             }
         },
         setup (props, ctx) {
