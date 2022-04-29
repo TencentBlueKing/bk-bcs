@@ -27,13 +27,13 @@ from backend.dashboard.examples.constants import (
 )
 
 
-def load_resource_template(lang: str, kind: str) -> Dict:
+def load_resource_template(kind: str, lang: str) -> Dict:
     """获取指定 资源类型模版 信息"""
     with open(f'{EXAMPLE_CONFIG_DIR}/{lang}/{kind}.json') as fr:
         return json.loads(fr.read())
 
 
-def load_resource_references(lang: str, kind: str) -> str:
+def load_resource_references(kind: str, lang: str) -> str:
     """获取指定 资源类型参考资料"""
     with open(f'{RESOURCE_REFERENCES_DIR}/{lang}/{kind}.md') as fr:
         return fr.read()

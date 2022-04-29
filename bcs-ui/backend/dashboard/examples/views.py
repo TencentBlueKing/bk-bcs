@@ -29,8 +29,8 @@ class TemplateViewSet(SystemViewSet):
         """指定资源类型的 Demo 配置信息"""
         params = self.params_validate(FetchResourceDemoManifestSLZ)
         lang = get_lang_from_cookies(request.COOKIES)
-        config = load_resource_template(lang, params['kind'])
-        config['references'] = load_resource_references(lang, params['kind'])
+        config = load_resource_template(params['kind'], lang)
+        config['references'] = load_resource_references(params['kind'], lang)
         for t in config['items']:
             t['manifest'] = load_demo_manifest(f"{config['class']}/{t['name']}")
         return Response(config)
