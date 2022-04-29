@@ -2277,7 +2277,7 @@ export default {
         "The host application is successfully submitted"
     ],
     "云服务商": [
-        "Cloud service provider"
+        "Cloud Provider"
     ],
     "附加参数": [
         "Additional parameter"
@@ -2778,5 +2778,7 @@ export default {
     ],
     "复制示例成功": [
         "Copy example success"
-    ]
+    ],
+    "导入方式": ['Import Type'],
+    'kubeconfig可用性测试': ['kubeconfig usability testing']
 }
