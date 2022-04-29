@@ -23,7 +23,7 @@ pytestmark = pytest.mark.django_db
 
 
 class TestConfigMap:
-    """ 测试 ConfigMap 相关接口 """
+    """测试 ConfigMap 相关接口"""
 
     manifest = load_demo_manifest('configs/simple_configmap')
     create_url = f'{DAU_PREFIX}/configs/configmaps/'
@@ -31,30 +31,30 @@ class TestConfigMap:
     inst_url = f"{list_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
-        """ 测试创建资源接口 """
+        """测试创建资源接口"""
         response = api_client.post(self.create_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_list(self, api_client):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(self.list_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'ConfigMapList'
 
     def test_update(self, api_client):
-        """ 测试更新资源接口 """
+        """测试更新资源接口"""
         self.manifest['data']['t_key'] = 't_val'
         response = api_client.put(self.inst_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client):
-        """ 测试获取单个资源接口 """
+        """测试获取单个资源接口"""
         response = api_client.get(self.inst_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'ConfigMap'
         assert getitems(response.data, 'manifest.data.t_key') == 't_val'
 
     def test_destroy(self, api_client):
-        """ 测试删除单个资源 """
+        """测试删除单个资源"""
         response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0

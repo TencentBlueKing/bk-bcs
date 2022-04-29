@@ -23,12 +23,12 @@ pytestmark = pytest.mark.django_db
 
 
 class TestCRD:
-    """ 测试 CRD 相关接口 """
+    """测试 CRD 相关接口"""
 
     crd_name = getitems(crd_manifest, 'metadata.name')
 
     def test_list(self, api_client, project_id, cluster_id):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/crds/v2/')
         assert response.json()['code'] == 0
         response_data = response.json()['data']
@@ -36,7 +36,7 @@ class TestCRD:
         assert self.crd_name in crds
 
     def test_retrieve(self, api_client, project_id, cluster_id):
-        """ 测试获取单个资源接口 """
+        """测试获取单个资源接口"""
         response = api_client.get(
             f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/crds/v2/{self.crd_name}/'
         )  # noqa
@@ -44,6 +44,6 @@ class TestCRD:
         assert self.crd_name == getitems(response.json()['data'], 'manifest.metadata.name')
 
     def test_list_shared_cluster_crd(self, api_client, project_id):
-        """ 获取共享集群 CRD，预期是被拦截（PermissionDenied） """
+        """获取共享集群 CRD，预期是被拦截（PermissionDenied）"""
         url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/crds/v2/'
         assert api_client.get(url).json()['code'] == 400

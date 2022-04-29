@@ -29,7 +29,7 @@ def cronjob_configs():
 
 class TestCronjobFormatter:
     def test_format_dict(self, cronjob_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = CronJobFormatter().format_dict(cronjob_configs['normal'])
         assert set(result.keys()) == {'active', 'lastSchedule', 'images', 'age', 'createTime', 'updateTime'}
         assert result['images'] == ['busybox']

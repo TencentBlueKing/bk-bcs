@@ -25,7 +25,7 @@ from backend.utils.renderers import BKAPIRenderer
 
 
 class FakeUserAuth(BaseAuthentication):
-    """ 假的用户身份认证类，单元测试用 """
+    """假的用户身份认证类，单元测试用"""
 
     def authenticate(self, request):
         class APIUserToken:
@@ -45,7 +45,7 @@ class FakeUserAuth(BaseAuthentication):
 
 
 class FakeProjectEnableBCS(BasePermission):
-    """ 假的权限控制类，单元测试用 """
+    """假的权限控制类，单元测试用"""
 
     def has_permission(self, request, view):
         project_id = view.kwargs.get('project_id', '') or view.kwargs.get('project_id_or_code', '')
@@ -123,7 +123,7 @@ class SimpleGenericMixin:
 
 
 class FakeSystemViewSet(SimpleGenericMixin, viewsets.ViewSet):
-    """ 假的基类 ViewSet，单元测试用 """
+    """假的基类 ViewSet，单元测试用"""
 
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
     # 替换掉原来的 认证 / 权限控制类
@@ -132,7 +132,7 @@ class FakeSystemViewSet(SimpleGenericMixin, viewsets.ViewSet):
 
 
 class FakeUserViewSet(FakeSystemViewSet):
-    """ 假的用户基类 ViewSet，单元测试用 """
+    """假的用户基类 ViewSet，单元测试用"""
 
     renderer_classes = (BKAPIRenderer,)
     authentication_classes = tuple()

@@ -22,7 +22,7 @@ from .models import Token, make_random_key
 
 
 class TokenSLZ(serializers.ModelSerializer):
-    """ 新增/查询/删除 三种操作 """
+    """新增/查询/删除 三种操作"""
 
     user = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
     username = serializers.CharField(read_only=True)
@@ -59,12 +59,12 @@ class TokenSLZ(serializers.ModelSerializer):
 
 
 class TokenUpdateSLZ(serializers.ModelSerializer):
-    """ 仅用于更新 token """
+    """仅用于更新 token"""
 
     user = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
 
     def update(self, instance, validated_data):
-        """ 更新key """
+        """更新key"""
         if instance.key != validated_data["key"]:
             raise PermissionDenied(_("输入的key与当前key不匹配"))
 

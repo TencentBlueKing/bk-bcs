@@ -22,13 +22,13 @@ pytestmark = pytest.mark.django_db
 
 
 class TestResourceExample:
-    """ 测试 资源模版 相关接口 """
+    """测试 资源模版 相关接口"""
 
     common_prefix = f'/api/dashboard/projects/{TEST_PROJECT_ID}/clusters/{TEST_CLUSTER_ID}/examples'
 
     @pytest.mark.parametrize('resource_kind', RES_KIND_WITH_DEMO_MANIFEST)
     def test_fetch_demo_manifest(self, resource_kind, api_client):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(f'{self.common_prefix}/manifests/?kind={resource_kind}')
         assert resource_kind == getitems(response.json(), 'data.kind')
         assert response.json()['code'] == 0
