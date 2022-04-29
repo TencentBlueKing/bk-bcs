@@ -17,18 +17,24 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.dashboard.examples.serializers import FetchResourceDemoManifestSLZ
-from backend.dashboard.examples.utils import load_demo_manifest, load_resource_references, load_resource_template
+from backend.dashboard.examples.utils import (
+    get_example_lang_from_cookie,
+    load_demo_manifest,
+    load_resource_references,
+    load_resource_template,
+)
 
 
 class TemplateViewSet(SystemViewSet):
-    """ 模板相关接口 """
+    """模板相关接口"""
 
     @action(methods=['GET'], url_path='manifests', detail=False)
     def manifests(self, request, project_id, cluster_id):
-        """ 指定资源类型的 Demo 配置信息 """
+        """指定资源类型的 Demo 配置信息"""
         params = self.params_validate(FetchResourceDemoManifestSLZ)
-        config = load_resource_template(params['kind'])
-        config['references'] = load_resource_references(params['kind'])
+        lang = get_example_lang_from_cookie(request)
+        config = load_resource_template(lang, params['kind'])
+        config['references'] = load_resource_references(lang, params['kind'])
         for t in config['items']:
             t['manifest'] = load_demo_manifest(f"{config['class']}/{t['name']}")
         return Response(config)

@@ -30,6 +30,16 @@ RANDOM_SUFFIX_LENGTH = 8
 # 后缀可选字符集（小写 + 数字）
 SUFFIX_ALLOWED_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
+# 示例配置支持的语言映射
+EXAMPLE_LANG_MAP = {
+    'zh': 'zh',
+    'zh-cn': 'zh',
+    'zh-hans': 'zh',
+    'zh-hant': 'zh',
+    'en': 'en',
+    'en-us': 'en',
+}
+
 RES_KIND_WITH_DEMO_MANIFEST = [
     # workload
     K8sResourceKind.Deployment.value,

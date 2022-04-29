@@ -1,0 +1,13 @@
+{
+  "kind": "PersistentVolume",
+  "class": "storages",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_persistent_volume",
+      "alias": "PersistentVolume Simple Demo",
+      "description": "A simple persistentVolume demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}
