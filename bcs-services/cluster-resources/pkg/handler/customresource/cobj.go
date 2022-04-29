@@ -46,7 +46,7 @@ func (h *Handler) ListCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildListAPIResp(
-		ctx, req.ClusterID, kind, apiVersion, req.Namespace, metav1.ListOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.Format, metav1.ListOptions{},
 	)
 	return err
 }

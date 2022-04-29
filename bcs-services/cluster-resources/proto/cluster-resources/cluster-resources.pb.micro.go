@@ -192,6 +192,78 @@ func (h *basicHandler) Version(ctx context.Context, in *VersionReq, out *Version
 	return h.BasicHandler.Version(ctx, in, out)
 }
 
+// Api Endpoints for Node service
+
+func NewNodeEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "Node.ListNode",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Node service
+
+type NodeService interface {
+	ListNode(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
+}
+
+type nodeService struct {
+	c    client.Client
+	name string
+}
+
+func NewNodeService(name string, c client.Client) NodeService {
+	return &nodeService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *nodeService) ListNode(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Node.ListNode", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Node service
+
+type NodeHandler interface {
+	ListNode(context.Context, *ResListReq, *CommonResp) error
+}
+
+func RegisterNodeHandler(s server.Server, hdlr NodeHandler, opts ...server.HandlerOption) error {
+	type node interface {
+		ListNode(ctx context.Context, in *ResListReq, out *CommonResp) error
+	}
+	type Node struct {
+		node
+	}
+	h := &nodeHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Node.ListNode",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Node{h}, opts...))
+}
+
+type nodeHandler struct {
+	NodeHandler
+}
+
+func (h *nodeHandler) ListNode(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.NodeHandler.ListNode(ctx, in, out)
+}
+
 // Api Endpoints for Namespace service
 
 func NewNamespaceEndpoints() []*api.Endpoint {
