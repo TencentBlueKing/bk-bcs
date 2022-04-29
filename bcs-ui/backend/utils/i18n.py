@@ -12,11 +12,23 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.dashboard.viewsets import NamespaceScopeViewSet
-from backend.resources.configs.secret import Secret
+from django.conf import settings
+
+# 默认语言版本（简写）
+DEFAULT_LANG = 'zh'
+
+# 语言版本简写映射
+LANG_MAP = {
+    'zh': 'zh',
+    'zh-cn': 'zh',
+    'zh-hans': 'zh',
+    'zh-hant': 'zh',
+    'en': 'en',
+    'en-us': 'en',
+}
 
 
-class SecretViewSet(NamespaceScopeViewSet):
-    """Secret 相关接口"""
-
-    resource_client = Secret
+def get_lang_from_cookies(cookies) -> str:
+    """从 Cookie 获取语言版本"""
+    lang = cookies.get(settings.LANGUAGE_COOKIE_NAME, DEFAULT_LANG).lower()
+    return LANG_MAP.get(lang, DEFAULT_LANG)

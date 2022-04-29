@@ -89,10 +89,3 @@ class ResourceTypeUnsupported(DashboardBaseError):
 
     message = "resource type for dashboard perm validate unsupported"
     code = 4005008
-
-
-class LanguageForExampleUnsupported(DashboardBaseError):
-    """不支持的示例文件/配置语言版本"""
-
-    message = "language for example if unsupported"
-    code = 4005009

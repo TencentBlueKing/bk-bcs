@@ -1,0 +1,13 @@
+{
+  "kind": "Job",
+  "class": "workloads",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_job",
+      "alias": "Job Simple Demo",
+      "description": "A simple job demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}
