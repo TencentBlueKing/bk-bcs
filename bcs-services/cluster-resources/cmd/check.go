@@ -103,7 +103,7 @@ func (c *DependencyServiceChecker) DoAndExit() {
 		fmt.Printf("try %d times\n", i) // nolint:forbidigo
 
 		if err := c.doOnce(); err == nil {
-			fmt.Printf("success and exit") // nolint:forbidigo
+			fmt.Println("success and exit") // nolint:forbidigo
 			os.Exit(0)
 		} else {
 			fmt.Printf("error: %v\n", err) // nolint:forbidigo
