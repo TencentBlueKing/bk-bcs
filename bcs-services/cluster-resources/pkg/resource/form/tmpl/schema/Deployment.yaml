@@ -1,0 +1,88 @@
+title: deployment
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: 配置信息
+    type: object
+    properties:
+      replicas:
+        title: 副本管理
+        type: object
+        properties:
+          cnt:
+            title: 副本数量
+            type: integer
+          updateStrategy:
+            title: 升级策略
+            type: string
+            ui:component:
+              name: radio
+              props:
+                datasource:
+                  - label: 滚动升级
+                    value: RollingUpdate
+                  - label: 重新创建
+                    value: Recreate
+          maxSurge:
+            title: 最大调度 Pod 数量
+            type: integer
+          msUnit:
+            default: cnt
+            title: 单位
+            type: string
+            ui:component:
+              name: select
+              props:
+                clearable: false
+                datasource:
+                  - label: '%'
+                    value: percent
+                  - label: 个
+                    value: cnt
+          maxUnavailable:
+            title: 最大不可用数量
+            type: integer
+          muaUnit:
+            default: percent
+            title: 单位
+            type: string
+            ui:component:
+              name: select
+              props:
+                clearable: false
+                datasource:
+                  - label: '%'
+                    value: percent
+                  - label: 个
+                    value: cnt
+          minReadySecs:
+            title: 最小就绪时间
+            type: integer
+            ui:component:
+              name: unitInput
+              props:
+                unit: s
+          progressDeadlineSecs:
+            default: 0
+            title: 进程截止时间
+            type: integer
+            ui:component:
+              name: unitInput
+              props:
+                max: 86400
+                unit: s
+      {{- include "workload.nodeSelect" . | indent 6 }}
+      {{- include "workload.affinity" . | indent 6 }}
+      {{- include "workload.toleration" . | indent 6 }}
+      {{- include "workload.networking" . | indent 6 }}
+      {{- include "workload.security" . | indent 6 }}
+      {{- include "workload.specOther" . | indent 6 }}
+    ui:group:
+      name: tab
+      props:
+        border: true
+        showTitle: true
+        type: card
+  {{- include "workload.volume" . | indent 2 }}
+  {{- include "container.containerGroup" . | indent 2 }}

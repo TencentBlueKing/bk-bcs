@@ -17,7 +17,6 @@ package renderer
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -173,13 +172,13 @@ func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) 
 		return errorx.New(errcode.General, "加载模板失败：%v", err)
 	}
 
-	// 2. 渲染模板并转换成 Map 格式（模板名称格式：{r.Kind}.json）
+	// 2. 渲染模板并转换成 Map 格式（模板名称格式：{r.Kind}.yaml）
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, r.Kind+".json", nil)
+	err = tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", nil)
 	if err != nil {
 		return errorx.New(errcode.General, "渲染模板失败：%v", err)
 	}
-	return json.Unmarshal(buf.Bytes(), ret)
+	return yaml.Unmarshal(buf.Bytes(), ret)
 }
 
 // 模板初始化（含挂载 include 方法等）
