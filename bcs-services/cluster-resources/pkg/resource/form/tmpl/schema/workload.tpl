@@ -1,3 +1,72 @@
+{{- define "workload.deployReplicas" }}
+replicas:
+  title: 副本管理
+  type: object
+  properties:
+    cnt:
+      title: 副本数量
+      type: integer
+    updateStrategy:
+      title: 升级策略
+      type: string
+      ui:component:
+        name: radio
+        props:
+          datasource:
+            - label: 滚动升级
+              value: RollingUpdate
+            - label: 重新创建
+              value: Recreate
+    maxSurge:
+      title: 最大调度 Pod 数量
+      type: integer
+    msUnit:
+      default: cnt
+      title: 单位
+      type: string
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          datasource:
+            - label: '%'
+              value: percent
+            - label: 个
+              value: cnt
+    maxUnavailable:
+      title: 最大不可用数量
+      type: integer
+    muaUnit:
+      default: percent
+      title: 单位
+      type: string
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          datasource:
+            - label: '%'
+              value: percent
+            - label: 个
+              value: cnt
+    minReadySecs:
+      title: 最小就绪时间
+      type: integer
+      ui:component:
+        name: unitInput
+        props:
+          unit: s
+    progressDeadlineSecs:
+      default: 0
+      title: 进程截止时间
+      type: integer
+      ui:component:
+        name: unitInput
+        props:
+          max: 86400
+          unit: s
+{{- end }}
+
 {{- define "workload.nodeSelect" }}
 nodeSelect:
   title: 节点选择
