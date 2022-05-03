@@ -247,6 +247,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -588,6 +595,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/formData）.",
             "in": "query",
@@ -642,6 +656,51 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_available_api_versions": {
+      "get": {
+        "summary": "Get resource's available apiVersions for form",
+        "description": "获取指定资源可用于表单化的 APIVersion",
+        "operationId": "Resource_GetFormAvailableAPIVersions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -836,6 +895,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -889,6 +955,13 @@
           {
             "name": "labelSelector",
             "description": "标签选择器.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -948,6 +1021,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1113,6 +1193,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -1167,6 +1254,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1332,6 +1426,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -1386,6 +1487,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1551,6 +1659,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -1605,6 +1720,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1770,6 +1892,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -1824,6 +1953,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1989,6 +2125,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -2043,6 +2186,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2208,6 +2358,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -2262,6 +2419,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2427,6 +2591,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -2481,6 +2652,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2646,6 +2824,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -2700,6 +2885,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2865,6 +3057,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -2919,6 +3118,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -3084,6 +3290,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -3138,6 +3351,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -3303,6 +3523,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -3357,6 +3584,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -3593,6 +3827,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/formData）.",
             "in": "query",
@@ -3754,6 +3995,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/formData）.",
             "in": "query",
@@ -3808,6 +4056,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -3923,6 +4178,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -4146,6 +4408,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -4200,6 +4469,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -4504,6 +4780,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -4701,6 +4984,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -4798,6 +5088,13 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4961,6 +5258,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
@@ -5058,6 +5362,13 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
             "in": "query",
             "required": false,
             "type": "string"

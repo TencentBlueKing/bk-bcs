@@ -28,7 +28,7 @@ import (
 func (h *Handler) ListSTS(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.STS).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.STS).List(
 		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -38,7 +38,7 @@ func (h *Handler) ListSTS(
 func (h *Handler) GetSTS(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.STS).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.STS).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
