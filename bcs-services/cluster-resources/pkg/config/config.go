@@ -230,6 +230,7 @@ type AuthConf struct {
 type BasicConf struct {
 	AppCode     string `yaml:"appCode" usage:"应用 ID"`
 	AppSecret   string `yaml:"appSecret" usage:"应用 Secret"`
+	APIBaseURL  string `yaml:"apiBaseURL" usage:"本服务访问基础路径"`
 	BKAPIGWHost string `yaml:"bkApiGWHost" usage:"蓝鲸 API 网关 Host"` // nolint:tagliatelle
 	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"蓝鲸 PaaS（esb）Host"`
 }

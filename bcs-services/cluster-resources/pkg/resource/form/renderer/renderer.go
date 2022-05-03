@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"text/template"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -62,7 +64,7 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 		// 4. 加载模板并初始化
 		r.initTemplate,
 		// 5. 渲染模板并转换格式
-		r.renderToMap,
+		r.render2Map,
 	} {
 		if err := f(); err != nil {
 			return nil, err
@@ -113,12 +115,12 @@ func (r *ManifestRenderer) cleanFormData() error {
 
 // 加载模板并初始化
 func (r *ManifestRenderer) initTemplate() (err error) {
-	r.Tmpl, err = initTemplate(envs.FormFileBaseDir+"/tmpl/", "*")
+	r.Tmpl, err = initTemplate(envs.FormTmplFileBaseDir+"/manifest/", "*")
 	return err
 }
 
 // 渲染模板并转换成 Map 格式
-func (r *ManifestRenderer) renderToMap() error {
+func (r *ManifestRenderer) render2Map() error {
 	// 渲染，转换并写入数据（模板名称格式：{r.Kind}.yaml）
 	var buf bytes.Buffer
 	err := r.Tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.FormData)
@@ -131,14 +133,12 @@ func (r *ManifestRenderer) renderToMap() error {
 
 // SchemaRenderer 渲染并加载表单 Schema 模板
 type SchemaRenderer struct {
-	Kind   string
-	Tmpl   *template.Template
-	Schema map[string]interface{}
+	Kind string
 }
 
 // NewSchemaRenderer ...
 func NewSchemaRenderer(kind string) *SchemaRenderer {
-	return &SchemaRenderer{Kind: kind, Schema: map[string]interface{}{}}
+	return &SchemaRenderer{Kind: kind}
 }
 
 // Render ...
@@ -148,20 +148,38 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 		return nil, errorx.New(errcode.Unsupported, "资源类型 %s 不支持表单化", r.Kind)
 	}
 
-	// 2. 加载模板并初始化
-	r.Tmpl, err = initTemplate(envs.FormFileBaseDir+"/schema/", "*")
-	if err != nil {
-		return nil, errorx.New(errcode.General, "加载模板失败：%v", err)
+	// 表单模板 Schema 包含原始 Schema + Layout 信息，两者格式不同，因此分别加载
+	schema := map[string]interface{}{}
+	if err = r.renderSubTypeTmpl2Map("schema", &schema); err != nil {
+		return nil, err
 	}
 
-	// 3. 渲染模板并转换成 Map 格式（模板名称格式：{r.Kind}.json）
-	var buf bytes.Buffer
-	err = r.Tmpl.ExecuteTemplate(&buf, r.Kind+".json", nil)
-	if err != nil {
-		return nil, errorx.New(errcode.General, "渲染模板失败：%v", err)
+	layout := []interface{}{}
+	if err = r.renderSubTypeTmpl2Map("layout", &layout); err != nil {
+		return nil, err
 	}
-	err = json.Unmarshal(buf.Bytes(), &r.Schema)
-	return r.Schema, err
+
+	// 表单交互相关依赖上下文
+	schemaCtx := map[string]interface{}{
+		"baseUrl": conf.G.Basic.APIBaseURL,
+	}
+	return map[string]interface{}{"context": schemaCtx, "schema": schema, "layout": layout}, nil
+}
+
+func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) error {
+	// 1. 加载模板并初始化
+	tmpl, err := initTemplate(fmt.Sprintf("%s/%s/", envs.FormTmplFileBaseDir, subType), "*")
+	if err != nil {
+		return errorx.New(errcode.General, "加载模板失败：%v", err)
+	}
+
+	// 2. 渲染模板并转换成 Map 格式（模板名称格式：{r.Kind}.json）
+	var buf bytes.Buffer
+	err = tmpl.ExecuteTemplate(&buf, r.Kind+".json", nil)
+	if err != nil {
+		return errorx.New(errcode.General, "渲染模板失败：%v", err)
+	}
+	return json.Unmarshal(buf.Bytes(), ret)
 }
 
 // 模板初始化（含挂载 include 方法等）

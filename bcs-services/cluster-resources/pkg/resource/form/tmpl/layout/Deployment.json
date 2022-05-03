@@ -1,0 +1,8 @@
+[
+  [
+    {
+      "prop": "metadata",
+      "group": [["name", "."], ["namespace", "."], ["labels"], ["annotations"]]
+    }
+  ]
+]
