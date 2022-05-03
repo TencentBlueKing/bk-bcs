@@ -48,10 +48,8 @@ class ContainerMetricViewSet(SystemViewSet):
         query_params = {
             'cluster_id': cluster_id,
             'namespace': params['namespace'],
-            'pod_name': pod_name if pod_name != URL_DEFAULT_PLACEHOLDER else METRICS_DEFAULT_POD_NAME,
-            'container_id_list': params['container_ids']
-            if params.get('container_ids')
-            else METRICS_DEFAULT_CONTAINER_LIST,
+            'pod_name': pod_name,
+            'container_name': params.get('container_name') or ".*",
         }
         # 部分指标如 Limit 不需要时间范围
         if need_time_range:

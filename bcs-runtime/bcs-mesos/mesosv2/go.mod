@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/mesosv2
 
-go 1.13
+go 1.17
 
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4

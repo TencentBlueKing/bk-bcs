@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
@@ -64,6 +65,7 @@ func TestCRDInSharedCluster(t *testing.T) {
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = h.ListCRD(ctx, &listReq, &listResp)

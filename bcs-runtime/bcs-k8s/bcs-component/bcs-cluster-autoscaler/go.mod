@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler
 
-go 1.14
+go 1.17
 
 require (
 	github.com/Microsoft/hcsshim v0.8.7-0.20191101173118-65519b62243c // indirect

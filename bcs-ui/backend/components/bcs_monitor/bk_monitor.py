@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 BK_MONITOR_QUERY_HOST = settings.BK_MONITOR_QUERY_HOST
 
-# 磁盘统计 允许的文件系统
-DISK_FSTYPE = "ext[234]|btrfs|xfs|zfs"
+# 磁盘统计 忽略的设备类型, 数据来源蓝鲸监控主机查询规则
+IGNORE_DEVICE_TYPE = "iso9660|tmpfs|udf"
 # 磁盘统计 允许的挂载目录
 DISK_MOUNTPOINT = "/data"
 
@@ -204,11 +204,11 @@ def get_cluster_disk_usage(cluster_id, node_ip_list, bk_biz_id=None):
     node_ip_list = "|".join(node_ip_list)
 
     disk_total_prom_query = f"""
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}})
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip=~"{node_ip_list}"}})
     """  # noqa
 
     disk_used_prom_query = f"""
-        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}})
+        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip=~"{node_ip_list}"}})
     """  # noqa
 
     data = {
@@ -227,9 +227,9 @@ def get_cluster_disk_usage_range(cluster_id, node_ip_list, bk_biz_id=None):
     node_ip_list = "|".join(node_ip_list)
 
     prom_query = f"""
-        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}}) /
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip=~"{node_ip_list}"}})
-    """
+        sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip=~"{node_ip_list}"}}) /
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip=~"{node_ip_list}"}})
+    """  # noqa
 
     resp = query_range(prom_query, start, end, step)
     return resp.get("data") or {}
@@ -268,7 +268,7 @@ def get_node_info(cluster_id, ip, bk_biz_id=None):
         info_resp['result'].append(result)
 
     node_disk_size_query = f"""
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip="{ip}"}})
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip="{ip}"}})
     """
     resp_data = query(node_disk_size_query).get('data') or []
     if resp_data and resp_data.get('result'):
@@ -362,8 +362,8 @@ def get_node_memory_usage_range(cluster_id, ip, start, end, bk_biz_id=None):
 
 def get_node_disk_usage(cluster_id, ip, bk_biz_id=None):
     prom_query = f"""
-        (sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip="{ip}"}}) /
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", mount_point=~"{ DISK_MOUNTPOINT }", ip="{ip}"}})) *
+        (sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip="{ip}"}}) /
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip="{ip}"}})) *
         100
     """  # noqa
 
@@ -476,90 +476,82 @@ def get_pod_network_transmit(cluster_id, namespace, pod_name_list, start, end, b
     return resp.get("data") or {}
 
 
-def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
+def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_name, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
     step = (end - start) // 60
-    container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
 
     prom_query = f"""
         sum by(container_name) (rate(container_cpu_usage_seconds_total{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{ container_id_list }"}}[2m])) * 100
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}}[2m])) * 100
         """  # noqa
 
     resp = query_range(prom_query, start, end, step, milliseconds=False)
     return resp.get("data") or {}
 
 
-def get_container_cpu_limit(cluster_id, namespace, pod_name, container_id_list, bk_biz_id=None):
+def get_container_cpu_limit(cluster_id, namespace, pod_name, container_name, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
-
-    container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
 
     prom_query = f"""
         max by(container_name) (container_spec_cpu_quota{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{ container_id_list }"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query(prom_query, milliseconds=False)
     return resp.get("data") or {}
 
 
-def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
+def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_name, start, end, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
     step = (end - start) // 60
-    container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
 
     prom_query = f"""
         sum by(container_name) (container_memory_rss{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }",pod_name=~"{pod_name}",
-        container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{ container_id_list }"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step, milliseconds=False)
     return resp.get("data") or {}
 
 
-def get_container_memory_limit(cluster_id, namespace, pod_name, container_id_list, bk_biz_id=None):
+def get_container_memory_limit(cluster_id, namespace, pod_name, container_name, bk_biz_id=None):
     """获取CPU总使用率
     start, end单位为毫秒，和数据平台保持一致
     """
 
-    container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
-
     prom_query = f"""
         max by(container_name) (container_spec_memory_limit_bytes{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{ container_id_list }"}}) > 0
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}}) > 0
         """  # noqa
 
     resp = query(prom_query, milliseconds=False)
     return resp.get("data") or {}
 
 
-def get_container_disk_read(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
+def get_container_disk_read(cluster_id, namespace, pod_name, container_name, start, end, bk_biz_id=None):
     step = (end - start) // 60
-    container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
 
     prom_query = f"""
         sum by(container_name) (container_fs_reads_bytes_total{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{container_id_list}"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)
     return resp.get("data") or {}
 
 
-def get_container_disk_write(cluster_id, namespace, pod_name, container_id_list, start, end, bk_biz_id=None):
+def get_container_disk_write(cluster_id, namespace, pod_name, container_name, start, end, bk_biz_id=None):
     step = (end - start) // 60
-    container_id_list = "|".join(f".*{i}.*" for i in container_id_list)
 
     prom_query = f"""
         sum by(container_name) (container_fs_writes_bytes_total{{bk_biz_id="{bk_biz_id}", bcs_cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{container_id_list}"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)

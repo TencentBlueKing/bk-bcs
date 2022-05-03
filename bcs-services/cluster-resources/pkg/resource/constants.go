@@ -16,7 +16,10 @@ package resource
 
 // k8s 资源类型
 const (
-	// NS
+	// Node ...
+	Node = "Node"
+
+	// NS ...
 	NS = "Namespace"
 
 	// Deploy ...

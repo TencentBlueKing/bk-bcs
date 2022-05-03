@@ -48,15 +48,15 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 }
 
 // List ...
-func (m *ResMgr) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
+func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1.ListOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
+	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, format, opts)
 }
 
 // Get ...
-func (m *ResMgr) Get(ctx context.Context, namespace, name string, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}

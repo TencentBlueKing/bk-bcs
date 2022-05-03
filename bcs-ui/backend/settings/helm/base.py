@@ -129,9 +129,6 @@ IS_USE_BCS_TLS = True
 K8S_VERSION = os.environ.get('BKAPP_K8S_VERSION')
 MESOS_VERSION = os.environ.get('BKAPP_MESOS_VERSION')
 
-# 是否支持使用 Mesos 服务
-SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
-
 # admin 权限用户
 ADMIN_USERNAME = 'admin'
 # BCS 默认业务
@@ -163,9 +160,8 @@ DEVOPS_CI_API_HOST = os.environ.get('DEVOPS_CI_API_URL')
 DEVOPS_BCS_API_URL = os.environ.get('BKAPP_BCS_UI_API_URL')
 DEVOPS_ARTIFACTORY_HOST = os.environ.get('BKAPP_ARTIFACTORY_ADDR')
 
-# bcs-api-gateway api 配置
-BCS_API_PRE_URL = os.environ.get('BCS_API_GATEWAY_PROD_DOMAIN')
-BCS_API_GATEWAY_AUTHORIZATION = os.environ.get("BCS_API_GATEWAY_AUTHORIZATION", "")
+# TODO 旧蓝鲸网关地址, 先废弃置空
+BCS_API_PRE_URL = ''
 
 BK_PAAS_HOST = os.environ.get('BK_PAAS_URL', "http://bk-paas.example.com")
 BK_PAAS_INNER_HOST = BK_PAAS_HOST
@@ -240,7 +236,7 @@ DASHBOARD_CTL_VERSION_MAP = {
 
 # 企业版/社区版 helm没有平台k8s集群时，无法为项目分配chart repo服务
 # 为解决该问题，容器服务会绑定一个chart repo服务使用，所有项目公用这个chart repo
-HELM_MERELY_REPO_URL = os.environ.get("BKAPP_HARBOR_CHARTS_URL")
+HELM_REPO_DOMAIN = os.environ.get("BKAPP_HARBOR_CHARTS_URL")
 HELM_MERELY_REPO_USERNAME = os.environ.get("BKAPP_HARBOR_CHARTS_USERNAME")
 HELM_MERELY_REPO_PASSWORD = os.environ.get("BKAPP_HARBOR_CHARTS_PASSWORD")
 
@@ -380,16 +376,8 @@ BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs
 BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "image-repo")
 BK_REPO_SHARED_CHART_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_CHART_DEPOT_NAME", "chart-repo")
 
-# 蓝鲸监控 unify-query 地址
-BK_MONITOR_QUERY_HOST = os.environ.get(
-    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
-)
-
-# 基础性能查询数据源
-PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
-
 # 集群管理的代理
-CLUSTER_MANAGER_DOMAIN = BCS_API_GATEWAY_DOMAIN["prod"]
+CLUSTER_MANAGER_DOMAIN = BCS_APIGW_DOMAIN["prod"]
 
 # 蓝鲸监控域名
 BKMONITOR_HOST = os.environ.get("BKAPP_BKMONITOR_URL", "")

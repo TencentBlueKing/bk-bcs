@@ -36,6 +36,7 @@ func GenResListReq() clusterRes.ResListReq {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 }
 

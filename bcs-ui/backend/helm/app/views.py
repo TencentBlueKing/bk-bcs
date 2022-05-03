@@ -530,7 +530,7 @@ class ClusterHelmInitView(ClusterImporterView):
                 },
             }
             english_name = project['data']['english_name']
-            url = '%s/chartrepo/%s/' % (settings.HELM_MERELY_REPO_URL, english_name)
+            url = '%s/chartrepo/%s/' % (settings.HELM_REPO_DOMAIN, english_name)
             private_repo = add_plain_repo(
                 target_project_id=project_id, name=english_name, url=url, repo_auth=repo_auth
             )

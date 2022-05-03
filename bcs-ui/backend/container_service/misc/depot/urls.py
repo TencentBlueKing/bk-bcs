@@ -40,6 +40,6 @@ urlpatterns = [
     # 镜像详情API
     url(
         r'^api/depot/images/project/(?P<project_id>\w{32})/info/image/$',
-        views.ImageDetailViewSet.as_view({'get': 'detail'}),
+        views.ImageDetailViewSet.as_view({'get': 'get'}),
     ),
 ]

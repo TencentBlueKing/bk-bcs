@@ -38,7 +38,7 @@ func (h *Handler) ListSA(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SA).List(
-		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }

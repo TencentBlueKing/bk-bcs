@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-common/test
 
-go 1.14
+go 1.17
 
 replace (
 	github.com/Tencent/bk-bcs/bcs-common => ../../../../bcs-common

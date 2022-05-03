@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler
 
-go 1.14
+go 1.17
 
 replace k8s.io/client-go => k8s.io/client-go v0.17.9
 

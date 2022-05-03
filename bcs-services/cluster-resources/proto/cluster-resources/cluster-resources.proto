@@ -77,6 +77,19 @@ service Basic {
 	}
 }
 
+// 节点接口
+service Node {
+	rpc ListNode(ResListReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取节点列表"
+			summary: "ListNode API"
+		};
+	}
+}
+
 // 命名空间接口
 service Namespace {
 	rpc ListNS(ResListReq) returns (CommonResp) {
@@ -1250,6 +1263,9 @@ message ResListReq {
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}, (validate.rules).string = {max_len: 128}];
+	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
 }
 
 message ResGetReq {
@@ -1351,6 +1367,9 @@ message PodResListReq {
 	string ownerKind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "所属资源类型"
 	}, (validate.rules).string = {max_len: 64}];
+	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
 }
 
 message ContainerListReq {
@@ -1426,6 +1445,9 @@ message CObjListReq {
 	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
 }
 
 message CObjGetReq {

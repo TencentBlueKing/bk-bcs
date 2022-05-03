@@ -29,7 +29,7 @@ func (h *Handler) ListSC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SC).List(
-		ctx, "", metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, "", req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
