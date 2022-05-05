@@ -4429,30 +4429,30 @@ var _ interface {
 
 var _GetResFormSchemaReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-// Validate checks the field values on GetFormAvailableApiVersionsReq with the
+// Validate checks the field values on GetFormSupportedApiVersionsReq with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetFormAvailableApiVersionsReq) Validate() error {
+func (m *GetFormSupportedApiVersionsReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetFormAvailableApiVersionsReq with
+// ValidateAll checks the field values on GetFormSupportedApiVersionsReq with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, the result is a list of violation errors wrapped in
-// GetFormAvailableApiVersionsReqMultiError, or nil if none found.
-func (m *GetFormAvailableApiVersionsReq) ValidateAll() error {
+// GetFormSupportedApiVersionsReqMultiError, or nil if none found.
+func (m *GetFormSupportedApiVersionsReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetFormAvailableApiVersionsReq) validate(all bool) error {
+func (m *GetFormSupportedApiVersionsReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_GetFormAvailableApiVersionsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := GetFormAvailableApiVersionsReqValidationError{
+	if !_GetFormSupportedApiVersionsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetFormSupportedApiVersionsReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -4463,7 +4463,7 @@ func (m *GetFormAvailableApiVersionsReq) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
-		err := GetFormAvailableApiVersionsReqValidationError{
+		err := GetFormSupportedApiVersionsReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
@@ -4474,7 +4474,7 @@ func (m *GetFormAvailableApiVersionsReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetKind()) > 128 {
-		err := GetFormAvailableApiVersionsReqValidationError{
+		err := GetFormSupportedApiVersionsReqValidationError{
 			field:  "Kind",
 			reason: "value length must be at most 128 runes",
 		}
@@ -4485,18 +4485,18 @@ func (m *GetFormAvailableApiVersionsReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetFormAvailableApiVersionsReqMultiError(errors)
+		return GetFormSupportedApiVersionsReqMultiError(errors)
 	}
 	return nil
 }
 
-// GetFormAvailableApiVersionsReqMultiError is an error wrapping multiple
-// validation errors returned by GetFormAvailableApiVersionsReq.ValidateAll()
+// GetFormSupportedApiVersionsReqMultiError is an error wrapping multiple
+// validation errors returned by GetFormSupportedApiVersionsReq.ValidateAll()
 // if the designated constraints aren't met.
-type GetFormAvailableApiVersionsReqMultiError []error
+type GetFormSupportedApiVersionsReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetFormAvailableApiVersionsReqMultiError) Error() string {
+func (m GetFormSupportedApiVersionsReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -4505,12 +4505,12 @@ func (m GetFormAvailableApiVersionsReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetFormAvailableApiVersionsReqMultiError) AllErrors() []error { return m }
+func (m GetFormSupportedApiVersionsReqMultiError) AllErrors() []error { return m }
 
-// GetFormAvailableApiVersionsReqValidationError is the validation error
-// returned by GetFormAvailableApiVersionsReq.Validate if the designated
+// GetFormSupportedApiVersionsReqValidationError is the validation error
+// returned by GetFormSupportedApiVersionsReq.Validate if the designated
 // constraints aren't met.
-type GetFormAvailableApiVersionsReqValidationError struct {
+type GetFormSupportedApiVersionsReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -4518,24 +4518,24 @@ type GetFormAvailableApiVersionsReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetFormAvailableApiVersionsReqValidationError) Field() string { return e.field }
+func (e GetFormSupportedApiVersionsReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetFormAvailableApiVersionsReqValidationError) Reason() string { return e.reason }
+func (e GetFormSupportedApiVersionsReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetFormAvailableApiVersionsReqValidationError) Cause() error { return e.cause }
+func (e GetFormSupportedApiVersionsReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetFormAvailableApiVersionsReqValidationError) Key() bool { return e.key }
+func (e GetFormSupportedApiVersionsReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetFormAvailableApiVersionsReqValidationError) ErrorName() string {
-	return "GetFormAvailableApiVersionsReqValidationError"
+func (e GetFormSupportedApiVersionsReqValidationError) ErrorName() string {
+	return "GetFormSupportedApiVersionsReqValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetFormAvailableApiVersionsReqValidationError) Error() string {
+func (e GetFormSupportedApiVersionsReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -4547,14 +4547,14 @@ func (e GetFormAvailableApiVersionsReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetFormAvailableApiVersionsReq.%s: %s%s",
+		"invalid %sGetFormSupportedApiVersionsReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetFormAvailableApiVersionsReqValidationError{}
+var _ error = GetFormSupportedApiVersionsReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -4562,6 +4562,6 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetFormAvailableApiVersionsReqValidationError{}
+} = GetFormSupportedApiVersionsReqValidationError{}
 
-var _GetFormAvailableApiVersionsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _GetFormSupportedApiVersionsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")

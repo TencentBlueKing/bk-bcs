@@ -2091,7 +2091,7 @@ func (x *GetResFormSchemaReq) GetKind() string {
 	return ""
 }
 
-type GetFormAvailableApiVersionsReq struct {
+type GetFormSupportedApiVersionsReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -2101,8 +2101,8 @@ type GetFormAvailableApiVersionsReq struct {
 	Kind      string `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
 }
 
-func (x *GetFormAvailableApiVersionsReq) Reset() {
-	*x = GetFormAvailableApiVersionsReq{}
+func (x *GetFormSupportedApiVersionsReq) Reset() {
+	*x = GetFormSupportedApiVersionsReq{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_proto_cluster_resources_cluster_resources_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2110,13 +2110,13 @@ func (x *GetFormAvailableApiVersionsReq) Reset() {
 	}
 }
 
-func (x *GetFormAvailableApiVersionsReq) String() string {
+func (x *GetFormSupportedApiVersionsReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetFormAvailableApiVersionsReq) ProtoMessage() {}
+func (*GetFormSupportedApiVersionsReq) ProtoMessage() {}
 
-func (x *GetFormAvailableApiVersionsReq) ProtoReflect() protoreflect.Message {
+func (x *GetFormSupportedApiVersionsReq) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_cluster_resources_cluster_resources_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2128,26 +2128,26 @@ func (x *GetFormAvailableApiVersionsReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetFormAvailableApiVersionsReq.ProtoReflect.Descriptor instead.
-func (*GetFormAvailableApiVersionsReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetFormSupportedApiVersionsReq.ProtoReflect.Descriptor instead.
+func (*GetFormSupportedApiVersionsReq) Descriptor() ([]byte, []int) {
 	return file_proto_cluster_resources_cluster_resources_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *GetFormAvailableApiVersionsReq) GetProjectID() string {
+func (x *GetFormSupportedApiVersionsReq) GetProjectID() string {
 	if x != nil {
 		return x.ProjectID
 	}
 	return ""
 }
 
-func (x *GetFormAvailableApiVersionsReq) GetClusterID() string {
+func (x *GetFormSupportedApiVersionsReq) GetClusterID() string {
 	if x != nil {
 		return x.ClusterID
 	}
 	return ""
 }
 
-func (x *GetFormAvailableApiVersionsReq) GetKind() string {
+func (x *GetFormSupportedApiVersionsReq) GetKind() string {
 	if x != nil {
 		return x.Kind
 	}
@@ -2788,7 +2788,7 @@ var file_proto_cluster_resources_cluster_resources_proto_rawDesc = []byte{
 	0x65, 0x71, 0x32, 0x26, 0xe8, 0x8e, 0xb7, 0xe5, 0x8f, 0x96, 0xe8, 0xb5, 0x84, 0xe6, 0xba, 0x90,
 	0xe8, 0xa1, 0xa8, 0xe5, 0x8d, 0x95, 0xe5, 0x8c, 0x96, 0x20, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61,
 	0x20, 0xe8, 0xaf, 0xb7, 0xe6, 0xb1, 0x82, 0xe4, 0xbd, 0x93, 0x22, 0xa5, 0x02, 0x0a, 0x1e, 0x47,
-	0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x41, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x41,
+	0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x53, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x41,
 	0x70, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x12, 0x41, 0x0a,
 	0x09, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x42, 0x23, 0x92, 0x41, 0x0b, 0x2a, 0x09, 0xe9, 0xa1, 0xb9, 0xe7, 0x9b, 0xae, 0x20, 0x49, 0x44,
@@ -2801,7 +2801,7 @@ var file_proto_cluster_resources_cluster_resources_proto_rawDesc = []byte{
 	0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x19, 0x92, 0x41, 0x0e, 0x2a, 0x0c, 0xe8, 0xb5, 0x84, 0xe6,
 	0xba, 0x90, 0xe7, 0xb1, 0xbb, 0xe5, 0x9e, 0x8b, 0xfa, 0x42, 0x05, 0x72, 0x03, 0x18, 0x80, 0x01,
 	0x52, 0x04, 0x6b, 0x69, 0x6e, 0x64, 0x3a, 0x5a, 0x92, 0x41, 0x57, 0x0a, 0x55, 0x2a, 0x1e, 0x47,
-	0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x41, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x41,
+	0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x53, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x41,
 	0x70, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x32, 0x33, 0xe8,
 	0x8e, 0xb7, 0xe5, 0x8f, 0x96, 0xe6, 0x8c, 0x87, 0xe5, 0xae, 0x9a, 0xe8, 0xb5, 0x84, 0xe6, 0xba,
 	0x90, 0xe5, 0x8f, 0xaf, 0xe7, 0x94, 0xa8, 0xe4, 0xba, 0x8e, 0xe8, 0xa1, 0xa8, 0xe5, 0x8d, 0x95,
@@ -4279,11 +4279,11 @@ var file_proto_cluster_resources_cluster_resources_proto_rawDesc = []byte{
 	0x20, 0x66, 0x6f, 0x72, 0x6d, 0x20, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x20, 0x41, 0x50, 0x49,
 	0x1a, 0x1f, 0xe8, 0x8e, 0xb7, 0xe5, 0x8f, 0x96, 0xe6, 0x8c, 0x87, 0xe5, 0xae, 0x9a, 0xe8, 0xb5,
 	0x84, 0xe6, 0xba, 0x90, 0xe8, 0xa1, 0xa8, 0xe5, 0x8d, 0x95, 0x20, 0x53, 0x63, 0x68, 0x65, 0x6d,
-	0x61, 0x12, 0xbc, 0x02, 0x0a, 0x1b, 0x47, 0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x41, 0x76, 0x61,
-	0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x41, 0x50, 0x49, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
+	0x61, 0x12, 0xbc, 0x02, 0x0a, 0x1b, 0x47, 0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x53, 0x75, 0x70,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x41, 0x50, 0x49, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
 	0x73, 0x12, 0x30, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x72, 0x65, 0x73, 0x6f, 0x75,
-	0x72, 0x63, 0x65, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x41, 0x76, 0x61, 0x69,
-	0x6c, 0x61, 0x62, 0x6c, 0x65, 0x41, 0x70, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73,
+	0x72, 0x63, 0x65, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x46, 0x6f, 0x72, 0x6d, 0x53, 0x75, 0x70, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x64, 0x41, 0x70, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73,
 	0x52, 0x65, 0x71, 0x1a, 0x20, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x72, 0x65, 0x73,
 	0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x4c, 0x69, 0x73,
 	0x74, 0x52, 0x65, 0x73, 0x70, 0x22, 0xc8, 0x01, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x5c, 0x12, 0x5a,
@@ -4291,10 +4291,10 @@ var file_proto_cluster_resources_cluster_resources_proto_rawDesc = []byte{
 	0x73, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x2f, 0x7b, 0x70,
 	0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x49, 0x44, 0x7d, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65,
 	0x72, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x44, 0x7d, 0x2f, 0x66,
-	0x6f, 0x72, 0x6d, 0x5f, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x61, 0x70,
+	0x6f, 0x72, 0x6d, 0x5f, 0x73, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x70,
 	0x69, 0x5f, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x92, 0x41, 0x63, 0x12, 0x2d, 0x47,
-	0x65, 0x74, 0x20, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x27, 0x73, 0x20, 0x61, 0x76,
-	0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x20, 0x61, 0x70, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69,
+	0x65, 0x74, 0x20, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x27, 0x73, 0x20, 0x73, 0x75,
+	0x70, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x20, 0x61, 0x70, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69,
 	0x6f, 0x6e, 0x73, 0x20, 0x66, 0x6f, 0x72, 0x20, 0x66, 0x6f, 0x72, 0x6d, 0x1a, 0x32, 0xe8, 0x8e,
 	0xb7, 0xe5, 0x8f, 0x96, 0xe6, 0x8c, 0x87, 0xe5, 0xae, 0x9a, 0xe8, 0xb5, 0x84, 0xe6, 0xba, 0x90,
 	0xe5, 0x8f, 0xaf, 0xe7, 0x94, 0xa8, 0xe4, 0xba, 0x8e, 0xe8, 0xa1, 0xa8, 0xe5, 0x8d, 0x95, 0xe5,
@@ -4350,7 +4350,7 @@ var file_proto_cluster_resources_cluster_resources_proto_goTypes = []interface{}
 	(*InvalidateDiscoveryCacheReq)(nil),    // 26: clusterresources.InvalidateDiscoveryCacheReq
 	(*FormRenderPreviewReq)(nil),           // 27: clusterresources.FormRenderPreviewReq
 	(*GetResFormSchemaReq)(nil),            // 28: clusterresources.GetResFormSchemaReq
-	(*GetFormAvailableApiVersionsReq)(nil), // 29: clusterresources.GetFormAvailableApiVersionsReq
+	(*GetFormSupportedApiVersionsReq)(nil), // 29: clusterresources.GetFormSupportedApiVersionsReq
 	(*_struct.Struct)(nil),                 // 30: google.protobuf.Struct
 	(*_struct.ListValue)(nil),              // 31: google.protobuf.ListValue
 }
@@ -4468,7 +4468,7 @@ var file_proto_cluster_resources_cluster_resources_proto_depIdxs = []int32{
 	26,  // 110: clusterresources.Resource.InvalidateDiscoveryCache:input_type -> clusterresources.InvalidateDiscoveryCacheReq
 	27,  // 111: clusterresources.Resource.FormDataRenderPreview:input_type -> clusterresources.FormRenderPreviewReq
 	28,  // 112: clusterresources.Resource.GetResFormSchema:input_type -> clusterresources.GetResFormSchemaReq
-	29,  // 113: clusterresources.Resource.GetFormAvailableAPIVersions:input_type -> clusterresources.GetFormAvailableApiVersionsReq
+	29,  // 113: clusterresources.Resource.GetFormSupportedAPIVersions:input_type -> clusterresources.GetFormSupportedApiVersionsReq
 	1,   // 114: clusterresources.Basic.Echo:output_type -> clusterresources.EchoResp
 	3,   // 115: clusterresources.Basic.Ping:output_type -> clusterresources.PingResp
 	5,   // 116: clusterresources.Basic.Healthz:output_type -> clusterresources.HealthzResp
@@ -4573,7 +4573,7 @@ var file_proto_cluster_resources_cluster_resources_proto_depIdxs = []int32{
 	22,  // 215: clusterresources.Resource.InvalidateDiscoveryCache:output_type -> clusterresources.CommonResp
 	22,  // 216: clusterresources.Resource.FormDataRenderPreview:output_type -> clusterresources.CommonResp
 	22,  // 217: clusterresources.Resource.GetResFormSchema:output_type -> clusterresources.CommonResp
-	23,  // 218: clusterresources.Resource.GetFormAvailableAPIVersions:output_type -> clusterresources.CommonListResp
+	23,  // 218: clusterresources.Resource.GetFormSupportedAPIVersions:output_type -> clusterresources.CommonListResp
 	114, // [114:219] is the sub-list for method output_type
 	9,   // [9:114] is the sub-list for method input_type
 	9,   // [9:9] is the sub-list for extension type_name
@@ -4936,7 +4936,7 @@ func file_proto_cluster_resources_cluster_resources_proto_init() {
 			}
 		}
 		file_proto_cluster_resources_cluster_resources_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetFormAvailableApiVersionsReq); i {
+			switch v := v.(*GetFormSupportedApiVersionsReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8878,7 +8878,7 @@ type ResourceClient interface {
 	FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...grpc.CallOption) (*CommonResp, error)
 	// 获取指定资源表单 Schema
 	GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetFormAvailableAPIVersions(ctx context.Context, in *GetFormAvailableApiVersionsReq, opts ...grpc.CallOption) (*CommonListResp, error)
+	GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...grpc.CallOption) (*CommonListResp, error)
 }
 
 type resourceClient struct {
@@ -8957,9 +8957,9 @@ func (c *resourceClient) GetResFormSchema(ctx context.Context, in *GetResFormSch
 	return out, nil
 }
 
-func (c *resourceClient) GetFormAvailableAPIVersions(ctx context.Context, in *GetFormAvailableApiVersionsReq, opts ...grpc.CallOption) (*CommonListResp, error) {
+func (c *resourceClient) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...grpc.CallOption) (*CommonListResp, error) {
 	out := new(CommonListResp)
-	err := c.cc.Invoke(ctx, "/clusterresources.Resource/GetFormAvailableAPIVersions", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clusterresources.Resource/GetFormSupportedAPIVersions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8978,7 +8978,7 @@ type ResourceServer interface {
 	FormDataRenderPreview(context.Context, *FormRenderPreviewReq) (*CommonResp, error)
 	// 获取指定资源表单 Schema
 	GetResFormSchema(context.Context, *GetResFormSchemaReq) (*CommonResp, error)
-	GetFormAvailableAPIVersions(context.Context, *GetFormAvailableApiVersionsReq) (*CommonListResp, error)
+	GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq) (*CommonListResp, error)
 }
 
 // UnimplementedResourceServer can be embedded to have forward compatible implementations.
@@ -9000,8 +9000,8 @@ func (*UnimplementedResourceServer) FormDataRenderPreview(context.Context, *Form
 func (*UnimplementedResourceServer) GetResFormSchema(context.Context, *GetResFormSchemaReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetResFormSchema not implemented")
 }
-func (*UnimplementedResourceServer) GetFormAvailableAPIVersions(context.Context, *GetFormAvailableApiVersionsReq) (*CommonListResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFormAvailableAPIVersions not implemented")
+func (*UnimplementedResourceServer) GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq) (*CommonListResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFormSupportedAPIVersions not implemented")
 }
 
 func RegisterResourceServer(s *grpc.Server, srv ResourceServer) {
@@ -9101,20 +9101,20 @@ func _Resource_GetResFormSchema_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Resource_GetFormAvailableAPIVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFormAvailableApiVersionsReq)
+func _Resource_GetFormSupportedAPIVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFormSupportedApiVersionsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ResourceServer).GetFormAvailableAPIVersions(ctx, in)
+		return srv.(ResourceServer).GetFormSupportedAPIVersions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/clusterresources.Resource/GetFormAvailableAPIVersions",
+		FullMethod: "/clusterresources.Resource/GetFormSupportedAPIVersions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).GetFormAvailableAPIVersions(ctx, req.(*GetFormAvailableApiVersionsReq))
+		return srv.(ResourceServer).GetFormSupportedAPIVersions(ctx, req.(*GetFormSupportedApiVersionsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -9140,8 +9140,8 @@ var _Resource_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Resource_GetResFormSchema_Handler,
 		},
 		{
-			MethodName: "GetFormAvailableAPIVersions",
-			Handler:    _Resource_GetFormAvailableAPIVersions_Handler,
+			MethodName: "GetFormSupportedAPIVersions",
+			Handler:    _Resource_GetFormSupportedAPIVersions_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

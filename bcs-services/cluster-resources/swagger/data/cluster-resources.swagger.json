@@ -652,16 +652,16 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_available_api_versions": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema": {
       "get": {
-        "summary": "Get resource's available apiVersions for form",
-        "description": "获取指定资源可用于表单化的 APIVersion",
-        "operationId": "Resource_GetFormAvailableAPIVersions",
+        "summary": "Get resource's form schema API",
+        "description": "获取指定资源表单 Schema",
+        "operationId": "Resource_GetResFormSchema",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonListResp"
+              "$ref": "#/definitions/clusterresourcesCommonResp"
             }
           },
           "default": {
@@ -697,16 +697,16 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions": {
       "get": {
-        "summary": "Get resource's form schema API",
-        "description": "获取指定资源表单 Schema",
-        "operationId": "Resource_GetResFormSchema",
+        "summary": "Get resource's supported apiVersions for form",
+        "description": "获取指定资源可用于表单化的 APIVersion",
+        "operationId": "Resource_GetFormSupportedAPIVersions",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
             }
           },
           "default": {

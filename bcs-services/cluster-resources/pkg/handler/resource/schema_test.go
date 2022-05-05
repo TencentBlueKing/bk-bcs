@@ -35,13 +35,13 @@ func TestGetResFormSchema(t *testing.T) {
 	}
 }
 
-func TestGetFormAvailableAPIVersions(t *testing.T) {
+func TestGetFormSupportedApiVersions(t *testing.T) {
 	hdlr := New()
 	ctx := context.TODO()
 
 	for kind := range renderer.FormRenderSupportedResAPIVersion {
-		req, resp := clusterRes.GetFormAvailableApiVersionsReq{Kind: kind}, clusterRes.CommonListResp{}
-		err := hdlr.GetFormAvailableAPIVersions(ctx, &req, &resp)
+		req, resp := clusterRes.GetFormSupportedApiVersionsReq{Kind: kind}, clusterRes.CommonListResp{}
+		err := hdlr.GetFormSupportedAPIVersions(ctx, &req, &resp)
 		assert.Nil(t, err)
 	}
 }
