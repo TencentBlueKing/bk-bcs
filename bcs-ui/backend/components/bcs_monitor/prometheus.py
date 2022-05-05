@@ -477,7 +477,7 @@ def get_container_disk_read(cluster_id, namespace, pod_name, container_name, sta
 
     prom_query = f"""
         sum by(container_name) (container_fs_reads_bytes_total{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{container_name}"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)
@@ -489,7 +489,7 @@ def get_container_disk_write(cluster_id, namespace, pod_name, container_name, st
 
     prom_query = f"""
         sum by(container_name) (container_fs_writes_bytes_total{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{container_name}"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)
