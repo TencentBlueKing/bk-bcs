@@ -19,8 +19,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // New 根据 Format 类型，生成不同的 Manifest 转换器
@@ -42,6 +44,10 @@ type DummyTransformer struct {
 
 // ToManifest 转换成 Manifest
 func (t *DummyTransformer) ToManifest() (map[string]interface{}, error) {
+	// 使用原生 Manifest 作为创建 / 更新配置的，添加 EditMode == yaml 的标识
+	if err := mapx.SetItems(t.manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeYaml); err != nil {
+		return nil, err
+	}
 	return t.manifest, nil
 }
 
@@ -55,5 +61,6 @@ type FormDataTransformer struct {
 
 // ToManifest 转换成 Manifest
 func (t *FormDataTransformer) ToManifest() (map[string]interface{}, error) {
+	// ManifestRenderer Render 会标识 EditMode == form
 	return renderer.NewManifestRenderer(t.ctx, t.formData, t.clusterID, t.kind).Render()
 }

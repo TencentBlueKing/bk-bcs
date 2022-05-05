@@ -64,6 +64,8 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 		r.initTemplate,
 		// 5. 渲染模板并转换格式
 		r.render2Map,
+		// 6. 添加 EditMode Label 标识
+		r.setEditMode,
 	} {
 		if err := f(); err != nil {
 			return nil, err
@@ -128,6 +130,11 @@ func (r *ManifestRenderer) render2Map() error {
 		return errorx.New(errcode.General, "渲染模板失败：%v", err)
 	}
 	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
+}
+
+// 添加 EditMode Label 标识
+func (r *ManifestRenderer) setEditMode() error {
+	return mapx.SetItems(r.Manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeForm)
 }
 
 // SchemaRenderer 渲染并加载表单 Schema 模板
