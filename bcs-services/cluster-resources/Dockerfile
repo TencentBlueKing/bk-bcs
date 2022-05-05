@@ -35,7 +35,7 @@ RUN cp -R $SRC_EXAMPLE_DIR/reference/* $TARGET_EXAMPLE_DIR/reference/
 ARG SRC_FORM_TMPL_DIR=/go/src/pkg/resource/form/tmpl
 ARG TARGET_FORM_TMPL_DIR=/go/src/form_tmpl
 
-RUN mkdir -p TARGET_FORM_TMPL_DIR
+RUN mkdir -p $TARGET_FORM_TMPL_DIR
 
 RUN cp -R $SRC_FORM_TMPL_DIR/* $TARGET_FORM_TMPL_DIR/
 
