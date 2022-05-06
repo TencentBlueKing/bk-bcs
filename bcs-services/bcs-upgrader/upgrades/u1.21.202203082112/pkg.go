@@ -11,10 +11,34 @@
  *
  */
 
-package main
+package u1x21x202203082112
 
 import (
-	// v1.21.x
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrades/u1.21.202109241520"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrades/u1.21.202203082112"
+	"context"
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrader"
 )
+
+func init() {
+	upgrader.RegisterUpgrade("u1.21.202203082112", upgrade)
+}
+
+func upgrade(ctx context.Context, helper upgrader.UpgradeHelper) error {
+	blog.Infof("start execute u1.21.202203082112")
+
+	h, ok := helper.(*upgrader.Helper)
+	if !ok {
+		return fmt.Errorf("upgrader helper type unknown")
+	}
+
+	handle := NewMigrateHandle(h.Config)
+	err := handle.run()
+	if err != nil {
+		blog.Errorf("[upgrade u1.21.202203082112, migrate data failed, err:  %v", err)
+		return err
+	}
+
+	return nil
+}

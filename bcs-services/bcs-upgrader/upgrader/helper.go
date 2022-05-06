@@ -15,6 +15,7 @@ package upgrader
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/app/options"
 )
 
 // UpgradeHelper is a helper for upgrade
@@ -25,13 +26,14 @@ type UpgradeHelper interface {
 
 // Helper is an implementation for interface UpgradeHelper
 type Helper struct {
-	DB drivers.DB
-	// TODO: 添加clusterManagerClient调用bcs-cluster-manager提供的接口，添加httpClient去调用bcs-saas cc模块提供的接口
+	DB     drivers.DB
+	Config options.HttpCliConfig
 }
 
 // HelperOpt is option for Helper
 type HelperOpt struct {
-	DB drivers.DB
+	DB     drivers.DB
+	config options.HttpCliConfig
 }
 
 // Name is the method of Helper to implement interface UpgradeHelper
@@ -42,6 +44,7 @@ func (h *Helper) HelperName() string {
 // NewUpgradeHelper new a Helper instance
 func NewUpgradeHelper(opt *HelperOpt) *Helper {
 	return &Helper{
-		DB: opt.DB,
+		DB:     opt.DB,
+		Config: opt.config,
 	}
 }
