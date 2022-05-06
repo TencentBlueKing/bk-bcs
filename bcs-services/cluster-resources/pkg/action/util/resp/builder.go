@@ -26,7 +26,7 @@ import (
 // NewRespDataBuilder 根据 Format 类型，生成不同的 Retrieve 请求响应数据生成器
 func NewRespDataBuilder(manifest map[string]interface{}, kind, format string) (DataBuilder, error) {
 	switch format {
-	case action.ManifestFormat:
+	case action.DefaultFormat, action.ManifestFormat:
 		return &ManifestRespBuilder{manifest: manifest, kind: kind}, nil
 	case action.FormDataFormat:
 		return &FormDataRespBuilder{manifest: manifest, kind: kind}, nil

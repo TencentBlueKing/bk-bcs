@@ -956,7 +956,7 @@ func (m *ResListReq) validate(all bool) error {
 	if _, ok := _ResListReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResListReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest selectItems]",
+			reason: "value must be in list [ manifest selectItems]",
 		}
 		if !all {
 			return err
@@ -1045,6 +1045,7 @@ var _ResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 var _ResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResListReq_Format_InLookup = map[string]struct{}{
+	"":            {},
 	"manifest":    {},
 	"selectItems": {},
 }
@@ -1151,7 +1152,7 @@ func (m *ResGetReq) validate(all bool) error {
 	if _, ok := _ResGetReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResGetReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -1242,6 +1243,7 @@ var _ResGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 var _ResGetReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
 var _ResGetReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -1322,7 +1324,7 @@ func (m *ResCreateReq) validate(all bool) error {
 	if _, ok := _ResCreateReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResCreateReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -1409,6 +1411,7 @@ var _ interface {
 var _ResCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _ResCreateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -1533,7 +1536,7 @@ func (m *ResUpdateReq) validate(all bool) error {
 	if _, ok := _ResUpdateReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResUpdateReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -1624,6 +1627,7 @@ var _ResUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 var _ResUpdateReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
 var _ResUpdateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }

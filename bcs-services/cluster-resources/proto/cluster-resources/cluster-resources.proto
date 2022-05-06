@@ -1278,7 +1278,7 @@ message ResListReq {
 	}, (validate.rules).string = {max_len: 63}];
 	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/selectItems）"
-	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
 }
 
 message ResGetReq {
@@ -1302,7 +1302,7 @@ message ResGetReq {
 	}, (validate.rules).string = {max_len: 63}];
 	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message ResCreateReq {
@@ -1318,7 +1318,7 @@ message ResCreateReq {
 	google.protobuf.Struct rawData = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message ResUpdateReq {
@@ -1340,7 +1340,7 @@ message ResUpdateReq {
 	google.protobuf.Struct rawData = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message ResDeleteReq {

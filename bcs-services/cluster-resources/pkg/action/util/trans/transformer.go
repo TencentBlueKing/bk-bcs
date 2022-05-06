@@ -28,7 +28,7 @@ import (
 // New 根据 Format 类型，生成不同的 Manifest 转换器
 func New(ctx context.Context, rawData map[string]interface{}, clusterID, kind, format string) (Transformer, error) {
 	switch format {
-	case action.ManifestFormat:
+	case action.DefaultFormat, action.ManifestFormat:
 		return &DummyTransformer{manifest: rawData}, nil
 	case action.FormDataFormat:
 		return &FormDataTransformer{ctx: ctx, formData: rawData, clusterID: clusterID, kind: kind}, nil
