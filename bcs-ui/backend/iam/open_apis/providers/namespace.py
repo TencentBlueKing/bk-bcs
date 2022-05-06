@@ -30,11 +30,9 @@ class NamespaceProvider(ResourceProvider):
     """命名空间 Provider"""
 
     def list_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
-        cluster_id = filter_obj.parent['id']
+        project_id, cluster_id = self._extract_project_and_cluster(filter_obj)
 
-        namespace_list = self._list_namespaces(
-            cluster_id, shared_cluster_ids=[cluster['cluster_id'] for cluster in get_shared_clusters()]
-        )
+        namespace_list = self._list_namespaces(project_id, cluster_id)
 
         results = [
             {'id': calc_iam_ns_id(cluster_id, ns['name']), 'display_name': ns['name']}
@@ -66,12 +64,13 @@ class NamespaceProvider(ResourceProvider):
 
     def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         """支持模糊搜索命名空间"""
-        cluster_id = filter_obj.parent['id']
+        project_id, cluster_id = self._extract_project_and_cluster(filter_obj)
         # 针对搜索关键字过滤命名空间
         namespace_list = [
             ns
             for ns in self._list_namespaces(
-                cluster_id, shared_cluster_ids=[cluster['cluster_id'] for cluster in get_shared_clusters()]
+                project_id,
+                cluster_id,
             )
             if filter_obj.keyword in ns['name']
         ]
@@ -82,6 +81,10 @@ class NamespaceProvider(ResourceProvider):
         ]
 
         return ListResult(results=results, count=len(namespace_list))
+
+    def _extract_project_and_cluster(self, filter_obj: FancyDict) -> (str, str):
+        """提取 project_id 和 cluster_id"""
+        return (filter_obj.ancestors[0]['id'], filter_obj.ancestors[1]['id'])
 
     def _calc_iam_cluster_ns(self, iam_ns_ids: List[str]) -> Dict[str, Dict]:
         """
@@ -96,18 +99,25 @@ class NamespaceProvider(ResourceProvider):
         shared_cluster_ids = [cluster['cluster_id'] for cluster in get_shared_clusters()]
 
         for cluster_id in cluster_set:
-            for ns in self._list_namespaces(cluster_id, shared_cluster_ids):
+            for ns in self._list_namespaces_by_cluster(cluster_id, shared_cluster_ids):
                 iam_cluster_ns[calc_iam_ns_id(cluster_id, ns['name'])] = ns
 
         return iam_cluster_ns
 
-    def _list_namespaces(self, cluster_id: str, shared_cluster_ids: List[str]) -> List[Dict]:
+    def _list_namespaces(self, project_id: str, cluster_id: str) -> List[Dict]:
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
+        data = paas_cc.get_cluster_namespace_list(project_id, cluster_id)
+        return data['results'] or []
+
+    def _list_namespaces_by_cluster(self, cluster_id: str, shared_cluster_ids: List[str]) -> List[Dict]:
+        """根据集群 ID, 查询所有命名空间"""
+        paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
+
         if cluster_id not in shared_cluster_ids:
             cluster = paas_cc.get_cluster_by_id(cluster_id=cluster_id)
-            ns_data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
-            return ns_data['results'] or []
+            data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
+            return data['results'] or []
 
         # 共享集群获取
-        ns_data = paas_cc.list_namespaces_in_shared_cluster(cluster_id)
-        return ns_data['results'] or []
+        data = paas_cc.list_namespaces_in_shared_cluster(cluster_id)
+        return data['results'] or []
