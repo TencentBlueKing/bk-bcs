@@ -33,8 +33,8 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:   "bcs-monitor",
-		Short: "A long-term storage for bk-monitor",
-		Long:  `A block based long-term storage for bk-monitor`,
+		Short: "a unified metrics server for bcs-monitor",
+		Long:  `A unified metrics server for bcs-monitor`,
 	}
 )
 
@@ -70,6 +70,7 @@ func init() {
 	// rootCmd.SilenceUsage = true
 
 	rootCmd.AddCommand(APICmd())
+	rootCmd.AddCommand(QueryCmd())
 	rootCmd.AddCommand(StoreGWCmd())
 	rootCmd.AddCommand(VersionCmd())
 

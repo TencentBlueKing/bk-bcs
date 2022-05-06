@@ -25,7 +25,7 @@ store:
 
 query:
   http: # http 服务相关
-    address: 127.0.0.1:10214
+    address: 0.0.0.0:10214
   grpc: # grpc 服务相关
     address: 127.0.0.1:10215
   store: # store 列表

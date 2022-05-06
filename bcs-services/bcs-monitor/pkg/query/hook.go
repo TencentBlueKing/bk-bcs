@@ -20,7 +20,7 @@ const (
 	QueryStoreRespTimeoutKey             = "query.store_resp_timeout"       // store list
 )
 
-var queryReplicaLabels = []string{"bcs-monitor_replica"}
+var queryReplicaLabels = []string{"bcs_monitor_replica"}
 
 func init() {
 	viper.SetDefault(QueryMaxConCurrentQueriesConfKey, 20)

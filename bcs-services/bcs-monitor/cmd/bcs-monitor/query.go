@@ -9,16 +9,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/query"
 )
 
-func APICmd() *cobra.Command {
+func QueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "api",
-		Short: "bcs monitor api",
-		Long:  `bcs monitor api.`,
+		Use:   "query",
+		Short: "PromQL compatible query api",
+		Long:  `Query node exposing PromQL enabled Query API with data retrieved from multiple store-gw.`,
 	}
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		cmdOpt, _ := getOption(cmd.Context())
-		if err := runAPI(cmdOpt); err != nil {
+		if err := runQuery(cmdOpt); err != nil {
 			cmdOpt.logger.Fatalf("execute %s command failed: %s", cmd.Use, err)
 		}
 
@@ -35,7 +35,7 @@ func APICmd() *cobra.Command {
 	return cmd
 }
 
-func runAPI(opt *option) error {
+func runQuery(opt *option) error {
 	var (
 		reg       = opt.reg
 		kitLogger = gokit.NewLogger(opt.logger)

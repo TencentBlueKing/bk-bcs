@@ -83,7 +83,7 @@ func NewAPI(
 
 	dnsStoreProvider := dns.NewProvider(
 		kitLogger,
-		extprom.WrapRegistererWithPrefix("bcs-monitor_query_store_apis_", reg),
+		extprom.WrapRegistererWithPrefix("bcs_monitor_query_store_apis_", reg),
 		dns.ResolverType(dns.MiekgdnsResolverType),
 	)
 
@@ -113,7 +113,7 @@ func NewAPI(
 
 		queryableCreator = query.NewQueryableCreator(
 			kitLogger,
-			extprom.WrapRegistererWithPrefix("bcs-monitor_api_", reg),
+			extprom.WrapRegistererWithPrefix("bcs_monitor_api_", reg),
 			proxy,
 			maxConcurrentSelects,
 			queryTimeout,
@@ -169,7 +169,7 @@ func NewAPI(
 	apiServer.statusProber = prober.Combine(
 		httpProbe,
 		grpcProbe,
-		prober.NewInstrumentation(comp, kitLogger, extprom.WrapRegistererWithPrefix("bcs-monitor_", reg)),
+		prober.NewInstrumentation(comp, kitLogger, extprom.WrapRegistererWithPrefix("bcs_monitor_", reg)),
 	)
 
 	if tracer == nil {
@@ -211,7 +211,7 @@ func NewAPI(
 			defaultMetadataTimeRange,
 			false, // disableCORS
 			gate.New(
-				extprom.WrapRegistererWithPrefix("bcs-monitor_api_concurrent_", reg),
+				extprom.WrapRegistererWithPrefix("bcs_monitor_api_concurrent_", reg),
 				maxConcurrentQueries,
 			),
 			reg,
