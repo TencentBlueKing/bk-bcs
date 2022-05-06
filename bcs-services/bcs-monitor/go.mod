@@ -131,4 +131,7 @@ require (
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
 )
 
-replace github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
+replace (
+	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
+	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
+)

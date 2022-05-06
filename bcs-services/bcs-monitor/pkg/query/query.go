@@ -40,7 +40,7 @@ import (
 
 type API struct {
 	StoresList   []string
-	stores       *query.StoreSet
+	endpoints    *query.EndpointSet
 	proxy        storepb.StoreServer
 	api          *v1.QueryAPI
 	srv          *httpserver.Server
@@ -95,25 +95,21 @@ func NewAPI(
 	var (
 		apiServer = &API{}
 		comp      = component.Query
-		stores    = query.NewStoreSet(
+		endpoints = query.NewEndpointSet(
 			kitLogger,
 			reg,
-			func() (specs []query.StoreSpec) {
+			func() (specs []*query.GRPCEndpointSpec) {
 				// Add DNS resolved addresses from static flags and file SD.
 				for _, addr := range dnsStoreProvider.Addresses() {
-					specs = append(specs, query.NewGRPCStoreSpec(addr, false))
+					specs = append(specs, query.NewGRPCEndpointSpec(addr, false))
 				}
 				return specs
 			},
-			nil,
-			nil,
-			nil,
-			nil,
 			dialOpts,
 			unhealthyStoreTimeout,
 		)
 
-		proxy = store.NewProxyStore(kitLogger, reg, stores.Get, component.Query, nil, storeResponseTimeout)
+		proxy = store.NewProxyStore(kitLogger, reg, endpoints.GetStoreClients, component.Query, nil, storeResponseTimeout)
 
 		queryableCreator = query.NewQueryableCreator(
 			kitLogger,
@@ -134,7 +130,7 @@ func NewAPI(
 			},
 		}
 	)
-	apiServer.stores = stores
+	apiServer.endpoints = endpoints
 	logger.Infof("store list: [%v]", conf.StoreList)
 
 	// Periodically update the store set with the addresses we see in our cluster.
@@ -142,12 +138,12 @@ func NewAPI(
 		ctx, cancel := context.WithCancel(context.Background())
 		g.Add(func() error {
 			return runutil.Repeat(5*time.Second, ctx.Done(), func() error {
-				stores.Update(ctx)
+				endpoints.Update(ctx)
 				return nil
 			})
 		}, func(error) {
 			cancel()
-			stores.Close()
+			endpoints.Close()
 		})
 	}
 
@@ -190,11 +186,11 @@ func NewAPI(
 		ins := extpromhttp.NewInstrumentationMiddleware(reg, nil)
 
 		// 启动一个ui界面
-		ui.NewQueryUI(kitLogger, stores, "", "").Register(router, ins)
+		ui.NewQueryUI(kitLogger, endpoints, "", "", "").Register(router, ins)
 
 		api := v1.NewQueryAPI(
 			kitLogger,
-			stores,
+			endpoints.GetEndpointStatus,
 			engineFactory(promql.NewEngine, engineOpts, dynamicLookbackDelta),
 			queryableCreator,
 			NewEmptyRuleClient(),
@@ -206,12 +202,14 @@ func NewAPI(
 			true, // 用不到rule接口
 			true, // 用不到target接口
 			true, // 用不到 metadata接口
+			true, // enableExemplarPartialResponse
+			true, // enableQueryPushdown
 			queryReplicaLabels,
 			nil,
 			defaultRangeQueryStep,
 			instantDefaultMaxSourceResolution,
 			defaultMetadataTimeRange,
-			false,
+			false, // disableCORS
 			gate.New(
 				extprom.WrapRegistererWithPrefix("bcs-monitor_api_concurrent_", reg),
 				maxConcurrentQueries,
@@ -330,12 +328,12 @@ func (a *API) RunGetStore() error {
 		a.ctx, a.cancel = context.WithCancel(ctx)
 	}
 	return runutil.Repeat(5*time.Second, a.ctx.Done(), func() error {
-		a.stores.Update(a.ctx)
+		a.endpoints.Update(a.ctx)
 		return nil
 	})
 }
 
 func (a *API) ShutDownGetStore(_ error) {
 	a.cancel()
-	a.stores.Close()
+	a.endpoints.Close()
 }

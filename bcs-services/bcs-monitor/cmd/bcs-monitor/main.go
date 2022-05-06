@@ -40,7 +40,7 @@ func main() {
 	// metrics 配置
 	metrics := prometheus.NewRegistry()
 	metrics.MustRegister(
-		version.NewCollector("bcs-monitor"),
+		version.NewCollector("bcs_monitor"),
 		prometheus.NewGoCollector(),
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
