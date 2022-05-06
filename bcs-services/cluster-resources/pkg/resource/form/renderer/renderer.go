@@ -134,6 +134,10 @@ func (r *ManifestRenderer) render2Map() error {
 
 // 添加 EditMode Label 标识
 func (r *ManifestRenderer) setEditMode() error {
+	// 若原始配置中没有 labels，则默认新建
+	if labels, _ := mapx.GetItems(r.Manifest, "metadata.labels"); labels == nil {
+		_ = mapx.SetItems(r.Manifest, "metadata.labels", map[string]interface{}{})
+	}
 	return mapx.SetItems(r.Manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeForm)
 }
 
