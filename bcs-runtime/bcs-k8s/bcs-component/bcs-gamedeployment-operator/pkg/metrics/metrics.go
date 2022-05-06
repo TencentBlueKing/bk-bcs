@@ -22,6 +22,15 @@ import (
 
 var namespace = "bkbcs"
 var subsystem = "gamedeployment"
+var IsGrace string
+
+const (
+	SuccessStatus          = "success"
+	FailureStatus          = "failure"
+	InplaceUpdateStrategy  = "inplaceUpdate"
+	HotPatchUpdateStrategy = "hotPatchUpdate"
+	DeletePodAction        = "deletePod"
+)
 
 const initialMinVal = 999999
 
@@ -123,7 +132,7 @@ func NewMetrics() *Metrics {
 			Name:      "pod_update_duration_seconds",
 			Help:      "update duration(seconds) of pod",
 			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-		}, []string{"gd", "status", "updateType"})
+		}, []string{"gd", "status", "updateType", "grace", "action"})
 		prometheus.MustRegister(m.podUpdateDuration)
 
 		m.podDeleteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -132,7 +141,7 @@ func NewMetrics() *Metrics {
 			Name:      "pod_delete_duration_seconds",
 			Help:      "delete duration(seconds) of pod",
 			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-		}, []string{"gd", "status"})
+		}, []string{"gd", "status", "grace", "action"})
 		prometheus.MustRegister(m.podDeleteDuration)
 
 		m.podCreateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -156,7 +165,7 @@ func NewMetrics() *Metrics {
 			Subsystem: subsystem,
 			Name:      "pod_update_duration_seconds_max",
 			Help:      "the max update duration(seconds) of pod",
-		}, []string{"gd", "status", "updateType"})
+		}, []string{"gd", "status", "updateType", "grace", "action"})
 		prometheus.MustRegister(m.podUpdateDurationMax)
 
 		m.podUpdateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -164,7 +173,7 @@ func NewMetrics() *Metrics {
 			Subsystem: subsystem,
 			Name:      "pod_update_duration_seconds_min",
 			Help:      "the min update duration(seconds) of pod",
-		}, []string{"gd", "status", "updateType"})
+		}, []string{"gd", "status", "updateType", "grace", "action"})
 		prometheus.MustRegister(m.podUpdateDurationMin)
 
 		m.podDeleteDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -172,7 +181,7 @@ func NewMetrics() *Metrics {
 			Subsystem: subsystem,
 			Name:      "pod_delete_duration_seconds_max",
 			Help:      "the max delete duration(seconds) of pod",
-		}, []string{"gd", "status"})
+		}, []string{"gd", "status", "grace", "action"})
 		prometheus.MustRegister(m.podDeleteDurationMax)
 
 		m.podDeleteDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -180,7 +189,7 @@ func NewMetrics() *Metrics {
 			Subsystem: subsystem,
 			Name:      "pod_delete_duration_seconds_min",
 			Help:      "the max delete duration(seconds) of pod",
-		}, []string{"gd", "status"})
+		}, []string{"gd", "status", "grace", "action"})
 		prometheus.MustRegister(m.podDeleteDurationMin)
 
 		m.replicas = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -251,14 +260,14 @@ func (m *Metrics) CollectReconcileDuration(gdName, status string, d time.Duratio
 // 3.the min create duration(seconds) of pods
 func (m *Metrics) CollectPodCreateDurations(gdName, status string, d time.Duration) {
 	duration := d.Seconds()
-	m.podCreateDuration.With(prometheus.Labels{"gd": gdName, "status": status}).Observe(duration)
+	m.podCreateDuration.WithLabelValues(gdName, status).Observe(duration)
 	if duration > m.podCreateDurationMaxVal {
 		m.podCreateDurationMaxVal = duration
-		m.podCreateDurationMax.With(prometheus.Labels{"gd": gdName, "status": status}).Set(duration)
+		m.podCreateDurationMax.WithLabelValues(gdName, status).Set(duration)
 	}
 	if duration < m.podCreateDurationMinVal {
 		m.podCreateDurationMinVal = duration
-		m.podCreateDurationMin.With(prometheus.Labels{"gd": gdName, "status": status}).Set(duration)
+		m.podCreateDurationMin.WithLabelValues(gdName, status).Set(duration)
 	}
 }
 
@@ -266,19 +275,17 @@ func (m *Metrics) CollectPodCreateDurations(gdName, status string, d time.Durati
 // 1.the update duration(seconds) of each pod
 // 2.the max update duration(seconds) of pods
 // 3.the min update duration(seconds) of pods
-func (m *Metrics) CollectPodUpdateDurations(gdName, status, updateType string, d time.Duration) {
+func (m *Metrics) CollectPodUpdateDurations(gdName, status, updateType, action, grace string, d time.Duration) {
 	duration := d.Seconds()
-	m.podUpdateDuration.With(prometheus.Labels{"gd": gdName, "status": status,
-		"updateType": updateType}).Observe(duration)
+	m.podUpdateDuration.WithLabelValues(gdName, status, updateType, action, grace).Observe(duration)
+
 	if duration > m.podUpdateDurationMaxVal {
 		m.podUpdateDurationMaxVal = duration
-		m.podUpdateDurationMax.With(prometheus.Labels{"gd": gdName, "status": status,
-			"updateType": updateType}).Set(duration)
+		m.podUpdateDurationMax.WithLabelValues(gdName, status, updateType, action, grace).Set(duration)
 	}
 	if duration < m.podUpdateDurationMinVal {
 		m.podUpdateDurationMinVal = duration
-		m.podUpdateDurationMin.With(prometheus.Labels{"gd": gdName, "status": status,
-			"updateType": updateType}).Set(duration)
+		m.podUpdateDurationMin.WithLabelValues(gdName, status, updateType, action, grace).Set(duration)
 	}
 }
 
@@ -286,16 +293,16 @@ func (m *Metrics) CollectPodUpdateDurations(gdName, status, updateType string, d
 // 1.the delete duration(seconds) of each pod
 // 2.the max delete duration(seconds) of pods
 // 3.the min delete duration(seconds) of pods
-func (m *Metrics) CollectPodDeleteDurations(gdName, status string, d time.Duration) {
+func (m *Metrics) CollectPodDeleteDurations(gdName, status string, action, grace string, d time.Duration) {
 	duration := d.Seconds()
-	m.podDeleteDuration.With(prometheus.Labels{"gd": gdName, "status": status}).Observe(duration)
+	m.podDeleteDuration.WithLabelValues(gdName, status, action, grace).Observe(duration)
 	if duration > m.podDeleteDurationMaxVal {
 		m.podDeleteDurationMaxVal = duration
-		m.podDeleteDurationMax.With(prometheus.Labels{"gd": gdName, "status": status}).Set(duration)
+		m.podDeleteDurationMax.WithLabelValues(gdName, status, action, grace).Set(duration)
 	}
 	if duration < m.podDeleteDurationMinVal {
 		m.podDeleteDurationMinVal = duration
-		m.podDeleteDurationMin.With(prometheus.Labels{"gd": gdName, "status": status}).Set(duration)
+		m.podDeleteDurationMin.WithLabelValues(gdName, status, action, grace).Set(duration)
 	}
 }
 
@@ -309,7 +316,7 @@ func (m *Metrics) CollectRelatedReplicas(gdName string,
 	m.updatedReadyReplicas.With(prometheus.Labels{"gd": gdName}).Set(float64(updatedReadyReplicas))
 }
 
-// collectOperatorVersion collects the image version of gamestatefulset operator pods
+// CollectOperatorVersion collects the image version of GameDeployment operator pods
 func (m *Metrics) CollectOperatorVersion(imageVersion, CRDVersion, gitVersion, gitCommit, buildDate string) {
 	m.operatorVersion.WithLabelValues("GameDeployment", imageVersion, CRDVersion,
 		gitVersion, gitCommit, buildDate).Set(float64(1))
