@@ -27,12 +27,6 @@ from backend.iam.permissions.resources.templateset import TemplatesetPermission
 from .fake_iam import *  # noqa
 
 
-@pytest.fixture(autouse=True)
-def patch_shared_clusters():
-    with mock.patch('backend.components.cluster_manager.get_shared_clusters', new=lambda *args, **kwargs: []):
-        yield
-
-
 def generate_apply_url(username: str, action_request_list: List[ActionResourcesRequest]) -> str:
     expect = []
     for req in action_request_list:

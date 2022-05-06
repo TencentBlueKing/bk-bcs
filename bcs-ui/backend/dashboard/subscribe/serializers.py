@@ -17,9 +17,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from backend.dashboard.utils.resources import get_crd_info
-from backend.resources.constants import ResourceScope
+from backend.resources.constants import NATIVE_CLUSTER_SCOPE_RES_KINDS, ResourceScope
 
-from .constants import CLUSTER_SCOPE_RESOURCE_KINDS
 from .utils import is_cobj_kind
 
 
@@ -34,7 +33,7 @@ class FetchResourceWatchResultSLZ(serializers.Serializer):
     namespace = serializers.CharField(label=_('命名空间'), max_length=64, required=False)
 
     def validate(self, attrs):
-        """ 若不是确定支持的资源类型（如自定义资源），则需要提供 apiVersion，以免需先查询 CRD """
+        """若不是确定支持的资源类型（如自定义资源），则需要提供 apiVersion，以免需先查询 CRD"""
         kind, namespace, crd_name = attrs['kind'], attrs.get('namespace'), attrs.get('crd_name')
         if is_cobj_kind(kind):
             if not (attrs.get('api_version') and crd_name):
@@ -47,6 +46,6 @@ class FetchResourceWatchResultSLZ(serializers.Serializer):
             if not (namespace or crd_info.get('scope') == ResourceScope.Cluster):
                 raise ValidationError(_('查询当前自定义资源事件需要指定 Namespace'))
         # 部分 K8S 原生资源不需要命名空间，其余的则需要
-        elif not (kind in CLUSTER_SCOPE_RESOURCE_KINDS or namespace):
+        elif not (kind in NATIVE_CLUSTER_SCOPE_RES_KINDS or namespace):
             raise ValidationError(_('查询当前资源事件需要指定 Namespace'))
         return attrs

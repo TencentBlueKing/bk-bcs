@@ -35,7 +35,7 @@ class TestNamespace:
             yield
 
     def test_create_namespace(self, api_client):
-        """ 测试 open_api 创建命名空间 """
+        """测试 open_api 创建命名空间"""
         url = f'{BASE_URL}/namespaces/'
         resp = api_client.post(url, data={'name': RANDOM_NS_NAME, 'labels': {'test_lk': 'test_lv'}})
         assert resp.json()['code'] == 0
@@ -45,13 +45,13 @@ class TestNamespace:
         assert data['name'] == FAKE_DATA['name']
 
     def test_update_namespace(self, api_client):
-        """ 测试 open_api 更新 namespace labels，annotations 信息 """
+        """测试 open_api 更新 namespace labels，annotations 信息"""
         url = f'{BASE_URL}/namespaces/{RANDOM_NS_NAME}/'
         resp = api_client.put(url, data={'labels': {'test_lk': 'test_lv1'}, 'annotations': {'test_ak': 'test_av'}})
         assert resp.json()['code'] == 0
 
     def test_retrieve_namespace(self, api_client):
-        """ 测试 open_api 获取 namespace 详情 """
+        """测试 open_api 获取 namespace 详情"""
         url = f'{BASE_URL}/namespaces/{RANDOM_NS_NAME}/'
         resp_data = api_client.get(url).json()['data']
         assert getitems(resp_data, 'metadata.labels.test_lk') == 'test_lv1'

@@ -58,7 +58,7 @@ class ProjectPermCtx(PermCtx):
     def from_dict(cls, init_data: Dict) -> 'ProjectPermCtx':
         return cls(
             username=init_data['username'],
-            force_raise=init_data['force_raise'],
+            force_raise=init_data.get('force_raise', False),
             project_id=init_data.get('project_id', ''),
         )
 

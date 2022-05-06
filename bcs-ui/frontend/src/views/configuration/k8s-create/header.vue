@@ -147,7 +147,7 @@
                     <bk-button
                         :disabled="!canCreateInstance"
                         v-authority="{
-                            clickable: isNewTemplate ? true : getAuthority('templateset_instantiate', Number(curTemplateId)),
+                            clickable: isNewTemplate || isFromNewTemplate ? true : getAuthority('templateset_instantiate', Number(curTemplateId)),
                             actionId: 'templateset_instantiate',
                             resourceName: curTemplate.name,
                             disablePerms: true,
@@ -390,6 +390,7 @@
         mixins: [applyPerm],
         data () {
             return {
+                isFromNewTemplate: false,
                 saveVersionWay: 'cur',
                 isEditName: false,
                 isEditDesc: false,
@@ -1591,6 +1592,7 @@
                         HPAs: this.HPAs
                     }
                     this.isTemplateLoading = false
+                    this.isFromNewTemplate = true
                     callback(data)
                 } else if (this.curTemplateId === 0 || this.curTemplateId === '0') {
                     if (!this.curTemplate.name) {

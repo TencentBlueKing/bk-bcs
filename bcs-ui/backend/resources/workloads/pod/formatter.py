@@ -20,10 +20,10 @@ from backend.utils.basic import getitems
 
 
 class PodFormatter(WorkloadFormatter):
-    """ Pod 格式化 """
+    """Pod 格式化"""
 
     def parse_container_images(self, resource_dict: Dict) -> List:
-        """ pod 配置格式与其它 工作负载类 资源不一致，需要重写解析逻辑 """
+        """pod 配置格式与其它 工作负载类 资源不一致，需要重写解析逻辑"""
         containers = getitems(resource_dict, 'spec.containers', [])
         return list({c['image'] for c in containers if 'image' in c})
 

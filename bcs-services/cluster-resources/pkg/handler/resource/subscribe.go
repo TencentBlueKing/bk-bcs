@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -38,14 +39,20 @@ import (
 // Subscribe 集群资源事件订阅（websocket）
 func (h *Handler) Subscribe(
 	ctx context.Context, req *clusterRes.SubscribeReq, stream clusterRes.Resource_SubscribeStream,
-) error {
+) (err error) {
+	// 注入项目，集群信息
+	ctx, err = injectProjClusterInfo(ctx, req)
+	if err != nil {
+		return err
+	}
+
 	// 接口调用合法性校验
-	if err := perm.CheckSubscribable(req); err != nil {
+	if err = perm.CheckSubscribable(ctx, req); err != nil {
 		return err
 	}
 
 	// 参数合法性校验
-	if err := validateSubscribeParams(req); err != nil {
+	if err = validateSubscribeParams(ctx, req); err != nil {
 		return err
 	}
 
@@ -79,7 +86,7 @@ func (h *Handler) Subscribe(
 			resp.Message = obj.Message
 		}
 
-		if err := stream.Send(&resp); err != nil {
+		if err = stream.Send(&resp); err != nil {
 			return err
 		}
 	}
@@ -101,14 +108,33 @@ func maybeCobjKind(kind string) bool {
 	return !slice.StringInSlice(kind, subscribableNativeKinds)
 }
 
+// 在 Context 中注入 Project，Cluster 信息
+func injectProjClusterInfo(ctx context.Context, req *clusterRes.SubscribeReq) (context.Context, error) {
+	projInfo, err := project.GetProjectInfo(ctx, req.ProjectID)
+	if err != nil {
+		return nil, errorx.New(errcode.General, "获取项目 %s 信息失败：%v", req.ProjectID, err)
+	}
+	clusterInfo, err := cluster.GetClusterInfo(ctx, req.ClusterID)
+	if err != nil {
+		return nil, errorx.New(errcode.General, "获取集群 %s 信息失败：%v", req.ClusterID, err)
+	}
+	// 若集群类型非共享集群，则需确认集群的项目 ID 与请求参数中的一致
+	if !slice.StringInSlice(clusterInfo.Type, cluster.SharedClusterTypes) && clusterInfo.ProjID != projInfo.ID {
+		return nil, errorx.New(errcode.ValidateErr, "集群 %s 不属于指定项目!", req.ClusterID)
+	}
+	ctx = context.WithValue(ctx, ctxkey.ProjKey, projInfo)
+	ctx = context.WithValue(ctx, ctxkey.ClusterKey, clusterInfo)
+	return ctx, nil
+}
+
 // 订阅 API 参数校验
-func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
+func validateSubscribeParams(ctx context.Context, req *clusterRes.SubscribeReq) error {
 	if maybeCobjKind(req.Kind) {
 		// 不支持订阅的原生资源，可以通过要求指定 ApiVersion，CRDName 等的后续检查限制住
 		if req.ApiVersion == "" || req.CRDName == "" {
 			return errorx.New(errcode.ValidateErr, "当资源类型为自定义对象时，需要指定 ApiVersion & CRDName")
 		}
-		crdInfo, err := cli.GetCRDInfo(req.ClusterID, req.CRDName)
+		crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 		if err != nil {
 			return err
 		}
@@ -130,22 +156,22 @@ func validateSubscribeParams(req *clusterRes.SubscribeReq) error {
 func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Interface, error) {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
 	opts := metav1.ListOptions{ResourceVersion: req.ResourceVersion}
-	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// 命名空间，CRD watcher 特殊处理
 	if req.Kind == res.NS {
-		projInfo, err := project.GetProjectInfo(req.ProjectID)
-		if err != nil {
+		projInfo, fetchProjErr := project.FromContext(ctx)
+		if fetchProjErr != nil {
 			return nil, err
 		}
-		return cli.NewNSClient(clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
+		return cli.NewNSClient(ctx, clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
 	}
 	if req.Kind == res.CRD {
-		return cli.NewCRDClient(clusterConf).Watch(ctx, clusterInfo.Type, opts)
+		return cli.NewCRDClient(ctx, clusterConf).Watch(ctx, clusterInfo.Type, opts)
 	}
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, req.Kind, req.ApiVersion)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, req.Kind, req.ApiVersion)
 	if err != nil {
 		return nil, err
 	}

@@ -36,6 +36,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
+// TokenNotify is the interface for token notify
 type TokenNotify interface {
 	Run()
 	Stop()
@@ -66,9 +67,11 @@ type tokenNotify struct {
 }
 
 const (
+	// TokenNotifyLockName is the name of the notify lock
 	TokenNotifyLockName = "tokenNotify"
 )
 
+// NewTokenNotify create a new token notify and init etcd lock
 func NewTokenNotify(op *options.UserManagerOptions) (TokenNotify, error) {
 	var tlsCfg *tls.Config
 	if !op.InsecureEtcd {
@@ -111,20 +114,22 @@ func NewTokenNotify(op *options.UserManagerOptions) (TokenNotify, error) {
 	}, nil
 }
 
+// Run start the token notify
 func (t *tokenNotify) Run() {
 	// acquire lock (or wait to have it)
 	if err := t.locker.Lock(TokenNotifyLockName, lock.LockTTL(5)); err != nil {
-		blog.Errorf("acquire lock err:", err.Error())
+		blog.Errorf("acquire lock err: %s", err.Error())
 		return
 	}
 	atomic.StoreInt32(&t.started, 1)
 	blog.Infof("acquire token notify lock success")
 
 	// run job
-	t.cron.AddFunc(t.cronExpression, func() { t.do() })
+	_ = t.cron.AddFunc(t.cronExpression, func() { t.do() })
 	t.cron.Start()
 }
 
+// Stop implements TokenNotify interface
 func (t *tokenNotify) Stop() {
 	t.cron.Stop()
 	if atomic.LoadInt32(&t.started) != 1 {
@@ -256,6 +261,7 @@ func (t *tokenNotify) insertRecord(resp *APIResponse, token models.BcsUser, noti
 	}
 }
 
+// APIResponse is the response format of esb api
 type APIResponse struct {
 	Result    bool        `json:"result"`
 	Code      string      `json:"code"`

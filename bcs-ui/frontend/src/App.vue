@@ -1,12 +1,7 @@
 <template>
     <div :class="systemCls" id="app">
         <Navigation @create-project="handleCreateProject">
-            <router-view :key="routerKey" v-if="projectList.length" />
-            <bk-exception type="403" v-else-if="!isLoading">
-                <span>{{$t('无项目权限')}}</span>
-                <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
-                <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
-            </bk-exception>
+            <router-view :key="routerKey" v-if="!isLoading" />
         </Navigation>
         <!-- 项目创建弹窗 -->
         <ProjectCreate v-model="showCreateDialog" :project-data="null"></ProjectCreate>
@@ -30,7 +25,7 @@
         components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips },
         data () {
             return {
-                isLoading: false,
+                isLoading: true,
                 showCreateDialog: false
             }
         },
@@ -109,7 +104,6 @@
             bus.$off('show-apply-perm-modal-async')
         },
         mounted () {
-            document.title = this.$t('容器服务')
             window.$loginModal = this.$refs.login
         },
         methods: {
@@ -123,13 +117,10 @@
                     console.error(err)
                 })
                 this.isLoading = false
+                document.title = this.$t('容器服务')
             },
             handleCreateProject () {
                 this.showCreateDialog = true
-            },
-            // 申请项目权限
-            handleGotoIAM () {
-                window.open(window.BK_IAM_APP_URL)
             }
         }
     }
@@ -138,6 +129,7 @@
     @import '@/css/reset.css';
     @import '@/css/app.css';
     @import '@/css/animation.css';
+    @import '@/fonts/style.css';
 
     .app-container {
         min-width: 1280px;

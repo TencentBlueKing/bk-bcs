@@ -23,13 +23,11 @@ from django.utils.translation import ugettext_lazy as _
 from backend.components.base import BaseHttpClient, BkApiClient, ComponentAuth, response_handler
 from backend.components.utils import http_delete, http_get, http_patch, http_post, http_put
 from backend.container_service.clusters.models import CommonStatus
-from backend.iam.permissions.filter import ProjectFilter
 from backend.utils.basic import getitems
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 
-from . import ssm
 from .cluster_manager import get_shared_clusters
 
 logger = logging.getLogger(__name__)
@@ -421,34 +419,6 @@ def get_image_registry_list(access_token, cluster_id):
     return [area_cfg[r_key] for r_key in image_registry_keys if area_cfg.get(r_key)]
 
 
-def list_auth_projects(access_token: str, username: str = '') -> Dict:
-    """获取用户有权限(project_view)的所有项目"""
-    if not username:
-        authorization = ssm.get_authorization_by_access_token(access_token)
-        username = authorization['identity']['username']
-
-    perm_filter = ProjectFilter().make_view_perm_filter(username)
-    if not perm_filter:
-        return {'code': 0, 'data': []}
-
-    # TODO 通过分页方式, 支持 any 用户查看有权限的项目
-    # 如果是 any, 表示所有项目. 由于项目量过大, 优化前仅返回空列表
-    if ProjectFilter.op_is_any(perm_filter):
-        logger.error(f'{username} project filter match any!')
-        return {'code': 0, 'data': []}
-
-    project_id_list = perm_filter.get('value')
-    if not project_id_list:
-        return {'code': 0, 'data': []}
-
-    client = PaaSCCClient(auth=ComponentAuth(access_token))
-    projects = client.list_projects_by_ids(project_id_list)
-    for p in projects:
-        p['project_code'] = p['english_name']
-
-    return {'code': 0, 'data': projects}
-
-
 def delete_cluster(access_token, project_id, cluster_id):
     """删除集群"""
     url = f"{BCS_CC_API_PRE_URL}/projects/{project_id}/clusters/{cluster_id}/"
@@ -526,8 +496,6 @@ def get_all_cluster_host_ips(access_token):
 
 
 # new client module start
-
-
 class PaaSCCConfig:
     """PaaSCC 系统配置对象，为 Client 提供地址等信息"""
 
@@ -535,16 +503,24 @@ class PaaSCCConfig:
         self.host = host
 
         # PaaSCC 系统接口地址
+        # 项目
+        self.list_projects = f'{host}/projects/'
+        self.get_project_url = f"{host}/projects/{{project_id}}/"
+        self.list_projects_by_ids = f"{host}/project_list/"
+        # 集群
         self.get_cluster_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}"
         self.get_cluster_by_id_url = f"{host}/clusters/{{cluster_id}}/"
-        self.get_project_url = f"{host}/projects/{{project_id}}/"
         self.update_cluster_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/"
         self.delete_cluster_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/"
         self.list_clusters_url = f"{host}/cluster_list/"
         self.update_node_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/nodes/"
+        # TODO 兼容容器化版本的逻辑，直连 SVC，后续随 PaaSCC 一并移除
+        if getattr(settings, "BCS_CC_GET_PROJECT_NODES", None):
+            self.get_node_list_url = f"{host}/projects/{{project_id}}/clusters/null/nodes/"
+        else:
+            self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
+        # 命名空间
         self.get_cluster_namespace_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/namespaces/"
-        self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
-        self.list_projects_by_ids = f"{host}/project_list/"
         self.list_namespaces_in_shared_cluster = f"{host}/shared_clusters/{{cluster_id}}/"
 
 
@@ -687,3 +663,7 @@ class PaaSCCClient(BkApiClient):
         url = self._config.list_namespaces_in_shared_cluster.format(cluster_id=cluster_id)
         # TODO 支持分页查询
         return self._client.request_json("GET", url, params={'offset': 0, 'limit': 1000})
+
+    @response_handler(default=[])
+    def list_all_projects(self) -> Dict:
+        return self._client.request_json('GET', url=self._config.list_projects, params={'desire_all_data': 1})

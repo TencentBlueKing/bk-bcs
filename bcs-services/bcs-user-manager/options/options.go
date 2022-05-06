@@ -44,6 +44,7 @@ type UserManagerOptions struct {
 	ClusterConfig    ClusterManagerConfig `json:"cluster_config"`
 	IAMConfig        IAMConfig            `json:"iam_config"`
 	PermissionSwitch bool                 `json:"permission_switch"`
+	Cmdb             CmdbConfig           `json:"cmdb"`
 }
 
 // ClusterManagerConfig cluster-manager config
@@ -106,4 +107,13 @@ type ESBConfig struct {
 type JWTKeyConfig struct {
 	JWTPublicKeyFile  string `json:"jwt_public_key_file" value:"" usage:"JWT public key file" mapstructure:"jwt_public_key_file"`
 	JWTPrivateKeyFile string `json:"jwt_private_key_file" value:"" usage:"JWT private key file" mapstructure:"jwt_private_key_file"`
+}
+
+// CmdbConfig for cmdb
+type CmdbConfig struct {
+	Enable     bool   `json:"enable"`
+	AppCode    string `json:"app_code"`
+	AppSecret  string `json:"app_secret"`
+	BkUserName string `json:"bk_user_name"`
+	Host       string `json:"host"`
 }

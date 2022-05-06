@@ -1,0 +1,13 @@
+{
+  "kind": "DaemonSet",
+  "class": "workloads",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_daemonset",
+      "alias": "DaemonSet Simple Demo",
+      "description": "A simple daemonset demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

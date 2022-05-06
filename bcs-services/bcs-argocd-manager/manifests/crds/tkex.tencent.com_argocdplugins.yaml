@@ -32,12 +32,24 @@ spec:
               description: ArgocdPluginSpec defines the desired state of ArgocdPlugin
               type: object
               properties:
-                host:
-                  type: string
                 image:
+                  type: string
+                nickName:
                   type: string
                 project:
                   type: string
+                service:
+                  description: ArgocdPluginService defines the service information of the plugins when type is "service"
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    headers:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    protocol:
+                      type: string
                 type:
                   type: string
             status:

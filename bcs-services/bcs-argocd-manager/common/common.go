@@ -12,4 +12,4 @@
 
 package common
 
-const BcsArgocdNamespace = "bcs-argocd"
+const BcsSystemNamespace = "bcs-system"

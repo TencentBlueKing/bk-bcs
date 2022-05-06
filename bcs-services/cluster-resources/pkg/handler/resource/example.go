@@ -42,9 +42,9 @@ func (h *Handler) GetK8SResTemplate(
 		return err
 	}
 	for _, tmpl := range conf["items"].([]interface{}) {
-		t, _ := tmpl.(map[interface{}]interface{})
-		t = make(map[interface{}]interface{})
-		t["manifest"], _ = example.LoadDemoManifest(fmt.Sprintf("%s/%s", conf["class"], t["name"]))
+		t, _ := tmpl.(map[string]interface{})
+		path := fmt.Sprintf("%s/%s", conf["class"], t["name"])
+		t["manifest"], _ = example.LoadDemoManifest(path, req.Namespace)
 	}
 	resp.Data, err = pbstruct.Map2pbStruct(conf)
 	return err

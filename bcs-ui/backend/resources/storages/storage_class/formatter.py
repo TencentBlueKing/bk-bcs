@@ -18,7 +18,7 @@ from backend.resources.storages.common.formatter import StorageFormatter
 
 
 class StorageClassFormatter(StorageFormatter):
-    """ StorageClass 格式化 """
+    """StorageClass 格式化"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         return self.format_common_dict(resource_dict)

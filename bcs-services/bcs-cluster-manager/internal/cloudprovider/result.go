@@ -35,6 +35,8 @@ type JobType string
 var (
 	// CreateClusterJob for createCluster job
 	CreateClusterJob JobType = "create-cluster"
+	// ImportClusterJob for importCluster job
+	ImportClusterJob JobType = "import-cluster"
 	// DeleteClusterJob for deleteCluster job
 	DeleteClusterJob JobType = "delete-cluster"
 	// AddNodeJob for addNodes job
@@ -100,6 +102,9 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	case CADeleteNodeJob:
 		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
 		return sjr.deleteCANodesResultStatus(isSuccess)
+	case ImportClusterJob:
+		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusImportClusterFailed)
+		return sjr.updateClusterResultStatus(isSuccess)
 	}
 
 	return fmt.Errorf(ErrJobType, sjr.JobType)

@@ -15,7 +15,6 @@
 package resource
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,46 +42,47 @@ func TestValidateSubscribeParams(t *testing.T) {
 	}
 	// 检查命名空间域原生资源
 	req.Kind = res.Deploy
+	ctx := handler.NewInjectedContext("", "", "")
 	// 需要指定命名空间
-	err = validateSubscribeParams(&req)
+	err = validateSubscribeParams(ctx, &req)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Namespace")
 
 	req.Namespace = envs.TestNamespace
-	assert.Nil(t, validateSubscribeParams(&req))
+	assert.Nil(t, validateSubscribeParams(ctx, &req))
 
 	// 检查集群域原生资源
 	req.Kind = res.PV
-	assert.Nil(t, validateSubscribeParams(&req))
+	assert.Nil(t, validateSubscribeParams(ctx, &req))
 
 	// 检查命名空间域自定义资源
 	req.Kind = "CronTab"
 	// 没有指定 CRDName，ApiVersion
-	err = validateSubscribeParams(&req)
+	err = validateSubscribeParams(ctx, &req)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "ApiVersion & CRDName")
 
 	req.CRDName = "xxx.stable.example.com"
 	req.ApiVersion = "stable.example.com/v1"
 	// crd 在集群中不存在
-	err = validateSubscribeParams(&req)
+	err = validateSubscribeParams(ctx, &req)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "not found")
 
 	req.CRDName = "crontabs.stable.example.com"
 	req.ApiVersion = "stable.example.com/v1"
-	assert.Nil(t, validateSubscribeParams(&req))
+	assert.Nil(t, validateSubscribeParams(ctx, &req))
 
 	req.Kind = "ACObjKind"
 	// kind 与 crd 中定义不一致
-	err = validateSubscribeParams(&req)
+	err = validateSubscribeParams(ctx, &req)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Kind")
 
 	req.Kind = "CronTab"
 	req.Namespace = ""
 	// 命名空间域自定义资源需要指定命名空间
-	err = validateSubscribeParams(&req)
+	err = validateSubscribeParams(ctx, &req)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Namespace")
 }
@@ -97,8 +97,9 @@ func TestSubscribe(t *testing.T) {
 		Namespace:       envs.TestNamespace,
 	}
 
-	log.Info("start test subscribe pod's event; loop will never break if event is empty!")
-	err := h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	ctx := handler.NewInjectedContext("", "", "")
+	log.Info(ctx, "start test subscribe pod's event; loop will never break if event is empty!")
+	err := h.Subscribe(ctx, &req, &mockSubscribeStream{})
 	// err != nil because force break websocket loop
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "force break websocket loop")
@@ -106,15 +107,15 @@ func TestSubscribe(t *testing.T) {
 
 func TestSubscribeDisabledKind(t *testing.T) {
 	h := New()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 	req := clusterRes.SubscribeReq{
 		ProjectID:       envs.TestProjectID,
 		ClusterID:       envs.TestSharedClusterID,
 		ResourceVersion: "0",
 	}
-
 	for _, kind := range []string{res.PV, res.SC} {
 		req.Kind = kind
-		err := h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+		err := h.Subscribe(ctx, &req, &mockSubscribeStream{})
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "只有指定的数类资源可以执行订阅功能")
 	}
@@ -125,6 +126,7 @@ func TestSubscribeCMInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 	req := clusterRes.SubscribeReq{
 		ProjectID:       envs.TestProjectID,
 		ClusterID:       envs.TestSharedClusterID,
@@ -133,22 +135,22 @@ func TestSubscribeCMInSharedCluster(t *testing.T) {
 		Namespace:       envs.TestNamespace,
 	}
 
-	err = h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	err = h.Subscribe(ctx, &req, &mockSubscribeStream{})
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "命名空间不属于指定项目")
 
 	// 在共享集群项目命名空间中创建 configmap 确保存在事件
-	cmManifest, _ := example.LoadDemoManifest("config/simple_configmap")
+	cmManifest, _ := example.LoadDemoManifest("config/simple_configmap", "")
 	_ = mapx.SetItems(cmManifest, "metadata.namespace", envs.TestSharedClusterNS)
 	clusterConf := res.NewClusterConfig(envs.TestSharedClusterID)
-	cmRes, err := res.GetGroupVersionResource(clusterConf, res.CM, "")
+	cmRes, err := res.GetGroupVersionResource(ctx, clusterConf, res.CM, "")
 	assert.Nil(t, err)
-	_, err = cli.NewResClient(clusterConf, cmRes).Create(cmManifest, true, metav1.CreateOptions{})
+	_, err = cli.NewResClient(clusterConf, cmRes).Create(ctx, cmManifest, true, metav1.CreateOptions{})
 	assert.Nil(t, err)
 
 	// 验证查询到事件后退出
 	req.Namespace = envs.TestSharedClusterNS
-	err = h.Subscribe(context.TODO(), &req, &mockSubscribeStream{})
+	err = h.Subscribe(ctx, &req, &mockSubscribeStream{})
 	// err != nil because force break websocket loop
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "force break websocket loop")

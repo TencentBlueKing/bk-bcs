@@ -26,7 +26,7 @@
     </bk-exception>
 </template>
 <script>
-    import { defineComponent, onBeforeMount, ref } from '@vue/composition-api'
+    import { defineComponent, onBeforeMount, ref, computed } from '@vue/composition-api'
     import { userPermsByAction } from '@/api/base'
     import actionsMap from '@/components/apply-perm/actions-map'
 
@@ -53,13 +53,17 @@
                 default: ''
             }
         },
-        setup (props) {
+        setup (props, ctx) {
+            const { $store } = ctx.root
             const tableData = ref([])
             const href = ref('')
             const isLoading = ref(false)
             const handleGotoIAM = () => {
                 window.open(href.value)
             }
+            const projectList = computed(() => {
+                return $store.state.sideMenu.onlineProjectList
+            })
             onBeforeMount(async () => {
                 if (!props.actionId) return
                 isLoading.value = true
@@ -70,7 +74,7 @@
                         : props.permCtx
                 }).catch(() => ({}))
                 isLoading.value = false
-                if (data?.perms?.[props.actionId] && props.fromRoute) {
+                if (data?.perms?.[props.actionId] && props.fromRoute && projectList.value.length) {
                     window.location.href = props.fromRoute
                 } else {
                     // eslint-disable-next-line camelcase

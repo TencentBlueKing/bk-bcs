@@ -14,9 +14,6 @@
 package v1
 
 import (
-	"sort"
-	"strings"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,10 +45,7 @@ type PortBindingItem struct {
 
 // GetKey get port pool item key
 func (pbi *PortBindingItem) GetKey() string {
-	tmpIDs := make([]string, len(pbi.LoadBalancerIDs))
-	copy(tmpIDs, pbi.LoadBalancerIDs)
-	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return GetPoolItemKey(pbi.PoolItemName, pbi.LoadBalancerIDs)
 }
 
 // PortBindingSpec defines the desired state of PortBinding

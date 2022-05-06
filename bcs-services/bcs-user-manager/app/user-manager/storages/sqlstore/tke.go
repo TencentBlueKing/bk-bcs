@@ -21,9 +21,9 @@ const (
 	// CidrStatusAvailable available status
 	CidrStatusAvailable = "available"
 	// CidrStatusUsed used status
-	CidrStatusUsed      = "used"
+	CidrStatusUsed = "used"
 	// CidrStatusReserved reserved status
-	CidrStatusReserved  = "reserved"
+	CidrStatusReserved = "reserved"
 )
 
 // CidrCount cidrInfo
@@ -70,4 +70,3 @@ func CountTkeCidr() []CidrCount {
 	GCoreDB.Table("tke_cidrs").Select("count(*) as count, vpc, ip_number, status").Group("vpc, ip_number, status").Scan(&cidrCounts)
 	return cidrCounts
 }
-

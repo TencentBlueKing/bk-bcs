@@ -16,8 +16,15 @@ redis:
   password: ""
   db: 0
 
+bklogin_conf:
+  host: ""
+
 auth_conf:
   host: ""
+
+bcs_cc_conf:
+  host: ""
+  stage: ""
 
 bcs_conf:
   host: ""

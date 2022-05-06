@@ -14,6 +14,7 @@ package clusterops
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -26,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	k8scorecliset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // K8SOperator operator of k8s
@@ -40,6 +42,28 @@ func NewK8SOperator(opt *options.ClusterManagerOptions, model store.ClusterManag
 		opt:   opt,
 		model: model,
 	}
+}
+
+// NewKubeClient get k8s client from kubeConfig file
+func NewKubeClient(kubeConfig string) (k8scorecliset.Interface, error) {
+	data, err := base64.StdEncoding.DecodeString(kubeConfig)
+	if err != nil {
+		return nil, fmt.Errorf("decode kube config failed: %w", err)
+	}
+
+	config, err := clientcmd.RESTConfigFromKubeConfig(data)
+	if err != nil {
+		return nil, fmt.Errorf("build rest config failed: %w", err)
+	}
+
+	config.Burst = 200
+	config.QPS = 100
+	cli, err := k8scorecliset.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("build kube client failed: %s", err)
+	}
+
+	return cli, nil
 }
 
 // GetClusterClient get cluster client

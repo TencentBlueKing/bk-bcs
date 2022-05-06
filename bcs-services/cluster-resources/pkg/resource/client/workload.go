@@ -16,6 +16,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,21 +36,21 @@ type PodClient struct {
 }
 
 // NewPodClient ...
-func NewPodClient(conf *res.ClusterConf) *PodClient {
-	podRes, _ := res.GetGroupVersionResource(conf, res.Po, "")
+func NewPodClient(ctx context.Context, conf *res.ClusterConf) *PodClient {
+	podRes, _ := res.GetGroupVersionResource(ctx, conf, res.Po, "")
 	return &PodClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
 // NewPodCliByClusterID ...
-func NewPodCliByClusterID(clusterID string) *PodClient {
-	return NewPodClient(res.NewClusterConfig(clusterID))
+func NewPodCliByClusterID(ctx context.Context, clusterID string) *PodClient {
+	return NewPodClient(ctx, res.NewClusterConfig(clusterID))
 }
 
 // List ...
 func (c *PodClient) List(
-	namespace, ownerKind, ownerName string, opts metav1.ListOptions,
+	ctx context.Context, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
-	ret, err := c.ResClient.List(namespace, opts)
+	ret, err := c.ResClient.List(ctx, namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (c *PodClient) List(
 	}
 
 	// 找到当前指定资源关联的 Pod 的 OwnerReferences 信息
-	podOwnerRefs, err := c.getPodOwnerRefs(c.conf, namespace, ownerKind, ownerName, opts)
+	podOwnerRefs, err := c.getPodOwnerRefs(ctx, c.conf, namespace, ownerKind, ownerName, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +71,7 @@ func (c *PodClient) List(
 
 // 非直接关联 Pod 的资源，找到下层直接关联的子资源
 func (c *PodClient) getPodOwnerRefs(
-	clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
+	ctx context.Context, clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
 	subOwnerRefs := []map[string]string{{"kind": ownerKind, "name": ownerName}}
 	if !slice.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
@@ -79,11 +80,11 @@ func (c *PodClient) getPodOwnerRefs(
 
 	// Deployment/CronJob 不直接关联 Pod，而是通过 ReplicaSet/Job 间接关联，需要向下钻取 Pod 的 OwnerReferences 信息
 	subResKind := map[string]string{res.Deploy: res.RS, res.CJ: res.Job}[ownerKind]
-	subRes, err := res.GetGroupVersionResource(clusterConf, subResKind, "")
+	subRes, err := res.GetGroupVersionResource(ctx, clusterConf, subResKind, "")
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewResClient(clusterConf, subRes).List(namespace, opts)
+	ret, err := NewResClient(clusterConf, subRes).List(ctx, namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +121,8 @@ func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map
 }
 
 // GetManifest 获取指定 Pod Manifest
-func (c *PodClient) GetManifest(namespace, podName string) (map[string]interface{}, error) {
-	ret, err := c.Get(namespace, podName, metav1.GetOptions{})
+func (c *PodClient) GetManifest(ctx context.Context, namespace, podName string) (map[string]interface{}, error) {
+	ret, err := c.Get(ctx, namespace, podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -130,20 +131,22 @@ func (c *PodClient) GetManifest(namespace, podName string) (map[string]interface
 }
 
 // ListPodRelatedRes 获取 Pod 关联的某种资源列表
-func (c *PodClient) ListPodRelatedRes(namespace, podName, resKind string) (map[string]interface{}, error) {
+func (c *PodClient) ListPodRelatedRes(
+	ctx context.Context, namespace, podName, resKind string,
+) (map[string]interface{}, error) {
 	// 获取同命名空间下指定的关联资源列表
-	relatedRes, err := res.GetGroupVersionResource(c.conf, resKind, "")
+	relatedRes, err := res.GetGroupVersionResource(ctx, c.conf, resKind, "")
 	if err != nil {
 		return nil, err
 	}
-	ret, err := NewResClient(c.conf, relatedRes).List(namespace, metav1.ListOptions{})
+	ret, err := NewResClient(c.conf, relatedRes).List(ctx, namespace, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	manifest := ret.UnstructuredContent()
 
 	// 获取 Pod 关联的某种资源的名称列表，匹配过滤
-	resNameList, err := c.getPodRelatedResNameList(namespace, podName, resKind)
+	resNameList, err := c.getPodRelatedResNameList(ctx, namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +162,8 @@ func (c *PodClient) ListPodRelatedRes(namespace, podName, resKind string) (map[s
 }
 
 // 获取 Pod 关联的某种资源的名称列表
-func (c *PodClient) getPodRelatedResNameList(namespace, podName, resKind string) ([]string, error) {
-	podManifest, err := c.GetManifest(namespace, podName)
+func (c *PodClient) getPodRelatedResNameList(ctx context.Context, namespace, podName, resKind string) ([]string, error) {
+	podManifest, err := c.GetManifest(ctx, namespace, podName)
 	if err != nil {
 		return nil, err
 	}

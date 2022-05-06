@@ -17,6 +17,6 @@ from backend.resources.networks.ingress import Ingress
 
 
 class IngressViewSet(NamespaceScopeViewSet):
-    """ Ingress 相关接口 """
+    """Ingress 相关接口"""
 
     resource_client = Ingress

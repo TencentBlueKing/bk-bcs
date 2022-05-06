@@ -18,6 +18,7 @@ import (
 	"encoding/hex"
 	"math/big"
 	"net"
+	"strconv"
 )
 
 // CIDR Info
@@ -33,6 +34,21 @@ func ParseCIDR(s string) (*CIDR, error) {
 		return nil, err
 	}
 	return &CIDR{ip: i, ipnet: n}, nil
+}
+
+// ConvertCIDRToStep convert CIDR to step
+func ConvertCIDRToStep(clusterCIDR string) (uint32, error) {
+	cidr, err := ParseCIDR(clusterCIDR)
+	if err != nil {
+		return 0, err
+	}
+
+	cnt, err := strconv.Atoi(cidr.IPCount().String())
+	if err != nil {
+		return 0, err
+	}
+
+	return uint32(cnt), err
 }
 
 // Equal check cidr equal

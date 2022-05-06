@@ -16,16 +16,24 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	tunnelSDK "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/sdk"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
 	discovery "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/dicsovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/proxy"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/utils"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
@@ -39,11 +47,7 @@ import (
 	microRgt "go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
-	"time"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // ArgocdServer is the main server struct
@@ -57,12 +61,18 @@ type ArgocdServer struct {
 	//http service
 	httpServer *http.Server
 
+	// tkex clientset
+	tkexIf tkexv1alpha1.TkexV1alpha1Interface
+
 	// metric service
 	//metricServer *http.Server
 
 	// tls config for bcs argocd server service and client side
 	tlsConfig       *tls.Config
 	clientTLSConfig *tls.Config
+
+	// tunnel
+	tunnelClient *tunnelSDK.WebsocketClient
 
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
@@ -83,11 +93,13 @@ func NewArgocdServer(opt *options.ArgocdServerOptions) *ArgocdServer {
 // Init bcs argocd server
 func (as *ArgocdServer) Init() error {
 	for _, f := range []func() error{
+		as.initClientSet,
 		as.initTLSConfig,
 		as.initRegistry,
 		as.initDiscovery,
 		as.initMicro,
 		as.initHTTPService,
+		as.initProxyAgent,
 		//as.initMetric,
 	} {
 		if err := f(); err != nil {
@@ -167,6 +179,21 @@ func (as *ArgocdServer) initDiscovery() error {
 	return nil
 }
 
+func (as *ArgocdServer) initClientSet() error {
+	config, err := clientcmd.BuildConfigFromFlags(as.opt.MasterURL, as.opt.KubeConfig)
+	if err != nil {
+		blog.Errorf("build kube config failed, err %s", err.Error())
+		return err
+	}
+	client, err := tkexv1alpha1.NewForConfig(config)
+	if err != nil {
+		blog.Errorf("create tkex v1alpha1 client failed, err %s", err.Error())
+		return err
+	}
+	as.tkexIf = client
+	return nil
+}
+
 func (as *ArgocdServer) initMicro() error {
 	svc := micro.NewService(
 		micro.Client(gClient.NewClient(gClient.AuthTLS(as.tlsConfig))),
@@ -193,17 +220,17 @@ func (as *ArgocdServer) initMicro() error {
 		}),
 	)
 
-	if err := project.RegisterProjectHandler(svc.Server(), handler.NewProjectHandler()); err != nil {
+	if err := project.RegisterProjectHandler(svc.Server(), handler.NewProjectHandler(as.tkexIf)); err != nil {
 		blog.Errorf("register bcs argocd project handler to micro failed: %s", err.Error())
 		return nil
 	}
 
-	if err := instance.RegisterInstanceHandler(svc.Server(), handler.NewInstanceHandler()); err != nil {
+	if err := instance.RegisterInstanceHandler(svc.Server(), handler.NewInstanceHandler(as.tkexIf)); err != nil {
 		blog.Errorf("register bcs argocd instance handler to micro failed: %s", err.Error())
 		return nil
 	}
 
-	if err := plugin.RegisterPluginHandler(svc.Server(), handler.NewPluginHandler()); err != nil {
+	if err := plugin.RegisterPluginHandler(svc.Server(), handler.NewPluginHandler(as.tkexIf)); err != nil {
 		blog.Errorf("register bcs argocd plugin handler to micro failed: %s", err.Error())
 		return nil
 	}
@@ -214,41 +241,15 @@ func (as *ArgocdServer) initMicro() error {
 }
 
 func (as *ArgocdServer) initHTTPService() error {
-	rmMux := ggRuntime.NewServeMux(
-		ggRuntime.WithIncomingHeaderMatcher(CustomMatcher),
-		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
-		ggRuntime.WithDisablePathLengthFallback(),
-	)
-
-	grpcDialOpts := make([]grpc.DialOption, 0)
-	if as.tlsConfig != nil && as.clientTLSConfig != nil {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(gCred.NewTLS(as.clientTLSConfig)))
-	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
-	}
-	err := project.RegisterProjectGwFromEndpoint(
-		context.TODO(),
-		rmMux,
-		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
-		grpcDialOpts)
-	err = instance.RegisterInstanceGwFromEndpoint(
-		context.TODO(),
-		rmMux,
-		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
-		grpcDialOpts)
-	err = plugin.RegisterPluginGwFromEndpoint(
-		context.TODO(),
-		rmMux,
-		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
-		grpcDialOpts)
-	if err != nil {
-		blog.Errorf("register http service failed, err %s", err.Error())
-		return fmt.Errorf("register http service failed, err %s", err.Error())
-	}
-
 	router := mux.NewRouter()
-	router.Handle("/{uri:.*}", rmMux)
-	blog.Info("register grpc service handler to path /")
+	// init instance proxy
+	if err := as.initInstanceProxy(router); err != nil {
+		return err
+	}
+	// init micro http gateway
+	if err := as.initHTTPGateway(router); err != nil {
+		return err
+	}
 
 	originMux := http.NewServeMux()
 	originMux.Handle("/", router)
@@ -278,6 +279,63 @@ func (as *ArgocdServer) initHTTPService() error {
 			as.stopCh <- struct{}{}
 		}
 	}()
+	return nil
+}
+
+func (as *ArgocdServer) initInstanceProxy(router *mux.Router) error {
+	url := "/argocdmanager/proxy/{instance_id}/{sub_path:.*}"
+	dispatcher := proxy.NewInstanceProxyDispatcher("instance_id", "sub_path", as.tkexIf)
+	router.Handle(url, dispatcher)
+	blog.Info("register instance proxy handler")
+	return nil
+}
+
+func (as *ArgocdServer) initHTTPGateway(router *mux.Router) error {
+	rmMux := ggRuntime.NewServeMux(
+		ggRuntime.WithIncomingHeaderMatcher(CustomMatcher),
+		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
+		ggRuntime.WithDisablePathLengthFallback(),
+	)
+
+	grpcDialOpts := make([]grpc.DialOption, 0)
+	if as.tlsConfig != nil && as.clientTLSConfig != nil {
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(gCred.NewTLS(as.clientTLSConfig)))
+	} else {
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+	}
+	err := project.RegisterProjectGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
+		grpcDialOpts)
+	err = instance.RegisterInstanceGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
+		grpcDialOpts)
+	err = plugin.RegisterPluginGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
+		grpcDialOpts)
+	if err != nil {
+		blog.Errorf("register http gateway failed, err %s", err.Error())
+		return fmt.Errorf("register http gateway failed, err %s", err.Error())
+	}
+	router.Handle("/{uri:.*}", rmMux)
+	blog.Info("register http gateway handler to path /")
+
+	return nil
+}
+
+func (as *ArgocdServer) initProxyAgent() error {
+	as.tunnelClient = tunnelSDK.NewWebsocketClient(
+		as.opt.Tunnel.ProxyAddress,
+		"http://127.0.0.1:"+strconv.Itoa(int(as.opt.HTTPPort)),
+		as.opt.Tunnel.AgentID,
+	)
+	as.tunnelClient.Start()
+
 	return nil
 }
 

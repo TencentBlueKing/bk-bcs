@@ -27,6 +27,7 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log import client
 from backend.components import data, paas_cc
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, VersionedEntity
 from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
@@ -672,6 +673,14 @@ class ReschedulerTaskgroup(InstanceAPI):
         project_kind = self.project_kind(request)
         if not self._from_template(instance_id):
             cluster_id, namespace_name, instance_name, category = self.get_instance_resource(request, project_id)
+            # 增加命名空间域的权限校验
+            perm_ctx = NamespaceScopedPermCtx(
+                username=request.user.username,
+                project_id=project_id,
+                cluster_id=cluster_id,
+                name=namespace_name,
+            )
+            NamespaceScopedPermission().can_use(perm_ctx)
         else:
             # 获取instance info
             inst_info = self.get_instance_info(instance_id)

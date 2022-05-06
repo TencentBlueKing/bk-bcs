@@ -28,38 +28,38 @@ mock_api_params = {
 
 
 class TestContainerMetric:
-    """ 容器指标相关接口单元测试 """
+    """容器指标相关接口单元测试"""
 
     common_prefix = '/api/metrics/projects/{project_id}/clusters/{cluster_id}/pods/{pod_name}/containers'.format(
         project_id=TEST_PROJECT_ID, cluster_id=TEST_CLUSTER_ID, pod_name=pod_name
     )
 
     def test_cpu_limit(self, api_client, container_metric_api_patch):
-        """ 测试获取 CPU 限制 接口 """
+        """测试获取 CPU 限制 接口"""
         response = api_client.post(f'{self.common_prefix}/cpu_limit/', mock_api_params)
         assert response.json()['code'] == 0
 
     def test_cpu_usage(self, api_client, container_metric_api_patch):
-        """ 测试获取 CPU 使用情况 接口 """
+        """测试获取 CPU 使用情况 接口"""
         response = api_client.post(f'{self.common_prefix}/cpu_usage/', mock_api_params)
         assert response.json()['code'] == 0
 
     def test_memory_limit(self, api_client, container_metric_api_patch):
-        """ 测试获取 内存限制 接口 """
+        """测试获取 内存限制 接口"""
         response = api_client.post(f'{self.common_prefix}/memory_limit/', mock_api_params)
         assert response.json()['code'] == 0
 
     def test_memory_usage(self, api_client, container_metric_api_patch):
-        """ 测试获取 内存使用情况 接口 """
+        """测试获取 内存使用情况 接口"""
         response = api_client.post(f'{self.common_prefix}/memory_usage/', mock_api_params)
         assert response.json()['code'] == 0
 
     def test_disk_read(self, api_client, container_metric_api_patch):
-        """ 测试获取 磁盘读情况 接口 """
+        """测试获取 磁盘读情况 接口"""
         response = api_client.post(f'{self.common_prefix}/disk_read/', mock_api_params)
         assert response.json()['code'] == 0
 
     def test_disk_write(self, api_client, container_metric_api_patch):
-        """ 测试获取 磁盘写情况 接口 """
+        """测试获取 磁盘写情况 接口"""
         response = api_client.post(f'{self.common_prefix}/disk_write/', mock_api_params)
         assert response.json()['code'] == 0

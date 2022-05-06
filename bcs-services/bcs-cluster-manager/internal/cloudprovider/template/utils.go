@@ -53,3 +53,19 @@ func getClusterType(cls *proto.Cluster) string {
 
 	return "0"
 }
+
+func getClusterCreateExtraEnv(cls *proto.Cluster) string {
+	value, ok := cls.ExtraInfo[createCluster]; if ok {
+		return value
+	}
+
+	return ""
+}
+
+func getAddNodesExtraEnv(cls *proto.Cluster) string {
+	value, ok := cls.ExtraInfo[addNodes]; if ok {
+		return value
+	}
+
+	return ""
+}

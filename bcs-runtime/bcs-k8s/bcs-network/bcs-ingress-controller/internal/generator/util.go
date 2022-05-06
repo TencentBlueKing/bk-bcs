@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
 // SplitRegionLBID get region and lbid from regionLBID
@@ -40,18 +41,43 @@ func SplitRegionLBID(regionLBID string) (string, string, error) {
 	return "", "", fmt.Errorf("regionLBID %s invalid", regionLBID)
 }
 
+// example: arn:aws:elasticloadbalancing:us-west-1:1234567:loadbalancer/net/name/xxx
+// return: region-lb-name
+func tryParseARNFromLbID(lbID string) string {
+	if a, err := arn.Parse(lbID); err == nil {
+		names := strings.Split(a.Resource, "/")
+		if len(names) != 4 {
+			return ""
+		}
+		return a.Region + "-" + names[2]
+	}
+	return ""
+}
+
 // GetListenerName generate listener name with lb id and port number
 func GetListenerName(lbID string, port int) string {
+	// parse arn
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		lbID = a
+	}
 	return lbID + "-" + strconv.Itoa(port)
 }
 
 // GetListenerNameWithProtocol generate listener key with lbid, protocol and port number
 func GetListenerNameWithProtocol(lbID, protocol string, port int) string {
+	// parse arn
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		lbID = a
+	}
 	return lbID + "-" + strings.ToLower(protocol) + "-" + strconv.Itoa(port)
 }
 
 // GetSegmentListenerName generate listener for port segment
 func GetSegmentListenerName(lbID string, startPort, endPort int) string {
+	// parse arn
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		lbID = a
+	}
 	return lbID + "-" + strconv.Itoa(startPort) + "-" + strconv.Itoa(endPort)
 }
 
@@ -173,7 +199,12 @@ func MatchLbStrWithID(lbID string) bool {
 
 	// match lb-xxxxx
 	match, _ = regexp.MatchString(constant.LoadBalanceCheckFormat, lbID)
-	return match
+	if match {
+		return true
+	}
+
+	// match aws arn
+	return arn.IsARN(lbID)
 }
 
 // MatchLbStrWithName check region info format
@@ -204,4 +235,12 @@ func GetPodHostPortByPort(pod *k8scorev1.Pod, port int32) int32 {
 		}
 	}
 	return 0
+}
+
+// GetLabelLBId get lbID from lbStr
+func GetLabelLBId(lbID string) string {
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		return a
+	}
+	return lbID
 }

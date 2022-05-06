@@ -24,10 +24,18 @@ type ArgocdPluginSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Project string `json:"project,omitempty" protobuf:"bytes,2,opt,name=project"`
-	Type    string `json:"type,omitempty" protobuf:"bytes,1,opt,name=foo"`
-	Host    string `json:"host,omitempty" protobuf:"bytes,3,opt,name=host"`
-	Image   string `json:"image,omitempty" protobuf:"bytes,4,opt,name=image"`
+	NickName string              `json:"nickName,omitempty" protobuf:"bytes,1,opt,name=nickName"`
+	Project  string              `json:"project,omitempty" protobuf:"bytes,2,opt,name=project"`
+	Type     string              `json:"type,omitempty" protobuf:"bytes,3,opt,name=type"`
+	Service  ArgocdPluginService `json:"service,omitempty" protobuf:"bytes,4,opt,name=service"`
+	Image    string              `json:"image,omitempty" protobuf:"bytes,5,opt,name=image"`
+}
+
+// ArgocdPluginService defines the service information of the plugins when type is "service"
+type ArgocdPluginService struct {
+	Protocol string            `json:"protocol,omitempty" protobuf:"bytes,1,opt,name=protocol"`
+	Address  string            `json:"address,omitempty" protobuf:"bytes,2,opt,name=address"`
+	Headers  map[string]string `json:"headers,omitempty" protobuf:"bytes,3,opt,name=headers"`
 }
 
 // ArgocdPluginStatus defines the observed state of ArgocdPlugin

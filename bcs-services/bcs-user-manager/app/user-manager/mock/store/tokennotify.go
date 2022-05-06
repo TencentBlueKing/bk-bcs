@@ -18,20 +18,24 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// MockTokenNotifyStore is a mock of TokenNotifyStore
 type MockTokenNotifyStore struct {
 	mock.Mock
 }
 
+// CreateTokenNotify mock create token notify
 func (m *MockTokenNotifyStore) CreateTokenNotify(notify *models.BcsTokenNotify) error {
 	args := m.Called(notify)
 	return args.Error(0)
 }
 
+// GetTokenNotifyByCondition mock get token notify by condition
 func (m *MockTokenNotifyStore) GetTokenNotifyByCondition(cond *models.BcsTokenNotify) []models.BcsTokenNotify {
 	args := m.Called(cond)
 	return args.Get(0).([]models.BcsTokenNotify)
 }
 
+// DeleteTokenNotify mock delete token notify
 func (m *MockTokenNotifyStore) DeleteTokenNotify(token string) error {
 	args := m.Called(token)
 	return args.Error(0)

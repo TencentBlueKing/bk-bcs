@@ -570,7 +570,8 @@
                     params: {
                         clusterId: this.searchScope,
                         name: crdcontroller.name,
-                        id: crdcontroller.crd_ctr_id
+                        id: crdcontroller.crd_ctr_id,
+                        chartName: crdcontroller.chart_name
                     }
                 })
             },

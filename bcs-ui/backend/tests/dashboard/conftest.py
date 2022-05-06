@@ -30,21 +30,21 @@ DASHBOARD_API_URL_COMMON_PREFIX = f'/api/dashboard/projects/{TEST_PROJECT_ID}/cl
 
 @pytest.fixture(autouse=True, scope='package')
 def dashboard_api_common_patch():
-    with mock.patch('backend.dashboard.viewsets.validate_cluster_perm', new=lambda *args, **kwargs: True), mock.patch(
-        'backend.dashboard.viewsets.gen_base_web_annotations', new=lambda *args, **kwargs: {}
-    ):
+    with mock.patch(
+        'backend.dashboard.viewsets.PermValidateMixin._validate_perm', new=lambda *args, **kwargs: True
+    ), mock.patch('backend.dashboard.viewsets.gen_base_web_annotations', new=lambda *args, **kwargs: {}):
         yield
 
 
 def gen_mock_pod_manifest(*args, **kwargs) -> Dict:
-    """ 构造并返回 mock 的 pod 配置信息 """
+    """构造并返回 mock 的 pod 配置信息"""
     with open(f'{settings.BASE_DIR}/backend/tests/resources/formatter/workloads/contents/pod.json') as fr:
         configs = json.load(fr)
     return configs['status_running']
 
 
 def gen_mock_env_info(*args, **kwargs) -> str:
-    """ 构造并返回 mock 的 exec_command 查询到的 env_info """
+    """构造并返回 mock 的 exec_command 查询到的 env_info"""
     return "env1=xxx\nenv2=xxx\nenv3=xxx"
 
 

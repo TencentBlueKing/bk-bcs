@@ -29,7 +29,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -119,7 +118,7 @@ func (f *fixture) expectGetGameStatefulSetAction(namespace, name string) {
 	f.stsActions = append(f.stsActions, action)
 }
 
-func (f *fixture) expectUpdateGameStatefulSetStatusAction(sts *gstsv1alpha1.GameStatefulSet) {
+func (f *fixture) expectUpdateGameSSStatusAction(sts *gstsv1alpha1.GameStatefulSet) {
 	action := core.NewUpdateAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 		Resource: gstsv1alpha1.Plural}, sts.Namespace, sts)
 	action.Subresource = "status"
@@ -145,7 +144,7 @@ func (f *fixture) expectPatchGameStatefulSetAction(sts *gstsv1alpha1.GameStatefu
 	f.stsActions = append(f.stsActions, action)
 }
 
-func (f *fixture) expectPatchGameStatefulSetSubResourceAction(sts *gstsv1alpha1.GameStatefulSet, patch []byte) {
+func (f *fixture) expectPatchGSSSubResourceAction(sts *gstsv1alpha1.GameStatefulSet, patch []byte) {
 	action := core.NewPatchSubresourceAction(schema.GroupVersionResource{Group: gstsv1alpha1.GroupName, Version: gstsv1alpha1.Version,
 		Resource: gstsv1alpha1.Plural}, sts.Namespace, sts.Name, types.MergePatchType, patch, "status")
 	f.stsActions = append(f.stsActions, action)

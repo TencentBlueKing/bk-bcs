@@ -85,7 +85,7 @@ export default {
                     namespace: item.namespace,
                     name: item.resourceName
                 })
-                names.push(`${item.cluster_name} / ${item.namespace} / ${item.resourceName}`)
+                names.push(`${item.cluster_id} / ${item.namespace} / ${item.resourceName}`)
             })
             if (!data.length) {
                 this.$bkMessage({

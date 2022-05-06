@@ -18,12 +18,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/micro/go-micro/v2/errors"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/errors"
+	"go-micro.dev/v4/server"
+	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -38,7 +41,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				r.RequestID = getRequestID(ctx)
 				r.Message, r.Code = getRespMsgCode(err)
 				if err != nil {
-					r.Data = nil
+					r.Data = genNewRespData(err)
 					// 返回 nil 避免框架重复处理 error
 					return nil // nolint:nilerr
 				}
@@ -57,7 +60,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 
 // 获取 Context 中的 RequestID
 func getRequestID(ctx context.Context) string {
-	return fmt.Sprintf("%s", ctx.Value(types.ContextKey("requestID")))
+	return fmt.Sprintf("%s", ctx.Value(ctxkey.RequestIDKey))
 }
 
 // 根据不同的错误类型，获取错误信息 & 错误码
@@ -67,11 +70,25 @@ func getRespMsgCode(err interface{}) (string, int32) {
 	}
 
 	switch e := err.(type) {
+	case *perm.IAMPermError:
+		return e.Error(), int32(e.Code)
 	case *errorx.BaseError:
 		return e.Error(), int32(e.Code())
 	case *errors.Error:
 		return e.Detail, errcode.General
 	default:
 		return fmt.Sprintf("%s", e), errcode.General
+	}
+}
+
+// 根据不同错误类型，更新 Data 字段信息
+func genNewRespData(err interface{}) *structpb.Struct {
+	switch e := err.(type) {
+	case *perm.IAMPermError:
+		perms, _ := e.Perms()
+		spbPerms, _ := pbstruct.Map2pbStruct(perms)
+		return spbPerms
+	default:
+		return nil
 	}
 }

@@ -14,6 +14,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -465,6 +466,33 @@ func (cli *TkeClient) GetTKEClusterVersions() ([]*Versions, error) {
 	}
 
 	return versions, nil
+}
+
+// GetTKEClusterKubeConfig get clusterKubeConfig: isExtranet internal/external kubeConfig
+func (cli *TkeClient) GetTKEClusterKubeConfig(clusterID string, isExtranet bool) (string, error){
+	if cli == nil {
+		return "", cloudprovider.ErrServerIsNil
+	}
+
+	req := tke.NewDescribeClusterKubeconfigRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.IsExtranet = common.BoolPtr(isExtranet)
+
+	resp, err := cli.tke.DescribeClusterKubeconfig(req)
+	if err != nil {
+		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig failed: %v", err)
+		return "", err
+	}
+
+	if resp.Response == nil {
+		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig but lost response information")
+		return "", cloudprovider.ErrCloudLostResponse
+	}
+	//check response data
+	blog.Infof("RequestId[%s] tke client DescribeClusterKubeconfig response successful", resp.Response.RequestId)
+	baseRet := base64.StdEncoding.EncodeToString([]byte(*resp.Response.Kubeconfig))
+
+	return baseRet, nil
 }
 
 // GetTKEClusterImages get tke cluster images info

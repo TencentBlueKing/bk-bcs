@@ -30,10 +30,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
-var showVersion = flag.Bool("version", false, "show version info only")
-var confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
-
-var globalConf *config.ClusterResourcesConf
+var (
+	showVersion  = flag.Bool("version", false, "show version info only")
+	confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
+)
 
 // Start 初始化并启动 ClusterResources 服务
 func Start() {
@@ -47,13 +47,12 @@ func Start() {
 	// 初始化随机数种子
 	rand.Seed(time.Now().UnixNano())
 
-	var loadConfErr error
-	globalConf, loadConfErr = config.LoadConf(*confFilePath)
-	if loadConfErr != nil {
-		panic(errorx.New(errcode.General, "load cluster resources config failed: %v", loadConfErr))
+	crConf, err := config.LoadConf(*confFilePath)
+	if err != nil {
+		panic(errorx.New(errcode.General, "load cluster resources config failed: %v", err))
 	}
 	// 初始化日志相关配置
-	logging.InitLogger(&globalConf.Log)
+	logging.InitLogger(&crConf.Log)
 	logger := logging.GetLogger()
 	defer logger.Sync()
 
@@ -61,9 +60,9 @@ func Start() {
 	logger.Info(fmt.Sprintf("VersionBuildInfo: {%s}", version.GetVersion()))
 
 	// 初始化 Redis 客户端
-	redis.InitRedisClient(&globalConf.Redis)
+	redis.InitRedisClient(&crConf.Redis)
 
-	crSvc := newClusterResourcesService(globalConf)
+	crSvc := newClusterResourcesService(crConf)
 	if err := crSvc.Init(); err != nil {
 		panic(errorx.New(errcode.General, "init cluster resources svc failed: %v", err))
 	}

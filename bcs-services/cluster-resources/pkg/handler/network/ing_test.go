@@ -15,7 +15,6 @@
 package network
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,9 +28,9 @@ import (
 
 func TestIng(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("network/simple_ingress")
+	manifest, _ := example.LoadDemoManifest("network/simple_ingress", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

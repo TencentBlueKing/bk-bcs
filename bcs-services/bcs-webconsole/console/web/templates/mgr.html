@@ -169,6 +169,8 @@
                 winHeight: 500,
                 projectId: "{{ .project_id }}",
                 siteUrl: "{{ .settings.SITE_URL }}",
+                loginUrl: "{{ .login_url }}",
+                permRequestUrl: "{{ .perm_request_url }}",
                 dropdownLeft: 0,
                 isDropdownShow: false,
                 clusterList: [],
@@ -197,6 +199,7 @@
                     this.watchMessage()
                     this.watchShortcut()
                     self = this
+                    const h = this.$createElement
                     $.getJSON(cluster_url, function (result) {
                         if (result.code != 0) {
                             console.log(result.message)
@@ -212,7 +215,43 @@
                             })
                         }
                     }).fail(function (result) {
-                        self.$bkMessage({ theme: 'error', message: result.responseJSON.message, delay: 0 })
+                        if (result.status == 401) {
+                            self.$bkMessage({
+                                theme: 'error', message: h('span', {}, [
+                                    result.responseJSON.message,
+                                    h('a', {
+                                        style: {
+                                            'text-decoration': 'none',
+                                            'color': '#3a84ff',
+                                            'margin-left': '20px'
+                                        },
+                                        attrs: {
+                                            href: `${self.loginUrl}`,
+                                            target: "_blank"
+                                        }
+                                    }, ['前往登录'])
+                                ]), delay: 0
+                            })
+                        } else if (result.status == 403) {
+                            self.$bkMessage({
+                                theme: 'error', message: h('span', {}, [
+                                    result.responseJSON.message,
+                                    h('a', {
+                                        style: {
+                                            'text-decoration': 'none',
+                                            'color': '#3a84ff',
+                                            'margin-left': '20px'
+                                        },
+                                        attrs: {
+                                            href: `${self.permRequestUrl}`,
+                                            target: "_blank"
+                                        }
+                                    }, ['前往申请'])
+                                ]), delay: 0
+                            })
+                        } else {
+                            self.$bkMessage({ theme: 'error', message: result.responseJSON.message, delay: 0 })
+                        }
                     })
 
                 },
@@ -230,7 +269,7 @@
                 handleTabChange(name) {
                     console.log(name)
                     const panel = this.panels.find(item => {
-                        return item.clusterName === name
+                        return item.name === name
                     })
                     if (panel) {
                         window.location.hash = `cluster=${panel.clusterId}`

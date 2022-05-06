@@ -26,49 +26,49 @@ import (
 
 // ListSecret ...
 func (h *Handler) ListSecret(
-	_ context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Secret).List(
-		req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Secret).List(
+		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
 
 // GetSecret ...
 func (h *Handler) GetSecret(
-	_ context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Secret).Get(
-		req.Namespace, req.Name, metav1.GetOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Secret).Get(
+		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
 }
 
 // CreateSecret ...
 func (h *Handler) CreateSecret(
-	_ context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Secret).Create(
-		req.Manifest, true, metav1.CreateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Secret).Create(
+		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
 }
 
 // UpdateSecret ...
 func (h *Handler) UpdateSecret(
-	_ context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Secret).Update(
-		req.Namespace, req.Name, req.Manifest, metav1.UpdateOptions{},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Secret).Update(
+		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
 }
 
 // DeleteSecret ...
 func (h *Handler) DeleteSecret(
-	_ context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.Secret).Delete(
-		req.Namespace, req.Name, metav1.DeleteOptions{},
+	return resAction.NewResMgr(req.ClusterID, "", res.Secret).Delete(
+		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

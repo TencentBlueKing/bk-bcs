@@ -40,7 +40,12 @@ const (
 // getWriter 获取 writer
 func getWriter(conf *config.LogConf) (io.Writer, error) {
 	if _, err := os.Stat(conf.Path); os.IsNotExist(err) {
-		return nil, errorx.New(errcode.General, "file path %s is not exists", conf.Path)
+		if !conf.AutoCreateDir {
+			return nil, errorx.New(errcode.General, "file path %s is not exists", conf.Path)
+		}
+		if makeDirErr := os.MkdirAll(conf.Path, 0o755); makeDirErr != nil {
+			return nil, errorx.New(errcode.General, "auto create dir %s failed: %v", conf.Path, makeDirErr)
+		}
 	}
 	// 文件名称，默认为 cr.log
 	name := conf.Name

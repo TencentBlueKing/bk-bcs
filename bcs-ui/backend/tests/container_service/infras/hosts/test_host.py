@@ -17,6 +17,7 @@ from unittest.mock import patch
 from backend.container_service.infras.hosts import host
 from backend.container_service.infras.hosts.perms import can_use_hosts
 from backend.container_service.infras.hosts.terraform.engines import sops
+from backend.container_service.infras.hosts.terraform.engines.sops import HostData
 from backend.tests.bcs_mocks.fake_sops import FakeSopsMod, sops_json
 
 fake_cc_host_ok_results = [{"bk_host_innerip": "127.0.0.1,127.0.0.3"}, {"bk_host_innerip": "127.0.0.2"}]
@@ -83,7 +84,18 @@ class TestApplyHostApi:
         new=FakeSopsMod,
     )
     def test_create_and_start_host_application(self):
-        task_id, task_url = sops.create_and_start_host_application(**self.fake_params)
+        username = "admin"
+        cc_app_id = "1"
+        host_data = HostData(
+            region="ap-nanjing",
+            vpc_name="vpc_test",
+            cvm_type="test",
+            disk_type='test',
+            disk_size=100,
+            replicas=1,
+            zone_id='ap-nanjing-1',
+        )
+        task_id, task_url = sops.create_and_start_host_application(username, cc_app_id, host_data)
         assert task_id == sops_json.fake_task_id
         assert task_url == sops_json.fake_task_url
 

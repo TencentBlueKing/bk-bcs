@@ -6,30 +6,24 @@ package cluster_resources
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	proto "github.com/golang/protobuf/proto"
 	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
 )
 
 import (
 	context "context"
-	api "github.com/micro/go-micro/v2/api"
-	client "github.com/micro/go-micro/v2/client"
-	server "github.com/micro/go-micro/v2/server"
+	api "go-micro.dev/v4/api"
+	client "go-micro.dev/v4/client"
+	server "go-micro.dev/v4/server"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -41,26 +35,26 @@ var _ server.Option
 
 func NewBasicEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Basic.Echo",
 			Path:    []string{"/clusterresources/v1/echo"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Basic.Ping",
 			Path:    []string{"/clusterresources/v1/ping"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Basic.Healthz",
 			Path:    []string{"/clusterresources/v1/healthz"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Basic.Version",
 			Path:    []string{"/clusterresources/v1/version"},
 			Method:  []string{"GET"},
@@ -202,7 +196,7 @@ func (h *basicHandler) Version(ctx context.Context, in *VersionReq, out *Version
 
 func NewNamespaceEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Namespace.ListNS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces"},
 			Method:  []string{"GET"},
@@ -274,242 +268,242 @@ func (h *namespaceHandler) ListNS(ctx context.Context, in *ResListReq, out *Comm
 
 func NewWorkloadEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.CreateDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.UpdateDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.DeleteDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.CreateDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/daemonsets"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.UpdateDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.DeleteDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.CreateSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/statefulsets"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.UpdateSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.DeleteSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.CreateCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.UpdateCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.DeleteCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.CreateJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/jobs"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.UpdateJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.DeleteJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListPo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetPo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.CreatePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/pods"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.UpdatePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.DeletePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListPoPVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/pvcs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListPoCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/configmaps"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListPoSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/secrets"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ReschedulePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.ListContainer",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetContainer",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Workload.GetContainerEnvInfo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{podName}/containers/{containerName}/env_info"},
 			Method:  []string{"GET"},
@@ -1428,99 +1422,99 @@ func (h *workloadHandler) GetContainerEnvInfo(ctx context.Context, in *Container
 
 func NewNetworkEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Network.ListIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.GetIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.CreateIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/ingresses"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.UpdateIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.DeleteIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.ListSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.GetSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.CreateSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/services"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.UpdateSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.DeleteSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.ListEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.GetEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.CreateEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.UpdateEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Network.DeleteEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
 			Method:  []string{"DELETE"},
@@ -1924,66 +1918,66 @@ func (h *networkHandler) DeleteEP(ctx context.Context, in *ResDeleteReq, out *Co
 
 func NewConfigEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Config.ListCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.GetCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.CreateCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/configmaps"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.UpdateCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.DeleteCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.ListSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.GetSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.CreateSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/secrets"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.UpdateSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Config.DeleteSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
 			Method:  []string{"DELETE"},
@@ -2269,99 +2263,99 @@ func (h *configHandler) DeleteSecret(ctx context.Context, in *ResDeleteReq, out 
 
 func NewStorageEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Storage.ListPV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.GetPV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.CreatePV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.UpdatePV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.DeletePV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.ListPVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.GetPVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.CreatePVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.UpdatePVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.DeletePVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.ListSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.GetSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.CreateSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.UpdateSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Storage.DeleteSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
 			Method:  []string{"DELETE"},
@@ -2765,33 +2759,33 @@ func (h *storageHandler) DeleteSC(ctx context.Context, in *ResDeleteReq, out *Co
 
 func NewRBACEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "RBAC.ListSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "RBAC.GetSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "RBAC.CreateSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/rbac/service_accounts"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "RBAC.UpdateSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "RBAC.DeleteSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
 			Method:  []string{"DELETE"},
@@ -2959,33 +2953,33 @@ func (h *rBACHandler) DeleteSA(ctx context.Context, in *ResDeleteReq, out *Commo
 
 func NewHPAEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "HPA.ListHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HPA.GetHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HPA.CreateHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/hpa"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HPA.UpdateHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HPA.DeleteHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
 			Method:  []string{"DELETE"},
@@ -3153,45 +3147,45 @@ func (h *hPAHandler) DeleteHPA(ctx context.Context, in *ResDeleteReq, out *Commo
 
 func NewCustomResEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "CustomRes.ListCRD",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "CustomRes.GetCRD",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "CustomRes.ListCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "CustomRes.GetCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "CustomRes.CreateCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "CustomRes.UpdateCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "CustomRes.DeleteCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"DELETE"},
@@ -3405,24 +3399,43 @@ func (h *customResHandler) DeleteCObj(ctx context.Context, in *CObjDeleteReq, ou
 
 func NewResourceEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Resource.GetK8SResTemplate",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Resource.Subscribe",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/subscribe"},
 			Method:  []string{"GET"},
 			Stream:  true,
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Resource.InvalidateDiscoveryCache",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
 			Method:  []string{"POST"},
-			Body:    "",
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.FormDataRenderPreview",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.GetResFormSchema",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.GetFormSupportedAPIVersions",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"},
+			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 	}
@@ -3437,6 +3450,11 @@ type ResourceService interface {
 	Subscribe(ctx context.Context, in *SubscribeReq, opts ...client.CallOption) (Resource_SubscribeService, error)
 	// 主动使 Discover 缓存失效
 	InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, opts ...client.CallOption) (*CommonResp, error)
+	// 表单化数据渲染预览
+	FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取指定资源表单 Schema
+	GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error)
+	GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonListResp, error)
 }
 
 type resourceService struct {
@@ -3477,12 +3495,17 @@ type Resource_SubscribeService interface {
 	Context() context.Context
 	SendMsg(interface{}) error
 	RecvMsg(interface{}) error
+	CloseSend() error
 	Close() error
 	Recv() (*SubscribeResp, error)
 }
 
 type resourceServiceSubscribe struct {
 	stream client.Stream
+}
+
+func (x *resourceServiceSubscribe) CloseSend() error {
+	return x.stream.CloseSend()
 }
 
 func (x *resourceServiceSubscribe) Close() error {
@@ -3520,6 +3543,36 @@ func (c *resourceService) InvalidateDiscoveryCache(ctx context.Context, in *Inva
 	return out, nil
 }
 
+func (c *resourceService) FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.FormDataRenderPreview", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceService) GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.GetResFormSchema", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceService) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.GetFormSupportedAPIVersions", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Resource service
 
 type ResourceHandler interface {
@@ -3529,6 +3582,11 @@ type ResourceHandler interface {
 	Subscribe(context.Context, *SubscribeReq, Resource_SubscribeStream) error
 	// 主动使 Discover 缓存失效
 	InvalidateDiscoveryCache(context.Context, *InvalidateDiscoveryCacheReq, *CommonResp) error
+	// 表单化数据渲染预览
+	FormDataRenderPreview(context.Context, *FormRenderPreviewReq, *CommonResp) error
+	// 获取指定资源表单 Schema
+	GetResFormSchema(context.Context, *GetResFormSchemaReq, *CommonResp) error
+	GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq, *CommonListResp) error
 }
 
 func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...server.HandlerOption) error {
@@ -3536,6 +3594,9 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		GetK8SResTemplate(ctx context.Context, in *GetK8SResTemplateReq, out *CommonResp) error
 		Subscribe(ctx context.Context, stream server.Stream) error
 		InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error
+		FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error
+		GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error
+		GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonListResp) error
 	}
 	type Resource struct {
 		resource
@@ -3558,7 +3619,26 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		Name:    "Resource.InvalidateDiscoveryCache",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
 		Method:  []string{"POST"},
-		Body:    "",
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.FormDataRenderPreview",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.GetResFormSchema",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.GetFormSupportedAPIVersions",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&Resource{h}, opts...))
@@ -3614,4 +3694,16 @@ func (x *resourceSubscribeStream) Send(m *SubscribeResp) error {
 
 func (h *resourceHandler) InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error {
 	return h.ResourceHandler.InvalidateDiscoveryCache(ctx, in, out)
+}
+
+func (h *resourceHandler) FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error {
+	return h.ResourceHandler.FormDataRenderPreview(ctx, in, out)
+}
+
+func (h *resourceHandler) GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error {
+	return h.ResourceHandler.GetResFormSchema(ctx, in, out)
+}
+
+func (h *resourceHandler) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonListResp) error {
+	return h.ResourceHandler.GetFormSupportedAPIVersions(ctx, in, out)
 }

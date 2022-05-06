@@ -16,6 +16,7 @@ package basic
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,7 @@ func TestBasicHandler(t *testing.T) {
 	// Echo API
 	echoReq, echoResp := clusterRes.EchoReq{Str: "testString"}, clusterRes.EchoResp{}
 	err := h.Echo(context.TODO(), &echoReq, &echoResp)
-	assert.Equal(t, "Echo: testString", echoResp.Ret)
+	assert.True(t, strings.Contains(echoResp.Ret, "Echo: testString"))
 	assert.Nil(t, err)
 
 	// Ping API
@@ -47,6 +48,7 @@ func TestBasicHandler(t *testing.T) {
 	// Version API
 	versionReq, versionResp := clusterRes.VersionReq{}, clusterRes.VersionResp{}
 	err = h.Version(context.TODO(), &versionReq, &versionResp)
-	assert.Equal(t, "go1.14.15", versionResp.GoVersion)
+	// NOTE 强制检查版本，若执行单元测试的 Go 版本与预期的不同则无法通过
+	assert.Equal(t, "go1.17.5", versionResp.GoVersion)
 	assert.Nil(t, err)
 }

@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	// bcs::web_console::sessions::{run_env}
-	keyPrefix      = "bcs::web_console::sessions::%s"
+	// bcs::webconsole::sessions::{run_env}
+	keyPrefix      = "bcs::webconsole::sessions::%s"
 	fieldKeyPrefix = "%s:%s:%s" // "{project_id}:{cluster_id}:{session_id}"
 	expireDuration = time.Minute * 30
 )

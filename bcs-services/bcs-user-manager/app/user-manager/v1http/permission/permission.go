@@ -149,12 +149,14 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 		blog.Warnf("BcsPermission kind must be permission")
 		message := fmt.Sprintf("errcode: %d, BcsPermission kind must be permission", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if bp.APIVersion != "v1" {
 		blog.Warnf("BcsPermission apiVersion must be v1")
 		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -258,12 +260,14 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 		blog.Warnf("BcsPermission kind must be permission")
 		message := fmt.Sprintf("errcode: %d, BcsPermission kind must be permission", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if bp.APIVersion != "v1" {
 		blog.Warnf("BcsPermission apiVersion must be v1")
 		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -339,6 +343,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			Message: fmt.Sprintf("usertoken [%s] is invalid", form.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if hasExpired {
@@ -350,6 +355,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			Message: fmt.Sprintf("usertoken [%s] is expired", form.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -549,6 +555,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Message: fmt.Sprintf("AuthToken [%s] is invalid", req.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if hasExpired {
@@ -560,6 +567,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Message: fmt.Sprintf("usertoken [%s] is expired", req.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -569,9 +577,14 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Allowed: true,
 			Message: fmt.Sprintf("admin user skip cluster permission check"),
 		})
+		err = buildAdminOperationLog(user.Name, req)
+		if err != nil {
+			blog.Errorf("VerifyPermissionV2 buildAdminOperationLog failed: %v", err)
+		}
 		blog.Infof("admin user %s access to type: %s, permission: %t", user.Name, req.ResourceType, true)
 		_, _ = response.Write([]byte(data))
 
+		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -584,6 +597,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 				Message: message,
 			})
 			_, _ = response.Write([]byte(data))
+			metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 			return
 		}
 	}

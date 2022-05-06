@@ -223,6 +223,74 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	return task, nil
 }
 
+// BuildImportClusterTask build import cluster task
+func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
+	// import cluster currently only has two steps:
+	// 0. import cluster: call TKEInterface import cluster master and node instances from cloud(clusterID or kubeConfig)
+	// 1. TODO: install bcs-k8s-watch & agent service
+	// may be need to call external previous or behind operation by bkops
+
+	// validate request params
+	if cls == nil {
+		return nil, fmt.Errorf("BuildImportClusterTask cluster info empty")
+	}
+	if opt == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("BuildImportClusterTask TaskOptions is lost")
+	}
+
+	//init task information
+	importClusterNodesTaskName := fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.ImportCluster),
+		TaskName:       "纳管TKE集群",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      cls.ClusterID,
+		ProjectID:      cls.ProjectID,
+		Creator:        opt.Operator,
+		Updater:        opt.Operator,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+
+	// preAction bkops
+
+	// setting all steps details
+	// step0: create cluster shield alarm step
+	importNodesStep := &proto.Step{
+		Name:       importClusterNodesTaskName,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: importClusterNodesTaskName,
+		TaskName:   "导入集群节点",
+	}
+	importNodesStep.Params["ClusterID"] = cls.ClusterID
+	importNodesStep.Params["CloudID"] = cls.Provider
+
+	task.Steps[importClusterNodesTaskName] = importNodesStep
+	task.StepSequence = append(task.StepSequence, importClusterNodesTaskName)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildImportClusterTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams["operator"] = opt.Operator
+	task.CommonParams["JobType"] = cloudprovider.ImportCluster.String()
+
+	return task, nil
+}
+
 // BuildDeleteClusterTask build deleteCluster task
 func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	// delete cluster has three steps:

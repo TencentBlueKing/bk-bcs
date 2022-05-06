@@ -75,6 +75,41 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 	return task, nil
 }
 
+// ImportCluster import cluster according cloudprovider
+func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
+	// call qcloud interface to create cluster
+	if cls == nil {
+		return nil, fmt.Errorf("qcloud ImportCluster cluster is empty")
+	}
+
+	if opt == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("qcloud ImportCluster cluster opt or cloud is empty")
+	}
+
+	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
+	}
+
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when ImportCluster %d failed, %s",
+			opt.Cloud.CloudID, cls.ClusterName, err.Error(),
+		)
+		return nil, err
+	}
+
+	// build import cluster task
+	task, err := mgr.BuildImportClusterTask(cls, opt)
+	if err != nil {
+		blog.Errorf("build ImportCluster task for cluster %s with cloudprovider %s failed, %s",
+			cls.ClusterName, cls.Provider, err.Error(),
+		)
+		return nil, err
+	}
+
+	return task, nil
+}
+
 // DeleteCluster delete kubenretes cluster according cloudprovider
 func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	if cls == nil {

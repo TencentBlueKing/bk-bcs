@@ -129,9 +129,10 @@ func (group *NodeGroup) IsSoldOut() bool {
 // It is assumed that cloud provider will not delete the existing nodes if the size
 // when there is an option to just decrease the target.
 func (group *NodeGroup) DecreaseTargetSize(delta int) error {
-	if delta >= 0 {
-		return fmt.Errorf("size decrease size must be negative")
-	}
+	// delta canbe positive, cause that scale down may failed.
+	// if delta >= 0 {
+	// 	return fmt.Errorf("size decrease size must be negative")
+	// }
 	size, err := group.TargetSize()
 	if err != nil {
 		return err

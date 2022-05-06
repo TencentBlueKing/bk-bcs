@@ -155,7 +155,7 @@ class CoreDynamicClient(DynamicClient):
 
 
 def generate_api_client(access_token: str, project_id: str, cluster_id: str) -> ApiClient:
-    """ 根据指定参数，生成 api_client """
+    """根据指定参数，生成 api_client"""
     ctx_cluster = CtxCluster.create(id=cluster_id, project_id=project_id, token=access_token)
     config = BcsKubeConfigurationService(ctx_cluster).make_configuration()
     return ApiClient(
@@ -164,7 +164,7 @@ def generate_api_client(access_token: str, project_id: str, cluster_id: str) -> 
 
 
 def generate_core_dynamic_client(access_token: str, project_id: str, cluster_id: str) -> CoreDynamicClient:
-    """ 根据指定参数，生成 CoreDynamicClient """
+    """根据指定参数，生成 CoreDynamicClient"""
     api_client = generate_api_client(access_token, project_id, cluster_id)
     # TODO 考虑集群可能升级k8s版本的情况, 缓存文件会失效
     discoverer_cache = DiscovererCache(cache_key=f"osrcp-{cluster_id}.json")
@@ -191,7 +191,7 @@ def get_dynamic_client(
 
 @lru_cache(maxsize=128)
 def _get_dynamic_client(access_token: str, project_id: str, cluster_id: str) -> CoreDynamicClient:
-    """ 获取 Kubernetes Client 对象（带缓存）"""
+    """获取 Kubernetes Client 对象（带缓存）"""
     return generate_core_dynamic_client(access_token, project_id, cluster_id)
 
 

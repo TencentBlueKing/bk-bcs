@@ -45,6 +45,7 @@ func GetClient() *req.Client {
 			}
 			// DevMode() 会设置 UserAgent 为浏览器行为, 在 APISix 会被校验登入态, 这里需要覆盖
 			globalClient.SetUserAgent(userAgent)
+			globalClient.DisableInsecureSkipVerify()
 		})
 	}
 	return globalClient

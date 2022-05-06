@@ -17,6 +17,6 @@ from backend.resources.storages.storage_class import StorageClass
 
 
 class StorageClassViewSet(ClusterScopeViewSet):
-    """ StorageClass 相关接口 """
+    """StorageClass 相关接口"""
 
     resource_client = StorageClass

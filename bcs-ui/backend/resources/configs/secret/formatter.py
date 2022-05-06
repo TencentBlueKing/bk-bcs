@@ -18,7 +18,7 @@ from backend.resources.configs.common.formatter import ConfigurationFormatter
 
 
 class SecretsFormatter(ConfigurationFormatter):
-    """ Secrets 格式化 """
+    """Secrets 格式化"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         res = self.format_common_dict(resource_dict)

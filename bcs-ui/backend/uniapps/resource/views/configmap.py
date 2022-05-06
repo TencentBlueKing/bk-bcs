@@ -75,7 +75,7 @@ class ConfigMaps(viewsets.ViewSet, BaseAPI, ResourceOperate):
         resource_id_key='iam_ns_id',
     )
     def get(self, request, project_id):
-        """ 获取项目下所有的ConfigMap """
+        """获取项目下所有的ConfigMap"""
         params = dict(request.GET.items())
         is_decode = request.GET.get('decode')
         is_decode = True if is_decode == '1' else False

@@ -32,12 +32,16 @@ spec:
               description: ArgocdInstanceSpec defines the desired state of ArgocdInstance
               type: object
               properties:
-                foo:
-                  description: Foo is an example field of ArgocdInstance. Edit argocdinstance_types.go to remove/update
+                project:
+                  description: Project which project belongs to
                   type: string
             status:
               description: ArgocdInstanceStatus defines the observed state of ArgocdInstance
               type: object
+              properties:
+                serverHost:
+                  description: ServerHost is the argocd-server host for this instance
+                  type: string
       served: true
       storage: true
       subresources:

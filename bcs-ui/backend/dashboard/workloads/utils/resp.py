@@ -23,13 +23,13 @@ from backend.utils.basic import get_with_placeholder, getitems
 
 @dataclass
 class ContainerRespBuilder:
-    """ 通过 Pod 配置信息获取容器信息 """
+    """通过 Pod 配置信息获取容器信息"""
 
     pod: Dict
     container_name: str = None
 
     def build_list(self) -> List[Dict]:
-        """ 构造列表展示的容器信息 """
+        """构造列表展示的容器信息"""
         containers = []
         for cs in getitems(self.pod, 'status.containerStatuses', []):
             status = message = reason = None
@@ -54,7 +54,7 @@ class ContainerRespBuilder:
         return containers
 
     def build(self) -> Dict:
-        """ 构造展示用的容器详情信息 """
+        """构造展示用的容器详情信息"""
         for cs in getitems(self.pod, 'status.containerStatuses', []):
             if self.container_name == cs['name']:
                 container_status = cs

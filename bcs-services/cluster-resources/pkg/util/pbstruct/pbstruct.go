@@ -117,7 +117,7 @@ func interface2pbValue(v interface{}) (*spb.Value, error) {
 		}
 		return spb.NewStructValue(v2), nil
 	case []interface{}:
-		v2, err := spb.NewList(v)
+		v2, err := newInterfaceList(v)
 		if err != nil {
 			return nil, err
 		}
@@ -137,6 +137,19 @@ func interface2pbValue(v interface{}) (*spb.Value, error) {
 	default:
 		return nil, protoimpl.X.NewError("invalid type: %T", v)
 	}
+}
+
+// 替换 structpb.NewList 对嵌套的普通类型进行支持
+func newInterfaceList(v []interface{}) (*spb.ListValue, error) {
+	x := &spb.ListValue{Values: make([]*spb.Value, len(v))}
+	for i, v := range v {
+		var err error
+		x.Values[i], err = interface2pbValue(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return x, nil
 }
 
 // 参考 structpb.NewList，NewValue(case string) 实现，支持 []string 类型

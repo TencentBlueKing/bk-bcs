@@ -37,6 +37,8 @@ const (
 	LabelValueTrue = "true"
 	// LabelValueFalse label value for false
 	LabelValueFalse = "false"
+	// LabelValueForPortPoolItemName label value for port pool and item name
+	LabelValueForPortPoolItemName = "portpool-item-name"
 	// ListenerStatusNotSynced shows listener changes are not synced
 	ListenerStatusNotSynced = "NotSynced"
 	// ListenerStatusSynced shows listener changes are synced

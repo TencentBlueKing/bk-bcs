@@ -14,18 +14,22 @@
 package main
 
 import (
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
+
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 func main() {
 	mgr := app.NewWebConsoleManager(nil)
 	if err := mgr.Init(); err != nil {
-		logger.Fatal(err)
+		logger.Errorf("init webconsole error: %s", err)
+		os.Exit(1)
 	}
 
 	if err := mgr.Run(); err != nil {
-		logger.Fatal(err)
+		logger.Errorf("run webconsole error: %s", err)
+		os.Exit(1)
 	}
 }

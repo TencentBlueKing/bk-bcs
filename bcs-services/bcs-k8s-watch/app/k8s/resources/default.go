@@ -18,6 +18,8 @@ import (
 	"net/url"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	tkexGDClientSet "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
+	tkexGSClientSet "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
 	webhookClientSet "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
@@ -51,6 +53,11 @@ const (
 	BkbcsGroupName        = "bkbcs.tencent.com"
 	MesosV2GroupVersion   = "bkbcs.tencent.com/v2"
 	WebhookV1GroupVersion = "bkbcs.tencent.com/v1"
+
+	TkexV1alpha1GroupName    = "tkex.tencent.com"
+	TkexV1alpha1GroupVersion = "tkex.tencent.com/v1alpha1"
+	TkexGameDeploymentName   = "gamedeployments.tkex.tencent.com"
+	TkexGameStatefulSetName  = "gamestatefulsets.tkex.tencent.com"
 
 	KubefedTypesV1Beta1GroupVersion            = "types.kubefed.io/v1beta1"
 	KubefedCoreV1Alpha1GroupVersion            = "core.kubefed.io/v1alpha1"
@@ -124,6 +131,15 @@ func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.Filter
 		CrdClientList[groupVersion] = client
 	}
 
+	// 初始化tkex crd各个apiVersion的RestClient
+	tkeClientList, err := initTkexClient(restConfig)
+	if err != nil {
+		return err
+	}
+	for groupVersion, client := range tkeClientList {
+		CrdClientList[groupVersion] = client
+	}
+
 	return nil
 }
 
@@ -183,6 +199,24 @@ func initWebhookClient(restConfig *rest.Config) (map[string]rest.Interface, erro
 	return webhookClientList, nil
 }
 
+func initTkexClient(restConfig *rest.Config) (map[string]rest.Interface, error) {
+	tkexGDClient, err := tkexGDClientSet.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	tkexGSClient, err := tkexGSClientSet.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	tkexClientList := map[string]rest.Interface{
+		TkexGameDeploymentName:  tkexGDClient.TkexV1alpha1().RESTClient(),
+		TkexGameStatefulSetName: tkexGSClient.TkexV1alpha1().RESTClient(),
+	}
+	return tkexClientList, nil
+}
+
 // initK8sWatcherConfigList init k8s resource
 func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[string]struct{}, onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) {
 	// create k8s clientset.
@@ -223,6 +257,7 @@ func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[str
 	apiResourceLists, err := discoveryClient.ServerPreferredResources()
 	if err != nil {
 		glog.Warnf("error getting apiResourceLists: %s", err.Error())
+		return nil, err
 	}
 
 	for _, apiResourceList := range apiResourceLists {

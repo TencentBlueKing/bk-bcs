@@ -2196,11 +2196,11 @@ export default {
          *
          * @param {Object} container 当前容器
          */
-        async showTerminal (container) {
+        async showTerminal (container, taskgroup) {
             const cluster = this.instanceInfo
             const clusterId = cluster.cluster_id
             const containerId = container.container_id
-            const url = `${DEVOPS_BCS_API_URL}/web_console/projects/${this.projectId}/clusters/${clusterId}/?container_id=${containerId}`
+            const url = `${DEVOPS_BCS_API_URL}/web_console/projects/${this.projectId}/clusters/${clusterId}/?namespace=${this.instanceInfo.namespace_name}&pod_name=${taskgroup.name}&container_name=${container.name}`
             if (this.terminalWins.hasOwnProperty(containerId)) {
                 const win = this.terminalWins[containerId]
                 if (!win.closed) {

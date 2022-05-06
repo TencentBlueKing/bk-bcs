@@ -298,8 +298,10 @@
                                                 <template v-if="taskgroup.status !== 'Running'">
                                                     <div class="value-label" style="color: #ff5656;">
                                                         <bcs-popover placement="top" :delay="500" :transfer="true">
-                                                            <i class="bcs-icon bcs-icon-info-circle" style="font-size: 16px;color: #ff5656;position: relative;top: 3px;"></i>
-                                                            {{`${taskgroup.status}${taskgroup.reason ? ':' + taskgroup.reason : ''}`}}
+                                                            <div class="pod-manager-status">
+                                                                <i class="bcs-icon bcs-icon-info-circle" style="font-size: 16px;color: #ff5656;"></i>
+                                                                <span>{{`${taskgroup.status}${taskgroup.reason ? ':' + taskgroup.reason : ''}`}}</span>
+                                                            </div>
                                                             <template slot="content">
                                                                 <p style="text-align: left; white-space: normal;word-break: break-word;font-weight:400;">{{taskgroup.message || $t('异常')}}</p>
                                                             </template>
@@ -400,7 +402,7 @@
                                                         </td>
                                                         <td class="act" style="width: 250px;">
                                                             <template v-if="container.status === 'running'">
-                                                                <a href="javascript:void(0);" class="bk-text-button" @click="showTerminal(container)">
+                                                                <a href="javascript:void(0);" class="bk-text-button" @click="showTerminal(container, taskgroup)">
                                                                     WebConsole
                                                                 </a>
                                                             </template>

@@ -16,9 +16,11 @@
 package perm
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -27,8 +29,8 @@ import (
 )
 
 // CheckNSAccess 检查该 API 能否访问指定命名空间
-func CheckNSAccess(projectID, clusterID, namespace string) error {
-	clusterInfo, err := cluster.GetClusterInfo(clusterID)
+func CheckNSAccess(ctx context.Context, clusterID, namespace string) error {
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -36,15 +38,15 @@ func CheckNSAccess(projectID, clusterID, namespace string) error {
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(projectID, clusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil
 }
 
 // CheckSubscribable 检查指定参数能否进行订阅
-func CheckSubscribable(req *clusterRes.SubscribeReq) error {
-	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error {
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -61,15 +63,15 @@ func CheckSubscribable(req *clusterRes.SubscribeReq) error {
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(req.ProjectID, req.ClusterID, req.Namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, req.ClusterID, req.Namespace) {
 		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil
 }
 
 // CheckCObjAccess 检查指定 CObj 是否可查看/操作
-func CheckCObjAccess(projectID, clusterID, crdName, namespace string) error {
-	clusterInfo, err := cluster.GetClusterInfo(clusterID)
+func CheckCObjAccess(ctx context.Context, clusterID, crdName, namespace string) error {
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -77,11 +79,11 @@ func CheckCObjAccess(projectID, clusterID, crdName, namespace string) error {
 		return nil
 	}
 
-	if !slice.StringInSlice(crdName, envs.SharedClusterEnabledCRDs) {
+	if !slice.StringInSlice(crdName, conf.G.SharedCluster.EnabledCRDs) {
 		return errorx.New(errcode.NoPerm, "共享集群暂时只支持查询部分自定义资源")
 	}
 
-	if !cli.IsProjNSinSharedCluster(projectID, clusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
 	}
 	return nil

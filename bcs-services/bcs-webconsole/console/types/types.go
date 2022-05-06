@@ -151,6 +151,13 @@ type K8sContextByContainerID struct {
 	ContainerName string
 }
 
+// webconsole 连接三要素
+type Container struct {
+	Namespace     string
+	PodName       string
+	ContainerName string
+}
+
 // PodContext
 type PodContext struct {
 	ProjectId      string         `json:"project_id"`

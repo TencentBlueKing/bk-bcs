@@ -16,7 +16,7 @@ from backend.packages.blue_krill.data_types.enum import FeatureFlag, FeatureFlag
 
 
 class BaseFeatureFlag(FeatureFlag):
-    """ 资源视图公共 FeatureFlag """
+    """资源视图公共 FeatureFlag"""
 
     NAMESPACE = FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
     WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
@@ -26,7 +26,7 @@ class BaseFeatureFlag(FeatureFlag):
 
 
 class SingleClusterFeatureFlag(BaseFeatureFlag):
-    """ 资源视图 - 独有集群 FeatureFlag """
+    """资源视图 - 独有集群 FeatureFlag"""
 
     OVERVIEW = FeatureFlagField(name='OVERVIEW', label='集群总览', default=True)
     NODE = FeatureFlagField(name='NODE', label='节点', default=True)
@@ -36,4 +36,4 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
-    """ 资源视图 - 共享集群 FeatureFlag """
+    """资源视图 - 共享集群 FeatureFlag"""

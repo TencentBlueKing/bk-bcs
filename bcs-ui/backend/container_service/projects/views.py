@@ -43,6 +43,7 @@ from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import PermsResponse
 
 from . import serializers
+from .authorized import list_auth_projects
 from .cmdb import list_biz_maintainers
 
 logger = logging.getLogger(__name__)
@@ -155,7 +156,7 @@ class AuthorizedProjectsViewSet(viewsets.ViewSet):
 
     def list(self, request):
         """查询用户有权限的项目列表"""
-        resp = paas_cc.list_auth_projects(request.user.token.access_token, request.user.username)
+        resp = list_auth_projects(request.user.token.access_token, request.user.username)
         if resp.get('code') != ErrorCode.NoError:
             logger.error('list_auth_projects error: %s', resp.get('message'))
             raise error_codes.ComponentError('list auth projects error')

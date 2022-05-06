@@ -15,7 +15,7 @@
 package cluster
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 )
 
@@ -34,6 +34,9 @@ const (
 	ClusterTypeFederationShared = "FederationShared"
 )
 
+// SharedClusterTypes 非独占的集群类型（包含普通共享集群，共享联邦集群）
+var SharedClusterTypes = []string{ClusterTypeShared, ClusterTypeFederationShared}
+
 var (
 	// SharedClusterEnabledNativeKinds 共享集群支持的 k8s 原生资源
 	SharedClusterEnabledNativeKinds = []string{
@@ -41,5 +44,5 @@ var (
 		res.EP, res.Ing, res.SVC, res.CM, res.Secret, res.PVC, res.SA, res.CRD,
 	}
 	// SharedClusterAccessibleResKinds 共享集群支持的资源
-	SharedClusterAccessibleResKinds = append(SharedClusterEnabledNativeKinds, envs.SharedClusterEnabledCObjKinds...)
+	SharedClusterAccessibleResKinds = append(SharedClusterEnabledNativeKinds, conf.G.SharedCluster.EnabledCObjKinds...)
 )

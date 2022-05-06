@@ -1,0 +1,194 @@
+{
+  "schema": {
+    "title": "deployment",
+    "description": "Deployment 表单",
+    "type": "object",
+    "properties": {
+      "metadata": {
+        "type": "object",
+        "title": "基础信息",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "名称",
+            "default": "",
+            "ui:component": {
+              "name": "input",
+              "props": {
+                "type": "string"
+              }
+            },
+            "ui:props": {
+              "tips": "资源名称",
+              "visible": true,
+              "className": "custom-style"
+            }
+          },
+          "namespace": {
+            "type": "string",
+            "title": "命名空间",
+            "default": "default",
+            "ui:component": {
+              "name": "select",
+              "options": [
+                {
+                  "label": "default",
+                  "value": "default"
+                },
+                {
+                  "label": "bcs-system",
+                  "value": "bcs-system"
+                },
+                {
+                  "label": "kube-system",
+                  "value": "kube-system"
+                }
+              ]
+            }
+          },
+          "labels": {
+            "type": "array",
+            "title": "标签",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "value"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "title": "key",
+                  "description": "键"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "value",
+                  "description": "值"
+                }
+              }
+            }
+          },
+          "annotations": {
+            "type": "array",
+            "title": "注解",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "value"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "title": "key",
+                  "description": "键"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "value",
+                  "description": "值"
+                }
+              }
+            }
+          }
+        }
+      },
+      "volume": {
+        "type": "object",
+        "title": "数据卷",
+        "properties": {
+          "pvc": {
+            "type": "array",
+            "title": "PVC",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "pvcName"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "title": "名称"
+                },
+                "pvcName": {
+                  "type": "string",
+                  "title": "PersistentVolumeClaim"
+                },
+                "readOnly": {
+                  "type": "bool",
+                  "title": "只读",
+                  "ui:component": {
+                    "name": "checkbox"
+                  }
+                }
+              }
+            }
+          },
+          "hostPath": {
+            "type": "array",
+            "title": "HostPath",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "path",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "title": "名称"
+                },
+                "path": {
+                  "type": "string",
+                  "title": "路径或节点"
+                },
+                "type": {
+                  "type": "select",
+                  "title": "类型",
+                  "default": "File",
+                  "ui:component": {
+                    "name": "select",
+                    "options": [
+                      {
+                        "label": "DirectoryOrCreate",
+                        "value": "DirectoryOrCreate"
+                      },
+                      {
+                        "label": "Directory",
+                        "value": "Directory"
+                      },
+                      {
+                        "label": "FileOrCreate",
+                        "value": "FileOrCreate"
+                      },
+                      {
+                        "label": "File",
+                        "value": "File"
+                      },
+                      {
+                        "label": "Socket",
+                        "value": "Socket"
+                      },
+                      {
+                        "label": "CharDevice",
+                        "value": "CharDevice"
+                      },
+                      {
+                        "label": "BlockDevice",
+                        "value": "BlockDevice"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "layout": []
+}

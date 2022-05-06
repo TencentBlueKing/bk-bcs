@@ -27,7 +27,7 @@ pytestmark = pytest.mark.django_db
 def setup_settings(settings):
     """Setup required settings for unittests"""
     settings.BCS_API_ENV = {'stag': 'my_stag', 'prod': 'my_prod'}
-    settings.BCS_SERVER_HOST = {
+    settings.BCS_APIGW_DOMAIN = {
         'my_stag': 'https://my-stag-bcs-server.example.com',
         'my_prod': 'https://my-prod-bcs-server.example.com',
     }

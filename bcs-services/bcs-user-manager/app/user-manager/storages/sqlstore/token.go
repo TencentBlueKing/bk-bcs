@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
+// TokenStore is the token store that operate token in database
 type TokenStore interface {
 	GetTokenByCondition(cond *models.BcsUser) *models.BcsUser
 	GetUserTokensByName(name string) []models.BcsUser
@@ -30,6 +31,7 @@ type TokenStore interface {
 	CreateTemporaryToken(token *models.BcsTempToken) error
 }
 
+// NewTokenStore create new token store with db
 func NewTokenStore(db *gorm.DB) TokenStore {
 	return &realTokenStore{db: db}
 }
@@ -74,13 +76,13 @@ func (u *realTokenStore) DeleteToken(token string) error {
 	return err
 }
 
-// CreateToken create new temporary token
+// CreateTemporaryToken create new temporary token
 func (u *realTokenStore) CreateTemporaryToken(token *models.BcsTempToken) error {
 	err := u.db.Create(token).Error
 	return err
 }
 
-// GetUserByCondition Query user by condition
+// GetTempTokenByCondition Query temp user by condition
 func GetTempTokenByCondition(cond *models.BcsTempToken) *models.BcsTempToken {
 	tempUser := models.BcsTempToken{}
 	GCoreDB.Where(cond).First(&tempUser)
