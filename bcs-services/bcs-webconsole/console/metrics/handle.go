@@ -13,12 +13,25 @@
 
 package metrics
 
-const (
-	namespace = "bkbcs"
-	subsystem = "webconsole"
+import (
+	"net/http"
+	"time"
 
-	// ErrStatus for success status
-	ErrStatus = "failure"
-	// SucStatus for failure status
-	SucStatus = "success"
+	"github.com/gin-gonic/gin"
 )
+
+func APIMetricHandlerFunc(handler string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		ReportAPIRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), start)
+		return
+	}
+}
+
+func respStatusTransform(status int) string {
+	if status == http.StatusOK {
+		return SucStatus
+	}
+	return ErrStatus
+}
