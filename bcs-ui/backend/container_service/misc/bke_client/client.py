@@ -133,15 +133,15 @@ class BCSClusterClient:
         return credentials_data
 
     def get_access_cluster_context(self):
-        """ 获取访问集群需要的信息 """
+        """获取访问集群需要的信息"""
         # 获取集群的环境
         # TODO: 这一部分逻辑后续直接放到组装kubeconfig中
         ctx_cluster = CtxCluster.create(id=self.cluster_id, project_id=self.project_id, token=self.access_token)
         env_name = BcsAPIEnvironmentQuerier(ctx_cluster).do()
         return {
-            'server_address': f"{settings.BCS_API_SERVER_DOMAIN[env_name]}/clusters/{self.cluster_id}",
+            'server_address': f"{settings.BCS_APIGW_DOMAIN[env_name]}/clusters/{self.cluster_id}",
             'identifier': self.cluster_id,
-            'user_token': settings.BCS_API_GW_AUTH_TOKEN,
+            'user_token': settings.BCS_APIGW_TOKEN,
         }
 
     def make_kubectl_options(self):

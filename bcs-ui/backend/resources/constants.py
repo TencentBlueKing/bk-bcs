@@ -225,7 +225,7 @@ class NodeConditionType(str, StructuredEnum):
 
 
 class ResourceScope(str, StructuredEnum):
-    """ 资源维度 命名空间/集群 """
+    """资源维度 命名空间/集群"""
 
     Namespaced = 'Namespaced'
     Cluster = 'Cluster'

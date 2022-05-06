@@ -245,6 +245,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -574,6 +581,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/formData）.",
             "in": "query",
@@ -648,6 +662,51 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions": {
+      "get": {
+        "summary": "Get resource's supported apiVersions for form",
+        "description": "获取指定资源可用于表单化的 APIVersion",
+        "operationId": "Resource_GetFormSupportedAPIVersions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
             }
           },
           "default": {
@@ -820,6 +879,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -868,6 +934,13 @@
           {
             "name": "labelSelector",
             "description": "标签选择器.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -920,6 +993,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1083,6 +1163,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1132,6 +1219,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1295,6 +1389,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1344,6 +1445,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1507,6 +1615,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1556,6 +1671,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1719,6 +1841,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1768,6 +1897,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -1931,6 +2067,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1980,6 +2123,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2143,6 +2293,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2192,6 +2349,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2355,6 +2519,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2404,6 +2575,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2567,6 +2745,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2616,6 +2801,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2779,6 +2971,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2828,6 +3027,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2991,6 +3197,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3040,6 +3253,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -3203,6 +3423,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3252,6 +3479,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -3481,6 +3715,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/formData）.",
             "in": "query",
@@ -3642,6 +3883,13 @@
             "type": "string"
           },
           {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "format",
             "description": "资源配置格式（manifest/formData）.",
             "in": "query",
@@ -3696,6 +3944,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -3811,6 +4066,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -4032,6 +4294,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4081,6 +4350,13 @@
             "name": "name",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -4521,6 +4797,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4613,6 +4896,13 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4774,6 +5064,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4866,6 +5163,13 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
             "in": "query",
             "required": false,
             "type": "string"

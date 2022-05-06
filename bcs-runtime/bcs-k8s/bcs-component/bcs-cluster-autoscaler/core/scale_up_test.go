@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	testprovider "k8s.io/autoscaler/cluster-autoscaler/cloudprovider/test"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
@@ -851,4 +852,62 @@ func TestCheckScaleUpDeltaWithinLimits(t *testing.T) {
 			assert.Equal(t, scaleUpLimitsCheckResult{true, test.exceededResources}, checkResult)
 		}
 	}
+}
+
+func TestGetUpcomingNodes(t *testing.T) {
+	expandedGroups := make(chan groupSizeChange, 10)
+	// ready but unschedulable node
+	t1 := BuildTestNode("t1", 4000, 1000000)
+	SetNodeReadyState(t1, true, time.Now())
+	t1.Spec.Taints = []apiv1.Taint{
+		{
+			Key: "node.kubernetes.io/unschedulable",
+		},
+	}
+	t1.CreationTimestamp = v1.Now()
+	// ready and scheduable node
+	t2 := BuildTestNode("t2", 4000, 1000000)
+	SetNodeReadyState(t1, true, time.Now())
+	t2.CreationTimestamp = v1.Now()
+	// notready node
+	t3 := BuildTestNode("t3", 4000, 1000000)
+	SetNodeReadyState(t1, false, time.Now())
+	t3.CreationTimestamp = v1.Now()
+
+	podLister := kube_util.NewTestPodLister([]*apiv1.Pod{})
+	listers := kube_util.NewListerRegistry(nil, nil, podLister, nil, nil, nil, nil, nil, nil, nil)
+	provider := testprovider.NewTestCloudProvider(func(nodeGroup string, increase int) error {
+		expandedGroups <- groupSizeChange{groupName: nodeGroup, sizeChange: increase}
+		return nil
+	}, nil)
+	provider.AddNodeGroup("pool-1", 0, 10, 3)
+	provider.AddNode("pool-1", t1)
+	provider.AddNode("pool-1", t2)
+	provider.AddNode("pool-1", t3)
+
+	options := config.AutoscalingOptions{
+		EstimatorName:                    estimator.BinpackingEstimatorName,
+		MaxCoresTotal:                    5000 * 64,
+		MaxMemoryTotal:                   5000 * 64 * 20,
+		NodeAutoprovisioningEnabled:      true,
+		MaxAutoprovisionedNodeGroupCount: 10,
+	}
+
+	context := NewScaleTestAutoscalingContext(options, &fake.Clientset{}, listers, provider, nil)
+
+	nodes := []*apiv1.Node{t1, t2, t3}
+	//nodes = append(nodes, t1)
+	nodeInfos, _ := getNodeInfosForGroups(nodes, nil, provider, listers,
+		[]*appsv1.DaemonSet{}, context.PredicateChecker, nil)
+	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
+		context.LogRecorder, newBackoff())
+
+	err := clusterState.UpdateNodes(nodes, nodeInfos, time.Now())
+	if err != nil {
+		t.Logf("UpdateNodes failed. Error: %v", err)
+	}
+	upcomingNodes := clusterState.GetUpcomingNodes()
+	t.Logf("upcoming: %v", upcomingNodes)
+
+	assert.Equal(t, 1, len(upcomingNodes))
 }

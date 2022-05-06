@@ -41,7 +41,7 @@ func (h *Handler) ListCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
@@ -62,7 +62,7 @@ func (h *Handler) GetCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
@@ -95,7 +95,7 @@ func (h *Handler) CreateCObj(
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, namespace); err != nil {
 		return err
 	}
 	// 经过命名空间检查后，若不需要指定命名空间，则认为是集群维度的
@@ -126,7 +126,7 @@ func (h *Handler) UpdateCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildUpdateCObjAPIResp(
@@ -146,7 +146,7 @@ func (h *Handler) DeleteCObj(
 	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
 		return err
 	}
-	if err = perm.CheckCObjAccess(ctx, req.ProjectID, req.ClusterID, req.CRDName, req.Namespace); err != nil {
+	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)

@@ -86,7 +86,7 @@ def gen_used_info(host: Dict, all_cluster_nodes: Dict, project_cluster_info: Dic
 
 
 def is_valid_machine(*args, **kwargs) -> bool:
-    """ 判断是否为机器类型是否可用 """
+    """判断是否为机器类型是否可用"""
     # NOTE ce 版本不做判断
     return True
 
@@ -132,7 +132,7 @@ def is_host_selectable(host: Dict) -> bool:
 
 
 def update_gse_agent_status(username, host_list: List) -> List:
-    """ 更新 GSE Agent 状态信息 """
+    """更新 GSE Agent 状态信息"""
     gse_params = []
     for info in host_list:
         bk_cloud_id = info.get('bk_cloud_id') or 0

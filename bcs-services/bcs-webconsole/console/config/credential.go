@@ -21,24 +21,40 @@ import (
 	"github.com/prometheus/prometheus/pkg/labels"
 )
 
-// 权限控制
+// CredentialType 凭证类型
+type CredentialType string
+
+// Credential 支持的类型, 配置 Unmarshal 会通过, 但是不会有匹配
 const (
-	CredentialBasicAuth   = "basic_auth"
-	CredentialBearerToken = "bearer_token"
-	CredentialAppCode     = "app_code"
-	CredentialUsername    = "username"
+	CredentialBasicAuth   CredentialType = "basic_auth"   // Basic验证
+	CredentialBearerToken CredentialType = "bearer_token" // Token验证
+	CredentialAppCode     CredentialType = "app_code"     // 蓝鲸App
+	CredentialManager     CredentialType = "manager"      // 管理员
+)
+
+// ScopeType 类型, 配置 Unmarshal 会通过, 但是不会有匹配
+type ScopeType string
+
+const (
+	ScopeProjectId   ScopeType = "project_id"   // 项目Id
+	ScopeProjectCode ScopeType = "project_code" // 项目Code
+	ScopeClusterId   ScopeType = "cluster_id"   // 集群Id
 )
 
 // Scope 权限控制，格式如cluster_id: "RE_BCS-K8S-40000", 多个取且关系
-type Scope map[string]string
+type Scope map[ScopeType]string
 
 // LabelMatchers :
 type LabelMatchers []*labels.Matcher
 
-// Matchs : 多个是且的关系
-func (m *LabelMatchers) Matches(s string) bool {
+// Matchs : 多个是且的关系, 注意, 只匹配单个
+func (m *LabelMatchers) Matches(name ScopeType, value string) bool {
 	for _, matcher := range *m {
-		if !matcher.Matches(s) {
+		if matcher.Name != string(name) {
+			return false
+		}
+
+		if !matcher.Matches(value) {
 			return false
 		}
 	}
@@ -47,20 +63,35 @@ func (m *LabelMatchers) Matches(s string) bool {
 
 // Credential 鉴权
 type Credential struct {
-	ProjectId      string           `yaml:"project_id"`
-	CredentialType string           `yaml:"credential_type"`
-	Credential     string           `yaml:"credential"`
-	Scopes         []Scope          `yaml:"scopes"` // 多个取或关系
-	scopeMatcher   []*LabelMatchers `yaml:"-"`
-	ExpireTime     time.Time        `yaml:"expire_time"`
-	Enabled        bool             `yaml:"enabled"`
-	Operator       string           `yaml:"operator"`
-	Comment        string           `yaml:"comment"`
+	ProjectId      string              `yaml:"project_id"`
+	CredentialType CredentialType      `yaml:"credential_type"`
+	Credential     string              `yaml:"credential"`
+	CredentialList []string            `yaml:"credential_list"`
+	Scopes         []Scope             `yaml:"scopes"` // 多个取或关系
+	ExpireTime     time.Time           `yaml:"expire_time"`
+	Enabled        bool                `yaml:"enabled"`
+	Operator       string              `yaml:"operator"`
+	Comment        string              `yaml:"comment"`
+	credentialKeys map[string]struct{} `yaml:"-"`
+	scopeMatcher   []*LabelMatchers    `yaml:"-"`
 }
 
-func (c *Credential) InitMatcher() error {
+func (c *Credential) InitCred() error {
 	if len(c.Scopes) == 0 {
 		return errors.New("scopes is required")
+	}
+
+	// 初始化凭证, 可为多个
+	c.credentialKeys = make(map[string]struct{})
+	// 不能为空值
+	if c.Credential != "" {
+		c.credentialKeys[c.Credential] = struct{}{}
+	}
+	for _, v := range c.CredentialList {
+		if v == "" {
+			continue
+		}
+		c.credentialKeys[v] = struct{}{}
 	}
 
 	c.scopeMatcher = make([]*LabelMatchers, 0, len(c.Scopes))
@@ -79,7 +110,12 @@ func (c *Credential) InitMatcher() error {
 	return nil
 }
 
-func (c *Credential) Matches(appCode, projectCode string) bool {
+func (c *Credential) Matches(credType CredentialType, cred string, scopeType ScopeType, scopeValue string) bool {
+	// 类型必须优先匹配
+	if c.CredentialType != credType {
+		return false
+	}
+
 	if !c.Enabled {
 		return false
 	}
@@ -87,9 +123,14 @@ func (c *Credential) Matches(appCode, projectCode string) bool {
 		return false
 	}
 
+	// 必须在凭证中
+	if _, ok := c.credentialKeys[cred]; !ok {
+		return false
+	}
+
 	// 多个是或的关系
 	for _, matcher := range c.scopeMatcher {
-		if matcher.Matches(projectCode) {
+		if matcher.Matches(scopeType, scopeValue) {
 			return true
 		}
 	}
@@ -97,7 +138,7 @@ func (c *Credential) Matches(appCode, projectCode string) bool {
 }
 
 // NewScopeMatcher : match 4种类型实现
-func NewScopeMatcher(name, value string) (*labels.Matcher, error) {
+func NewScopeMatcher(name ScopeType, value string) (*labels.Matcher, error) {
 	var (
 		typeStr   string
 		matchType labels.MatchType
@@ -122,6 +163,5 @@ func NewScopeMatcher(name, value string) (*labels.Matcher, error) {
 	default:
 		matchType = labels.MatchEqual
 	}
-	return labels.NewMatcher(matchType, name, value)
-
+	return labels.NewMatcher(matchType, string(name), value)
 }

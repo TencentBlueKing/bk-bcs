@@ -30,15 +30,15 @@
                                 <th style="width: 160px;">{{$t('主机名/IP')}}</th>
                                 <th style="width: 220px;">{{$t('状态')}}</th>
                                 <th style="width: 120px;">{{$t('容器数量')}}</th>
-                                <th style="width: 200px;">{{$t('配置')}}</th>
+                                <th style="width: 200px;">{{$t('Pod数量')}}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <template v-if="candidateHostList.length">
-                                <tr v-for="(host, index) in candidateHostList" @click.stop="rowClick" :key="index">
+                            <template v-if="curPageData.length">
+                                <tr v-for="(host, index) in curPageData" @click.stop="rowClick" :key="index">
                                     <td style="width: 60px; text-align: right; ">
                                         <label class="bk-form-checkbox mt5">
-                                            <input type="checkbox" name="check-host" v-model="host.isChecked" @click.stop="selectHost(candidateHostList)" :disabled="host.status !== 'normal'">
+                                            <input type="checkbox" name="check-host" v-model="host.isChecked" @click.stop="selectHost(candidateHostList)" :disabled="host.status !== 'RUNNING'">
                                         </label>
                                     </td>
                                     <td>
@@ -48,10 +48,10 @@
                                         {{getHostStatus(host.status)}}
                                     </td>
                                     <td>
-                                        {{host.containers}}
+                                        {{ nodeMetric[host.inner_ip] ? nodeMetric[host.inner_ip].container_count : 0 }}
                                     </td>
                                     <td>
-                                        {{host.device_class || '--'}}
+                                        {{ nodeMetric[host.inner_ip] ? nodeMetric[host.inner_ip].pod_count : 0 }}
                                     </td>
                                 </tr>
                             </template>
@@ -143,7 +143,8 @@
 
                 showStagTip: false,
                 exceptionCode: null,
-                curProject: null
+                curProject: [],
+                nodeMetric: {}
             }
         },
         computed: {
@@ -155,44 +156,54 @@
             },
             onlineProjectList () {
                 return this.$store.state.sideMenu.onlineProjectList || []
+            },
+            curPageData () {
+                const { pageSize, curPage } = this.pageConf
+                return this.candidateHostList.slice(pageSize * (curPage - 1), pageSize * curPage)
+            }
+        },
+        watch: {
+            curPageData: {
+                handler (val) {
+                    this.handleGetNodeOverview()
+                }
             }
         },
         mounted () {
             this.curProject = Object.assign({}, this.onlineProjectList.filter(p => p.project_id === this.projectId)[0] || {})
         },
         methods: {
+            async handleGetNodeOverview () {
+                if (!this.curPageData.length) return
+                const promiseList = []
+                for (let i = 0; i < this.curPageData.length; i++) {
+                    promiseList.push(
+                        this.$store.dispatch('cluster/getNodeOverview', {
+                            nodeIp: this.curPageData[i].inner_ip,
+                            clusterId: this.curPageData[i].cluster_id,
+                            projectId: this.projectId
+                        }).then(data => {
+                            this.$set(this.nodeMetric, this.curPageData[i].inner_ip, data.data)
+                        })
+                    )
+                }
+                await Promise.all(promiseList)
+            },
             /**
              * 获取节点状态
              *
              * @param {string} status 节点状态
-             *
-             * 正常: normal
-             * 不正常: unnormal, not_ready
-             * 不可调度: removable, to_removed
-             * 初始化失败: initial_failed, so_init_failed, check_failed, bke_failed, schedule_failed
-             * 删除失败: delete_failed, remove_failed
-             * 初始化中: initializing, so_initializing, initial_checking, uninitialized
-             * 删除中: removing
              */
             getHostStatus (status) {
                 const statusMap = {
-                    'normal': this.$t('正常'),
-                    'unnormal': this.$t('不正常'),
-                    'not_ready': this.$t('不正常'),
-                    'removable': this.$t('不可调度'),
-                    'to_removed': this.$t('不可调度'),
-                    'initial_failed': this.$t('初始化失败'),
-                    'so_init_failed': this.$t('初始化失败'),
-                    'check_failed': this.$t('初始化失败'),
-                    'bke_failed': this.$t('初始化失败'),
-                    'schedule_failed': this.$t('初始化失败'),
-                    'delete_failed': this.$t('删除失败'),
-                    'remove_failed': this.$t('删除失败'),
-                    'initializing': this.$t('初始化中'),
-                    'so_initializing': this.$t('初始化中'),
-                    'initial_checking': this.$t('初始化中'),
-                    'uninitialized': this.$t('初始化中'),
-                    'removing': this.$t('删除中')
+                    'INITIALIZATION': this.$t('初始化中'),
+                    'RUNNING': this.$t('正常'),
+                    'NOTREADY': this.$t('不正常'),
+                    'REMOVABLE': this.$t('不可调度'),
+                    'DELETING': this.$t('删除中'),
+                    'ADD-FAILURE': this.$t('上架失败'),
+                    'REMOVE-FAILURE': this.$t('下架失败'),
+                    'UNKNOWN': this.$t('未知状态')
                 }
                 return statusMap[status] || this.$t('不正常')
             },
@@ -260,14 +271,11 @@
             async fetchCCData (params = {}) {
                 this.ccHostLoading = true
                 try {
-                    const res = await this.$store.dispatch('cluster/getNodeList', {
-                        projectId: this.projectId,
-                        clusterId: this.curClusterId,
-                        limit: this.pageConf.pageSize,
-                        offset: params.offset
+                    const res = await this.$store.dispatch('cluster/getK8sNodes', {
+                        $clusterId: this.curClusterId
                     })
 
-                    const count = res.data.count
+                    const count = res.length
 
                     this.pageConf.show = !!count
                     this.pageConf.count = count
@@ -276,13 +284,12 @@
                         this.pageConf.curPage = 1
                     }
 
-                    const list = res.data.results || []
+                    const list = res || []
                     list.forEach(item => {
-                        if (this.hostListCache[`${item.inner_ip}-${item.asset_id}`]) {
+                        if (this.hostListCache[item.inner_ip]) {
                             item.isChecked = true
                         }
                     })
-
                     this.candidateHostList.splice(0, this.candidateHostList.length, ...list)
                     this.initSelected(this.candidateHostList)
                     this.selectHost(this.candidateHostList)
@@ -301,18 +308,15 @@
                 this.remainCount = 0
                 this.pageConf.curPage = 1
                 this.dialogConf.isShow = true
-                this.candidateHostList.splice(0, this.candidateHostList.length, ...[])
                 this.isCheckCurPageAll = false
-                await this.fetchCCData({
-                    offset: 0
-                })
+                await this.fetchCCData()
             },
 
             initSelected (list) {
                 list.forEach(item => {
                     item.isChecked = false
                     this.selected.forEach(selectItem => {
-                        if (String(selectItem.id) === String(item.id)) {
+                        if (String(selectItem.inner_ip) === String(item.inner_ip)) {
                             item.isChecked = true
                         }
                     })
@@ -325,9 +329,7 @@
              * @param {number} page 当前页
              */
             pageChange (page) {
-                this.fetchCCData({
-                    offset: this.pageConf.pageSize * (page - 1)
-                })
+                this.pageConf.curPage = page
             },
 
             /**
@@ -336,7 +338,7 @@
             toggleCheckCurPage () {
                 const isChecked = !this.isCheckCurPageAll
                 this.candidateHostList.forEach(host => {
-                    if (host.status === 'normal') {
+                    if (host.status === 'RUNNING') {
                         host.isChecked = isChecked
                     }
                 })
@@ -355,19 +357,19 @@
                     const selectedHosts = hosts.filter(host => host.isChecked)
 
                     const canSelectedHosts = hosts.filter(host =>
-                        host.status === 'normal'
+                        host.status === 'RUNNING'
                     )
 
                     this.isCheckCurPageAll = selectedHosts.length === canSelectedHosts.length
 
                     // 清除 hostListCache
                     hosts.forEach(item => {
-                        delete this.hostListCache[`${item.inner_ip}-${item.asset_id}`]
+                        delete this.hostListCache[item.inner_ip]
                     })
 
                     // 重新根据选择的 host 设置到 hostListCache 中
                     selectedHosts.forEach(item => {
-                        this.hostListCache[`${item.inner_ip}-${item.asset_id}`] = item
+                        this.hostListCache[item.inner_ip] = item
                     })
 
                     this.remainCount = Object.keys(this.hostListCache).length
@@ -382,7 +384,7 @@
              */
             removeHost (host, index) {
                 this.hostList.splice(index, 1)
-                delete this.hostListCache[`${host.inner_ip}-${host.asset_id}`]
+                delete this.hostListCache[`${host.inner_ip}`]
             }
         }
     }

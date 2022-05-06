@@ -26,25 +26,25 @@ func (rt ResourceType) String() string {
 
 var (
 	// Cluster type
-	Cluster           ResourceType = "cluster"
+	Cluster ResourceType = "cluster"
 	// AutoScalingOption type
 	AutoScalingOption ResourceType = "autoscalingoption"
 	// Cloud type
-	Cloud             ResourceType = "cloud"
+	Cloud ResourceType = "cloud"
 	// CloudVPC type
-	CloudVPC          ResourceType = "cloudvpc"
+	CloudVPC ResourceType = "cloudvpc"
 	// ClusterCredential type
 	ClusterCredential ResourceType = "clustercredential"
 	// NameSpace type
-	NameSpace         ResourceType = "namespace"
+	NameSpace ResourceType = "namespace"
 	// NameSpaceQuota type
-	NameSpaceQuota    ResourceType = "namespacequota"
+	NameSpaceQuota ResourceType = "namespacequota"
 	// NodeGroup type
-	NodeGroup         ResourceType = "nodegroup"
+	NodeGroup ResourceType = "nodegroup"
 	// Project type
-	Project           ResourceType = "project"
+	Project ResourceType = "project"
 	// Task type
-	Task              ResourceType = "task"
+	Task ResourceType = "task"
 )
 
 const (
@@ -200,15 +200,16 @@ const (
 
 // ClusterIDRange for generate clusterID range
 var ClusterIDRange = map[string][]int{
-	"mesos-stag":  []int{10000, 15000},
-	"mesos-debug": []int{20000, 25000},
-	"mesos-prod":  []int{30000, 399999},
-	"k8s-stag":    []int{15001, 19999},
-	"k8s-debug":   []int{25001, 29999},
-	"k8s-prod":    []int{40000, 1000000},
+	"mesos-stag":  {10000, 15000},
+	"mesos-debug": {20000, 25000},
+	"mesos-prod":  {30000, 399999},
+	"k8s-stag":    {15001, 19999},
+	"k8s-debug":   {25001, 29999},
+	"k8s-prod":    {40000, 1000000},
 }
 
 // Develop dev env
 var Develop = "dev"
+
 // StagClusterENV stag env
 var StagClusterENV = "stag"

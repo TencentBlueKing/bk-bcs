@@ -29,7 +29,7 @@ def ingress_configs():
 
 class TestIngressFormatter:
     def test_format_dict(self, ingress_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = IngressFormatter().format_dict(ingress_configs['normal'])
         assert set(result.keys()) == {
             'hosts',

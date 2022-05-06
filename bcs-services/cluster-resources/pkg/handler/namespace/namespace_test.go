@@ -15,7 +15,6 @@
 package namespace
 
 import (
-	"context"
 	"strings"
 	"testing"
 
@@ -29,10 +28,11 @@ import (
 
 func TestNS(t *testing.T) {
 	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	// List
 	listReq, listResp := handler.GenResListReq(), clusterRes.CommonResp{}
-	err := h.ListNS(context.TODO(), &listReq, &listResp)
+	err := h.ListNS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -45,13 +45,14 @@ func TestNSInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = h.ListNS(context.TODO(), &listReq, &listResp)
+	err = h.ListNS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	// 确保列出来的，都是共享集群中，属于项目的命名空间

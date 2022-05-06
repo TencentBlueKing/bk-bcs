@@ -33,16 +33,14 @@ import (
 
 // ResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
 type ResMgr struct {
-	ProjectID    string
 	ClusterID    string
 	GroupVersion string
 	Kind         string
 }
 
 // NewResMgr 创建 ResMgr 并初始化
-func NewResMgr(projectID, clusterID, groupVersion, kind string) *ResMgr {
+func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 	return &ResMgr{
-		ProjectID:    projectID,
 		ClusterID:    clusterID,
 		GroupVersion: groupVersion,
 		Kind:         kind,
@@ -77,9 +75,11 @@ func (m *ResMgr) Create(
 	if err != nil {
 		return nil, err
 	}
-	if err := m.checkAccess(ctx, "", manifest); err != nil {
+	if err = m.checkAccess(ctx, "", manifest); err != nil {
 		return nil, err
 	}
+	// apiVersion 以 manifest 中的为准，不强制要求 preferred
+	m.GroupVersion = mapx.Get(manifest, "apiVersion", "").(string)
 	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
@@ -95,9 +95,11 @@ func (m *ResMgr) Update(
 	if err != nil {
 		return nil, err
 	}
-	if err := m.checkAccess(ctx, namespace, manifest); err != nil {
+	if err = m.checkAccess(ctx, namespace, manifest); err != nil {
 		return nil, err
 	}
+	// apiVersion 以 manifest 中的为准，不强制要求 preferred
+	m.GroupVersion = mapx.Get(manifest, "apiVersion", "").(string)
 	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 
@@ -111,7 +113,7 @@ func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1
 
 // 访问权限检查（如共享集群禁用等）
 func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map[string]interface{}) error {
-	clusterInfo, err := cluster.GetClusterInfo(m.ClusterID)
+	clusterInfo, err := cluster.GetClusterInfo(ctx, m.ClusterID)
 	if err != nil {
 		return err
 	}
@@ -127,7 +129,7 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	if manifest != nil {
 		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
 	}
-	if !cli.IsProjNSinSharedCluster(ctx, m.ProjectID, m.ClusterID, namespace) {
+	if !cli.IsProjNSinSharedCluster(ctx, m.ClusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
 	}
 	return nil

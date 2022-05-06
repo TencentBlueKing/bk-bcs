@@ -254,7 +254,7 @@ func (r *Request) Do() *Result {
 			} else {
 				host = r.endpoints[i]
 			}
-			url := r.scheme + host + r.WrapURL().String()
+			url := r.scheme + host + r.WrapURL().Path
 
 			r.tryThrottle(url)
 

@@ -13,12 +13,25 @@
 package hook
 
 import (
+	"context"
 	"fmt"
+	"k8s.io/client-go/kubernetes"
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/testutil"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookFake "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/fake"
 	hookInformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	apiv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apiextensionfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,9 +42,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
-	"reflect"
-	"testing"
-	"time"
 )
 
 var alwaysReady = func() bool { return true }
@@ -41,6 +51,7 @@ type fixture struct {
 	c *HookController
 
 	kubeClient *fake.Clientset
+	apiClient  *apiextensionfake.Clientset
 	hookClient *hookFake.Clientset
 
 	hookRunLister []*hookv1alpha1.HookRun
@@ -57,6 +68,7 @@ type fixture struct {
 
 	// Objects from here are also preloaded into NewSimpleFake.
 	kubeObjects []runtime.Object
+	apiObjects  []runtime.Object
 	hookObjects []runtime.Object
 }
 
@@ -68,7 +80,8 @@ func assertActions(expect, got []clienttesting.Action, t testing.TB) {
 		}
 
 		expectedAction := expect[i]
-		if !(expectedAction.Matches(action.GetVerb(), action.GetResource().Resource) && action.GetSubresource() == expectedAction.GetSubresource()) {
+		if !(expectedAction.Matches(action.GetVerb(), action.GetResource().Resource) &&
+			action.GetSubresource() == expectedAction.GetSubresource()) {
 			t.Errorf("Expected\n\t%#v\ngot\n\t%#v", expectedAction, action)
 			continue
 		}
@@ -106,6 +119,7 @@ func newFixture(t testing.TB) *fixture {
 	f := &fixture{}
 	f.t = t
 	f.kubeObjects = []runtime.Object{}
+	f.apiObjects = []runtime.Object{}
 	f.hookObjects = []runtime.Object{}
 	return f
 }
@@ -113,11 +127,13 @@ func newFixture(t testing.TB) *fixture {
 func (f *fixture) newController() {
 	// Create the controller
 	f.kubeClient = fake.NewSimpleClientset(f.kubeObjects...)
+	f.apiClient = apiextensionfake.NewSimpleClientset(f.apiObjects...)
 	f.hookClient = hookFake.NewSimpleClientset(f.hookObjects...)
 	f.kubeInformer = informers.NewSharedInformerFactory(f.kubeClient, controller.NoResyncPeriodFunc())
 	f.hookInformer = hookInformers.NewSharedInformerFactory(f.hookClient, controller.NoResyncPeriodFunc())
 
-	c := NewHookController(f.kubeClient, f.hookClient, f.hookInformer.Tkex().V1alpha1().HookRuns(), &record.FakeRecorder{})
+	c := NewHookController(f.kubeClient, f.apiClient,
+		f.hookClient, f.hookInformer.Tkex().V1alpha1().HookRuns(), &record.FakeRecorder{})
 	c.hookRunSynced = alwaysReady
 
 	for _, run := range f.hookRunLister {
@@ -249,4 +265,158 @@ func TestSync(t *testing.T) {
 	f.expectedPatchHookRunSubStatus(hr.Namespace, hr.Name, types.MergePatchType, nil)
 
 	f.run(types.NamespacedName{Name: hr.Name, Namespace: hr.Namespace}.String())
+}
+
+func buildVersionClientV1beta1(t *testing.T) (kubernetes.Interface, apiextension.Interface) {
+	f := newFixture(t)
+	f.newController()
+	ds := appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "bcs-hook-operator",
+			Namespace: "bcs-system",
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Image: "bcs-hook-operator:v0.0",
+						},
+					},
+				},
+			},
+		},
+	}
+	f.kubeClient.AppsV1().DaemonSets("bcs-system").Create(context.TODO(), &ds, metav1.CreateOptions{})
+	templatev1beta1 := apiv1beta1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "hooktemplates.tkex.tencent.com",
+			Annotations: map[string]string{
+				"version": "v0.0",
+			},
+		},
+	}
+	f.apiClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.TODO(),
+		&templatev1beta1, metav1.CreateOptions{})
+	runv1beta1 := apiv1beta1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "hookruns.tkex.tencent.com",
+			Annotations: map[string]string{
+				"version": "v0.0",
+			},
+		},
+	}
+	f.apiClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.TODO(),
+		&runv1beta1, metav1.CreateOptions{})
+	return f.kubeClient, f.apiClient
+}
+
+func buildVersionClientV1(t *testing.T) (kubernetes.Interface, apiextension.Interface) {
+	f := newFixture(t)
+	f.newController()
+	ds := appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "bcs-hook-operator",
+			Namespace: "bcs-system",
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Image: "bcs-hook-operator:v0.1",
+						},
+					},
+				},
+			},
+		},
+	}
+	f.kubeClient.AppsV1().DaemonSets("bcs-system").Create(context.TODO(), &ds, metav1.CreateOptions{})
+	templatev1 := apiv1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "hooktemplates.tkex.tencent.com",
+			Annotations: map[string]string{
+				"version": "v0.1",
+			},
+		},
+	}
+	f.apiClient.ApiextensionsV1().CustomResourceDefinitions().Create(context.TODO(),
+		&templatev1, metav1.CreateOptions{})
+	runv1 := apiv1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "hookruns.tkex.tencent.com",
+			Annotations: map[string]string{
+				"version": "v0.1",
+			},
+		},
+	}
+	f.apiClient.ApiextensionsV1().CustomResourceDefinitions().Create(context.TODO(),
+		&runv1, metav1.CreateOptions{})
+	return f.kubeClient, f.apiClient
+}
+func TestHookController_getVersion(t *testing.T) {
+
+	type fields struct {
+		kubeClient         kubernetes.Interface
+		apiextensionClient apiextension.Interface
+	}
+	tests := []struct {
+		name                    string
+		fields                  fields
+		wantImageVersion        string
+		wantHookrunVersion      string
+		wantHooktemplateVersion string
+	}{
+		{
+			name: "version = v0.0, with v1beta1 crd",
+			fields: fields{
+				kubeClient: func() kubernetes.Interface {
+					tmp, _ := buildVersionClientV1beta1(t)
+					return tmp
+				}(),
+				apiextensionClient: func() apiextension.Interface {
+					_, tmp := buildVersionClientV1beta1(t)
+					return tmp
+				}(),
+			},
+			wantImageVersion:        "v0.0",
+			wantHookrunVersion:      "v1beta1-v0.0",
+			wantHooktemplateVersion: "v1beta1-v0.0",
+		},
+		{
+			name: "version = v0.1, with v1 crd",
+			fields: fields{
+				kubeClient: func() kubernetes.Interface {
+					tmp, _ := buildVersionClientV1(t)
+					return tmp
+				}(),
+				apiextensionClient: func() apiextension.Interface {
+					_, tmp := buildVersionClientV1(t)
+					return tmp
+				}(),
+			},
+			wantImageVersion:        "v0.1",
+			wantHookrunVersion:      "v1-v0.1",
+			wantHooktemplateVersion: "v1-v0.1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hc := &HookController{
+				kubeClient:         tt.fields.kubeClient,
+				apiextensionClient: tt.fields.apiextensionClient,
+			}
+			gotImageVersion, gotHookrunVersion, gotHooktemplateVersion := hc.getVersion()
+			if gotImageVersion != tt.wantImageVersion {
+				t.Errorf("HookController.getVersion() gotImageVersion = %v, want %v", gotImageVersion, tt.wantImageVersion)
+			}
+			if gotHookrunVersion != tt.wantHookrunVersion {
+				t.Errorf("HookController.getVersion() gotHookrunVersion = %v, want %v", gotHookrunVersion, tt.wantHookrunVersion)
+			}
+			if gotHooktemplateVersion != tt.wantHooktemplateVersion {
+				t.Errorf("HookController.getVersion() gotHooktemplateVersion = %v, want %v", gotHooktemplateVersion,
+					tt.wantHooktemplateVersion)
+			}
+		})
+	}
 }

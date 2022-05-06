@@ -48,7 +48,7 @@ class TestComponentCCBusiness:
         assert ret == [{'id': 1001, "name": "测试业务"}, {'id': 1001, "name": "测试业务"}]
 
     def test_get_single_app_info(self):
-        """ 测试 AppQueryService.get """
+        """测试 AppQueryService.get"""
         ret = AppQueryService('admin').get(1001)
         assert ret == FAKE_BIZS_INFO['info'][0]
 
@@ -61,6 +61,6 @@ class TestComponentCCBusiness:
         assert ret == ['admin', 'admin1']
 
     def test_fetch_all_apps(self):
-        """ 测试 AppQueryService.fetch_all """
+        """测试 AppQueryService.fetch_all"""
         ret = AppQueryService('admin').fetch_all()
         assert len(ret) == 2

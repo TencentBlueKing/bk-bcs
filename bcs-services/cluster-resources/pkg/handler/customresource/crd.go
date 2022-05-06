@@ -53,7 +53,7 @@ func (h *Handler) ListCRD(
 func (h *Handler) GetCRD(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) error {
-	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}

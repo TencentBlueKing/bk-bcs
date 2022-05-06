@@ -15,7 +15,6 @@
 package storage
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +28,7 @@ import (
 
 func TestPVC(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume_claim", "")
 	resName := mapx.Get(manifest, "metadata.name", "")

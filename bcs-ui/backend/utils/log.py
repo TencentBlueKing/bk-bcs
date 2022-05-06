@@ -29,7 +29,7 @@ class LogstashRedisHandler(logging.Handler):
         logging.Handler.__init__(self)
         self.queue_name = queue_name
         pool = redis.BlockingConnectionPool.from_url(redis_url, max_connections=600, timeout=1)
-        self.client = redis.Redis(connection_pool=pool)
+        self.client = redis.Redis(connection_pool=pool, health_check_interval=30)
 
         self.formatter = formatter.LogstashFormatterVersion1(message_type, tags, fqdn=False)
 

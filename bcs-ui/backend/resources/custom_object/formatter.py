@@ -39,7 +39,7 @@ class CustomObjectFormatter(ResourceDefaultFormatter):
 
 
 class CustomObjectCommonFormatter(ResourceDefaultFormatter):
-    """ 通用的自定义对象格式化器 """
+    """通用的自定义对象格式化器"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         return self.format_common_dict(resource_dict)

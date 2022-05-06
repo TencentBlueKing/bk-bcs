@@ -29,7 +29,7 @@ def statefulset_configs():
 
 class TestStatefulsetFormatter:
     def test_format_dict(self, statefulset_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = StatefulSetFormatter().format_dict(statefulset_configs['normal'])
         assert set(result.keys()) == {'images', 'age', 'createTime', 'updateTime'}
         assert result['images'] == ['k8s.gcr.io/nginx-slim:0.8']

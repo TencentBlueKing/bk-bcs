@@ -199,6 +199,9 @@ func (da *DeleteAction) cleanLocalInformation() error {
 		return err
 	}
 
+	// delete passcc cluster
+	syncDeletePassCluster(da.cluster)
+
 	// finally clean cluster
 	da.cluster.Status = common.StatusDeleted
 	if err := da.model.UpdateCluster(da.ctx, da.cluster); err != nil {

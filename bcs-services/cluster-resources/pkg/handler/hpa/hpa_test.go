@@ -15,7 +15,6 @@
 package hpa
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +28,7 @@ import (
 
 func TestHPA(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("hpa/simple_hpa", "")
 	resName := mapx.Get(manifest, "metadata.name", "")

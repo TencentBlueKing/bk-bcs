@@ -19,15 +19,15 @@ from backend.utils.basic import get_with_placeholder, getitems
 
 
 class IngressFormatter(NetworkFormatter):
-    """ Ingress 格式化 """
+    """Ingress 格式化"""
 
     def parse_hosts(self, resource_dict: Dict) -> List:
-        """ 解析 Ingress hosts """
+        """解析 Ingress hosts"""
         rules = getitems(resource_dict, 'spec.rules', [])
         return [r['host'] for r in rules if r.get('host')]
 
     def parse_addresses(self, resource_dict: Dict) -> List:
-        """ 解析 Ingress address """
+        """解析 Ingress address"""
         addresses = []
         for ingress in getitems(resource_dict, 'status.loadBalancer.ingress', []):
             if ingress.get('ip'):
@@ -44,7 +44,7 @@ class IngressFormatter(NetworkFormatter):
         return '80, 443' if 'tls' in resource_dict['spec'] else '80'
 
     def parse_v1_rules(self, resource_dict: Dict) -> List:
-        """ 解析 networking.k8s.io/v1 版本 Ingress Rules """
+        """解析 networking.k8s.io/v1 版本 Ingress Rules"""
         rules = []
         for r in getitems(resource_dict, 'spec.rules', []):
             sub_rules = [
@@ -61,7 +61,7 @@ class IngressFormatter(NetworkFormatter):
         return rules
 
     def parse_v1beta1_rules(self, resource_dict: Dict) -> List:
-        """ 解析 extensions/v1beta1 版本 Ingress Rules """
+        """解析 extensions/v1beta1 版本 Ingress Rules"""
         rules = []
         for r in getitems(resource_dict, 'spec.rules', []):
             sub_rules = [

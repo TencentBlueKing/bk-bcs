@@ -34,7 +34,7 @@ class PageData:
 
 
 class BkCCConfig:
-    """ 蓝鲸配置平台配置信息，提供后续使用的host， url等 """
+    """蓝鲸配置平台配置信息，提供后续使用的host， url等"""
 
     def __init__(self, host: str):
         # 请求域名
@@ -76,7 +76,7 @@ class BkCCAuth(AuthBase):
 
 
 class BkCCClient(BkApiClient):
-    """ CMDB API SDK """
+    """CMDB API SDK"""
 
     def __init__(self, username: str, bk_supplier_account: Optional[str] = settings.BKCC_DEFAULT_SUPPLIER_ACCOUNT):
         self._config = BkCCConfig(host=settings.COMPONENT_HOST)

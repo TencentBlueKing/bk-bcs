@@ -123,6 +123,11 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(user, action string,
 
 	switch verifyType {
 	case clusterScopedType:
+		// clusterScopedType nonResourceRequest will just skip
+		if !requestInfo.IsResourceRequest {
+			blog.V(4).Infof("verifyUserClusterScopedPermission skip nonResourceRequest[%s]", requestInfo.Path)
+			return true, nil
+		}
 		clusterScopedAllow, err := cli.verifyUserClusterScopedPermission(user, action, resource)
 		if err != nil {
 			blog.Errorf("verifyUserClusterScopedPermission failed: %v", err)

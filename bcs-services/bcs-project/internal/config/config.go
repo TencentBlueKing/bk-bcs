@@ -18,6 +18,8 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/envs"
 )
 
 // EtcdConfig 依赖的 etcd 服务的配置
@@ -42,6 +44,7 @@ type MongoConfig struct {
 
 // ServerConfig 服务的配置
 type ServerConfig struct {
+	UseLocalIP      bool   `yaml:"useLocalIP" usage:"是否使用 Local IP"`
 	Address         string `yaml:"address" usage:"server address"`
 	InsecureAddress string `yaml:"insecureAddress" usage:"insecurue server address"`
 	Port            int    `yaml:"port" usage:"grpc port"`
@@ -74,17 +77,62 @@ type LogConfig struct {
 
 // SwaggerConfig
 type SwaggerConfig struct {
-	Dir string `yaml:"dir" usage:"swagger dir"`
+	Enable bool   `yaml:"enable" usage:"enable swagger"`
+	Dir    string `yaml:"dir" usage:"swagger dir"`
 }
 
-type ProjectConfig struct {
-	Etcd    EtcdConfig    `yaml:"etcd"`
-	Mongo   MongoConfig   `yaml:"mongo"`
-	Log     LogConfig     `yaml:"log"`
-	Swagger SwaggerConfig `yaml:"swagger"`
-	Server  ServerConfig  `yaml:"server"`
-	Client  ClientConfig  `yaml:"client"`
+// JwtConfig
+type JWTConfig struct {
+	Enable         bool   `yaml:"enable" usage:"enable jwt"`
+	PublicKey      string `yaml:"publicKey" usage:"public key"`
+	PublicKeyFile  string `yaml:"publicKeyFile" usage:"public key file"`
+	PrivateKey     string `yaml:"privateKey" usage:"private key"`
+	PrivateKeyFile string `yaml:"privateKeyFile" usage:"private key file"`
 }
+
+// IAMConfig iam操作需要的配置
+type IAMConfig struct {
+	AppCode     string `yaml:"appCode" usage:"app code"`
+	AppSecret   string `yaml:"appSecret" usage:"app secret"`
+	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
+	UseGWHost   bool   `yaml:"useGWHost" usage:"use gatewayHost when true, else use iamHost and bkPaaSHost"`
+	IAMHost     string `yaml:"iamHost" usage:"iam host"`
+	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"bk paas host"`
+	Debug       bool   `yaml:"debug" usage:"debug mode"`
+}
+
+// ActionExemptPermConfig 用于标识操作是否开启权限
+type ActionExemptPermConfig struct {
+	Create bool `yaml:"create" usage:"exempt create action perm"`
+	View   bool `yaml:"view" usage:"exempt view action perm"`
+	Update bool `yaml:"update" usage:"exempt update action perm"`
+	Delete bool `yaml:"delete" usage:"exempt delete action perm"`
+}
+
+// ProjectConfig 项目的配置信息
+type ProjectConfig struct {
+	Etcd             EtcdConfig             `yaml:"etcd"`
+	Mongo            MongoConfig            `yaml:"mongo"`
+	Log              LogConfig              `yaml:"log"`
+	Swagger          SwaggerConfig          `yaml:"swagger"`
+	Server           ServerConfig           `yaml:"server"`
+	Client           ClientConfig           `yaml:"client"`
+	JWT              JWTConfig              `yaml:"jwt"`
+	IAM              IAMConfig              `yaml:"iam"`
+	ActionExemptPerm ActionExemptPermConfig `yaml:"actionExemptPerm"`
+}
+
+func (conf *ProjectConfig) initServerAddress() error {
+	// 若指定使用 LOCAL_IP 且环境变量中 LOCAL_IP 有值，则替换掉 Server.Address
+	if conf.Server.UseLocalIP && envs.LocalIP != "" {
+		conf.Server.Address = envs.LocalIP
+		conf.Server.InsecureAddress = envs.LocalIP
+	}
+	return nil
+}
+
+// GlobalConf 项目配置信息，全局都可以使用
+var GlobalConf *ProjectConfig
 
 // LoadConfig 通过制定的path，加载对应的配置选项
 func LoadConfig(filePath string) (*ProjectConfig, error) {
@@ -96,5 +144,9 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+	// 初始化服务地址
+	conf.initServerAddress()
+	// 用于后续的使用
+	GlobalConf = conf
 	return conf, nil
 }

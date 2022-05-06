@@ -16,6 +16,8 @@ import logging
 
 from django.conf import settings
 
+from backend.packages.blue_krill.data_types.enum import StructuredEnum
+
 logger = logging.getLogger(__name__)
 
 # K8S lb default name
@@ -136,6 +138,12 @@ K8S_LB_NAMESPACE = settings.BCS_SYSTEM_NAMESPACE
 
 # release version prefix
 RELEASE_VERSION_PREFIX = "(current-unchanged)"
+
+
+class LBLabelOp(str, StructuredEnum):
+    ADD = "add"
+    DELETE = "delete"
+
 
 try:
     from .constants_ext import *  # noqa

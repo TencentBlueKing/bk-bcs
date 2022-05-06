@@ -11,14 +11,14 @@
         <div v-bkloading="{isLoading: rollingUpdateDialogConf.loading}" style="min-height: 455px;">
             <div class="title-wrapper">
                 <div class="left">
-                    <span style="margin-right: 40px;">当前版本：{{rollingUpdateDialogConf.oldVer}}</span>
-                    <span>实例数：{{curInstance.instance}}</span>
+                    <span style="margin-right: 40px;"><span>{{$t('当前版本')}}</span>：{{rollingUpdateDialogConf.oldVer}}</span>
+                    <span><span>{{$t('实例数')}}</span>：{{curInstance.instance}}</span>
                 </div>
                 <div class="right">
-                    更新版本：
+                    {{$t('更新版本')}}：
                     <div class="dropdown">
                         <bk-selector
-                            :placeholder="'请选择项目'"
+                            :placeholder="$t('请选择项目')"
                             :list="rollingUpdateDialogConf.verList"
                             :selected.sync="rollingUpdateDialogConf.selectedVerId"
                             :setting-key="'id'"
@@ -29,24 +29,24 @@
                         </bk-selector>
                     </div>
                     <span>
-                        实例数：
+                        {{$t('实例数')}}：
                         <bk-number-input
                             :value.sync="rollingUpdateDialogConf.instanceNum"
                             :min="1"
                             :max="1000"
                             :ex-style="{width: '80px'}"
-                            :placeholder="'请输入'">
+                            :placeholder="$t('请输入')">
                         </bk-number-input>
                     </span>
                     <a href="javascript:void(0)" class="bk-text-button" style="margin-left: 27px;" @click="toggleVariable"
                         v-if="(rollingUpdateDialogConf.oldVariableList && rollingUpdateDialogConf.oldVariableList.length) || (rollingUpdateDialogConf.newVariableList && rollingUpdateDialogConf.newVariableList.length)"
                         >
-                        <i class="bk-icon icon-edit2"></i>编辑变量
+                        <i class="bk-icon icon-edit2"></i>{{$t('编辑变量')}}
                     </a>
                     <template v-else>
-                        <bk-tooltip :content="'模板未引用变量'" :delay="500" placement="top">
+                        <bk-tooltip :content="$t('模板未引用变量')" :delay="500" placement="top">
                             <a href="javascript:void(0)" class="bk-text-button is-disabled" style="margin-left: 27px;">
-                                <i class="bk-icon icon-edit2"></i>编辑变量
+                                <i class="bk-icon icon-edit2"></i>{{$t('编辑变量')}}
                             </a>
                         </bk-tooltip>
                     </template>
@@ -59,7 +59,7 @@
                             <div class="biz-key-value-item" v-for="(variable, index) in rollingUpdateDialogConf.oldVariableList">
                                 <input type="text" class="bk-form-input" disabled v-model="variable.key">
                                 <span class="equals-sign">=</span>
-                                <input type="text" maxlength="30" class="bk-form-input right" placeholder="值" disabled v-model="variable.value">
+                                <input type="text" maxlength="30" class="bk-form-input right" :placeholder="$t('值')" disabled v-model="variable.value">
                             </div>
                         </div>
                     </template>
@@ -70,7 +70,7 @@
                             <div class="biz-key-value-item" v-for="(variable, index) in rollingUpdateDialogConf.newVariableList">
                                 <input type="text" class="bk-form-input" disabled v-model="variable.key">
                                 <span class="equals-sign">=</span>
-                                <input type="text" maxlength="30" class="bk-form-input right" placeholder="值" v-model="variable.value">
+                                <input type="text" maxlength="30" class="bk-form-input right" :placeholder="$t('值')" v-model="variable.value">
                             </div>
                         </div>
                     </template>
@@ -92,19 +92,19 @@
         <div class="bk-dialog-outer">
             <template v-if="isUpdating">
                 <button type="button" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary disabled">
-                    更新中...
+                    {{$t('更新中...')}}
                 </button>
                 <button type="button" class="bk-dialog-btn bk-dialog-btn-cancel disabled">
-                    取消
+                    {{$t('取消')}}
                 </button>
             </template>
             <template v-else>
                 <button type="button" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
                     @click="rollingUpdateConfirm">
-                    确定
+                    {{$t('确定')}}
                 </button>
                 <button type="button" class="bk-dialog-btn bk-dialog-btn-cancel" @click="hideRollingUpdate">
-                    取消
+                    {{$t('取消')}}
                 </button>
             </template>
         </div>

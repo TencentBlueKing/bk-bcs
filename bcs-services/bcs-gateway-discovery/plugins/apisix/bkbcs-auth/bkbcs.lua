@@ -11,6 +11,7 @@
 
 local apiBalancer = require("apisix.balancer")
 local core = require("apisix.core")
+local bcs_upstreams_util = require("apisix.plugins.bcs-common.upstreams")
 local http = require("resty.http")
 local url = require("net.url")
 local ngx_re = require("ngx.re")
@@ -68,32 +69,23 @@ end
 --@return: ip, port, error if happened
 local function instance_balancer(key)
   if not key then
-    core.log.error("no host information to get bcs-user-manager balance instance")
-    return nil, nil, "lost user-manager host"
+    core.log.error("no upstream key to get bcs-user-manager balance instance")
+    return nil, nil, "lost user-manager upstream"
   end
   -- get upstream from local cache data
-  local upstreams = core.config.fetch_created_obj("/upstreams")
-  if not upstreams then
-    return nil, nil, "no user-manager registe"
-  end
-  local userkey = ngx_re.split(key, "\\.", nil, nil, 3)
-  local userUpstream = upstreams:get(userkey[1])
+  local userUpstream = bcs_upstreams_util.get_upstream_by_name(key)
   if not userUpstream then
-    return nil, nil, "search usermanager " .. userkey[1] .. " failed"
+    return nil, nil, "search usermanager " .. key .. " failed"
   end
-  for i, _ in ipairs(userUpstream.value.nodes) do
-    if not userUpstream.value.nodes[i].priority then
-      userUpstream.value.nodes[i].priority = 0
+  for i, _ in ipairs(userUpstream.nodes) do
+    if not userUpstream.nodes[i].priority then
+      userUpstream.nodes[i].priority = 0
     end
   end
-  local user_conf = {
-    type = userUpstream.value.type,
-    nodes = userUpstream.value.nodes,
-  }
   local cxt = {
-    upstream_conf = user_conf,
+    upstream_conf = userUpstream,
     upstream_version = userUpstream.modifiedIndex,
-    upstream_key = "bkbcs-" .. userkey[1],
+    upstream_key = "bkbcs-" .. key,
   }
   local server, err = apiBalancer.pick_server({}, cxt)
   if err then
@@ -112,7 +104,7 @@ local BKUserCli_mt = {
 function BKUserCli:new(conf)
   -- parse endpoint for request details
   local parsed_url = parse_url(conf.bkbcs_auth_endpoints)
-  local ip, port, err = instance_balancer(parsed_url.host)
+  local ip, port, err = instance_balancer(conf.usermanager_upstream_name)
   if err then
     return nil, err
   end

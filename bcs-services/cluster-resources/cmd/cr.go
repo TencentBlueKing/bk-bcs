@@ -30,8 +30,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
 
-var showVersion = flag.Bool("version", false, "show version info only")
-var confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
+var (
+	showVersion  = flag.Bool("version", false, "show version info only")
+	confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
+)
 
 // Start 初始化并启动 ClusterResources 服务
 func Start() {

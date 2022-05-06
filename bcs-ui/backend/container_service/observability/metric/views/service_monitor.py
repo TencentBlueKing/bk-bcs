@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
-    """ 集群 ServiceMonitor 相关操作 """
+    """集群 ServiceMonitor 相关操作"""
 
     def get_permissions(self):
         # create 方法需要额外检查共享集群 Namespace 是否属于指定项目，其他方法在代码逻辑中过滤
@@ -58,7 +58,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
         resource_id_key='iam_ns_id',
     )
     def list(self, request, project_id, cluster_id):
-        """ 获取 ServiceMonitor 列表 """
+        """获取 ServiceMonitor 列表"""
         cluster_map = self._get_cluster_map(project_id)
         namespace_map = self._get_namespace_map(project_id)
 
@@ -84,7 +84,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
         )
 
     def create(self, request, project_id, cluster_id):
-        """ 创建 ServiceMonitor """
+        """创建 ServiceMonitor"""
         params = self.params_validate(ServiceMonitorCreateSLZ)
 
         name, namespace = params['name'], params['namespace']
@@ -130,7 +130,7 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
 
     @action(methods=['DELETE'], url_path='batch', detail=False)
     def batch_delete(self, request, project_id, cluster_id):
-        """ 批量删除 ServiceMonitor """
+        """批量删除 ServiceMonitor"""
         params = self.params_validate(ServiceMonitorBatchDeleteSLZ)
         svc_monitors = params['service_monitors']
 
@@ -160,16 +160,16 @@ class ServiceMonitorViewSet(SystemViewSet, ServiceMonitorMixin):
 
 
 class ServiceMonitorDetailViewSet(SystemViewSet, ServiceMonitorMixin):
-    """ 单个 ServiceMonitor 相关操作 """
+    """单个 ServiceMonitor 相关操作"""
 
     lookup_field = 'name'
 
     def get_permissions(self):
-        """ 拦截所有共享集群中不属于项目的命名空间的请求 """
+        """拦截所有共享集群中不属于项目的命名空间的请求"""
         return [*super().get_permissions(), AccessSvcMonitorNamespacePerm()]
 
     def retrieve(self, request, project_id, cluster_id, namespace, name):
-        """ 获取单个 ServiceMonitor """
+        """获取单个 ServiceMonitor"""
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         result = client.get_service_monitor(namespace, name)
         if result.get('status') == 'Failure':
@@ -187,7 +187,7 @@ class ServiceMonitorDetailViewSet(SystemViewSet, ServiceMonitorMixin):
         return Response(result)
 
     def destroy(self, request, project_id, cluster_id, namespace, name):
-        """ 删除 ServiceMonitor """
+        """删除 ServiceMonitor"""
         self._validate_namespace_use_perm(project_id, cluster_id, [namespace])
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         result = self._single_service_monitor_operate_handler(
@@ -203,7 +203,7 @@ class ServiceMonitorDetailViewSet(SystemViewSet, ServiceMonitorMixin):
         return Response(result)
 
     def update(self, request, project_id, cluster_id, namespace, name):
-        """ 更新 ServiceMonitor (先删后增) """
+        """更新 ServiceMonitor (先删后增)"""
         params = self.params_validate(ServiceMonitorUpdateSLZ)
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         result = self._single_service_monitor_operate_handler(
@@ -228,7 +228,7 @@ class ServiceMonitorDetailViewSet(SystemViewSet, ServiceMonitorMixin):
         return Response(result)
 
     def _update_manifest(self, manifest: Dict, params: Dict) -> Dict:
-        """ 使用 api 请求参数更新 manifest """
+        """使用 api 请求参数更新 manifest"""
         manifest['metadata']['labels']['release'] = 'po'
         manifest['spec']['selector'] = {'matchLabels': params['selector']}
         manifest['spec']['sampleLimit'] = params['sample_limit']

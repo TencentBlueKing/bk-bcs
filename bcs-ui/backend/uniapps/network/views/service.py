@@ -242,7 +242,7 @@ class Services(viewsets.ViewSet, BaseAPI):
         resource_id_key='iam_ns_id',
     )
     def get(self, request, project_id):
-        """ 获取项目下所有的服务 """
+        """获取项目下所有的服务"""
         params = dict(request.GET.items())
         params['env'] = 'k8s'
 
