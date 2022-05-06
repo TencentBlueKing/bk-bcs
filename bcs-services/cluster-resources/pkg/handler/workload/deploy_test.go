@@ -57,7 +57,7 @@ func TestDeploy(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = listResp.Data.AsMap()
-	selectItems := mapx.Get(respData, "selectItems", []interface{}{}).([]interface{})
+	selectItems := mapx.GetList(respData, "selectItems")
 	assert.True(t, len(selectItems) > 0)
 
 	// Update

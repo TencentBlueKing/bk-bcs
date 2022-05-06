@@ -171,7 +171,7 @@ func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podNam
 			message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
 		}
 		containers = append(containers, map[string]interface{}{
-			"containerID": extractContainerID(mapx.Get(cs, "containerID", "").(string)),
+			"containerID": extractContainerID(mapx.GetStr(cs, "containerID")),
 			"image":       cs["image"].(string),
 			"name":        cs["name"].(string),
 			"status":      status,
@@ -214,7 +214,7 @@ func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName
 		"hostName":      mapx.Get(podManifest, "spec.nodeName", "--"),
 		"hostIP":        mapx.Get(podManifest, "status.hostIP", "--"),
 		"containerIP":   mapx.Get(podManifest, "status.podIP", "--"),
-		"containerID":   extractContainerID(mapx.Get(curContainerStatus, "containerID", "").(string)),
+		"containerID":   extractContainerID(mapx.GetStr(curContainerStatus, "containerID")),
 		"containerName": containerName,
 		"image":         mapx.Get(curContainerStatus, "image", "--"),
 		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "--"),
