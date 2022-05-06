@@ -54,7 +54,7 @@
                     </StatusIcon>
                 </template>
             </bk-table-column>
-            <bk-table-column label="操作" width="150">
+            <bk-table-column :label="$t('操作')" width="150">
                 <template #default="{ row }">
                     <bk-button
                         class="mr10"
@@ -195,7 +195,7 @@
                 .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
                 .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
-            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${API密钥}" -H "accept: application/json" "${bcs_api_host}/clusters/${cluster_id}/version"'
+            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/clusters/${cluster_id}/version"'
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
                 .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
             

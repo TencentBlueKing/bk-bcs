@@ -54,7 +54,7 @@ func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[stri
 	}
 	manifest := ret.UnstructuredContent()
 	// 共享集群命名空间，需要过滤出属于指定项目的
-	clusterInfo, err := cluster.GetClusterInfo(c.ResClient.conf.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}

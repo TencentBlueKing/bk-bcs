@@ -16,7 +16,7 @@ from backend.packages.blue_krill.data_types.enum import FeatureFlag, FeatureFlag
 
 
 class BaseFeatureFlag(FeatureFlag):
-    """ 对应左侧菜单功能，默认都开启 """
+    """对应左侧菜单功能，默认都开启"""
 
     NAMESPACE = FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
     TEMPLATESET = FeatureFlagField(name='TEMPLATESET', label='模板集', default=True)
@@ -26,7 +26,7 @@ class BaseFeatureFlag(FeatureFlag):
 
 
 class GlobalClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 全部集群 """
+    """集群管理 - 全部集群"""
 
     CLUSTER = FeatureFlagField(name='CLUSTER', label='集群', default=True)
     NODE = FeatureFlagField(name='NODE', label='节点', default=True)
@@ -40,7 +40,7 @@ class GlobalClusterFeatureFlag(BaseFeatureFlag):
 
 
 class SingleClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 单个独有集群 """
+    """集群管理 - 单个独有集群"""
 
     OVERVIEW = FeatureFlagField(name='OVERVIEW', label='概览', default=True)
     NODE = FeatureFlagField(name='NODE', label='节点', default=True)
@@ -52,4 +52,4 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 单个共享集群 """
+    """集群管理 - 单个共享集群"""

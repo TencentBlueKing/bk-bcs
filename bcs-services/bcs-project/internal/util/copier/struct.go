@@ -17,7 +17,6 @@ package copier
 import (
 	"reflect"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 )
 
@@ -28,10 +27,10 @@ func CopyStruct(DstStructPtr interface{}, SrcStructPtr interface{}) *errorx.Proj
 	srct := reflect.TypeOf(SrcStructPtr)
 	dstt := reflect.TypeOf(DstStructPtr)
 	if srct.Kind() != reflect.Ptr || dstt.Kind() != reflect.Ptr || srct.Elem().Kind() == reflect.Ptr || dstt.Elem().Kind() == reflect.Ptr {
-		return errorx.New(errcode.InnerErr, "Fatal error:type of parameters must be Ptr of value")
+		return errorx.NewInnerErr("Fatal error:type of parameters must be Ptr of value")
 	}
 	if srcv.IsNil() || dstv.IsNil() {
-		return errorx.New(errcode.InnerErr, "Fatal error:value of parameters should not be nil")
+		return errorx.NewInnerErr("Fatal error:value of parameters should not be nil")
 	}
 	srcV := srcv.Elem()
 	dstV := dstv.Elem()

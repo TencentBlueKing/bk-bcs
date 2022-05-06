@@ -22,7 +22,7 @@ from backend.resources.custom_object import CustomResourceDefinition
 
 
 def gen_cobj_web_annotations(request, project_id, cluster_id, namespace: Union[str, None], crd_name: str) -> Dict:
-    """ 构造 custom_object 相关 web_annotations """
+    """构造 custom_object 相关 web_annotations"""
     client = CustomResourceDefinition(request.ctx_cluster)
     crd = client.get(name=crd_name, is_format=False)
     if not crd:

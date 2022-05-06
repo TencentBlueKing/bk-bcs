@@ -25,7 +25,7 @@ pytestmark = pytest.mark.django_db
 
 
 class TestDeployment:
-    """ 测试 Deployment 相关接口 """
+    """测试 Deployment 相关接口"""
 
     manifest = load_demo_manifest('workloads/simple_deployment')
     create_url = f'{DAU_PREFIX}/workloads/deployments/'
@@ -34,37 +34,37 @@ class TestDeployment:
     shared_cluster_url_prefix = f'/api/dashboard/projects/{TEST_PROJECT_ID}/clusters/{TEST_SHARED_CLUSTER_ID}'
 
     def test_create(self, api_client):
-        """ 测试创建资源接口 """
+        """测试创建资源接口"""
         response = api_client.post(self.create_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_list(self, api_client):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(self.list_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'DeploymentList'
 
     def test_update(self, api_client):
-        """ 测试更新资源接口 """
+        """测试更新资源接口"""
         # 修改 replicas 数量
         self.manifest['spec']['replicas'] = 5
         response = api_client.put(self.inst_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client):
-        """ 测试获取单个资源接口 """
+        """测试获取单个资源接口"""
         response = api_client.get(self.inst_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'Deployment'
         assert getitems(response.data, 'manifest.spec.replicas') == 5
 
     def test_destroy(self, api_client):
-        """ 测试删除单个资源 """
+        """测试删除单个资源"""
         response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_deploys(self, api_client, shared_cluster_ns_mgr):
-        """ 测试获取共享集群 Deploy """
+        """测试获取共享集群 Deploy"""
         shared_cluster_ns = shared_cluster_ns_mgr
 
         response = api_client.get(
@@ -77,7 +77,7 @@ class TestDeployment:
         assert response.json()['code'] == 400
 
     def test_operate_shared_cluster_deploys(self, api_client, shared_cluster_ns_mgr):
-        """ 测试 创建 / 获取 / 删除 共享集群 Pod """
+        """测试 创建 / 获取 / 删除 共享集群 Pod"""
         shared_cluster_ns = shared_cluster_ns_mgr
 
         pc_deploy_manifest = deepcopy(self.manifest)
@@ -108,7 +108,7 @@ class TestDeployment:
         assert response.json()['code'] == 0
 
     def test_operate_shared_cluster_no_perm_ns_deploys(self, api_client):
-        """ 测试越权操作共享集群不属于项目的命名空间 """
+        """测试越权操作共享集群不属于项目的命名空间"""
         deploy_manifest = deepcopy(self.manifest)
         deploy_manifest['metadata']['namespace'] = 'default'
 

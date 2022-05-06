@@ -18,17 +18,17 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -84,9 +84,9 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// update cluster status
-	cloudprovider.UpdateClusterStatus(clusterID, icommon.StatusRunning)
-	// import cluster clustercreential
+	// update cluster info
+	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	// import cluster clustercredential
 	err = importClusterCredential(basicInfo)
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: importClusterCredential failed: %v", taskID, err)
@@ -157,7 +157,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return err
 	}
 
-	// import cluster
+	// import cluster and update cluster status
 	masterNodes := make(map[string]*proto.Node)
 	nodes, err := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
 		Common: data.CmOption,
@@ -170,6 +170,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		masterNodes[node.InnerIP] = node
 	}
 	data.Cluster.Master = masterNodes
+	data.Cluster.Status = icommon.StatusRunning
 
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,

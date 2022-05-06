@@ -39,7 +39,7 @@ func (h *Handler) ListNS(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
 	ret, err := cli.NewNSCliByClusterID(ctx, req.ClusterID).List(
-		ctx, req.ProjectID, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err

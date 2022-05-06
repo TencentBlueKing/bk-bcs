@@ -126,7 +126,7 @@
                                     </bcs-popover>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('操作')" width="200">
+                            <bk-table-column :label="$t('操作')" width="240">
                                 <template slot-scope="props">
                                     <template v-if="props.row.can_update">
                                         <a href="javascript:void(0);"
@@ -567,40 +567,27 @@
                                 </i18n>
                             </div>
                         </bcs-alert>
-                        <div class="create-form-wrapper">
-                            <div class="form-item">
-                                <label :class="isEn ? 'en' : ''">{{$t('是否有sid')}}：</label>
-                                <div class="form-item-inner">
-                                    <bk-radio-group v-model="createCL5DialogConf.isHasSid">
-                                        <bk-radio value="yes">{{$t('是')}}</bk-radio>
-                                        <bk-radio value="no">{{$t('否')}}</bk-radio>
-                                    </bk-radio-group>
-                                </div>
-                            </div>
-                            <div class="form-item">
-                                <template v-if="createCL5DialogConf.isHasSid === 'yes'">
-                                    <label>sid：</label>
-                                </template>
-                                <template v-else>
-                                    <label :class="isEn ? 'en' : ''">{{$t('业务模块')}}：</label>
-                                </template>
-                                <div class="form-item-inner">
+                        <bk-form ref="formRef" :label-width="labelWidth">
+                            <bk-form-item :label="$t('是否有sid')">
+                                <bk-radio-group v-model="createCL5DialogConf.isHasSid">
+                                    <bk-radio value="yes">{{$t('是')}}</bk-radio>
+                                    <bk-radio value="no">{{$t('否')}}</bk-radio>
+                                </bk-radio-group>
+                            </bk-form-item>
+                            <bk-form-item :label="createCL5DialogConf.isHasSid === 'yes' ? 'sid' : $t('业务模块')">
+                                <div style="display: flex;">
                                     <bk-input maxlength="60"
-                                        :style="{ width: isEn ? '250px' : '340px' }"
                                         :placeholder="createCL5DialogConf.isHasSid === 'yes' ? $t('请输入sid') : $t('请输入业务模块')"
                                         v-model="createCL5DialogConf.bid4" />
                                     <bcs-popover v-if="createCL5DialogConf.isHasSid === 'no'" :content="$t('Node节点所属的CMDB三级业务模块ID')" placement="right">
                                         <i class="bcs-icon bcs-icon-info-circle" style="margin-left: 5px;"></i>
                                     </bcs-popover>
                                 </div>
-                            </div>
-                            <div class="form-item" style="margin-bottom: 0;">
-                                <label :class="isEn ? 'en' : ''">{{$t('责任人')}}：</label>
-                                <div class="form-item-inner">
-                                    {{userInfo.username}}
-                                </div>
-                            </div>
-                        </div>
+                            </bk-form-item>
+                            <bk-form-item :label="$t('责任人')">
+                                <span>{{userInfo.username}}</span>
+                            </bk-form-item>
+                        </bk-form>
                     </div>
                 </template>
                 <div slot="footer">
@@ -625,6 +612,7 @@
 <script>
     import mixin from './mixin'
     import { catchErrorHandler, formatDate } from '@/common/util'
+    import useFormLabel from '@/common/use-form-label'
 
     export default {
         mixins: [mixin],
@@ -811,6 +799,10 @@
         },
         created () {
             this.initPageConf()
+        },
+        mounted () {
+            const { initFormLabelWidth } = useFormLabel()
+            this.labelWidth = initFormLabelWidth(this.$refs.formRef)
         },
         methods: {
             /**

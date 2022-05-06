@@ -8,14 +8,14 @@
                 <span class="mode-panel-desc">{{ $t('可自定义集群基本信息和集群版本') }}</span>
             </div>
             <!-- 导入集群 -->
-            <div class="mode-panel disabled" v-bk-tooltips="$t('功能建设中')">
+            <div class="mode-panel" @click="handleImportCluster">
                 <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-upload"></i></span>
                 <span class="mode-panel-title">{{ $t('导入集群') }}</span>
                 <span class="mode-panel-desc">{{ $t('支持快速导入已存在的集群') }}</span>
             </div>
         </div>
         <div class="cluster-template-title">
-            <span class="title">{{ $t('集群模板') }}</span>
+            <span class="title">{{ $t('云服务商') }}</span>
             <!-- <bcs-button size="small" @click="handleCreateTemplate">{{ $t('新建集群模板') }}</bcs-button> -->
         </div>
         <bcs-table class="mt15"
@@ -24,7 +24,7 @@
             v-bkloading="{ isLoading }"
             @page-change="pageChange"
             @page-limit-change="pageSizeChange">
-            <bcs-table-column :label="$t('模板名称')">
+            <bcs-table-column :label="$t('名称')">
                 <template #default="{ row }">
                     <bcs-button text @click="handleShowDetail(row)">{{ row.name }}</bcs-button>
                 </template>
@@ -59,6 +59,7 @@
     import * as ace from '@/components/ace-editor'
     import fullScreen from '@/directives/full-screen'
     import yamljs from 'js-yaml'
+    import useConfig from '@/common/use-config'
 
     export default defineComponent({
         name: 'CreateCluster',
@@ -68,10 +69,19 @@
         },
         setup (props, ctx) {
             const { $router, $store } = ctx.root
+            const { $INTERNAL } = useConfig()
 
             // 自建集群
             const handleCreateCluster = () => {
-                $router.push({ name: 'createFormCluster' })
+                if ($INTERNAL.value) {
+                    $router.push({ name: 'createFormCluster' })
+                } else {
+                    $router.push({ name: 'createFormClusterEE' })
+                }
+            }
+            // 导入集群
+            const handleImportCluster = () => {
+                $router.push({ name: 'createImportCluster' })
             }
 
             // 获取表格数据
@@ -125,7 +135,8 @@
                 handleDeleteTemplate,
                 pageChange,
                 pageSizeChange,
-                handleShowDetail
+                handleShowDetail,
+                handleImportCluster
             }
         }
     })

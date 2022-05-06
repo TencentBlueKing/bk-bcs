@@ -52,8 +52,17 @@ testcov: tidy
 
 # build docker image
 docker:
-	docker build \
+	docker build -f ./Dockerfile \
 	--build-arg VERSION=${VERSION} \
 	--build-arg GITCOMMIT=${GITCOMMIT} \
 	-t cluster-resources:${VERSION} \
 	--no-cache .
+
+# build docker image for develop / test (include soruce code)
+dockerdev:
+	docker build -f ./Dockerfile-Dev \
+	--build-arg VERSION=${VERSION} \
+	--build-arg GITCOMMIT=${GITCOMMIT} \
+	-t cluster-resources:${VERSION} \
+	--no-cache .
+

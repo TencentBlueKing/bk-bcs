@@ -27,14 +27,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 )
 
-//HttpRespone define the information of the http respone
+// HttpRespone define the information of the http respone
 type HttpRespone struct {
 	Reply      []byte
 	StatusCode int
 	Status     string
 	Header     http.Header
 }
-
+// HttpClient http client object
 type HttpClient struct {
 	caFile   string
 	certFile string
@@ -43,6 +43,7 @@ type HttpClient struct {
 	httpCli  *http.Client
 }
 
+// NewHttpClient create new http client
 func NewHttpClient() *HttpClient {
 	return &HttpClient{
 		httpCli: &http.Client{},
@@ -50,10 +51,12 @@ func NewHttpClient() *HttpClient {
 	}
 }
 
+// GetClient get raw http client
 func (client *HttpClient) GetClient() *http.Client {
 	return client.httpCli
 }
 
+// SetTlsNoVerity set tls with no verify
 func (client *HttpClient) SetTlsNoVerity() error {
 	tlsConf := ssl.ClientTslConfNoVerity()
 
@@ -64,6 +67,7 @@ func (client *HttpClient) SetTlsNoVerity() error {
 	return nil
 }
 
+// SetTlsVerityServer set tls to verify server side
 func (client *HttpClient) SetTlsVerityServer(caFile string) error {
 	client.caFile = caFile
 
@@ -78,6 +82,7 @@ func (client *HttpClient) SetTlsVerityServer(caFile string) error {
 	return nil
 }
 
+// SetTlsVerity set tls config with caFile, certFile, keyFile and password
 func (client *HttpClient) SetTlsVerity(caFile, certFile, keyFile, passwd string) error {
 	client.caFile = caFile
 	client.certFile = certFile
@@ -94,16 +99,19 @@ func (client *HttpClient) SetTlsVerity(caFile, certFile, keyFile, passwd string)
 	return nil
 }
 
+// SetTlsVerityConfig set tls config
 func (client *HttpClient) SetTlsVerityConfig(tlsConf *tls.Config) {
 	trans := client.NewTransPort()
 	trans.TLSClientConfig = tlsConf
 	client.httpCli.Transport = trans
 }
 
+// SetTransPort set http transport
 func (client *HttpClient) SetTransPort(transport http.RoundTripper) {
 	client.httpCli.Transport = transport
 }
 
+// NewTransPort create new transport
 func (client *HttpClient) NewTransPort() *http.Transport {
 	return &http.Transport{
 		TLSHandshakeTimeout: 5 * time.Second,
@@ -115,6 +123,7 @@ func (client *HttpClient) NewTransPort() *http.Transport {
 	}
 }
 
+// SetTimeOut set timeout for http client
 func (client *HttpClient) SetTimeOut(timeOut time.Duration) {
 	client.httpCli.Timeout = timeOut
 }
@@ -138,51 +147,63 @@ func (client *HttpClient) SetBatchHeader(headerSet []*http2.HeaderSet) {
 	}
 }
 
+// GET wraps http GET method
 func (client *HttpClient) GET(url string, header http.Header, data []byte) ([]byte, error) {
 	return client.Request(url, "GET", header, data)
 }
 
+// POST wraps http POST method
 func (client *HttpClient) POST(url string, header http.Header, data []byte) ([]byte, error) {
 	return client.Request(url, "POST", header, data)
 }
 
+// DELETE wraps http DELETE method
 func (client *HttpClient) DELETE(url string, header http.Header, data []byte) ([]byte, error) {
 	return client.Request(url, "DELETE", header, data)
 }
 
+// PUT wraps http PUT method
 func (client *HttpClient) PUT(url string, header http.Header, data []byte) ([]byte, error) {
 	return client.Request(url, "PUT", header, data)
 }
 
+// PATCH wraps http PATCH method
 func (client *HttpClient) PATCH(url string, header http.Header, data []byte) ([]byte, error) {
 	return client.Request(url, "PATCH", header, data)
 }
 
+// Get wraps http Get method
 func (client *HttpClient) Get(url string, header http.Header, data []byte) (*HttpRespone, error) {
 	return client.RequestEx(url, "GET", header, data)
 }
 
+// Post wraps http Post method
 func (client *HttpClient) Post(url string, header http.Header, data []byte) (*HttpRespone, error) {
 	return client.RequestEx(url, "POST", header, data)
 }
 
+// Delete wraps http Delete method
 func (client *HttpClient) Delete(url string, header http.Header, data []byte) (*HttpRespone, error) {
 	return client.RequestEx(url, "DELETE", header, data)
 }
 
+// Put wraps http Put method
 func (client *HttpClient) Put(url string, header http.Header, data []byte) (*HttpRespone, error) {
 	return client.RequestEx(url, "PUT", header, data)
 }
 
+// Patch wraps http Patch method
 func (client *HttpClient) Patch(url string, header http.Header, data []byte) (*HttpRespone, error) {
 	return client.RequestEx(url, "PATCH", header, data)
 }
 
+// Request wraps http Request method
 func (client *HttpClient) Request(url, method string, header http.Header, data []byte) ([]byte, error) {
 	rsp, err := client.RequestEx(url, method, header, data)
 	return rsp.Reply, err
 }
 
+// RequestEx do http request, old version
 func (client *HttpClient) RequestEx(url, method string, header http.Header, data []byte) (*HttpRespone, error) {
 	var req *http.Request
 	var errReq error
@@ -235,6 +256,7 @@ func (client *HttpClient) RequestEx(url, method string, header http.Header, data
 	return httpRsp, nil
 }
 
+// RequestStream do http stream request
 func (client *HttpClient) RequestStream(url, method string, header http.Header, data []byte) (io.ReadCloser, error) {
 	var req *http.Request
 	var errReq error

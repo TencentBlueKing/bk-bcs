@@ -232,6 +232,12 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 	}
 	metrics.UpdateLastTime(metrics.Autoscaling, time.Now())
 
+	// set minSize of nodegroups in cron mode
+	err = b.doCron(contexts, b.clusterStateRegistry, currentTime)
+	if err != nil {
+		klog.Errorf("Failed in cron mode: %v", err)
+	}
+
 	originalScheduledPods, err := b.ScheduledPodLister().List()
 	if err != nil {
 		klog.Errorf("Failed to list scheduled pods: %v", err)

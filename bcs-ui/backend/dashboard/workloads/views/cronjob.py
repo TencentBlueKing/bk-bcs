@@ -17,6 +17,6 @@ from backend.resources.workloads.cronjob import CronJob
 
 
 class CronJobViewSet(NamespaceScopeViewSet):
-    """ CronJob 相关接口 """
+    """CronJob 相关接口"""
 
     resource_client = CronJob

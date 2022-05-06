@@ -22,7 +22,7 @@ import (
 const RecursionMaxNums = 100
 
 // TmplRandomNameLength 模板随机名称长度
-const TmplRandomNameLength = 8
+const TmplRandomNameLength = 12
 
 // FormRenderSupportedResAPIVersion 支持表单化的资源版本
 var FormRenderSupportedResAPIVersion = map[string][]string{

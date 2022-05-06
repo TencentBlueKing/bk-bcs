@@ -25,6 +25,9 @@ const (
 	// InstanceNamePrefix argocd instance name prefix
 	InstanceNamePrefix = "bcs-argocd"
 
+	// InstanceNamePrefix argocd instance name prefix
+	ProjectNamePrefix = "bcs-project"
+
 	// PluginNamePrefix argocd plugin name prefix
 	PluginNamePrefix = "bcs-argocd-plugin"
 

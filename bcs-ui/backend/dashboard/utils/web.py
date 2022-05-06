@@ -28,7 +28,7 @@ from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAc
 def get_res_inst_multi_actions_perms(
     username: str, project_id: str, cluster_id: str, namespace: Union[str, None], resource_type: ResourceType
 ) -> Dict:
-    """ 获取指定实例的多个操作权限 """
+    """获取指定实例的多个操作权限"""
     if resource_type not in [ResourceType.Namespace, ResourceType.Cluster]:
         raise ResourceTypeUnsupported()
 
@@ -53,7 +53,7 @@ def get_res_inst_multi_actions_perms(
 
 
 def gen_base_web_annotations(username: str, project_id: str, cluster_id: str, namespace: str) -> Dict:
-    """ 生成资源视图相关的页面控制信息，用于控制按钮展示等 """
+    """生成资源视图相关的页面控制信息，用于控制按钮展示等"""
     resource_type = ResourceType.Namespace if namespace else ResourceType.Cluster
     perms = get_res_inst_multi_actions_perms(username, project_id, cluster_id, namespace, resource_type)
     tip = _('当前用户没有该操作的权限')

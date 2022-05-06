@@ -15,7 +15,6 @@
 package workload
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,9 +32,9 @@ import (
 
 func TestDeploy(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
@@ -121,9 +120,26 @@ var deployManifest4FormTest = map[string]interface{}{
 	},
 }
 
+func TestDeployWithUnavailableAPIVersion(t *testing.T) {
+	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
+
+	// List
+	listReq, listResp := handler.GenResListReq(), clusterRes.CommonResp{}
+	listReq.ApiVersion = "deprecated/v1beta1"
+	err := h.ListDeploy(ctx, &listReq, &listResp)
+	assert.NotNil(t, err)
+
+	// Get
+	getReq, getResp := handler.GenResGetReq("resName"), clusterRes.CommonResp{}
+	getReq.ApiVersion = "deprecated/v1"
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.NotNil(t, err)
+}
+
 func TestDeployWithForm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
 
@@ -185,9 +201,9 @@ func TestDeployInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 	// 设置为共享集群项目属命名空间
 	err = mapx.SetItems(manifest, "metadata.namespace", envs.TestSharedClusterNS)
@@ -249,9 +265,9 @@ func TestDeployInSharedCluster(t *testing.T) {
 
 func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create

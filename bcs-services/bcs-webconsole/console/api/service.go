@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/shlex"
 )
 
 type service struct {
@@ -42,24 +43,17 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
+	gp := metrics.New(s.opts.Router)
+	api.Use(gp.Middleware())
+
 	// 用户登入态鉴权, session鉴权
-	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",
-		metrics.APIMetricHandlerFunc("CreateWebConsoleSession"),
-		route.PermissionRequired(), s.CreateWebConsoleSession)
-	api.GET("/api/projects/:projectId/clusters/",
-		metrics.APIMetricHandlerFunc("ListClusters"),
-		route.PermissionRequired(), s.ListClusters)
+	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", route.PermissionRequired(), s.CreateWebConsoleSession)
+	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	api.GET("/api/portal/sessions/:sessionId/",
-		metrics.APIMetricHandlerFunc("CreatePortalSession"),
-		s.CreatePortalSession)
-	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/",
-		metrics.APIMetricHandlerFunc("CreateContainerPortalSession"),
-		route.CredentialRequired(), s.CreateContainerPortalSession)
-	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/",
-		metrics.APIMetricHandlerFunc("CreateClusterPortalSession"),
-		route.CredentialRequired(), s.CreateClusterPortalSession)
+	api.GET("/api/portal/sessions/:sessionId/", s.CreatePortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/", route.CredentialRequired(), s.CreateContainerPortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/", route.CredentialRequired(), s.CreateClusterPortalSession)
 
 	// websocket协议, session鉴权
 	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
@@ -177,6 +171,17 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		return
 	}
 
+	// 自定义命令行
+	var commands []string
+	if consoleQuery.Command != "" {
+		commands, err = shlex.Split(consoleQuery.Command)
+		if err != nil {
+			msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, command not valid, %s", err))
+			APIError(c, msg)
+			return
+		}
+	}
+
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
 		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
@@ -184,6 +189,10 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		return
 	}
 	podCtx.ProjectId = authCtx.ProjectId
+
+	if len(commands) > 0 {
+		podCtx.Commands = commands
+	}
 
 	store := sessions.NewRedisStore("open-session", "open-session")
 

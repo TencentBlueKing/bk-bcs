@@ -49,8 +49,8 @@ INSTALLED_APPS += [
 LOGIN_FULL = ""
 LOGIN_SIMPLE = ""
 
-# 设置存储在 session 中的 token 一天后过期，默认为 5 分钟
-BKAUTH_SESSION_TIMEOUT = 86400
+# 设置 session 过期时间为 12H
+SESSION_COOKIE_AGE = 12 * 60 * 60
 
 # bkpaas_auth 模块会通过用户的 AccessToken 获取用户基本信息，因为这个 API 调用比较昂贵。
 # 所以最好设置 Django 缓存来避免不必要的请求以提高效率。
@@ -283,11 +283,10 @@ BCS_APP_SECRET = SECRET_KEY
 
 # REPO 相关配置
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-HELM_MERELY_REPO_URL = HELM_REPO_DOMAIN
 BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
-# 默认 BKCC 设备供应方
-BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', None)
+# 默认 BKCC 设备供应方，社区版默认 '0'
+BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', '0')
 
 # clustermanager域名
 CLUSTER_MANAGER_DOMAIN = os.environ.get("CLUSTER_MANAGER_DOMAIN", "")

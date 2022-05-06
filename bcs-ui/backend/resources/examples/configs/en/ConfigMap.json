@@ -1,0 +1,13 @@
+{
+  "kind": "ConfigMap",
+  "class": "configs",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_configmap",
+      "alias": "ConfigMap Simple Demo",
+      "description": "A simple configmap demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

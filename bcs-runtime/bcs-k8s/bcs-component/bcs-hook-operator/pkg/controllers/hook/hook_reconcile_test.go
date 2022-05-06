@@ -696,6 +696,49 @@ func TestGenerateMetricTasks(t *testing.T) {
 				return r
 			}(),
 		},
+		{
+			name: "Ordered polocy, only generate one task for the first metric",
+			run: func() *hookv1alpha1.HookRun {
+				r := newHr(2, 0, 0)
+				r.Spec.Policy = hookv1alpha1.OrderedPolicy
+				return r
+			}(),
+			expectedTasks: []metricTask{{metric: hookv1alpha1.Metric{Name: "m0"}}},
+		},
+		{
+			name: "Ordered polocy, waitting for the first metric to be completed",
+			run: func() *hookv1alpha1.HookRun {
+				r := newHr(2, 0, 0)
+				// reached desired count
+				r.Status.MetricResults = append(r.Status.MetricResults, hookv1alpha1.MetricResult{
+					Name: "m0",
+					Measurements: []hookv1alpha1.Measurement{
+						{Phase: hookv1alpha1.HookPhaseRunning, FinishedAt: &metav1.Time{Time: time.Now()}},
+					},
+					Count: 1,
+				})
+				r.Spec.Policy = hookv1alpha1.OrderedPolicy
+				return r
+			}(),
+		},
+		{
+			name: "Ordered polocy, only generate one task",
+			run: func() *hookv1alpha1.HookRun {
+				r := newHr(3, 0, 0)
+				r.Status.MetricResults = append(r.Status.MetricResults, hookv1alpha1.MetricResult{
+					Name:  "m0",
+					Phase: hookv1alpha1.HookPhaseSuccessful,
+					Measurements: []hookv1alpha1.Measurement{
+						{Phase: hookv1alpha1.HookPhaseSuccessful, FinishedAt: &metav1.Time{Time: time.Now()}},
+					},
+					Count:      1,
+					Successful: 1,
+				})
+				r.Spec.Policy = hookv1alpha1.OrderedPolicy
+				return r
+			}(),
+			expectedTasks: []metricTask{{metric: hookv1alpha1.Metric{Name: "m1"}}},
+		},
 	}
 
 	for _, s := range tests {

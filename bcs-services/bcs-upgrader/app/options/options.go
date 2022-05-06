@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 //CertConfig is configuration of Cert
@@ -37,8 +38,10 @@ type UpgraderOptions struct {
 	conf.LogConfig
 	conf.ProcessConfig
 	MongoConfig
+	HttpCliConfig
 	ServerCert *CertConfig
-	DebugMode  bool `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
+
+	DebugMode bool `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 }
 
 // MongoConfig option for mongo
@@ -51,6 +54,18 @@ type MongoConfig struct {
 	MongoPassword       string `json:"mongo_password" value:"" usage:"mongo passsword for cluster manager"`
 	MongoMaxPoolSize    uint   `json:"mongo_maxpoolsize" value:"0" usage:"mongo client connection pool max size"`
 	MongoMinPoolSize    uint   `json:"mongo_minpoolsize" value:"0" usage:"mongo client connection pool min size"`
+}
+
+// HttpCliConfig option for HttpCliConfig
+type HttpCliConfig struct {
+	CcHOST                   string `json:"cc_host" value:"" usage:"request bcs saas cc host"`
+	BkAppSecret              string `json:"bk_app_secret" value:"" usage:"request ssm for http header"`
+	SsmHost                  string `json:"ssm_host" value:"" usage:"request ssm host"`
+	SsmAccessToken           string `json:"ssm_access_token" value:"" usage:"ssm access token"`
+	CmHost                   string `json:"cm_host"  value:"" usage:"request cluster manager host"`
+	GatewayToken             string `json:"gateway_token" value:"" usage:"bcs api gateway token"`
+	HttpCliCertConfig        *commtypes.CertConfig
+	ClusterManagerCertConfig *commtypes.CertConfig
 }
 
 // AddFlags add cmdline flags

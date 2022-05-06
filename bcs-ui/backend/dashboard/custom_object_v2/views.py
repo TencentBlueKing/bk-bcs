@@ -38,21 +38,21 @@ from backend.utils.url_slug import KUBE_NAME_REGEX
 
 
 class CRDViewSet(AccessClusterPermMixin, PermValidateMixin, SystemViewSet):
-    """ 自定义资源定义 """
+    """自定义资源定义"""
 
     lookup_field = 'crd_name'
     # 指定符合 CRD 名称规范的
     lookup_value_regex = KUBE_NAME_REGEX
 
     def list(self, request, project_id, cluster_id):
-        """ 获取所有自定义资源列表 """
+        """获取所有自定义资源列表"""
         self._validate_perm(request.user.username, project_id, cluster_id, None, DashboardAction.View)
         client = CustomResourceDefinition(request.ctx_cluster)
         response_data = ListApiRespBuilder(client).build()
         return Response(response_data)
 
     def retrieve(self, request, project_id, cluster_id, crd_name):
-        """ 获取单个自定义资源详情 """
+        """获取单个自定义资源详情"""
         self._validate_perm(request.user.username, project_id, cluster_id, None, DashboardAction.View)
         client = CustomResourceDefinition(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace=None, name=crd_name).build()
@@ -60,17 +60,17 @@ class CRDViewSet(AccessClusterPermMixin, PermValidateMixin, SystemViewSet):
 
 
 class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
-    """ 自定义资源对象 """
+    """自定义资源对象"""
 
     lookup_field = 'custom_obj_name'
     lookup_value_regex = KUBE_NAME_REGEX
 
     def get_permissions(self):
-        """ 在共享集群中仅部分自定义资源可订阅 """
+        """在共享集群中仅部分自定义资源可订阅"""
         return [*super().get_permissions(), AccessCustomObjectsPermission()]
 
     def list(self, request, project_id, cluster_id, crd_name):
-        """ 获取某类自定义资源列表 """
+        """获取某类自定义资源列表"""
         params = self.params_validate(
             slzs.ListCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
         )
@@ -84,7 +84,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, crd_name, custom_obj_name):
-        """ 获取单个自定义对象 """
+        """获取单个自定义对象"""
         params = self.params_validate(
             slzs.FetchCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
         )
@@ -99,7 +99,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Add)
     def create(self, request, project_id, cluster_id, crd_name):
-        """ 创建自定义资源 """
+        """创建自定义资源"""
         params = self.params_validate(slzs.CreateCustomObjectSLZ)
         namespace = getitems(params, 'manifest.metadata.namespace')
         cus_obj_name = getitems(params, 'manifest.metadata.name')
@@ -118,7 +118,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id, cluster_id, crd_name, custom_obj_name):
-        """ 更新自定义资源 """
+        """更新自定义资源"""
         params = self.params_validate(
             slzs.UpdateCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
         )
@@ -144,7 +144,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Delete)
     def destroy(self, request, project_id, cluster_id, crd_name, custom_obj_name):
-        """ 删除自定义资源 """
+        """删除自定义资源"""
         params = self.params_validate(
             slzs.DestroyCustomObjectSLZ, context={'crd_name': crd_name, 'ctx_cluster': request.ctx_cluster}
         )
@@ -161,7 +161,7 @@ class CustomObjectViewSet(PermValidateMixin, SystemViewSet):
 
     @staticmethod
     def _update_audit_ctx(request, namespace: str, crd_name: str, custom_obj_name: str) -> None:
-        """ 更新操作审计相关信息 """
+        """更新操作审计相关信息"""
         resource_name = (
             f'{crd_name} - {namespace}/{custom_obj_name}' if namespace else f'{crd_name} - {custom_obj_name}'
         )

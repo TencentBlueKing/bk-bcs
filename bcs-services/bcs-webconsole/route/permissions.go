@@ -38,20 +38,19 @@ func PermissionRequired() gin.HandlerFunc {
 		authCtx := MustGetAuthContext(c)
 
 		// 校验项目，集群信息的正确性
-		if authCtx.ClusterId != "" || authCtx.ClusterId == "-" {
-			err := ValidateProjectCluster(c, authCtx)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
-					Code:      types.ApiErrorCode,
-					Message:   err.Error(),
-					RequestID: authCtx.RequestId,
-				})
-				return
-			}
+		if err := ValidateProjectCluster(c, authCtx); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
+				Code:      types.ApiErrorCode,
+				Message:   err.Error(),
+				RequestID: authCtx.RequestId,
+			})
+			return
 		}
 
-		// 管理员不校验权限
-		if config.G.Base.IsManager(authCtx.Username) {
+		c.Set("auth_context", authCtx)
+
+		// 管理员不校验权限, 包含管理员凭证
+		if config.G.IsManager(authCtx.Username, authCtx.ClusterId) {
 			c.Next()
 			return
 		}
@@ -133,6 +132,8 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
+		c.Set("auth_context", authCtx)
+
 		if authCtx.BindAPIGW == nil || !authCtx.BindAPIGW.App.Verified {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
@@ -142,7 +143,7 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
-		if !config.G.ValidateCred(authCtx.BindAPIGW.App.AppCode, authCtx.ProjectCode) {
+		if !config.G.ValidateCred(config.CredentialAppCode, authCtx.BindAPIGW.App.AppCode, config.ScopeProjectCode, authCtx.ProjectCode) {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
 				Message:   fmt.Sprintf("app %s have no permission, %s, %s", authCtx.BindAPIGW.App.AppCode, authCtx.BindProject, authCtx.BindCluster),

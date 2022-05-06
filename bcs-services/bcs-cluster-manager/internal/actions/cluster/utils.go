@@ -301,3 +301,11 @@ func importClusterExtraOperation(cluster *proto.Cluster) {
 			cluster.ClusterID, err)
 	}
 }
+
+// syncDeletePassCluster deletePassCluster
+func syncDeletePassCluster(cluster *proto.Cluster) {
+	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
+	if err != nil {
+		blog.Errorf("syncDeletePassCluster[%s] failed: %v", cluster.ClusterID, err)
+	}
+}

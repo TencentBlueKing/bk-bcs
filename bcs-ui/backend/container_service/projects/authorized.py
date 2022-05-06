@@ -15,6 +15,8 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Dict
 
+from django.conf import settings
+
 from backend.components import ssm
 from backend.components.base import ComponentAuth
 from backend.components.paas_cc import PaaSCCClient
@@ -33,18 +35,24 @@ def list_auth_projects(access_token: str, username: str = '') -> Dict:
     if not perm_filter:
         return {'code': 0, 'data': []}
 
-    # TODO 通过分页方式, 支持 any 用户查看有权限的项目
-    # 如果是 any, 表示所有项目. 由于项目量过大, 优化前仅返回空列表
+    # 如果是 any, 表示所有项目
     if ProjectFilter.op_is_any(perm_filter):
-        logger.error(f'{username} project filter match any!')
-        return {'code': 0, 'data': []}
+        if settings.REGION != 'ce':
+            # 非 ce 版本可能项目很多, PaaSCCClient 接口拉取超时, 降级处理不返回
+            logger.error(f'{username} project filter match any!')
+            return {'code': 0, 'data': []}
 
-    project_id_list = perm_filter.get('value')
-    if not project_id_list:
-        return {'code': 0, 'data': []}
+        client = PaaSCCClient(auth=ComponentAuth(access_token))
+        projects = client.list_all_projects()
 
-    client = PaaSCCClient(auth=ComponentAuth(access_token))
-    projects = client.list_projects_by_ids(project_id_list)
+    else:
+        project_id_list = perm_filter.get('value')
+        if not project_id_list:
+            return {'code': 0, 'data': []}
+
+        client = PaaSCCClient(auth=ComponentAuth(access_token))
+        projects = client.list_projects_by_ids(project_id_list)
+
     for p in projects:
         p['project_code'] = p['english_name']
 

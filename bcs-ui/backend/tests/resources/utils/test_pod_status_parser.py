@@ -42,6 +42,6 @@ from backend.tests.resources.utils.contents.pod_configs import (
     ],
 )
 def test_pod_status_parser(config, expected_status):
-    """ 测试 Pod 状态解析逻辑"""
+    """测试 Pod 状态解析逻辑"""
     actual_status = PodStatusParser(config).parse()
     assert actual_status == expected_status

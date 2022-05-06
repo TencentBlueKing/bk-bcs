@@ -18,6 +18,6 @@ from backend.resources.storages.persistent_volume_claim import PersistentVolumeC
 
 
 class PersistentVolumeClaimViewSet(AccessClusterPermMixin, NamespaceScopeViewSet):
-    """ PersistentVolumeClaim 相关接口 """
+    """PersistentVolumeClaim 相关接口"""
 
     resource_client = PersistentVolumeClaim

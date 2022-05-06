@@ -30,7 +30,7 @@ from backend.utils.basic import getitems
 
 
 class SubscribeViewSet(SystemViewSet):
-    """ 订阅相关接口，检查 K8S 资源变更情况 """
+    """订阅相关接口，检查 K8S 资源变更情况"""
 
     def get_permissions(self):
         return [*super().get_permissions(), IsSubscribeable()]

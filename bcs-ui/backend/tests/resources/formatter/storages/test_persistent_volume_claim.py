@@ -29,7 +29,7 @@ def persistent_volume_claim_configs():
 
 class TestPersistentVolumeFormatter:
     def test_format_dict(self, persistent_volume_claim_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = PersistentVolumeClaimFormatter().format_dict(persistent_volume_claim_configs['normal'])
         assert set(result.keys()) == {'accessModes', 'age', 'createTime', 'updateTime'}
         assert result['accessModes'] == ['RWO']

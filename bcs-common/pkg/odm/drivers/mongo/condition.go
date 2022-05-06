@@ -120,6 +120,11 @@ func convertContains2Bson(originValue operator.M) bson.M {
 	for k, v := range originValue {
 		if s, ok := v.(string); ok {
 			r[k] = primitive.Regex{Pattern: fmt.Sprintf(".*%s.*", regexp.QuoteMeta(s))}
+			continue
+		}
+		// support primitive.Regex
+		if s, ok := v.(primitive.Regex); ok {
+			r[k] = s
 		}
 	}
 	return r

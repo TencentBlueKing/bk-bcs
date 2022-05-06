@@ -28,6 +28,7 @@ import re
 import shlex
 import uuid
 from collections import OrderedDict
+from typing import List
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -91,16 +92,25 @@ HANDLED_NUM_VAR_PATTERN = re.compile(r"%s}" % NUM_VAR_PATTERN)
 k8s_res_mapping = OrderedDict()
 
 
-def is_use_bcs_registry(origin_image, bcs_registry_list):
-    bcs_registry_list.append(settings.DEVOPS_ARTIFACTORY_HOST)
-    registry_list = [registry.split(":")[0] for registry in bcs_registry_list]
+def is_use_bcs_registry(origin_image: str, bcs_registry_list: List[str]) -> bool:
+    registry_list = [registry.split(":")[0] for registry in bcs_registry_list if registry]
     for r in registry_list:
         if r in origin_image:
             return True
     return False
 
 
-def generate_image_str(origin_image, default_registry, bcs_registry_list):
+def generate_image_str(origin_image: str, default_registry: str, bcs_registry_list: List[str]) -> str:
+    """
+    按规则生成最终的镜像值. 目的是统一所用到的 bcs 镜像仓库 domain
+
+    @param: origin_image: 原始镜像值
+    @param: default_registry: bcs 统一的镜像仓库 domain
+    @param: bcs_registry_list: bcs 所有支持过的镜像仓库 domain
+
+    TODO 重新梳理表单模板集的镜像组成规则, 并将这段特殊逻辑从 github 仓库中废弃掉
+    """
+    bcs_registry_list.append(settings.DEVOPS_ARTIFACTORY_HOST)
     if not is_use_bcs_registry(origin_image, bcs_registry_list):
         return origin_image
 
@@ -711,7 +721,7 @@ class K8sDeploymentGenerator(K8sProfileGenerator):
                 remove_key(_c, "imageVersion")
 
                 _c["image"] = generate_image_str(
-                    _c.get("image"), self.context["SYS_JFROG_DOMAIN"], self.context["SYS_IMAGE_REGISTRY_LIST"]
+                    _c.get("image"), self.context["SYS_JFROG_DOMAIN"], self.context["SYS_IMAGE_REGISTRY_LIST"][:]
                 )
 
                 # 2.1 启动命令和参数用 shellhex 命令处理为数组

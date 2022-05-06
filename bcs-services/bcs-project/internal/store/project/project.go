@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
@@ -39,10 +40,10 @@ var (
 	projectIndexes = []drivers.Index{
 		{
 			Name: tableName + "_idx",
-			Key: map[string]int32{
-				projectIDField:   1,
-				projectCodeField: 1,
-				projectNameField: 1,
+			Key: bson.D{
+				bson.E{Key: projectIDField, Value: 1},
+				bson.E{Key: projectCodeField, Value: 1},
+				bson.E{Key: projectNameField, Value: 1},
 			},
 			Unique: true,
 		},
@@ -224,5 +225,27 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 		return nil, 0, err
 	}
 
+	return projectList, total, nil
+}
+
+func (m *ModelProject) ListProjectByIDs(
+	ctx context.Context,
+	ids []string,
+	pagination *page.Pagination,
+) ([]Project, int64, error) {
+	projectList := make([]Project, 0)
+	condM := make(operator.M)
+	condM["projectID"] = ids
+	cond := operator.NewLeafCondition(operator.In, condM)
+	finder := m.db.Table(m.tableName).Find(cond)
+	// 获取总量
+	total, err := finder.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	// 拉取满足项目 ID 的全量数据
+	if err := finder.All(ctx, &projectList); err != nil {
+		return nil, 0, err
+	}
 	return projectList, total, nil
 }

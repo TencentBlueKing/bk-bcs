@@ -15,7 +15,6 @@
 package rbac
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,9 +28,9 @@ import (
 
 func TestSA(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("rbac/simple_service_account")
+	manifest, _ := example.LoadDemoManifest("rbac/simple_service_account", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
