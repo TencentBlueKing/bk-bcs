@@ -100,7 +100,7 @@ class TestBcsClusterMaster:
 
 class TestNodeDetail:
     def test_detail(self, ctx_cluster, node_name, create_and_delete_node):
-        client = node_tools.NodeDetail(node_name, ctx_cluster)
+        client = node_tools.NodeDetailQuerier(node_name, ctx_cluster)
         node = client.detail()
         # 判断名称
         assert node["name"] == node_name

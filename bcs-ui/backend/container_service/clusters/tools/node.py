@@ -241,7 +241,7 @@ class BcsClusterMaster:
         }
 
 
-class NodeDetail:
+class NodeDetailQuerier:
     def __init__(self, name: str, ctx_cluster: CtxCluster):
         self.name = name
         self.ctx_cluster = ctx_cluster
