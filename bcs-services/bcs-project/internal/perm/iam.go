@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 )
 
 const (
@@ -51,12 +52,31 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 	return iamPerm.NewBCSProjectPermClient(cli), nil
 }
 
+const (
+	CreateAction = "create"
+	ViewAction   = "view"
+	UpdateAction = "update"
+	DeleteAction = "delete"
+)
+
+// 是否豁免权限
+func canExemptClientPerm(clientID string, action string) bool {
+	clientActions := config.GlobalConf.ClientActionExemptPerm.ClientActions
+	for _, ca := range clientActions {
+		if ca.ClientID == clientID && stringx.StringInSlice(action, ca.Actions) {
+			return true
+		}
+	}
+	return false
+}
+
 // CanCreateProject ...
-func CanCreateProject(username string) error {
+func CanCreateProject(username string, clientID string) error {
 	// 判断是否校验权限
-	if config.GlobalConf.ActionExemptPerm.Create {
+	if canExemptClientPerm(clientID, CreateAction) {
 		return nil
 	}
+
 	// 判断是否有创建权限
 	permClient, err := NewPermClient()
 	if err != nil {
@@ -74,11 +94,12 @@ func CanCreateProject(username string) error {
 }
 
 // CanViewProject ...
-func CanViewProject(username string, projectID string) error {
+func CanViewProject(username string, projectID string, clientID string) error {
 	// 判断是否校验权限
-	if config.GlobalConf.ActionExemptPerm.View {
+	if canExemptClientPerm(clientID, ViewAction) {
 		return nil
 	}
+
 	permClient, err := NewPermClient()
 	if err != nil {
 		return errorx.NewIAMClientErr(err)
@@ -95,9 +116,9 @@ func CanViewProject(username string, projectID string) error {
 }
 
 // CanEditProject ...
-func CanEditProject(username, projectID string) error {
+func CanEditProject(username, projectID string, clientID string) error {
 	// 判断是否校验权限
-	if config.GlobalConf.ActionExemptPerm.Update {
+	if canExemptClientPerm(clientID, UpdateAction) {
 		return nil
 	}
 
@@ -117,9 +138,9 @@ func CanEditProject(username, projectID string) error {
 }
 
 // CanEditProject ...
-func CanDeleteProject(username string, projectID string) error {
+func CanDeleteProject(username string, projectID string, clientID string) error {
 	// 判断是否校验权限
-	if config.GlobalConf.ActionExemptPerm.Delete {
+	if canExemptClientPerm(clientID, DeleteAction) {
 		return nil
 	}
 

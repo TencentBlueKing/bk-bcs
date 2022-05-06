@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
@@ -66,6 +67,14 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 }
 
 func (ua *UpdateAction) validate() error {
+	// 当业务ID不为空时，校验当前用户是否为要绑定业务的业务运维
+	if ua.req.BusinessID != "" {
+		if err := cmdb.CheckUseIsMaintainer(
+			auth.GetUserFromCtx(ua.ctx), ua.req.BusinessID,
+		); err != nil {
+			return err
+		}
+	}
 	// check name unique
 	name := ua.req.Name
 	if name == "" {

@@ -14,7 +14,9 @@
 
 package stringx
 
-import "strings"
+import (
+	"strings"
+)
 
 // SplitString 分割字符串, 允许半角逗号、分号及空格
 func SplitString(str string) []string {
@@ -27,5 +29,14 @@ func SplitString(str string) []string {
 func JoinString(str ...string) string {
 	var strList []string
 	strList = append(strList, str...)
+	return strings.Join(strList, ",")
+}
+
+// Errs2String error array to string
+func Errs2String(errs []error) string {
+	var strList []string
+	for _, err := range errs {
+		strList = append(strList, err.Error())
+	}
 	return strings.Join(strList, ",")
 }

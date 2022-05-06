@@ -15,6 +15,8 @@
 package stringx
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,4 +43,12 @@ func TestJoinString(t *testing.T) {
 	str1, str2 := "str1", "str2"
 	joinedStr := JoinString(str1, str2)
 	assert.Equal(t, "str1,str2", joinedStr)
+}
+
+func TestErrs2String(t *testing.T) {
+	var errs []error
+	for i := range []int{0, 1, 2} {
+		errs = append(errs, errors.New(fmt.Sprintf("error %v", i)))
+	}
+	assert.Equal(t, Errs2String(errs), "error 0,error 1,error 2")
 }

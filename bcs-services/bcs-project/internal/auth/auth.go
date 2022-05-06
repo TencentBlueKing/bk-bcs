@@ -37,6 +37,22 @@ func GetUserFromCtx(ctx context.Context) string {
 	return username
 }
 
+// GetClientIDFromCtx 通过 ctx 获取平台级用户
+func GetClientIDFromCtx(ctx context.Context) string {
+	clientID, ok := ctx.Value(ctxkey.ClientID).(string)
+	if !ok {
+		logging.Warn("获取平台级用户信息异常, 非字符串类型!")
+		return ""
+	}
+	return clientID
+}
+
+func GetAuthFromCtx(ctx context.Context) (string, string) {
+	username := GetUserFromCtx(ctx)
+	clientID := GetClientIDFromCtx(ctx)
+	return username, clientID
+}
+
 type AuthUser struct {
 	Username string
 	UserType string

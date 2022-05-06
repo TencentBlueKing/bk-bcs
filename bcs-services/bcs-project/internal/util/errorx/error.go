@@ -76,3 +76,13 @@ func NewRequestIAMErr(msg ...interface{}) *ProjectError {
 func NewNotFoundHeaderUserErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(NotFoundHeaderUserErr, NotFoundHeaderUserErrMsg, msg...)
 }
+
+// NewRequestCMDBErr ...
+func NewRequestCMDBErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(RequestCMDBErr, RequestCMDBErrMsg, msg...)
+}
+
+// NewNoMaintainerRoleErr ...
+func NewNoMaintainerRoleErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(NoMaintainerRoleErr, NoMaintainerRoleErrMsg, msg...)
+}
