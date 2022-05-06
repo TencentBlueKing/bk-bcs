@@ -47,7 +47,7 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 	}
 }
 
-// List ...
+// List 请求某类资源（指定命名空间）下的所有资源列表，按指定 format 格式化后返回
 func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1.ListOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1
 	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, format, opts)
 }
 
-// Get ...
+// Get 请求某个资源详情，按指定 Format 格式化后返回
 func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts m
 	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format, opts)
 }
 
-// Create ...
+// Create 创建 k8s 资源，支持以 manifest / formData 格式创建
 func (m *ResMgr) Create(
 	ctx context.Context, rawData *structpb.Struct, format string, isNSScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
@@ -83,7 +83,7 @@ func (m *ResMgr) Create(
 	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
-// Update ...
+// Update 更新 k8s 资源，支持以 manifest / formData 格式更新
 func (m *ResMgr) Update(
 	ctx context.Context, namespace, name string, rawData *structpb.Struct, format string, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
@@ -103,7 +103,7 @@ func (m *ResMgr) Update(
 	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 
-// Delete ...
+// Delete 删除某个 k8s 资源
 func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1.DeleteOptions) error {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return err

@@ -36,9 +36,9 @@ func (h *Handler) GetResFormSchema(
 	return err
 }
 
-// GetFormAvailableAPIVersions ...
-func (h *Handler) GetFormAvailableAPIVersions(
-	_ context.Context, req *clusterRes.GetFormAvailableApiVersionsReq, resp *clusterRes.CommonListResp,
+// GetFormSupportedAPIVersions ...
+func (h *Handler) GetFormSupportedAPIVersions(
+	_ context.Context, req *clusterRes.GetFormSupportedApiVersionsReq, resp *clusterRes.CommonListResp,
 ) (err error) {
 	supportedAPIVersions, ok := renderer.FormRenderSupportedResAPIVersion[req.Kind]
 	if !ok {

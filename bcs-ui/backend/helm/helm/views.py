@@ -266,7 +266,7 @@ class ChartVersionViewSet(viewsets.ViewSet):
         # 兼容harbor中chart仓库项目名称
         project_name = DEFAULT_CHART_REPO_PROJECT_NAME or project_code
         try:
-            client = bk_repo.BkRepoClient(username, password=pwd)
+            client = bk_repo.BkRepoClient(username=username, password=pwd)
             client.delete_chart_version(project_name, project_code, name, version)
         except bk_repo.BkRepoDeleteVersionError as e:
             raise error_codes.APIError(f"delete chart: {name} version: {version} failed, {e}")

@@ -18,7 +18,7 @@ from backend.resources.utils.format import ResourceDefaultFormatter
 
 
 class NamespaceFormatter(ResourceDefaultFormatter):
-    """ 命名空间 格式化器 """
+    """命名空间 格式化器"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         return self.format_common_dict(resource_dict)

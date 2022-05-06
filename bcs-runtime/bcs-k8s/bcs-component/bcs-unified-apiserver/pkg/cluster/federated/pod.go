@@ -24,8 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	restclient "k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 )
 
 // BCS 集群ID Label
@@ -33,20 +35,33 @@ const ClusterIdLabel = "bkbcs.tencent.com/cluster-id"
 
 // PodStor PodInterface 实现
 type PodStor struct {
-	members      []string
-	k8sClientMap map[string]*kubernetes.Clientset
+	members         []string
+	k8sClientMap    map[string]*kubernetes.Clientset
+	proxyHandlerMap map[string]*proxy.ProxyHandler
 }
 
 // NewPodStor
 func NewPodStor(members []string) (*PodStor, error) {
-	stor := &PodStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
+	stor := &PodStor{
+		members:         members,
+		k8sClientMap:    make(map[string]*kubernetes.Clientset),
+		proxyHandlerMap: make(map[string]*proxy.ProxyHandler),
+	}
+
 	for _, k := range members {
 		k8sClient, err := clientutil.GetKubeClientByClusterId(k)
 		if err != nil {
 			return nil, err
 		}
 		stor.k8sClientMap[k] = k8sClient
+
+		proxyHandler, err := proxy.NewProxyHandler(k)
+		if err != nil {
+			return nil, err
+		}
+		stor.proxyHandlerMap[k] = proxyHandler
 	}
+
 	return stor, nil
 }
 
@@ -286,4 +301,34 @@ func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListO
 		return watch, nil
 	}
 	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
+}
+
+// GetLogs kubectl logs 命令
+func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error) {
+	for _, v := range p.k8sClientMap {
+		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+		}
+		return v.CoreV1().Pods(namespace).GetLogs(name, opts), nil
+	}
+	return nil, apierrors.NewNotFound(v1.Resource("pods"), "")
+}
+
+// Exec kubectl exec 命令
+func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*proxy.ProxyHandler, error) {
+	for k, v := range p.k8sClientMap {
+		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, opts)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+
+		return p.proxyHandlerMap[k], nil
+	}
+	return nil, apierrors.NewNotFound(v1.Resource("pods"), name)
 }

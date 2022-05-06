@@ -29,7 +29,7 @@ def persistent_volume_configs():
 
 class TestPersistentVolumeFormatter:
     def test_format_dict(self, persistent_volume_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = PersistentVolumeFormatter().format_dict(persistent_volume_configs['normal'])
         assert set(result.keys()) == {'accessModes', 'claim', 'age', 'createTime', 'updateTime'}
         assert result['claim'] == 'default/task-pv-claim'

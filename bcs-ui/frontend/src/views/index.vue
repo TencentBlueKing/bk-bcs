@@ -2,7 +2,7 @@
     <div class="biz-container app-container" v-bkloading="{ isLoading, zIndex: 10 }">
         <!-- isLoading为解决当前集群和项目信息未设置时界面依赖时序问题 -->
         <template v-if="curProject && curProject.kind !== 0 && !isLoading">
-            <SideNav class="biz-side-bar"></SideNav>
+            <SideNav class="biz-side-bar" :key="$i18n.locale"></SideNav>
             <div class="bcs-content">
                 <ContentHeader
                     :title="$route.meta.title"
@@ -83,12 +83,14 @@
             }
             // 校验项目
             const validateProject = async () => {
-                // 未开启容器服务
-                if (curProject.value?.kind === 0) return false
+                // 1. 开启容器服务，且项目存在
+                if (curProject.value) {
+                    return curProject.value.kind !== 0
+                }
 
-                // 校验项目不存在，但是ProjectCode存在的情况
+                // 2. 校验项目不存在，但是ProjectCode存在的情况
                 const _projectCode = projectCode || localProjectCode
-                if (!_projectCode || curProject.value) return true
+                if (!_projectCode) return false
 
                 const projectData = await isProjectExit({
                     project_code: _projectCode,

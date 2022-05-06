@@ -29,7 +29,7 @@ def deployment_configs():
 
 class TestDeploymentFormatter:
     def test_format_dict(self, deployment_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = DeploymentFormatter().format_dict(deployment_configs['normal'])
         assert set(result.keys()) == {'images', 'age', 'createTime', 'updateTime'}
         assert result['images'] == ['nginx:1.14.2']

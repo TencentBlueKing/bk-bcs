@@ -149,7 +149,7 @@
     .action {
         width: 150px;
         .bk-primary.bk-button-normal {
-            width: 88px;
+            min-width: 88px;
         }
     }
 

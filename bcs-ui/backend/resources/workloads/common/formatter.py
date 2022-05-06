@@ -19,7 +19,7 @@ from backend.utils.basic import getitems
 
 
 class WorkloadFormatter(ResourceDefaultFormatter):
-    """ 工作负载类 资源通用格式化器 """
+    """工作负载类 资源通用格式化器"""
 
     def parse_container_images(self, resource_dict: Dict) -> List:
         """

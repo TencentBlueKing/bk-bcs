@@ -404,7 +404,7 @@ class ChartRelease(BaseTSModel):
     objects = ChartReleaseManager()
 
     def generate_valuesyaml(self, project_id, namespace_id, cluster_id):
-        """ valuefile + bcs namespace variables """
+        """valuefile + bcs namespace variables"""
         sys_variables = self.app.sys_variables
         bcs_variables = get_bcs_variables(project_id, cluster_id, namespace_id)
         return merge_valuefile_with_bcs_variables(self.valuefile, bcs_variables, sys_variables)

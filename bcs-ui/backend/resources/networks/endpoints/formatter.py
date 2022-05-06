@@ -19,10 +19,10 @@ from backend.resources.networks.common.formatter import NetworkFormatter
 
 
 class EndpointsFormatter(NetworkFormatter):
-    """ Endpoints 格式化 """
+    """Endpoints 格式化"""
 
     def parse_endpoints(self, resource_dict: Dict) -> List:
-        """ 解析 endpoints 信息 """
+        """解析 endpoints 信息"""
         endpoints = []
         for subset in resource_dict.get('subsets', []):
             # endpoints 为 subsets ips 与 ports 的笛卡儿积

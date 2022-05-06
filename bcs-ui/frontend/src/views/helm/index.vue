@@ -806,7 +806,6 @@
                         me.appCheckTime = FAST_TIME
                         me.isOperaLayerShow = false
                         me.getAppsStatus()
-                        close()
                     }
                 })
             },

@@ -15,14 +15,14 @@ specific language governing permissions and limitations under the License.
 
 
 class DashboardBaseError(Exception):
-    """ Dashboard 模块基础异常类 """
+    """Dashboard 模块基础异常类"""
 
     message = 'Dashboard module exception'
     # 子异常在基类基础上，自带两位错误码后缀
     code = 40050
 
     def __init__(self, message=None, code=None):
-        """ 初始化异常类，若无参数则使用默认值 """
+        """初始化异常类，若无参数则使用默认值"""
         if message:
             self.message = message
         if code:
@@ -33,14 +33,14 @@ class DashboardBaseError(Exception):
 
 
 class ResourceNotExist(DashboardBaseError):
-    """ 指定资源不存在 """
+    """指定资源不存在"""
 
     message = 'Resource not exist'
     code = 4005001
 
 
 class CreateResourceError(DashboardBaseError):
-    """ 创建资源失败 """
+    """创建资源失败"""
 
     message = 'Create Resource Error'
     # NOTE 前端对此错误码有特殊逻辑
@@ -48,7 +48,7 @@ class CreateResourceError(DashboardBaseError):
 
 
 class UpdateResourceError(DashboardBaseError):
-    """ 更新资源失败 """
+    """更新资源失败"""
 
     message = 'Update Resource Error'
     # NOTE 前端对此错误码有特殊逻辑
@@ -56,14 +56,14 @@ class UpdateResourceError(DashboardBaseError):
 
 
 class DeleteResourceError(DashboardBaseError):
-    """ 删除资源失败 """
+    """删除资源失败"""
 
     message = 'Delete Resource Error'
     code = 4005004
 
 
 class ResourceVersionExpired(DashboardBaseError):
-    """ ResourceVersion 过期 """
+    """ResourceVersion 过期"""
 
     message = 'ResourceVersion Expired'
     # NOTE 前端对此错误码有特殊逻辑
@@ -71,21 +71,21 @@ class ResourceVersionExpired(DashboardBaseError):
 
 
 class OwnerReferencesNotExist(DashboardBaseError):
-    """ 不存在父级资源 """
+    """不存在父级资源"""
 
     message = "OwnerReferences Not Exist"
     code = 4005006
 
 
 class ActionUnsupported(DashboardBaseError):
-    """ 不支持指定的 Action """
+    """不支持指定的 Action"""
 
     message = "action unsupported"
     code = 4005007
 
 
 class ResourceTypeUnsupported(DashboardBaseError):
-    """ 不支持的用于资源视图鉴权的资源类型 """
+    """不支持的用于资源视图鉴权的资源类型"""
 
     message = "resource type for dashboard perm validate unsupported"
     code = 4005008

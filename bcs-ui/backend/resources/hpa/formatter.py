@@ -152,7 +152,7 @@ class HPAFormatter(ResourceDefaultFormatter):
 
 
 class HPAFormatter4Dashboard(ResourceDefaultFormatter):
-    """ HPA 格式化（资源视图用）"""
+    """HPA 格式化（资源视图用）"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         res = self.format_common_dict(resource_dict)
