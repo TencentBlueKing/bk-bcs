@@ -13,30 +13,21 @@
 package isolated
 
 import (
-	"fmt"
-
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
-	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 )
 
 // Handler isolated cluster hander
 type Handler struct {
 	clusterId    string
-	proxyHandler *apiproxy.UpgradeAwareHandler
+	proxyHandler *proxy.ProxyHandler
 }
 
 // NewHandler create isolated cluster handler
 func NewHandler(clusterId string) (*Handler, error) {
-	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
+	proxyHandler, err := proxy.NewProxyHandler(clusterId)
 	if err != nil {
-		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
-	}
-
-	proxyHandler, err := proxy.NewProxyHandlerFromConfig(kubeConf)
-	if err != nil {
-		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
+		return nil, err
 	}
 
 	return &Handler{

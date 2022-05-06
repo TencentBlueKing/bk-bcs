@@ -1,40 +1,40 @@
 files: ^(bcs-ui|bcs-services)/
 fail_fast: true
 repos:
-- repo: https://github.com/timothycrosley/isort
-  rev: 5.7.0
-  hooks:
-  - id: isort
-    exclude: >
-      (?x)^(
-          .*/migrations/.*
-          | bcs-ui/backend/packages/.*
-      )$
-    additional_dependencies: [toml]
-- repo: https://github.com/psf/black
-  rev: 20.8b1
-  hooks:
-  - id: black
-    args: [--config=bcs-ui/pyproject.toml]
-    exclude: >
-      (?x)^(
-          .*/migrations/.*
-          | bcs-ui/backend/packages/.*
-      )$
-- repo: https://gitlab.com/pycqa/flake8
-  rev: 3.8.0
-  hooks:
-  - id: flake8
-    args: [--config=bcs-ui/.flake8]
-    exclude: >
-      (?x)^(
-          .*/migrations/.*
-          | bcs-ui/backend/packages/.*
-      )$
-- repo: https://github.com/dnephin/pre-commit-golang
-  rev: v0.4.0
-  hooks:
-  - id: go-fmt
-    files: "^bcs-services/cluster-resources/pkg/"
-  - id: go-lint
-    files: "^bcs-services/cluster-resources/pkg/"
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.7.0
+    hooks:
+      - id: isort
+        exclude: >
+          (?x)^(
+              .*/migrations/.*
+              | bcs-ui/backend/packages/.*
+          )$
+        additional_dependencies: [toml]
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: [--config=bcs-ui/pyproject.toml]
+        exclude: >
+          (?x)^(
+              .*/migrations/.*
+              | bcs-ui/backend/packages/.*
+          )$
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.0
+    hooks:
+      - id: flake8
+        args: [--config=bcs-ui/.flake8]
+        exclude: >
+          (?x)^(
+              .*/migrations/.*
+              | bcs-ui/backend/packages/.*
+          )$
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.4.0
+    hooks:
+      - id: go-fmt
+        files: "^bcs-services/cluster-resources/pkg/"
+      - id: go-lint
+        files: "^bcs-services/cluster-resources/pkg/"

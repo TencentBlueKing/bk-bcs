@@ -21,6 +21,4 @@ const (
 	ErrStatus = "failure"
 	// SucStatus for failure status
 	SucStatus = "success"
-
-	bcsWebSocketHandlerPath = "/ws/projects/:projectId/clusters/:clusterId/"
 )

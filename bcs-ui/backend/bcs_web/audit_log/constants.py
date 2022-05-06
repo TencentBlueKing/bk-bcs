@@ -18,7 +18,7 @@ from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnu
 
 
 class ActivityType(str, StructuredEnum):
-    """ 操作类型 """
+    """操作类型"""
 
     Add = EnumField('add', _('创建'))
     Modify = EnumField('modify', _('更新'))
@@ -36,7 +36,7 @@ class ActivityType(str, StructuredEnum):
 
 
 class ActivityStatus(str, StructuredEnum):
-    """ 操作状态 """
+    """操作状态"""
 
     Completed = EnumField('completed', _('完成'))
     Error = EnumField('error', _('错误'))
@@ -45,7 +45,7 @@ class ActivityStatus(str, StructuredEnum):
 
 
 class ResourceType(str, StructuredEnum):
-    """ 资源类型 """
+    """资源类型"""
 
     Project = EnumField('project', _('项目'))
     Cluster = EnumField('cluster', _('集群'))

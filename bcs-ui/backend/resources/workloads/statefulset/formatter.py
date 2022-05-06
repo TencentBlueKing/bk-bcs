@@ -18,7 +18,7 @@ from backend.resources.workloads.common.formatter import WorkloadFormatter
 
 
 class StatefulSetFormatter(WorkloadFormatter):
-    """ StatefulSet 格式化 """
+    """StatefulSet 格式化"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         return self.format_common_dict(resource_dict)

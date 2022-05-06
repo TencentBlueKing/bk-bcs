@@ -75,9 +75,11 @@ func (m *ResMgr) Create(
 	if err != nil {
 		return nil, err
 	}
-	if err := m.checkAccess(ctx, "", manifest); err != nil {
+	if err = m.checkAccess(ctx, "", manifest); err != nil {
 		return nil, err
 	}
+	// apiVersion 以 manifest 中的为准，不强制要求 preferred
+	m.GroupVersion = mapx.Get(manifest, "apiVersion", "").(string)
 	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
@@ -93,9 +95,11 @@ func (m *ResMgr) Update(
 	if err != nil {
 		return nil, err
 	}
-	if err := m.checkAccess(ctx, namespace, manifest); err != nil {
+	if err = m.checkAccess(ctx, namespace, manifest); err != nil {
 		return nil, err
 	}
+	// apiVersion 以 manifest 中的为准，不强制要求 preferred
+	m.GroupVersion = mapx.Get(manifest, "apiVersion", "").(string)
 	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 

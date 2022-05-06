@@ -37,7 +37,7 @@ func New() *Handler {
 func (h *Handler) ListPV(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PV).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.PV).List(
 		ctx, "", req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -47,7 +47,7 @@ func (h *Handler) ListPV(
 func (h *Handler) GetPV(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PV).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.PV).Get(
 		ctx, "", req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err

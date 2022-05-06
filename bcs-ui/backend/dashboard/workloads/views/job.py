@@ -17,6 +17,6 @@ from backend.resources.workloads.job import Job
 
 
 class JobViewSet(NamespaceScopeViewSet):
-    """ Job 相关接口 """
+    """Job 相关接口"""
 
     resource_client = Job

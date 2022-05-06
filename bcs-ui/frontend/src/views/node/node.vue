@@ -73,8 +73,8 @@
                                 content: $t('kubeconfig导入集群，节点管理功能不可用')
                             }"
                             @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
-                        <div style="width: 100px; height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
-                            <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('Pod迁移')}}</li>
+                        <div style="height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
+                            <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('pod迁移')}}</li>
                         </div>
                         <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
                         <li :disabled="isImportCluster"
@@ -201,13 +201,13 @@
                         <LoadingIcon
                             v-if="['INITIALIZATION', 'DELETING'].includes(row.status)"
                         >
-                            {{ nodeStatusMap[row.status.toLowerCase()] }}
+                            <span class="bcs-ellipsis">{{ nodeStatusMap[row.status.toLowerCase()] }}</span>
                         </LoadingIcon>
                         <StatusIcon :status="row.status"
                             :status-color-map="nodeStatusColorMap"
                             v-else
                         >
-                            {{ nodeStatusMap[row.status.toLowerCase()] }}
+                            <span class="bcs-ellipsis">{{ nodeStatusMap[row.status.toLowerCase()] }}</span>
                         </StatusIcon>
                     </template>
                 </bcs-table-column>
@@ -1491,6 +1491,7 @@
         color: #63656e;
         font-size: 14px;
         cursor: pointer;
+        white-space: nowrap;
         &:hover {
             background-color: #eaf3ff;
             color: #3a84ff;

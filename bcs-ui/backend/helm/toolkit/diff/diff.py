@@ -88,7 +88,7 @@ def print_diff_record(diff, to):
 
 
 def calculate_distances(diffs):
-    """ Calculate distance of every diff-line to the closest change """
+    """Calculate distance of every diff-line to the closest change"""
     distances = dict()
 
     # Iterate forwards through diffs, set 'distance' based on closest 'change' before this line

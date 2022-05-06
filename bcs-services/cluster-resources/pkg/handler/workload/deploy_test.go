@@ -129,6 +129,23 @@ var deployManifest4FormTest = map[string]interface{}{
 	},
 }
 
+func TestDeployWithUnavailableAPIVersion(t *testing.T) {
+	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
+
+	// List
+	listReq, listResp := handler.GenResListReq(), clusterRes.CommonResp{}
+	listReq.ApiVersion = "deprecated/v1beta1"
+	err := h.ListDeploy(ctx, &listReq, &listResp)
+	assert.NotNil(t, err)
+
+	// Get
+	getReq, getResp := handler.GenResGetReq("resName"), clusterRes.CommonResp{}
+	getReq.ApiVersion = "deprecated/v1"
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.NotNil(t, err)
+}
+
 func TestDeployWithForm(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")

@@ -72,7 +72,7 @@ class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
         resource_id_key='iam_ns_id',
     )
     def get(self, request, project_id):
-        """ 获取项目下所有的secrets """
+        """获取项目下所有的secrets"""
         params = dict(request.GET.items())
         is_decode = str2bool(request.GET.get('decode'))
 

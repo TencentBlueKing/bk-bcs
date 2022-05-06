@@ -37,7 +37,7 @@ func New() *Handler {
 func (h *Handler) ListCM(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.CM).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.CM).List(
 		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -47,7 +47,7 @@ func (h *Handler) ListCM(
 func (h *Handler) GetCM(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.CM).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.CM).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
