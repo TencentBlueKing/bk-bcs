@@ -1143,6 +1143,16 @@ service Resource {
 			summary: "Get resource's form schema API"
 		};
 	}
+
+	rpc GetFormSupportedAPIVersions(GetFormSupportedApiVersionsReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取指定资源可用于表单化的 APIVersion"
+			summary: "Get resource's supported apiVersions for form"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -1250,6 +1260,9 @@ message ResListReq {
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}, (validate.rules).string = {max_len: 128}];
+	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "apiVersion"
+	}, (validate.rules).string = {max_len: 63}];
 }
 
 message ResGetReq {
@@ -1268,7 +1281,10 @@ message ResGetReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
-	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "apiVersion"
+	}, (validate.rules).string = {max_len: 63}];
+	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
 	}, (validate.rules).string = {in: ["manifest", "formData"]}];
 }
@@ -1642,7 +1658,22 @@ message FormRenderPreviewReq {
 
 message GetResFormSchemaReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "SubscribeReq", description: "订阅资源请求体"}
+		json_schema: {title: "GetResFormSchemaReq", description: "获取资源表单化 Schema 请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
+}
+
+message GetFormSupportedApiVersionsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetFormSupportedApiVersionsReq", description: "获取指定资源可用于表单化的 ApiVersions"}
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"

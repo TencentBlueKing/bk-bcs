@@ -44,7 +44,7 @@ def service_account_configs():
 
 class TestServiceAccountFormatter:
     def test_format_dict(self, service_account_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = ServiceAccountFormatter().format_dict(service_account_configs)
         assert set(result.keys()) == {'secrets', 'age', 'createTime', 'updateTime'}
         assert result['secrets'] == 1

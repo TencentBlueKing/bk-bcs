@@ -17,6 +17,6 @@ from backend.resources.workloads.deployment import Deployment
 
 
 class DeploymentViewSet(NamespaceScopeViewSet):
-    """ Deployment 相关接口 """
+    """Deployment 相关接口"""
 
     resource_client = Deployment

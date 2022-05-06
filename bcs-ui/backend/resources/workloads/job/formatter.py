@@ -19,7 +19,7 @@ from backend.resources.workloads.common.formatter import WorkloadFormatter
 
 
 class JobFormatter(WorkloadFormatter):
-    """ Deployment 格式化 """
+    """Deployment 格式化"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         res = self.format_common_dict(resource_dict)

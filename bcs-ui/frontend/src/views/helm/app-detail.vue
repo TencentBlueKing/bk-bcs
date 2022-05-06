@@ -160,7 +160,7 @@
                                 </bcs-popover>
 
                                 <div style="display: inline-block;">
-                                    <bk-checkbox class="ml10 mr5" v-model="isLocked">{{isLocked ? '已锁定' : '已解锁'}}</bk-checkbox>
+                                    <bk-checkbox class="ml10 mr5" v-model="isLocked">{{isLocked ? $t('已锁定') : $t('已解锁')}}</bk-checkbox>
                                 </div>
                                 <!-- <span class="f12 vm">{{isLocked ? '已锁定' : '已解锁'}}</span> -->
                                 <span class="biz-tip vm">({{$t('默认锁定values内容为当前release')}}({{$t('版本：')}}<span v-bk-tooltips.top="curApp.chart_info.version" class="release-version">{{curApp.chart_info.version}}</span>){{$t('的内容，解除锁定后，加载为对应Chart中的values内容')}})</span>

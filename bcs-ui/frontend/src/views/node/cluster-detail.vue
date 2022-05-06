@@ -41,6 +41,7 @@
     import overview from '@/views/cluster/overview.vue'
     import info from '@/views/cluster/info.vue'
     import useDefaultClusterId from './use-default-clusterId'
+    import $i18n from '@/i18n/i18n-setup'
 
     export default defineComponent({
         components: {
@@ -61,7 +62,7 @@
             }
         },
         setup (props, ctx) {
-            const { $store, $i18n, $router } = ctx.root
+            const { $store, $router } = ctx.root
             const { active, clusterId } = toRefs(props)
             const activeCom = ref(active)
             const curCluster = computed(() => {

@@ -28,7 +28,7 @@ import (
 func (h *Handler) ListSVC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SVC).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SVC).List(
 		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -38,7 +38,7 @@ func (h *Handler) ListSVC(
 func (h *Handler) GetSVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SVC).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SVC).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err

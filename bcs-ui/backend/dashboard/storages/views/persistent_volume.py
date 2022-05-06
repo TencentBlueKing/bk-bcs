@@ -17,6 +17,6 @@ from backend.resources.storages.persistent_volume import PersistentVolume
 
 
 class PersistentVolumeViewSet(ClusterScopeViewSet):
-    """ PersistentVolume 相关接口 """
+    """PersistentVolume 相关接口"""
 
     resource_client = PersistentVolume

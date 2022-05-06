@@ -49,7 +49,7 @@ func (h *Handler) ListPo(
 func (h *Handler) GetPo(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Po).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Po).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err

@@ -112,15 +112,27 @@ type EnvToken struct {
 
 // initContextWithDevEnv Dev环境, 可以设置环境变量
 func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
-	// DEV环境
-	if config.G.Base.RunEnv == config.DevEnv {
-		username := os.Getenv("WEBCONSOLE_USERNAME")
-		if username != "" {
-			authCtx.BindEnv = &EnvToken{Username: username}
-			authCtx.Username = username
-			return true
-		}
+	if config.G.Base.RunEnv != config.DevEnv {
+		return false
 	}
+
+	// 本地用户认证
+	username := os.Getenv("WEBCONSOLE_USERNAME")
+	if username != "" {
+		authCtx.BindEnv = &EnvToken{Username: username}
+		authCtx.Username = username
+		return true
+	}
+
+	// AppCode 认证
+	appCode := c.GetHeader("X-BKAPI-JWT-APPCODE")
+	if appCode != "" {
+		authCtx.BindAPIGW = &APIGWToken{
+			App: &APIGWApp{AppCode: appCode, Verified: true},
+		}
+		return true
+	}
+
 	return false
 }
 

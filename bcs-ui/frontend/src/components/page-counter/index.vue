@@ -14,7 +14,7 @@
                 </bk-selector>
             </template>
             <template v-else>
-                每页
+                {{$t('每页')}}
                 <bk-selector
                     style="width: 70px; display: inline-block;"
                     :placeholder="placeholder"
@@ -22,7 +22,7 @@
                     :list="pageCounterList"
                     @item-selected="pageCounterSelect">
                 </bk-selector>
-                条
+                {{$t('条')}}
             </template>
         </div>
     </div>

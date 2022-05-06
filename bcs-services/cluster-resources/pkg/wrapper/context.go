@@ -154,6 +154,7 @@ var NoInjectProjClusterEndpoints = []string{
 	// Example & Tmpl API 不需要 Info 注入
 	"Resource.GetK8SResTemplate",
 	"Resource.GetResFormSchema",
+	"Resource.GetFormSupportedAPIVersions",
 }
 
 // 需要注入项目 & 集群信息

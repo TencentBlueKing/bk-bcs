@@ -37,7 +37,7 @@
                             {{$t('选择关联Label')}}：<span class="red">*</span>
                         </label>
                         <div class="bk-form-content">
-                            <div class="bk-keyer http-header" tip="小提示：同时粘贴多行“键=值”的文本会自动添加多行记录">
+                            <div class="bk-keyer http-header">
                                 <div class="biz-keys-list mb10">
                                     <div class="biz-key-item" v-for="(key, keyIndex) in Object.keys(keyValueData)" :key="keyIndex">
                                         <bk-input style="width: 235px;" :disabled="true" :value="key" />

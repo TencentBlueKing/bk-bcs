@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceMonitorMixin:
-    """ 一些通用的方法 """
+    """一些通用的方法"""
 
     def _handle_endpoints(self, endpoints: List[Dict]) -> List[Dict]:
         """
@@ -91,7 +91,7 @@ class ServiceMonitorMixin:
         return new_items
 
     def _validate_namespace_use_perm(self, project_id: str, cluster_id: str, namespaces: List):
-        """ 检查是否有命名空间的使用权限 """
+        """检查是否有命名空间的使用权限"""
         permission = NamespaceScopedPermission()
         for ns in namespaces:
             if ns in constants.SM_NO_PERM_NAMESPACE:
@@ -113,7 +113,7 @@ class ServiceMonitorMixin:
         activity_type: ActivityType,
         activity_status: ActivityStatus,
     ) -> None:
-        """ 操作记录方法 """
+        """操作记录方法"""
         client = activity_client.ContextActivityLogClient(
             project_id=project_id, user=username, resource_type=ResourceType.Metric, resource=resource_name
         )

@@ -3432,6 +3432,12 @@ func NewResourceEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "Resource.GetFormSupportedAPIVersions",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -3448,6 +3454,7 @@ type ResourceService interface {
 	FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取指定资源表单 Schema
 	GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error)
+	GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonListResp, error)
 }
 
 type resourceService struct {
@@ -3556,6 +3563,16 @@ func (c *resourceService) GetResFormSchema(ctx context.Context, in *GetResFormSc
 	return out, nil
 }
 
+func (c *resourceService) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.GetFormSupportedAPIVersions", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Resource service
 
 type ResourceHandler interface {
@@ -3569,6 +3586,7 @@ type ResourceHandler interface {
 	FormDataRenderPreview(context.Context, *FormRenderPreviewReq, *CommonResp) error
 	// 获取指定资源表单 Schema
 	GetResFormSchema(context.Context, *GetResFormSchemaReq, *CommonResp) error
+	GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq, *CommonListResp) error
 }
 
 func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...server.HandlerOption) error {
@@ -3578,6 +3596,7 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error
 		FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error
 		GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error
+		GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonListResp) error
 	}
 	type Resource struct {
 		resource
@@ -3613,6 +3632,12 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Resource.GetResFormSchema",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.GetFormSupportedAPIVersions",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3677,4 +3702,8 @@ func (h *resourceHandler) FormDataRenderPreview(ctx context.Context, in *FormRen
 
 func (h *resourceHandler) GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error {
 	return h.ResourceHandler.GetResFormSchema(ctx, in, out)
+}
+
+func (h *resourceHandler) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonListResp) error {
+	return h.ResourceHandler.GetFormSupportedAPIVersions(ctx, in, out)
 }
