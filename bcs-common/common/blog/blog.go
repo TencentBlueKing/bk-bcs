@@ -69,14 +69,17 @@ func CloseLogs() {
 }
 
 var (
-	Info  = glog.Infof
-	Infof = glog.Infof
+	Info      = glog.Infof
+	Infof     = glog.Infof
+	InfoDepth = glog.InfoDepth
 
-	Warn  = glog.Warningf
-	Warnf = glog.Warningf
+	Warn      = glog.Warningf
+	Warnf     = glog.Warningf
+	WarnDepth = glog.WarningDepth
 
-	Error  = glog.Errorf
-	Errorf = glog.Errorf
+	Error      = glog.Errorf
+	Errorf     = glog.Errorf
+	ErrorDepth = glog.ErrorDepth
 
 	Fatal  = glog.Fatal
 	Fatalf = glog.Fatalf
