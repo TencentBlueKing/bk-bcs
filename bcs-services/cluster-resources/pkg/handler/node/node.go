@@ -12,35 +12,32 @@
  * limitations under the License.
  */
 
-package resource
+package node
 
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-type mockSubscribeStream struct{}
+// Handler ...
+type Handler struct{}
 
-func (x *mockSubscribeStream) Context() context.Context {
-	panic("not implement")
+// New ...
+func New() *Handler {
+	return &Handler{}
 }
 
-func (x *mockSubscribeStream) SendMsg(i interface{}) error {
-	panic("not implement")
-}
-
-func (x *mockSubscribeStream) RecvMsg(i interface{}) error {
-	panic("not implement")
-}
-
-func (x *mockSubscribeStream) Close() error {
-	panic("not implement")
-}
-
-// 目前单测中仅使用该方法，可按需实现其他方法的 Mock
-func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
-	return errorx.New(errcode.General, "force break websocket loop")
+// ListNode ...
+func (h *Handler) ListNode(
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Node).List(
+		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	)
+	return err
 }

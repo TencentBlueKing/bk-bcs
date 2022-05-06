@@ -953,6 +953,17 @@ func (m *ResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _ResListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ResListReqMultiError(errors)
 	}
@@ -1032,6 +1043,11 @@ var _ interface {
 var _ResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _ResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResListReq_Format_InLookup = map[string]struct{}{
+	"manifest":    {},
+	"selectItems": {},
+}
 
 // Validate checks the field values on ResGetReq with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -1881,6 +1897,17 @@ func (m *PodResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _PodResListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := PodResListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return PodResListReqMultiError(errors)
 	}
@@ -1961,6 +1988,11 @@ var _ interface {
 var _PodResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _PodResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _PodResListReq_Format_InLookup = map[string]struct{}{
+	"manifest":    {},
+	"selectItems": {},
+}
 
 // Validate checks the field values on ContainerListReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -2565,6 +2597,17 @@ func (m *CObjListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _CObjListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return CObjListReqMultiError(errors)
 	}
@@ -2644,6 +2687,11 @@ var _ interface {
 var _CObjListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _CObjListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _CObjListReq_Format_InLookup = map[string]struct{}{
+	"manifest":    {},
+	"selectItems": {},
+}
 
 // Validate checks the field values on CObjGetReq with the rules defined in the
 // proto definition for this message. If any rules are violated, the first

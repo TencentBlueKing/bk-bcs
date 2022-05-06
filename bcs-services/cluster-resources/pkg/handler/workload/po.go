@@ -27,6 +27,7 @@ import (
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -41,7 +42,17 @@ func (h *Handler) ListPo(
 	if err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.GenListResRespData(ret, res.Po)
+
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ret, res.CRD, req.Format)
+	if err != nil {
+		return err
+	}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(respData)
 	return err
 }
 
@@ -91,7 +102,9 @@ func (h *Handler) ListPoPVC(
 	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.PVC)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.PVC,
+	)
 	return err
 }
 
@@ -102,7 +115,9 @@ func (h *Handler) ListPoCM(
 	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.CM)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.CM,
+	)
 	return err
 }
 
@@ -113,7 +128,9 @@ func (h *Handler) ListPoSecret(
 	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.Secret)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.Secret,
+	)
 	return err
 }
 

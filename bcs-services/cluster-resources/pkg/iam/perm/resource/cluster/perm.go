@@ -15,8 +15,10 @@
 package cluster
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // Perm ...
@@ -39,7 +41,7 @@ func NewPerm(projectID string) *Perm {
 
 // CanList ...
 func (p *Perm) CanList(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
 // CanView ...
@@ -50,22 +52,22 @@ func (p *Perm) CanView(ctx perm.Ctx) (bool, error) {
 
 // CanCreate ...
 func (p *Perm) CanCreate(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
 // CanUpdate ...
 func (p *Perm) CanUpdate(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
 // CanDelete ...
 func (p *Perm) CanDelete(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
 // CanUse ...
 func (p *Perm) CanUse(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
 // CanManage ...
@@ -141,5 +143,5 @@ func (p *ScopedPerm) CanUse(ctx perm.Ctx) (bool, error) {
 
 // CanManage ...
 func (p *ScopedPerm) CanManage(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
