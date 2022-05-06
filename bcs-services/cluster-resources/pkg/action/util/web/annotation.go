@@ -69,25 +69,25 @@ type AnnoFunc func(*Annotations)
 // Annotations Web 注解，参考结构：
 /*
 {
-    "perm": {
-        "page": {
-            "createBtn": {
-                "clickable": false,
-                "tip": "没有权限"
-            }
-        },
-        "items": {
-            "{{ uid }}": {
-                "editBtn": {
-                    "clickable": false,
-                    "tip": "系统命名空间不能编辑",
-                    "applyURL": ""
-                }
-            }
-        }
-    },
-    "featureFlag": {
-		"serviceMonitor": false
+	"perm": {
+		"page": {
+			"createBtn": {
+				"clickable": false,
+				"tip": "没有权限"
+			}
+		},
+		"items": {
+			"{{ uid }}": {
+				"editBtn": {
+					"clickable": false,
+					"tip": "系统命名空间不能编辑",
+					"applyURL": ""
+				}
+			}
+		}
+	},
+	"featureFlag": {
+		"FORM_CREATE": false
 	}
 }
 */

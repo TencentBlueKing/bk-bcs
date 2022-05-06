@@ -1574,7 +1574,7 @@ message CommonResp {
 	google.protobuf.Struct data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "data", description : "资源信息"
 	}];
-	google.protobuf.Struct WebAnnotations = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	google.protobuf.Struct webAnnotations = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "webAnnotations", description : "web 注解"
 	}];
 }

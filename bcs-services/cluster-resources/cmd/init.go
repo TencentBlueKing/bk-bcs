@@ -300,7 +300,8 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 			AssetDir: swagger.AssetDir,
 			Prefix:   "third_party/swagger-ui",
 		})
-		originMux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", fileServer))
+		swaggerUIURL := "/clusterresources/v1/swagger-ui/"
+		originMux.Handle(swaggerUIURL, http.StripPrefix(swaggerUIURL, fileServer))
 	}
 
 	httpAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.HTTPPort)

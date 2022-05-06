@@ -5986,7 +5986,7 @@
           "description": "资源信息",
           "title": "data"
         },
-        "WebAnnotations": {
+        "webAnnotations": {
           "type": "object",
           "description": "web 注解",
           "title": "webAnnotations"
