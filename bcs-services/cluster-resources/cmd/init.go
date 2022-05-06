@@ -305,8 +305,11 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 
 	httpAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.HTTPPort)
 	crSvc.httpServer = &http.Server{
-		Addr:    httpAddr,
-		Handler: wsproxy.WebsocketProxy(originMux),
+		Addr: httpAddr,
+		Handler: wsproxy.WebsocketProxy(
+			originMux,
+			wsproxy.WithForwardedHeaders(httpUtil.WSHeaderForwarder),
+		),
 	}
 	go func() {
 		var err error

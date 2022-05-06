@@ -15,7 +15,11 @@
 package http
 
 import (
+	"strings"
+
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // CustomHeaderMatcher 自定义 HTTP Header Matcher
@@ -26,4 +30,12 @@ func CustomHeaderMatcher(key string) (string, bool) {
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
+}
+
+// 会在 websocket 连接中被转发的 Header Key
+var wsHeadersToForward = []string{"origin", "referer", "authorization", "cookie"}
+
+// WSHeaderForwarder websocket Headers 转发规则
+func WSHeaderForwarder(header string) bool {
+	return slice.StringInSlice(strings.ToLower(header), wsHeadersToForward)
 }
