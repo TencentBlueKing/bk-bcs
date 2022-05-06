@@ -71,7 +71,7 @@ type FormDataRespBuilder struct {
 
 // BuildList ...
 func (b *FormDataRespBuilder) BuildList() (map[string]interface{}, error) {
-	panic("not implement")
+	return nil, errorx.New(errcode.Unsupported, "FormDataRespBuilder.BuildList is unsupported")
 }
 
 // Build ...
@@ -106,5 +106,5 @@ func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
 
 // Build ...
 func (b *SelectItemsRespBuilder) Build() (map[string]interface{}, error) {
-	panic("not implement")
+	return nil, errorx.New(errcode.Unsupported, "SelectItemsRespBuilder.Build is unsupported")
 }

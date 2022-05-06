@@ -25,19 +25,19 @@ import (
 type mockSubscribeStream struct{}
 
 func (x *mockSubscribeStream) Context() context.Context {
-	panic("implement me")
+	panic("not implement")
 }
 
 func (x *mockSubscribeStream) SendMsg(i interface{}) error {
-	panic("implement me")
+	panic("not implement")
 }
 
 func (x *mockSubscribeStream) RecvMsg(i interface{}) error {
-	panic("implement me")
+	panic("not implement")
 }
 
 func (x *mockSubscribeStream) Close() error {
-	panic("implement me")
+	panic("not implement")
 }
 
 // 目前单测中仅使用该方法，可按需实现其他方法的 Mock
