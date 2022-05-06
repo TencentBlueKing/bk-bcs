@@ -43,7 +43,6 @@ class NodeObj(ResourceObj):
         logger.warning("inner ip of addresses is null, address is %s", addresses)
         return ""
 
-    @property
     def is_master(self) -> bool:
         """当key对应的值为空或者true时，认为当前"""
         for key in constants.NODE_ROLE_MASTER_KEYS:
