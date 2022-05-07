@@ -10,7 +10,7 @@ WORKDIR /go/src/
 ARG VERSION
 ARG GITCOMMIT
 
-RUN apt-get update && apt-get install make vim
+RUN apt-get update && apt-get install -y make vim
 
 COPY . .
 RUN go mod download
