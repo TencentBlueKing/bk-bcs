@@ -104,7 +104,7 @@ func (h *Handler) CreateCObj(
 	if err != nil {
 		return err
 	}
-	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
+	namespace := mapx.GetStr(manifest, "metadata.namespace")
 
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err

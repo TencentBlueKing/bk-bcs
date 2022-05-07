@@ -79,7 +79,7 @@ func (m *ResMgr) Create(
 		return nil, err
 	}
 	// apiVersion 以 manifest 中的为准，不强制要求 preferred
-	m.GroupVersion = mapx.Get(manifest, "apiVersion", "").(string)
+	m.GroupVersion = mapx.GetStr(manifest, "apiVersion")
 	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
@@ -99,7 +99,7 @@ func (m *ResMgr) Update(
 		return nil, err
 	}
 	// apiVersion 以 manifest 中的为准，不强制要求 preferred
-	m.GroupVersion = mapx.Get(manifest, "apiVersion", "").(string)
+	m.GroupVersion = mapx.GetStr(manifest, "apiVersion")
 	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 
@@ -127,7 +127,7 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	}
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
-		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
+		namespace = mapx.GetStr(manifest, "metadata.namespace")
 	}
 	if !cli.IsProjNSinSharedCluster(ctx, m.ClusterID, namespace) {
 		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
