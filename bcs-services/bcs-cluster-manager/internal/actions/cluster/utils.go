@@ -347,3 +347,13 @@ func deleteClusterExtraOperation(cluster *proto.Cluster) {
 	}
 }
 
+// deleteClusterCredentialInfo sync delete cluster credential
+func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID string) {
+	err := store.DeleteClusterCredential(context.Background(), clusterID)
+	if err != nil {
+		blog.Errorf("deleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
+	} else {
+		blog.Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
+	}
+}
+

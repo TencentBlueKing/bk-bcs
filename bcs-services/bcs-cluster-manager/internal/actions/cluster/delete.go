@@ -199,8 +199,9 @@ func (da *DeleteAction) cleanLocalInformation() error {
 		return err
 	}
 
-	// delete passcc cluster info
+	// delete cluster dependency info
 	deleteClusterExtraOperation(da.cluster)
+	deleteClusterCredentialInfo(da.model, da.cluster.ClusterID)
 
 	// finally clean cluster
 	da.cluster.Status = common.StatusDeleted
