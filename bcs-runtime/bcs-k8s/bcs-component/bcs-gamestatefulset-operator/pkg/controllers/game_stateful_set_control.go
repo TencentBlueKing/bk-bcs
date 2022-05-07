@@ -50,13 +50,12 @@ import (
 )
 
 const (
-	successStatus           string = "success"
-	failureStatus           string = "failure"
-	recreatingPod           string = "recreatingFailedPod"
-	inplaceUpdateStrategy   string = "inplaceUpdate"
-	hotPatchUpdateStrategy  string = "hotPatchUpdate"
-	updateConflictPodAction string = "updateConflictPod"
-	forceDeletePodAction    string = "forceDeletePod"
+	successStatus          string = "success"
+	failureStatus          string = "failure"
+	recreatingPod          string = "recreatingFailedPod"
+	inplaceUpdateStrategy  string = "inplaceUpdate"
+	hotPatchUpdateStrategy string = "hotPatchUpdate"
+	forceDeletePodAction   string = "forceDeletePod"
 )
 
 var (
@@ -167,6 +166,12 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(
 	hrList, err := ssc.getHookRunsForGameStatefulSet(set)
 	if err != nil {
 		return err
+	}
+
+	if set.Spec.PreDeleteUpdateStrategy.Hook != nil || set.Spec.PreInplaceUpdateStrategy.Hook != nil {
+		isGrace = "true"
+	} else {
+		isGrace = "false"
 	}
 
 	canaryCtx := newCanaryCtx(set, hrList, currentRevision, updateRevision, collisionCount)
@@ -618,13 +623,13 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		if !isCreated(replicas[i]) {
 			startTime := time.Now()
 			if err := ssc.podControl.CreateGameStatefulSetPod(set, replicas[i]); err != nil {
-				ssc.metrics.collectPodCreateDurations(set.Namespace, set.Name, failureStatus, createPodAction, time.Since(startTime))
+				ssc.metrics.collectPodCreateDurations(set.Namespace, set.Name, failureStatus, time.Since(startTime))
 				createPodAction = "createOrScaleUpGameStatefulSet"
 				klog.Errorf("Operator create new Pod %s controlled by GameStatefulSet %s/%s failed, %s",
 					replicas[i].Name, set.Namespace, set.Name, err.Error())
 				return status, err
 			}
-			ssc.metrics.collectPodCreateDurations(set.Namespace, set.Name, successStatus, createPodAction, time.Since(startTime))
+			ssc.metrics.collectPodCreateDurations(set.Namespace, set.Name, successStatus, time.Since(startTime))
 			createPodAction = "createOrScaleUpGameStatefulSet"
 			klog.Infof("GameStatefulSet %s/%s is creating Pod %s", set.Namespace, set.Name, replicas[i].Name)
 			status.Replicas++
@@ -1053,7 +1058,8 @@ func (ssc *defaultGameStatefulSetControl) inPlaceUpdatePod(
 		"find Pod %s update strategy is InplaceUpdate, but the diff "+
 			"not only contains replace operation of spec.containers[x].image",
 		pod)
-	ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, failureStatus, inplaceUpdateStrategy, isGrace, time.Since(startTime))
+	ssc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, failureStatus, "incorrectInplaceUpdateSettings",
+		isGrace, time.Since(startTime))
 	ssc.recorder.Eventf(
 		set,
 		v1.EventTypeWarning,
@@ -1123,11 +1129,6 @@ func (ssc *defaultGameStatefulSetControl) truncatePreDeleteHookRuns(
 	pods []*v1.Pod,
 	hrList []*hookv1alpha1.HookRun) error {
 	preDeleteHookRuns := commonhookutil.FilterPreDeleteHookRuns(hrList)
-	if len(preDeleteHookRuns) > 0 {
-		isGrace = "true"
-	} else {
-		isGrace = "false"
-	}
 	hrsToDelete := []*hookv1alpha1.HookRun{}
 	for _, hr := range preDeleteHookRuns {
 		podControllerRevision := hr.Labels[commonhookutil.WorkloadRevisionUniqueLabel]
@@ -1287,12 +1288,15 @@ func (ssc *defaultGameStatefulSetControl) deletePod(set *gstsv1alpha1.GameStatef
 		klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s/%s now.", pod.Namespace, pod.Name)
 		return fmt.Errorf("PreDelete Hook of pod %s/%s not completed", pod.Namespace, pod.Name)
 	}
+	startTime := time.Now()
 	if err := ssc.kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(),
 		pod.Name, metav1.DeleteOptions{}); err != nil {
+		ssc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, failureStatus, deletePodAction, isGrace, time.Since(startTime))
 		scaleExpectations.ObserveScale(util.GetControllerKey(set), expectations.Delete, pod.Name)
 		ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedDeletePod",
 			"failed to delete pod %s/%s: %v", set.Namespace, podName, err)
 	}
+	ssc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, successStatus, deletePodAction, isGrace, time.Since(startTime))
 	return nil
 }
 

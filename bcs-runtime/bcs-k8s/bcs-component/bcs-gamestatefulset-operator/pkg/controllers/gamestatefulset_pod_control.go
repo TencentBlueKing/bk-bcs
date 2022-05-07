@@ -131,11 +131,11 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		// commit the update, retrying on conflicts
 		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 		if updateErr == nil {
-			spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, successStatus, updateConflictPodAction, isGrace, time.Since(startTime))
+			spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, successStatus, "updateGameStatefulSet", isGrace, time.Since(startTime))
 			klog.Infof("Pod %s/%s is updating successfully in UpdateGameStatefulSetPod", pod.Namespace, pod.Name)
 			return nil
 		}
-		spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, failureStatus, updateConflictPodAction, isGrace, time.Since(startTime))
+		spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, failureStatus, "updateGameStatefulSet", isGrace, time.Since(startTime))
 		klog.Errorf("Pod %s/%s update err in UpdateGameStatefulSetPod: %+v", pod.Namespace, pod.Name, updateErr)
 		if updated, err := spc.podLister.Pods(set.Namespace).Get(pod.Name); err == nil {
 			// make a copy so we don't mutate the shared cache

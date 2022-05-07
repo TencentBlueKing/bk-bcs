@@ -35,6 +35,6 @@ func init() {
 	prometheus.MustRegister(gssHRCreateDuration)
 }
 
-func (p *PromServer) CollectHRCreateDurations(namespace, name, status, action string, d time.Duration) {
+func (p *PromServer) CollectGSSHRCreateDurations(namespace, name, status, action string, d time.Duration) {
 	gssHRCreateDuration.WithLabelValues(namespace, name, status, action).Observe(d.Seconds())
 }

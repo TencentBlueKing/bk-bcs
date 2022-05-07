@@ -113,12 +113,12 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 			klog.Warningf("Created PreDelete HookRun failed for pod %s of %s %s/%s, err:%s",
 				pod.Name, objectKind, namespace, name, err)
 			if objectKind == "GameStatefulSet" {
-				ps.CollectHRCreateDurations(namespace, name, "failure", "createHookrun", time.Since(startTime))
+				ps.CollectGSSHRCreateDurations(namespace, name, "failure", "predelete", time.Since(startTime))
 			}
 			return false, err
 		}
 		if objectKind == "GameStatefulSet" {
-			ps.CollectHRCreateDurations(namespace, name, "success", "createHookrun", time.Since(startTime))
+			ps.CollectGSSHRCreateDurations(namespace, name, "success", "predelete", time.Since(startTime))
 		}
 
 		updatePreDeleteHookCondition(newStatus, pod.Name)
