@@ -328,6 +328,7 @@ other:
       ui:component:
         name: radio
         props:
+          # TODO Job，CronJob 不应有 Always，可以用 kind 判断
           datasource:
             - label: Always
               value: Always

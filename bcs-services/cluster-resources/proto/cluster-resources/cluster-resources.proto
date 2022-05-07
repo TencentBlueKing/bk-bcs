@@ -1385,7 +1385,7 @@ message PodResListReq {
 	}, (validate.rules).string = {max_len: 64}];
 	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/selectItems）"
-	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
 }
 
 message ContainerListReq {
@@ -1463,7 +1463,7 @@ message CObjListReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
 	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/selectItems）"
-	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
 }
 
 message CObjGetReq {
@@ -1487,7 +1487,7 @@ message CObjGetReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
 	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message CObjCreateReq {
@@ -1506,7 +1506,7 @@ message CObjCreateReq {
 	google.protobuf.Struct rawData = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message CObjUpdateReq {
@@ -1531,7 +1531,7 @@ message CObjUpdateReq {
 	google.protobuf.Struct rawData = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message CObjDeleteReq {
