@@ -95,7 +95,7 @@ type SelectItemsRespBuilder struct {
 func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
 	// 取每个 K8S 资源的名称，作为下拉框选项
 	selectItems := []interface{}{}
-	for _, item := range mapx.Get(b.manifest, "items", []interface{}{}).([]interface{}) {
+	for _, item := range mapx.GetList(b.manifest, "items") {
 		name := mapx.Get(item.(map[string]interface{}), "metadata.name", "--")
 		selectItems = append(selectItems, map[string]interface{}{
 			"label": name, "value": name,

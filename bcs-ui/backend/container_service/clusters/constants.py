@@ -75,11 +75,6 @@ class ClusterManagerNodeStatus(str, StructuredEnum):
     UNKNOWN = EnumField("UNKNOWN", label="未知状态")
 
 
-# k8s cluster master role
-# 参考rancher中定义nodeRoleMaster="node-role.kubernetes.io/master"
-K8S_NODE_ROLE_MASTER = "node-role.kubernetes.io/master"
-
-
 # docker状态排序
 # default will be 100
 DockerStatusDefaultOrder = 100

@@ -91,7 +91,7 @@ func getRunningPodNameFromCluster() string {
 		p, _ := pod.(map[string]interface{})
 		parser := formatter.PodStatusParser{Manifest: p}
 		if parser.Parse() == "Running" {
-			return mapx.Get(p, "metadata.name", "").(string)
+			return mapx.GetStr(p, "metadata.name")
 		}
 	}
 	return ""
