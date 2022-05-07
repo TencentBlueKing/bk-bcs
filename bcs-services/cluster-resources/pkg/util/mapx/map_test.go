@@ -42,11 +42,14 @@ var deploySpec = map[string]interface{}{
 	"template": map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"creationTimestamp": nil,
+			"int64Key4GetInt64": int64(10),
 			"labels": map[string]interface{}{
-				"app": "nginx",
+				"app":           "nginx",
+				"strKey4GetStr": "value",
 			},
 		},
 		"spec": map[string]interface{}{
+			"boolKey4GetBool": true,
 			"containers": []map[string]interface{}{
 				{
 					"image":           "nginx:latest",
@@ -64,6 +67,10 @@ var deploySpec = map[string]interface{}{
 			"schedulerName":                 "default-scheduler",
 			"securityContext":               map[string]interface{}{},
 			"terminationGracePeriodSeconds": 30,
+		},
+		"interfaceList": []interface{}{
+			map[string]interface{}{"key": "value"},
+			"key-value",
 		},
 	},
 }
@@ -144,6 +151,30 @@ func TestGet(t *testing.T) {
 
 	ret = mapx.Get(deploySpec, "container.name", "defaultName")
 	assert.Equal(t, "defaultName", ret)
+}
+
+func TestGetBool(t *testing.T) {
+	assert.True(t, mapx.GetBool(deploySpec, "template.spec.boolKey4GetBool"))
+	assert.False(t, mapx.GetBool(deploySpec, "template.spec.notExistsKey"))
+}
+
+func TestGetInt64(t *testing.T) {
+	assert.Equal(t, int64(10), mapx.GetInt64(deploySpec, "template.metadata.int64Key4GetInt64"))
+	assert.Equal(t, int64(0), mapx.GetInt64(deploySpec, "template.spec.notExistsKey"))
+}
+
+func TestGetStr(t *testing.T) {
+	assert.Equal(t, "value", mapx.GetStr(deploySpec, "template.metadata.labels.strKey4GetStr"))
+	assert.Equal(t, "default-scheduler", mapx.GetStr(deploySpec, "template.spec.schedulerName"))
+	assert.Equal(t, "", mapx.GetStr(deploySpec, "template.spec.notExistsKey"))
+}
+
+func TestGetList(t *testing.T) {
+	assert.Equal(
+		t, []interface{}{map[string]interface{}{"key": "value"}, "key-value"},
+		mapx.GetList(deploySpec, "template.interfaceList"),
+	)
+	assert.Equal(t, []interface{}{}, mapx.GetList(deploySpec, "template.spec.notExistsKey"))
 }
 
 // SetItems 成功的情况
