@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -146,7 +147,7 @@ func (dbc *DBCleaner) Run(ctx context.Context) {
 				if err := dbc.doSoftDeleteClean(); err != nil {
 					blog.Errorf("do soft delete clean failed, err %s", err.Error())
 				}
-			} else if dbc.db.DataBase() == databaseAlarm || dbc.db.DataBase() == databaseEvent {
+			} else if dbc.db.DataBase() == databaseAlarm || strings.HasPrefix(dbc.db.DataBase(), databaseEvent) {
 				if err := dbc.doNumClean(); err != nil {
 					blog.Errorf("do num clean failed, err %s", err.Error())
 				}
