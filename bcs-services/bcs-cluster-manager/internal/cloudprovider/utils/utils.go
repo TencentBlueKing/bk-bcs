@@ -14,9 +14,11 @@
 package utils
 
 import (
+	"context"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
@@ -125,6 +127,17 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 		},
 	})
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteClusterCredentialInfo delete cluster credential info
+func DeleteClusterCredentialInfo(clusterID string) error {
+	err := cloudprovider.GetStorageModel().DeleteClusterCredential(context.Background(), clusterID)
+	if err != nil{
+		blog.Errorf("DeleteClusterCredentialInfo[%s] failed: %v", err)
 		return err
 	}
 

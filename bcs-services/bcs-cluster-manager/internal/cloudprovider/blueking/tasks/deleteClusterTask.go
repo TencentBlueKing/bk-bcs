@@ -85,9 +85,10 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete cluster[%s] in DB successful", taskID, clusterID)
 
-	// sync delete pass-cc cluster
+	// sync clean cluster dependency(pass-cc/token/credential)
 	utils.SyncDeletePassCCCluster(taskID, cluster)
 	utils.DeleteBcsAgentToken(cluster)
+	utils.DeleteClusterCredentialInfo(cluster.ClusterID)
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
