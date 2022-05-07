@@ -35,11 +35,21 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
+type clusterInfo struct {
+	clusterName string
+	clusterID string
+}
+
 const (
 	// Builder self builder cluster
 	Builder = "builder"
 	// Importer export external cluster
 	Importer = "importer"
+
+	// KubeConfig import
+	KubeConfig = "kubeConfig"
+	// Cloud import
+	Cloud      = "cloud"
 
 	// Prod environment
 	Prod = "prod"
@@ -128,6 +138,30 @@ func getClusterMaxNum(clusterType string, env string, model store.ClusterManager
 	}
 
 	return clusterNumIDs[len(clusterNumIDs)-1] + 1, nil
+}
+
+// getAllMasterIPs get cluster masterIPs
+func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
+	clusterStatus := []string{common.StatusInitialization, common.StatusRunning, common.StatusDeleting}
+	condStatus := operator.NewLeafCondition(operator.In, operator.M{"status": clusterStatus})
+
+	clusterList, err := model.ListCluster(context.Background(), condStatus, &storeopt.ListOption{All: true})
+	if err != nil {
+		blog.Errorf("getAllIPList ListCluster failed: %v", err)
+		return nil
+	}
+
+	ipListInfo := make(map[string]clusterInfo)
+	for i := range clusterList {
+		for ip := range clusterList[i].Master {
+			ipListInfo[ip] = clusterInfo{
+				clusterName: clusterList[i].ClusterName,
+				clusterID:   clusterList[i].ClusterID,
+			}
+		}
+	}
+
+	return ipListInfo
 }
 
 // getAllIPList get mongo all IPList
@@ -301,3 +335,15 @@ func importClusterExtraOperation(cluster *proto.Cluster) {
 			cluster.ClusterID, err)
 	}
 }
+
+// deleteClusterExtraOperation sync delete pass-cc cluster
+func deleteClusterExtraOperation(cluster *proto.Cluster) {
+	// sync delete clusterInfo info to pass-cc
+	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
+	if err != nil {
+		blog.Errorf("deleteClusterExtraOperation DeletePassCCCluster[%s] failed: %v", cluster.ClusterID, err)
+	} else {
+		blog.Infof("deleteClusterExtraOperation DeletePassCCCluster[%s] successful", cluster.ClusterID)
+	}
+}
+

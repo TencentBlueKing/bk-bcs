@@ -34,6 +34,10 @@ const (
 )
 
 var (
+	// import cluster task
+	importClusterNodesTask = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
+	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
+
 	// create cluster task
 	createClusterShieldAlarmTask  = fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName)
 	createTKEClusterTask          = fmt.Sprintf("%s-CreateTKEClusterTask", cloudName)

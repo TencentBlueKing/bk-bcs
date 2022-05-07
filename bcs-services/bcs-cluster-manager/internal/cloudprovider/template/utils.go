@@ -14,9 +14,35 @@
 package template
 
 import (
+	"context"
+	"encoding/base64"
+	"fmt"
 	"strings"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
+)
+
+// BcsKey bcsEnvs key
+type BcsKey string
+
+// String xxx
+func (bk BcsKey) String() string {
+	return string(bk)
+}
+
+var (
+	// BCSCA xxx
+	BCSCA BcsKey = "bcs_ca"
+	// BCSClientCert xxx
+	BCSClientCert BcsKey = "bcs_client_cert"
+	// BCSClientKey xxx
+	BCSClientKey BcsKey = "bcs_client_key"
+	// BCSToken xxx
+	BCSTokenKey BcsKey = "bcs_token"
 )
 
 func getClusterMasterIPs(cluster *proto.Cluster) string {
@@ -55,7 +81,8 @@ func getClusterType(cls *proto.Cluster) string {
 }
 
 func getClusterCreateExtraEnv(cls *proto.Cluster) string {
-	value, ok := cls.ExtraInfo[createCluster]; if ok {
+	value, ok := cls.ExtraInfo[createCluster]
+	if ok {
 		return value
 	}
 
@@ -63,9 +90,50 @@ func getClusterCreateExtraEnv(cls *proto.Cluster) string {
 }
 
 func getAddNodesExtraEnv(cls *proto.Cluster) string {
-	value, ok := cls.ExtraInfo[addNodes]; if ok {
+	value, ok := cls.ExtraInfo[addNodes]
+	if ok {
 		return value
 	}
 
 	return ""
+}
+
+func getEnv(k, v string) string {
+	return fmt.Sprintf("%s=%s", k, v)
+}
+
+// getBcsEnvs get bcs platform common parameters
+func getBcsEnvs(cluster *proto.Cluster) (string, error) {
+	cloud, err := cloudprovider.GetStorageModel().GetCloud(context.Background(), cluster.Provider)
+	if err != nil {
+		return "", err
+	}
+	// credential info
+	bcsEnvs := make([]string, 0)
+	opts := options.GetGlobalCMOptions()
+	if opts.ClientCa != "" {
+		bcsEnvs = append(bcsEnvs, getEnv(BCSCA.String(), base64.StdEncoding.EncodeToString([]byte(opts.ClientCa))))
+	}
+	if opts.ClientCert != "" {
+		bcsEnvs = append(bcsEnvs, getEnv(BCSClientCert.String(), base64.StdEncoding.EncodeToString([]byte(opts.ClientCert))))
+	}
+	if opts.ClientKey != "" {
+		bcsEnvs = append(bcsEnvs, getEnv(BCSClientKey.String(), base64.StdEncoding.EncodeToString([]byte(opts.ClientKey))))
+	}
+
+	// get cloud platform common config
+	for k, v := range cloud.PlatformInfo {
+		bcsEnvs = append(bcsEnvs, getEnv(k, v))
+	}
+
+	if user.GetUserManagerClient() != nil {
+		token, err := utils.BuildBcsAgentToken(cluster)
+		if err != nil {
+			return "", err
+		}
+
+		bcsEnvs = append(bcsEnvs, getEnv(BCSTokenKey.String(), token))
+	}
+
+	return strings.Join(bcsEnvs, ","), nil
 }

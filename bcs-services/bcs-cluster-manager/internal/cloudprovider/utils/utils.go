@@ -15,9 +15,11 @@ package utils
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 )
 
 // SyncClusterInfoToPassCC sync clusterInfo to pass-cc
@@ -49,6 +51,84 @@ func SyncDeletePassCCCluster(taskID string, cluster *proto.Cluster) {
 	} else {
 		blog.Infof("CleanClusterDBInfoTask[%s]: DeletePassCCCluster[%s] successful", taskID, cluster.ClusterID)
 	}
+}
+
+// BuildBcsAgentToken create cluster
+func BuildBcsAgentToken(cluster *proto.Cluster) (string, error) {
+	var (
+		token string
+		err   error
+	)
+
+	token, err = user.GetUserManagerClient().GetUserToken(cluster.ClusterID)
+	if err != nil {
+		return "", err
+	}
+
+	if token == "" {
+		token, err = user.GetUserManagerClient().CreateUserToken(user.CreateTokenReq{
+			Username:   cluster.ClusterID,
+			Expiration: -1,
+		})
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// grant permission
+	err = user.GetUserManagerClient().GrantUserPermission([]types.Permission{
+		types.Permission{
+			UserName:     cluster.ClusterID,
+			ResourceType: user.ResourceTypeClusterManager,
+			Resource:     cluster.ClusterID,
+			Role:         user.PermissionManagerRole,
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+// DeleteBcsAgentToken revoke token&permission when delete cluster
+func DeleteBcsAgentToken(cluster *proto.Cluster) error {
+	var (
+		token string
+		err   error
+	)
+
+	// user-manager not enable
+	if user.GetUserManagerClient() == nil {
+		return nil
+	}
+
+	token, err = user.GetUserManagerClient().GetUserToken(cluster.ClusterID)
+	if err != nil {
+		return  err
+	}
+
+	if token != "" {
+		err = user.GetUserManagerClient().DeleteUserToken(token)
+		if err != nil {
+			return err
+		}
+	}
+
+	// grant permission
+	err = user.GetUserManagerClient().RevokeUserPermission([]types.Permission{
+		types.Permission{
+			UserName:     cluster.ClusterID,
+			ResourceType: user.ResourceTypeClusterManager,
+			Resource:     cluster.ClusterID,
+			Role:         user.PermissionManagerRole,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getResourceType(env string) string {

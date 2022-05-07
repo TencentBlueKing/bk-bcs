@@ -195,7 +195,9 @@ const (
 	// BcsErrClusterManagerTaskDoneErr build task doing or done error
 	BcsErrClusterManagerTaskDoneErr = bcscommon.BCSErrClusterManager + 30
 	// BcsErrClusterManagerSyncCloudErr cloud config error
-	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 24
+	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 31
+	// BcsErrClusterManagerSyncCloudErr cloud config error
+	BcsErrClusterManagerCheckKubeErr = bcscommon.BCSErrClusterManager + 32
 )
 
 // ClusterIDRange for generate clusterID range
