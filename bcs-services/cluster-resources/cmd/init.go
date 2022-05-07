@@ -47,6 +47,7 @@ import (
 	hpaHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/hpa"
 	nsHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/namespace"
 	networkHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/network"
+	nodeHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/node"
 	rbacHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/rbac"
 	resHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/resource"
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
@@ -150,6 +151,9 @@ func (crSvc *clusterResourcesService) initMicro() error {
 // 注册多个 Handler
 func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	if err := clusterRes.RegisterBasicHandler(crSvc.microSvc.Server(), basicHdlr.New()); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterNodeHandler(crSvc.microSvc.Server(), nodeHdlr.New()); err != nil {
 		return err
 	}
 	if err := clusterRes.RegisterNamespaceHandler(crSvc.microSvc.Server(), nsHdlr.New()); err != nil {
@@ -258,6 +262,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	endpoint := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.Port)
 	for _, epRegister := range []func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 		clusterRes.RegisterBasicGwFromEndpoint,
+		clusterRes.RegisterNodeGwFromEndpoint,
 		clusterRes.RegisterNamespaceGwFromEndpoint,
 		clusterRes.RegisterWorkloadGwFromEndpoint,
 		clusterRes.RegisterNetworkGwFromEndpoint,

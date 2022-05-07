@@ -12,35 +12,34 @@
  * limitations under the License.
  */
 
-package resource
+package node
 
 import (
-	"context"
+	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-type mockSubscribeStream struct{}
+func TestNode(t *testing.T) {
+	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
 
-func (x *mockSubscribeStream) Context() context.Context {
-	panic("not implement")
-}
+	// List
+	listReq := clusterRes.ResListReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Format:    action.ManifestFormat,
+	}
+	listResp := clusterRes.CommonResp{}
+	err := h.ListNode(ctx, &listReq, &listResp)
+	assert.Nil(t, err)
 
-func (x *mockSubscribeStream) SendMsg(i interface{}) error {
-	panic("not implement")
-}
-
-func (x *mockSubscribeStream) RecvMsg(i interface{}) error {
-	panic("not implement")
-}
-
-func (x *mockSubscribeStream) Close() error {
-	panic("not implement")
-}
-
-// 目前单测中仅使用该方法，可按需实现其他方法的 Mock
-func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
-	return errorx.New(errcode.General, "force break websocket loop")
+	respData := listResp.Data.AsMap()
+	assert.Equal(t, "NodeList", mapx.Get(respData, "manifest.kind", ""))
 }

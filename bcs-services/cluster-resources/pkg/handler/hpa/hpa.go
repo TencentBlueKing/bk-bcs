@@ -41,7 +41,7 @@ func (h *Handler) ListHPA(
 		req.ApiVersion = res.DefaultHPAGroupVersion
 	}
 	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.HPA).List(
-		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
