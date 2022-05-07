@@ -93,7 +93,7 @@
         "image_register": "",
         "storage_zookeeper": "",
         "storage_url": "",
-        "bcs_api_host": "",
+        "bcs_api_host": ""
       }
     }
   ]

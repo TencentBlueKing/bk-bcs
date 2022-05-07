@@ -5,7 +5,7 @@
       "name": "原生K8S集群",
       "engineType": "k8s",
       "editable": true,
-      "enable": "false",
+      "enable": "true",
       "osManagement": {
         "availableVersion": ["default"],
         "instanceType": [],
@@ -93,7 +93,7 @@
         "image_register": "",
         "storage_zookeeper": "",
         "storage_url": "",
-        "bcs_api_host": "",
+        "bcs_api_host": ""
       }
     }
   ]

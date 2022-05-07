@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 
@@ -113,15 +112,7 @@ func NewUserManagerClient(opts *Options) *UserManagerClient {
 	if !ok {
 		return nil
 	}
-
-	// parse bearer token
-	password := opts.Token
-	if password != "" {
-		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
-		password = string(realPwd)
-	}
-	opts.Token = password
-
+	
 	userClient := &UserManagerClient{
 		opts: opts,
 	}
