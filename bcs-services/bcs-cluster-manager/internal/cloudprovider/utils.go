@@ -255,8 +255,8 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 	}
 	if len(config.AuthInfos) > 0 {
 		token = config.AuthInfos[0].AuthInfo.Token
-		clientCert = config.AuthInfos[0].AuthInfo.ClientCertificate
-		clientKey = config.AuthInfos[0].AuthInfo.ClientKey
+		clientCert = string(config.AuthInfos[0].AuthInfo.ClientCertificateData)
+		clientKey = string(config.AuthInfos[0].AuthInfo.ClientKeyData)
 	}
 
 	if server == "" || caCertData == "" || (token == "" && (clientCert == "" || clientKey == "")) {
