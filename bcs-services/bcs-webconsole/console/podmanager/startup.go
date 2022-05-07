@@ -474,6 +474,6 @@ func GetKubectldVersion(clusterId string) (string, error) {
 		return "", err
 	}
 
-	v, err := config.G.WebConsole.MatchTag(info.GitVersion)
+	v, err := config.G.WebConsole.MatchTag(info)
 	return v, err
 }
