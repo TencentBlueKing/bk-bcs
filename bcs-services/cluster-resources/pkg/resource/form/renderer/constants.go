@@ -27,5 +27,10 @@ const TmplRandomNameLength = 12
 // FormRenderSupportedResAPIVersion 支持表单化的资源版本
 var FormRenderSupportedResAPIVersion = map[string][]string{
 	res.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
+	res.DS:     {"apps/v1"},
+	res.STS:    {"apps/v1"},
+	res.CJ:     {"batch/v1", "batch/v1beta1"},
+	res.Job:    {"batch/v1"},
+	res.Po:     {"v1"},
 	// TODO 补充其他资源类型
 }

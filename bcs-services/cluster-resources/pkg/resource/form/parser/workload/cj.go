@@ -48,14 +48,14 @@ func ParseCJSpec(manifest map[string]interface{}, spec *model.CJSpec) {
 
 // ParseCJJobManage ...
 func ParseCJJobManage(manifest map[string]interface{}, jm *model.CJJobManage) {
-	jm.Schedule = mapx.Get(manifest, "spec.schedule", "").(string)
-	jm.ConcurrencyPolicy = mapx.Get(manifest, "spec.concurrencyPolicy", "").(string)
-	jm.Suspend = mapx.Get(manifest, "spec.suspend", false).(bool)
-	jm.Completions = mapx.Get(manifest, "spec.jobTemplate.spec.completions", int64(0)).(int64)
-	jm.Parallelism = mapx.Get(manifest, "spec.jobTemplate.spec.parallelism", int64(0)).(int64)
-	jm.BackoffLimit = mapx.Get(manifest, "spec.jobTemplate.spec.backoffLimit", int64(0)).(int64)
-	jm.ActiveDDLSecs = mapx.Get(manifest, "spec.jobTemplate.spec.activeDeadlineSeconds", int64(0)).(int64)
-	jm.SuccessfulJobsHistoryLimit = mapx.Get(manifest, "spec.successfulJobsHistoryLimit", int64(0)).(int64)
-	jm.FailedJobsHistoryLimit = mapx.Get(manifest, "spec.failedJobsHistoryLimit", int64(0)).(int64)
-	jm.StartingDDLSecs = mapx.Get(manifest, "spec.startingDeadlineSeconds", int64(0)).(int64)
+	jm.Schedule = mapx.GetStr(manifest, "spec.schedule")
+	jm.ConcurrencyPolicy = mapx.GetStr(manifest, "spec.concurrencyPolicy")
+	jm.Suspend = mapx.GetBool(manifest, "spec.suspend")
+	jm.Completions = mapx.GetInt64(manifest, "spec.jobTemplate.spec.completions")
+	jm.Parallelism = mapx.GetInt64(manifest, "spec.jobTemplate.spec.parallelism")
+	jm.BackoffLimit = mapx.GetInt64(manifest, "spec.jobTemplate.spec.backoffLimit")
+	jm.ActiveDDLSecs = mapx.GetInt64(manifest, "spec.jobTemplate.spec.activeDeadlineSeconds")
+	jm.SuccessfulJobsHistoryLimit = mapx.GetInt64(manifest, "spec.successfulJobsHistoryLimit")
+	jm.FailedJobsHistoryLimit = mapx.GetInt64(manifest, "spec.failedJobsHistoryLimit")
+	jm.StartingDDLSecs = mapx.GetInt64(manifest, "spec.startingDeadlineSeconds")
 }

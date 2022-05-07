@@ -54,5 +54,5 @@ func ParseDSReplicas(manifest map[string]interface{}, replicas *model.DSReplicas
 	if err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
-	replicas.MinReadySecs = mapx.Get(manifest, "spec.minReadySeconds", int64(0)).(int64)
+	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")
 }

@@ -1,0 +1,19 @@
+apiVersion: {{ .apiVersion }}
+kind: DaemonSet
+{{ include "common.metadata" .metadata }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
+  strategy:
+    type: {{ .spec.replicas.updateStrategy }}
+    rollingUpdate:
+      {{- if .spec.replicas.maxUnavailable }}
+      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}
+      {{- else }}
+      {}
+      {{- end }}
+  {{- if .spec.replicas.minReadySecs }}
+  minReadySeconds: {{ .spec.replicas.minReadySecs }}
+  {{- end }}
+  {{- include "workload.podTemplate" . | nindent 2 }}

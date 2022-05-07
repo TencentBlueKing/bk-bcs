@@ -45,7 +45,7 @@ func (h *Handler) ListPo(
 		return err
 	}
 
-	respDataBuilder, err := respUtil.NewRespDataBuilder(ret, res.CRD, req.Format)
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ret, res.Po, req.Format)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,17 @@
+apiVersion: {{ .apiVersion }}
+kind: Job
+{{ include "common.metadata" .metadata }}
+spec:
+  {{- if .spec.jobManage.completions }}
+  completions: {{ .spec.jobManage.completions }}
+  {{- end }}
+  {{- if .spec.jobManage.parallelism }}
+  parallelism: {{ .spec.jobManage.parallelism }}
+  {{- end }}
+  {{- if .spec.jobManage.backoffLimit }}
+  backoffLimit: {{ .spec.jobManage.backoffLimit }}
+  {{- end }}
+  {{- if .spec.jobManage.activeDDLSecs }}
+  activeDeadlineSeconds: {{ .spec.jobManage.activeDDLSecs }}
+  {{- end }}
+  {{- include "workload.podTemplate" . | nindent 2 }}

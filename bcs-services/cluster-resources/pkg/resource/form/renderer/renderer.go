@@ -83,7 +83,10 @@ func (r *ManifestRenderer) setAPIVersion() error {
 		if err != nil {
 			return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
 		}
-		r.APIVersion = resInfo.Group + "/" + resInfo.Version
+		r.APIVersion = resInfo.Version
+		if resInfo.Group != "" {
+			r.APIVersion = resInfo.Group + "/" + resInfo.Version
+		}
 		r.FormData["apiVersion"] = r.APIVersion
 	}
 	return nil

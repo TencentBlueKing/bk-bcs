@@ -48,8 +48,8 @@ func ParseJobSpec(manifest map[string]interface{}, spec *model.JobSpec) {
 
 // ParseJobManage ...
 func ParseJobManage(manifest map[string]interface{}, jm *model.JobManage) {
-	jm.Completions = mapx.Get(manifest, "spec.completions", int64(0)).(int64)
-	jm.Parallelism = mapx.Get(manifest, "spec.parallelism", int64(0)).(int64)
-	jm.BackoffLimit = mapx.Get(manifest, "spec.backoffLimit", int64(0)).(int64)
-	jm.ActiveDDLSecs = mapx.Get(manifest, "spec.activeDeadlineSeconds", int64(0)).(int64)
+	jm.Completions = mapx.GetInt64(manifest, "spec.completions")
+	jm.Parallelism = mapx.GetInt64(manifest, "spec.parallelism")
+	jm.BackoffLimit = mapx.GetInt64(manifest, "spec.backoffLimit")
+	jm.ActiveDDLSecs = mapx.GetInt64(manifest, "spec.activeDeadlineSeconds")
 }

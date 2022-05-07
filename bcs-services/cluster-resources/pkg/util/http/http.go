@@ -32,7 +32,7 @@ func CustomHeaderMatcher(key string) (string, bool) {
 	}
 }
 
-// 会在 websocket 连接中被转发的 Header Key
+// 会在 websocket 连接中被转发的 Header Key（可按需添加）
 var wsHeadersToForward = []string{"origin", "referer", "authorization", "cookie"}
 
 // WSHeaderForwarder websocket Headers 转发规则

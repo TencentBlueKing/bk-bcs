@@ -3,34 +3,38 @@ template:
   metadata:
     labels:
       {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
-  spec:
-    {{- include "container.containers" .containerGroup.containers | nindent 4 }}
-    {{- include "container.initContainers" .containerGroup.initContainers | nindent 4 }}
-    # affinity
-    {{- if .spec.affinity }}
-    affinity:
-      {{- include "workload.affinity" .spec.affinity | indent 6 }}
-    {{- end }}
-    # toleration
-    {{- if .spec.toleration }}
-    tolerations:
-      {{- include "workload.toleration" .spec.toleration | indent 6 }}
-    {{- end }}
-    # nodeSelect
-    {{- include "workload.nodeSelect" .spec.nodeSelect | indent 4 }}
-    # networking
-    {{- include "workload.network" .spec.networking | nindent 4 }}
-    # security
-    {{- if .spec.security }}
-    securityContext:
-      {{- include "workload.security" .spec.security | indent 6 }}
-    {{- end }}
-    # other
-    {{- include "workload.specOther" .spec.other | indent 4 }}
-    {{- if .volume }}
-    volumes:
-      {{- include "workload.volume" .volume | indent 6 }}
-    {{- end }}
+  {{- include "workload.podSpec" . | nindent 2 }}
+{{- end }}
+
+{{- define "workload.podSpec" -}}
+spec:
+  {{- include "container.containers" .containerGroup.containers | nindent 2 }}
+  {{- include "container.initContainers" .containerGroup.initContainers | nindent 2 }}
+  # affinity
+  {{- if .spec.affinity }}
+  affinity:
+    {{- include "workload.affinity" .spec.affinity | indent 4 }}
+  {{- end }}
+  # toleration
+  {{- if .spec.toleration }}
+  tolerations:
+    {{- include "workload.toleration" .spec.toleration | indent 4 }}
+  {{- end }}
+  # nodeSelect
+  {{- include "workload.nodeSelect" .spec.nodeSelect | indent 2 }}
+  # networking
+  {{- include "workload.network" .spec.networking | nindent 2 }}
+  # security
+  {{- if .spec.security }}
+  securityContext:
+    {{- include "workload.security" .spec.security | indent 4 }}
+  {{- end }}
+  # other
+  {{- include "workload.specOther" .spec.other | indent 2 }}
+  {{- if .volume }}
+  volumes:
+    {{- include "workload.volume" .volume | indent 4 }}
+  {{- end }}
 {{- end }}
 
 {{- define "workload.affinity" -}}

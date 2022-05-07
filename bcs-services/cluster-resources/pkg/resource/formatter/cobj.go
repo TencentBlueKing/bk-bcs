@@ -38,21 +38,21 @@ func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
 // 根据 CRD 配置解析 cobj ApiVersion
 // ref: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions
 func parseCObjAPIVersion(manifest map[string]interface{}) string {
-	group, _ := mapx.GetItems(manifest, "spec.group")
-	versions, _ := mapx.GetItems(manifest, "spec.versions")
+	group := mapx.GetStr(manifest, "spec.group")
+	versions := mapx.GetList(manifest, "spec.versions")
 
-	if versions != nil && len(versions.([]interface{})) != 0 {
-		for _, ver := range versions.([]interface{}) {
+	if versions != nil && len(versions) != 0 {
+		for _, ver := range versions {
 			v, _ := ver.(map[string]interface{})
 			if v["served"].(bool) {
 				return fmt.Sprintf("%s/%s", group, v["name"])
 			}
 		}
-		return fmt.Sprintf("%s/%s", group, versions.([]interface{})[0].(map[string]interface{})["name"])
+		return fmt.Sprintf("%s/%s", group, versions[0].(map[string]interface{})["name"])
 	}
 
-	version, _ := mapx.GetItems(manifest, "spec.version")
-	if version != nil && version != "" {
+	version := mapx.GetStr(manifest, "spec.version")
+	if version != "" {
 		return fmt.Sprintf("%s/%s", group, version)
 	}
 	return fmt.Sprintf("%s/v1alpha1", group)
