@@ -15,6 +15,8 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -39,16 +41,19 @@ func (e *BcsDataManager) GetProjectInfo(ctx context.Context, req *bcsdatamanager
 	rsp *bcsdatamanager.GetProjectInfoResponse) error {
 	blog.Infof("Received GetProjectInfo.Call request. Project id: %s, dimension:%s",
 		req.GetProjectID(), req.GetDimension())
+	start := time.Now()
 	result, err := e.model.GetProjectInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get project info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
 	rsp.Message = common.BcsSuccessStr
 	rsp.Code = common.BcsSuccess
+	prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
 
@@ -57,17 +62,20 @@ func (e *BcsDataManager) GetClusterInfoList(ctx context.Context, req *bcsdataman
 	rsp *bcsdatamanager.GetClusterInfoListResponse) error {
 	blog.Infof("Received GetClusterInfoList.Call request. Project id: %s, dimension:%s, page:%s, size:%s",
 		req.GetProjectID(), req.GetDimension(), req.GetPage(), req.GetSize())
+	start := time.Now()
 	result, total, err := e.model.GetClusterInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster list info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetClusterInfoList", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
 	rsp.Message = common.BcsSuccessStr
 	rsp.Code = common.BcsSuccess
 	rsp.Total = uint32(total)
+	prom.ReportAPIRequestMetric("GetClusterInfoList", "grpc", prom.StatusOK, start)
 	return nil
 }
 
@@ -77,15 +85,18 @@ func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager
 	blog.Infof("Received GetClusterInfo.Call request. cluster id:%s, dimension: %s",
 		req.GetClusterID(), req.GetDimension())
 	result, err := e.model.GetClusterInfo(ctx, req)
+	start := time.Now()
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetClusterInfo", "grpc", prom.StatusOK, start)
 		return nil
 	}
 	rsp.Data = result
 	rsp.Message = common.BcsSuccessStr
 	rsp.Code = common.BcsSuccess
+	prom.ReportAPIRequestMetric("GetClusterInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
 
@@ -94,17 +105,20 @@ func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatam
 	rsp *bcsdatamanager.GetNamespaceInfoListResponse) error {
 	blog.Infof("Received GetNamespaceInfoList.Call request. cluster id:%s, dimension: %s, page:%s, size:%s",
 		req.GetClusterID(), req.GetDimension(), req.GetPage(), req.GetSize())
+	start := time.Now()
 	result, total, err := e.model.GetNamespaceInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get namespace list info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetNamespaceInfoList", "grpc", prom.StatusOK, start)
 		return nil
 	}
 	rsp.Data = result
 	rsp.Message = common.BcsSuccessStr
 	rsp.Code = common.BcsSuccess
 	rsp.Total = uint32(total)
+	prom.ReportAPIRequestMetric("GetNamespaceInfoList", "grpc", prom.StatusOK, start)
 	return nil
 }
 
@@ -113,16 +127,19 @@ func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanag
 	rsp *bcsdatamanager.GetNamespaceInfoResponse) error {
 	blog.Infof("Received GetNamespaceInfo.Call request. cluster id:%s, namespace:%s, dimension: %s",
 		req.GetClusterID(), req.Namespace, req.Dimension)
+	start := time.Now()
 	result, err := e.model.GetNamespaceInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get namespace info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetNamespaceInfo", "grpc", prom.StatusOK, start)
 		return nil
 	}
 	rsp.Data = result
 	rsp.Message = common.BcsSuccessStr
 	rsp.Code = common.BcsSuccess
+	prom.ReportAPIRequestMetric("GetNamespaceInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
 
@@ -132,17 +149,20 @@ func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatama
 	blog.Infof("Received GetWorkloadInfoList.Call request, cluster id: %s, namespace: %s, dimension: %s, "+
 		"type: %s, page: %s, size: %s",
 		req.GetClusterID(), req.GetNamespace(), req.GetDimension(), req.GetWorkloadType(), req.GetPage(), req.GetSize())
+	start := time.Now()
 	result, total, err := e.model.GetWorkloadInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload list info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
 		return nil
 	}
 	rsp.Data = result
 	rsp.Message = common.BcsSuccessStr
 	rsp.Code = common.BcsSuccess
 	rsp.Total = uint32(total)
+	prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
 
@@ -152,15 +172,18 @@ func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanage
 	blog.Infof("Received GetWorkloadInfo.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
 		"type: %s, name: %s",
 		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetWorkloadType(), req.GetWorkloadName())
+	start := time.Now()
 	result, err := e.model.GetWorkloadInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
 		return nil
 	}
 	rsp.Data = result
 	rsp.Message = common.BcsSuccessStr
 	rsp.Code = common.BcsSuccess
+	prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
 	return nil
 }

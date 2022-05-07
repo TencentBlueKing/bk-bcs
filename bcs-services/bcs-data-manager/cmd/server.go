@@ -459,9 +459,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 			EnableAckWait:     true,
 			AckWaitDuration:   time.Duration(30) * time.Second,
 			MaxInFlight:       0,
-			QueueArguments: map[string]interface{}{
-				"x-message-ttl": 1800000,
-			},
+			QueueArguments:    map[string]interface{}{"x-message-ttl": 1800000},
 		})
 	msgQueue, err := msgqueue.NewMsgQueue(commonOption, exchangeOption, natStreamingOption, publishOption, subscribeOption)
 	if err != nil {

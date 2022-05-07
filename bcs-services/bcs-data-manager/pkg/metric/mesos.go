@@ -16,6 +16,8 @@ import (
 	"fmt"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"time"
 )
 
 func (g *MetricGetter) getMesosWorkloadMemory(opts *common.JobCommonOpts,
@@ -128,13 +130,17 @@ func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *common.JobCommonOpts,
 func (g *MetricGetter) getMesosNodeCount(opts *common.JobCommonOpts,
 	clients *common.Clients) (int64, int64, error) {
 	var nodeCount, availableNode int64
-
+	start := time.Now()
 	nodes, err := clients.CmCli.Cli.ListNodesInCluster(clients.CmCli.Ctx, &cm.ListNodesInClusterRequest{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+			"GET", err, start)
 		return nodeCount, availableNode, fmt.Errorf("get cluster metrics error:%v", err)
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+		"GET", err, start)
 	nodeCount = int64(len(nodes.Data))
 	for key := range nodes.Data {
 		if nodes.Data[key].Status == "RUNNING" {
