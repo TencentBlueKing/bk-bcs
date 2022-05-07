@@ -40,5 +40,9 @@ class TestPodFormatter:
             'age',
             'createTime',
             'updateTime',
+            'namespace',
+            'hostIP',
+            'name',
+            'podIP',
         }
         assert result['images'] == ['k8s.gcr.io/echoserver:1.4']
