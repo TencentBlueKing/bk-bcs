@@ -17,7 +17,9 @@ package resource
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -31,5 +33,23 @@ func (h *Handler) GetResFormSchema(
 		return err
 	}
 	resp.Data, err = pbstruct.Map2pbStruct(schema)
+	return err
+}
+
+// GetFormSupportedAPIVersions ...
+func (h *Handler) GetFormSupportedAPIVersions(
+	_ context.Context, req *clusterRes.GetFormSupportedApiVersionsReq, resp *clusterRes.CommonListResp,
+) (err error) {
+	supportedAPIVersions, ok := renderer.FormRenderSupportedResAPIVersion[req.Kind]
+	if !ok {
+		return errorx.New(errcode.Unsupported, "资源类型 %s 不支持表单化", req.Kind)
+	}
+	versions := []map[string]interface{}{
+		{"label": "Preferred Version", "value": ""},
+	}
+	for _, ver := range supportedAPIVersions {
+		versions = append(versions, map[string]interface{}{"label": ver, "value": ver})
+	}
+	resp.Data, err = pbstruct.MapSlice2ListValue(versions)
 	return err
 }

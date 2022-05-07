@@ -1,0 +1,44 @@
+base_conf:
+  app_code: ""
+  app_secret: ""
+  time_zone: Asia/Shanghai
+  language_code: zh-hans
+  run_env: dev
+
+logging:
+  level: info
+  file:  ""
+  stderr: true
+
+bcs_conf:
+  host: ""
+  token: ""
+  jwt_public_key: ""
+  verify: false
+
+bcs_env_conf: []
+
+apiserver:
+  cluster_id: xxx
+
+cluster_resources:
+  - cluster_id: xxx
+    members:
+      - BCS-K8S-xx
+      - BCS-K8S-xx
+    master: xxx
+    kind: federated # 联邦集群
+
+  - cluster_id: BCS-xx
+    kind: isolated # 独立集群
+    member: xx
+
+  - cluster_id: BCS-xx
+    kind: shared # 共享集群
+    member: xx
+
+etcd:
+  endpoints: ""
+  ca: ""
+  cert: ""
+  key: ""

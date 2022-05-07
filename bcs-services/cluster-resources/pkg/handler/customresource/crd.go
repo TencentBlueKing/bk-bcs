@@ -26,6 +26,7 @@ import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -45,7 +46,17 @@ func (h *Handler) ListCRD(
 	if err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.GenListResRespData(ret, res.CRD)
+
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ret, res.CRD, req.Format)
+	if err != nil {
+		return err
+	}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(respData)
 	return err
 }
 
@@ -53,7 +64,7 @@ func (h *Handler) ListCRD(
 func (h *Handler) GetCRD(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) error {
-	clusterInfo, err := cluster.GetClusterInfo(req.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return err
 	}

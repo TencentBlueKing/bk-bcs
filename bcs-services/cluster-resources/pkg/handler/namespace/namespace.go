@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 
-// Package namespace 命名空间接口实现
 package namespace
 
 import (
@@ -23,6 +22,7 @@ import (
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -39,11 +39,21 @@ func (h *Handler) ListNS(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
 	ret, err := cli.NewNSCliByClusterID(ctx, req.ClusterID).List(
-		ctx, req.ProjectID, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.GenListResRespData(ret, res.NS)
+
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ret, res.NS, req.Format)
+	if err != nil {
+		return err
+	}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(respData)
 	return err
 }

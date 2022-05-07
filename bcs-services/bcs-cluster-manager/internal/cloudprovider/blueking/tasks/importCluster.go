@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -125,7 +126,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return err
 	}
 
-	// import cluster
+	// import cluster and update cluster status
 	masterNodes := make(map[string]*proto.Node)
 	nodes, err := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
 		Common: data.CmOption,
@@ -138,6 +139,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		masterNodes[node.InnerIP] = node
 	}
 	data.Cluster.Master = masterNodes
+	data.Cluster.Status = icommon.StatusRunning
 
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,

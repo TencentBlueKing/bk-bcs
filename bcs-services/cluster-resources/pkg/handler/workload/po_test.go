@@ -15,11 +15,11 @@
 package workload
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
@@ -30,9 +30,9 @@ import (
 
 func TestPod(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_pod")
+	manifest, _ := example.LoadDemoManifest("workload/simple_pod", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
 
 	// Create
@@ -46,6 +46,7 @@ func TestPod(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = h.ListPo(ctx, &podListReq, &listResp)

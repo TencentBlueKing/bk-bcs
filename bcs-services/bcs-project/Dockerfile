@@ -28,8 +28,10 @@ RUN apk --update --no-cache add bash ca-certificates
 
 WORKDIR /data/project
 
+RUN mkdir -p /data/project/logs /data/project/cert /data/project/swagger
+
 COPY --from=builder /go/src/bcs-project-service /usr/bin/bcs-project-service
 COPY --from=builder /go/src/etc /data/project/etc
-COPY --from=builder /go/src/swagger /data/project/
+COPY --from=builder /go/src/swagger /data/project/swagger
 
-RUN mkdir -p /data/project/logs
+CMD ["/usr/bin/bcs-project-service"]

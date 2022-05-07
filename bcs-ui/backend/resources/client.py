@@ -13,7 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Any, Dict
+from typing import Dict
 
 from django.conf import settings
 from kubernetes import client
@@ -53,7 +53,6 @@ class BcsKubeConfigurationService:
 
     def __init__(self, cluster: CtxCluster):
         self.cluster = cluster
-        self.bcs_api = self.cluster.comps.bcs_api
         self.env_querier = BcsAPIEnvironmentQuerier(cluster)
 
     def make_configuration(self) -> Configuration:
@@ -71,6 +70,6 @@ class BcsKubeConfigurationService:
     def get_client_credentials(self, env_name: str) -> Dict[str, str]:
         """获取访问集群 apiserver 所需的鉴权信息，包含 user_token、server_address_path 等"""
         return {
-            "host": f"{settings.BCS_API_SERVER_DOMAIN[env_name]}/clusters/{self.cluster.id}",
-            "user_token": settings.BCS_API_GW_AUTH_TOKEN,
+            "host": f"{settings.BCS_APIGW_DOMAIN[env_name]}/clusters/{self.cluster.id}",
+            "user_token": settings.BCS_APIGW_TOKEN,
         }

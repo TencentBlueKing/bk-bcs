@@ -210,8 +210,22 @@ func (mgr *WatcherManager) Run(stopCh <-chan struct{}) {
 		// run netservice watcher.
 		go mgr.netserviceWatcher.Run(stopCh)
 	}
-	// run synchronizer.
-	go mgr.synchronizer.Run(stopCh)
+
+	// synchronizer run once
+	var count = 0
+	for {
+		if count >= 5 {
+			panic("synchronizer run failed")
+		}
+		if err := mgr.synchronizer.RunOnce(); err != nil {
+			glog.Errorf("synchronizer sync failed: %v", err)
+			time.Sleep(5 * time.Minute)
+		} else {
+			glog.Infof("synchronizer sync done.")
+			break
+		}
+		count++
+	}
 }
 
 // StopCrdWatchers stop all crd watcher and writer handler

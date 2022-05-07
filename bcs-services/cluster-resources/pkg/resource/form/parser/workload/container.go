@@ -54,7 +54,7 @@ func parseContainer(raw map[string]interface{}) model.Container {
 func parseContainerBasic(raw map[string]interface{}, basic *model.ContainerBasic) {
 	basic.Name = raw["name"].(string)
 	basic.Image = raw["image"].(string)
-	basic.PullPolicy = mapx.Get(raw, "imagePullPolicy", "").(string)
+	basic.PullPolicy = mapx.GetStr(raw, "imagePullPolicy")
 }
 
 func parseContainerCommand(raw map[string]interface{}, command *model.ContainerCommand) {
@@ -137,11 +137,11 @@ func parseContainerHealthz(raw map[string]interface{}, healthz *model.ContainerH
 }
 
 func parseProbe(raw map[string]interface{}, probe *model.Probe) {
-	probe.PeriodSecs = mapx.Get(raw, "periodSeconds", int64(0)).(int64)
-	probe.InitialDelaySecs = mapx.Get(raw, "initialDelaySeconds", int64(0)).(int64)
-	probe.TimeoutSecs = mapx.Get(raw, "timeoutSeconds", int64(0)).(int64)
-	probe.SuccessThreshold = mapx.Get(raw, "successThreshold", int64(0)).(int64)
-	probe.FailureThreshold = mapx.Get(raw, "failureThreshold", int64(0)).(int64)
+	probe.PeriodSecs = mapx.GetInt64(raw, "periodSeconds")
+	probe.InitialDelaySecs = mapx.GetInt64(raw, "initialDelaySeconds")
+	probe.TimeoutSecs = mapx.GetInt64(raw, "timeoutSeconds")
+	probe.SuccessThreshold = mapx.GetInt64(raw, "successThreshold")
+	probe.FailureThreshold = mapx.GetInt64(raw, "failureThreshold")
 	if httpGet, ok := raw["httpGet"]; ok {
 		probe.Type = ProbeTypeHTTPGet
 		probe.Path = httpGet.(map[string]interface{})["path"].(string)
@@ -158,10 +158,10 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 }
 
 func parseContainerRes(raw map[string]interface{}, res *model.ContainerRes) {
-	res.Requests.CPU = util.ConvertCPUUnit(mapx.Get(raw, "resources.requests.cpu", "").(string))
-	res.Requests.Memory = util.ConvertMemoryUnit(mapx.Get(raw, "resources.requests.memory", "").(string))
-	res.Limits.CPU = util.ConvertCPUUnit(mapx.Get(raw, "resources.limits.cpu", "").(string))
-	res.Limits.Memory = util.ConvertMemoryUnit(mapx.Get(raw, "resources.limits.memory", "").(string))
+	res.Requests.CPU = util.ConvertCPUUnit(mapx.GetStr(raw, "resources.requests.cpu"))
+	res.Requests.Memory = util.ConvertMemoryUnit(mapx.GetStr(raw, "resources.requests.memory"))
+	res.Limits.CPU = util.ConvertCPUUnit(mapx.GetStr(raw, "resources.limits.cpu"))
+	res.Limits.Memory = util.ConvertMemoryUnit(mapx.GetStr(raw, "resources.limits.memory"))
 }
 
 func parseContainerSecurity(raw map[string]interface{}, security *model.SecurityCtx) {

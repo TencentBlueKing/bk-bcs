@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 func TestLoadResConf(t *testing.T) {
@@ -48,12 +49,22 @@ func TestLoadResRefs(t *testing.T) {
 }
 
 func TestLoadDemoManifest(t *testing.T) {
-	manifest, _ := LoadDemoManifest("workload/simple_deployment")
+	manifest, _ := LoadDemoManifest("workload/simple_deployment", "")
 	assert.Equal(t, "Deployment", manifest["kind"])
 
-	manifest, _ = LoadDemoManifest("storage/simple_persistent_volume")
+	manifest, _ = LoadDemoManifest("storage/simple_persistent_volume", "")
 	assert.Equal(t, "PersistentVolume", manifest["kind"])
 
-	_, err := LoadDemoManifest("custom_resource/custom_object")
+	// 指定命名空间不生效的
+	manifest, _ = LoadDemoManifest("storage/simple_storage_class", "custom-namespace")
+	_, err := mapx.GetItems(manifest, "metadata.namespace")
+	assert.NotNil(t, err)
+
+	// 指定命名空间生效的
+	manifest, _ = LoadDemoManifest("config/simple_secret", "custom-namespace")
+	namespace, _ := mapx.GetItems(manifest, "metadata.namespace")
+	assert.Equal(t, "custom-namespace", namespace)
+
+	_, err = LoadDemoManifest("custom_resource/custom_object", "")
 	assert.NotNil(t, err)
 }

@@ -37,8 +37,8 @@ func New() *Handler {
 func (h *Handler) ListSA(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).List(
-		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SA).List(
+		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
@@ -47,7 +47,7 @@ func (h *Handler) ListSA(
 func (h *Handler) GetSA(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SA).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
@@ -57,7 +57,7 @@ func (h *Handler) GetSA(
 func (h *Handler) CreateSA(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SA).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -67,7 +67,7 @@ func (h *Handler) CreateSA(
 func (h *Handler) UpdateSA(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SA).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -77,7 +77,7 @@ func (h *Handler) UpdateSA(
 func (h *Handler) DeleteSA(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SA).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", res.SA).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

@@ -17,6 +17,6 @@ from backend.resources.configs.configmap import ConfigMap
 
 
 class ConfigMapViewSet(NamespaceScopeViewSet):
-    """ ConfigMap 相关接口 """
+    """ConfigMap 相关接口"""
 
     resource_client = ConfigMap

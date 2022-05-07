@@ -48,6 +48,7 @@ type BlockUnit struct {
 	FailPolicy       string
 }
 
+// NewBlockUnit create block unit
 func NewBlockUnit(refer, op, failPolicy string) *BlockUnit {
 	return &BlockUnit{
 		ReferenceContent: refer,

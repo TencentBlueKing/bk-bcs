@@ -123,7 +123,7 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	return inputMsg, nil
 }
 
-// Read : executor 回调读取 web 端的输入
+// Read : executor 回调读取 web 端的输入, 主动断开链接逻辑
 func (r *RemoteStreamConn) Read(p []byte) (int, error) {
 	select {
 	case <-r.ctx.Done():
@@ -182,15 +182,24 @@ func (r *RemoteStreamConn) Run() error {
 	defer pingInterval.Stop()
 
 	guideMessages := helloMessage(r.bindMgr.PodCtx.Source)
-
-	PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+	notSendMsg := true
 
 	for {
 		select {
 		case <-r.ctx.Done():
 			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
-			return r.ctx.Err()
-		case output := <-r.outputMsgChan:
+			return nil
+		case output, ok := <-r.outputMsgChan:
+			if !ok {
+				logger.Infof("close %s RemoteStreamConn done by chan", r.bindMgr.PodCtx.PodName)
+				return nil
+			}
+			// 收到首个字节才发送 hello 信息
+			if notSendMsg {
+				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+				notSendMsg = false
+			}
+
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
 			}
@@ -204,6 +213,8 @@ func (r *RemoteStreamConn) Run() error {
 
 // WaitStreamDone: stream 流处理
 func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types.PodContext) error {
+	defer r.Close()
+
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.AdminClusterId)
 	k8sConfig := &rest.Config{
 		Host:        host,
@@ -248,12 +259,11 @@ func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types
 	})
 
 	if err != nil {
-		logger.Warnf("remote stream %s closed, err: %s", podCtx.PodName, err)
+		logger.Warnf("close %s WaitStreamDone err, %s", podCtx.PodName, err)
 		return err
 	}
 
-	logger.Info("remote stream %s closed normal", podCtx.PodName)
-
+	logger.Infof("close %s WaitStreamDone done", podCtx.PodName)
 	return nil
 }
 
@@ -276,7 +286,7 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error()),
 		time.Now().Add(time.Second*5), // 最迟 5 秒
 	); err != nil {
-		logger.Warnf("gracefully close websocket error, %s", err)
+		logger.Warnf("gracefully close websocket [%s] error: %s", errMsg, err)
 	}
 
 	// 如果没有建立双向连接前, 需要ReadMessage才能正常结束

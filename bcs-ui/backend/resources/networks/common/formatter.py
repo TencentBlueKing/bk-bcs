@@ -16,6 +16,6 @@ from backend.resources.utils.format import ResourceDefaultFormatter
 
 
 class NetworkFormatter(ResourceDefaultFormatter):
-    """ 网络类 资源通用格式化器 """
+    """网络类 资源通用格式化器"""
 
     pass

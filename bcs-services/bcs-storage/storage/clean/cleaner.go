@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -23,6 +24,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+const (
+	// softdelete field name
+	databaseFieldNameForDeletionFlag = "_isBcsObjectDeleted"
+	databaseEvent                    = "event"
+	databaseDynamic                  = "dynamic"
+	databaseAlarm                    = "alarm"
 )
 
 // DBCleaner db cleaner
@@ -115,6 +124,18 @@ func (dbc *DBCleaner) doTimeClean() error {
 	return nil
 }
 
+func (dbc *DBCleaner) doSoftDeleteClean() error {
+	deleteCounter, err := dbc.db.Table(dbc.tableName).Delete(context.TODO(),
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			databaseFieldNameForDeletionFlag: true,
+		}))
+	if err != nil {
+		return fmt.Errorf("delete entry with deletion flag true")
+	}
+	blog.Infof("cleaned %d entry of table %s", deleteCounter, dbc.tableName)
+	return nil
+}
+
 // Run run cleaner
 func (dbc *DBCleaner) Run(ctx context.Context) {
 	ticker := time.NewTicker(dbc.checkInterval)
@@ -122,11 +143,17 @@ func (dbc *DBCleaner) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			if err := dbc.doNumClean(); err != nil {
-				blog.Warnf("do number clean failed, err %s", err.Error())
-			}
-			if err := dbc.doTimeClean(); err != nil {
-				blog.Warnf("do time clean failed, err %s", err.Error())
+			if dbc.db.DataBase() == databaseDynamic {
+				if err := dbc.doSoftDeleteClean(); err != nil {
+					blog.Errorf("do soft delete clean failed, err %s", err.Error())
+				}
+			} else if dbc.db.DataBase() == databaseAlarm || strings.HasPrefix(dbc.db.DataBase(), databaseEvent) {
+				if err := dbc.doNumClean(); err != nil {
+					blog.Errorf("do num clean failed, err %s", err.Error())
+				}
+				if err := dbc.doTimeClean(); err != nil {
+					blog.Errorf("do time clean failed, err %s", err.Error())
+				}
 			}
 		case <-ctx.Done():
 

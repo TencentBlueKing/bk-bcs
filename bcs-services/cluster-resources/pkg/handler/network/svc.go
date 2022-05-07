@@ -28,8 +28,8 @@ import (
 func (h *Handler) ListSVC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).List(
-		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SVC).List(
+		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }
@@ -38,7 +38,7 @@ func (h *Handler) ListSVC(
 func (h *Handler) GetSVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SVC).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err
@@ -48,7 +48,7 @@ func (h *Handler) GetSVC(
 func (h *Handler) CreateSVC(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SVC).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -58,7 +58,7 @@ func (h *Handler) CreateSVC(
 func (h *Handler) UpdateSVC(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SVC).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -68,7 +68,7 @@ func (h *Handler) UpdateSVC(
 func (h *Handler) DeleteSVC(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ProjectID, req.ClusterID, "", res.SVC).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", res.SVC).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

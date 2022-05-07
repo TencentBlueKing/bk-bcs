@@ -1130,12 +1130,13 @@ export default {
          * @return {Promise} promise 对象
          */
         containerCpuUsage (context, params, config = {}) {
-            const { projectId, clusterId } = params
+            const { projectId, clusterId, pod_name } = params
             delete params.projectId
             delete params.clusterId
+            delete params.pod_name
 
             return http.post(
-                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/-/containers/cpu_usage/`,
+                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/${pod_name}/containers/cpu_usage/`,
                 params,
                 config
             )
@@ -1244,12 +1245,13 @@ export default {
          * @return {Promise} promise 对象
          */
         containerCpuLimit (context, params, config = {}) {
-            const { projectId, clusterId } = params
+            const { projectId, clusterId, pod_name } = params
             delete params.projectId
             delete params.clusterId
+            delete params.pod_name
 
             return http.post(
-                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/-/containers/cpu_limit/`,
+                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/${pod_name}/containers/cpu_limit/`,
                 params,
                 config
             )
@@ -1266,12 +1268,13 @@ export default {
          * @return {Promise} promise 对象
          */
         containerMemUsage (context, params, config = {}) {
-            const { projectId, clusterId } = params
+            const { projectId, clusterId, pod_name } = params
             delete params.projectId
             delete params.clusterId
+            delete params.pod_name
 
             return http.post(
-                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/-/containers/memory_usage/`,
+                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/${pod_name}/containers/memory_usage/`,
                 params,
                 config
             )
@@ -1288,12 +1291,13 @@ export default {
          * @return {Promise} promise 对象
          */
         containerMemLimit (context, params, config = {}) {
-            const { projectId, clusterId } = params
+            const { projectId, clusterId, pod_name } = params
             delete params.projectId
             delete params.clusterId
+            delete params.pod_name
 
             return http.post(
-                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/-/containers/memory_limit/`,
+                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/${pod_name}/containers/memory_limit/`,
                 params,
                 config
             )
@@ -1354,12 +1358,13 @@ export default {
          * @return {Promise} promise 对象
          */
         containerDiskWrite (context, params, config = {}) {
-            const { projectId, clusterId } = params
+            const { projectId, clusterId, pod_name } = params
             delete params.projectId
             delete params.clusterId
+            delete params.pod_name
 
             return http.post(
-                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/-/containers/disk_write/`,
+                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/${pod_name}/containers/disk_write/`,
                 params,
                 config
             )
@@ -1376,12 +1381,13 @@ export default {
          * @return {Promise} promise 对象
          */
         containerDiskRead (context, params, config = {}) {
-            const { projectId, clusterId } = params
+            const { projectId, clusterId, pod_name } = params
             delete params.projectId
             delete params.clusterId
+            delete params.pod_name
 
             return http.post(
-                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/-/containers/disk_read/`,
+                `${DEVOPS_BCS_API_URL}/api/metrics/projects/${projectId}/clusters/${clusterId}/pods/${pod_name}/containers/disk_read/`,
                 params,
                 config
             )
@@ -1565,6 +1571,13 @@ export default {
                 {},
                 config
             )
+        },
+
+        /**
+         * 获取版本日志列表
+         */
+        getVersionsLogList () {
+            return http.get(`${DEVOPS_BCS_API_URL}/change_log/`)
         }
     }
 }

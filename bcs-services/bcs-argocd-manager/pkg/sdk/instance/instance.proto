@@ -54,7 +54,7 @@ message CreateArgocdInstanceResponse {
     description : "返回错误信息"
   }];
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instance",
     description: "Argocd 实例的信息"
   }];
@@ -92,7 +92,7 @@ message UpdateArgocdInstanceResponse {
     description : "返回错误信息"
   }];
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "project",
     description: " Argocd 实例的信息"
   }];
@@ -164,7 +164,7 @@ message GetArgocdInstanceResponse {
     description : "返回错误信息"
   }];
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstance instance = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instance",
     description: "Argocd 实例的信息"
   }];
@@ -202,7 +202,7 @@ message ListArgocdInstancesResponse {
     description : "返回错误信息"
   }];
 
-  required github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstanceList instances = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  optional github.com.Tencent.bk_bcs.bcs_services.bcs_argocd_manager.pkg.apis.tkex.v1alpha1.ArgocdInstanceList instances = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instances",
     description: " Argocd 实例列表的信息"
   }];

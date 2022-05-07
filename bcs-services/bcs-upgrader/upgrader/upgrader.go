@@ -155,7 +155,8 @@ func (u *Upgrader) initSigalHandler() {
 
 func (u *Upgrader) initUpgradeHelper() {
 	opt := &HelperOpt{
-		DB: u.db,
+		DB:     u.db,
+		config: u.opt.HttpCliConfig,
 	}
 	u.upgradeHelper = NewUpgradeHelper(opt)
 }

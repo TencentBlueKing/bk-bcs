@@ -38,7 +38,7 @@ class SingleHelmAppUpdateProvider(BaseProvider):
             "app_id": {
                 "type": "number",
                 "minimum": 1,
-                "maximum": 10 ** 6,
+                "maximum": 10**6,
             },
         },
     }

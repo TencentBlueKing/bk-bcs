@@ -16,7 +16,7 @@ import re
 
 from django.utils.translation import ugettext_lazy as _
 
-from backend.components import prometheus as prom
+from backend.components import bcs_monitor as prom
 from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 # 没有指定时间范围的情况下，默认获取一小时的数据
@@ -33,7 +33,7 @@ METRICS_DEFAULT_CONTAINER_LIST = ['.*']
 
 
 class MetricDimension(str, StructuredEnum):
-    """ 指标维度 """
+    """指标维度"""
 
     CpuUsage = EnumField('cpu_usage', label=_('CPU 使用率'))
     MemoryUsage = EnumField('memory_usage', label=_('内存使用率'))

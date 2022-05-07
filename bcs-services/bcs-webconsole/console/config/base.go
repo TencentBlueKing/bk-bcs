@@ -58,9 +58,3 @@ func (c *BaseConf) InitManagers() error {
 	}
 	return nil
 }
-
-// IsManager
-func (c *BaseConf) IsManager(username string) bool {
-	_, ok := c.ManagerMap[username]
-	return ok
-}

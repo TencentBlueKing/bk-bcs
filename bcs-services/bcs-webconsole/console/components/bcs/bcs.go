@@ -110,12 +110,12 @@ type Token struct {
 }
 
 // CreateTempToken 创建临时 token
-func CreateTempToken(ctx context.Context, bcsConf *config.BCSConf, username string) (*Token, error) {
+func CreateTempToken(ctx context.Context, bcsConf *config.BCSConf, username, clusterId string) (*Token, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", bcsConf.Host)
 
 	// 管理员账号不做鉴权
 	var userType BCSTokenUserType
-	if config.G.Base.IsManager(username) {
+	if config.G.IsManager(username, clusterId) {
 		userType = AdminUser
 	} else {
 		userType = GeneralUser

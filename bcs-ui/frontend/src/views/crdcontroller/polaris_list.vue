@@ -122,7 +122,7 @@
                                     <p class="polaris-cell-item" :title="row.updated">{{ $t('更新时间') }}：{{row.updated || '--'}}</p>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('操作')" width="120">
+                            <bk-table-column :label="$t('操作')" min-width="140">
                                 <template slot-scope="{ row }">
                                     <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('更新')}}</a>
                                     <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('删除')}}</a>

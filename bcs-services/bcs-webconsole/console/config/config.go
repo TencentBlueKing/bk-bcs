@@ -31,7 +31,7 @@ type Configurations struct {
 	BCS         *BCSConf                   `yaml:"bcs_conf"`
 	BCSCC       *BCSCCConf                 `yaml:"bcs_cc_conf"`
 	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
-	Credentials []*Credential              `yaml:"credentials"`
+	Credentials map[string][]*Credential   `yaml:"-"`
 	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
 	Redis       *RedisConf                 `yaml:"redis"`
 	WebConsole  *WebConsoleConf            `yaml:"webconsole"`
@@ -75,6 +75,8 @@ func (c *Configurations) Init() error {
 	c.WebConsole = &WebConsoleConf{}
 	c.WebConsole.Init()
 
+	c.Credentials = map[string][]*Credential{}
+
 	c.Web = &WebConf{}
 	c.Web.Init()
 
@@ -94,7 +96,7 @@ func init() {
 	G.Init()
 }
 
-func (c *Configurations) ReadCred(content []byte) error {
+func (c *Configurations) ReadCred(name string, content []byte) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
@@ -103,21 +105,37 @@ func (c *Configurations) ReadCred(content []byte) error {
 	if err != nil {
 		return err
 	}
-	c.Credentials = cred
-	for _, v := range c.Credentials {
-		if err := v.InitMatcher(); err != nil {
+	c.Credentials[name] = cred
+	for _, v := range c.Credentials[name] {
+		if err := v.InitCred(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Configurations) ValidateCred(appCode, projectCode string) bool {
-	for _, cred := range c.Credentials {
-		if cred.Matches(appCode, projectCode) {
-			return true
+// ValidateCred 校验凭证是否合法
+func (c *Configurations) ValidateCred(credType CredentialType, credName string, scopeType ScopeType, scopeValue string) bool {
+	for _, creds := range c.Credentials {
+		for _, cred := range creds {
+			if cred.Matches(credType, credName, scopeType, scopeValue) {
+				return true
+			}
 		}
 	}
+	return false
+}
+
+// IsManager 校验固定的 manager 和 集群维度动态凭证
+func (c *Configurations) IsManager(username, clusterId string) bool {
+	if _, ok := c.Base.ManagerMap[username]; ok {
+		return true
+	}
+
+	if c.ValidateCred(CredentialManager, username, ScopeClusterId, clusterId) {
+		return true
+	}
+
 	return false
 }
 

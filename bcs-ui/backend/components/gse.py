@@ -22,7 +22,7 @@ from backend.utils.error_codes import error_codes
 
 logger = logging.getLogger(__name__)
 
-GSE_HOST = settings.BK_PAAS_INNER_HOST
+GSE_HOST = settings.COMPONENT_HOST
 BK_APP_CODE = settings.APP_ID
 BK_APP_SECRET = settings.APP_TOKEN
 PREFIX_PATH = "/api/c/compapi"

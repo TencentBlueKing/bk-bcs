@@ -15,12 +15,12 @@
 package namespace
 
 import (
-	"context"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -29,10 +29,11 @@ import (
 
 func TestNS(t *testing.T) {
 	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	// List
 	listReq, listResp := handler.GenResListReq(), clusterRes.CommonResp{}
-	err := h.ListNS(context.TODO(), &listReq, &listResp)
+	err := h.ListNS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
@@ -45,13 +46,15 @@ func TestNSInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
-	err = h.ListNS(context.TODO(), &listReq, &listResp)
+	err = h.ListNS(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	// 确保列出来的，都是共享集群中，属于项目的命名空间

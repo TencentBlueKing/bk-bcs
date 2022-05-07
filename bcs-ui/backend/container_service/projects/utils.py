@@ -14,45 +14,47 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
+from celery import shared_task
 from django.utils.translation import ugettext_lazy as _
 
-from backend.components import cc
-from backend.container_service.misc.depot.api import create_project_path_by_api
+from backend.components import bk_repo, cc
 from backend.container_service.projects.drivers import K8SDriver
 from backend.templatesets.legacy_apps.configuration.init_data import init_template
+from backend.utils import FancyDict
 from backend.utils.notify import notify_manager
 
 logger = logging.getLogger(__name__)
-
-
-def backend_create_depot_path(request, project_id, pre_cc_app_id):
-    try:
-        create_project_path_by_api(request.user.token.access_token, project_id, request.project.english_name)
-    except Exception as err:
-        logger.error("创建项目仓库路径失败，详细信息: %s" % err)
 
 
 def fetch_has_maintain_perm_apps(request):
     return cc.fetch_has_maintain_perm_apps(request.user.username)
 
 
+def create_bkrepo_project_and_depot(project: FancyDict, username: str):
+    """创建制品库项目及镜像仓库"""
+    client = bk_repo.BkRepoClient()
+    # 创建项目
+    try:
+        client.create_project(project.project_code, project.project_name, project.description)
+    except bk_repo.BkRepoCreateProjectError as e:
+        logger.error("创建制品库的项目失败: %s", e)
+    # 创建镜像仓库
+    try:
+        client.create_repo(f"{project.project_code}-docker", repo_type="DOCKER")
+    except bk_repo.BkRepoCreateRepoError as e:
+        logger.error("创建制品库的镜像仓库失败: %s", e)
+
+
 def update_bcs_service_for_project(request, project_id, data):
-    backend_create_depot_path(request, project_id, request.project.cc_app_id)
+    username = request.user.username
+    create_bkrepo_project_and_depot(request.project, username)
     logger.info(f'init_template [update] project_id: {project_id}')
     init_template.delay(
         project_id, request.project.english_name, request.user.token.access_token, request.user.username
     )
     # helm handler
     K8SDriver.backend_create_helm_info(project_id)
-    notify_manager.delay(
-        '{prefix_msg}[{username}]{project}{project_name}{suffix_msg}'.format(
-            prefix_msg=_("用户"),
-            username=request.user.username,
-            project=_("在项目"),
-            project_name=request.project.project_name,
-            suffix_msg=_("下启用了容器服务，请关注"),
-        )
-    )
+    notify_manager.delay(_("用户[{}]在项目{}下启用了容器服务，请关注").format(username, request.project.project_name))
 
 
 try:

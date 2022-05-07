@@ -6,7 +6,7 @@ BUILD_TIME=$(shell TZ=Asia/Shanghai date +%FT%T%z)
 
 TAG?=dev
 FLAGS=
-LDFLAGS?=-s
+LDFLAGS?=-X 'github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs.EncryptionKey=${bcs_encryption_key}'
 ENVVAR=CGO_ENABLED=0 GO111MODULE=on
 GOOS?=linux
 REGISTRY?=
@@ -22,7 +22,7 @@ else
   FOR_PROVIDER=
 endif
 ifdef LDFLAGS
-  LDFLAGS_FLAG=--ldflags "${LDFLAGS}"
+  LDFLAGS_FLAG=-ldflags "${LDFLAGS}"
 else
   LDFLAGS_FLAG=
 endif

@@ -25,6 +25,7 @@ mongo:
   minpoolsize: 1
   encrypted: false
 server:
+  useLocalIP: false
   address: "127.0.0.1"
   insecureAddress: "127.0.0.1"
   port: 8090
@@ -49,4 +50,20 @@ log:
   size: 100
   age: 7
   backups: 5
-
+jwt:
+  enable: true
+  publicKeyFile: "../../test/jwt/app.rsa.pub"
+  privateKeyFile: "../../test/jwt/app.rsa"
+iam:
+  appCode: ""
+  appSecret: ""
+  gatewayHost: ""
+  useGWHost: true
+  iamHost: ""
+  bkPaaSHost: ""
+  debug: false
+actionExemptPerm:
+  create: false
+  view: false
+  update: false
+  delete: false

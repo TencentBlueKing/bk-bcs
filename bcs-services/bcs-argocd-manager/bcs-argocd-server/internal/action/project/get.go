@@ -15,8 +15,13 @@ package project
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // NewGetArgocdProjectAction return a new GetArgocdProjectAction instance
@@ -37,5 +42,31 @@ type GetArgocdProjectAction struct {
 // Handle the get process
 func (action *GetArgocdProjectAction) Handle(ctx context.Context,
 	req *project.GetArgocdProjectRequest, resp *project.GetArgocdProjectResponse) error {
+	if req == nil || resp == nil {
+		blog.Errorf("action/project/get: get project failed, req or resp is empty")
+		return common.ErrArgocdServerReqOrRespEmpty.GenError()
+	}
+	action.ctx = ctx
+	action.req = req
+	action.resp = resp
+
+	name := req.GetName()
+	p, err := action.tkexIf.ArgocdProjects(common.ArgocdManagerNamespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		blog.Errorf("get project %s failed, err: %s", name, err.Error())
+		action.setResp(common.ErrActionFailed, "get argocd project failed", nil)
+		return nil
+	}
+	// TODO: check if the operator has permission in project
+	blog.Infof("get argocd project %s success", name)
+	action.setResp(common.ErrArgocdServerSuccess, "", p)
 	return nil
+}
+
+func (action *GetArgocdProjectAction) setResp(err common.ArgocdServerError, message string, project *v1alpha1.ArgocdProject) {
+	code := err.Int32()
+	msg := err.ErrorMessage(message)
+	action.resp.Code = &code
+	action.resp.Message = &msg
+	action.resp.Project = project
 }
