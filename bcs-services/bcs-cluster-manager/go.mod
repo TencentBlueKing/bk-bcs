@@ -17,6 +17,7 @@ replace (
 )
 
 require (
+    github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/RichardKnop/machinery/v2 v2.0.11
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220125124309-240e1e103087
