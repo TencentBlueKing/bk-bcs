@@ -22,8 +22,8 @@ import (
 func getUserManagerClient() UserManager {
 	return NewUserManagerClient(&Options{
 		Enable:          true,
-		GateWay:         "https://uat-bcs-api.open.woa.com/bcsapi/v4/",
-		Token:           "2scr2HzVIgtYBbkz9Iuel8imK2rRLb87",
+		GateWay:         "https://xxx/bcsapi/v4/",
+		Token:           "xxx",
 	})
 }
 
@@ -31,7 +31,7 @@ var cli = getUserManagerClient()
 
 func TestUserManagerClient_CreateUserToken(t *testing.T) {
 	token, err := cli.CreateUserToken(CreateTokenReq{
-		Username:   "evanlixin",
+		Username:   "xxx",
 		Expiration: -1,
 	})
 	if err != nil {
@@ -42,7 +42,7 @@ func TestUserManagerClient_CreateUserToken(t *testing.T) {
 }
 
 func TestUserManagerClient_GetUserToken(t *testing.T) {
-	token, err := cli.GetUserToken("evanlixin")
+	token, err := cli.GetUserToken("BCS-K8S-40025")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestUserManagerClient_GetUserToken(t *testing.T) {
 }
 
 func TestUserManagerClient_DeleteUserToken(t *testing.T) {
-	err := cli.DeleteUserToken("x4mm349UwuVxevevnX25GIMI8KZQdL1m")
+	err := cli.DeleteUserToken("xxx")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestUserManagerClient_DeleteUserToken(t *testing.T) {
 func TestUserManagerClient_GrantUserPermission(t *testing.T) {
 	err := cli.GrantUserPermission([]types.Permission{
 		types.Permission{
-			UserName:     "evanlixin",
+			UserName:     "xxx",
 			ResourceType: ResourceTypeClusterManager,
 			Resource:     "BCS-K8S-15202",
 			Role:         PermissionViewerRole,
@@ -78,7 +78,7 @@ func TestUserManagerClient_GrantUserPermission(t *testing.T) {
 func TestUserManagerClient_RevokeUserPermission(t *testing.T) {
 	err := cli.RevokeUserPermission([]types.Permission{
 		types.Permission{
-			UserName:     "evanlixin",
+			UserName:     "xxx",
 			ResourceType: ResourceTypeClusterManager,
 			Resource:     "BCS-K8S-15202",
 			Role:         PermissionViewerRole,

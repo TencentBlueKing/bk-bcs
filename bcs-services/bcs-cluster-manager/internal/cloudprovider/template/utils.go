@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -102,6 +103,15 @@ func getEnv(k, v string) string {
 	return fmt.Sprintf("%s=%s", k, v)
 }
 
+func getFileContent(file string) (string, error){
+	body, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
 // getBcsEnvs get bcs platform common parameters
 func getBcsEnvs(cluster *proto.Cluster) (string, error) {
 	cloud, err := cloudprovider.GetStorageModel().GetCloud(context.Background(), cluster.Provider)
@@ -112,13 +122,16 @@ func getBcsEnvs(cluster *proto.Cluster) (string, error) {
 	bcsEnvs := make([]string, 0)
 	opts := options.GetGlobalCMOptions()
 	if opts.ClientCa != "" {
-		bcsEnvs = append(bcsEnvs, getEnv(BCSCA.String(), base64.StdEncoding.EncodeToString([]byte(opts.ClientCa))))
+		clientCa, _ := getFileContent(opts.ClientCa)
+		bcsEnvs = append(bcsEnvs, getEnv(BCSCA.String(), base64.StdEncoding.EncodeToString([]byte(clientCa))))
 	}
 	if opts.ClientCert != "" {
-		bcsEnvs = append(bcsEnvs, getEnv(BCSClientCert.String(), base64.StdEncoding.EncodeToString([]byte(opts.ClientCert))))
+		clientCert, _ := getFileContent(opts.ClientCert)
+		bcsEnvs = append(bcsEnvs, getEnv(BCSCA.String(), base64.StdEncoding.EncodeToString([]byte(clientCert))))
 	}
 	if opts.ClientKey != "" {
-		bcsEnvs = append(bcsEnvs, getEnv(BCSClientKey.String(), base64.StdEncoding.EncodeToString([]byte(opts.ClientKey))))
+		clientKey, _ := getFileContent(opts.ClientKey)
+		bcsEnvs = append(bcsEnvs, getEnv(BCSClientKey.String(), base64.StdEncoding.EncodeToString([]byte(clientKey))))
 	}
 
 	// get cloud platform common config
