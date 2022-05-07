@@ -2780,5 +2780,6 @@ export default {
         "Copy example success"
     ],
     "导入方式": ['Import Type'],
-    'kubeconfig可用性测试': ['kubeconfig usability testing']
+    'kubeconfig可用性测试': ['kubeconfig usability testing'],
+    'IP已被 {name}{id} 占用': ['']
 }
