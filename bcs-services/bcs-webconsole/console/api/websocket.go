@@ -121,7 +121,8 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
 
-	func() {
+	// 封装一个独立函数, 统计耗时
+	if err := func() error {
 		start := time.Now()
 		atomic.AddInt64(&s.wsConnection, 1)
 
@@ -136,11 +137,11 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 			atomic.AddInt64(&s.wsConnection, -1)
 		}()
 
-		if err := eg.Wait(); err != nil {
-			manager.GracefulCloseWebSocket(ctx, ws, connected, err)
-			return
-		}
-	}()
+		return eg.Wait()
+	}(); err != nil {
+		manager.GracefulCloseWebSocket(ctx, ws, connected, err)
+		return
+	}
 
 	// 正常退出, 如使用 Exit 命令主动退出返回提示
 	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New("BCS Console 服务端连接断开，请重新登录"))
