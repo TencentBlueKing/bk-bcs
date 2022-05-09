@@ -80,23 +80,6 @@ var (
 		Name:      "ws_connection_total",
 		Help:      "The total number of websocket connection",
 	}, []string{"username", "tg_cluster_id", "tg_namespace", "tg_pod_name", "tg_container_name"})
-
-	// 断开ws连接
-	wsConnectionCloseTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "ws_connection_close_total",
-		Help:      "The total number of websocket disconnections",
-	}, []string{"namespace", "name"})
-
-	// ws连接延迟
-	wsConnectionDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "ws_connection_duration_seconds",
-		Help:      "Counter of websocket connection to bcs-webconsole.",
-		Buckets:   []float64{0.1, 1, 5, 10, 30, 60, 1800, 3600},
-	}, []string{"username", "tg_cluster_id", "tg_namespace", "tg_pod_name", "tg_container_name"})
 )
 
 func init() {
@@ -107,8 +90,17 @@ func init() {
 	prometheus.MustRegister(podCreateDuration)
 	prometheus.MustRegister(podDeleteDuration)
 	prometheus.MustRegister(wsConnectionTotal)
-	prometheus.MustRegister(wsConnectionCloseTotal)
-	prometheus.MustRegister(wsConnectionDuration)
+}
+
+// RegisterWsConnection
+func RegisterWsConnection(loader func() float64) {
+	wsConnectionOnlineCount := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      "ws_connection_online_count",
+		Help:      "The number of websocket current connections",
+	}, loader)
+	prometheus.MustRegister(wsConnectionOnlineCount)
 }
 
 func HandlerFunc() gin.HandlerFunc {
@@ -137,12 +129,13 @@ func CollectPodDeleteDurations(namespace, name, status, podName string, started 
 
 }
 
-func CollectWsConnection(username, targetClusterId, namespace, podName, containerName string, started time.Time) {
-	wsConnectionTotal.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Inc()
-	wsConnectionDuration.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Observe(time.Since(started).Seconds())
+// PodCollect Pod拉起耗时统计
+func PodCollect(namespace, podName, status string, duration time.Duration) {
+	podCreateTotal.WithLabelValues(namespace, podName, status).Inc()
+	podCreateDuration.WithLabelValues(namespace, podName, status).Observe(duration.Seconds())
 }
 
-// CollectCloseWs 断开ws连接
-func CollectCloseWs(namespace, name string) {
-	wsConnectionCloseTotal.WithLabelValues(namespace, name).Inc()
+// CollectWsConnection Websocket 长链接统计
+func CollectWsConnection(username, targetClusterId, namespace, podName, containerName string) {
+	wsConnectionTotal.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Inc()
 }

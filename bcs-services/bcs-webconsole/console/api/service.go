@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"sync/atomic"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
@@ -34,14 +35,21 @@ import (
 )
 
 type service struct {
-	opts *route.Options
+	opts         *route.Options
+	wsConnection int64
 }
 
 func NewRouteRegistrar(opts *route.Options) route.Registrar {
-	return service{opts: opts}
+	s := &service{opts: opts}
+
+	metrics.RegisterWsConnection(func() float64 {
+		return float64(atomic.LoadInt64(&s.wsConnection))
+	})
+
+	return s
 }
 
-func (s service) RegisterRoute(router gin.IRoutes) {
+func (s *service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
 	// 用户登入态鉴权, session鉴权

@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os/signal"
 	"strconv"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -87,10 +88,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	start := time.Now()
-	metrics.CollectWsConnection(podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName, podCtx.ContainerName, start)
-	defer metrics.CollectCloseWs(podCtx.Namespace, podCtx.PodName)
-
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
 	connected = true
@@ -125,9 +122,17 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	func() {
 		wsConnStart := time.Now()
+		atomic.AddInt64(&s.wsConnection, 1)
+
+		// 单独统计 ws metrics
+		metrics.CollectWsConnection(podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName, podCtx.ContainerName)
+
 		defer func() {
+			// 过滤掉 ws 长链接时间
 			wsConnDuration := time.Since(wsConnStart)
 			metrics.SetRequestIgnoreDuration(c, wsConnDuration)
+
+			atomic.AddInt64(&s.wsConnection, -1)
 		}()
 
 		if err := eg.Wait(); err != nil {

@@ -37,12 +37,6 @@ func SetRequestIgnoreDuration(c *gin.Context, duration time.Duration) {
 	c.Set(httpRequestDurationIgnoreKey, duration)
 }
 
-// PodCollect Pod拉起耗时统计
-func PodCollect(namespace, podName, status string, duration time.Duration) {
-	podCreateTotal.WithLabelValues(namespace, podName, status).Inc()
-	podCreateDuration.WithLabelValues(namespace, podName, status).Observe(duration.Seconds())
-}
-
 // getRequestDuration 获取请求耗时, 可以是统计整个函数时间，或者在函数内计算好(长链接场景)
 func getRequestDuration(c *gin.Context) time.Duration {
 	authCtx := route.MustGetAuthContext(c)
