@@ -40,6 +40,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/envx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/gorilla/mux"
@@ -95,6 +96,7 @@ func NewHelmManager(opt *options.HelmManagerOptions) *HelmManager {
 
 // Init helm manager server
 func (hm *HelmManager) Init() error {
+	hm.getServerAddress()
 	for _, f := range []func() error{
 		hm.initTLSConfig,
 		hm.initModel,
@@ -194,10 +196,15 @@ func (hm *HelmManager) initPlatform() error {
 
 // initReleaseHandler init a new release.Handler, for handling operations to helm-client
 func (hm *HelmManager) initReleaseHandler() error {
-	token, err := encrypt.DesDecryptFromBase([]byte(hm.opt.Release.Token))
-	if err != nil {
-		blog.Errorf("init release handler decode token failed: %s", err.Error())
-		return err
+	token := hm.opt.Release.Token
+	if token != "" && hm.opt.Release.Encrypted {
+		realToken, err := encrypt.DesDecryptFromBase([]byte(token))
+		if err != nil {
+			blog.Errorf("init release handler decode token failed: %s", err.Error())
+			return err
+		}
+
+		token = string(realToken)
 	}
 
 	template, err := os.ReadFile(hm.opt.Release.KubeConfigTemplate)
@@ -445,4 +452,13 @@ func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
 	}
 
 	return r, nil
+}
+
+func (hm *HelmManager) getServerAddress() error {
+	// 通过环境变量获取LocalIP，这里是用的是podIP
+	if hm.opt.UseLocalIP && envx.LocalIP != "" {
+		hm.opt.Address = envx.LocalIP
+		hm.opt.InsecureAddress = envx.LocalIP
+	}
+	return nil
 }

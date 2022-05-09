@@ -40,6 +40,7 @@ type SwaggerConfig struct {
 
 // ServerConfig option for server
 type ServerConfig struct {
+	UseLocalIP      bool   `json:"uselocalip"`
 	Address         string `json:"address"`
 	InsecureAddress string `json:"insecureaddress"`
 	Port            uint   `json:"port"`
@@ -86,6 +87,7 @@ type ReleaseConfig struct {
 	Binary             string `json:"binary"`
 	PatchDir           string `json:"patchdir"`
 	VarDir             string `json:"vardir"`
+	Encrypted          bool   `json:"encrypted"`
 }
 
 // HelmManagerOptions options of helm manager

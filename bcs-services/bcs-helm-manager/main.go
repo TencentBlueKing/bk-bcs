@@ -33,6 +33,7 @@ func parseFlags() {
 	flag.String("etcd_ca", "", "ca file for etcd")
 
 	// server config
+	flag.Bool("uselocalip", false, "use local ip")
 	flag.String("address", "127.0.0.1", "grpc server address")
 	flag.String("insecureaddress", "127.0.0.1", "insecure server address")
 	flag.Uint("port", 8081, "grpc server port")
@@ -63,6 +64,7 @@ func parseFlags() {
 	flag.Bool("repo_encrypted", false, "repo platform password encrypted")
 
 	// release config
+	flag.Bool("release_encrypted", false, "release password encrypted")
 	flag.String("release_api", "", "api address for release handler")
 	flag.String("release_token", "", "api token for release handler")
 	flag.String("release_template", "", "kube config template file for release handler")
