@@ -114,7 +114,13 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 			podReadyDuration := time.Since(start)
 			metrics.SetRequestIgnoreDuration(c, podReadyDuration)
 
-			metrics.CollectPodReady(podmanager.GetNamespace(), podmanager.GetPodName(clusterId, authCtx.Username), err, podReadyDuration)
+			metrics.CollectPodReady(
+				podmanager.GetAdminClusterId(clusterId),
+				podmanager.GetNamespace(),
+				podmanager.GetPodName(clusterId, authCtx.Username),
+				err,
+				podReadyDuration,
+			)
 		}()
 
 		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)

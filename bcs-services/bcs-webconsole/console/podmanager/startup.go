@@ -331,6 +331,14 @@ func (m *StartupManager) waitPodReady(namespace, name string) error {
 
 }
 
+// GetAdminClusterId
+func GetAdminClusterId(clusterId string) string {
+	if config.G.WebConsole.IsExternalMode() {
+		return config.G.WebConsole.AdminClusterId
+	}
+	return clusterId
+}
+
 // GetNamespace
 func GetNamespace() string {
 	// 正式环境使用 web-console 命名空间

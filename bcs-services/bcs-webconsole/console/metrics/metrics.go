@@ -45,7 +45,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "pod_ready_total",
 		Help:      "Counter of pod create/wait to bcs-webconsole.",
-	}, []string{"tg_namespace", "tg_pod_name", "status"})
+	}, []string{"tg_cluster_id", "tg_namespace", "tg_pod_name", "status"})
 
 	// 创建/等待 pod Ready 延迟指标
 	podReadyDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -54,7 +54,7 @@ var (
 		Name:      "pod_ready_duration_seconds",
 		Help:      "create/wait duration(seconds) of pod",
 		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
-	}, []string{"tg_namespace", "tg_pod_name", "status"})
+	}, []string{"tg_cluster_id", "tg_namespace", "tg_pod_name", "status"})
 
 	// ws连接
 	wsConnectionTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -63,14 +63,23 @@ var (
 		Name:      "ws_connection_total",
 		Help:      "The total number of websocket connection",
 	}, []string{"username", "tg_cluster_id", "tg_namespace", "tg_pod_name", "tg_container_name"})
+
+	// pod 存活数量
+	podCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      "pod_count",
+		Help:      "The number of current pod in namespace",
+	}, []string{"tg_cluster_id", "tg_namespace"})
 )
 
 func init() {
 	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpRequestDuration)
+	prometheus.MustRegister(wsConnectionTotal)
 	prometheus.MustRegister(podReadyTotal)
 	prometheus.MustRegister(podReadyDuration)
-	prometheus.MustRegister(wsConnectionTotal)
+	prometheus.MustRegister(podCount)
 }
 
 // RegisterWsConnection
@@ -82,18 +91,6 @@ func RegisterWsConnection(loader func() float64) {
 		Help:      "The number of websocket current connections",
 	}, loader)
 	prometheus.MustRegister(wsConnectionOnlineCount)
-}
-
-// RegisterPodCount
-func RegisterPodCount(tgNamespace string, loader func() float64) {
-	podCount := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-		Namespace:   namespace,
-		Subsystem:   subsystem,
-		Name:        "pod_count",
-		Help:        "The number of current pod in namespace",
-		ConstLabels: prometheus.Labels{"tg_namespace": tgNamespace},
-	}, loader)
-	prometheus.MustRegister(podCount)
 }
 
 // PromMetricHandler prometheus handler 转换为 Gin Handler
@@ -111,10 +108,15 @@ func collectHTTPRequestMetric(handler, method, status, code string, duration tim
 	httpRequestDuration.WithLabelValues(handler, method, status, code).Observe(duration.Seconds())
 }
 
+// CollectWsConnection Websocket 长链接统计
+func CollectWsConnection(username, targetClusterId, namespace, podName, containerName string) {
+	wsConnectionTotal.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Inc()
+}
+
 // CollectPodReady Pod 拉起耗时统计
-func CollectPodReady(namespace, podName string, err error, duration time.Duration) {
-	podReadyTotal.WithLabelValues(namespace, podName, makePodStatus(err)).Inc()
-	podReadyDuration.WithLabelValues(namespace, podName, makePodStatus(err)).Observe(duration.Seconds())
+func CollectPodReady(clusterId, namespace, podName string, err error, duration time.Duration) {
+	podReadyTotal.WithLabelValues(clusterId, namespace, podName, makePodStatus(err)).Inc()
+	podReadyDuration.WithLabelValues(clusterId, namespace, podName, makePodStatus(err)).Observe(duration.Seconds())
 }
 
 // makePodStatus Pod 状态
@@ -125,7 +127,7 @@ func makePodStatus(err error) string {
 	return SucStatus
 }
 
-// CollectWsConnection Websocket 长链接统计
-func CollectWsConnection(username, targetClusterId, namespace, podName, containerName string) {
-	wsConnectionTotal.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Inc()
+// CollectPodCount
+func CollectPodCount(clusterId, namespace string, count float64) {
+	podCount.WithLabelValues(clusterId, namespace).Set(count)
 }

@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync/atomic"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
@@ -39,7 +38,6 @@ import (
 type CleanUpManager struct {
 	ctx         context.Context
 	redisClient *redis.Client
-	podCount    int64 // Pod存活数量
 }
 
 func NewCleanUpManager(ctx context.Context) *CleanUpManager {
@@ -49,10 +47,6 @@ func NewCleanUpManager(ctx context.Context) *CleanUpManager {
 		ctx:         ctx,
 		redisClient: redisClient,
 	}
-
-	metrics.RegisterPodCount(GetNamespace(), func() float64 {
-		return float64(atomic.LoadInt64(&mgr.podCount))
-	})
 
 	return mgr
 }
@@ -150,7 +144,8 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 	if err != nil {
 		return err
 	}
-	atomic.StoreInt64(&p.podCount, int64(len(podList.Items)))
+
+	metrics.CollectPodCount(clusterId, namespace, float64(len(podList.Items)))
 
 	// 过期时间
 	now := time.Now()
