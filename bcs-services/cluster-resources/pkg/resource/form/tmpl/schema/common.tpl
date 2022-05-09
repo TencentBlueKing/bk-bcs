@@ -17,10 +17,11 @@ metadata:
         name: select
         props:
           clearable: false
+          searchable: true
           remoteConfig:
             params:
-              cluster_id: xxxx
-            url: "{{`{{`}} 'http://www.bcs.com/api/configuration/' + $context.projectId + '/namespace/' {{`}}`}}"
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces` {{`}}`}}"
       ui:reactions:
         - lifetime: init
           then:

@@ -6,17 +6,22 @@ podAffinity:
     type: object
     properties:
       namespaces:
-        description: TODO 多选
         title: 命名空间
         type: array
         ui:component:
           name: select
           props:
-            datasource:
-              - label: TODO
-                value: TODO Get Namespace Data
-              - label: TODO1
-                value: TODO1 Get Namespace Data
+            clearable: false
+            searchable: true
+            remoteConfig:
+              params:
+                format: selectItems
+              url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces` {{`}}`}}"
+        ui:reactions:
+          - lifetime: init
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
       priority:
         title: 优先级
         type: string

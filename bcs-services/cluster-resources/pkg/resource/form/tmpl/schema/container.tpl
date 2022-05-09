@@ -11,6 +11,9 @@ containerGroup:
       border: true
       showTitle: true
       type: card
+  ui:order:
+    - initContainers
+    - containers
 {{- end }}
 
 {{- define "container.initContainers" }}
@@ -31,6 +34,14 @@ initContainers:
       name: tab
       style:
         background: '#fff'
+    ui:order:
+      - basic
+      - command
+      - service
+      - envs
+      - resource
+      - security
+      - mount
   ui:group:
     props:
       showTitle: false
@@ -55,6 +66,15 @@ containers:
       name: tab
       style:
         background: '#fff'
+    ui:order:
+      - basic
+      - command
+      - service
+      - envs
+      - healthz
+      - resource
+      - security
+      - mount
   ui:group:
     props:
       showTitle: false
@@ -195,6 +215,23 @@ envs:
                     value: configMap
                   - label: Secret
                     value: secret
+            ui:reactions:
+              - target: "{{`{{`}} $widgetNode?.getSibling('source')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'keyValue' || $self.value === 'podField' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'configMap' || $self.value === 'secret' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
           name:
             title: 内容（Name/Prefix）
             type: string
@@ -338,9 +375,9 @@ resource:
 
 {{- define "container.security" }}
 security:
+  title: 安全
+  type: object
   properties:
-    title: 安全
-    type: object
     privileged:
       title: 特权模式
       type: boolean

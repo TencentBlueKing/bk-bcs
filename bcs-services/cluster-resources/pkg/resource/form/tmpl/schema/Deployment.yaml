@@ -19,5 +19,13 @@ properties:
         border: true
         showTitle: true
         type: card
+    ui:order:
+      - replicas
+      - nodeSelect
+      - affinity
+      - toleration
+      - networking
+      - security
+      - other
   {{- include "workload.volume" . | indent 2 }}
   {{- include "container.containerGroup" . | indent 2 }}

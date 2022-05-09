@@ -79,9 +79,16 @@ nodeSelect:
         name: select
         props:
           clearable: false
-          datasource:
-            - label: TODO
-              value: TODO Get Node Data
+          searchable: true
+          remoteConfig:
+            params:
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/nodes` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
     selector:
       title: 调度规则
       type: array
@@ -127,6 +134,10 @@ nodeSelect:
             state:
               visible: false
           target: spec.nodeSelect.selector
+  ui:order:
+    - type
+    - selector
+    - nodeName
 {{- end }}
 
 {{- define "workload.affinity" }}
@@ -368,4 +379,11 @@ volume:
       border: true
       showTitle: true
       type: card
+  ui:order:
+    - pvc
+    - hostPath
+    - configMap
+    - secret
+    - emptyDir
+    - nfs
 {{- end }}

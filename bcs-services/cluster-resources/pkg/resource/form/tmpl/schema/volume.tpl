@@ -14,10 +14,21 @@ pvc:
         ui:component:
           name: select
           props:
-            clearable: true
-            datasource:
-              - label: TODO
-                value: TODO Get PVC Data
+            clearable: false
+            searchable: true
+            remoteConfig:
+              params:
+                format: selectItems
+              url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/storages/persistent_volume_claims` {{`}}`}}"
+        ui:reactions:
+          - lifetime: init
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
+          - source: "metadata.namespace"
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
       readOnly:
         title: 只读
         type: boolean
@@ -91,9 +102,20 @@ configMap:
           name: select
           props:
             clearable: false
-            datasource:
-              - label: TODO
-                value: TODO Get CM Data
+            searchable: true
+            remoteConfig:
+              params:
+                format: selectItems
+              url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/configs/configmaps` {{`}}`}}"
+        ui:reactions:
+          - lifetime: init
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
+          - source: "metadata.namespace"
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
       items:
         title: Items
         type: array
@@ -140,9 +162,20 @@ secret:
           name: select
           props:
             clearable: false
-            datasource:
-              - label: TODO
-                value: TODO Get Secret Data
+            searchable: true
+            remoteConfig:
+              params:
+                format: selectItems
+              url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/configs/secrets` {{`}}`}}"
+        ui:reactions:
+          - lifetime: init
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
+          - source: "metadata.namespace"
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
       items:
         title: Items
         type: array

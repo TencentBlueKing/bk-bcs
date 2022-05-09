@@ -54,7 +54,7 @@
             - [ "name", "path", "type", "." ]
           prop: hostPath
           container:
-            grid-template-columns: "1fr 1fr 60px auto"
+            grid-template-columns: "1fr 1fr 150px auto"
       - - group:
             - [ "name", "defaultMode", "cmName" ]
             - [ "items" ]
