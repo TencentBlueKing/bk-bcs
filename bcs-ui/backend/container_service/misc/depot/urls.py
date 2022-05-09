@@ -18,18 +18,28 @@ from . import views
 
 urlpatterns = [
     # 镜像库
-    url(r'^api/depot/images/public/$', views.PublicImages.as_view()),
+    url(r'^api/depot/images/public/$', views.SharedRepoImagesViewSet.as_view({"get": "get"})),
     # 项目镜像
-    url(r'^api/depot/images/project/(?P<project_id>\w{32})/$', views.ProjectImage.as_view(), name='project_images'),
+    url(
+        r'^api/depot/images/project/(?P<project_id>\w{32})/$',
+        views.ProjectImagesViewSet.as_view({"get": "get"}),
+        name='project_images',
+    ),
     # 镜像库 + 项目镜像 : 提供给模板配置页面使用
     url(
-        r'^api/depot/available/images/(?P<project_id>\w{32})/$', views.AvailableImage.as_view(), name='available_image'
+        r'^api/depot/available/images/(?P<project_id>\w{32})/$',
+        views.AvailableImagesViewSet.as_view({"get": "get"}),
+        name='available_image',
     ),
     # 根据 镜像标识（repo） 查询 tags
-    url(r'^api/depot/available/tags/(?P<project_id>\w{32})/$', views.AvailableTag.as_view(), name='available_tag'),
+    url(
+        r'^api/depot/available/tags/(?P<project_id>\w{32})/$',
+        views.AvailableTagsViewSet.as_view({"get": "get"}),
+        name='available_tag',
+    ),
     # 镜像详情API
     url(
         r'^api/depot/images/project/(?P<project_id>\w{32})/info/image/$',
-        views.ImagesInfo.as_view({'get': 'get_image_detail'}),
+        views.ImageDetailViewSet.as_view({'get': 'get'}),
     ),
 ]

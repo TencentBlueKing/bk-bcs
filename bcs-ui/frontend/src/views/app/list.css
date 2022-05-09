@@ -77,7 +77,7 @@
     }
 
     .right {
-        width: calc(100% - 380px);
+        width: calc(100% - 400px);
         &.mesos {
             width: calc(100% - 140px);
         }

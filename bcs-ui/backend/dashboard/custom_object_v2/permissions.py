@@ -21,7 +21,7 @@ from backend.utils.basic import getitems
 
 
 class AccessCustomObjectsPermission(BasePermission):
-    """ 检查是否可获取自定义资源 """
+    """检查是否可获取自定义资源"""
 
     message = '在该共享集群中，您没有查看或操作当前命名空间或该自定义资源的权限'
 

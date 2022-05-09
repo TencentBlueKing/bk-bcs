@@ -26,7 +26,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture(autouse=True)
 def use_dummy_settings_config(settings):
-    settings.DEVOPS_ARTIFACTORY_HOST = "http://harbor-api.service.consul"
+    settings.DEVOPS_ARTIFACTORY_HOST = "harbor-api.service.consul"
 
 
 class TestReleaseDataGenerator:

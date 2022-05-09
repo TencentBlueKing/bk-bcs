@@ -34,6 +34,8 @@ var (
 	)
 	// BCSApiGWAuthToken 网关 Auth Token（仅挂载环境变量模式使用，来源为 Secret）
 	BCSApiGWAuthToken = envx.Get("BCS_API_GW_AUTH_TOKEN", "")
+	// LocalIP 服务运行 Pod IP，容器化部署时候指定
+	LocalIP = envx.Get("LOCAL_IP", "")
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）

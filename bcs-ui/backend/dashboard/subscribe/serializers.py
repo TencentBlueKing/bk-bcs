@@ -33,7 +33,7 @@ class FetchResourceWatchResultSLZ(serializers.Serializer):
     namespace = serializers.CharField(label=_('命名空间'), max_length=64, required=False)
 
     def validate(self, attrs):
-        """ 若不是确定支持的资源类型（如自定义资源），则需要提供 apiVersion，以免需先查询 CRD """
+        """若不是确定支持的资源类型（如自定义资源），则需要提供 apiVersion，以免需先查询 CRD"""
         kind, namespace, crd_name = attrs['kind'], attrs.get('namespace'), attrs.get('crd_name')
         if is_cobj_kind(kind):
             if not (attrs.get('api_version') and crd_name):

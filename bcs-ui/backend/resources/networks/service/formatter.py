@@ -19,10 +19,10 @@ from backend.utils.basic import getitems
 
 
 class ServiceFormatter(NetworkFormatter):
-    """ Service 格式化 """
+    """Service 格式化"""
 
     def parse_external_ip(self, resource_dict: Dict) -> List:
-        """ 解析 Service external_ip """
+        """解析 Service external_ip"""
         external_ips = []
         for ingress in getitems(resource_dict, 'status.loadBalancer.ingress', []):
             if ingress.get('ip'):
@@ -32,7 +32,7 @@ class ServiceFormatter(NetworkFormatter):
         return external_ips
 
     def parse_ports(self, resource_dict: Dict) -> List:
-        """ 解析 Service ports """
+        """解析 Service ports"""
         origin_ports = getitems(resource_dict, 'spec.ports', [])
         # 若 nodePort 存在则需要展示，否则隐藏
         return [

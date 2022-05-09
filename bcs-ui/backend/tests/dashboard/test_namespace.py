@@ -21,15 +21,15 @@ pytestmark = pytest.mark.django_db
 
 
 class TestNamespace:
-    """ 资源视图 命名空间 相关API单元测试 """
+    """资源视图 命名空间 相关API单元测试"""
 
     def test_list(self, api_client, project_id, cluster_id):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/namespaces/')
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_ns(self, api_client, project_id, shared_cluster_ns_mgr):
-        """ 获取共享集群中项目拥有的命名空间 """
+        """获取共享集群中项目拥有的命名空间"""
         response = api_client.get(
             f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/namespaces/'
         )

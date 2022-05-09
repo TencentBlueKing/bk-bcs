@@ -28,7 +28,7 @@ import (
 func (h *Handler) ListSC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SC).List(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SC).List(
 		ctx, "", metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
@@ -38,7 +38,7 @@ func (h *Handler) ListSC(
 func (h *Handler) GetSC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SC).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SC).Get(
 		ctx, "", req.Name, req.Format, metav1.GetOptions{},
 	)
 	return err

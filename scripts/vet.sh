@@ -12,7 +12,8 @@ bk-bcs/bcs-services/bcs-webhook-server/pkg/client \
 bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client \
 bk-bcs/bcs-k8s/bcs-egress \
 bk-bcs/bcs-mesos/bcs-container-executor/mesos \
-bk-bcs/bmsf-configuration"
+bk-bcs/bmsf-configuration \
+bk-bcs/bcs-services/bcs-project"
 
 PACKAGES=$(go list ../...)
 for dir in $SKIP_DIR;do

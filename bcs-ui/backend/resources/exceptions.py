@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 
 
 class ResourceBaseError(Exception):
-    """ Resource 模块基础异常类，需在上层捕获后处理 """
+    """Resource 模块基础异常类，需在上层捕获后处理"""
 
     message: str = 'Resource Module Exception'
 
@@ -29,4 +29,4 @@ class ResourceBaseError(Exception):
 
 
 class DeleteResourceError(ResourceBaseError):
-    """ 删除资源异常 """
+    """删除资源异常"""

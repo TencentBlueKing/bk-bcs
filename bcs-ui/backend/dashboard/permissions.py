@@ -21,7 +21,7 @@ from backend.utils.basic import getitems
 
 
 class AccessNamespacePermission(BasePermission):
-    """ 对于普通集群不做检查，对于共享集群需要检查命名空间是否属于指定项目 """
+    """对于普通集群不做检查，对于共享集群需要检查命名空间是否属于指定项目"""
 
     message = '在该共享集群中，您没有权限查看或操作当前命名空间的资源'
 

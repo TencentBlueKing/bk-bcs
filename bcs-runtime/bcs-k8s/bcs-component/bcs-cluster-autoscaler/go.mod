@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler
 
-go 1.14
+go 1.17
 
 require (
 	bou.ke/monkey v1.0.2

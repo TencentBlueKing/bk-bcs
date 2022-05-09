@@ -26,7 +26,7 @@ from .formatter import CRDFormatter
 class CrdObj(ResourceObj):
     @property
     def additional_columns(self) -> List:
-        """ 获取 资源新增列 信息 """
+        """获取 资源新增列 信息"""
         manifest = self.data.to_dict()
         additional_columns = getitems(manifest, 'spec.additionalPrinterColumns', [])
         # 存在时间会统一处理，因此此处直接过滤掉

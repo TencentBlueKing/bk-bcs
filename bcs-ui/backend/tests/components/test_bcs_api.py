@@ -18,12 +18,12 @@ from requests_mock import ANY
 from backend.components.base import ComponentAuth
 from backend.components.bcs_api import BcsApiClient
 
-BCS_AUTH_TOKEN = 'example-auth-token'
+BCS_APIGW_TOKEN = 'example-auth-token'
 
 
 @pytest.fixture(autouse=True)
 def setup_token(settings):
-    settings.BCS_AUTH_TOKEN = BCS_AUTH_TOKEN
+    settings.BCS_APIGW_TOKEN = BCS_APIGW_TOKEN
 
 
 class TestBcsApiClient:
@@ -36,7 +36,7 @@ class TestBcsApiClient:
 
         req_history = requests_mock.request_history[0]
         # Assert token was in request headers and access_token was in query string
-        assert req_history.headers.get('Authorization') == BCS_AUTH_TOKEN
+        assert req_history.headers.get('Authorization') == f"Bearer {BCS_APIGW_TOKEN}"
         assert 'access_token=fake_token' in req_history.url
 
     def test_get_cluster_credentials(self, requests_mock):

@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 import os
+from typing import Optional
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -289,6 +290,24 @@ def with_code_wrapper(func):
     return func
 
 
+def make_bkmonitor_url(project: dict) -> str:
+    """蓝鲸监控跳转链接"""
+    if not project:
+        return ""
+
+    url = f"{getattr(settings,'BKMONITOR_HOST', '')}/?bizId={project['cc_app_id']}#/k8s"
+    return url
+
+
+def make_bklog_url(project: dict) -> str:
+    """蓝鲸日志平台跳转链接"""
+    if not project:
+        return ""
+
+    url = f"{getattr(settings, 'BKLOG_HOST', '')}/#/retrieve/?bizId={project['cc_app_id']}"
+    return url
+
+
 class VueTemplateView(APIView):
     """
     # TODO 重构优化逻辑
@@ -353,28 +372,38 @@ class VueTemplateView(APIView):
 
         return redirect_url
 
+    def get_project_kind(self, project: dict) -> str:
+        """获取项目类型"""
+        if not project:
+            return ""
+
+        # 未开启容器服务
+        if project['kind'] == 0:
+            return ""
+
+        # mesos
+        if project['kind'] != ProjectKindID:
+            return "mesos"
+
+        # 包含 k8s, tke
+        return "k8s"
+
     @xframe_options_exempt
     @method_decorator(login_required(redirect_field_name="c_url"))
-    def get(self, request, project_code: str):
+    def get(self, request, project_code: Optional[str] = None):
 
         # 缓存项目类型
         @cache.region.cache_on_arguments(expiration_time=60 * 60)
-        def cached_project_kind(project_code):
+        def cached_project_info(project_code):
             """缓存项目类型"""
             result = paas_cc.get_project(request.user.token.access_token, project_code)
             if result['code'] != 0:
-                return ""
+                return {}
 
-            # 未开启容器服务
-            if result['data']['kind'] == 0:
-                return ""
-            # mesos
-            if result['data']['kind'] != ProjectKindID:
-                return "mesos"
-            # 包含 k8s, tke
-            return "k8s"
+            return result['data']
 
-        kind = cached_project_kind(project_code)
+        project = cached_project_info(project_code)
+        kind = self.get_project_kind(project)
 
         if not self.is_orchestration_match(kind):
             return HttpResponseRedirect(redirect_to=self.make_redirect_url(project_code, kind))
@@ -386,6 +415,8 @@ class VueTemplateView(APIView):
             "DEVOPS_BCS_HOST": settings.DEVOPS_BCS_HOST,
             "DEVOPS_BCS_API_URL": settings.DEVOPS_BCS_API_URL,
             "DEVOPS_ARTIFACTORY_HOST": settings.DEVOPS_ARTIFACTORY_HOST,
+            "BKMONITOR_URL": make_bkmonitor_url(project),  # 蓝鲸监控跳转链接
+            "BKLOG_URL": make_bklog_url(project),  # 日志平台跳转链接
             "LOGIN_FULL": settings.LOGIN_FULL,
             "RUN_ENV": settings.RUN_ENV,
             # 去除末尾的 /, 前端约定
@@ -396,7 +427,7 @@ class VueTemplateView(APIView):
             "BK_CC_HOST": settings.BK_CC_HOST,
             "SITE_URL": settings.SITE_URL[:-1],
             "BK_IAM_APP_URL": settings.BK_IAM_APP_URL,
-            "SUPPORT_MESOS": str2bool(os.environ.get("BKAPP_SUPPORT_MESOS", "false")),
+            "SUPPORT_MESOS": str2bool(settings.SUPPORT_MESOS),
             "CONTAINER_ORCHESTRATION": "",  # 前端路由, 默认地址不变
             "BCS_API_HOST": settings.BCS_API_HOST,
         }

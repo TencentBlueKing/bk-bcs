@@ -250,7 +250,7 @@
                         <span class="bk-outline"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('未实例化过')}}</span>
                         <span class="bk-default"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('已实例化过')}}</span>
                     </div>
-                    <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList" v-if="!curClusterId || (curClusterId && item.cluster_id === curClusterId)">
+                    <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList" v-show="!curClusterId || (curClusterId && item.cluster_id === curClusterId)">
                         <div class="content-trigger" @click="triggerHandler(item, index)">
                             <div class="left-area" style="border-right: none;">
                                 <div class="label">
@@ -2158,7 +2158,7 @@
                     })
 
                     const resList = res.data
-                    const resCluster = resList.find(cluster => cluster.name === item.name)
+                    const resCluster = resList.find(cluster => cluster.cluster_id === item.cluster_id)
                     if (resCluster) {
                         const resNamespaces = resCluster.results
                         const itemNamespaces = item.results
@@ -2171,9 +2171,8 @@
                                 ns.isExist = inItemNamespaces.isExist
                             }
                         })
-                        const resClusterIndex = resList.findIndex(cluster => cluster.name === item.name)
-                        this.$set(this.candidateNamespaceList, resClusterIndex, Object.assign(resCluster, {
-                            isOpen: this.candidateNamespaceList[resClusterIndex].isOpen
+                        this.$set(this.candidateNamespaceList, index, Object.assign(resCluster, {
+                            isOpen: this.candidateNamespaceList[index].isOpen
                         }))
 
                         this.selectNamespaceInDialog(index, addedRes.data, 0)

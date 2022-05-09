@@ -126,22 +126,28 @@
                                             :style="{ width: !clusterOverviewMap[cluster.cluster_id] ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                                     </div>
                                 </div>
-                                <bk-button
-                                    class="add-node-btn"
-                                    v-authority="{
-                                        clickable: webAnnotations.perms[cluster.clusterID]
-                                            && webAnnotations.perms[cluster.clusterID].cluster_manage,
-                                        actionId: 'cluster_manage',
-                                        resourceName: cluster.clusterName,
-                                        disablePerms: true,
-                                        permCtx: {
-                                            project_id: curProject.project_id,
-                                            cluster_id: cluster.clusterID
-                                        }
-                                    }"
-                                    @click="goNodeInfo(cluster)">
-                                    <span>{{$t('添加节点')}}</span>
-                                </bk-button>
+                                <span v-bk-tooltips="{
+                                    disabled: cluster.clusterCategory !== 'importer',
+                                    content: $t('kubeconfig导入集群，节点管理功能不可用')
+                                }">
+                                    <bk-button
+                                        class="add-node-btn"
+                                        v-authority="{
+                                            clickable: webAnnotations.perms[cluster.clusterID]
+                                                && webAnnotations.perms[cluster.clusterID].cluster_manage,
+                                            actionId: 'cluster_manage',
+                                            resourceName: cluster.clusterName,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: curProject.project_id,
+                                                cluster_id: cluster.clusterID
+                                            }
+                                        }"
+                                        :disabled="cluster.clusterCategory === 'importer'"
+                                        @click="goNodeInfo(cluster)">
+                                        <span>{{$t('添加节点')}}</span>
+                                    </bk-button>
+                                </span>
                             </template>
                         </div>
                     </div>

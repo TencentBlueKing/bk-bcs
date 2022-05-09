@@ -49,8 +49,8 @@ func PermissionRequired() gin.HandlerFunc {
 
 		c.Set("auth_context", authCtx)
 
-		// 管理员不校验权限
-		if config.G.Base.IsManager(authCtx.Username) {
+		// 管理员不校验权限, 包含管理员凭证
+		if config.G.IsManager(authCtx.Username, authCtx.ClusterId) {
 			c.Next()
 			return
 		}
@@ -143,7 +143,7 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
-		if !config.G.ValidateCred(authCtx.BindAPIGW.App.AppCode, authCtx.ProjectCode) {
+		if !config.G.ValidateCred(config.CredentialAppCode, authCtx.BindAPIGW.App.AppCode, config.ScopeProjectCode, authCtx.ProjectCode) {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
 				Message:   fmt.Sprintf("app %s have no permission, %s, %s", authCtx.BindAPIGW.App.AppCode, authCtx.BindProject, authCtx.BindCluster),

@@ -33,3 +33,5 @@ RUN mkdir -p /data/project/logs /data/project/cert /data/project/swagger
 COPY --from=builder /go/src/bcs-project-service /usr/bin/bcs-project-service
 COPY --from=builder /go/src/etc /data/project/etc
 COPY --from=builder /go/src/swagger /data/project/swagger
+
+CMD ["/usr/bin/bcs-project-service"]

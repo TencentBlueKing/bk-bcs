@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-common
 
-go 1.14
+go 1.17
 
 replace (
 	github.com/Tencent/bk-bcs/bcs-common => ../bcs-common
@@ -14,7 +14,6 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/kubebkbcsv2 v0.0.0-20220330120237-0bbed74dcf6d
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/coreos/etcd v3.3.18+incompatible

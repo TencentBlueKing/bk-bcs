@@ -33,7 +33,7 @@ class PodStatusParser:
     tol_status: str = SimplePodStatus.PodUnknown.value
 
     def parse(self) -> str:
-        """ 获取 Pod 总状态 """
+        """获取 Pod 总状态"""
         # 1. 默认使用 Pod.Status.Phase
         self.tol_status = getitems(self.pod, 'status.phase')
         # 2. 若有具体的 Pod.Status.Reason 则使用
@@ -59,7 +59,7 @@ class PodStatusParser:
         return self.tol_status
 
     def _update_status_by_init_container_statuses(self):
-        """ 根据 pod.Status.InitContainerStatuses 更新 总状态 """
+        """根据 pod.Status.InitContainerStatuses 更新 总状态"""
         for idx, container in enumerate(getitems(self.pod, 'status.initContainerStatuses', [])):
             # 检查每个容器的 state.terminated.exitCode 判断是否初始化完成
             term_exit_code = getitems(container, 'state.terminated.exitCode')
@@ -87,7 +87,7 @@ class PodStatusParser:
             break
 
     def _has_pod_ready_condition(self, conditions: List[Dict]) -> bool:
-        """ 检查 pod condition Ready 状态 """
+        """检查 pod condition Ready 状态"""
         for c in conditions:
             if (
                 c.get('type') == PodConditionType.PodReady.value
@@ -97,7 +97,7 @@ class PodStatusParser:
         return False
 
     def _update_status_by_container_statuses(self):
-        """ 根据 pod.Status.ContainerStatuses 更新 总状态 """
+        """根据 pod.Status.ContainerStatuses 更新 总状态"""
         hasRunning = False
         for container in reversed(getitems(self.pod, 'status.containerStatuses', [])):
             waiting_reason = getitems(container, 'state.waiting.reason')

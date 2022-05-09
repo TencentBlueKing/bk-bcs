@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class HostQueryService:
-    """ 主机查询相关服务 """
+    """主机查询相关服务"""
 
     def __init__(
         self,
@@ -56,7 +56,7 @@ class HostQueryService:
         self.bk_supplier_account = bk_supplier_account
 
     def _fetch_count(self) -> int:
-        """ 查询指定条件下主机数量 """
+        """查询指定条件下主机数量"""
         resp_data = self.cc_client.list_biz_hosts(
             self.bk_biz_id,
             PageData(start=constants.DEFAULT_START_AT, limit=constants.LIMIT_FOR_COUNT),
@@ -104,7 +104,7 @@ class HostQueryService:
 
 
 class BizTopoQueryService:
-    """ 业务拓扑信息查询 """
+    """业务拓扑信息查询"""
 
     def __init__(self, username: str, bk_biz_id: int):
         """
@@ -163,7 +163,7 @@ class BizTopoQueryService:
 
 
 def get_has_perm_hosts(bk_biz_id: int, username: str) -> List:
-    """ 查询业务下有权限的主机 """
+    """查询业务下有权限的主机"""
     all_maintainers = get_app_maintainers(username, bk_biz_id)
     if username in all_maintainers:
         # 如果是业务运维，查询全量主机
@@ -173,6 +173,6 @@ def get_has_perm_hosts(bk_biz_id: int, username: str) -> List:
 
 
 def _get_hosts_by_operator(bk_biz_id: int, username: str) -> List:
-    """ 获取 指定用户 在业务下为 主备负责人 的机器 """
+    """获取 指定用户 在业务下为 主备负责人 的机器"""
     host_list = HostQueryService(username, bk_biz_id).fetch_all()
     return [h for h in host_list if username in [h.get('operator'), h.get('bk_bak_operator')]]

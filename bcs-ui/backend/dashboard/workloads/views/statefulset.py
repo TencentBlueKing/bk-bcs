@@ -17,6 +17,6 @@ from backend.resources.workloads.statefulset import StatefulSet
 
 
 class StatefulSetViewSet(NamespaceScopeViewSet):
-    """ StatefulSet 相关接口 """
+    """StatefulSet 相关接口"""
 
     resource_client = StatefulSet
