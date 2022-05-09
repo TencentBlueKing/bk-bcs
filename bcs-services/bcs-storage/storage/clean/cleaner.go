@@ -15,11 +15,14 @@ package clean
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // DBCleaner db cleaner
@@ -53,11 +56,13 @@ func (dbc *DBCleaner) WithMaxDuration(maxDuration time.Duration, timeTagName str
 }
 
 func (dbc *DBCleaner) doNumClean() error {
+	blog.Infof("table(%s) max entry num: %d", dbc.tableName, dbc.maxEntryNum)
 	if dbc.maxEntryNum != 0 {
 		total, err := dbc.db.Table(dbc.tableName).Find(operator.EmptyCondition).Count(context.TODO())
 		if err != nil {
 			return fmt.Errorf("count table %s failed, err %s", dbc.tableName, err.Error())
 		}
+		blog.Infof("table(%s) total entry num: %d", dbc.tableName, total)
 		if total > dbc.maxEntryNum {
 			var toDelete operator.M
 			if err := dbc.db.Table(dbc.tableName).Find(operator.EmptyCondition).
@@ -73,8 +78,12 @@ func (dbc *DBCleaner) doNumClean() error {
 			if !ok {
 				return fmt.Errorf("data %+v does not have time tag %s", toDelete, dbc.timeTagName)
 			}
-			timeEdge, asok := timeObj.(time.Time)
-			if !asok {
+			blog.Infof("timeTag %s type: %s", dbc.timeTagName, reflect.TypeOf(timeObj))
+			timeEdge := time.Time{}
+
+			if timeObjDT, asok := timeObj.(primitive.DateTime); asok {
+				timeEdge = timeObjDT.Time()
+			} else {
 				return fmt.Errorf("field %+v with time tag %s is not time.Time", timeObj, dbc.timeTagName)
 			}
 			deleteCounter, err := dbc.db.Table(dbc.tableName).Delete(context.TODO(),

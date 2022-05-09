@@ -42,7 +42,7 @@ class TestServiceMonitor:
 
     def test_list(self, api_client, sm_api_patch, patch_k8s_client):
         """ 测试获取列表接口 """
-        response = api_client.get(f'{self.common_prefix}/')
+        response = api_client.get(f'{self.common_prefix}/?with_perms=false')
         assert response.json()['code'] == 0
         assert set(response.json()['data'][0].keys()) == {
             'namespace_id',
@@ -53,11 +53,12 @@ class TestServiceMonitor:
             'spec',
             'cluster_name',
             'environment',
-            'permissions',
             'status',
             'namespace',
             'name',
             'instance_id',
+            'iam_ns_id',
+            'is_system',
         }
 
     def test_create(self, api_client, sm_api_patch):

@@ -51,6 +51,7 @@ const (
 // CreationType is the type of node creation
 type CreationType string
 
+// NewNodeGroupCache news node group cache
 func NewNodeGroupCache(getNodes GetNodes) *NodeGroupCache {
 	registry := &NodeGroupCache{
 		registeredGroups:       make([]*NodeGroup, 0),

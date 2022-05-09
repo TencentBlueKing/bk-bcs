@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
-	"sync"
 	"testing"
 	"time"
 
@@ -43,7 +42,6 @@ func TestNodeGroup_MaxSize(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -79,7 +77,6 @@ func TestNodeGroup_MaxSize(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -100,7 +97,6 @@ func TestNodeGroup_MinSize(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -135,8 +131,6 @@ func TestNodeGroup_MinSize(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
-				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
 			if got := group.MinSize(); got != tt.want {
@@ -169,7 +163,6 @@ func TestNodeGroup_TargetSize(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -210,7 +203,6 @@ func TestNodeGroup_TargetSize(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -265,7 +257,6 @@ func TestNodeGroup_IncreaseSize(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -369,7 +360,6 @@ func TestNodeGroup_IncreaseSize(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -398,7 +388,6 @@ func TestNodeGroup_buildNodeFromTemplate(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -469,7 +458,6 @@ func TestNodeGroup_buildNodeFromTemplate(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -586,7 +574,6 @@ func TestNodeGroup_DecreaseTargetSize(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -633,7 +620,6 @@ func TestNodeGroup_DecreaseTargetSize(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -662,7 +648,6 @@ func TestNodeGroup_Belongs(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -762,7 +747,6 @@ func TestNodeGroup_Belongs(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -846,7 +830,6 @@ func TestNodeGroup_DeleteNodes(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -924,7 +907,6 @@ func TestNodeGroup_DeleteNodes(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -1006,7 +988,6 @@ func TestNodeGroup_Nodes(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -1046,7 +1027,6 @@ func TestNodeGroup_Nodes(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -1119,7 +1099,6 @@ func TestNodeGroup_TemplateNodeInfo(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -1151,7 +1130,6 @@ func TestNodeGroup_TemplateNodeInfo(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -1177,7 +1155,6 @@ func TestNodeGroup_Id(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -1206,7 +1183,6 @@ func TestNodeGroup_Id(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -1227,7 +1203,6 @@ func TestNodeGroup_Debug(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -1257,7 +1232,6 @@ func TestNodeGroup_Debug(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}
@@ -1285,7 +1259,6 @@ func TestNodeGroup_GetNodeGroup(t *testing.T) {
 		maxSize      int
 		closedSize   int
 		soldout      bool
-		lk           sync.Mutex
 		nodeCache    map[string]string
 		client       clustermanager.NodePoolClientInterface
 	}
@@ -1316,7 +1289,6 @@ func TestNodeGroup_GetNodeGroup(t *testing.T) {
 				maxSize:      tt.fields.maxSize,
 				closedSize:   tt.fields.closedSize,
 				soldout:      tt.fields.soldout,
-				lk:           tt.fields.lk,
 				nodeCache:    tt.fields.nodeCache,
 				client:       tt.fields.client,
 			}

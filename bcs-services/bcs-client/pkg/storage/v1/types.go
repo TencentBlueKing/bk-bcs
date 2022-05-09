@@ -88,30 +88,60 @@ type DeploymentList []*DeploymentSet
 type IPPoolStaticList []*IPPoolStatic
 type IPPoolStaticDetailList []*IPPoolStaticDetail
 
-// sort by namespace
+// Len in list-sort for ApplicationList
 func (l ApplicationList) Len() int           { return len(l) }
+// Less in list-sort for ApplicationList
 func (l ApplicationList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+// Swap in list-sort for ApplicationList
 func (l ApplicationList) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+
+// Len in list-sort for ProcessList
 func (l ProcessList) Len() int               { return len(l) }
+// Less in list-sort for ProcessList
 func (l ProcessList) Less(i, j int) bool     { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+// Swap in list-sort for ProcessList
 func (l ProcessList) Swap(i, j int)          { l[i], l[j] = l[j], l[i] }
+
+// Len in list-sort for TaskGroupList
 func (l TaskGroupList) Len() int             { return len(l) }
+// Less in list-sort for TaskGroupList
 func (l TaskGroupList) Less(i, j int) bool   { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+// Swap in list-sort for TaskGroupList
 func (l TaskGroupList) Swap(i, j int)        { l[i], l[j] = l[j], l[i] }
+
+// Len in list-sort for ConfigMapList
 func (l ConfigMapList) Len() int             { return len(l) }
+// Less in list-sort for ConfigMapList
 func (l ConfigMapList) Less(i, j int) bool   { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+// Swap in list-sort for ConfigMapList
 func (l ConfigMapList) Swap(i, j int)        { l[i], l[j] = l[j], l[i] }
+
+// Len in list-sort for SecretList
 func (l SecretList) Len() int                { return len(l) }
+// Less in list-sort for SecretList
 func (l SecretList) Less(i, j int) bool      { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+// Swap in list-sort for SecretList
 func (l SecretList) Swap(i, j int)           { l[i], l[j] = l[j], l[i] }
+
+// Len in list-sort for ServiceList
 func (l ServiceList) Len() int               { return len(l) }
+// Less in list-sort for ServiceList
 func (l ServiceList) Less(i, j int) bool     { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+// Swap in list-sort for ServiceList
 func (l ServiceList) Swap(i, j int)          { l[i], l[j] = l[j], l[i] }
+
+// Len in list-sort for EndpointList
 func (l EndpointList) Len() int              { return len(l) }
+// Less in list-sort for EndpointList
 func (l EndpointList) Less(i, j int) bool    { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+// Swap in list-sort for EndpointList
 func (l EndpointList) Swap(i, j int)         { l[i], l[j] = l[j], l[i] }
+
+// Len in list-sort for DeploymentList
 func (l DeploymentList) Len() int            { return len(l) }
+// Less in list-sort for DeploymentList
 func (l DeploymentList) Less(i, j int) bool {
 	return l[i].Data.ObjectMeta.NameSpace > l[j].Data.ObjectMeta.NameSpace
 }
+// Swap in list-sort for DeploymentList
 func (l DeploymentList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }

@@ -3,12 +3,14 @@
         <div class="biz-side-title cluster-selector">
             <!-- 全部集群 -->
             <template v-if="!curCluster">
-                <img src="@/images/bcs2.svg" class="all-icon">
-                <span class="cluster-name-all">{{$t('全部集群')}}</span>
+                <span class="icon">{{ clusterType }}</span>
+                <span class="cluster-name-all">
+                    {{ $t('全部集群')}}
+                </span>
             </template>
             <!-- 单集群 -->
             <template v-else-if="curCluster.cluster_id && curCluster.name">
-                <span class="icon">{{ curCluster.name[0] }}</span>
+                <span :class="['icon', { shared: curCluster.is_shared }]">{{ clusterType }}</span>
                 <span>
                     <span class="cluster-name" :title="curCluster.name">{{ curCluster.name }}</span>
                     <br>
@@ -47,6 +49,8 @@
     import SideMenu from '@/components/menu/index.vue'
     import clusterSelector from '@/components/cluster-selector/index.vue'
     import menuConfig, { IMenuItem, ISpecialMenuItem } from '@/store/menu'
+    import { BCS_CLUSTER } from '@/common/constant'
+    import useGoHome from '@/common/use-gohome'
 
     export default defineComponent({
         name: 'SideNav',
@@ -61,36 +65,25 @@
                 const cluster = $store.state.cluster.curCluster
                 return cluster && Object.keys(cluster).length ? cluster : null
             })
+            const clusterType = computed(() => {
+                // eslint-disable-next-line camelcase
+                return curCluster.value?.is_shared ? $i18n.t('共享') : $i18n.t('专用')
+            })
 
             const isShowClusterSelector = ref(false)
             const handleShowClusterSelector = () => {
                 isShowClusterSelector.value = true
             }
+            const { goHome } = useGoHome()
             // 切换单集群
-            const handleChangeCluster = (cluster) => {
+            const handleChangeCluster = async (cluster) => {
                 localStorage.setItem('FEATURE_CLUSTER', 'done')
-                if (viewMode.value === 'dashboard') {
-                    $router.replace({
-                        name: 'dashboard',
-                        params: {
-                            clusterId: cluster.cluster_id
-                        }
-                    })
-                } else if (!cluster.cluster_id) {
-                    $router.replace({
-                        name: 'clusterMain',
-                        params: {
-                            clusterId: cluster.cluster_id
-                        }
-                    })
-                } else {
-                    $router.replace({
-                        name: 'clusterOverview',
-                        params: {
-                            clusterId: cluster.cluster_id
-                        }
-                    })
-                }
+                localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
+                $store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
+                $store.commit('updateCurClusterId', cluster.cluster_id)
+                $store.dispatch('getFeatureFlag')
+                goHome(ctx.root.$route)
             }
 
             // 视图类型
@@ -108,15 +101,12 @@
                 }
             ])
             // 视图切换
-            const handleChangeView = (item) => {
+            const handleChangeView = async (item) => {
                 if (viewMode.value === item.id) return
 
                 $store.commit('updateViewMode', item.id)
-                if (viewMode.value === 'dashboard') {
-                    $router.push({ name: 'dashboard' })
-                } else {
-                    $router.push({ name: 'clusterOverview' })
-                }
+                $store.dispatch('getFeatureFlag')
+                goHome(ctx.root.$route)
             }
 
             // 菜单列表
@@ -131,25 +121,47 @@
             const featureFlag = computed(() => {
                 return $store.getters.featureFlag || {}
             })
+            // 数组去重
+            const removeDuplicates = (data: (IMenuItem | ISpecialMenuItem)[]) => {
+                let slow = 0
+                for (let fast = 0; fast < data.length; fast++) {
+                    if (data[slow].id !== data[fast].id) {
+                        data[++slow] = data[fast]
+                    }
+                }
+                return data.slice(0, slow + 1)
+            }
             const menuConfigList = computed<IMenuItem[]>(() => {
-                return $store.state.menuList
+                return JSON.parse(JSON.stringify($store.state.menuList))
             })
             const menuList = computed(() => {
-                return menuConfigList.value.reduce<(IMenuItem | ISpecialMenuItem)[]>((pre, item) => {
+                const data = menuConfigList.value.reduce<(IMenuItem | ISpecialMenuItem)[]>((pre, item) => {
                     if (item.id && featureFlag.value[item.id]) {
+                        // todo 特殊处理公共集群下自定义资源的二级菜单
+                        // eslint-disable-next-line camelcase
+                        if (item.id === 'CUSTOM_RESOURCE' && curCluster.value?.is_shared) {
+                            item.children = item.children?.filter(child =>
+                                !['dashboardCRD', 'dashboardCustomObjects'].includes(child.id))
+                        }
+                        // eslint-disable-next-line camelcase
+                        if (item.id === 'WORKLOAD' && curCluster.value?.is_shared) {
+                            item.children = item.children?.filter(child => child.id !== 'dashboardWorkloadDaemonSets')
+                        }
                         pre.push(item)
                     } else if (!item.id) {
                         pre.push(item)
                     }
                     return pre
                 }, [])
+                return removeDuplicates(data)
             })
 
             const selected = computed(() => {
                 // 当前选择菜单在全局导航守卫中设置的
                 // eslint-disable-next-line camelcase
-                if ($store.state.curMenuId === 'OVERVIEW' && !curCluster.value?.cluster_id) { // 全部集群时预览界面是归属于集群菜单的
-                    return 'CLUSTER'
+                if ($store.state.curMenuId === 'CLUSTER' && curCluster.value?.cluster_id) {
+                    // 特殊：单集群时预览界面是归属于概览菜单下的
+                    return 'OVERVIEW'
                 }
                 return $store.state.curMenuId
             })
@@ -186,6 +198,7 @@
                 viewList,
                 menuList,
                 selected,
+                clusterType,
                 handleChangeCluster,
                 handleShowClusterSelector,
                 handleChangeView,

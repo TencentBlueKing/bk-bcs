@@ -41,30 +41,6 @@
              * @param {Object} namespace 当前 namespace 对象，只有命名空间试图才会有
              */
             async goInstanceDetail (instance, namespace) {
-                if (!instance.permissions.view) {
-                    const resourceList = [
-                        {
-                            policy_code: 'view',
-                            resource_code: instance.namespace_id,
-                            resource_name: instance.namespace,
-                            resource_type: 'namespace'
-                        }
-                    ]
-                    if (instance.from_platform) {
-                        resourceList.push({
-                            policy_code: 'view',
-                            resource_code: instance.muster_id,
-                            resource_name: instance.muster_name,
-                            resource_type: 'templates'
-                        })
-                    }
-                    await this.$store.dispatch('getMultiResourcePermissions', {
-                        project_id: this.projectId,
-                        operator: 'and',
-                        resource_list: resourceList
-                    })
-                }
-
                 const params = {
                     projectId: this.projectId,
                     projectCode: this.projectCode,

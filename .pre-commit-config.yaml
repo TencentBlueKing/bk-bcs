@@ -1,4 +1,4 @@
-files: ^bcs-ui/
+files: ^(bcs-ui|bcs-services)/
 fail_fast: true
 repos:
 - repo: https://github.com/timothycrosley/isort
@@ -24,10 +24,17 @@ repos:
 - repo: https://gitlab.com/pycqa/flake8
   rev: 3.8.0
   hooks:
-  -   id: flake8
-      args: [--config=bcs-ui/.flake8]
-      exclude: >
-        (?x)^(
-            .*/migrations/.*
-            | bcs-ui/backend/packages/.*
-        )$
+  - id: flake8
+    args: [--config=bcs-ui/.flake8]
+    exclude: >
+      (?x)^(
+          .*/migrations/.*
+          | bcs-ui/backend/packages/.*
+      )$
+- repo: https://github.com/dnephin/pre-commit-golang
+  rev: v0.4.0
+  hooks:
+  - id: go-fmt
+    files: "^bcs-services/cluster-resources/pkg/"
+  - id: go-lint
+    files: "^bcs-services/cluster-resources/pkg/"

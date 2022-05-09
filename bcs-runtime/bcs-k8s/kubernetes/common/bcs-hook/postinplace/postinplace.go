@@ -14,6 +14,7 @@
 package postinplace
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -221,10 +222,12 @@ func (p *PostInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj run
 	arguments = append(arguments, podArgs...)
 
 	for i, value := range pod.Spec.Containers {
+		tmp := new(string)
+		*tmp = value.Name
 		imageArgs := []hookv1alpha1.Argument{
 			{
 				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
-				Value: &value.Name,
+				Value: tmp,
 			},
 		}
 		arguments = append(arguments, imageArgs...)
@@ -337,7 +340,7 @@ func (p *PostInplaceControl) deleteHookRun(hr *hookv1alpha1.HookRun) error {
 	if hr.DeletionTimestamp != nil {
 		return nil
 	}
-	err := p.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(hr.Name, nil)
+	err := p.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Delete(context.TODO(), hr.Name, metav1.DeleteOptions{})
 	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}

@@ -31,21 +31,29 @@ class GenericMixin:
         request_data.update(**kwargs)
         return request_data
 
-    def params_validate(self, serializer, init_params: Optional[Dict] = None, **kwargs):
+    def params_validate(
+        self, serializer, context: Optional[Dict] = None, init_params: Optional[Dict] = None, **kwargs
+    ):
         """
         检查参数是够符合序列化器定义的通用逻辑
 
         :param serializer: 序列化器
-        :param init_params: 初始参数
+        :param context: 上下文数据，可在 View 层传入给 SLZ 使用
+        :param init_params: 初始参数，替换掉 request.query_params / request.data
         :param kwargs: 可变参数
         :return: 校验的结果
         """
         if init_params is None:
             # 获取 Django request 对象
             _request = self.request
-            if _request.method in ['GET']:
+            if _request.method in ['GET', 'DELETE']:
                 req_data = copy.deepcopy(_request.query_params)
             else:
+                req_data = _request.data.copy()
+
+            # NOTE 兼容措施，确保未切换的老接口 Delete 请求还可以从 request.body 中获取请求参数
+            # 新接口 Delete 请求参数应从 query_params 中获取，复杂参数如批量删除的 list，该用 Post 请求
+            if _request.method == 'DELETE' and not req_data:
                 req_data = _request.data.copy()
         else:
             req_data = init_params
@@ -54,7 +62,8 @@ class GenericMixin:
             req_data.update(kwargs)
 
         # 参数校验，如不符合直接抛出异常
-        slz = serializer(data=req_data)
+        context = context or {}
+        slz = serializer(data=req_data, context=context)
         slz.is_valid(raise_exception=True)
         return slz.validated_data
 

@@ -206,7 +206,6 @@
                         // 集群ID + resourceName + 命名空间确定唯一
                         const curSelectedService = this.serviceList.find(
                             item => (item.resourceName === this.editParams.service_name)
-                                && (item.clusterId === this.editParams.cluster_id)
                                 && (item.namespace === this.editParams.namespace)
                         )
                         this.curSelectedService = Object.assign({}, curSelectedService)

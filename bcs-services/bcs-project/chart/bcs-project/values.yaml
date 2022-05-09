@@ -1,0 +1,176 @@
+# Default values for ..
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: "mirrors.tencent.com/bellke-test/bcs-project"
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-project"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+hostNetwork: false
+
+container:
+  ports:
+    - name: grpc
+      containerPort: 8090
+      protocol: TCP
+    - name: http
+      containerPort: 8091
+      protocol: TCP
+    - name: metric
+      containerPort: 8092
+      protocol: TCP
+
+service:
+  enable: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8091
+      targetPort: 8091
+      protocol: TCP
+    - name: metric
+      port: 8092
+      targetPort: 8092
+      protocol: TCP
+
+ingress:
+  enabled: true
+  className: ""
+  rules:
+    - host: project.bkbcs.tencent.com
+      paths:
+        - path: /metrics
+          portNumber: 8092
+        - path: /
+          portNumber: 8091
+  tls: []
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2048Mi
+  requests:
+    cpu: 500m
+    memory: 1024Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+livenessProbe:
+  enabled: true
+  conf:
+    httpGet:
+      path: /bcsproject/v1/ping
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 10
+
+readinessProbe:
+  enabled: true
+  conf:
+    httpGet:
+      path: /bcsproject/v1/healthz
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 10
+
+# 服务配置
+svcConf:
+  # etcd 配置
+  etcd:
+    endpoints: "127.0.0.1:2379"
+    cert: "/data/project/cert/etcd/etcd.pem"
+    key: "/data/project/cert/etcd/etcd-key.pem"
+    ca: "/data/project/cert/etcd/etcd-ca.pem"
+  # mongo 配置
+  mongo:
+    address: "127.0.0.1:27017"
+    connecttimeout: 5
+    database: "bcsproject_project"
+    username: "admin"
+    password: 123456
+    maxpoolsize: 10
+    minpoolsize: 1
+    encrypted: false
+  # server
+  server:
+    address: "127.0.0.1"
+    insecureAddress: "127.0.0.1"
+    port: 8090
+    httpPort: 8091
+    metricPort: 8092
+    cert: ""
+    certPwd: ""
+    key: ""
+    ca: ""
+  # client
+  client:
+    cert: ""
+    certPwd: ""
+    key: ""
+    ca: ""
+  # swagger 配置
+  swagger:
+    enable: false
+    dir: "."
+  # 日志记录
+  log:
+    level: "info"
+    flushInterval: 5
+    path: "./log"
+    name: "project.log"
+    size: 100
+    age: 7
+    backups: 5
+  jwt:
+    enable: true
+    publicKeyFile: "/data/project/cert/jwt/public.key"
+    privateKeyFile: "/data/project/cert/jwt/private.key"
+  iam:
+    appCode: "bk_bcs"
+    appSecret: ""
+    gatewayHost: ""
+    useGWHost: true
+    iamHost: ""
+    bkPaaSHost: ""
+    debug: false

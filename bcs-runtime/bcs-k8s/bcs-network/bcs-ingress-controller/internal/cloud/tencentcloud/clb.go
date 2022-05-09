@@ -25,6 +25,7 @@ import (
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	k8scorev1 "k8s.io/api/core/v1"
 )
 
 // Clb client to operate clb instance
@@ -56,6 +57,32 @@ func NewClbWithSecretIDKey(id, key string) (*Clb, error) {
 		return nil, err
 	}
 	apiWrapper, err := NewAPIWrapperWithSecretIDKey(id, key)
+	if err != nil {
+		return nil, err
+	}
+	return &Clb{
+		sdkWrapper: sdkWrapper,
+		apiWrapper: apiWrapper,
+	}, nil
+}
+
+// NewClbWithSecret create clb client with k8s secret
+func NewClbWithSecret(secret *k8scorev1.Secret) (cloud.LoadBalance, error) {
+	secretIDBytes, ok := secret.Data[EnvNameTencentCloudAccessKeyID]
+	if !ok {
+		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameTencentCloudAccessKeyID,
+			secret.Namespace, secret.Name)
+	}
+	secretKeyBytes, ok := secret.Data[EnvNameTencentCloudAccessKey]
+	if !ok {
+		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameTencentCloudAccessKey,
+			secret.Namespace, secret.Name)
+	}
+	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
+	if err != nil {
+		return nil, err
+	}
+	apiWrapper, err := NewAPIWrapperWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -320,6 +347,12 @@ func (c *Clb) DeleteMultiListeners(region, lbID string, listeners []*networkexte
 	var cloudListenerIDs []string
 	for _, li := range resp.Response.Listeners {
 		cloudListenerIDs = append(cloudListenerIDs, *li.ListenerId)
+	}
+	// describe listener success but no existed cloudListenerIDs in cloud
+	// It's possible delete all listeners when listenerIds be empty
+	if len(cloudListenerIDs) == 0 {
+		blog.Warnf("no cloudListenerIDs to do batch deletion")
+		return nil
 	}
 
 	return c.batchDeleteListener(region, lbID, cloudListenerIDs)

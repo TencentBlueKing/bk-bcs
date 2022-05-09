@@ -3,6 +3,11 @@
         "clusterID": "${clusterId}",
         "hostIP": "${localIp}"
     },
+     "watch_resource": {
+        "namespace": "${watchNamespace}",
+        "disable_netservice": ${watchDisableNetService},
+        "disable_crd": ${watchDisableCrd}
+    },
     "bcs": {
         "zk": "${bcsZkHost}",
         "tls": {
@@ -19,6 +24,7 @@
         "podQueueNum": ${podQueueNum}
     },
     "k8s": {
+        "kubeconfig": "${kubeconfig}",
         "master": "${kubeMaster}",
         "tls": {
             "ca-file": "",

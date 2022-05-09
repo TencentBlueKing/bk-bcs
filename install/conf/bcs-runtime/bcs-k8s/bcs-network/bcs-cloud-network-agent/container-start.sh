@@ -14,5 +14,5 @@ if [ $BCS_CONFIG_TYPE == "render" ]; then
   cat ${module}.conf.template | envsubst | tee ${module}.json
 fi
 #ready to start
-/data/bcs/${module}/${module} $@
+exec /data/bcs/${module}/${module} $@
 

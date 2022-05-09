@@ -18,4 +18,4 @@ if [ "x$BCS_CONFIG_TYPE" == "xrender" ]; then
 fi
 
 #ready to start
-/data/bcs/${module}/${module} $@
+exec /data/bcs/${module}/${module} $@

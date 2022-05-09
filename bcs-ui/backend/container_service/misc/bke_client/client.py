@@ -23,10 +23,13 @@ from rest_framework.exceptions import APIException, PermissionDenied
 
 from backend.components import bcs
 from backend.container_service.clusters.base.constants import ClusterCOES
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.base.utils import get_cluster_coes
 from backend.helm.toolkit.kubehelm.helm import KubeHelmClient
 from backend.helm.toolkit.utils import get_kubectl_version
 from backend.kube_core.toolkit import kubectl
+from backend.resources.client import BcsAPIEnvironmentQuerier
+from backend.resources.utils.kube_client import get_dynamic_client
 
 from . import constants
 
@@ -131,27 +134,20 @@ class BCSClusterClient:
 
     def get_access_cluster_context(self):
         """ 获取访问集群需要的信息 """
-        context = self.get_cluster_credential()
-        context.update(
-            **{
-                'host': self.host,
-                'source_cluster_id': self.cluster_id,
-                'source_project_id': self.project_id,
-            }
-        )
-        return context
+        # 获取集群的环境
+        # TODO: 这一部分逻辑后续直接放到组装kubeconfig中
+        ctx_cluster = CtxCluster.create(id=self.cluster_id, project_id=self.project_id, token=self.access_token)
+        env_name = BcsAPIEnvironmentQuerier(ctx_cluster).do()
+        return {
+            'server_address': f"{settings.BCS_API_SERVER_DOMAIN[env_name]}/clusters/{self.cluster_id}",
+            'identifier': self.cluster_id,
+            'user_token': settings.BCS_API_GW_AUTH_TOKEN,
+        }
 
     def make_kubectl_options(self):
         context = self.get_access_cluster_context()
-
-        # NOTE: 先兼容两个字段，防止bcs调整发布间隙的问题
-        if context.get('server_address_path'):
-            server = '{host}{path}'.format(host=self.host, path=context['server_address_path'])
-        else:
-            server = context['server_address']
-
         options = {
-            'server': server,
+            'server': context['server_address'],
             'token': context["user_token"],
             'client-certificate': False,
         }
@@ -200,10 +196,9 @@ class BCSClusterClient:
 
 
 def get_cluster_proper_kubectl(access_token, project_id, cluster_id):
-    bcs_api_client = bcs.k8s.K8SClient(access_token, project_id, cluster_id, None)
-
+    client = get_dynamic_client(access_token, project_id, cluster_id)
     kubectl_version = get_kubectl_version(
-        bcs_api_client.version, constants.KUBECTL_VERSION, constants.DEFAULT_KUBECTL_VERSION
+        client.version["kubernetes"]["gitVersion"], constants.KUBECTL_VERSION, constants.DEFAULT_KUBECTL_VERSION
     )
 
     try:

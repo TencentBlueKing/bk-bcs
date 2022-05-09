@@ -1522,13 +1522,16 @@ optgroup {
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label {
       position: relative; }
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: absolute;
-      margin: 3px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
-      vertical-align: middle;
-      right: 18px; }
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
+      vertical-align: middle; }
   .bk-form.bk-inline-form .bk-label {
     width: auto;
     display: inline-block;
@@ -1629,11 +1632,15 @@ optgroup {
   .bk-form-item.is-required .bk-label {
     position: relative; }
     .bk-form-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: relative;
-      margin: 2px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
       vertical-align: middle; }
   .bk-form-item.is-readonly input[type="text"],
   .bk-form-item.is-readonly input[type="password"],
@@ -3453,13 +3460,16 @@ optgroup {
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label {
       position: relative; }
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: absolute;
-      margin: 3px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
-      vertical-align: middle;
-      right: 18px; }
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
+      vertical-align: middle; }
   .bk-form.bk-inline-form .bk-label {
     width: auto;
     display: inline-block;
@@ -3560,11 +3570,15 @@ optgroup {
   .bk-form-item.is-required .bk-label {
     position: relative; }
     .bk-form-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: relative;
-      margin: 2px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
       vertical-align: middle; }
   .bk-form-item.is-readonly input[type="text"],
   .bk-form-item.is-readonly input[type="password"],
@@ -4187,13 +4201,16 @@ optgroup {
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label {
       position: relative; }
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: absolute;
-      margin: 3px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
-      vertical-align: middle;
-      right: 18px; }
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
+      vertical-align: middle; }
   .bk-form.bk-inline-form .bk-label {
     width: auto;
     display: inline-block;
@@ -4294,11 +4311,15 @@ optgroup {
   .bk-form-item.is-required .bk-label {
     position: relative; }
     .bk-form-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: relative;
-      margin: 2px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
       vertical-align: middle; }
   .bk-form-item.is-readonly input[type="text"],
   .bk-form-item.is-readonly input[type="password"],
@@ -6030,13 +6051,16 @@ optgroup {
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label {
       position: relative; }
     .bk-form.bk-inline-form .bk-form-inline-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: absolute;
-      margin: 3px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
-      vertical-align: middle;
-      right: 18px; }
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
+      vertical-align: middle; }
   .bk-form.bk-inline-form .bk-label {
     width: auto;
     display: inline-block;
@@ -6137,11 +6161,15 @@ optgroup {
   .bk-form-item.is-required .bk-label {
     position: relative; }
     .bk-form-item.is-required .bk-label:after {
-      content: '*';
-      color: #ff5656;
-      position: relative;
-      margin: 2px -7px 0 2px;
+      color: #ea3636;
+      content: "*";
       display: inline-block;
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      transform: translate(3px,-50%);
       vertical-align: middle; }
   .bk-form-item.is-readonly input[type="text"],
   .bk-form-item.is-readonly input[type="password"],

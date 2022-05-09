@@ -17,16 +17,22 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
-	tkeCidrTableName         = "tkecidrs"
+	tkeCidrTableName = "tkecidrs"
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
+	tkeCidrKeyVPC            = "vpc"
+	tkeCidrKeyCIDR           = "cidr"
 	defaultTkeCidrListLength = 3000
 )
 
@@ -35,8 +41,8 @@ var (
 		{
 			Name: tkeCidrTableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: "vpc", Value: 1},
-				bson.E{Key: "cidr", Value: 1},
+				bson.E{Key: tkeCidrKeyVPC, Value: 1},
+				bson.E{Key: tkeCidrKeyCIDR, Value: 1},
 			},
 			Unique: true,
 		},
@@ -101,8 +107,8 @@ func (m *ModelTkeCidr) UpdateTkeCidr(ctx context.Context, cidr *types.TkeCidr) e
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"vpc":  cidr.Vpc,
-		"cidr": cidr.Cidr,
+		tkeCidrKeyVPC:  cidr.VPC,
+		tkeCidrKeyCIDR: cidr.CIDR,
 	})
 	oldTkeCidr := &types.TkeCidr{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, oldTkeCidr); err != nil {
@@ -117,15 +123,15 @@ func (m *ModelTkeCidr) DeleteTkeCidr(ctx context.Context, vpc string, cidr strin
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"vpc":  vpc,
-		"cidr": cidr,
+		tkeCidrKeyVPC:  vpc,
+		tkeCidrKeyCIDR: cidr,
 	})
 	deleteCounter, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
 		return err
 	}
 	if deleteCounter == 0 {
-		return fmt.Errorf("no tke cidr %s of vpc %s delete ", vpc, cidr)
+		blog.Warnf("no tke cidr %s of vpc %s delete ", vpc, cidr)
 	}
 	return nil
 }
@@ -136,8 +142,8 @@ func (m *ModelTkeCidr) GetTkeCidr(ctx context.Context, vpc string, cidr string) 
 		return nil, err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"vpc":  vpc,
-		"cidr": cidr,
+		tkeCidrKeyVPC:  vpc,
+		tkeCidrKeyCIDR: cidr,
 	})
 	retTkeCidr := &types.TkeCidr{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retTkeCidr); err != nil {
@@ -176,11 +182,11 @@ func (m *ModelTkeCidr) ListTkeCidrCount(ctx context.Context, opt *options.ListOp
 			"$group": map[string]interface{}{
 				"_id": map[string]interface{}{
 					"vpc":      "$vpc",
-					"ipNumber": "$ipNumber",
+					"ipnumber": "$ipnumber",
 					"status":   "$status",
 				},
 				"vpc":      map[string]interface{}{"$first": "$vpc"},
-				"ipNumber": map[string]interface{}{"$first": "$ipNumber"},
+				"ipnumber": map[string]interface{}{"$first": "$ipnumber"},
 				"status":   map[string]interface{}{"$first": "$status"},
 				"count": map[string]interface{}{
 					"$sum": 1,

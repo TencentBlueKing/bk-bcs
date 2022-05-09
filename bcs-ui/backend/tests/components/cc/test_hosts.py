@@ -106,7 +106,6 @@ class TestComponentCCHosts:
 
     def test_search_biz_inst_topo(self):
         ret = BizTopoQueryService('admin', 1001).fetch()
-        print(ret)
         assert ret[0]['child'][0]['child'][0]['bk_inst_id'] == 11
         assert ret[0]['child'][1]['bk_inst_id'] == 5001
 

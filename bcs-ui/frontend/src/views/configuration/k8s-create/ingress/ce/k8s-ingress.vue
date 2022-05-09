@@ -45,30 +45,13 @@
                                                 </bk-input>
                                             </td>
                                             <td>
-                                                <bk-selector
-                                                    placeholder="选择一个证书"
+                                                <bkbcs-input
+                                                    type="text"
+                                                    :placeholder="$t('请输入证书')"
                                                     style="width: 350px;"
-                                                    :allow-clear="true"
-                                                    :has-create-item="true"
-                                                    :setting-key="'certId'"
-                                                    :display-key="'certName'"
-                                                    :is-loading="isCertListLoading"
-                                                    :selected.sync="computer.certId"
-                                                    :list="certList"
-                                                    :tools="certTools"
-                                                    @item-selected="handlerSelectCert(computer, ...arguments)"
-                                                    @edit="editBcsTls"
-                                                    @del="deleteBcsTls(computer, ...arguments)"
+                                                    :value.sync="computer.secretName"
                                                 >
-                                                    <div class="bk-selector-create-item" slot="newItem" @click="goCertList" v-if="certListUrl">
-                                                        <i class="bk-icon icon-apps"></i>
-                                                        <i class="text">证书列表</i>
-                                                    </div>
-                                                    <div class="bk-selector-create-item" slot="newItem" @click="showBcsTlsEditor">
-                                                        <i class="bk-icon icon-plus-circle"></i>
-                                                        <i class="text">新建证书</i>
-                                                    </div>
-                                                </bk-selector>
+                                                </bkbcs-input>
                                             </td>
                                             <td>
                                                 <button class="action-btn ml5" @click.stop.prevent="addTls">
@@ -120,38 +103,6 @@
                     </bk-tooltip>
                 </div>
             </div>
-
-            <bk-dialog
-                :title="tlsParams.id ? '编辑证书' : '新建证书'"
-                :is-show.sync="certKeyConf.isShow"
-                :width="800"
-                :quick-close="false"
-                :content="certKeyConf.content"
-                @confirm="saveBcsTls"
-                @cancel="certKeyConf.isShow = false">
-                <template slot="content">
-                    <form class="bk-form">
-                        <div class="bk-form-item is-required">
-                            <label class="bk-label" style="width: 80px;">Name：</label>
-                            <div class="bk-form-content" style="margin-left: 80px;">
-                                <input class="bk-form-input" v-model="tlsParams.name" placeholder="请输入名称，英文大小写、数字、下划线和英文句号，最大长度为64个字符" maxlength="64" />
-                            </div>
-                        </div>
-                        <div class="bk-form-item is-required">
-                            <label class="bk-label" style="width: 80px;">Cert：</label>
-                            <div class="bk-form-content" style="margin-left: 80px;">
-                                <textarea class="bk-form-textarea" v-model="tlsParams.cert" style="height: 130px;" placeholder="请输入证书"></textarea>
-                            </div>
-                        </div>
-                        <div class="bk-form-item is-required">
-                            <label class="bk-label" style="width: 80px;">Key：</label>
-                            <div class="bk-form-content" style="margin-left: 80px;">
-                                <textarea class="bk-form-textarea" v-model="tlsParams.key" style="height: 130px;" placeholder="请输入私钥"></textarea>
-                            </div>
-                        </div>
-                    </form>
-                </template>
-            </bk-dialog>
 
             <div class="bk-form biz-configuration-form pb15">
                 <div class="biz-span" style="margin-left: 130px;">
@@ -226,7 +177,6 @@
     import bkKeyer from '@/components/keyer'
     import ingressParams from '@/json/k8s-ingress.json'
     import ruleParams from '@/json/k8s-ingress-rule.json'
-    import { catchErrorHandler } from '@/common/util'
 
     export default {
         components: {
@@ -311,12 +261,6 @@
             linkPorts () {
                 return []
             },
-            certListUrl () {
-                return this.$store.state.k8sTemplate.certListUrl
-            },
-            certList () {
-                return this.$store.state.k8sTemplate.certList
-            },
             curLabelList () {
                 const list = []
                 // 如果有缓存直接使用
@@ -375,57 +319,6 @@
             handlerSelectCert (computer, index, data) {
                 computer.certType = data.certType
             },
-            /**
-             * 编辑证书
-             * @param  {number} index 索引
-             */
-            async editBcsTls (index) {
-                const projectId = this.projectId
-                const tls = this.certList[index]
-                const certId = tls.certId
-
-                try {
-                    const res = await this.$store.dispatch('k8sTemplate/getBcsTlsDetail', { projectId, certId })
-                    this.tlsParams = res.data
-                    this.certKeyConf.isShow = true
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
-            /**
-             * 删除当前的密钥
-             * @param {object} computer 当前主机
-             * @param {number} index 证书索引
-             */
-            async deleteBcsTls (computer, index) {
-                const projectId = this.projectId
-                const tls = this.certList[index]
-                const certId = tls.certId
-                const me = this
-
-                me.$bkInfo({
-                    title: ``,
-                    clsName: 'biz-remove-dialog',
-                    content: this.$createElement('p', {
-                        class: 'biz-confirm-desc'
-                    }, `确认要删除证书【${certId}？】`),
-                    async confirmFn () {
-                        try {
-                            await me.$store.dispatch('k8sTemplate/deleteBcsTls', { projectId, certId })
-                            me.$bkMessage({
-                                theme: 'success',
-                                message: '删除成功！'
-                            })
-                            me.isCertListLoading = true
-                            me.resetSelectedTls(certId)
-                            await me.$store.dispatch('k8sTemplate/getCertList', projectId)
-                            me.isCertListLoading = false
-                        } catch (e) {
-                            catchErrorHandler(e, me)
-                        }
-                    }
-                })
-            },
 
             /**
              * 当删除证书回调，将已经选择此证书的给清空
@@ -438,91 +331,6 @@
                         tls.certId = ''
                     }
                 })
-            },
-
-            /**
-             * 保存当前的密钥
-             */
-            async saveBcsTls () {
-                const nameReg = /^[A-Za-z0-9_.]{1,64}$/
-
-                if (!this.tlsParams.name) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请输入Name！'
-                    })
-                    return false
-                }
-
-                if (!nameReg.test(this.tlsParams.name)) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: 'Name错误，只能包含英文大小写、数字、下划线和英文句号！'
-                    })
-                    return false
-                }
-
-                if (!this.tlsParams.cert) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请输入Cert！'
-                    })
-                    return false
-                }
-
-                if (!this.tlsParams.key) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: '请输入Key！'
-                    })
-                    return false
-                }
-
-                const projectId = this.projectId
-                const data = this.tlsParams
-                try {
-                    if (this.tlsParams.id) {
-                        const certId = this.tlsParams.id
-                        await this.$store.dispatch('k8sTemplate/updateBcsTls', { projectId, certId, data })
-                        this.$bkMessage({
-                            theme: 'success',
-                            message: '更新证书成功！'
-                        })
-                    } else {
-                        await this.$store.dispatch('k8sTemplate/createBcsTls', { projectId, data })
-                        this.$bkMessage({
-                            theme: 'success',
-                            message: '创建证书成功！'
-                        })
-                    }
-
-                    this.hideCertKeyEditor()
-                    this.isCertListLoading = true
-                    await this.$store.dispatch('k8sTemplate/getCertList', projectId)
-                    this.isCertListLoading = false
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
-
-            /**
-             * 显示证书密钥编辑
-             * @return {object} computer 证书
-             */
-            showBcsTlsEditor (computer) {
-                this.tlsParams = {
-                    name: '',
-                    cert: '',
-                    key: ''
-                }
-                this.certKeyConf.isShow = true
-            },
-
-            /**
-             * 隐藏证书密钥编辑
-             */
-            hideCertKeyEditor () {
-                this.certKeyConf.isShow = false
             },
 
             goCertList () {

@@ -119,8 +119,6 @@ rbac:
 serviceAccount:
   create: true
   name: serviceaccount
-imagePullSecrets:
-  - name: secretName
 tcp:
   enabled: true
 udp:

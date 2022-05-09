@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import pytest
 
+from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 from backend.utils.basic import getitems
 
 from .conftest import crd_manifest
@@ -41,3 +42,8 @@ class TestCRD:
         )  # noqa
         assert response.json()['code'] == 0
         assert self.crd_name == getitems(response.json()['data'], 'manifest.metadata.name')
+
+    def test_list_shared_cluster_crd(self, api_client, project_id):
+        """ 获取共享集群 CRD，预期是被拦截（PermissionDenied） """
+        url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/crds/v2/'
+        assert api_client.get(url).json()['code'] == 400

@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.names.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: bcs-helm-manager
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  bcs-helm-manager.json: |-
+    {
+      "etcd": {
+        "endpoints": "{{ include "bcs-helm-manager.etcd.address" . }}",
+        "cert": "{{ include "bcs-helm-manager.etcd.cert" . }}",
+        "key": "{{ include "bcs-helm-manager.etcd.key" . }}",
+        "ca": "{{ include "bcs-helm-manager.etcd.ca" . }}"
+      },
+      "bcslog": {
+        "dir": "{{ .Values.helmmanager.log.dir }}",
+        "maxsize": {{ .Values.helmmanager.log.maxSize }},
+        "maxnum": {{ .Values.helmmanager.log.maxNum }},
+        "tostderr": false,
+        "alsotostderr": true,
+        "v": {{ .Values.helmmanager.log.verbosity }},
+        "stderrthreshold": "2",
+        "vmodule": "",
+        "backtraceat": ""
+      },
+      "swagger": {
+        "dir": "{{ .Values.helmmanager.swagger.dir }}"
+      },
+      "mongo": {
+        "address": "{{ include "bcs-helm-manager.mongodb.address" . }}",
+        "connecttimeout": {{ .Values.helmmanager.mongo.connectTimeout }},
+        "authdatabase": "{{ include "bcs-helm-manager.mongodb.authDatabase" . }}",
+        "database": "{{ include "bcs-helm-manager.mongodb.database" . }}",
+        "username": "{{ include "bcs-helm-manager.mongodb.username" . }}",
+        "password": "{{ include "bcs-helm-manager.mongodb.password" . }}",
+        "maxpoolsize": {{ .Values.helmmanager.mongo.maxPoolSize }},
+        "minpoolsize": {{ .Values.helmmanager.mongo.minPoolSize }},
+        "encrypted": {{ .Values.helmmanager.mongo.encrypted }}
+      },
+      "repo": {
+        "url": "{{ .Values.helmmanager.repo.url }}",
+        "username": "{{ .Values.helmmanager.repo.username }}",
+        "password": "{{ .Values.helmmanager.repo.password }}",
+        "encrypted": {{ .Values.helmmanager.repo.encrypted }}, 
+      },
+      "release": {
+        "api": "{{ .Values.helmmanager.release.api }}",
+        "token": "{{ .Values.helmmanager.release.token }}",
+        "template": "/data/bcs/template/bcs-helm-manager/kubeconfig.template",
+        "binary": "helm",
+        "patchdir": "/data/bcs/patches/bcs-helm-manager/",
+        "vardir": "/data/bcs/vars/bcs-helm-manager/"
+      },
+      "debug": false,
+      "address": "",
+      "insecureaddress": "",
+      "port": {{ .Values.helmmanager.service.grpcPort }},
+      "httpport": {{ .Values.helmmanager.service.httpPort }},
+      "metricport": {{ .Values.helmmanager.service.metricPort }},
+      "serverca": "{{ .Values.helmmanager.tls.ca }}",
+      "servercert": "{{ .Values.helmmanager.tls.server.cert }}",
+      "serverkey": "{{ .Values.helmmanager.tls.server.ket }}"
+    }

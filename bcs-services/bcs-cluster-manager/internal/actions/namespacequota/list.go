@@ -18,9 +18,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // ListAction is action for list namespace resource quota
@@ -52,23 +52,15 @@ func (la *ListAction) listQuotas() error {
 		condM["namespace"] = la.req.Namespace
 	}
 	if len(la.req.FederationClusterID) != 0 {
-		condM["federationClusterID"] = la.req.FederationClusterID
+		condM["federationclusterid"] = la.req.FederationClusterID
 	}
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	quotaList, err := la.model.ListQuota(la.ctx, cond, &storeopt.ListOption{})
 	if err != nil {
 		return err
 	}
-	for _, quota := range quotaList {
-		la.quotaList = append(la.quotaList, &cmproto.ResourceQuota{
-			Namespace:           quota.Namespace,
-			FederationClusterID: quota.FederationClusterID,
-			ClusterID:           quota.ClusterID,
-			Region:              quota.Region,
-			ResourceQuota:       quota.ResourceQuota,
-			CreateTime:          quota.CreateTime.String(),
-			UpdateTime:          quota.UpdateTime.String(),
-		})
+	for i := range quotaList {
+		la.quotaList = append(la.quotaList, &quotaList[i])
 	}
 	return nil
 }
@@ -76,7 +68,7 @@ func (la *ListAction) listQuotas() error {
 func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
-	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 	la.resp.Data = la.quotaList
 }
 
@@ -92,13 +84,13 @@ func (la *ListAction) Handle(ctx context.Context,
 	la.resp = resp
 
 	if err := la.validate(); err != nil {
-		la.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := la.listQuotas(); err != nil {
-		la.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	la.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

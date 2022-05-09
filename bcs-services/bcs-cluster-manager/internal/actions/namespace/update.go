@@ -20,8 +20,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	k8scorev1 "k8s.io/api/core/v1"
 )
@@ -32,7 +32,7 @@ type UpdateAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.UpdateNamespaceReq
 	resp  *cmproto.UpdateNamespaceResp
-	ns    *types.Namespace
+	ns    *cmproto.Namespace
 }
 
 // NewUpdateAction create action for udpate
@@ -66,13 +66,13 @@ func (ua *UpdateAction) updateNamespace() error {
 			return fmt.Errorf("decode max quota %s to k8s ResourceQuota failed, err %s", ua.req.MaxQuota, err.Error())
 		}
 	}
-	newNs := &types.Namespace{
+	newNs := &cmproto.Namespace{
 		Name:                ua.ns.Name,
 		FederationClusterID: ua.ns.FederationClusterID,
 		MaxQuota:            ua.req.MaxQuota,
 		Labels:              ua.req.Labels,
 		CreateTime:          ua.ns.CreateTime,
-		UpdateTime:          time.Now(),
+		UpdateTime:          time.Now().Format(time.RFC3339),
 	}
 	return ua.model.UpdateNamespace(ua.ctx, newNs)
 }
@@ -80,7 +80,7 @@ func (ua *UpdateAction) updateNamespace() error {
 func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle update namespace request
@@ -95,13 +95,13 @@ func (ua *UpdateAction) Handle(ctx context.Context,
 	ua.resp = resp
 
 	if err := ua.validate(); err != nil {
-		ua.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := ua.updateNamespace(); err != nil {
-		ua.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	ua.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

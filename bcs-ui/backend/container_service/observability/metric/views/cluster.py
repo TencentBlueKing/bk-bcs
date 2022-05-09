@@ -88,7 +88,5 @@ class ClusterMetricViewSet(SystemViewSet):
         :param cluster_id: 集群 ID
         :return: Node IP 列表
         """
-        node_list = get_cluster_nodes(
-            self.request.user.token.access_token, project_id, cluster_id, raise_exception=False
-        )
+        node_list = get_cluster_nodes(self.request.user.token.access_token, project_id, cluster_id)
         return [node['inner_ip'] for node in node_list]

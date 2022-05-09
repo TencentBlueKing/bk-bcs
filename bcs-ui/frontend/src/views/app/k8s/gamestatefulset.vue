@@ -193,7 +193,6 @@
                     }
                 },
                 bkMessageInstance: null,
-                clusterList: [],
                 selectedClusterId: '',
                 selectedNamespaceName: '',
                 namespaceList: [],
@@ -230,6 +229,9 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -261,9 +263,6 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', this.projectId)
-                    const list = res.data.results || []
-                    this.clusterList.splice(0, this.clusterList.length, ...list)
                     if (this.clusterList.length) {
                         if (!this.curClusterId) {
                             this.selectedClusterId = this.clusterList[0].cluster_id

@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
@@ -76,11 +77,11 @@ func NewIngressConverter(opt *IngressConverterOpt,
 }
 
 // get cloud loadbalance info by cloud loadbalance id pair
-// regionIDPair "ap-xxxxx:lb-xxxxxx"
+// regionIDPair "ap-xxxxx:lb-xxxxxx" "arn:aws:elasticloadbalancing:xxx:xxx:xxx"
 func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
-	strs := strings.Split(regionIDPair, ":")
+	strs := g.splitRegionIDPair(regionIDPair)
 	// only has id
 	if len(strs) == 1 {
 		obj, ok := g.lbIDCache.Get(g.defaultRegion + ":" + strs[0])
@@ -123,6 +124,17 @@ func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.L
 	g.lbIDCache.SetDefault(lbObj.Region+":"+lbObj.LbID, lbObj)
 	g.lbNameCache.SetDefault(lbObj.Region+":"+lbObj.Name, lbObj)
 	return lbObj, nil
+}
+
+// split regionIDPair
+// regionIDPair "ap-xxxxx:lb-xxxxxx" "arn:aws:elasticloadbalancing:xxx:xxx:xxx"
+// if regionIDPair has region and id, return 2 string
+// else return 1 string
+func (g *IngressConverter) splitRegionIDPair(regionIDPair string) []string {
+	if a, err := arn.Parse(regionIDPair); err == nil {
+		return []string{a.Region, regionIDPair}
+	}
+	return strings.Split(regionIDPair, ":")
 }
 
 // get cloud loadbalance info by cloud loadbalance name pair
@@ -189,6 +201,14 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	// if there are both ids and names, ids is effective
 	if idOk {
 		lbIDs := strings.Split(lbIDStrs, ",")
+		// check lb id format before request cloud
+		for _, regionIDPair := range lbIDs {
+			if !MatchLbStrWithID(regionIDPair) {
+				// invalid format
+				blog.Warnf("lbid %s invalid", regionIDPair)
+				return nil, fmt.Errorf("lbid %s invalid", regionIDPair)
+			}
+		}
 		for _, regionIDPair := range lbIDs {
 			lbObj, err := g.getLoadbalanceByID(ingress.GetNamespace(), regionIDPair)
 			if err != nil {
@@ -198,6 +218,14 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 		}
 	} else if nameOk {
 		names := strings.Split(lbNameStrs, ",")
+		// check lb name format before request cloud
+		for _, regionNamePair := range names {
+			if !MatchLbStrWithName(regionNamePair) {
+				// invalid format
+				blog.Warnf("lbname %s invalid", regionNamePair)
+				return nil, fmt.Errorf("lbname %s invalid", regionNamePair)
+			}
+		}
 		for _, regionNamePair := range names {
 			lbObj, err := g.getLoadbalanceByName(ingress.GetNamespace(), regionNamePair)
 			if err != nil {
@@ -306,6 +334,9 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 			Region:           lb.Region,
 			Type:             lb.Type,
 			IPs:              lb.IPs,
+			DNSName:          lb.DNSName,
+			Scheme:           lb.Scheme,
+			AWSLBType:        lb.AWSLBType,
 		})
 	}
 	patchStruct := map[string]interface{}{

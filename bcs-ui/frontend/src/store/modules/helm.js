@@ -365,20 +365,6 @@ export default {
         },
 
         /**
-         * 获取对应chart的命名空间列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数，包含projectId, chartId
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getNamespaceListByChart (context, { projectId, chartId }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs/k8s/configuration/${projectId}/namespaces/?chart_id=${chartId}`
-            return http.get(url, {}, config)
-        },
-
-        /**
          * 创建应用
          *
          * @param {Object} context store 上下文对象

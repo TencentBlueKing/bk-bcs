@@ -22,8 +22,10 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
+// GCoreDB global DB client
 var GCoreDB *gorm.DB
 
+// InitCoreDatabase set DB client
 func InitCoreDatabase(conf *config.UserMgrConfig) error {
 	if conf == nil {
 		return fmt.Errorf("core_database config not init")

@@ -28,6 +28,7 @@ from ruamel.yaml.compat import StringIO, ordereddict
 from backend.components import bcs, paas_cc
 from backend.helm.helm.utils.util import EmptyVaue, fix_rancher_value_by_type
 from backend.helm.toolkit.diff import parser
+from backend.resources.utils.kube_client import get_dynamic_client
 from backend.utils.basic import get_bcs_component_version
 from backend.utils.client import make_dashboard_ctl_client
 
@@ -400,10 +401,26 @@ def get_cc_app_id(access_token, project_id):
 
 def get_helm_dashboard_path(access_token: str, project_id: str, cluster_id: str) -> str:
     """获取dashboard的路径"""
-    # TODO: 后续调整为新的client
-    bcs_api_client = bcs.k8s.K8SClient(access_token, project_id, cluster_id, None)
+    client = get_dynamic_client(access_token, project_id, cluster_id)
     # 获取版本
-    version = get_bcs_component_version(bcs_api_client.version, DASHBOARD_CTL_VERSION, DEFAULT_DASHBOARD_CTL_VERSION)
+    version = get_bcs_component_version(
+        client.version["kubernetes"]["gitVersion"], DASHBOARD_CTL_VERSION, DEFAULT_DASHBOARD_CTL_VERSION
+    )
 
     bin_path_map = getattr(settings, "DASHBOARD_CTL_VERSION_MAP", {})
     return bin_path_map.get(version, settings.DASHBOARD_CTL_BIN)
+
+
+def remove_updater_creator_from_manifest(manifest: str) -> str:
+    """删除manifest中的添加的平台注入的updater和creator
+
+    :param manifest: 资源的yaml内容
+    :return: 返回移除updater和creator后的内容
+    """
+    stream = StringIO(manifest)
+    refine_stream = StringIO()
+    for l in stream.readlines():
+        if ("io.tencent.paas.creator" in l) or ("io.tencent.paas.updator" in l):
+            continue
+        refine_stream.write(l)
+    return refine_stream.getvalue()

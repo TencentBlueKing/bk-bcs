@@ -1,0 +1,13 @@
+{
+  "kind": "Endpoints",
+  "class": "network",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_endpoints",
+      "alias": "Endpoints 简单示例",
+      "description": "简单的 Endpoints 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

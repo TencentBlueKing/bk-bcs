@@ -17,6 +17,7 @@ import (
 	"crypto/tls"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
@@ -40,12 +41,24 @@ type UserMgrConfig struct {
 	MetricPort      uint
 	ServCert        *CertConfig
 	ClientCert      *CertConfig
+	// server http tls authentication
+	TlsServerConfig *tls.Config
+	// client http tls authentication
+	TlsClientConfig *tls.Config
+
 	VerifyClientTLS bool
 
 	DSN            string
+	RedisDSN       string
 	BootStrapUsers []options.BootStrapUser
 	TKE            options.TKEOptions
 	PeerToken      string
+
+	IAMConfig     options.IAMConfig
+	ClusterConfig options.ClusterManagerConfig
+	EtcdConfig    registry.CMDOptions
+
+	PermissionSwitch bool
 }
 
 var (

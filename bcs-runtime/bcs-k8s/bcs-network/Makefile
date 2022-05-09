@@ -95,3 +95,9 @@ ipres-webhook:
 	cp -R ${BCS_CONF_NETWORK_PATH}/bcs-ipres-webhook/* ${INNER_PACKAGEPATH}/bcs-network/bcs-ipres-webhook
 	GOOS=linux go build ${LDFLAG} -o ${INNER_PACKAGEPATH}/bcs-network/bcs-ipres-webhook/bcs-ipres-webhook ./bcs-ipres-webhook/main.go
 	GOOS=linux go build ${LDFLAG} -o ${INNER_PACKAGEPATH}/bcs-network/bcs-ipres-webhook/bcs-ipres-nslabel-injector ./bcs-ipres-webhook/nslabelinjector/main.go
+
+# unit test for bcs ingress controller
+test-ingress-controller:
+	@go test -v -coverprofile=./bcs-ingress-controller/.coverage.out ./bcs-ingress-controller/...
+	@go tool cover -func=./bcs-ingress-controller/.coverage.out | tail -n1 | awk '{print "Total test coverage: " $$3}'
+	@go tool cover -html=./bcs-ingress-controller/.coverage.out -o ./bcs-ingress-controller/coverage.html

@@ -184,6 +184,7 @@
             // 图表指标参数
             const params = computed(() => {
                 return {
+                    namespace: namespace.value,
                     container_ids: [id.value],
                     $podId: pod.value
                 }

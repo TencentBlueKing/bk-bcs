@@ -31,3 +31,13 @@ func IsClusterTypeValid(clusterType string) bool {
 		return false
 	}
 }
+
+// IsClusterManageTypeValid to see if cluster manage type is valid
+func IsClusterManageTypeValid(clusterManageType string) bool {
+	switch clusterManageType {
+	case ClusterManageTypeManaged, ClusterManageTypeIndependent:
+		return true
+	default:
+		return false
+	}
+}

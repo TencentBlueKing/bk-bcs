@@ -20,12 +20,12 @@ import arrow
 from rest_framework import response, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 
-from backend.accounts import bcs_perm
 from backend.components import data as apigw_data
 from backend.components import paas_cc, prometheus
 from backend.container_service.clusters import serializers as cluster_serializers
 from backend.container_service.clusters.utils import use_prometheus_source
 from backend.container_service.clusters.views.metric_handler import get_namespace_metric, get_node_metric
+from backend.iam.permissions.resources.cluster import ClusterPermCtx, ClusterPermission
 from backend.utils.basic import normalize_metric
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
@@ -37,8 +37,8 @@ logger = logging.getLogger(__name__)
 
 class ClusterMetricsBase:
     def can_view_cluster(self, request, project_id, cluster_id):
-        perm = bcs_perm.Cluster(request, project_id, cluster_id)
-        perm.can_view(raise_exception=True)
+        perm_ctx = ClusterPermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id)
+        ClusterPermission().can_view(perm_ctx)
 
     def get_cluster(self, request, project_id, cluster_id):
         cluster_resp = paas_cc.get_cluster(request.user.token.access_token, project_id, cluster_id)

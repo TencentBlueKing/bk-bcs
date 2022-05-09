@@ -22,11 +22,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/emicklei/go-restful"
@@ -45,7 +46,7 @@ type AddTkeCidrForm struct {
 // TkeCidr tke cidr struct
 type TkeCidr struct {
 	Cidr     string `json:"cidr" validate:"required"`
-	IPNumber uint64 `json:"ip_number" validate:"required"`
+	IPNumber uint32 `json:"ip_number" validate:"required"`
 	Status   string `json:"status"`
 }
 
@@ -53,14 +54,14 @@ type TkeCidr struct {
 type ApplyTkeCidrForm struct {
 	Vpc      string `json:"vpc" validate:"required"`
 	Cluster  string `json:"cluster" validate:"required"`
-	IPNumber uint64 `json:"ip_number" validate:"required"`
+	IPNumber uint32 `json:"ip_number" validate:"required"`
 }
 
 // ApplyTkeCidrResult result for applying tke cidr
 type ApplyTkeCidrResult struct {
 	Vpc      string `json:"vpc" validate:"required"`
 	Cidr     string `json:"cidr" validate:"required"`
-	IPNumber uint64 `json:"ip_number" validate:"required"`
+	IPNumber uint32 `json:"ip_number" validate:"required"`
 	Status   string `json:"status"`
 }
 
@@ -74,8 +75,8 @@ type ReleaseTkeCidrForm struct {
 // TkeCidrCount tke cidr count
 type TkeCidrCount struct {
 	Vpc      string `json:"vpc"`
-	IPNumber uint64 `json:"ip_number"`
-	Count    uint64 `json:"count"`
+	IPNumber uint32 `json:"ip_number"`
+	Count    uint32 `json:"count"`
 	Status   string `json:"status"`
 }
 
@@ -117,15 +118,13 @@ func (h *Handler) AddTkeCidr(request *restful.Request, response *restful.Respons
 
 	for _, tkeCidr := range form.TkeCidrs {
 		cidr, err := h.model.GetTkeCidr(request.Request.Context(), form.Vpc, tkeCidr.Cidr)
-		if err != nil {
-			if !errors.Is(err, drivers.ErrTableRecordNotFound) {
-				code = httpCodeClientError
-				message := fmt.Sprintf("errcode: %d, add tke cidr failed, error: %s",
-					types.BcsErrClusterManagerStoreOperationFailed, err.Error())
-				WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
-				metrics.ReportAPIRequestMetric("AddTkeCidr", "http", strconv.Itoa(code), start)
-				return
-			}
+		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+			code = httpCodeClientError
+			message := fmt.Sprintf("errcode: %d, add tke cidr failed, error: %s",
+				common.BcsErrClusterManagerStoreOperationFailed, err.Error())
+			WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
+			metrics.ReportAPIRequestMetric("AddTkeCidr", "http", strconv.Itoa(code), start)
+			return
 		}
 		if cidr != nil {
 			blog.Warnf("Add Cidr failed, Cidr %s IpNumber %d in vpc %s already exists",
@@ -133,24 +132,24 @@ func (h *Handler) AddTkeCidr(request *restful.Request, response *restful.Respons
 			continue
 		}
 		if tkeCidr.Status == "" {
-			tkeCidr.Status = types.TkeCidrStatusAvailable
+			tkeCidr.Status = common.TkeCidrStatusAvailable
 		}
 		now := time.Now()
 		err = h.model.CreateTkeCidr(request.Request.Context(), &types.TkeCidr{
-			Vpc:      form.Vpc,
-			Cidr:     tkeCidr.Cidr,
-			IPNumber: uint64(tkeCidr.IPNumber),
-			Status:   tkeCidr.Status,
-			Cluster:  "",
-			CreateAt: now,
-			UpdateAt: now,
+			VPC:        form.Vpc,
+			CIDR:       tkeCidr.Cidr,
+			IPNumber:   uint32(tkeCidr.IPNumber),
+			Status:     tkeCidr.Status,
+			Cluster:    "",
+			CreateTime: now.Format(time.RFC3339),
+			UpdateTime: now.Format(time.RFC3339),
 		})
 		if err != nil {
 			code = httpCodeClientError
 			message := fmt.Sprintf("errcode: %d, add tke cidr failed, err %s",
-				types.BcsErrClusterManagerStoreOperationFailed, err.Error())
+				common.BcsErrClusterManagerStoreOperationFailed, err.Error())
 			blog.Warnf("add tke cidr failed, err %s", err.Error())
-			WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
+			WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
 			metrics.ReportAPIRequestMetric("AddTkeCidr", "http", strconv.Itoa(code), start)
 			return
 		}
@@ -161,11 +160,11 @@ func (h *Handler) AddTkeCidr(request *restful.Request, response *restful.Respons
 	metrics.ReportAPIRequestMetric("AddTkeCidr", "http", strconv.Itoa(code), start)
 }
 
-func (h *Handler) getOneTkeCidr(ctx context.Context, vpc string, ipNumber uint64, status string) (
+func (h *Handler) getOneTkeCidr(ctx context.Context, vpc string, ipNumber uint32, status string) (
 	*types.TkeCidr, error) {
 	tkeCidrs, err := h.model.ListTkeCidr(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
 		"vpc":      vpc,
-		"ipNumber": ipNumber,
+		"ipnumber": ipNumber,
 		"status":   status,
 	}), &storeopt.ListOption{
 		Limit: 1,
@@ -211,37 +210,37 @@ func (h *Handler) ApplyTkeCidr(request *restful.Request, response *restful.Respo
 	defer h.locker.Unlock(form.Vpc)
 
 	// apply a available cidr
-	tkeCidr, err := h.getOneTkeCidr(request.Request.Context(), form.Vpc, form.IPNumber, types.TkeCidrStatusAvailable)
+	tkeCidr, err := h.getOneTkeCidr(request.Request.Context(), form.Vpc, form.IPNumber, common.TkeCidrStatusAvailable)
 	if err != nil {
 		code = httpCodeClientError
 		message := fmt.Sprintf("get one tke cidr failed, err %s", err.Error())
 		blog.Warnf("get one tke cidr failed, err %s", err.Error())
-		WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
+		WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
 		metrics.ReportAPIRequestMetric("ApplyTkeCidr", "http", strconv.Itoa(code), start)
 		return
 	}
 
 	// update and save to db
 	updatedTkeCidr := tkeCidr
-	updatedTkeCidr.Status = types.TkeCidrStatusUsed
+	updatedTkeCidr.Status = common.TkeCidrStatusUsed
 	updatedTkeCidr.Cluster = form.Cluster
-	updatedTkeCidr.UpdateAt = time.Now()
+	updatedTkeCidr.UpdateTime = time.Now().String()
 	err = h.model.UpdateTkeCidr(request.Request.Context(), updatedTkeCidr)
 	if err != nil {
 		code = httpCodeClientError
 		message := fmt.Sprintf("update tke cidr failed, err %s", err.Error())
 		blog.Warnf("update tke cidr failed, err %s", err.Error())
-		WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
+		WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
 		metrics.ReportAPIRequestMetric("ApplyTkeCidr", "http", strconv.Itoa(code), start)
 		return
 	}
 
-	blog.Infof("assign a cidr successfully, cidr: %s, ipNumber: %d, vpc: %s", tkeCidr.Cidr, tkeCidr.IPNumber, form.Vpc)
+	blog.Infof("assign a cidr successfully, cidr: %s, ipNumber: %d, vpc: %s", tkeCidr.CIDR, tkeCidr.IPNumber, form.Vpc)
 	cidr := &ApplyTkeCidrResult{
-		Vpc:      tkeCidr.Vpc,
-		Cidr:     tkeCidr.Cidr,
+		Vpc:      tkeCidr.VPC,
+		Cidr:     tkeCidr.CIDR,
 		IPNumber: tkeCidr.IPNumber,
-		Status:   types.TkeCidrStatusUsed,
+		Status:   common.TkeCidrStatusUsed,
 	}
 	data := CreateResponeData(nil, "success", cidr)
 	response.Write([]byte(data))
@@ -278,15 +277,15 @@ func (h *Handler) ReleaseTkeCidr(request *restful.Request, response *restful.Res
 		code = httpCodeClientError
 		blog.Warnf("release cidr %s in vpc %s failed, err %s", form.Cidr, form.Vpc, err.Error())
 		message := fmt.Sprintf("release cidr %s in vpc %s failed, err %s", form.Cidr, form.Vpc, err.Error())
-		WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
+		WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
 		metrics.ReportAPIRequestMetric("ReleaseTkeCidr", "http", strconv.Itoa(code), start)
 		return
 	}
-	if tkeCidr == nil || tkeCidr.Status == types.TkeCidrStatusAvailable {
+	if tkeCidr == nil || tkeCidr.Status == common.TkeCidrStatusAvailable {
 		code = httpCodeClientError
 		blog.Warnf("release cidr %s in vpc %s failed, no such cidr to be released", form.Cidr, form.Vpc)
 		message := fmt.Sprintf("release cidr %s in vpc %s failed, no such cidr to be released", form.Cidr, form.Vpc)
-		WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
+		WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
 		metrics.ReportAPIRequestMetric("ReleaseTkeCidr", "http", strconv.Itoa(code), start)
 		return
 	}
@@ -294,21 +293,21 @@ func (h *Handler) ReleaseTkeCidr(request *restful.Request, response *restful.Res
 	// update and save to db
 	cluster := tkeCidr.Cluster
 	updatedTkeCidr := tkeCidr
-	updatedTkeCidr.Status = types.TkeCidrStatusAvailable
+	updatedTkeCidr.Status = common.TkeCidrStatusAvailable
 	updatedTkeCidr.Cluster = ""
-	updatedTkeCidr.UpdateAt = time.Now()
+	updatedTkeCidr.UpdateTime = time.Now().Format(time.RFC3339)
 	err = h.model.UpdateTkeCidr(request.Request.Context(), updatedTkeCidr)
 	if err != nil {
 		code = httpCodeClientError
 		message := fmt.Sprintf("release tke cidr failed, err %s", err.Error())
 		blog.Warnf("release tke cidr failed, err %s", err.Error())
-		WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
+		WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
 		metrics.ReportAPIRequestMetric("ReleaseTkeCidr", "http", strconv.Itoa(code), start)
 		return
 	}
 
 	blog.Infof("release a cidr successfully, cidr: %s, ipNumber: %d, vpc: %s, cluster: %s",
-		tkeCidr.Cidr, tkeCidr.IPNumber, form.Vpc, cluster)
+		tkeCidr.CIDR, tkeCidr.IPNumber, form.Vpc, cluster)
 	data := CreateResponeData(nil, "success", nil)
 	response.Write([]byte(data))
 	metrics.ReportAPIRequestMetric("ReleaseTkeCidr", "http", strconv.Itoa(code), start)
@@ -329,14 +328,14 @@ func (h *Handler) ListTkeCidrCount(request *restful.Request, response *restful.R
 		code = httpCodeServerError
 		message := fmt.Sprintf("list tke cidr count failed, err %s", err.Error())
 		blog.Warnf("list tke cidr count failed, err %s", err.Error())
-		WriteClientError(response, types.BcsErrClusterManagerStoreOperationFailed, message)
+		WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
 		metrics.ReportAPIRequestMetric("ListTkeCidrCount", "http", strconv.Itoa(code), start)
 		return
 	}
 	var retTkeCidrCountList []TkeCidrCount
 	for _, cidr := range storeTkeCidrCountList {
 		retTkeCidrCountList = append(retTkeCidrCountList, TkeCidrCount{
-			Vpc:      cidr.Vpc,
+			Vpc:      cidr.VPC,
 			IPNumber: cidr.IPNumber,
 			Count:    cidr.Count,
 			Status:   cidr.Status,

@@ -21,6 +21,8 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components.prometheus import get_targets
+from backend.container_service.clusters.base.utils import get_cluster_type, get_shared_cluster_proj_namespaces
+from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.observability.metric.constants import FILTERED_ANNOTATION_PATTERN, JOB_PATTERN
 from backend.container_service.observability.metric.serializers import FetchTargetsSLZ
 from backend.utils.basic import getitems
@@ -50,6 +52,17 @@ class TargetsViewSet(SystemViewSet):
                 'total_count': len(targets),
                 'health_count': len([t for t in targets if t['health'] == 'up']),
             }
+
+        # 如果是共享集群，需要过滤出属于项目的命名空间的 Target
+        # 过滤规则：targets_dict key: {namespace}/{name} 取 ns 进行检查
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
+            targets_dict = {
+                inst_id: target_info
+                for inst_id, target_info in targets_dict.items()
+                if inst_id.split('/')[0] in project_namespaces
+            }
+
         return Response(targets_dict)
 
     def _filter_targets(self, raw_targets, show_discovered):

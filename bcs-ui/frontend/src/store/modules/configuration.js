@@ -543,6 +543,14 @@ export default {
             )
         },
 
+        getNamespaceListByClusterId (context, { projectId, clusterId }, config = {}) {
+            return http.get(
+                `${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/namespace/${clusterId ? `?cluster_id=${clusterId}` : ''}`,
+                {},
+                config
+            )
+        },
+
         /**
          * 查询命名空间的变量信息
          *

@@ -1,0 +1,110 @@
+# Default values for bcs-argocd-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+etcd:
+  enabled: false
+  fullnameOverride: "bcs-argocd-etcd"
+  auth:
+    rbac:
+      enabled: false
+    client:
+      secureTransport: false
+      useAutoTLS: false
+      existingSecret: ""
+      enableAuthentication: false
+      certFilename: ""
+      certKeyFilename: ""
+      caFilename: ""
+
+  externalEtcd:
+    address: "http://127.0.0.1:2379"
+    ca: /data/bcs/cert/etcd/etcd-ca.pem
+    cert: /data/bcs/cert/etcd/etcd.pem
+    key: /data/bcs/cert/etcd/etcd-key.pem
+
+global:
+  etcd:
+    enabled: false
+    fullnameOverride: "bcs-argocd-etcd"
+    auth:
+      rbac:
+        enabled: false
+      client:
+        secureTransport: false
+        useAutoTLS: false
+        existingSecret: ""
+        enableAuthentication: false
+        certFilename: ""
+        certKeyFilename: ""
+        caFilename: ""
+
+  externalEtcd:
+    address: "http://127.0.0.1:2379"
+    ca: /data/bcs/cert/etcd/etcd-ca.pem
+    cert: /data/bcs/cert/etcd/etcd.pem
+    key: /data/bcs/cert/etcd/etcd-key.pem
+
+bcs-argocd-proxy:
+  enabled: false
+  image:
+    registry: ""
+    repository: /bcs/bcs-argocd-proxy
+    tag: latest
+    pullPolicy: Always
+  nameOverride: ""
+  fullnameOverride: "bcs-argocd-proxy"
+  tunnel:
+    peertoken: fake-token
+    managedclusterid: fake-cluster
+
+bcs-argocd-server:
+  enabled: false
+  image:
+    registry: ""
+    repository: /bcs/bcs-argocd-server
+    tag: latest
+    pullPolicy: Always
+  nameOverride: ""
+  fullnameOverride: "bcs-argocd-server"
+  argocdserver:
+    tunnel:
+      proxyAddress:
+      agentID:
+    environment:
+      apiServer:
+      token:
+      clusterID:
+
+bcs-argocd-controller:
+  enabled: false
+  image:
+    registry: ""
+    repository: /bcs/bcs-argocd-controller
+    tag: latest
+    pullPolicy: Always
+  nameOverride: ""
+  fullnameOverride: "bcs-argocd-controller"
+
+  argocdcontroller:
+    plugins:
+      serverImage:
+        registry: ""
+        repository: /bcs/bcs-repo-sidecar-server
+        pullPolicy: Always
+        tag: latest
+      clientImage:
+        registry: ""
+        repository: /bcs/bcs-repo-sidecar-client
+        pullPolicy: Always
+        tag: latest
+
+bcs-argocd-example-plugin:
+  enabled: false
+  image:
+    registry: ""
+    repository: /bcs/bcs-argocd-example-plugin
+    tag: latest
+    pullPolicy: Always
+
+  nameOverride: ""
+  fullnameOverride: "bcs-argocd-example-plugin"

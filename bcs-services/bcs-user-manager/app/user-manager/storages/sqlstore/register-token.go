@@ -21,22 +21,23 @@ import (
 	"github.com/dchest/uniuri"
 )
 
+// RegisterTokenLen token length
 const RegisterTokenLen = 128
 
 // GetRegisterToken return the registerToken by clusterId
-func GetRegisterToken(clusterId string) *models.BcsRegisterToken {
+func GetRegisterToken(clusterID string) *models.BcsRegisterToken {
 	token := models.BcsRegisterToken{}
-	GCoreDB.Where(&models.BcsRegisterToken{ClusterId: clusterId}).First(&token)
+	GCoreDB.Where(&models.BcsRegisterToken{ClusterId: clusterID}).First(&token)
 	if token.ID != 0 {
 		return &token
 	}
 	return nil
 }
 
-// CreateResterToken creates a new registerToken for given clusterId
-func CreateRegisterToken(clusterId string) error {
+// CreateRegisterToken creates a new registerToken for given clusterId
+func CreateRegisterToken(clusterID string) error {
 	token := models.BcsRegisterToken{
-		ClusterId: clusterId,
+		ClusterId: clusterID,
 		Token:     uniuri.NewLen(RegisterTokenLen),
 	}
 	err := GCoreDB.Create(&token).Error

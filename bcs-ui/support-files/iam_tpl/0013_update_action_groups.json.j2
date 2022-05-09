@@ -1,0 +1,141 @@
+{
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_action_groups",
+      "data": [
+        {
+          "name": "项目",
+          "name_en": "Project",
+          "actions": [
+            {
+              "id": "project_create"
+            },
+            {
+              "id": "project_view"
+            },
+            {
+              "id": "project_edit"
+            },
+            {
+              "id": "project_delete"
+            }
+          ],
+          "sub_groups": [
+            {
+              "name": "集群",
+              "name_en": "Cluster",
+              "actions": [
+                {
+                  "id": "cluster_create"
+                },
+                {
+                  "id": "cluster_view"
+                },
+                {
+                  "id": "cluster_manage"
+                },
+                {
+                  "id": "cluster_delete"
+                }
+              ]
+            },
+            {
+              "name": "集群域资源",
+              "name_en": "Cluster-scoped Resource",
+              "actions": [
+                {
+                  "id": "cluster_scoped_create"
+                },
+                {
+                  "id": "cluster_scoped_view"
+                },
+                {
+                  "id": "cluster_scoped_update"
+                },
+                {
+                  "id": "cluster_scoped_delete"
+                }
+              ]
+            },
+            {
+              "name": "命名空间",
+              "name_en": "Namespace",
+              "actions": [
+                {
+                  "id": "namespace_create"
+                },
+                {
+                  "id": "namespace_list"
+                },
+                {
+                  "id": "namespace_view"
+                },
+                {
+                  "id": "namespace_update"
+                },
+                {
+                  "id": "namespace_delete"
+                }
+              ]
+            },
+            {
+              "name": "命名空间域资源",
+              "name_en": "Namespace-scoped Resource",
+              "actions": [
+                {
+                  "id": "namespace_scoped_create"
+                },
+                {
+                  "id": "namespace_scoped_view"
+                },
+                {
+                  "id": "namespace_scoped_update"
+                },
+                {
+                  "id": "namespace_scoped_delete"
+                }
+              ]
+            },
+            {
+              "name": "模板集",
+              "name_en": "Templateset",
+              "actions": [
+                {
+                  "id": "templateset_create"
+                },
+                {
+                  "id": "templateset_view"
+                },
+                {
+                  "id": "templateset_copy"
+                },
+                {
+                  "id": "templateset_update"
+                },
+                {
+                  "id": "templateset_delete"
+                },
+                {
+                  "id": "templateset_instantiate"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "未启用",
+          "name_en": "Not Enabled",
+          "actions": [
+            {
+              "id": "cluster_use"
+            },
+            {
+              "id": "namespace_use"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

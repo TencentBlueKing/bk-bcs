@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 import pytest
 
 from backend.dashboard.examples.utils import load_demo_manifest
-from backend.tests.conftest import TEST_NAMESPACE
+from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
 from backend.tests.dashboard.conftest import DASHBOARD_API_URL_COMMON_PREFIX as DAU_PREFIX
 from backend.utils.basic import getitems
 
@@ -26,9 +26,8 @@ class TestPersistentVolume:
     """ 测试 PersistentVolume 相关接口 """
 
     manifest = load_demo_manifest('storages/simple_persistent_volume')
-    name = getitems(manifest, 'metadata.name')
     batch_url = f'{DAU_PREFIX}/storages/persistent_volumes/'
-    detail_url = f'{DAU_PREFIX}/namespaces/{TEST_NAMESPACE}/storages/persistent_volumes/{name}/'
+    detail_url = f"{batch_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
         """ 测试创建资源接口 """
@@ -58,3 +57,8 @@ class TestPersistentVolume:
         """ 测试删除单个资源 """
         response = api_client.delete(self.detail_url)
         assert response.json()['code'] == 0
+
+    def test_list_shared_cluster_pv(self, api_client, project_id):
+        """ 获取共享集群 PV，预期是被拦截（PermissionDenied） """
+        url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/storages/persistent_volumes/'
+        assert api_client.get(url).json()['code'] == 400

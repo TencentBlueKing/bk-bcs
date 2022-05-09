@@ -25,6 +25,10 @@ from rest_framework.response import Response
 from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client as activity_client
 from backend.components.bcs import k8s
+from backend.container_service.clusters.base.utils import get_cluster_type
+from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.resources.namespace import calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.legacy_apps.instance.constants import (
     ANNOTATIONS_CREATOR,
@@ -59,6 +63,9 @@ class ResourceOperate:
     desc = "cluster: {cluster_id}, namespace: {namespace}, delete {resource_name}: {name}"
 
     def delete_single_resource(self, request, project_id, cluster_id, namespace, namespace_id, name):
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            return Response({"code": 400, "message": _("无法操作共享集群资源")})
+
         username = request.user.username
         access_token = request.user.token.access_token
 
@@ -95,7 +102,7 @@ class ResourceOperate:
         namespace_id = app_utils.get_namespace_id(
             request.user.token.access_token, project_id, (cluster_id, namespace), cluster_id=cluster_id
         )
-        app_utils.can_use_namespace(request, project_id, namespace_id)
+        app_utils.can_use_namespace(request, project_id, cluster_id, namespace)
 
         resp = self.delete_single_resource(request, project_id, cluster_id, namespace, namespace_id, name)
         # 添加操作审计
@@ -205,6 +212,9 @@ class ResourceOperate:
 
     def update_resource(self, request, project_id, cluster_id, namespace, name):
         """更新"""
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            return Response({"code": 400, "message": _("无法操作共享集群资源")})
+
         access_token = request.user.token.access_token
 
         if namespace in K8S_SYS_NAMESPACE:
@@ -227,8 +237,10 @@ class ResourceOperate:
         username = request.user.username
 
         # 检查是否有命名空间的使用权限
-        perm = bcs_perm.Namespace(request, project_id, namespace_id)
-        perm.can_use(raise_exception=True)
+        perm_ctx = NamespaceScopedPermCtx(
+            username=username, project_id=project_id, cluster_id=cluster_id, name=namespace
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
 
         # 对配置文件做处理
         gparams = {"access_token": access_token, "project_id": project_id, "username": username}
@@ -321,14 +333,10 @@ class ResourceOperate:
 
     def handle_data(
         self,
-        request,
         data,
         s_cate,
-        project_id,
         cluster_id,
         is_decode,
-        cluster_env,
-        cluster_name,
         namespace_dict=None,
     ):
         for _s in data:
@@ -345,10 +353,9 @@ class ResourceOperate:
             _s['can_delete'] = True
             _s['can_delete_msg'] = ''
 
+            _s['iam_ns_id'] = calc_iam_ns_id(cluster_id, _s['namespace'])
             _s['namespace_id'] = namespace_dict.get((cluster_id, _s['namespace'])) if namespace_dict else None
             _s['cluster_id'] = cluster_id
-            _s['environment'] = cluster_env
-            _s['cluster_name'] = cluster_name
             _s['name'] = _s['resourceName']
 
             labels = _config.get('metadata', {}).get('labels', {})
@@ -421,7 +428,3 @@ class ResourceOperate:
             if info_data:
                 info['data']['data'] = dict(sorted(info_data.items(), key=lambda x: x[0]))
             ret_data.append(info)
-
-        # 检查是否用命名空间的使用权限
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        perm.hook_perms(ret_data, ns_id_flag='namespace_id', cluster_id_flag='cluster_id', ns_name_flag='namespace')

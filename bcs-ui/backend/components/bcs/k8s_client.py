@@ -22,7 +22,7 @@ from django.utils.functional import cached_property
 from kubernetes import client
 
 from backend.components.bcs import BCSClientBase, resources
-from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.client import BcsKubeConfigurationService
 
 logger = logging.getLogger(__name__)

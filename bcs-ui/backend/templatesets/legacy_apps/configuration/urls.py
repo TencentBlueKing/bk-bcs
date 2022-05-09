@@ -54,7 +54,7 @@ urlpatterns = [
         views.UpdateDestroyAppResourceView.as_view(),
     ),
     # 根据版本id查询所有的资源id
-    url(r'^api/configuration/(?P<project_id>\w{32})/resource/(?P<pk>\d+)/$', views.TempalteResourceView.as_view()),
+    url(r'^api/configuration/(?P<project_id>\w{32})/resource/(?P<pk>\d+)/$', views.TemplateResourceView.as_view()),
 ]
 
 urlpatterns += sversion_patterns

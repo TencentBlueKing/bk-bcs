@@ -45,11 +45,11 @@ func getExistedListeners() []networkextensionv1.Listener {
 	return []networkextensionv1.Listener{
 		{
 			ObjectMeta: k8smetav1.ObjectMeta{
-				Name:      GetListenerName("lb1", 8000),
+				Name:      GetListenerName("lb-1", 8000),
 				Namespace: "ns1",
 			},
 			Spec: networkextensionv1.ListenerSpec{
-				LoadbalancerID: "lb1",
+				LoadbalancerID: "lb-1",
 				Port:           8000,
 				EndPort:        0,
 				Protocol:       "tcp",
@@ -57,11 +57,11 @@ func getExistedListeners() []networkextensionv1.Listener {
 		},
 		{
 			ObjectMeta: k8smetav1.ObjectMeta{
-				Name:      GetListenerName("lb1", 8001),
+				Name:      GetListenerName("lb-1", 8001),
 				Namespace: "ns1",
 			},
 			Spec: networkextensionv1.ListenerSpec{
-				LoadbalancerID: "lb1",
+				LoadbalancerID: "lb-1",
 				Port:           8001,
 				EndPort:        0,
 				Protocol:       "tcp",
@@ -69,11 +69,11 @@ func getExistedListeners() []networkextensionv1.Listener {
 		},
 		{
 			ObjectMeta: k8smetav1.ObjectMeta{
-				Name:      GetSegmentListenerName("lb1", 3000, 3002),
+				Name:      GetSegmentListenerName("lb-1", 3000, 3002),
 				Namespace: "ns1",
 			},
 			Spec: networkextensionv1.ListenerSpec{
-				LoadbalancerID: "lb1",
+				LoadbalancerID: "lb-1",
 				Port:           3000,
 				EndPort:        3002,
 				Protocol:       "tcp",
@@ -81,11 +81,11 @@ func getExistedListeners() []networkextensionv1.Listener {
 		},
 		{
 			ObjectMeta: k8smetav1.ObjectMeta{
-				Name:      GetSegmentListenerName("lb1", 3003, 3005),
+				Name:      GetSegmentListenerName("lb-1", 3003, 3005),
 				Namespace: "ns1",
 			},
 			Spec: networkextensionv1.ListenerSpec{
-				LoadbalancerID: "lb1",
+				LoadbalancerID: "lb-1",
 				Port:           3003,
 				EndPort:        3005,
 				Protocol:       "tcp",
@@ -116,6 +116,9 @@ func constructStatefulsetData(cli k8sclient.Client) {
 				Namespace: "test",
 				Labels: map[string]string{
 					"app": "sts-1",
+				},
+				OwnerReferences: []k8smetav1.OwnerReference{
+					{Kind: "StatefulSet", Name: "sts-1"},
 				},
 			},
 			Spec: k8scorev1.PodSpec{
@@ -198,14 +201,19 @@ func constructK8sData(cli k8sclient.Client) {
 						Ports: []k8scorev1.ContainerPort{
 							{
 								ContainerPort: int32(containerPort),
+								Protocol:      "TCP",
 							},
 						},
 					},
 				},
 			},
 			Status: k8scorev1.PodStatus{
+				Phase:  k8scorev1.PodRunning,
 				PodIP:  podIPs[i],
 				HostIP: hostIPs[i],
+				Conditions: []k8scorev1.PodCondition{
+					{Type: k8scorev1.ContainersReady, Status: k8scorev1.ConditionTrue},
+				},
 			},
 		})
 	}
@@ -238,7 +246,7 @@ func constructK8sData(cli k8sclient.Client) {
 				},
 				Ports: []k8scorev1.ServicePort{
 					{
-						Protocol:   "tcp",
+						Protocol:   "TCP",
 						Port:       svcPorts[i],
 						NodePort:   nodePorts[i],
 						TargetPort: intstr.FromInt(containerPort),
@@ -291,7 +299,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -313,22 +321,22 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): {
+				GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb1", 8000),
+						Name:      GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           8000,
 						Protocol:       "TCP",
 						TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -361,7 +369,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -384,22 +392,22 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): {
+				GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb1", 8000),
+						Name:      GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           8000,
 						Protocol:       "TCP",
 						TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -432,7 +440,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -460,22 +468,22 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): {
+				GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb1", 8000),
+						Name:      GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           8000,
 						Protocol:       "HTTP",
 						Rules: []networkextensionv1.ListenerRule{
@@ -514,7 +522,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -555,22 +563,22 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): {
+				GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb1", 8000),
+						Name:      GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           8000,
 						Protocol:       "TCP",
 						TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -603,7 +611,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -623,23 +631,23 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetSegmentListenerName("lb1", 18001, 0): {
+				GetSegmentListenerName("lb-1", 18001, 0): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18001, 0),
+						Name:      GetSegmentListenerName("lb-1", 18001, 0),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18001,
 						Protocol:       "TCP",
 						TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -655,23 +663,23 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetSegmentListenerName("lb1", 18002, 0): {
+				GetSegmentListenerName("lb-1", 18002, 0): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18002, 0),
+						Name:      GetSegmentListenerName("lb-1", 18002, 0),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18002,
 						Protocol:       "TCP",
 						TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -699,7 +707,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -720,23 +728,23 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetSegmentListenerName("lb1", 18010, 18019): {
+				GetSegmentListenerName("lb-1", 18010, 18019): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18010, 18019),
+						Name:      GetSegmentListenerName("lb-1", 18010, 18019),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueTrue,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18010,
 						EndPort:        18019,
 						Protocol:       "TCP",
@@ -753,23 +761,23 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetSegmentListenerName("lb1", 18020, 18029): {
+				GetSegmentListenerName("lb-1", 18020, 18029): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18020, 18029),
+						Name:      GetSegmentListenerName("lb-1", 18020, 18029),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueTrue,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18020,
 						EndPort:        18029,
 						Protocol:       "TCP",
@@ -798,7 +806,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -820,23 +828,23 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetSegmentListenerName("lb1", 18010, 18019): {
+				GetSegmentListenerName("lb-1", 18010, 18019): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18010, 18019),
+						Name:      GetSegmentListenerName("lb-1", 18010, 18019),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueTrue,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18010,
 						EndPort:        18019,
 						Protocol:       "TCP",
@@ -853,23 +861,23 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetSegmentListenerName("lb1", 18020, 18029): {
+				GetSegmentListenerName("lb-1", 18020, 18029): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18020, 18029),
+						Name:      GetSegmentListenerName("lb-1", 18020, 18029),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueTrue,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18020,
 						EndPort:        18029,
 						Protocol:       "TCP",
@@ -898,7 +906,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "test-ingress-for-http-mapping",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -912,11 +920,11 @@ func TestIngressConvert(t *testing.T) {
 								EndIndex:          4,
 								Protocol:          "HTTP",
 								Routes: []networkextensionv1.IngressPortMappingLayer7Route{
-									networkextensionv1.IngressPortMappingLayer7Route{
+									{
 										Domain: "www.testdomain1.com",
 										Path:   "/url1",
 									},
-									networkextensionv1.IngressPortMappingLayer7Route{
+									{
 										Domain: "www.testdomain2.com",
 										Path:   "/url2",
 									},
@@ -928,27 +936,27 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetSegmentListenerName("lb1", 18001, 0): {
+				GetSegmentListenerName("lb-1", 18001, 0): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18001, 0),
+						Name:      GetSegmentListenerName("lb-1", 18001, 0),
 						Namespace: "test",
 						Labels: map[string]string{
 							"test-ingress-for-http-mapping": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18001,
 						Protocol:       "HTTP",
 						Rules: []networkextensionv1.ListenerRule{
-							networkextensionv1.ListenerRule{
+							{
 								Domain: "www.testdomain1.com",
 								Path:   "/url1",
 								TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -962,7 +970,7 @@ func TestIngressConvert(t *testing.T) {
 									},
 								},
 							},
-							networkextensionv1.ListenerRule{
+							{
 								Domain: "www.testdomain2.com",
 								Path:   "/url2",
 								TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -980,27 +988,27 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetSegmentListenerName("lb1", 18002, 0): {
+				GetSegmentListenerName("lb-1", 18002, 0): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetSegmentListenerName("lb1", 18002, 0),
+						Name:      GetSegmentListenerName("lb-1", 18002, 0),
 						Namespace: "test",
 						Labels: map[string]string{
 							"test-ingress-for-http-mapping": networkextensionv1.LabelValueForIngressName,
 							// if segment length is 1, don't use segment feature
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           18002,
 						Protocol:       "HTTP",
 						Rules: []networkextensionv1.ListenerRule{
-							networkextensionv1.ListenerRule{
+							{
 								Domain: "www.testdomain1.com",
 								Path:   "/url1",
 								TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -1014,7 +1022,7 @@ func TestIngressConvert(t *testing.T) {
 									},
 								},
 							},
-							networkextensionv1.ListenerRule{
+							{
 								Domain: "www.testdomain2.com",
 								Path:   "/url2",
 								TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -1044,7 +1052,7 @@ func TestIngressConvert(t *testing.T) {
 						Name:      "ingress1",
 						Namespace: "test",
 						Annotations: map[string]string{
-							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb1",
+							networkextensionv1.AnnotationKeyForLoadbalanceIDs: "lb-1",
 						},
 					},
 					Spec: networkextensionv1.IngressSpec{
@@ -1077,22 +1085,22 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerNameWithProtocol("lb1", "tcp", 8000): {
+				GetListenerNameWithProtocol("lb-1", "tcp", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerNameWithProtocol("lb1", "tcp", 8000),
+						Name:      GetListenerNameWithProtocol("lb-1", "tcp", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           8000,
 						Protocol:       "TCP",
 						TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -1113,22 +1121,22 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetListenerNameWithProtocol("lb1", "udp", 8000): {
+				GetListenerNameWithProtocol("lb-1", "udp", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerNameWithProtocol("lb1", "udp", 8000),
+						Name:      GetListenerNameWithProtocol("lb-1", "udp", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
 							networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-							networkextensionv1.LabelKeyForLoadbalanceID:     "lb1",
+							networkextensionv1.LabelKeyForLoadbalanceID:     "lb-1",
 							networkextensionv1.LabelKeyForLoadbalanceRegion: "testregion",
 						},
 						ResourceVersion: "1",
 						Finalizers:      []string{"ingresscontroller.bkbcs.tencent.com"},
 					},
 					Spec: networkextensionv1.ListenerSpec{
-						LoadbalancerID: "lb1",
+						LoadbalancerID: "lb-1",
 						Port:           8000,
 						Protocol:       "UDP",
 						TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -1163,81 +1171,82 @@ func TestIngressConvert(t *testing.T) {
 		AnyTimes()
 	mockCloud.
 		EXPECT().
-		DescribeLoadBalancer("testregion", "lb1", "").
+		DescribeLoadBalancer("testregion", "lb-1", "").
 		Return(&cloud.LoadBalanceObject{
-			LbID:   "lb1",
+			LbID:   "lb-1",
 			Name:   "lbname1",
 			Region: "testregion",
 		}, nil).
 		AnyTimes()
 	mockCloud.
 		EXPECT().
-		DescribeLoadBalancer("testregion", "lb2", "").
+		DescribeLoadBalancer("testregion", "lb-2", "").
 		Return(&cloud.LoadBalanceObject{
-			LbID:   "lb2",
+			LbID:   "lb-2",
 			Name:   "lbname2",
 			Region: "testregion",
 		}, nil).
 		AnyTimes()
 
 	for _, test := range testCases {
-		t.Logf("test content: %s", test.testTitle)
-		newScheme := runtime.NewScheme()
-		existedListeners := &networkextensionv1.ListenerList{}
-		newScheme.AddKnownTypes(
-			networkextensionv1.GroupVersion,
-			&networkextensionv1.Listener{},
-			&networkextensionv1.Ingress{},
-			existedListeners)
-		newScheme.AddKnownTypes(
-			k8scorev1.SchemeGroupVersion,
-			&k8scorev1.Service{},
-			&k8scorev1.ServiceList{},
-			&k8scorev1.Endpoints{},
-			&k8scorev1.Pod{},
-			&k8scorev1.PodList{})
-		newScheme.AddKnownTypes(
-			k8sappsv1.SchemeGroupVersion,
-			&k8sappsv1.StatefulSet{},
-		)
-		cli := k8sfake.NewFakeClientWithScheme(newScheme)
+		t.Run(test.testTitle, func(t *testing.T) {
+			newScheme := runtime.NewScheme()
+			existedListeners := &networkextensionv1.ListenerList{}
+			newScheme.AddKnownTypes(
+				networkextensionv1.GroupVersion,
+				&networkextensionv1.Listener{},
+				&networkextensionv1.Ingress{},
+				existedListeners)
+			newScheme.AddKnownTypes(
+				k8scorev1.SchemeGroupVersion,
+				&k8scorev1.Service{},
+				&k8scorev1.ServiceList{},
+				&k8scorev1.Endpoints{},
+				&k8scorev1.Pod{},
+				&k8scorev1.PodList{})
+			newScheme.AddKnownTypes(
+				k8sappsv1.SchemeGroupVersion,
+				&k8sappsv1.StatefulSet{},
+			)
+			cli := k8sfake.NewFakeClientWithScheme(newScheme)
 
-		constructK8sData(cli)
-		constructStatefulsetData(cli)
+			constructK8sData(cli)
+			constructStatefulsetData(cli)
 
-		ic, err := NewIngressConverter(
-			&IngressConverterOpt{
-				DefaultRegion:     "testregion",
-				IsTCPUDPPortReuse: test.isTCPUDPReuse,
-			},
-			cli,
-			tencentcloud.NewClbValidater(),
-			mockCloud,
-		)
-		if err != nil {
-			t.Errorf("create new ingress converter failed, err %s", err.Error())
-		}
-
-		for _, ingress := range test.ingresses {
-			cli.Create(context.TODO(), &ingress)
-			err := ic.ProcessUpdateIngress(&ingress)
-			if (err != nil && !test.hasErr) || (err == nil && test.hasErr) {
-				t.Errorf("expect %v, but err is %v", test.hasErr, err)
+			ic, err := NewIngressConverter(
+				&IngressConverterOpt{
+					DefaultRegion:     "testregion",
+					IsTCPUDPPortReuse: test.isTCPUDPReuse,
+				},
+				cli,
+				tencentcloud.NewClbValidater(),
+				mockCloud,
+			)
+			if err != nil {
+				t.Errorf("create new ingress converter failed, err %s", err.Error())
 			}
-		}
 
-		tmpListenerMap := make(map[string]networkextensionv1.Listener)
-		cli.List(context.TODO(), existedListeners, &k8sclient.ListOptions{})
-		for index := range existedListeners.Items {
-			tmpListenerMap[existedListeners.Items[index].GetName()] = existedListeners.Items[index]
-		}
-		for key, lis := range test.generatedListeners {
-			tmpLis := tmpListenerMap[key]
-			if !reflect.DeepEqual(lis, tmpLis) {
-				lisData, _ := json.Marshal(lis)
-				tmpData, _ := json.Marshal(tmpLis)
-				t.Errorf("expected %s but get %s", string(lisData), string(tmpData))
+			for _, ingress := range test.ingresses {
+				cli.Create(context.TODO(), &ingress)
+				err := ic.ProcessUpdateIngress(&ingress)
+				if (err != nil && !test.hasErr) || (err == nil && test.hasErr) {
+					t.Errorf("expect %v, but err is %v", test.hasErr, err)
+				}
 			}
-		}
+
+			tmpListenerMap := make(map[string]networkextensionv1.Listener)
+			cli.List(context.TODO(), existedListeners, &k8sclient.ListOptions{})
+			for index := range existedListeners.Items {
+				tmpListenerMap[existedListeners.Items[index].GetName()] = existedListeners.Items[index]
+			}
+			for key, lis := range test.generatedListeners {
+				tmpLis := tmpListenerMap[key]
+				if !reflect.DeepEqual(lis, tmpLis) {
+					lisData, _ := json.Marshal(lis)
+					tmpData, _ := json.Marshal(tmpLis)
+					t.Errorf("\nexpect:\n%s\nbut get:\n%s", string(lisData), string(tmpData))
+				}
+			}
+		})
 	}
 }

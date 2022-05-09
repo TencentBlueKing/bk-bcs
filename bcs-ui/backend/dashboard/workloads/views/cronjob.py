@@ -12,11 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.dashboard.viewsets import DashboardViewSet
+from backend.dashboard.viewsets import NamespaceScopeViewSet
 from backend.resources.workloads.cronjob import CronJob
 
 
-class CronJobViewSet(DashboardViewSet):
+class CronJobViewSet(NamespaceScopeViewSet):
     """ CronJob 相关接口 """
 
     resource_client = CronJob

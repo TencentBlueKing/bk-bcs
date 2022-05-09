@@ -90,7 +90,7 @@ PAAS_LABLES = {
     LABLE_PROJECT_ID: "{{SYS_PROJECT_ID}}",
     SOURCE_TYPE_LABEL_KEY: "template",
 }
-# 公共的lable
+# 公共的labels
 PUBLIC_LABELS = BCS_LABELS.copy()
 PUBLIC_LABELS.update(PAAS_LABLES)
 

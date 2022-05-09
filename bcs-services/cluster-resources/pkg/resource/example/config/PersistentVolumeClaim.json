@@ -1,0 +1,13 @@
+{
+  "kind": "PersistentVolumeClaim",
+  "class": "storage",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_persistent_volume_claim",
+      "alias": "PersistentVolumeClaim 简单示例",
+      "description": "简单的 PersistentVolumeClaim 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

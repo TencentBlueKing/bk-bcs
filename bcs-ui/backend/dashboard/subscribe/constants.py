@@ -15,7 +15,6 @@ specific language governing permissions and limitations under the License.
 from backend.resources.configs.configmap import ConfigMap
 from backend.resources.configs.secret import Secret
 from backend.resources.custom_object import CustomResourceDefinition
-from backend.resources.event.client import Event
 from backend.resources.hpa.client import HPA
 from backend.resources.namespace.client import Namespace
 from backend.resources.networks.endpoints import Endpoints
@@ -68,7 +67,6 @@ K8S_RESOURCE_CLIENTS = [
     # CustomResource
     CustomResourceDefinition,
     # cluster
-    Event,
     Namespace,
     # HPA
     HPA,
@@ -76,3 +74,29 @@ K8S_RESOURCE_CLIENTS = [
 
 # K8S资源类型：Client
 KIND_RESOURCE_CLIENT_MAP = {client.kind: client for client in K8S_RESOURCE_CLIENTS}
+
+# 共享集群支持调用订阅接口的资源（同样需要检查命名空间）
+SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS = [
+    client.kind
+    for client in [
+        # cluster
+        Namespace,
+        # workloads
+        CronJob,
+        DaemonSet,
+        Deployment,
+        Job,
+        Pod,
+        StatefulSet,
+        # networks
+        Endpoints,
+        Ingress,
+        Service,
+        # configurations
+        ConfigMap,
+        Secret,
+    ]
+]
+
+# 目前开放两类自定义资源可以订阅
+SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS += ['GameDeployment', 'GameStatefulSet']
