@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -88,11 +89,29 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	consoleQuery := new(podmanager.ConsoleQuery)
 	c.BindQuery(consoleQuery)
 
-	podCtx, err := podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
-	if err != nil {
-		APIError(c, i18n.GetMessage(err.Error()))
-		return
-	}
+	var (
+		podCtx *types.PodContext
+		err    error
+	)
+
+	// 统计耗时
+	func() {
+		queryPodCtxStart := time.Now()
+		defer func() {
+			if consoleQuery.IsContainerDirectMode() {
+				return
+			}
+
+			podWaitDuration := time.Since(queryPodCtxStart)
+			metrics.SetRequestIgnoreDuration(c, podWaitDuration)
+		}()
+
+		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
+		if err != nil {
+			APIError(c, i18n.GetMessage(err.Error()))
+			return
+		}
+	}()
 
 	podCtx.ProjectId = projectId
 	podCtx.Username = authCtx.Username

@@ -21,10 +21,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const (
-	HttpRequestDurationKey = "http_request_duration_seconds"
-)
-
 var (
 	// http 请求总量
 	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -35,7 +31,7 @@ var (
 	}, []string{"handler", "method", "status", "code"})
 
 	// http 请求耗时, 包含页面返回, API请求, WebSocket(去掉pod_create耗时)
-	httpRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "http_request_duration_seconds",
@@ -51,14 +47,6 @@ var (
 		Help:      "Counter of pod create to bcs-webconsole.",
 	}, []string{"namespace", "name", "status"})
 
-	// 删除pod数量
-	podDeleteTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_total",
-		Help:      "Counter of pod delete total to bcs-webconsole.",
-	}, []string{"namespace", "name", "status"})
-
 	// 创建pod延迟指标
 	podCreateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
@@ -66,6 +54,14 @@ var (
 		Name:      "pod_create_duration_seconds",
 		Help:      "create duration(seconds) of pod",
 		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
+	}, []string{"namespace", "name", "status"})
+
+	// 删除pod数量
+	podDeleteTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      "pod_delete_total",
+		Help:      "Counter of pod delete total to bcs-webconsole.",
 	}, []string{"namespace", "name", "status", "reason"})
 
 	// 删除pod延迟指标
@@ -75,7 +71,7 @@ var (
 		Name:      "pod_delete_duration_seconds",
 		Help:      "delete duration(seconds) of pod",
 		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
-	}, []string{"namespace", "name", "status"})
+	}, []string{"namespace", "name", "status", "reason"})
 
 	// ws连接
 	wsConnectionTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -105,7 +101,7 @@ var (
 
 func init() {
 	prometheus.MustRegister(httpRequestsTotal)
-	prometheus.MustRegister(httpRequestDurationSeconds)
+	prometheus.MustRegister(httpRequestDuration)
 	prometheus.MustRegister(podCreateTotal)
 	prometheus.MustRegister(podDeleteTotal)
 	prometheus.MustRegister(podCreateDuration)
@@ -123,21 +119,10 @@ func HandlerFunc() gin.HandlerFunc {
 	}
 }
 
-func ReportAPIRequestMetric(handler, method, status, code string, duration time.Duration) {
+// collectHTTPRequestMetric http metrics 处理
+func collectHTTPRequestMetric(handler, method, status, code string, duration time.Duration) {
 	httpRequestsTotal.WithLabelValues(handler, method, status, code).Inc()
-	httpRequestDurationSeconds.WithLabelValues(handler, method, status, code).Observe(duration.Seconds())
-}
-
-// CollectPodCreateDurations collect below metrics:
-// 1.the create duration(seconds) of each pod
-// 2.the max create duration(seconds) of pod
-// 3.the min create duration(seconds) of pod
-func CollectPodCreateDurations(namespace, podName, status string, started time.Time) {
-	duration := time.Since(started).Seconds()
-
-	podCreateTotal.WithLabelValues(namespace, podName, status).Inc()
-	podCreateDuration.WithLabelValues(namespace, podName, status).Observe(duration)
-
+	httpRequestDuration.WithLabelValues(handler, method, status, code).Observe(duration.Seconds())
 }
 
 // CollectPodDeleteDurations collect below metrics:

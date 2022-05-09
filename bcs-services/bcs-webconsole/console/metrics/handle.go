@@ -18,29 +18,43 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	"github.com/gin-gonic/gin"
 )
 
 // RequestCollect 统计请求耗时
 func RequestCollect(handler string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		start := time.Now()
 		c.Next()
 		code := strconv.FormatInt(int64(c.Writer.Status()), 10)
-		requestDuration := getRequestDuration(c, start)
-		ReportAPIRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), code, requestDuration)
+		requestDuration := getRequestDuration(c)
+		collectHTTPRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), code, requestDuration)
 	}
 }
 
+// SetRequestIgnoreDuration 忽略 长链接/Pod 拉起等
+func SetRequestIgnoreDuration(c *gin.Context, duration time.Duration) {
+	c.Set(httpRequestDurationIgnoreKey, duration)
+}
+
+// PodCollect Pod拉起耗时统计
+func PodCollect(namespace, podName, status string, duration time.Duration) {
+	podCreateTotal.WithLabelValues(namespace, podName, status).Inc()
+	podCreateDuration.WithLabelValues(namespace, podName, status).Observe(duration.Seconds())
+}
+
 // getRequestDuration 获取请求耗时, 可以是统计整个函数时间，或者在函数内计算好(长链接场景)
-func getRequestDuration(c *gin.Context, start time.Time) time.Duration {
-	requestDuration := c.Value(HttpRequestDurationKey)
-	duration, ok := requestDuration.(time.Duration)
+func getRequestDuration(c *gin.Context) time.Duration {
+	authCtx := route.MustGetAuthContext(c)
+	duration := time.Since(authCtx.StartTime)
+
+	requestIgnoreDuration := c.Value(httpRequestDurationIgnoreKey)
+	ignoreDuration, ok := requestIgnoreDuration.(time.Duration)
 	if ok {
-		return duration
+		duration = duration - ignoreDuration
 	}
 
-	return time.Since(start)
+	return duration
 }
 
 func respStatusTransform(status int) string {

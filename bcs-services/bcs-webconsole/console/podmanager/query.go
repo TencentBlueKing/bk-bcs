@@ -201,6 +201,14 @@ func (q *ConsoleQuery) MakeEncodedQuery() string {
 	return values.Encode()
 }
 
+// IsContainerDirectMode 是否是直连容器请求
+func (q *ConsoleQuery) IsContainerDirectMode() bool {
+	if q.ContainerId != "" || q.Namespace != "" || q.PodName != "" || q.ContainerName != "" {
+		return true
+	}
+	return false
+}
+
 // QueryAuthPodCtx web鉴权模式
 func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQuery *ConsoleQuery) (*types.PodContext, error) {
 	//  直连模式
@@ -228,7 +236,7 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 	}
 
 	// 有任意参数, 使用直连模式
-	if consoleQuery.ContainerId != "" || consoleQuery.Namespace != "" || consoleQuery.PodName != "" || consoleQuery.ContainerName != "" {
+	if consoleQuery.IsContainerDirectMode() {
 		return nil, errors.New("container_id或namespace/pod_name/container_name不能同时为空")
 	}
 

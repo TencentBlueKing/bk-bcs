@@ -40,8 +40,6 @@ var upgrader = websocket.Upgrader{
 
 // BCSWebSocketHandler WebSocket 连接处理函数
 func (s *service) BCSWebSocketHandler(c *gin.Context) {
-	start := time.Now()
-
 	// 还未建立 WebSocket 连接, 使用 Json 返回
 	errResp := types.APIResponse{
 		Code: 400,
@@ -89,6 +87,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return
 	}
 
+	start := time.Now()
 	metrics.CollectWsConnection(podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName, podCtx.ContainerName, start)
 	defer metrics.CollectCloseWs(podCtx.Namespace, podCtx.PodName)
 
@@ -124,12 +123,18 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
 
-	c.Set(metrics.HttpRequestDurationKey, time.Since(start))
+	func() {
+		wsConnStart := time.Now()
+		defer func() {
+			wsConnDuration := time.Since(wsConnStart)
+			metrics.SetRequestIgnoreDuration(c, wsConnDuration)
+		}()
 
-	if err := eg.Wait(); err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, err)
-		return
-	}
+		if err := eg.Wait(); err != nil {
+			manager.GracefulCloseWebSocket(ctx, ws, connected, err)
+			return
+		}
+	}()
 
 	// 正常退出, 如使用 Exit 命令主动退出返回提示
 	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New("BCS Console 服务端连接断开，请重新登录"))
