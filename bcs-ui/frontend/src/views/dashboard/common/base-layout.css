@@ -33,6 +33,26 @@
                     width: 320px;
                 }
             }
+            .resource-create-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 10px;
+            }
+            .resource-create-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                top: -1px;
+                margin-left: 4px;
+            }
+            .bk-dropdown-list {
+                overflow: hidden;
+                li {
+                    cursor: pointer;
+                }
+            }
         }
     }
     .detail-header {

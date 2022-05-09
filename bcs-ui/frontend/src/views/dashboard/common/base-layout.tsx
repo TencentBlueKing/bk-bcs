@@ -1,8 +1,6 @@
 /* eslint-disable camelcase */
 import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/composition-api'
 import DashboardTopActions from './dashboard-top-actions'
-// import useCluster from './use-cluster'
-import useInterval from './use-interval'
 import useNamespace from './use-namespace'
 import usePage from './use-page'
 import useSearch from './use-search'
@@ -79,7 +77,7 @@ export default defineComponent({
         }
     },
     setup (props, ctx) {
-        const { $router, $i18n, $bkInfo, $store, $bkMessage } = ctx.root
+        const { $router, $i18n, $bkInfo, $store, $bkMessage, $route } = ctx.root
         const { type, category, kind, showNameSpace, showCrd, defaultActiveDetailType, defaultCrd } = toRefs(props)
 
         // crd
@@ -93,7 +91,7 @@ export default defineComponent({
         })
         const currentCrdExt = computed(() => {
             const item = crdList.value.find(item => item.metadata.name === currentCrd.value)
-            return crdData.value?.manifest_ext?.[item?.metadata?.uid] || {}
+            return crdData.value?.manifestExt?.[item?.metadata?.uid] || {}
         })
         // 未选择crd时提示
         const crdTips = computed(() => {
@@ -233,8 +231,7 @@ export default defineComponent({
         })
 
         // 订阅事件
-        const { initParams, handleSubscribe } = useSubscribe(data, ctx)
-        const { start, stop } = useInterval(handleSubscribe, 5000)
+        const { handleSubscribe } = useSubscribe(data, ctx)
         const subscribeKind = computed(() => {
             // 自定义资源（非CustomResourceDefinition类型的crd）的kind是根据选择的crd动态获取的，不能取props的kind值
             return kind.value === 'CustomObject' ? crdKind.value : kind.value
@@ -244,29 +241,35 @@ export default defineComponent({
         const apiVersion = computed(() => {
             return ['GameDeployment', 'GameStatefulSet'].includes(kind.value) ? 'tkex.tencent.com/v1alpha1' : currentCrdExt.value.api_version
         })
+        const projectId = computed(() => $route.params.projectId)
+        const clusterId = computed(() => $route.params.clusterId)
+        const subscribeURL = computed(() => {
+            // todo
+            return `wss://test`
+        })
         const handleStartSubscribe = () => {
             // 自定义的CRD订阅时必须传apiVersion
             // eslint-disable-next-line @typescript-eslint/camelcase
             if (!subscribeKind.value || !resourceVersion.value || (customCrd.value && !apiVersion.value)) return
 
-            stop()
             const params: ISubscribeParams = {
                 kind: subscribeKind.value,
-                resource_version: resourceVersion.value,
-                api_version: apiVersion.value,
+                resourceVersion: resourceVersion.value,
                 namespace: namespaceValue.value
 
             }
-            if (customCrd.value) {
-                params.crd_name = currentCrd.value
+            if (apiVersion.value) {
+                params.apiVersion = apiVersion.value
             }
-            initParams(params)
-            start()
+            if (customCrd.value) {
+                params.CRDName = currentCrd.value
+            }
+            handleSubscribe(`${subscribeURL.value}?${new URLSearchParams(params as Record<string, any>)}`)
         }
 
         // 获取额外字段方法
         const handleGetExtData = (uid: string, ext?: string) => {
-            const extData = data.value.manifest_ext[uid] || {}
+            const extData = data.value.manifestExt[uid] || {}
             return ext ? extData[ext] : extData
         }
 
@@ -339,22 +342,51 @@ export default defineComponent({
                 }
             })
         }
-        // 更新资源
-        const handleUpdateResource = (row) => {
-            const { name, namespace } = row.metadata || {}
+        // 创建资源（表单模式）
+        const handleCreateFormResource = () => {
             $router.push({
-                name: 'dashboardResourceUpdate',
-                params: {
-                    namespace,
-                    name
-                },
+                name: 'dashboardFormResourceUpdate',
                 query: {
                     type: type.value,
                     category: category.value,
-                    kind: type.value === 'crd' ? kind.value : row.kind,
+                    kind: kind.value,
                     crd: currentCrd.value
                 }
             })
+        }
+        // 更新资源
+        const handleUpdateResource = (row) => {
+            const { name, namespace, uid } = row.metadata || {}
+            const editMode = handleGetExtData(uid, 'editMode')
+            if (editMode === 'yaml') {
+                $router.push({
+                    name: 'dashboardResourceUpdate',
+                    params: {
+                        namespace,
+                        name
+                    },
+                    query: {
+                        type: type.value,
+                        category: category.value,
+                        kind: type.value === 'crd' ? kind.value : row.kind,
+                        crd: currentCrd.value
+                    }
+                })
+            } else {
+                $router.push({
+                    name: 'dashboardFormResourceUpdate',
+                    params: {
+                        namespace,
+                        name
+                    },
+                    query: {
+                        type: type.value,
+                        category: category.value,
+                        kind: type.value === 'crd' ? kind.value : row.kind,
+                        crd: currentCrd.value
+                    }
+                })
+            }
         }
         // 删除资源
         const handleDeleteResource = (row) => {
@@ -433,6 +465,7 @@ export default defineComponent({
             currentCrdExt,
             additionalColumns,
             crdTips,
+            webAnnotations,
             getJsonPathValue,
             renderCrdHeader,
             stop,
@@ -446,11 +479,59 @@ export default defineComponent({
             handleUpdateResource,
             handleDeleteResource,
             handleCreateResource,
+            handleCreateFormResource,
             handleCrdChange,
             handleNamespaceSelected
         }
     },
     render () {
+        const renderCreate = () => {
+            if (this.showCreate) {
+                if(this.webAnnotations?.featureFlag?.FORM_CREATE) {
+                    return (
+                        <bk-dropdown-menu trigger="click" {...{
+                            scopedSlots: {
+                                'dropdown-trigger': () => (
+                                    <bk-button
+                                        class="resource-create"
+                                        theme="primary">
+                                        <div class="resource-create-wrapper">
+                                            { this.$t('创建') }
+                                            <span class="resource-create-icon">
+                                                <i class="bk-icon icon-angle-down"></i>
+                                            </span>
+                                        </div>
+                                    </bk-button>
+                                ),
+                                'dropdown-content': () => (
+                                    <ul class="bk-dropdown-list">
+                                        <li onClick={this.handleCreateFormResource}><a href="javascript:;">{this.$t('表单模式')}</a></li>
+                                        <li onClick={this.handleCreateResource}>
+                                            <a href="javascript:;">{this.$t('Yaml模式')}</a>
+                                        </li>
+                                    </ul>
+                                )
+                            }
+                        }}>
+                        </bk-dropdown-menu>
+                    )
+                }
+                return (
+                    <bk-button
+                        v-authority={{
+                            clickable: this.pagePerms.create?.clickable,
+                            content: this.pagePerms.create?.tip || this.crdTips || this.$t('无权限')
+                        }}
+                        class="resource-create"
+                        icon="plus"
+                        theme="primary"
+                        onClick={this.handleCreateResource}>
+                        { this.$t('创建') }
+                    </bk-button>
+                )
+            }
+            return <div></div>
+        }
         return (
             <div class="biz-content base-layout">
                 <div class="biz-top-bar">
@@ -462,18 +543,7 @@ export default defineComponent({
                 <div class="biz-content-wrapper" v-bkloading={{ isLoading: this.isLoading, zIndex: 10 }}>
                     <div class="base-layout-operate mb20">
                         {
-                            this.showCreate ? (
-                                <bk-button v-authority={{
-                                    clickable: this.pagePerms.create?.clickable,
-                                    content: this.pagePerms.create?.tip || this.crdTips || this.$t('无权限')
-                                }}
-                                class="resource-create"
-                                icon="plus"
-                                theme="primary"
-                                onClick={this.handleCreateResource}>
-                                    { this.$t('创建') }
-                                </bk-button>
-                            ) : <div></div>
+                            renderCreate()
                         }
 
                         <div class="search-wapper">

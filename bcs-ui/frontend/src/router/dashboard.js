@@ -12,6 +12,9 @@ const DashboardWorkloadJobs = () => import(/* webpackChunkName: 'dashboard-workl
 const DashboardWorkloadPods = () => import(/* webpackChunkName: 'dashboard-workload' */'@/views/dashboard/workload/pods.vue')
 const DashboardWorkloadDetail = () => import(/* webpackChunkName: 'dashboard-workload-detail' */'@/views/dashboard/workload/detail/index.vue')
 
+// 资源表单化创建
+const DashboardFormResourceUpdate = () => import(/* webpackChunkName: resource-create */'@/views/dashboard/resource-update/form-resource.vue')
+
 // 自定义资源
 const DashboardCRD = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/crd.vue')
 const DashboardGameStatefulSets = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/gamestatefulsets.vue')
@@ -267,6 +270,40 @@ const childRoutes = [
         props: (route) => ({ ...route.params, ...route.query }),
         component: DashboardResourceUpdate,
         meta: { isDashboard: true },
+        beforeEnter: (to, from, next) => {
+            // 设置当前详情的父级菜单
+            const menuIdMap = {
+                CronJob: 'dashboardWorkloadCronJobs',
+                Deployment: 'dashboardWorkloadDeployments',
+                DaemonSet: 'dashboardWorkloadDaemonSets',
+                Job: 'dashboardWorkloadJobs',
+                Pod: 'dashboardWorkloadPods',
+                StatefulSet: 'dashboardWorkloadStatefulSets',
+                Ingress: 'dashboardNetworkIngress',
+                Service: 'dashboardNetworkService',
+                Endpoints: 'dashboardNetworkEndpoints',
+                ConfigMap: 'dashboardConfigsConfigMaps',
+                Secret: 'dashboardConfigsSecrets',
+                PersistentVolumeClaim: 'dashboardStoragePersistentVolumesClaims',
+                ServiceAccount: 'dashboardRbacServiceAccounts',
+                PersistentVolume: 'dashboardStoragePersistentVolumes',
+                StorageClass: 'dashboardStorageStorageClass',
+                HorizontalPodAutoscaler: 'HPA',
+                GameStatefulSet: 'dashboardGameStatefulSets',
+                GameDeployment: 'dashboardGameDeployments',
+                CustomObject: 'dashboardCustomObjects'
+            }
+            to.meta.menuId = menuIdMap[to.query.kind]
+            next()
+        }
+    },
+    // resource update form
+    {
+        path: ':projectCode/:clusterId/dashboard/form/resource/:namespace?/:name?',
+        name: 'dashboardFormResourceUpdate',
+        props: (route) => ({ ...route.params, ...route.query }),
+        component: DashboardFormResourceUpdate,
+        meta: { isDashboard: true, keepAlive: ['dashboardResourceUpdate'] },
         beforeEnter: (to, from, next) => {
             // 设置当前详情的父级菜单
             const menuIdMap = {

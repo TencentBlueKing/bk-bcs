@@ -56,24 +56,24 @@ export default defineComponent({
 
         // 处理额外字段
         const handleExtCol = (row: any, key: string) => {
-            const ext = namespaceData.value.manifest_ext[row.metadata?.uid] || {}
+            const ext = namespaceData.value.manifestExt[row.metadata?.uid] || {}
             return ext[key] || '--'
         }
 
-        // 订阅事件
-        const { initParams, handleSubscribe } = useSubscribe(namespaceData, ctx)
-        const { start, stop } = useInterval(handleSubscribe, 5000)
+        // 订阅事件 todo
+        // const { initParams, handleSubscribe } = useSubscribe(namespaceData, ctx)
+        // const { start, stop } = useInterval(handleSubscribe, 5000)
 
-        watch(resourceVersion, (newVersion, oldVersion) => {
-            if (newVersion && newVersion !== oldVersion) {
-                stop()
-                initParams({
-                    kind: 'Namespace',
-                    resource_version: resourceVersion.value
-                })
-                resourceVersion.value && start()
-            }
-        })
+        // watch(resourceVersion, (newVersion, oldVersion) => {
+        //     if (newVersion && newVersion !== oldVersion) {
+        //         stop()
+        //         initParams({
+        //             kind: 'Namespace',
+        //             resourceVersion: resourceVersion.value
+        //         })
+        //         resourceVersion.value && start()
+        //     }
+        // })
 
         onMounted(() => {
             getNamespaceData()

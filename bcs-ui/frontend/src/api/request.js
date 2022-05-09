@@ -14,7 +14,6 @@ export const request = (method, url) => (params = {}, config = {}) => {
     const variableData = {
         '$projectId': router.currentRoute.params.projectId,
         '$clusterId': store.state.curClusterId || ''
-        // '$namespace': ''
     }
     Object.keys(params).forEach(key => {
         // 自定义url变量
@@ -22,12 +21,12 @@ export const request = (method, url) => (params = {}, config = {}) => {
             variableData[key] = params[key]
         }
     })
-    let newUrl = `${DEVOPS_BCS_API_URL}${url}`
+    let newUrl = `${/(http|https):\/\/([\w.]+\/?)\S*/.test(url) ? url : `${DEVOPS_BCS_API_URL}${url}`}`
     Object.keys(variableData).forEach(key => {
         if (!variableData[key]) {
             // console.warn(`路由变量未配置${key}`)
             // 去除后面的路径符号
-            newUrl = newUrl.replace(new RegExp(`\\${key}/`, 'g'), '')
+            newUrl = newUrl.replace(`/${key}`, '')
         } else {
             newUrl = newUrl.replace(new RegExp(`\\${key}`, 'g'), variableData[key])
         }

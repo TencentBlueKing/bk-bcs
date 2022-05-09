@@ -161,7 +161,7 @@
 
     export interface IDetail {
         manifest: any;
-        manifest_ext: any;
+        manifestExt: any;
     }
 
     export interface IParams {
@@ -237,9 +237,9 @@
             const pods = computed(() => {
                 return workloadPods.value?.manifest?.items || []
             })
-            // 获取pod manifest_ext数据
+            // 获取pod manifestExt数据
             const handleGetExtData = (uid, prop) => {
-                return workloadPods.value?.manifest_ext?.[uid]?.[prop]
+                return workloadPods.value?.manifestExt?.[uid]?.[prop]
             }
             // 指标参数
             const params = computed<IParams | null>(() => {
@@ -280,7 +280,8 @@
                     $namespaceId: props.namespace,
                     label_selector: labelSelector,
                     owner_kind: props.kind,
-                    owner_name: props.name
+                    owner_name: props.name,
+                    format: "manifest"
                 })
                 return data
             }

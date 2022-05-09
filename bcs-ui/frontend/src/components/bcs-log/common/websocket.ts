@@ -1,4 +1,4 @@
-export default class LogWebSocket {
+export default class BCSWebSocket {
     timeout = 6000
     timeoutObj: any = null
     lockReconnect = false

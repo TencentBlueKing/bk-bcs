@@ -132,7 +132,7 @@
                         namespace: props.namespace,
                         pod: name,
                         name: row.name,
-                        id: row.container_id
+                        id: row.containerID
                     }
                 })
             }

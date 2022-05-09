@@ -2780,5 +2780,10 @@ export default {
         "Copy example success"
     ],
     "导入方式": ['Import Type'],
-    'kubeconfig可用性测试': ['kubeconfig usability testing']
+    'kubeconfig可用性测试': ['kubeconfig usability testing'],
+    "Yaml 模式可以兼容表单模式，但从 Yaml 切换回表单，会丢失配置，请确认": [""],
+    "切换为 YAML 模式": [""],
+    "确认切换为表单模式？": [""],
+    '将执行 Replace 操作，若多人同时编辑可能存在冲突': [''],
+    '确认资源更新': ['']
 }

@@ -21,6 +21,7 @@ import crdController from './crdcontroller.js'
 import storageRoutes from './storage'
 import dashboardRoutes from './dashboard'
 import menuConfig from '@/store/menu'
+import i18n from '@/i18n/i18n-setup'
 
 const originalPush = VueRouter.prototype.push
 const originalReplace = VueRouter.prototype.replace
@@ -110,7 +111,22 @@ router.beforeEach(async (to, from, next) => {
     }
 
     await cancelRequest()
-    next()
+
+    // 路由切换二次确认
+    if (from.meta?.backConfirm) {
+        Vue.prototype.$bkInfo({
+            type: 'warning',
+            clsName: 'custom-info-confirm',
+            title: i18n.t('确认退出当前编辑状态'),
+            subTitle: i18n.t('退出后，你修改的内容将丢失'),
+            defaultInfo: true,
+            confirmFn: () => {
+                next()
+            }
+        })
+    } else {
+        next()
+    }
 })
 
 let containerEle = null

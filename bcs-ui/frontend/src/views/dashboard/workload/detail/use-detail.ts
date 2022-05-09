@@ -4,8 +4,8 @@ import yamljs from 'js-yaml'
 
 export interface IWorkloadDetail {
     manifest: any;
-    manifest_ext: any;
-    web_annotations?: any;
+    manifestExt: any;
+    webAnnotations?: any;
 }
 
 export interface IDetailOptions {
@@ -42,7 +42,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
     // metadata 数据
     const metadata = computed(() => detail.value?.manifest?.metadata || {})
     // manifestExt 数据
-    const manifestExt = computed(() => detail.value?.manifest_ext || {})
+    const manifestExt = computed(() => detail.value?.manifestExt || {})
     // yaml数据
     const yaml = computed(() => {
         return yamljs.dump(detail.value?.manifest || {})
@@ -72,7 +72,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
             $type: type
         })
         detail.value = res.data
-        webAnnotations.value = res.web_annotations
+        webAnnotations.value = res.webAnnotations
         isLoading.value = false
         return detail.value
     }

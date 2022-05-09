@@ -1,18 +1,20 @@
 import http from '@/api'
-import { stdLogsSession } from '@/api/base'
+import { stdLogsSession, stdLogs } from '@/api/base'
 
 export default {
     namespaced: true,
     actions: {
         async getLogList (context, { projectId, clusterId, namespaceId, podId, containerName, previous }) {
-            const data = await http.get(
-                `${DEVOPS_BCS_API_URL}/api/logs/projects/${projectId}/clusters/${clusterId}/namespaces/${namespaceId}/pods/${podId}/stdlogs/?container_name=${containerName}&previous=${!!previous}`,
-                {}
-            ).catch(_ => {
+            const data = await stdLogs({
+                $projectId: projectId,
+                $clusterId: clusterId,
+                $namespaceId: namespaceId,
+                $podId: podId,
+                container_name: containerName,
+                previous: !!previous
+            }).catch(_ => {
                 return {
-                    data: {
-                        logs: []
-                    }
+                    logs: []
                 }
             })
             return data

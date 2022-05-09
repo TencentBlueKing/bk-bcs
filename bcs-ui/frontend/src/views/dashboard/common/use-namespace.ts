@@ -21,7 +21,7 @@ export default function useNamespace (ctx: SetupContext): IUseNamespace {
     const namespaceLoading = ref(false)
     const namespaceData = ref<ISubscribeData>({
         manifest: {},
-        manifest_ext: {}
+        manifestExt: {}
     })
     // 命名空间数据
     const namespaceList = computed(() => {

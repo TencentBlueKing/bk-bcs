@@ -85,7 +85,7 @@ export default defineComponent({
             if (!state.container || state.contentLoading) return
 
             state.contentLoading = true
-            const { data } = await $store.dispatch('log/getLogList', getParams())
+            const data = await $store.dispatch('log/getLogList', getParams())
             state.log = data.logs
             state.previous = data.previous
             state.contentLoading = false

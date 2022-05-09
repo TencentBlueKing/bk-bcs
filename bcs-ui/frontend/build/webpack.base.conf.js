@@ -76,7 +76,7 @@ module.exports = {
                 enforce: 'pre',
                 loader: 'eslint-loader',
                 include: [resolve('src'), resolve('build')],
-                exclude: /node_modules\/|lib\.bundle\.js|ip-selector\.js/,
+                exclude: /node_modules\/|lib\.bundle\.js|ip-selector\.js|bkui-form-umd\.js/,
                 options: {
                     formatter: friendlyFormatter
                 }
