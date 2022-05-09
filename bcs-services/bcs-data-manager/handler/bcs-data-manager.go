@@ -90,7 +90,7 @@ func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager
 		rsp.Message = fmt.Sprintf("get cluster info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
-		prom.ReportAPIRequestMetric("GetClusterInfo", "grpc", prom.StatusOK, start)
+		prom.ReportAPIRequestMetric("GetClusterInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
@@ -111,7 +111,7 @@ func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatam
 		rsp.Message = fmt.Sprintf("get namespace list info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
-		prom.ReportAPIRequestMetric("GetNamespaceInfoList", "grpc", prom.StatusOK, start)
+		prom.ReportAPIRequestMetric("GetNamespaceInfoList", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
@@ -133,7 +133,7 @@ func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanag
 		rsp.Message = fmt.Sprintf("get namespace info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
-		prom.ReportAPIRequestMetric("GetNamespaceInfo", "grpc", prom.StatusOK, start)
+		prom.ReportAPIRequestMetric("GetNamespaceInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
@@ -155,7 +155,7 @@ func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatama
 		rsp.Message = fmt.Sprintf("get workload list info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
-		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
+		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
@@ -178,7 +178,7 @@ func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanage
 		rsp.Message = fmt.Sprintf("get workload info error: %v", err)
 		rsp.Code = common.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
-		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
+		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result

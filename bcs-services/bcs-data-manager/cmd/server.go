@@ -70,7 +70,6 @@ type Server struct {
 	store         store.Server
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
-	stopCtx       context.Context
 	// extra module server, [pprof, metrics, swagger]
 	extraServer *http.Server
 }
