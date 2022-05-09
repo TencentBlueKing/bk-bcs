@@ -28,6 +28,7 @@ from backend.bcs_web.audit_log import client
 from backend.components import data, paas_cc
 from backend.container_service.projects.base.constants import ProjectKindID
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.resources.workloads.pod.utils import PodStatusParser
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, VersionedEntity
 from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
@@ -150,7 +151,7 @@ class QueryAllTaskgroups(BaseTaskgroupCls):
             message, reason = self.get_pod_conditions(condition)
             item.update(
                 {
-                    "status": status.get("phase"),
+                    "status": PodStatusParser(pod=info_data).parse(),
                     "podIP": status.get("podIP"),
                     "host_ip": status.get("hostIP"),
                     "message": message,

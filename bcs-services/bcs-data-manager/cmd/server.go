@@ -70,7 +70,7 @@ type Server struct {
 	store         store.Server
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
-	stopCh        chan struct{}
+	stopCtx       context.Context
 	// extra module server, [pprof, metrics, swagger]
 	extraServer *http.Server
 }
@@ -81,7 +81,6 @@ func NewServer(ctx context.Context, cancel context.CancelFunc, opt *DataManagerO
 		opt:           opt,
 		ctx:           ctx,
 		ctxCancelFunc: cancel,
-		stopCh:        make(chan struct{}),
 	}
 }
 
@@ -288,7 +287,7 @@ func (s *Server) initHTTPService() error {
 		}
 		if err != nil {
 			blog.Errorf("start http gateway server failed, err %s", err.Error())
-			s.stopCh <- struct{}{}
+			s.ctxCancelFunc()
 		}
 	}()
 
@@ -334,7 +333,7 @@ func (s *Server) initSignalHandler() {
 		case e := <-interrupt:
 			blog.Infof("receive interrupt %s, do close", e.String())
 			s.close()
-		case <-s.stopCh:
+		case <-s.ctx.Done():
 			blog.Infof("stop channel, do close")
 			s.close()
 		}
@@ -580,7 +579,7 @@ func (s *Server) initExtraModules() {
 		err = s.extraServer.ListenAndServe()
 		if err != nil {
 			blog.Errorf("extra modules server listen failed, err %s", err.Error())
-			s.stopCh <- struct{}{}
+			s.ctxCancelFunc()
 		}
 	}()
 }

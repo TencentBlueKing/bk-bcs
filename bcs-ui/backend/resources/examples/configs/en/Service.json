@@ -1,0 +1,13 @@
+{
+  "kind": "Service",
+  "class": "networks",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_service",
+      "alias": "Service Simple Demo",
+      "description": "A simple service demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

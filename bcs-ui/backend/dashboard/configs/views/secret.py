@@ -17,6 +17,6 @@ from backend.resources.configs.secret import Secret
 
 
 class SecretViewSet(NamespaceScopeViewSet):
-    """ Secret 相关接口 """
+    """Secret 相关接口"""
 
     resource_client = Secret

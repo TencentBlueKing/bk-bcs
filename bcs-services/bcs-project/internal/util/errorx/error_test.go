@@ -17,16 +17,15 @@ package errorx
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestProjectError(t *testing.T) {
 	// one message
-	err := New(errcode.Success, errcode.SuccessMsg)
-	assert.Equal(t, err.Error(), errcode.SuccessMsg)
+	err := NewProjectError(Success, SuccessMsg)
+	assert.Equal(t, err.Error(), SuccessMsg)
 	// some message
-	err = New(errcode.ParamErr, errcode.ParamErrMsg, "some error")
-	assert.Equal(t, int(err.Code()), int(errcode.ParamErr))
-	assert.Contains(t, err.Error(), errcode.ParamErrMsg)
+	err = NewProjectError(ParamErr, ParamErrMsg, "some error")
+	assert.Equal(t, int(err.Code()), int(ParamErr))
+	assert.Contains(t, err.Error(), ParamErrMsg)
 }

@@ -94,7 +94,7 @@ func TestCreateTempToken(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	token, err := CreateTempToken(ctx, config.G.BCS, getTestUsername())
+	token, err := CreateTempToken(ctx, config.G.BCS, getTestUsername(), getTestClusterId())
 	assert.NoError(t, err)
 	assert.Equal(t, len(token.Token), 32)
 }

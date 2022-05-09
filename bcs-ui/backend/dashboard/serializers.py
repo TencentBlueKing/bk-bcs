@@ -17,7 +17,7 @@ from rest_framework import serializers
 
 
 class ListResourceSLZ(serializers.Serializer):
-    """ 查询 K8S 资源列表 """
+    """查询 K8S 资源列表"""
 
     # NOTE：暂时只先支持 label_selector
     label_selector = serializers.CharField(label=_('标签选择算符'), required=False)
@@ -27,12 +27,12 @@ class ListResourceSLZ(serializers.Serializer):
 
 
 class CreateResourceSLZ(serializers.Serializer):
-    """ 创建 K8S 资源对象 """
+    """创建 K8S 资源对象"""
 
     manifest = serializers.JSONField(label=_('资源配置信息'))
 
 
 class UpdateResourceSLZ(CreateResourceSLZ):
-    """ 更新 K8S 资源对象 """
+    """更新 K8S 资源对象"""
 
     pass

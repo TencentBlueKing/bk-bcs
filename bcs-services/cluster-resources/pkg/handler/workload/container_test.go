@@ -15,13 +15,13 @@
 package workload
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -30,7 +30,7 @@ import (
 
 func TestContainer(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	podName := getRunningPodNameFromCluster()
 	assert.NotEqual(t, "", podName, "ensure has running pod")
@@ -83,14 +83,15 @@ func TestContainer(t *testing.T) {
 
 // 取集群中已存在的，状态为 Running 的 Pod 用于测试（需确保 Pod 存在）
 func getRunningPodNameFromCluster() string {
-	podCli := client.NewPodCliByClusterID(context.TODO(), envs.TestClusterID)
-	ret, _ := podCli.List(context.TODO(), envs.TestNamespace, "", "", metav1.ListOptions{})
+	ctx := handler.NewInjectedContext("", "", "")
+	podCli := client.NewPodCliByClusterID(ctx, envs.TestClusterID)
+	ret, _ := podCli.List(ctx, envs.TestNamespace, "", "", metav1.ListOptions{})
 
 	for _, pod := range ret["items"].([]interface{}) {
 		p, _ := pod.(map[string]interface{})
 		parser := formatter.PodStatusParser{Manifest: p}
 		if parser.Parse() == "Running" {
-			return mapx.Get(p, "metadata.name", "").(string)
+			return mapx.GetStr(p, "metadata.name")
 		}
 	}
 	return ""

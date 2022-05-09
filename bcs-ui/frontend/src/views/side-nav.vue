@@ -51,6 +51,7 @@
     import menuConfig, { IMenuItem, ISpecialMenuItem } from '@/store/menu'
     import { BCS_CLUSTER } from '@/common/constant'
     import useGoHome from '@/common/use-gohome'
+    import useConfig from '@/common/use-config'
 
     export default defineComponent({
         name: 'SideNav',
@@ -60,6 +61,7 @@
         },
         setup (props, ctx) {
             const { $store, $i18n, $router } = ctx.root
+            const { $INTERNAL } = useConfig()
             const featureCluster = ref(!localStorage.getItem('FEATURE_CLUSTER'))
             const curCluster = computed(() => {
                 const cluster = $store.state.cluster.curCluster
@@ -177,8 +179,11 @@
                 if (ctx.root.$route.name === item.routeName) return
 
                 if (item.id === 'MONITOR') {
-                    // 特殊处理监控中心
-                    window.open(`${window.DEVOPS_HOST}/console/monitor/${projectCode.value}/?project_id=${projectId.value}`)
+                    if ($INTERNAL.value) {
+                        window.open(`${window.DEVOPS_HOST}/console/monitor/${projectCode.value}/?project_id=${projectId.value}`)
+                    } else {
+                        window.open(window.BKMONITOR_URL)
+                    }
                 } else {
                     $router.push({
                         name: item.routeName,

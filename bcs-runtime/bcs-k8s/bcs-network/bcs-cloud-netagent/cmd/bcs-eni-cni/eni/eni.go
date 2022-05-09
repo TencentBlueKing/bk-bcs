@@ -90,11 +90,17 @@ func loadConf(bytes []byte, args string) (*NetConf, string, error) {
 }
 
 // ENI cni object
-type ENI struct{}
+type ENI struct{
+	eniPrefix string
+}
 
 // New create ENI object
 func New() *ENI {
 	return &ENI{}
+}
+
+func (e *ENI) SetEniPrefix(eniPrefix string) {
+	e.eniPrefix = eniPrefix
 }
 
 // getRouteTableIDByMac get route table id by mac address and eni prefix
@@ -357,12 +363,12 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 	eniMac := result.Interfaces[0].Mac
 
 	// find eni id according to eniMac
-	routeTableID, err := getRouteTableIDByMac(eniMac, constant.EniPrefix)
+	routeTableID, err := getRouteTableIDByMac(eniMac, e.eniPrefix)
 	if err != nil {
 		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s",
-			eniMac, constant.EniPrefix, err.Error())
+			eniMac, e.eniPrefix, err.Error())
 		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s",
-			eniMac, constant.EniPrefix, err.Error())
+			eniMac, e.eniPrefix, err.Error())
 	}
 
 	// get container namespace

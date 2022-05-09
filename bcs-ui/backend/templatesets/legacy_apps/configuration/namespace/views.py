@@ -318,7 +318,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 result['message'] = _("以下变量不存在:{}").format(";".join(not_exist_show_msg))
             result['data']['ns_vars'] = NameSpaceVariable.get_ns_vars(namespace_id, project_id)
         request.audit_ctx.update_fields(
-            resource=data["namespace_id"], description=_("调整命名空间({})下的变量").format(data["namespace_id"], extra=data)
+            resource=namespace_id, description=_("调整命名空间({})下的变量").format(namespace_id, extra=data)
         )
         return response.Response(result)
 

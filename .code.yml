@@ -43,7 +43,8 @@ source:
       ".*/bcs-services/bcs-cluster-manager/third_party/.*",
       ".*/bmsf-configuration/internal/protocol/.*",
       ".*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*",
-      ".*/bcs-runtime/bcs-k8s/bcs-network/.*"
+      ".*/bcs-runtime/bcs-k8s/bcs-network/.*",
+      ".*/bcs-runtime/bcs-k8s/bcs-component/cluster-autoscaler/.*"
     ]
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
   # 此处备注的第三方代码在后续统计代码量环节会被排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空

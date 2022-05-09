@@ -43,7 +43,7 @@ def common_base_request(url, data):
 
 
 def send_mail(title, content, receiver__username):
-    url = f"{settings.BK_PAAS_INNER_HOST}/{CSMI_PREFIX_PATH}/send_mail/"
+    url = f"{settings.COMPONENT_HOST}/{CSMI_PREFIX_PATH}/send_mail/"
     content = smart_str(base64.b64encode(smart_bytes(content)))
     data = {
         "receiver__username": receiver__username,  # 多个以逗号分隔
@@ -56,14 +56,14 @@ def send_mail(title, content, receiver__username):
 
 
 def send_weixin(heading, message, receiver__username):
-    url = f"{settings.BK_PAAS_INNER_HOST}/{CSMI_PREFIX_PATH}/send_weixin/"
+    url = f"{settings.COMPONENT_HOST}/{CSMI_PREFIX_PATH}/send_weixin/"
     data = {"receiver__username": receiver__username, "data": {"heading": heading, "message": message}}  # 多个以逗号分隔
     resp = common_base_request(url, data)
     return resp
 
 
 def send_sms(content, receiver__username):
-    url = f"{settings.BK_PAAS_INNER_HOST}/{CSMI_PREFIX_PATH}/send_sms/"
+    url = f"{settings.COMPONENT_HOST}/{CSMI_PREFIX_PATH}/send_sms/"
     content = smart_str(base64.b64encode(smart_bytes(content)))
     data = {"receiver__username": receiver__username, "content": content, "is_content_base64": True}  # 多个以逗号分隔
     resp = common_base_request(url, data)

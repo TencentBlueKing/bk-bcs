@@ -20,15 +20,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// NewGetRespDataBuilder 根据 Format 类型，生成不同的 Retrieve 请求响应数据生成器
-func NewGetRespDataBuilder(manifest map[string]interface{}, kind, format string) (GetRespDataBuilder, error) {
+// NewRespDataBuilder 根据 Format 类型，生成不同的 Retrieve 请求响应数据生成器
+func NewRespDataBuilder(manifest map[string]interface{}, kind, format string) (DataBuilder, error) {
 	switch format {
 	case action.ManifestFormat:
 		return &ManifestRespBuilder{manifest: manifest, kind: kind}, nil
 	case action.FormDataFormat:
 		return &FormDataRespBuilder{manifest: manifest, kind: kind}, nil
+	case action.SelectItemsFormat:
+		return &SelectItemsRespBuilder{manifest: manifest, kind: kind}, nil
 	default:
 		return nil, errorx.New(errcode.Unsupported, "不受支持的生成器格式：%s", format)
 	}
@@ -40,8 +43,20 @@ type ManifestRespBuilder struct {
 	kind     string
 }
 
-// Do ...
-func (b *ManifestRespBuilder) Do() (map[string]interface{}, error) {
+// BuildList ...
+func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
+	manifestExt := map[string]interface{}{}
+	formatFunc := formatter.GetFormatFunc(b.kind)
+	// 遍历列表中的每个资源，生成 manifestExt
+	for _, item := range b.manifest["items"].([]interface{}) {
+		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
+		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
+	}
+	return map[string]interface{}{"manifest": b.manifest, "manifestExt": manifestExt}, nil
+}
+
+// Build ...
+func (b *ManifestRespBuilder) Build() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"manifest":    b.manifest,
 		"manifestExt": formatter.GetFormatFunc(b.kind)(b.manifest),
@@ -54,8 +69,13 @@ type FormDataRespBuilder struct {
 	kind     string
 }
 
-// Do ...
-func (b *FormDataRespBuilder) Do() (map[string]interface{}, error) {
+// BuildList ...
+func (b *FormDataRespBuilder) BuildList() (map[string]interface{}, error) {
+	return nil, errorx.New(errcode.Unsupported, "FormDataRespBuilder.BuildList is unsupported")
+}
+
+// Build ...
+func (b *FormDataRespBuilder) Build() (map[string]interface{}, error) {
 	parseFunc, err := parser.GetResParseFunc(b.kind)
 	if err != nil {
 		return nil, err
@@ -63,4 +83,28 @@ func (b *FormDataRespBuilder) Do() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"formData": parseFunc(b.manifest),
 	}, nil
+}
+
+// SelectItemsRespBuilder 下拉框数据生成器
+type SelectItemsRespBuilder struct {
+	manifest map[string]interface{}
+	kind     string
+}
+
+// BuildList ...
+func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
+	// 取每个 K8S 资源的名称，作为下拉框选项
+	selectItems := []interface{}{}
+	for _, item := range mapx.GetList(b.manifest, "items") {
+		name := mapx.Get(item.(map[string]interface{}), "metadata.name", "--")
+		selectItems = append(selectItems, map[string]interface{}{
+			"label": name, "value": name,
+		})
+	}
+	return map[string]interface{}{"selectItems": selectItems}, nil
+}
+
+// Build ...
+func (b *SelectItemsRespBuilder) Build() (map[string]interface{}, error) {
+	return nil, errorx.New(errcode.Unsupported, "SelectItemsRespBuilder.Build is unsupported")
 }

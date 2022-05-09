@@ -18,17 +18,18 @@ import "google/api/annotations.proto";
 import "google/protobuf/wrappers.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
+import "google/protobuf/struct.proto";
 
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
-    info : {
-      title : "BCS Project API Doc" 
-      version : "0.0.1"
-    };
-    schemes : HTTP 
-    consumes : "application/json" 
-    produces : "application/json"
+  info : {
+    title : "BCS Project API Doc" 
+    version : "0.0.1"
   };
+  schemes : HTTP 
+  consumes : "application/json" 
+  produces : "application/json"
+};
 
 service BCSProject {
   rpc CreateProject(CreateProjectRequest) returns (ProjectResponse) {
@@ -79,6 +80,16 @@ service BCSProject {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "通过查询参数过滤项目列表, 支持分页和全量数据"
       summary : "查询项目列表"
+    };
+  }
+
+  rpc ListAuthorizedProjects(ListAuthorizedProjReq) returns (ListAuthorizedProjResp){
+    option (google.api.http) = {
+      get : "/bcsproject/v1/authorized_projects"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询用户有权限的项目列表"
+      summary : "查询有权限项目列表"
     };
   }
 }
@@ -399,9 +410,13 @@ message ProjectResponse{
     description: "返回详细信息, 可以为空"
   }];
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-	  title: "request id",
+    title: "request id",
     description: "请求 ID"
-	}];
+  }];
+  Perms webAnnotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "webAnnotations",
+    description : "项目更多信息，主要是权限相关"
+  }];
 }
 
 message ListProjectsRequest{
@@ -478,7 +493,108 @@ message ListProjectsResponse{
     description: "返回项目信息, 包含总量及项目列表"
   }];
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "request id",
+    title: "request id",
     description: "请求 ID"
-	}];
+  }];
+  Perms webAnnotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "webAnnotations",
+    description : "项目更多信息，主要是权限相关"
+  }];
+}
+
+message Perms {
+  google.protobuf.Struct perms = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "perms",
+    description : "用户针对项目的权限"
+  }];
+}
+
+message ListAuthorizedProjReq{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListAuthorizedProjReq"
+      description : "查询用户有权限的项目"
+    }
+  };
+}
+
+message ListAuthorizedProjResp{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ListProjectData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回项目信息, 包含总量及项目列表"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+service Healthz {
+  rpc Healthz(HealthzRequest) returns (HealthzResponse) {
+    option (google.api.http) = {
+      get: "/bcsproject/v1/healthz"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "探针API, 用于readiness探测"
+    };
+	}
+  rpc Ping(PingRequest) returns (PingResponse) {
+    option (google.api.http) = {
+      get: "/bcsproject/v1/ping"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description: "探针API, 用于liveness探测"
+    };
+  }
+}
+
+message HealthzRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema: {
+      title: "HealthzRequest",
+      description: "Healthz API"
+    }
+  };
+}
+
+message HealthzResponse {
+  string status = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "服务整体状态"
+  }];
+  string mongoStatus = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mongo status",
+    description: "服务依赖的 mongo 状态"
+  }];
+}
+
+message PingRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema: {
+      title: "PingRequest",
+      description: "Ping API request"
+    }
+  };
+}
+
+message PingResponse {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+      title: "PingResp",
+      description: "Ping API 响应"
+    }
+  };
+
+  string ret = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "Ret",
+    description: "成功返回 Pong"
+  }];
 }

@@ -117,6 +117,12 @@ export default {
                     ...clusterExtraInfo[item.clusterID]
                 }
             })
+            const exitSessionStorageCluster = res.data.find(item => {
+                return item.clusterID === sessionStorage['bcs-cluster']
+            })
+            if (!exitSessionStorageCluster) {
+                sessionStorage['bcs-cluster'] = ""
+            }
             context.commit('forceUpdateClusterList', res?.data || [])
             context.commit('updateClusterWebAnnotations', res.web_annotations || { perms: {} })
             return res

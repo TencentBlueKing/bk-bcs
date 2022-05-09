@@ -15,28 +15,29 @@
                             <bk-input style="width: 282px;" v-model="createParams.name" :placeholder="$t('请输入')" maxlength="253" />
                         </div>
                     </div>
-                    <div class="bk-form-item flex-item">
-                        <div class="left">
-                            <label class="bk-label label">
-                                {{$t('选择Service')}}：<span class="red">*</span>
-                                <span class="tip">{{$t('选择Service以获取Label')}}</span>
-                            </label>
-                            <div class="bk-form-content">
-                                <bkbcs-input style="cursor: not-allowed;" type="text" disabled :value.sync="clusterName"></bkbcs-input>
+                    <div class="bk-form-item">
+                        <label class="bk-label label">
+                            {{$t('选择Service')}}：<span class="red">*</span>
+                            <span class="tip">{{$t('选择Service以获取Label')}}</span>
+                        </label>
+                        <div class="bk-form-content flex-item">
+                            <div class="left">
+                                <div class="bk-form-content">
+                                    <bkbcs-input style="cursor: not-allowed;" type="text" disabled :value.sync="clusterName"></bkbcs-input>
+                                </div>
                             </div>
-                        </div>
-                        <div class="right">
-                            <label class="bk-label label">&nbsp;</label>
-                            <div class="bk-form-content">
-                                <bk-selector
-                                    searchable
-                                    :selected.sync="createParams.displayName"
-                                    :list="serviceList"
-                                    :search-key="'displayName'"
-                                    :setting-key="'displayName'"
-                                    :display-key="'displayName'"
-                                    @item-selected="changeSelectedService">
-                                </bk-selector>
+                            <div class="right">
+                                <div class="bk-form-content">
+                                    <bk-selector
+                                        searchable
+                                        :selected.sync="createParams.displayName"
+                                        :list="serviceList"
+                                        :search-key="'displayName'"
+                                        :setting-key="'displayName'"
+                                        :display-key="'displayName'"
+                                        @item-selected="changeSelectedService">
+                                    </bk-selector>
+                                </div>
                             </div>
                         </div>
                     </div>

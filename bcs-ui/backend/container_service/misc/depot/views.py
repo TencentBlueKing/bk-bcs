@@ -13,279 +13,147 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from typing import Dict, Optional
 
 from django.conf import settings
-from rest_framework import response, views, viewsets
+from rest_framework import permissions
+from rest_framework.response import Response
 
-from backend.utils.funutils import convert_mappings
-from backend.utils.views import FinalizeResponseMixin
+from backend.bcs_web.viewsets import SystemViewSet
+from backend.components.bk_repo import BkRepoClient, PageData
 
-from . import api
 from .serializers import AvailableTagSLZ, ImageDetailSLZ, ImageQuerySLZ
 
 logger = logging.getLogger(__name__)
 
 
-class BaseImage:
-    ResultMappings = {
-        "search": "searchKey",
-        "filters": "repoType",
-        "project_id": "projectId",
-        "offset": "start",
-        "limit": "limit",
-    }
-    project_id = None
+class BaseImagesViewSet(SystemViewSet):
+    def list_images(
+        self, access_token: str, project_name: str, repo_name: str, page: PageData, name: Optional[str] = None
+    ) -> Dict:
+        client = BkRepoClient(access_token)
+        return client.list_images(project_name, repo_name, page, name)
 
-    def parse_images(self, images, username):
-        if not images:
-            return []
-
-        data_list = []
-        if self.project_id:
-            pro_name = self.request.project.project_code
-        else:
-            pro_name = ''
-        if settings.DEPOT_PREFIX:
-            repo_prefix = f"{settings.DEPOT_PREFIX}/{pro_name}/"
-        else:
-            repo_prefix = f'{pro_name}/'
-        for i in images:
-            data_list.append(
-                {
-                    'name': i.get('repo').split(repo_prefix)[-1] if pro_name else i.get('repo'),
-                    "repo": i.get("repo", ""),
-                    "deployBy": i.get("createdBy", ""),
-                    "type": i.get("type", ""),
-                    "desc": i.get("desc", ""),
-                    "repoType": i.get("repoType", ""),
-                    "modified": i.get("modified", ""),
-                    "modifiedBy": i.get("modifiedBy", "") or i.get("createdBy", ""),
-                    "imagePath": i.get("imagePath", ""),
-                    "downloadCount": i.get("downloadCount", ""),
-                }
-            )
-        data_list = sorted(data_list, key=lambda x: x['repo'])
-        return data_list
-
-    def handle_response(self, result, username):
-        message = result.get("message", "")
-
-        data = result.get("data", {}) or {}
-        images = data.get('imageList', [])
-        count = data.get("total")
-        return response.Response(
+    def compose_data(self, access_token: str, project_name: str, repo_name: str, repo_type: str) -> Dict:
+        params = self.params_validate(ImageQuerySLZ)
+        page = PageData(pageNumber=params["offset"], pageSize=params["limit"])
+        resp_data = self.list_images(access_token, project_name, repo_name, page, params.get("search"))
+        # 转换为前端需要的格式
+        data = [
             {
-                "code": 0,
-                "message": message,
-                "data": {
-                    "count": count,
-                    "next": None,
-                    "previous": None,
-                    "results": self.parse_images(images, username),
-                },
+                "name": i["name"],
+                "repo": f"/{project_name}/{repo_name}/{i['name']}",
+                "deployBy": "system",
+                "type": repo_type,
+                "desc": i["description"],
+                "repoType": "",
+                "modified": i["lastModifiedDate"],
+                "modifiedBy": i["lastModifiedBy"],
+                "imagePath": "",
+                "downloadCount": "",
             }
+            for i in resp_data["records"]
+        ]
+        return {"count": resp_data["totalRecords"], "results": data}
+
+
+class SharedRepoImagesViewSet(BaseImagesViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        """查询共享仓库下的镜像信息"""
+        return Response(
+            self.compose_data(
+                request.user.token.access_token,
+                settings.BK_REPO_SHARED_PROJECT_NAME,
+                settings.BK_REPO_SHARED_IMAGE_DEPOT_NAME,
+                "public",
+            )
         )
 
 
-class PublicImages(FinalizeResponseMixin, views.APIView, BaseImage):
-    def get_images(self, params):
-        query = convert_mappings(self.ResultMappings, params, reversed=True)
-        query["access_token"] = self.request.user.token.access_token
-        query['project_code'] = ''
-        return api.get_public_image_list(query)
-
-    def get(self, request):
-        """
-        GET /api/depot/images/public/?limit=5&projId=28aa9eda67644a6eb254d694d944307e&offset=0&search=
-
-        HTTP 200 OK
-        Content-Type: application/json
-        Vary: Accept
-
-        {
-            "code": 0,
-            "message": "success",
-            "data": {
-                "count": 2,
-                "next": null,
-                "previous": null,
-                "results": [
-                    {
-                        "repo": "paas/public/jdk1.8_maven",
-                        "deployBy": null,
-                        "type": "public",
-                        "desc": "description1",
-                        "repoType": "",
-                    },
-                    {
-                        "repo": "paas/public/jdk1.8_maven2",
-                        "deployBy": null,
-                        "type": "public",
-                        "desc": "description2",
-                        "repoType": "",
-                    }
-                ]
-            }
-        }
-        """
-        self.slz = ImageQuerySLZ(data=request.GET)
-        self.slz.is_valid(raise_exception=True)
-        result = self.get_images(self.slz.data)
-        username = request.user.username
-
-        return self.handle_response(result, username)
-
-
-class ProjectImage(FinalizeResponseMixin, views.APIView, BaseImage):
-    def get_images(self, project_id, params):
-        params['project_id'] = project_id
-        query = convert_mappings(self.ResultMappings, params, reversed=True)
-        query["access_token"] = self.request.user.token.access_token
-        query['project_code'] = self.request.project.project_code
-        return api.get_project_image_list(query)
-
+class ProjectImagesViewSet(BaseImagesViewSet):
     def get(self, request, project_id):
-        """
-        GET /api/depot/images/project/28aa9eda67644a6eb254d694d944307e/
-        HTTP 200 OK
-        Content-Type: application/json
-        Vary: Accept
-
-        {
-            "code": 0,
-            "message": "success",
-            "data": {
-                "count": 2,
-                "next": null,
-                "previous": null,
-                "results": [
-                    {
-                        "repo": "paas/public/jdk1.8_maven2",
-                        "deployBy": null,
-                        "type": "public",
-                        "desc": "description2",
-                        "repoType": "",
-                    },
-                    {
-                        "repo": "paas/public/jdk1.8_maven",
-                        "deployBy": null,
-                        "type": "public",
-                        "desc": "description1",
-                        "repoType": "",
-                    }
-                ]
-            }
-        }
-        """
-        self.project_id = project_id
-        self.slz = ImageQuerySLZ(data=request.GET)
-        self.slz.is_valid(raise_exception=True)
-        result = self.get_images(project_id, self.slz.data)
-        username = request.user.username
-
-        return self.handle_response(result, username)
+        """查询项目专用仓库下的镜像信息"""
+        project_name = repo_name = request.project.project_code
+        return Response(
+            self.compose_data(request.user.token.access_token, project_name, f"{repo_name}-docker", "private")
+        )
 
 
-class AvailableImage(FinalizeResponseMixin, views.APIView):
-    """"""
-
+class AvailableImagesViewSet(BaseImagesViewSet):
     def get(self, request, project_id):
-        image_list = []
-        # 获取公共镜像
-        pub_query = {'access_token': self.request.user.token.access_token}
-        pub_resp = api.get_public_image_list(pub_query)
-
-        pub_image_data = pub_resp.get('data', {}) or {}
-        pub_image_list = pub_image_data.get('imageList', [])
-        for _pub in pub_image_list:
-            _repo = _pub.get('repo')
-            image_list.append(
-                {
-                    'name': _repo.split(settings.DEPOT_PREFIX)[-1] if settings.DEPOT_PREFIX else _repo,
-                    'value': _repo,
-                    'is_pub': True,
-                }
-            )
-
-        # 获取项目镜像
-        access_token = self.request.user.token.access_token
-        pro_query = {'repoType': 'all', 'projectId': project_id, 'access_token': access_token}
-        pro_query['project_code'] = self.request.project.english_name if 'english_name' in self.request.project else ''
-        pro_resp = api.get_project_image_list(pro_query)
-
-        pro_image_data = pro_resp.get('data', {}) or {}
-        pro_image_list = pro_image_data.get('imageList', [])
-
-        pro_name = request.project.project_code
-        if settings.DEPOT_PREFIX:
-            repo_prefix = f"{settings.DEPOT_PREFIX}/{pro_name}/"
-        else:
-            repo_prefix = f'{pro_name}/'
-        for _pub in pro_image_list:
-            image_list.append(
-                {
-                    'name': _pub.get('repo').split(repo_prefix)[-1] if pro_name else _pub.get('repo'),
-                    'value': _pub.get('repo'),
-                    'is_pub': False,
-                }
-            )
-
-        return response.Response({"code": 0, "message": "success", "data": image_list})
+        """获取项目下可用的镜像列表，包含项目专用仓库和共享仓库"""
+        page = PageData()
+        shared_images = self.list_images(
+            request.user.token.access_token,
+            settings.BK_REPO_SHARED_PROJECT_NAME,
+            settings.BK_REPO_SHARED_IMAGE_DEPOT_NAME,
+            page,
+        )
+        project_name = repo_name = request.project.project_code
+        dedicated_images = self.list_images(request.user.token.access_token, project_name, f"{repo_name}-docker", page)
+        # 组装数据
+        data = []
+        for i in dedicated_images.get("records") or []:
+            name = value = f"{project_name}/{repo_name}-docker/{i['name']}"
+            data.append({"name": name, "value": value, "is_pub": False})
+        for i in shared_images.get("records") or []:
+            project_name = settings.BK_REPO_SHARED_PROJECT_NAME
+            repo_name = settings.BK_REPO_SHARED_IMAGE_DEPOT_NAME
+            name = value = f"/{project_name}/{repo_name}/{i['name']}"
+            data.append({"name": name, "value": value, "is_pub": True})
+        return Response(data)
 
 
-class AvailableTag(FinalizeResponseMixin, views.APIView):
-    """"""
+class BaseImageTagsViewSet(SystemViewSet):
+    def list_image_tags(self, access_token: str, image_path: str) -> Dict:
+        page = PageData()
+        # 前端传递的路径格式为/项目名/仓库名/镜像，需要转换为 镜像
+        repo_list = image_path.split("/", 3)
+        project_name = repo_list[1]
+        repo_name = repo_list[2]
+        image_name = repo_list[3]
+        client = BkRepoClient(access_token)
+        return client.list_image_tags(project_name, repo_name, image_name, page)
 
+
+class AvailableTagsViewSet(BaseImageTagsViewSet):
     def get(self, request, project_id):
-        self.slz = AvailableTagSLZ(data=request.GET)
-        self.slz.is_valid(raise_exception=True)
+        params = self.params_validate(AvailableTagSLZ)
+        resp_data = self.list_image_tags(params["repo"])
+        # 转换为前端需要的数据
+        data = [
+            {"value": f"{settings.BK_REPO_DOMAIN}/{params['repo']}:{i['tag']}", "text": i["tag"]}
+            for i in resp_data["records"]
+        ]
+        return Response(data)
 
-        slz_data = self.slz.data
-        repo = slz_data.get('repo')
-        is_pub = slz_data.get('is_pub')
-        req_project_id = project_id
-        params = {
-            "projectId": '' if is_pub else req_project_id,
-            "repoList": [repo],
-            "imageRepo": repo,
-            "includeTags": True,
+
+class ImageDetailViewSet(SystemViewSet):
+    def get(self, request, project_id):
+        params = self.params_validate(ImageDetailSLZ)
+        # 前端传递的格式为/项目名/仓库名/镜像，需要转换为 镜像
+        resp_data = self.list_image_tags(params["image_repo"])
+        tags = [
+            {"tag": i["tag"], "size": f"{i['size']} MB", "modified": i["lastModifiedDate"]}
+            for i in resp_data["records"]
+        ]
+        latest_tag = resp_data["records"][-1]
+        data = {
+            "tags": tags,
+            "modified": latest_tag["lastModifiedDate"],
+            "modifiedBy": latest_tag["lastModifiedBy"],
+            "imageName": params["image_repo"].split("/", 3)[-1],
+            "repo": params["image_repo"],
+            "tagCount": resp_data["totalRecords"],
+            "downloadCount": 0,  # 暂无下载次数记录
         }
-        params["access_token"] = self.request.user.token.access_token
-        params['project_code'] = self.request.project.english_name if 'english_name' in self.request.project else ''
-        if is_pub:
-            tag_resp = api.get_pub_image_info(params)
-        else:
-            tag_resp = api.get_project_image_info(params)
 
-        try:
-            tag_data = tag_resp.get('data', [])[0].get('tags', [])
-            tag_data.sort(key=lambda item: item['modified'], reverse=True)
-            image_list = [{'value': tag.get('image'), 'text': tag.get('tag')} for tag in tag_data if tag.get('tag')]
-        except Exception:
-            image_list = []
-            logger.exception(u"解析镜像(repo:%s)的tag出错" % repo)
-
-        return response.Response({"code": 0, "message": "success", "data": image_list})
+        return Response(data)
 
 
-class ImagesInfo(FinalizeResponseMixin, viewsets.ViewSet):
-    def get_image_detail(self, request, project_id):
-        """查看镜像详情
-        分页查询，tag大小一块返回
-                        'has_previous': extra_data['page'] != 1,
-             'has_next': total > (extra_data['from_pos'] + extra_data['page_size']),
-        """
-        access_token = request.user.token.access_token
-        project_code = request.project.english_name if 'english_name' in self.request.project else ''
-
-        self.slz = ImageDetailSLZ(data=request.query_params)
-        self.slz.is_valid(raise_exception=True)
-        offset = self.slz.data['offset']
-        limit = self.slz.data['limit']
-        query_params = {
-            'imageRepo': self.slz.data['image_repo'],
-            'tagStart': offset,
-            'tagLimit': limit,
-        }
-        resp = api.get_image_tags(access_token, project_id, project_code, offset, limit, **query_params)
-        return response.Response(resp)
+try:
+    from .views_ext import *  # noqa
+except ImportError as e:
+    logger.debug("Load extension failed: %s", e)

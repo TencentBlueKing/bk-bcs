@@ -39,6 +39,9 @@ type ClientInterface interface {
 		*ESBTransferHostModuleResult, error)
 	ESBListHostsWithoutBiz(username string, req *ESBListHostsWitoutBizRequest) (*ESBListHostsWitoutBizResult, error)
 	ESBGetBizLocation(username string, bizIDs []int64) (*ESBGetBizLocationResult, error)
+	ESBGetBizInternalModule(usename string, bizID int64, bkSupplierAccount string) (*ESBGetBizInternalModuleResult, error)
+	ESBListBizHosts(username string, req *ESBListBizHostsRequest) (*ESBListBizHostsResult, error)
+	ESBListBizHostsTopo(username string, req *ESBListBizHostsTopoRequest) (*ESBListBizHostsTopoResult, error)
 }
 
 // NewClientInterface create client interface

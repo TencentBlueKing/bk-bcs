@@ -22,6 +22,7 @@ etcd:
 
 # Server 配置信息
 server:
+  useLocalIP: false
   address: ""
   insecureAddress: ""
   port: 9090
@@ -86,13 +87,28 @@ crGlobal:
     disabled: false
     jwtPublicKey: ""
 
+  # 项目基础类配置
+  basic:
+    appCode: "bk_bcs_app"
+    appSecret: "your_app_secret"
+    bkApiGWHost: "http://bkapigw.com"
+    bkPaaSHost: "http://bkpaas.com"
+
   # BCS API 网关配置
   bcsApiGW:
-    host: ""
+    host: "http://bcs.apigw.com"
     authToken: ""
+    readAuthTokenFromEnv: false
+
+  # 权限中心相关配置
+  iam:
+    host: "http://iam.com"
+    systemID: "bk_bcs_app"
+    useBKApiGW: false
+    metric: false
+    debug: false
 
   # 共享集群相关配置
   sharedCluster:
     enabledCObjKinds: []
     enabledCRDs: []
-    clusterIDs: []

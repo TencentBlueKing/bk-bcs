@@ -32,11 +32,11 @@ logger = logging.getLogger(__name__)
 
 
 class CCViewSet(SystemViewSet):
-    """ CMDB 主机查询相关接口 """
+    """CMDB 主机查询相关接口"""
 
     @action(methods=['GET'], url_path='topology', detail=False)
     def biz_inst_topo(self, request, project_id):
-        """ 查询业务实例拓扑 """
+        """查询业务实例拓扑"""
         try:
             topo_info = cc.BizTopoQueryService(request.user.username, request.project.cc_app_id).fetch()
         except CompParseBkCommonResponseError as e:
@@ -48,7 +48,7 @@ class CCViewSet(SystemViewSet):
 
     @action(methods=['POST'], url_path='hosts', detail=False)
     def hosts(self, request, project_id):
-        """ 查询指定业务拓扑下主机列表 """
+        """查询指定业务拓扑下主机列表"""
         params = self.params_validate(FetchCCHostSLZ)
         username = request.user.username
         access_token = request.user.token.access_token

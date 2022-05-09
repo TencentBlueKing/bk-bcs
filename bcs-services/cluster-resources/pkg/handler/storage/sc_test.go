@@ -15,7 +15,6 @@
 package storage
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +28,7 @@ import (
 
 func TestSC(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_storage_class", "")
 	resName := mapx.Get(manifest, "metadata.name", "")

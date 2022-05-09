@@ -197,7 +197,7 @@ func (m *StartupManager) ensurePod(namespace, name string, podManifest *v1.Pod) 
 // getExternalKubeConfig 外部集群鉴权
 func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string) (*clientcmdv1.Config, error) {
 	bcsConf := GetBCSConfByClusterId(targetClusterId)
-	tokenObj, err := bcs.CreateTempToken(m.ctx, bcsConf, username)
+	tokenObj, err := bcs.CreateTempToken(m.ctx, bcsConf, username, targetClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -474,6 +474,6 @@ func GetKubectldVersion(clusterId string) (string, error) {
 		return "", err
 	}
 
-	v, err := config.G.WebConsole.MatchTag(info.GitVersion)
+	v, err := config.G.WebConsole.MatchTag(info)
 	return v, err
 }

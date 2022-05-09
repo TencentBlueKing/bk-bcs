@@ -18,6 +18,6 @@ from backend.resources.hpa.client import HPA
 
 
 class HPAViewSet(AccessClusterPermMixin, NamespaceScopeViewSet):
-    """ HPA 相关接口 """
+    """HPA 相关接口"""
 
     resource_client = HPA

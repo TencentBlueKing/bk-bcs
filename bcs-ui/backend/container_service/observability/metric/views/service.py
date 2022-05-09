@@ -30,10 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceViewSet(SystemViewSet):
-    """ Metric Service 相关接口 """
+    """Metric Service 相关接口"""
 
     def list(self, request, project_id, cluster_id):
-        """ 获取可选 Service 列表"""
+        """获取可选 Service 列表"""
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         resp = client.get_service({'env': 'k8s'})
         services = self._slim_down_service(resp.get('data') or [])

@@ -942,6 +942,28 @@ func (m *ResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetApiVersion()) > 63 {
+		err := ResListReqValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _ResListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ResListReqMultiError(errors)
 	}
@@ -1021,6 +1043,11 @@ var _ interface {
 var _ResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _ResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResListReq_Format_InLookup = map[string]struct{}{
+	"manifest":    {},
+	"selectItems": {},
+}
 
 // Validate checks the field values on ResGetReq with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -1103,6 +1130,17 @@ func (m *ResGetReq) validate(all bool) error {
 		err := ResGetReqValidationError{
 			field:  "Name",
 			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetApiVersion()) > 63 {
+		err := ResGetReqValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 63 runes",
 		}
 		if !all {
 			return err
@@ -1859,6 +1897,17 @@ func (m *PodResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _PodResListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := PodResListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return PodResListReqMultiError(errors)
 	}
@@ -1939,6 +1988,11 @@ var _ interface {
 var _PodResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _PodResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _PodResListReq_Format_InLookup = map[string]struct{}{
+	"manifest":    {},
+	"selectItems": {},
+}
 
 // Validate checks the field values on ContainerListReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -2543,6 +2597,17 @@ func (m *CObjListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _CObjListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return CObjListReqMultiError(errors)
 	}
@@ -2622,6 +2687,11 @@ var _ interface {
 var _CObjListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _CObjListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _CObjListReq_Format_InLookup = map[string]struct{}{
+	"manifest":    {},
+	"selectItems": {},
+}
 
 // Validate checks the field values on CObjGetReq with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -4406,3 +4476,140 @@ var _ interface {
 } = GetResFormSchemaReqValidationError{}
 
 var _GetResFormSchemaReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on GetFormSupportedApiVersionsReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetFormSupportedApiVersionsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetFormSupportedApiVersionsReq with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetFormSupportedApiVersionsReqMultiError, or nil if none found.
+func (m *GetFormSupportedApiVersionsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetFormSupportedApiVersionsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_GetFormSupportedApiVersionsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetFormSupportedApiVersionsReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetFormSupportedApiVersionsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := GetFormSupportedApiVersionsReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetFormSupportedApiVersionsReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetFormSupportedApiVersionsReqMultiError is an error wrapping multiple
+// validation errors returned by GetFormSupportedApiVersionsReq.ValidateAll()
+// if the designated constraints aren't met.
+type GetFormSupportedApiVersionsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetFormSupportedApiVersionsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetFormSupportedApiVersionsReqMultiError) AllErrors() []error { return m }
+
+// GetFormSupportedApiVersionsReqValidationError is the validation error
+// returned by GetFormSupportedApiVersionsReq.Validate if the designated
+// constraints aren't met.
+type GetFormSupportedApiVersionsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetFormSupportedApiVersionsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetFormSupportedApiVersionsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetFormSupportedApiVersionsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetFormSupportedApiVersionsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetFormSupportedApiVersionsReqValidationError) ErrorName() string {
+	return "GetFormSupportedApiVersionsReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetFormSupportedApiVersionsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetFormSupportedApiVersionsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetFormSupportedApiVersionsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetFormSupportedApiVersionsReqValidationError{}
+
+var _GetFormSupportedApiVersionsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")

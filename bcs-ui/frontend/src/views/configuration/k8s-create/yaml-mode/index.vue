@@ -473,7 +473,7 @@
                             <th>{{$t('版本号')}}</th>
                             <th>{{$t('更新时间')}}</th>
                             <th>{{$t('最后更新人')}}</th>
-                            <th style="width: 128px;">{{$t('操作')}}</th>
+                            <th style="width: 138px;">{{$t('操作')}}</th>
                         </tr>
                     </thead>
                     <tbody>

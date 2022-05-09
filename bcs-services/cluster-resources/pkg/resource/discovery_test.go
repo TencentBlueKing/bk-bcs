@@ -45,19 +45,19 @@ func TestFilterResByKind(t *testing.T) {
 	}}
 
 	// groupVersion 特殊情况（只有 version，没有 group）
-	res, err := filterResByKind(Po, testClusterID, allRes)
+	res, err := filterResByKind(Po, testClusterID, "", allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "", res.Group)
 	assert.Equal(t, "v1", res.Version)
 
 	// 普通情况
-	res, err = filterResByKind(Deploy, testClusterID, allRes)
+	res, err = filterResByKind(Deploy, testClusterID, "", allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "apps", res.Group)
 	assert.Equal(t, "v1", res.Version)
 
 	// 找不到的情况
-	_, err = filterResByKind("NotExistsKind", testClusterID, allRes)
+	_, err = filterResByKind("NotExistsKind", testClusterID, "", allRes)
 	assert.NotNil(t, err)
 }
 

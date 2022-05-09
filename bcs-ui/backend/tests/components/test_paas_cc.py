@@ -81,3 +81,29 @@ class TestPaaSCCClient:
 
         assert resp == {"count": 1, "results": [{"inner_ip": "127.0.0.1"}]}
         assert "desire_all_data" in requests_mock.last_request.qs
+
+    def test_list_all_projects(self, requests_mock):
+        requests_mock.get(
+            ANY,
+            json={
+                'code': 0,
+                'data': [
+                    {
+                        'description': 'asdfsdf',
+                        'english_name': 'a1',
+                        'project_id': 'e5e7c623798f41f18211c8b25895ef6f',
+                        'project_name': 'asdfasdf',
+                    },
+                    {
+                        'description': 'public scan',
+                        'english_name': 'CODE_716498',
+                        'project_id': '47ceebac77214c77b794f7a6bb63ba14',
+                        'project_name': 'CODE_716498',
+                    },
+                ],
+            },
+        )
+        client = PaaSCCClient(ComponentAuth("token"))
+        data = client.list_all_projects()
+        assert len(data) == 2
+        assert "desire_all_data" in requests_mock.last_request.qs

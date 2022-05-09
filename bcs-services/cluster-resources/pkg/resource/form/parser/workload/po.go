@@ -182,14 +182,14 @@ func parsePodAffinity(
 	for _, exec := range execs.([]interface{}) {
 		e, _ := exec.(map[string]interface{})
 		namespaces := []string{}
-		for _, ns := range mapx.Get(e, priorityArgs.NSPaths, []interface{}{}).([]interface{}) {
+		for _, ns := range mapx.GetList(e, priorityArgs.NSPaths) {
 			namespaces = append(namespaces, ns.(string))
 		}
 		aff := model.PodAffinity{
 			Type:        typeArgs.Type,
 			Priority:    priorityArgs.Priority,
 			Namespaces:  namespaces,
-			TopologyKey: mapx.Get(e, priorityArgs.TopoKeyPaths, "").(string),
+			TopologyKey: mapx.GetStr(e, priorityArgs.TopoKeyPaths),
 		}
 		if weight, ok := e["weight"]; ok {
 			aff.Weight = weight.(int64)
@@ -218,16 +218,16 @@ func ParseToleration(podSpec map[string]interface{}, toleration *model.Toleratio
 // ParseNetworking ...
 func ParseNetworking(podSpec map[string]interface{}, networking *model.Networking) {
 	networking.DNSPolicy = mapx.Get(podSpec, "dnsPolicy", "ClusterFirst").(string)
-	networking.HostIPC = mapx.Get(podSpec, "hostIPC", false).(bool)
-	networking.HostNetwork = mapx.Get(podSpec, "hostNetwork", false).(bool)
-	networking.HostPID = mapx.Get(podSpec, "hostPID", false).(bool)
-	networking.ShareProcessNamespace = mapx.Get(podSpec, "shareProcessNamespace", false).(bool)
-	networking.HostName = mapx.Get(podSpec, "hostname", "").(string)
-	networking.Subdomain = mapx.Get(podSpec, "subdomain", "").(string)
-	for _, ns := range mapx.Get(podSpec, "dnsConfig.nameservers", []interface{}{}).([]interface{}) {
+	networking.HostIPC = mapx.GetBool(podSpec, "hostIPC")
+	networking.HostNetwork = mapx.GetBool(podSpec, "hostNetwork")
+	networking.HostPID = mapx.GetBool(podSpec, "hostPID")
+	networking.ShareProcessNamespace = mapx.GetBool(podSpec, "shareProcessNamespace")
+	networking.HostName = mapx.GetStr(podSpec, "hostname")
+	networking.Subdomain = mapx.GetStr(podSpec, "subdomain")
+	for _, ns := range mapx.GetList(podSpec, "dnsConfig.nameservers") {
 		networking.NameServers = append(networking.NameServers, ns.(string))
 	}
-	for _, s := range mapx.Get(podSpec, "dnsConfig.searches", []interface{}{}).([]interface{}) {
+	for _, s := range mapx.GetList(podSpec, "dnsConfig.searches") {
 		networking.Searches = append(networking.Searches, s.(string))
 	}
 	if dnsOpts, _ := mapx.GetItems(podSpec, "dnsConfig.options"); dnsOpts != nil {
@@ -262,8 +262,8 @@ func ParsePodSecurityCtx(podSpec map[string]interface{}, security *model.PodSecu
 // ParseSpecOther ...
 func ParseSpecOther(podSpec map[string]interface{}, other *model.SpecOther) {
 	other.RestartPolicy = mapx.Get(podSpec, "restartPolicy", "Always").(string)
-	other.TerminationGracePeriodSecs = mapx.Get(podSpec, "terminationGracePeriodSeconds", int64(0)).(int64)
-	other.SAName = mapx.Get(podSpec, "serviceAccountName", "").(string)
+	other.TerminationGracePeriodSecs = mapx.GetInt64(podSpec, "terminationGracePeriodSeconds")
+	other.SAName = mapx.GetStr(podSpec, "serviceAccountName")
 	if imagePullSecrets, ok := podSpec["imagePullSecrets"]; ok {
 		for _, secret := range imagePullSecrets.([]interface{}) {
 			other.ImagePullSecrets = append(other.ImagePullSecrets, secret.(map[string]interface{})["name"].(string))

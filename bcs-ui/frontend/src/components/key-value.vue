@@ -1,6 +1,6 @@
 <template>
     <div class="key-value">
-        <div class="key-value-item">
+        <div class="key-value-item" v-if="showHeader">
             <span class="key desc">
                 {{$t('键')}}:
                 <i v-bk-tooltips="keyDesc"
@@ -20,13 +20,38 @@
             :key="index"
             class="key-value-item"
         >
-            <bcs-input :placeholder="$t('键')" :disabled="item.disabled" class="key" v-model="item.key"></bcs-input>
+            <bcs-dropdown-menu class="key" trigger="click"
+                :disabled="keyAdvice.length === 0 && !item.disabled">
+                <template #dropdown-trigger>
+                    <bcs-input :placeholder="$t('键')"
+                        :disabled="item.disabled"
+                        v-model="item.key">
+                    </bcs-input>
+                </template>
+                <template #dropdown-content>
+                    <ul class="bk-dropdown-list">
+                        <li v-for="(advice, i) in keyAdvice" :key="i"
+                            @click="handleAdvice(advice, item)">
+                            <a href="javascript:;"
+                                v-bk-tooltips="{
+                                    content: advice.desc,
+                                    disabled: !advice.desc,
+                                    placement: 'right',
+                                    boundary: 'window'
+                                }"
+                            >{{advice.name}}</a>
+                        </li>
+                    </ul>
+                </template>
+            </bcs-dropdown-menu>
             <span class="equals-sign">=</span>
             <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
             <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
-            <i class="bk-icon icon-minus-circle" v-if="keyValueData.length > 1" @click="handleDeleteKeyValue(index)"></i>
+            <i :class="['bk-icon icon-minus-circle', { disabled: keyValueData.length === 1 }]"
+                @click="handleDeleteKeyValue(index)"
+            ></i>
         </div>
-        <div class="mt30">
+        <div class="mt30" v-if="showFooter">
             <bcs-button class="bcs-btn"
                 theme="primary"
                 :loading="loading"
@@ -67,6 +92,18 @@
             loading: {
                 type: Boolean,
                 default: false
+            },
+            showFooter: {
+                type: Boolean,
+                default: true
+            },
+            showHeader: {
+                type: Boolean,
+                default: true
+            },
+            keyAdvice: {
+                type: Array,
+                default: () => []
             }
         },
         model: {
@@ -105,6 +142,7 @@
                 })
             }
             const handleDeleteKeyValue = (index) => {
+                if (keyValueData.value.length === 1) return
                 keyValueData.value.splice(index, 1)
             }
             const labels = computed(() => {
@@ -132,12 +170,19 @@
             const hideSetLabel = () => {
                 ctx.emit('cancel', labels.value)
             }
+            // key联想功能
+            const handleAdvice = (advice, item) => {
+                item.key = advice.name
+                item.value = advice.default
+            }
             return {
+                labels,
                 keyValueData,
                 confirmSetLabel,
                 hideSetLabel,
                 handleAddKeyValue,
-                handleDeleteKeyValue
+                handleDeleteKeyValue,
+                handleAdvice
             }
         }
     })
@@ -165,6 +210,10 @@
         color: #979bA5;
         cursor: pointer;
     }
+    .bk-icon.disabled {
+        color: #DCDEE5;
+        cursor: not-allowed;
+    }
     .equals-sign {
         color: #c3cdd7;
         margin: 0 15px;
@@ -172,5 +221,11 @@
 }
 .bcs-btn {
     width: 86px;
+}
+>>> .bk-dropdown-menu.disabled * {
+    cursor: default !important;
+    color: #63656e !important;
+    border-color: #c4c6cc !important;
+    background-color: #fff !important;
 }
 </style>

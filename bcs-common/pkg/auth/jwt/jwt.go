@@ -169,6 +169,13 @@ func (jc *JWTClient) JWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 		return jc.verifyKey, nil
 	})
 
+	if err != nil {
+		return nil, err
+	}
+	if token == nil {
+		return nil, ErrTokenIsNil
+	}
+
 	if claims, ok := token.Claims.(*UserClaimsInfo); ok && token.Valid {
 		return claims, nil
 	}

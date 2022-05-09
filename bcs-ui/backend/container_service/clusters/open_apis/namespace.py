@@ -86,7 +86,7 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
 
     @log_audit_on_view(OpenAPIAuditor, activity_type=ActivityType.Modify)
     def sync_namespaces(self, request, project_id_or_code, cluster_id):
-        """ 同步集群命名空间到 BCSCC """
+        """同步集群命名空间到 BCSCC"""
         request.audit_ctx.update_fields(
             resource_type=ResourceType.Cluster, resource=cluster_id, description=f'同步集群 {cluster_id} 命名空间'
         )

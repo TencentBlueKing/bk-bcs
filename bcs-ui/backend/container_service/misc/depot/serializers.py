@@ -39,13 +39,6 @@ class AvailableTagSLZ(serializers.Serializer):
 
 
 class ImageDetailSLZ(serializers.Serializer):
-    limit = serializers.IntegerField(required=False)
-    offset = serializers.IntegerField(required=False)
+    limit = serializers.IntegerField(default=10)
+    offset = serializers.IntegerField(default=10)
     image_repo = serializers.CharField(required=True)
-
-    def validate(self, data):
-        if data.get('limit') is None:
-            data['limit'] = 10
-        if data.get('offset') is None:
-            data['offset'] = 0
-        return data

@@ -44,6 +44,10 @@ class StubPaaSCCClient:
     def get_cluster_namespace_list(self, project_id: str, cluster_id: str) -> Dict:
         return self.make_cluster_namespace_data(project_id, cluster_id)
 
+    @mockable_function
+    def get_project_with_code(self, project_id: str) -> Dict:
+        return self.wrap_resp(self.make_project_data(project_id))
+
     @staticmethod
     def wrap_resp(data):
         return {

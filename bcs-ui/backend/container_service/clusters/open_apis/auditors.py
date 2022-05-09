@@ -16,6 +16,6 @@ from backend.bcs_web.audit_log.audit.auditors import Auditor
 
 
 class OpenAPIAuditor(Auditor):
-    """ Open API 操作审计类 """
+    """Open API 操作审计类"""
 
     pass

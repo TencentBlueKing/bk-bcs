@@ -104,7 +104,6 @@
             bus.$off('show-apply-perm-modal-async')
         },
         mounted () {
-            document.title = this.$t('容器服务')
             window.$loginModal = this.$refs.login
         },
         methods: {
@@ -118,6 +117,7 @@
                     console.error(err)
                 })
                 this.isLoading = false
+                document.title = this.$t('容器服务')
             },
             handleCreateProject () {
                 this.showCreateDialog = true
@@ -129,6 +129,7 @@
     @import '@/css/reset.css';
     @import '@/css/app.css';
     @import '@/css/animation.css';
+    @import '@/fonts/style.css';
 
     .app-container {
         min-width: 1280px;

@@ -21,12 +21,12 @@ pytestmark = pytest.mark.django_db
 
 
 class TestSubscribe:
-    """ 测试事件订阅接口 """
+    """测试事件订阅接口"""
 
     subscribe_api_path = '/api/dashboard/projects/{p_id}/clusters/{c_id}/subscribe/'
 
     def test_watch_namespace_scope_resource(self, api_client):
-        """ 测试 命名空间维度 资源事件 获取接口 """
+        """测试 命名空间维度 资源事件 获取接口"""
         url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_CLUSTER_ID)
         params = {'kind': 'Deployment', 'resource_version': 0}
         response = api_client.get(url, data=params)
@@ -41,7 +41,7 @@ class TestSubscribe:
         assert 'latest_rv' in response_key
 
     def test_watch_cluster_scope_resource(self, api_client):
-        """ 测试 集群维度 资源事件 获取接口 """
+        """测试 集群维度 资源事件 获取接口"""
         url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_CLUSTER_ID)
         params = {'kind': 'PersistentVolume', 'resource_version': 0}
         response = api_client.get(url, data=params)
@@ -60,14 +60,14 @@ class TestSubscribe:
         ],
     )
     def test_watch_shared_cluster_disabled_resource(self, api_client, res_kind):
-        """ 测试获取共享集群禁用资源事件 """
+        """测试获取共享集群禁用资源事件"""
         url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_SHARED_CLUSTER_ID)
         response = api_client.get(url, {'kind': res_kind, 'resource_version': 0})
         # PermissionDenied
         assert response.json()['code'] == 400
 
     def test_watch_shared_cluster_deployment(self, api_client, shared_cluster_ns_mgr):
-        """ 测试获取共享集群 Deployment 事件 """
+        """测试获取共享集群 Deployment 事件"""
         url = self.subscribe_api_path.format(p_id=TEST_PROJECT_ID, c_id=TEST_SHARED_CLUSTER_ID)
         params = {'kind': 'Deployment', 'resource_version': 0}
 

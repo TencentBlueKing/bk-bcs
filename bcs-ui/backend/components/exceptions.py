@@ -16,12 +16,12 @@ from .base import BaseCompError
 
 
 class BaseCompUtilError(BaseCompError):
-    """ Component 工具类基础异常类 """
+    """Component 工具类基础异常类"""
 
     message = 'Component util exception'
 
     def __init__(self, message=None):
-        """ 初始化异常类，若无参数则使用默认值 """
+        """初始化异常类，若无参数则使用默认值"""
         if message:
             self.message = message
 
@@ -30,6 +30,6 @@ class BaseCompUtilError(BaseCompError):
 
 
 class ResourceNotFoundError(BaseCompUtilError):
-    """ 资源不存在 """
+    """资源不存在"""
 
     message = 'Resource Not Found'

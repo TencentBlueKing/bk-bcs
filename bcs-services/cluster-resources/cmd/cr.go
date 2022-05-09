@@ -32,6 +32,7 @@ import (
 
 var (
 	showVersion  = flag.Bool("version", false, "show version info only")
+	checkService = flag.Bool("checkService", false, "check dependency service status (redis, clusterManager...)")
 	confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
 )
 
@@ -58,6 +59,11 @@ func Start() {
 
 	logger.Info(fmt.Sprintf("ConfigFilePath: %s", *confFilePath))
 	logger.Info(fmt.Sprintf("VersionBuildInfo: {%s}", version.GetVersion()))
+
+	// 若指定了只检查依赖服务，则检查通过后以零值退出，否则以非零值退出
+	if *checkService {
+		NewDependencyServiceChecker(crConf).DoAndExit()
+	}
 
 	// 初始化 Redis 客户端
 	redis.InitRedisClient(&crConf.Redis)
