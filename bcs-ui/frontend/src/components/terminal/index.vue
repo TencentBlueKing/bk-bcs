@@ -1,7 +1,7 @@
 <template>
     <div
         :class="['bk-dropdown-menu biz-terminal active', { 'active': isActive }]"
-        v-if="curProject && clusterList.length"
+        v-if="curProject && clusterList.length && !isSharedCluster"
         @mouseover="handlerMouseover"
         @mouseout="handlerMouseout">
         <div class="bk-dropdown-trigger">
@@ -37,6 +37,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     export default {
         data () {
             return {
@@ -74,12 +75,8 @@
             },
             routeName () {
                 return this.$route.name
-            }
-        },
-        mounted () {
-            if (!this.clusterList.length && this.routeName !== 'clusterMain') {
-                this.getClusters()
-            }
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         methods: {
             handlerMouseover () {
@@ -106,30 +103,7 @@
                     this.isActive = false
                 }, 400)
             },
-            async getClusters (notLoading) {
-                try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-
-                    const list = res.data.results || []
-                    this.$store.commit('cluster/forceUpdateClusterList', list)
-                } finally {
-                    this.showLoading = false
-                }
-            },
             async goWebConsole (cluster) {
-                if (!cluster.permissions.use) {
-                    const type = `cluster_${cluster.environment === 'stag' ? 'test' : 'prod'}`
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: cluster.cluster_id,
-                        resource_name: cluster.name,
-                        resource_type: type
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 const clusterId = cluster.cluster_id
                 const url = `${DEVOPS_BCS_API_URL}/web_console/projects/${this.projectId}/mgr/#cluster=${clusterId}`
 
@@ -140,7 +114,7 @@
                         this.terminalWins.postMessage({
                             clusterId: clusterId,
                             clusterName: cluster.name
-                        }, DEVOPS_BCS_HOST)
+                        }, location.origin)
                         this.terminalWins.focus()
                     } else {
                         this.terminalWins = window.open(url, '')

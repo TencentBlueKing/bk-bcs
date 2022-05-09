@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-helm-manager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-helm-manager.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-helm-manager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+    annotations:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bcs-helm-manager.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-helm-manager/container-start.sh"]
+          args:
+            - --conf
+            - /data/bcs/config/bcs-helm-manager/bcs-helm-manager.json
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            - name: server-config
+              mountPath: /data/bcs/config/bcs-helm-manager/
+            - name: server-template
+              mountPath: /data/bcs/template/bcs-helm-manager/
+            - name: server-patches
+              mountPath: /data/bcs/patches/bcs-helm-manager/
+            - name: server-vars
+              mountPath: /data/bcs/vars/bcs-helm-manager/
+      volumes:
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: server-config
+          configMap:
+            name: {{ include "common.names.fullname" . }}-config
+        - name: server-template
+          configMap:
+            name: {{ include "common.names.fullname" . }}-template
+        - name: server-patches
+          configMap:
+            name: {{ include "common.names.fullname" . }}-patches
+        - name: server-vars
+          configMap:
+            name: {{ include "common.names.fullname" . }}-vars
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

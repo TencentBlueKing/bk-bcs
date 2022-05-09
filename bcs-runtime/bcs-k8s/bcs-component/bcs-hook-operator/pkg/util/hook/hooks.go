@@ -14,12 +14,14 @@
 package hook
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/typed/tkex/v1alpha1"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -155,7 +157,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run v1
 	collisionCount := 1
 	baseName := run.Name
 	for {
-		createdRun, err := hookRunIf.Create(&run)
+		createdRun, err := hookRunIf.Create(context.TODO(), &run, metav1.CreateOptions{})
 		if err == nil {
 			return createdRun, nil
 		}
@@ -163,7 +165,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run v1
 			return nil, err
 		}
 		// TODO(jessesuen): switch from Get to List so that there's no guessing about which collision counter to use.
-		existingRun, err := hookRunIf.Get(run.Name, metav1.GetOptions{})
+		existingRun, err := hookRunIf.Get(context.TODO(), run.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}

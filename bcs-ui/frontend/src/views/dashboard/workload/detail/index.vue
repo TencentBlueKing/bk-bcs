@@ -151,6 +151,5 @@
 <style scoped>
 .detail {
     flex: 1;
-    width: 0;
 }
 </style>

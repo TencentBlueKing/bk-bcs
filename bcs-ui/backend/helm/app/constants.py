@@ -27,6 +27,6 @@ DASHBOARD_CTL_VERSION = OrderedDict(
             re.compile(r"^[vV]?1\.14\.\S+$"),
             re.compile(r"^[vV]?1\.16\.\S+$"),
         ],
-        "v2": [re.compile(r"^[vV]?1\.18\.\S+$")],
+        "v2": [re.compile(r"^[vV]?1\.18\.\S+$"), re.compile(r"^[vV]?1\.20\.\S+$")],
     }
 )

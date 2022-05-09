@@ -14,6 +14,7 @@ package handler
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -21,12 +22,15 @@ import (
 type ClusterManager struct {
 	kubeOp *clusterops.K8SOperator
 	model  store.ClusterManagerModel
+	locker lock.DistributedLock
 }
 
 // NewClusterManager create clustermanager Handler
-func NewClusterManager(model store.ClusterManagerModel, kubeOp *clusterops.K8SOperator) *ClusterManager {
+func NewClusterManager(model store.ClusterManagerModel, kubeOp *clusterops.K8SOperator,
+	locker lock.DistributedLock) *ClusterManager {
 	return &ClusterManager{
 		model:  model,
 		kubeOp: kubeOp,
+		locker: locker,
 	}
 }

@@ -282,6 +282,7 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 				Name:      li.GetName(),
 			})
 		}
+		return
 	}
 	for _, li := range listeners {
 		li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameBcsIngressController)

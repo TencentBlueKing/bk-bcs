@@ -25,8 +25,8 @@ import (
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/informers/externalversions"
+	dockertypes "github.com/docker/docker/api/types"
 
-	docker "github.com/fsouza/go-dockerclient"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -133,7 +133,7 @@ func (s *SidecarController) createBcsLogConfig() error {
 }
 
 // InjectContent inject log envs to pod
-func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod *corev1.Pod) *bcsv1.BcsLogConfig {
+func (s *SidecarController) getPodLogConfigCrd(container *dockertypes.ContainerJSON, pod *corev1.Pod) *bcsv1.BcsLogConfig {
 	//fetch cluster all BcsLogConfig
 	bcsLogConfs, err := s.bcsLogConfigLister.List(labels.Everything())
 	if err != nil {
@@ -148,8 +148,8 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 	var highLogConfig *bcsv1.BcsLogConfig
 	var highScore int
 	for _, conf := range bcsLogConfs {
-		blog.Infof("BcsLogConfig(%s) check pod(%s) container(%s)", conf.Name, pod.Name, container.ID)
-		score := scoreBcsLogConfig(container, pod, conf)
+		blog.V(4).Infof("BcsLogConfig(%s) check pod(%s) container(%s)", conf.Name, pod.Name, container.ID)
+		score := s.scoreBcsLogConfig(container, pod, conf)
 		if score > highScore {
 			highScore = score
 			highLogConfig = conf
@@ -172,7 +172,7 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 //BcsLogConfig parameter WorkloadType、WorkloadName、WorkloadNamespace matched, increased 2 score
 //BcsLogConfig parameter ContainerName matched, increased 10 score
 //finally, the above scores will be accumulated to be the BcsLogConfig final score
-func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf *bcsv1.BcsLogConfig) int {
+func (s *SidecarController) scoreBcsLogConfig(container *dockertypes.ContainerJSON, pod *corev1.Pod, bcsLogConf *bcsv1.BcsLogConfig) int {
 	// do not select ConfigType == host
 	if bcsLogConf.Spec.ConfigType == bcsv1.HostConfigType {
 		return 0
@@ -185,11 +185,11 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 		return 0
 	}
 	if !podSelector.Matches(podLabelSet) {
-		blog.Warnf("container %s pod(%s:%s) labels(%+v) not match BcsLogConfig(%s:%s) pod selector(%+v)",
+		blog.V(4).Infof("container %s pod(%s:%s) labels(%+v) not match BcsLogConfig(%s:%s) pod selector(%+v)",
 			container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
 		return 0
 	}
-	blog.Infof("container %s pod(%s:%s) labels(%+v) match BcsLogConfig(%s:%s) pod selector(%+v)",
+	blog.V(4).Infof("container %s pod(%s:%s) labels(%+v) match BcsLogConfig(%s:%s) pod selector(%+v)",
 		container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
 	//the default BcsLogConfig, 1 score
 	if bcsLogConf.Spec.ConfigType == bcsv1.DefaultConfigType {
@@ -213,7 +213,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 		}
 		//not matched, return 0 score
 		if !matched {
-			blog.Warnf("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) StaticPodNamePattern %s",
+			blog.V(4).Infof("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) StaticPodNamePattern %s",
 				container.ID, pod.Namespace, pod.Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.PodNamePattern)
 			return 0
 		}
@@ -228,18 +228,19 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 			return 0
 		}
 		matched := false
+		lowerWorkloadType := strings.ToLower(bcsLogConf.Spec.WorkloadType)
 		if pod.OwnerReferences[0].Kind == "ReplicaSet" {
-			if strings.ToLower(bcsLogConf.Spec.WorkloadType) == strings.ToLower("Deployment") {
+			if lowerWorkloadType == "deployment" {
 				score += 2
 				matched = true
 			}
-		} else if strings.ToLower(pod.OwnerReferences[0].Kind) == strings.ToLower(bcsLogConf.Spec.WorkloadType) {
+		} else if pod.OwnerReferences[0].Kind == bcsLogConf.Spec.WorkloadType {
 			score += 2
 			matched = true
 		}
 		//not matched, return 0 score
 		if !matched {
-			blog.Warnf("container %s pod(%s) OwnerReferencesKind(%s) not match BcsLogConfig(%s:%s) WorkloadType %s",
+			blog.V(4).Infof("container %s pod(%s) OwnerReferencesKind(%s) not match BcsLogConfig(%s:%s) WorkloadType %s",
 				container.ID, pod.Name, pod.OwnerReferences[0].Kind, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
 			return 0
 		}
@@ -249,7 +250,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 			score += 2
 			//not matched, return 0 score
 		} else {
-			blog.Warnf("container %s pod(%s) namespace(%s) not match BcsLogConfig(%s:%s) WorkloadNamespace %s",
+			blog.V(4).Infof("container %s pod(%s) namespace(%s) not match BcsLogConfig(%s:%s) WorkloadNamespace %s",
 				container.ID, pod.Name, pod.Namespace, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadNamespace)
 			return 0
 		}
@@ -279,7 +280,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 		}
 		//not matched, return 0 score
 		if !matched {
-			blog.Warnf("container %s pod(%s) OwnerReferencesName(%s) not match BcsLogConfig(%s:%s) WorkloadName %s",
+			blog.V(4).Infof("container %s pod(%s) OwnerReferencesName(%s) not match BcsLogConfig(%s:%s) WorkloadName %s",
 				container.ID, pod.Name, pod.OwnerReferences[0].Name, bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadName)
 			return 0
 		}
@@ -294,7 +295,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	}
 	//not matched, return 0 score
 	if len(bcsLogConf.Spec.ContainerConfs) != 0 && !matched {
-		blog.Warnf("container(%s) pod(%s) containerName(%s) not match BcsLogConfig(%s:%s) ContainerConfs(%+v)", container.ID, pod.Name,
+		blog.V(4).Infof("container(%s) pod(%s) containerName(%s) not match BcsLogConfig(%s:%s) ContainerConfs(%+v)", container.ID, pod.Name,
 			container.Config.Labels[ContainerLabelK8sContainerName], bcsLogConf.Namespace, bcsLogConf.Name, bcsLogConf.Spec.ContainerConfs)
 		return 0
 	}

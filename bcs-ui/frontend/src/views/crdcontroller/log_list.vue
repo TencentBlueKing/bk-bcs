@@ -291,8 +291,8 @@
                                                 <div slot="content">
                                                     <p>1. 请填写文件的绝对路径，不支持目录</p>
                                                     <p>2. 支持通配符，但通配符仅支持文件级别的</p>
-                                                    <p>有效的示例: /data/log/*/*.log, /data/test.log, /data/log/log.*</p>
-                                                    <p>无效的示例: /data/log/*, /data/log</p>
+                                                    <p>有效的示例: /data/log/*/*.log; /data/test.log; /data/log/log.*</p>
+                                                    <p>无效的示例: /data/log/*; /data/log</p>
                                                 </div>
                                             </bcs-popover>
                                         </div>
@@ -426,8 +426,8 @@
                                                                     <div slot="content">
                                                                         <p>1. 请填写文件的绝对路径，不支持目录</p>
                                                                         <p>2. 支持通配符，但通配符仅支持文件级别的</p>
-                                                                        <p>有效的示例: /data/log/*/*.log, /data/test.log, /data/log/log.*</p>
-                                                                        <p>无效的示例: /data/log/*, /data/log</p>
+                                                                        <p>有效的示例: /data/log/*/*.log; /data/test.log; /data/log/log.*</p>
+                                                                        <p>无效的示例: /data/log/*; /data/log</p>
                                                                     </div>
                                                                 </bcs-popover>
                                                             </div>
@@ -556,8 +556,8 @@
                                                                     <div slot="content">
                                                                         <p>1. 请填写文件的绝对路径，不支持目录</p>
                                                                         <p>2. 支持通配符，但通配符仅支持文件级别的</p>
-                                                                        <p>有效的示例: /data/log/*/*.log, /data/test.log, /data/log/log.*</p>
-                                                                        <p>无效的示例: /data/log/*, /data/log</p>
+                                                                        <p>有效的示例: /data/log/*/*.log; /data/test.log; /data/log/log.*</p>
+                                                                        <p>无效的示例: /data/log/*; /data/log</p>
                                                                     </div>
                                                                 </bcs-popover>
                                                             </div>
@@ -1194,15 +1194,6 @@
                     return false
                 }
                 this.isDetailLoading = true
-                if (crdInstance.permissions && !crdInstance.permissions.use) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: crdInstance.namespace,
-                        resource_name: crdInstance.namespace_name,
-                        resource_type: 'namespace'
-                    })
-                }
 
                 try {
                     const projectId = this.projectId
@@ -1309,16 +1300,6 @@
              * @param  {number} index 索引
              */
             async removeCrdInstance (crdInstance, index) {
-                if (crdInstance.permissions && !crdInstance.permissions.use) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: crdInstance.namespace,
-                        resource_name: crdInstance.namespace_name,
-                        resource_type: 'namespace'
-                    })
-                }
-
                 const self = this
                 const projectId = this.projectId
                 const clusterId = this.clusterId

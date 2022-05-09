@@ -1,0 +1,1110 @@
+syntax = "proto3";
+package datamanager;
+option go_package = "proto/bcs-data-manager;datamanager";
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info : {
+    title : "Data Manager API Doc"
+    version : "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+
+service DataManager {
+  rpc GetProjectInfo(GetProjectInfoRequest) returns (GetProjectInfoResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/projects/{projectID}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定projectID的项目资源信息"
+      summary : "查询project"
+    };
+  }
+  rpc GetClusterInfoList(GetClusterInfoListRequest) returns (GetClusterInfoListResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/projects/{projectID}/cluster"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定projectID的集群资源信息列表"
+      summary : "查询cluster list"
+    };
+  }
+  rpc GetClusterInfo(GetClusterInfoRequest) returns (GetClusterInfoResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/clusters/{clusterID}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定ClusterID的集群资源信息"
+      summary : "查询Cluster"
+    };
+  }
+  rpc GetNamespaceInfoList(GetNamespaceInfoListRequest) returns (GetNamespaceInfoListResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/clusters/{clusterID}/namespaces"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定ClusterID的命名空间资源列表信息"
+      summary : "查询namespace list"
+    };
+  }
+  rpc GetNamespaceInfo(GetNamespaceInfoRequest) returns (GetNamespaceInfoResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定ClusterID和namespace的集群命名空间信息"
+      summary : "查询namespace"
+    };
+  }
+  rpc GetWorkloadInfoList(GetWorkloadInfoListRequest) returns (GetWorkloadInfoListResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定ClusterID、命名空间、类型的模块资源列表信息"
+      summary : "查询workload list"
+    };
+  }
+  rpc GetWorkloadInfo(GetWorkloadInfoRequest) returns (GetWorkloadInfoResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}/{workloadName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定ClusterID、命名空间、类型和名称的模块资源信息"
+      summary : "查询workload"
+    };
+  }
+}
+
+message GetProjectInfoRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectInfoRequest"
+      description : "查询项目请求"
+      required : ["projectID"]
+    }
+  };
+
+  string projectID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "项目ID"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+}
+
+message GetProjectInfoResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectInfoResponse"
+      description : "查询项目信息返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  Project data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "项目信息"
+    }];
+}
+
+message GetClusterInfoListRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterInfoListRequest"
+      description : "查询集群列表请求"
+      required : ["projectID"]
+    }
+  };
+
+  string projectID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "项目ID"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，minute，hour，day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  uint32 page= 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "查询偏移量"
+    },
+    (validate.rules).uint32.gte = 0
+  ];
+  uint32 size= 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
+    },
+    (validate.rules).uint32.lte = 10
+  ];
+}
+
+message GetClusterInfoListResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterInfoListResponse"
+      description : "查询集群列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  repeated Cluster data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "集群列表信息"
+    }];
+}
+
+message GetClusterInfoRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterInfoRequest"
+      description : "查询集群请求"
+      required : ["clusterID"]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string dimension = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+}
+
+message GetClusterInfoResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterInfoResponse"
+      description : "查询集群返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  Cluster data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "集群信息"
+    }];
+}
+
+message GetNamespaceInfoListRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceInfoListRequest"
+      description : "查询命名空间列表请求"
+      required : ["clusterID"]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string dimension = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，minute，hour，day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  uint32 page= 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页数"
+    },
+    (validate.rules) .uint32.gte = 0
+  ];
+  uint32 size= 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "页面大小"
+    },
+    (validate.rules) .uint32.lte = 10
+  ];
+}
+
+message GetNamespaceInfoListResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceInfoListResponse"
+      description : "查询命名空间列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  repeated Namespace data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "命名空间列表信息"
+    }];
+}
+
+message GetNamespaceInfoRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceInfoRequest"
+      description : "查询命名空间请求"
+      required : ["clusterID", "namespace"]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "namespace",
+      description : "命名空间名字"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+}
+
+message GetNamespaceInfoResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceInfoResponse"
+      description : "查询命名空间返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  Namespace data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "命名空间信息"
+    }];
+}
+
+message GetWorkloadInfoListRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadInfoListRequest"
+      description : "查询模块列表请求"
+      required : ["clusterID", "namespace", "WorkloadType"]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "namespace",
+      description : "命名空间名字"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadType = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadType",
+      description : "模块类型"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，minute，hour，day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  uint32 page= 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页数"
+    },
+    (validate.rules) .uint32.gte = 0
+  ];
+  uint32 size= 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "页面大小"
+    },
+    (validate.rules) .uint32.lte = 10
+  ];
+}
+
+message GetWorkloadInfoListResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadInfoListResponse"
+      description : "查询模块列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  repeated Workload data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "模块列表信息"
+    }];
+}
+
+message GetWorkloadInfoRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadInfoRequest"
+      description : "查询资源请求"
+      required : ["clusterID", "namespace", "workloadType", "workloadName"]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "namespace",
+      description : "命名空间名字"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadType = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadType",
+      description : "模块类型"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadName = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadName",
+      description : "模块名称"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+}
+
+message GetWorkloadInfoResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetWorkloadInfoResponse"
+      description : "查询模块返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  Workload data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "模块列表信息"
+    }];
+}
+
+
+message Project {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Project"
+      description : "记录project资源信息"
+    }
+  };
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目id"
+  }];
+  string dimension = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dimension",
+    description: "时间维度"
+  }];
+  string startTime = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime",
+    description: "开始时间"
+  }];
+  string endTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime",
+    description: "结束时间"
+  }];
+  repeated ProjectMetrics metrics = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "metrics",
+    description: "数据列表"
+  }];
+  ExtremumRecord minNode = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minNode",
+    description: "最小节点数及时间"
+  }];
+  ExtremumRecord maxNode = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxNode",
+    description: "最大节点数及时间"
+  }];
+}
+
+message ProjectMetrics {
+  string time = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "time",
+    description: "数据时间"
+  }];
+  string clustersCount = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterCount",
+    description: "集群总数"
+  }];
+  string totalCPU = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalCPU",
+    description: "总cpu"
+  }];
+  string totalMemory = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalMemory",
+    description: "总内存"
+  }];
+  string totalLoadCPU = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalLoadCPU",
+    description: "总cpu负载"
+  }];
+  string totalLoadMemory = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalLoadMemory",
+    description: "总内存负载"
+  }];
+  string avgLoadCPU = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "avgLoadCPU",
+    description: "平均cpu负载"
+  }];
+  string avgLoadMemory = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "avgLoadMemory",
+    description: "平均cpu负载"
+  }];
+  string CPUUsage = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPUUsage",
+    description: "cpu使用率"
+  }];
+  string MemoryUsage = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MemoryUsage",
+    description: "内存使用率"
+  }];
+  string nodeCount = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeCount",
+    description: "节点总数"
+  }];
+  string availableNodeCount = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "availableNodeCount",
+    description: "可用节点数"
+  }];
+  string minNodeCount = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minNodeCount",
+    description: "最小节点数"
+  }];
+  string minNodeTime = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minNodeTime",
+    description: "最小节点数时间"
+  }];
+  string maxNodeCount = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxNodeCount",
+    description: "最大节点数"
+  }];
+  string maxNodeTime = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxNodeTime",
+    description: "最大节点数时间"
+  }];
+}
+
+message Cluster {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "cluster"
+      description : "记录cluster资源信息"
+    }
+  };
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目id"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群id"
+  }];
+  string dimension = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dimension",
+    description: "时间维度"
+  }];
+  string startTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime",
+    description: "开始时间"
+  }];
+  string endTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime",
+    description: "结束时间"
+  }];
+  repeated ClusterMetrics metrics = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "metrics",
+    description: "数据列表"
+  }];
+  ExtremumRecord minNode = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minNode",
+    description: "最小节点数及时间"
+  }];
+  ExtremumRecord maxNode = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minNode",
+    description: "最小节点数及时间"
+  }];
+  ExtremumRecord minInstance = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minInstance",
+    description: "最小实例数及时间"
+  }];
+  ExtremumRecord maxInstance = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxInstance",
+    description: "最大实例数及时间"
+  }];
+}
+
+message ClusterMetrics {
+  string time = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "time",
+    description: "数据时间"
+  }];
+  string nodeCount = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeCount",
+    description: "节点总数"
+  }];
+  string availableNodeCount = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "availableNodeCount",
+    description: "可用节点数"
+  }];
+  ExtremumRecord minNode = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minNode",
+    description: "最小节点数及所在时间段"
+  }];
+  ExtremumRecord maxNode = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxNode",
+    description: "最大节点数及所在时间段"
+  }];
+  repeated NodeQuantile nodeQuantile = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeQuantile",
+    description: "节点分位数"
+  }];
+  string minUsageNode = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minUsageNode",
+    description: "最低负载节点百分比"
+  }];
+  string totalCPU = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalCPU",
+    description: "总cpu"
+  }];
+  string totalMemory = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalMemory",
+    description: "总内存"
+  }];
+  string totalLoadCPU = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalLoadCPU",
+    description: "总cpu负载"
+  }];
+  string totalLoadMemory = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalLoadMemory",
+    description: "总内存负载"
+  }];
+  string avgLoadCPU = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "avgLoadCPU",
+    description: "平均cpu负载"
+  }];
+  string avgLoadMemory = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "avgLoadMemory",
+    description: "平均cpu负载"
+  }];
+  string CPUUsage = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPUUsage",
+    description: "cpu使用率"
+  }];
+  string MemoryUsage = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MemoryUsage",
+    description: "内存使用率"
+  }];
+  string workloadCount = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadCount",
+    description: "模块数"
+  }];
+  string instanceCount = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceCount",
+    description: "当前实例数"
+  }];
+  ExtremumRecord minInstance = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minInstance",
+    description: "最小实例数及所在时间段"
+  }];
+  ExtremumRecord MaxInstanceTime = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MaxInstanceTimeTime",
+    description: "最大实例数及所在时间段"
+  }];
+  string CpuRequest = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cpuRequest",
+    description: "cpu请求量"
+  }];
+  string MemoryRequest = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryRequest",
+    description: "内存请求量"
+  }];
+}
+
+message NodeQuantile {
+  string percentage = 1;
+  string nodeCPUUsage = 2;
+}
+
+message Namespace {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "namespace"
+      description : "记录namespace资源信息"
+    }
+  };
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目id"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群id"
+  }];
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间名字"
+  }];
+  string dimension = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dimension",
+    description: "时间维度"
+  }];
+  repeated NamespaceMetrics metrics = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "metrics",
+    description: "数据列表"
+  }];
+  string startTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime",
+    description: "开始时间"
+  }];
+  string endTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime",
+    description: "结束时间"
+  }];
+  string suggestCPU = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "suggestCPU",
+    description: "建议cpu值"
+  }];
+  string suggestMemory = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "suggestMemory",
+    description: "建议内存值"
+  }];
+  ResourceLimit resourceLimit = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceLimit",
+    description: "资源限制"
+  }];
+  ExtremumRecord MaxCPUUsageTime = 11[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MaxCPUUsageTime",
+      description : "最大cpu利用率及时间"
+    }];
+  ExtremumRecord MinCPUUsageTime = 12[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MinCPUUsageTime",
+      description : "最小cpu利用率及时间"
+    }];
+  ExtremumRecord MaxMemoryUsageTime = 13[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MaxMemoryUsageTime",
+      description : "最大内存利用率及时间"
+    }];
+  ExtremumRecord MinMemoryUsageTime = 14[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MinMemoryUsageTime",
+      description : "最小内存利用率及时间"
+    }];
+  ExtremumRecord MinInstanceTime = 15[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MinInstanceTime",
+      description : "最小实例数及时间"
+    }];
+  ExtremumRecord MaxInstanceTime = 16[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MaxInstanceTime",
+      description : "最大实例数及时间"
+    }];
+  ExtremumRecord MinWorkloadUsage = 17[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MinWorkloadUsage",
+      description : "使用率最小模块及时间"
+    }];
+  ExtremumRecord MaxWorkloadUsage = 18[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MaxWorkloadUsage",
+      description : "使用率最大模块及时间"
+    }];
+}
+
+message ResourceLimit {
+  string CPULimit = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPULimit",
+    description: "cpu限制"
+  }];
+  string CPURequest = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPURequest",
+    description: "cpu请求"
+  }];
+  string MemoryLimit = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MemoryLimit",
+    description: "内存限制"
+  }];
+  string MemoryRequest = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MemoryRequest",
+    description: "内存请求"
+  }];
+}
+
+message NamespaceMetrics {
+  string time = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "time",
+    description: "数据时间"
+  }];
+  string CPURequest = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPURequest",
+    description: "cpu请求量"
+  }];
+  string MemoryRequest = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryRequest",
+    description: "内存请求量"
+  }];
+  string CPUUsageAmount = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPUUsageAmount",
+    description: "cpu使用量"
+  }];
+  string memoryUsageAmount = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryUsageAmount",
+    description: "内存使用量"
+  }];
+  string CPUUsage = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPUUsage",
+    description: "cpu使用率"
+  }];
+  string MemoryUsage = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MemoryUsage",
+    description: "内存使用率"
+  }];
+  ExtremumRecord maxCPUUsageTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxCPUUsageTime",
+    description: "CPU使用率最高时间段"
+  }];
+  ExtremumRecord minCPUUsageTime = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minCPUUsageTime",
+    description: "CPU使用率最低时间段"
+  }];
+  ExtremumRecord maxMemoryUsageTime = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxMemoryUsageTime",
+    description: "内存使用率最高时间段"
+  }];
+  ExtremumRecord minMemoryUsageTime = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minMemoryUsageTime",
+    description: "内存使用率最低时间段"
+  }];
+  string workloadCount = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadCount",
+    description: "模块数"
+  }];
+  string instanceCount = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceCount",
+    description: "当前实例数"
+  }];
+  ExtremumRecord minInstanceTime = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minInstanceTime",
+    description: "最小实例数及所在时间段"
+  }];
+  ExtremumRecord MaxInstanceTime = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxInstanceTime",
+    description: "最大实例数及所在时间段"
+  }];
+  ExtremumRecord minWorkloadUsage = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minWorkloadUsage",
+    description: "使用率最低模块"
+  }];
+  ExtremumRecord maxWorkloadUsage = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxWorkloadUsage",
+    description: "使用率最高模块"
+  }];
+}
+
+message ExtremumRecord {
+  string name = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "对象名称，如模块名"
+  }];
+  string metricName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "metricName",
+    description: "指标，如cpu，memory"
+  }];
+  double value = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "value",
+    description: "值"
+  }];
+  string period = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "period",
+    description: "时间段"
+  }];
+}
+
+message Workload {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "workload"
+      description : "记录模块资源信息"
+    }
+  };
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目id"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群id"
+  }];
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间名字"
+  }];
+  string workloadType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadType",
+    description: "模块类型"
+  }];
+  string workloadName = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadName",
+    description: "模块名称"
+  }];
+  string dimension = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dimension",
+    description: "时间维度"
+  }];
+  repeated WorkloadMetrics metrics = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "metrics",
+    description: "数据列表"
+  }];
+  string startTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime",
+    description: "开始时间"
+  }];
+  string endTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime",
+    description: "结束时间"
+  }];
+  string suggestCPU = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "suggestCPU",
+    description: "建议cpu值"
+  }];
+  string suggestMemory = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "suggestMemory",
+    description: "建议内存值"
+  }];
+  ExtremumRecord MaxCPUUsageTime = 17[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MaxCPUUsageTime",
+      description : "最大cpu利用率及时间"
+    }];
+  ExtremumRecord MinCPUUsageTime = 12[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MinCPUUsageTime",
+      description : "最小cpu利用率及时间"
+    }];
+  ExtremumRecord MaxMemoryUsageTime = 13[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MaxMemoryUsageTime",
+      description : "最大内存利用率及时间"
+    }];
+  ExtremumRecord MinMemoryUsageTime = 14[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MinMemoryUsageTime",
+      description : "最小内存利用率及时间"
+    }];
+  ExtremumRecord MinInstanceTime = 15[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MinInstanceTime",
+      description : "最小实例数及时间"
+    }];
+  ExtremumRecord MaxInstanceTime = 16[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "MaxInstanceTime",
+      description : "最大实例数及时间"
+    }];
+}
+
+message WorkloadMetrics {
+  string time = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "time",
+    description: "数据时间"
+  }];
+  string CPURequest = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPURequest",
+    description: "cpu请求量"
+  }];
+  string memoryRequest = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryRequest",
+    description: "内存请求量"
+  }];
+  string CPUUsageAmount = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPUUsageAmount",
+    description: "cpu使用量"
+  }];
+  string memoryUsageAmount = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryUsageAmount",
+    description: "内存使用量"
+  }];
+  string CPUUsage = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPUUsage",
+    description: "cpu使用率"
+  }];
+  string MemoryUsage = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MemoryUsage",
+    description: "内存使用率"
+  }];
+  ExtremumRecord maxCPUUsageTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxCPUUsageTime",
+    description: "CPU使用率最高值及对应时间段"
+  }];
+  ExtremumRecord minCPUUsageTime = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minCPUUsageTime",
+    description: "CPU使用率最低值及对应时间段"
+  }];
+  ExtremumRecord maxMemoryUsageTime = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxMemoryUsageTime",
+    description: "内存使用率最高值及时间段"
+  }];
+  ExtremumRecord minMemoryUsageTime = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minMemoryUsageTime",
+    description: "内存使用率最低值及时间段"
+  }];
+  string instanceCount = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceCount",
+    description: "当前实例数"
+  }];
+  ExtremumRecord minInstanceTime = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minInstanceTime",
+    description: "最小实例数及所在时间段"
+  }];
+  ExtremumRecord maxInstanceTime = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxInstanceTime",
+    description: "最大实例数及所在时间段"
+  }];
+}

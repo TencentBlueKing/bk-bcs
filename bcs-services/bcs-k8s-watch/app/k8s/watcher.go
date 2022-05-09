@@ -56,6 +56,9 @@ const (
 
 	// defaultHTTPRetryerTime is default http request retry time.
 	defaultHTTPRetryerTime = time.Second
+
+	// defaultQueueTimeout is default timeout of queue.
+	defaultQueueTimeout = 1 * time.Second
 )
 
 // Watcher watchs target type resource metadata from k8s cluster,
@@ -69,10 +72,11 @@ type Watcher struct {
 	writer             *output.Writer
 	sharedWatchers     map[string]WatcherInterface
 	stopChan           chan struct{}
+	namespace          string
 }
 
 // NewWatcher creates a new watcher of target type resource.
-func NewWatcher(client *rest.Interface, resourceType string, resourceName string, objType runtime.Object,
+func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string, objType runtime.Object,
 	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool) *Watcher {
 
 	watcher := &Watcher{
@@ -81,10 +85,11 @@ func NewWatcher(client *rest.Interface, resourceType string, resourceName string
 		sharedWatchers:     sharedWatchers,
 		resourceNamespaced: resourceNamespaced,
 		queue:              queue.New(),
+		namespace:          namespace,
 	}
 
 	// build list watch.
-	listWatch := cache.NewListWatchFromClient(*client, resourceName, metav1.NamespaceAll, fields.Everything())
+	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
 
 	// register event handler.
 	eventHandler := cache.ResourceEventHandlerFuncs{
@@ -153,13 +158,29 @@ func (w *Watcher) handleQueueData(stopCh <-chan struct{}) {
 	}
 }
 
+// distribute data to handler at watcher handlers.
+func (w *Watcher) distributeDataToHandler(data *action.SyncData) {
+	handlerKey := w.writer.GetHandlerKeyBySyncData(data)
+	if handlerKey == "" {
+		glog.Errorf("get handler key failed, resource: %s, namespace: %s, name: %s", data.Kind, data.Namespace, data.Name)
+		return
+	}
+
+	if handler, ok := w.writer.Handlers[handlerKey]; ok {
+		handler.HandleWithTimeout(data, defaultQueueTimeout)
+	} else {
+		glog.Errorf("can't distribute the normal metadata, unknown DataType[%+v]", data.Kind)
+	}
+}
+
 // AddEvent is event handler for add resource event.
 func (w *Watcher) AddEvent(obj interface{}) {
 	data := w.genSyncData(obj, action.SyncDataActionAdd)
 	if data == nil {
 		return
 	}
-	w.queue.Append(data)
+
+	w.distributeDataToHandler(data)
 }
 
 // DeleteEvent is event handler for delete resource event.
@@ -168,7 +189,8 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 	if data == nil {
 		return
 	}
-	w.queue.Append(data)
+
+	w.distributeDataToHandler(data)
 }
 
 // UpdateEvent is event handler for update resource event.
@@ -191,7 +213,7 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		// NOTE: a best way is to use deepcopy function, save the common fields,
 		// update the change fields.
 
-		var tempLastTimes = make([]metav1.Time, 5)
+		var tempLastTimes = make([]metav1.Time, len(newNode.Status.Conditions))
 		tempVersion := newNode.ResourceVersion
 		newNode.ResourceVersion = oldNode.ResourceVersion
 
@@ -219,7 +241,8 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	if data == nil {
 		return
 	}
-	w.queue.Append(data)
+
+	w.distributeDataToHandler(data)
 }
 
 // isEventShouldFilter filters k8s system events.

@@ -18,8 +18,16 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+SCRIPT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ./hack)}
+gosrc="${GOBIN:-$(go env GOPATH)/src}"
+OPERATOR_PACKAGE="github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator"
+
 # generate the code with:
-bash ../vendor/k8s.io/code-generator/generate-groups.sh "deepcopy,client,informer,lister" \
-  github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis \
+bash "${CODEGEN_PKG}"/generate-groups.sh "deepcopy,client,informer,lister" \
+  ${OPERATOR_PACKAGE}/pkg/client ${OPERATOR_PACKAGE}/pkg/apis \
   tkex:v1alpha1 \
-  --go-header-file $(pwd)/boilerplate.go.txt
+  --go-header-file "${SCRIPT_ROOT}"/boilerplate.go.txt
+
+cp -r ${gosrc}/${OPERATOR_PACKAGE}/pkg/apis ./pkg
+cp -r ${gosrc}/${OPERATOR_PACKAGE}/pkg/client ./pkg

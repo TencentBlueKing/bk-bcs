@@ -7,7 +7,7 @@
             </div>
         </div>
 
-        <div class="biz-content-wrapper" v-bkloading="{ isLoading: createInstanceLoading }">
+        <div class="biz-content-wrapper" v-bkloading="{ isLoading: createInstanceLoading, zIndex: 100 }">
             <div>
                 <div class="biz-helm-header">
                     <div class="left">
@@ -121,19 +121,47 @@
                                             </div>
                                             <div class="inner-item">
                                                 <label class="title">{{$t('命名空间')}}</label>
-                                                <div>
-                                                    <bk-selector
+                                                <div style="display: flex;align-items: center;">
+                                                    <bcs-select style="width: 248px;"
+                                                        searchable
+                                                        :clearable="false"
+                                                        v-model="namespaceId">
+                                                        <bcs-option v-for="(item, index) in namespaceList"
+                                                            :key="item.id"
+                                                            :id="item.id"
+                                                            :name="item.name"
+                                                            v-authority="{
+                                                                clickable: webAnnotations.perms[item.iam_ns_id]
+                                                                    && webAnnotations.perms[item.iam_ns_id].namespace_scoped_use,
+                                                                actionId: 'namespace_scoped_use',
+                                                                resourceName: item.name,
+                                                                disablePerms: true,
+                                                                permCtx: {
+                                                                    project_id: projectId,
+                                                                    cluster_id: item.cluster_id,
+                                                                    name: item.name
+                                                                }
+                                                            }"
+                                                            @click.native="getClusterInfo(index, item)">
+                                                        </bcs-option>
+                                                        <div slot="extension" style="cursor: pointer;"
+                                                            @click="goNamespaceList">
+                                                            <i class="bcs-icon bcs-icon-apps"></i>
+                                                            <span style="font-size: 14px">{{$t('命名空间列表')}}</span>
+                                                        </div>
+                                                    </bcs-select>
+                                                    <!-- <bk-selector
                                                         style="width: 248px;"
                                                         :placeholder="$t('请选择')"
                                                         :searchable="true"
                                                         :selected.sync="namespaceId"
                                                         :field-type="'namespace'"
-                                                        :list="curNamespaceList"
+                                                        :list="namespaceList"
                                                         :setting-key="'id'"
                                                         :display-key="'name'"
                                                         @item-selected="getClusterInfo">
-                                                    </bk-selector>
-                                                    <i v-bk-tooltips.top="$t('如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间')" class="bcs-icon bcs-icon-question-circle f14"></i>
+                                                    </bk-selector> -->
+                                                    <i v-bk-tooltips.top="$t('如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间')" class="bcs-icon bcs-icon-question-circle f14 ml5"></i>
                                                 </div>
                                             </div>
                                             <p class="biz-tip pt10" id="cluster-info" style="clear: both;" v-if="clusterInfo" v-html="clusterInfo"></p>
@@ -178,21 +206,23 @@
                                     class="biz-tab-container"
                                     @tab-changed="helmModeChangeHandler">
                                     <bk-tab-panel name="yaml-mode" :title="$t('YAML模式')">
-                                        <div style="width: 100%; min-height: 600px;" v-bkloading="{ isLoading: isSyncYamlLoading }">
+                                        <div style="width: 100%; min-height: 600px;">
                                             <p class="biz-tip p15" style="color: #63656E; overflow: hidden;">
                                                 <i class="bcs-icon bcs-icon-info-circle biz-warning-text mr5"></i>
                                                 {{$t('YAML初始值为创建时Chart中values.yaml内容，后续更新部署以该YAML内容为准，YAML内容最终通过`--values`选项传递给`helm template`命令')}}
                                             </p>
-                                            <ace
-                                                v-if="curEditMode === 'yaml-mode'"
-                                                :value="curTplYaml"
-                                                :width="yamlConfig.width"
-                                                :height="yamlConfig.height"
-                                                :lang="yamlConfig.lang"
-                                                :read-only="yamlConfig.readOnly"
-                                                :full-screen="yamlConfig.fullScreen"
-                                                @init="editorInit">
-                                            </ace>
+                                            <div v-bkloading="{ isLoading: isSyncYamlLoading, color: '#272822' }">
+                                                <ace
+                                                    v-if="curEditMode === 'yaml-mode'"
+                                                    :value="curTplYaml"
+                                                    :width="yamlConfig.width"
+                                                    :height="yamlConfig.height"
+                                                    :lang="yamlConfig.lang"
+                                                    :read-only="yamlConfig.readOnly"
+                                                    :full-screen="yamlConfig.fullScreen"
+                                                    @init="editorInit">
+                                                </ace>
+                                            </div>
                                         </div>
                                     </bk-tab-panel>
                                     <bk-tab-panel name="form-mode" :title="$t('表单模式')">
@@ -403,7 +433,6 @@
                 appName: '',
                 winHeight: 0,
                 curClusterId: '',
-                clusterList: [],
                 editor: null,
                 curTpl: {
                     data: {
@@ -507,7 +536,8 @@
                         value: ''
                     }
                 ],
-                hignDesc: this.$t('设置Flags，如设置wait，输入格式为 --wait = true')
+                hignDesc: this.$t('设置Flags，如设置wait，输入格式为 --wait = true'),
+                webAnnotations: { perms: {} }
             }
         },
         computed: {
@@ -523,15 +553,11 @@
             tplList () {
                 return this.$store.state.helm.tplList
             },
-            curNamespaceList () {
-                if (this.curClusterId !== undefined) {
-                    const match = this.namespaceList.find(item => item.id === this.curClusterId)
-                    return match ? match.children : []
-                }
-                return []
-            },
             globalClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList
             }
         },
         watch: {
@@ -541,6 +567,9 @@
                     this.namespaceId = ''
                 },
                 immediate: true
+            },
+            curClusterId () {
+                this.getNamespaceList(this.$route.params.tplId)
             }
         },
         async mounted () {
@@ -549,7 +578,6 @@
             this.curTpl = await this.getTplById(tplId)
             this.appName = ''
             this.getTplVersions()
-            this.getPermissionClusterList()
             this.getNamespaceList(tplId)
             this.winHeight = window.innerHeight
         },
@@ -868,7 +896,6 @@
                     this.curVersionData = tplData
 
                     for (const key in files) {
-                        console.log('key', key)
                         if (bcsRegex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 2] + '/' + catalog[catalog.length - 1]
@@ -880,7 +907,6 @@
                         if (regex.test(key)) {
                             const catalog = key.split('/')
                             const fileName = catalog[catalog.length - 1]
-                            console.log('fileName', fileName)
                             list.push({
                                 name: fileName,
                                 content: files[key]
@@ -972,35 +998,25 @@
             },
 
             /**
-             * 获取有权限的集群列表
-             */
-            async getPermissionClusterList (chartId) {
-                const projectId = this.projectId
-
-                try {
-                    const res = await this.$store.dispatch('cluster/getPermissionClusterList', projectId)
-                    this.clusterList = res.data.results
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
-
-            /**
              * 获取命名集群和空间列表
              */
             async getNamespaceList (chartId) {
+                if (!this.curClusterId) return
                 const projectId = this.projectId
 
                 try {
-                    const res = await this.$store.dispatch('helm/getNamespaceListByChart', { projectId, chartId })
-                    res.data.forEach(item => {
-                        const match = item.name.match(/^([\s\S]*)\(([\w-]*)\)/)
-                        if (match && match.length >= 3) {
-                            item.id = match[2]
+                    const res = await this.$store.dispatch(
+                        'helm/getNamespaceList',
+                        {
+                            projectId,
+                            params: {
+                                chart_id: chartId,
+                                cluster_id: this.curClusterId
+                            }
                         }
-                    })
-
+                    )
                     this.namespaceList = res.data
+                    this.webAnnotations = res.web_annotations || { perms: {} }
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }
@@ -1329,6 +1345,15 @@
                 } else {
                     delete this.hignSetupMap[index].errorKeyTip
                 }
+            },
+            goNamespaceList () {
+                this.$router.push({
+                    name: 'namespace',
+                    params: {
+                        projectId: this.projectId,
+                        projectCode: this.projectCode
+                    }
+                })
             }
         }
     }

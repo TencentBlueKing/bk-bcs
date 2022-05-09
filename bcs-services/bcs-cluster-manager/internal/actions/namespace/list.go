@@ -18,9 +18,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // ListAction action for list namespace
@@ -49,23 +49,15 @@ func (la *ListAction) validate() error {
 func (la *ListAction) listQuotas(namespace, federationClusterID string) ([]*cmproto.ResourceQuota, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"namespace":           namespace,
-		"federationClusterID": federationClusterID,
+		"federationclusterid": federationClusterID,
 	})
 	quotas, err := la.model.ListQuota(la.ctx, cond, &storeopt.ListOption{})
 	if err != nil {
 		return nil, err
 	}
 	var retQuotaList []*cmproto.ResourceQuota
-	for _, quota := range quotas {
-		retQuotaList = append(retQuotaList, &cmproto.ResourceQuota{
-			Namespace:           quota.Namespace,
-			FederationClusterID: quota.FederationClusterID,
-			ClusterID:           quota.ClusterID,
-			Region:              quota.Region,
-			ResourceQuota:       quota.ResourceQuota,
-			CreateTime:          quota.CreateTime.String(),
-			UpdateTime:          quota.UpdateTime.String(),
-		})
+	for i := range quotas {
+		retQuotaList = append(retQuotaList, &quotas[i])
 	}
 	return retQuotaList, nil
 }
@@ -98,8 +90,8 @@ func (la *ListAction) listNamespaces() error {
 			BusinessID:          ns.BusinessID,
 			Labels:              ns.Labels,
 			MaxQuota:            ns.MaxQuota,
-			CreateTime:          ns.CreateTime.String(),
-			UpdateTime:          ns.UpdateTime.String(),
+			CreateTime:          ns.CreateTime,
+			UpdateTime:          ns.UpdateTime,
 			QuotaList:           quotaList,
 		}
 		la.nsList = append(la.nsList, retNs)
@@ -110,7 +102,7 @@ func (la *ListAction) listNamespaces() error {
 func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
-	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 	la.resp.Data = la.nsList
 }
 
@@ -125,13 +117,13 @@ func (la *ListAction) Handle(ctx context.Context, req *cmproto.ListNamespaceReq,
 	la.resp = resp
 
 	if err := la.validate(); err != nil {
-		la.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
+		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := la.listNamespaces(); err != nil {
-		la.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	la.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
+	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

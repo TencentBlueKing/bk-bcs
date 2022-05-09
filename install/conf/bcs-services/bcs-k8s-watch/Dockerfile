@@ -13,6 +13,12 @@ ADD filter.json /data/bcs/bcs-k8s-watch/
 RUN chmod +x /data/bcs/bcs-k8s-watch/bcs-k8s-watch
 RUN chmod +x /data/bcs/bcs-k8s-watch/container-start.sh
 
+# 提前设置的默认env
+# 关闭netservice的数据上报，默认关闭
+ENV watchDisableNetService=false
+# 关闭crd资源的数据上报，默认关闭
+ENV watchDisableCrd=false
+
 ENV TZ="Asia/Shanghai"
 RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
 

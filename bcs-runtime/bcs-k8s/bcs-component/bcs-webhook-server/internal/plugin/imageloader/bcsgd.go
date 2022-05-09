@@ -13,17 +13,18 @@
 package imageloader
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsgdapi "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	bcsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
-	bcssche "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
-	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/informers/externalversions"
-	bcsgdlister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
+	bcsgdapi "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/tkex/v1alpha1"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/tkex/v1alpha1"
+	bcsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
+	bcssche "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned/scheme"
+	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/informers/externalversions"
+	bcsgdlister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/listers/tkex/v1alpha1"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/api/admission/v1beta1"
@@ -34,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
-	kubeletapi "k8s.io/kubernetes/pkg/kubelet/apis"
 )
 
 const (
@@ -70,9 +70,9 @@ func (b *bcsgdWorkload) Name() string {
 // Init inits the workload's informer.
 func (b *bcsgdWorkload) Init(i *imageLoader) error {
 	b.name = metav1.GroupVersionKind{
-		Group:   bcsgdapi.GroupName,
-		Version: bcsgdapi.Version,
-		Kind:    bcsgdapi.Kind,
+		Group:   bcsgdapi.GroupVersion.Group,
+		Version: bcsgdapi.GroupVersion.Version,
+		Kind:    "GameDeployment",
 	}.String()
 	b.i = i
 
@@ -284,10 +284,11 @@ func (b *bcsgdWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 	updatePatch = updatePatch[:len(updatePatch)-1] + "," +
 		fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/%s\",\"value\":\"1\"}",
 			imagePreloadDoneLabel) + "]"
-	_, err = b.client.TkexV1alpha1().GameDeployments(gd.Namespace).Patch(
+	_, err = b.client.TkexV1alpha1().GameDeployments(gd.Namespace).Patch(context.Background(),
 		gd.Name,
 		types.JSONPatchType,
-		[]byte(updatePatch))
+		[]byte(updatePatch),
+		metav1.PatchOptions{})
 	if err != nil {
 		blog.Errorf("execute update failed: %v", err)
 		return err
@@ -323,7 +324,7 @@ func applyPatchToGD(old *tkexv1alpha1.GameDeployment, patch string) (*tkexv1alph
 func (b *bcsgdWorkload) generateJobByDiff(
 	gd *tkexv1alpha1.GameDeployment, diffContainers []corev1.Container) (*batchv1.Job, error) {
 	job := newJob(diffContainers)
-	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower(bcsgdapi.Kind), gd.Namespace, gd.Name)
+	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower("GameDeployment"), gd.Namespace, gd.Name)
 	// add fields to set anti affinity
 	job.Labels[jobNameLabel] = job.Name
 	job.Labels[workloadInsNameLabel] = gd.Name
@@ -352,7 +353,7 @@ func (b *bcsgdWorkload) generateJobByDiff(
 				{
 					Namespaces:    []string{gd.Namespace},
 					LabelSelector: gd.Spec.Selector,
-					TopologyKey:   kubeletapi.LabelHostname,
+					TopologyKey:   corev1.LabelHostname,
 				},
 			},
 		},
@@ -365,7 +366,7 @@ func (b *bcsgdWorkload) generateJobByDiff(
 							jobNameLabel: job.Name,
 						},
 					},
-					TopologyKey: kubeletapi.LabelHostname,
+					TopologyKey: corev1.LabelHostname,
 				},
 			},
 		},
@@ -379,7 +380,7 @@ func (b *bcsgdWorkload) nodesOfGD(gd *tkexv1alpha1.GameDeployment) []string {
 	// get all pods of the gd
 	set := labels.Set(gd.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
-	pods, err := b.i.k8sClient.CoreV1().Pods(gd.Namespace).List(listOptions)
+	pods, err := b.i.k8sClient.CoreV1().Pods(gd.Namespace).List(context.Background(), listOptions)
 	if err != nil {
 		blog.Errorf("get pods of bcsgd(%s-%s) failed: %v", gd.Namespace, gd.Name, err)
 		return ret

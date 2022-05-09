@@ -19,6 +19,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
 )
 
 var _ Scaler = &CronScaler{}
@@ -38,14 +39,17 @@ func NewCronScaler(ranges []v1alpha1.TimeRange) Scaler {
 
 // GetReplicas return replicas  recommend by crontab GPA
 func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
-	var max int32
+	var max int32 = -1
+	var metricsServer metrics.PrometheusMetricServer
+	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
 	for _, t := range s.ranges {
-		misMatch, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
+		timeMetric := t.Schedule
+		_, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {
+			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "time", timeMetric, err)
 			klog.Error(err)
 			return currentReplicas, nil
 		}
-		klog.Infof("firstMisMatch: %v, finalMatch: %v", misMatch, finalMatch)
 		if finalMatch == nil {
 			continue
 		}
@@ -53,12 +57,14 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 			max = t.DesiredReplicas
 			recordScheduleName = t.Schedule
 		}
-		klog.Infof("Schedule %v recommend %v replicas, desire: %v", t.Schedule, max, t.DesiredReplicas)
+		klog.V(6).Infof("Schedule %v recommend %v replicas, desire: %v", t.Schedule, max, t.DesiredReplicas)
 	}
-	if max == 0 {
-		klog.Info("Recommend 0 replicas, use current replicas number")
-		max = gpa.Status.DesiredReplicas
+	if max == -1 {
+		klog.V(4).Infof("Now is not in any time range")
 	}
+	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "time", recordScheduleName,
+		int64(max), int64(currentReplicas))
+	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "time", max)
 	return max, nil
 }
 
@@ -67,22 +73,40 @@ func (s *CronScaler) ScalerName() string {
 	return s.name
 }
 
-func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler, schedule string) (*time.Time, *time.Time, error) {
+func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler,
+	schedule string) (*time.Time, *time.Time, error) {
 	sched, err := cron.ParseStandard(schedule)
 	if err != nil {
 		return nil, nil, err
 	}
-	lastTime := gpa.Status.LastCronScheduleTime.DeepCopy()
-	if recordScheduleName != schedule {
-		lastTime = nil
-	}
-	if lastTime == nil || lastTime.IsZero() {
-		lastTime = gpa.CreationTimestamp.DeepCopy()
-	}
-	match := lastTime.Time
-	misMatch := lastTime.Time
-	klog.Infof("Init time: %v, now: %v", lastTime, s.now)
-	t := lastTime.Time
+	// lastTime := gpa.Status.LastCronScheduleTime.DeepCopy()
+	// if recordScheduleName != schedule {
+	// 	lastTime = nil
+	// }
+	// if lastTime == nil || lastTime.IsZero() {
+	// 	lastTime = gpa.CreationTimestamp.DeepCopy()
+	// }
+	// match := lastTime.Time
+	// misMatch := lastTime.Time
+	// klog.Infof("Init time: %v, now: %v", lastTime, s.now)
+	// t := lastTime.Time
+	// for {
+	// 	if !t.After(s.now) {
+	// 		misMatch = t
+	// 		t = sched.Next(t)
+	// 		continue
+	// 	}
+	// 	match = t
+	// 	break
+	// }
+	// if s.now.Sub(misMatch).Minutes() < 1 && s.now.After(misMatch) {
+	// 	return &misMatch, &match, nil
+	// }
+
+	lastTime := s.now.Add(-2 * time.Minute)
+	match := lastTime
+	misMatch := lastTime
+	t := lastTime
 	for {
 		if !t.After(s.now) {
 			misMatch = t
@@ -92,7 +116,8 @@ func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler
 		match = t
 		break
 	}
-	if s.now.Sub(misMatch).Minutes() < 1 && s.now.After(misMatch) {
+	klog.V(6).Infof("mismatch: %v, match: %v, now: %v", misMatch, match, s.now)
+	if s.now.Sub(misMatch).Minutes() <= 1 {
 		return &misMatch, &match, nil
 	}
 

@@ -405,8 +405,7 @@
                     name: 'clusterMain',
                     params: {
                         projectId: this.projectId,
-                        projectCode: this.projectCode,
-                        needCheckPermission: true
+                        projectCode: this.projectCode
                     }
                 })
             },
@@ -415,8 +414,7 @@
                     name: 'namespace',
                     params: {
                         projectId: this.projectId,
-                        projectCode: this.projectCode,
-                        needCheckPermission: true
+                        projectCode: this.projectCode
                     }
                 })
             },
@@ -425,8 +423,7 @@
                     name: 'metricManage',
                     params: {
                         projectId: this.projectId,
-                        projectCode: this.projectCode,
-                        needCheckPermission: true
+                        projectCode: this.projectCode
                     }
                 })
             },

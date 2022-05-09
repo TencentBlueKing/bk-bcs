@@ -12,7 +12,7 @@
                     v-if="!clusterFixed"
                     :placeholder="$t('请选择')"
                     :searchable="true"
-                    :setting-key="'id'"
+                    :setting-key="'cluster_id'"
                     :display-key="'name'"
                     :selected.sync="searchScope"
                     :list="scopeList"

@@ -186,6 +186,11 @@ func (cloud *Provider) Refresh() error {
 		return fmt.Errorf("Refresh cloud manager is nil")
 	}
 
+	if cloud.NodeGroupCache == nil {
+		klog.Errorf("Refresh cloud manager groups is nil")
+		return fmt.Errorf("Refresh cloud manager groups is nil")
+	}
+
 	return cloud.NodeGroupCache.regenerateCache()
 }
 

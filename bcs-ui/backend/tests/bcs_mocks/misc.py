@@ -28,14 +28,21 @@ class FakePaaSCCMod:
 
     def get_projects(self, access_token: str, query_params: Optional[Dict]) -> Dict:
         resp = self._resp(paas_cc_json.resp_filter_projects_ok)
+        if 'search_name' in query_params:
+            projects = resp['data']['results']
+            results = [p for p in projects if query_params['search_name'] in p['project_name']]
+            resp['data'].update({'results': results, 'count': len(results)})
 
         if not query_params:
+            return {'data': resp['data']['results'], 'code': resp['code']}
+
+        if 'project_ids' in query_params:
+            project_id_list = query_params['project_ids'].split(',')
+            resp['data']['results'][0]['project_id'] = project_id_list[0]
+
+        if 'limit' in query_params:
             return resp
-
-        project_id_list = query_params['project_ids'].split(',')
-        resp['data']['results'][0]['project_id'] = project_id_list[0]
-
-        return resp
+        return {'data': resp['data']['results'], 'code': resp['code']}
 
     def get_all_clusters(self, access_token, project_id, limit=None, offset=None, desire_all_data=0):
         resp = self._resp(paas_cc_json.resp_get_clusters_ok)
@@ -72,20 +79,11 @@ class FakePaaSCCMod:
 class FakeProjectPermissionAllowAll:
     """A fake object which replace the original ProjectPermission, allows all operations"""
 
-    def can_create(self, username, raise_exception=False):
+    def can_create(self, perm_ctx, raise_exception=False):
         return True
 
-    def can_view(self, username, project_id, raise_exception=False):
+    def can_view(self, perm_ctx, raise_exception=False):
         return True
 
-    def can_edit(self, username, project_id, raise_exception=False):
+    def can_edit(self, perm_ctx, raise_exception=False):
         return True
-
-    def query_authorized_users(self, project_id, action_id):
-        return []
-
-    def grant_related_action_perms(self, username, project_id, project_name):
-        return []
-
-    def verify_project(self, access_token, project_id, user_id):
-        return {"code": 0}

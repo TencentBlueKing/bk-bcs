@@ -12,7 +12,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import mock
 import pytest
 
 pytestmark = pytest.mark.django_db
@@ -21,10 +20,10 @@ namespace, pod_name, container_name = 'default', 'test_pod_name', 'echoserver'
 
 
 class TestContainer:
-    """ 测试 Container 相关接口 """
+    """测试 Container 相关接口"""
 
     def test_list(self, api_client, project_id, cluster_id, dashboard_container_api_patch):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(
             f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/'
             + f'namespaces/{namespace}/workloads/pods/{pod_name}/containers/'
@@ -34,7 +33,7 @@ class TestContainer:
         assert set(ret.keys()) == {'container_id', 'image', 'name', 'status', 'message', 'reason'}
 
     def test_retrieve(self, api_client, project_id, cluster_id, dashboard_container_api_patch):
-        """ 测试获取单个容器信息 """
+        """测试获取单个容器信息"""
         response = api_client.get(
             f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/'
             + f'namespaces/{namespace}/workloads/pods/{pod_name}/containers/{container_name}/'
@@ -56,7 +55,7 @@ class TestContainer:
         }
 
     def test_fetch_env_info(self, api_client, project_id, cluster_id, dashboard_container_api_patch):
-        """ 测试获取单个容器环境变量配置信息 """
+        """测试获取单个容器环境变量配置信息"""
         response = api_client.get(
             f'/api/dashboard/projects/{project_id}/clusters/{cluster_id}/namespaces/{namespace}'
             + f'/workloads/pods/{pod_name}/containers/{container_name}/env_info/'

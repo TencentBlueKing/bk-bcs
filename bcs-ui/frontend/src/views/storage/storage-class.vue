@@ -94,8 +94,6 @@
                     curPage: 1,
                     show: true
                 },
-
-                clusterList: [],
                 dataListTmp: [],
                 dataList: []
             }
@@ -109,6 +107,16 @@
             },
             curClusterId () {
                 return this.$store.state.curClusterId
+            },
+            clusterList () {
+                return this.$store.state.cluster.clusterList.map(item => {
+                    return {
+                        id: item.cluster_id,
+                        cluster_id: item.cluster_id,
+                        cluster_name: item.name,
+                        name: item.name
+                    }
+                })
             }
         },
         watch: {
@@ -126,19 +134,6 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    const list = res.data.results || []
-                    const clusterList = []
-                    list.forEach(item => {
-                        clusterList.push({
-                            id: item.cluster_id,
-                            cluster_id: item.cluster_id,
-                            cluster_name: item.name,
-                            name: item.name
-                        })
-                    })
-
-                    this.clusterList.splice(0, this.clusterList.length, ...clusterList)
                     if (this.clusterList.length) {
                         const clusterIds = this.clusterList.map(item => item.id)
                         // 使用当前缓存
@@ -147,7 +142,7 @@
                         } else {
                             this.searchClusterId = this.clusterList[0].cluster_id
                         }
-                        
+
                         await this.fetchData()
                     } else {
                         // 没有集群时，这里就终止了，不会执行 fetchData，所以这里关闭 loading，不能在 finally 里面关闭

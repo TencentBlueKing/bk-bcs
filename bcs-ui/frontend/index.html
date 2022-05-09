@@ -4,7 +4,7 @@
         <link rel="icon" href="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
         <link rel="shortcut icon" href="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
         <meta charset="utf-8">
-        <title> index </title>
+        <title> loading </title>
     </head>
 <body>
 <div id="app"></div>
@@ -34,6 +34,8 @@
     var UWORK_HOST = '{{ UWORK_HOST }}'
     var SNIPER_HOST = '{{ SNIPER_HOST }}'
     var MIRROR_HOST = '{{ MIRROR_HOST }}'
+    var BKMONITOR_URL = '{{ BKMONITOR_URL }}'
+    var BCS_API_HOST = '{{ BCS_API_HOST }}'
 
     document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
     // 加载配置文件

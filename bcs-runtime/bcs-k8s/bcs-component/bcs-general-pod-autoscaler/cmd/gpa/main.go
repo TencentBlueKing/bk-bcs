@@ -17,6 +17,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -51,6 +52,11 @@ const (
 	defaultLeaseDuration = 15 * time.Second
 	defaultRenewDeadline = 10 * time.Second
 	defaultRetryPeriod   = 2 * time.Second
+)
+
+var (
+	metricServerAddress string
+	metricPort          uint
 )
 
 func main() {
@@ -141,11 +147,12 @@ func main() {
 		case <-ctx.Done():
 		}
 	}()
-
 	run := func(ctx context.Context) {
 		controller.Run(ctx.Done())
 	}
-
+	var metricsServer metrics.PrometheusMetricServer
+	addr := metricServerAddress + ":" + strconv.Itoa(int(metricPort))
+	go metricsServer.NewServer(addr, "/metrics")
 	id, err := os.Hostname()
 	if err != nil {
 		klog.Fatalf("Unable to get hostname: %v", err)
@@ -164,7 +171,6 @@ func main() {
 	if err != nil {
 		klog.Fatalf("Unable to create leader election lock: %v", err)
 	}
-
 	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
 		Lock:          lock,
 		LeaseDuration: leaderElection.LeaseDuration.Duration,
@@ -191,4 +197,9 @@ func defaultLeaderElectionConfiguration() componentbaseconfig.LeaderElectionConf
 		RetryPeriod:   metav1.Duration{Duration: defaultRetryPeriod},
 		ResourceLock:  resourcelock.LeasesResourceLock,
 	}
+}
+
+func init() {
+	pflag.StringVar(&metricServerAddress, "metric-server-address", "0.0.0.0", "http metric server address")
+	pflag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
 }

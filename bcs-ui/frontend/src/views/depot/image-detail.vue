@@ -100,6 +100,13 @@
     import { getScrollHeight, getScrollTop, getWindowHeight } from '@/common/util'
 
     export default {
+        props: {
+            imageRepo: {
+                type: String,
+                default: '',
+                required: true
+            }
+        },
         data () {
             return {
                 showLoading: true,
@@ -132,9 +139,6 @@
             },
             backRouterName () {
                 return localStorage.getItem('backRouterName')
-            },
-            imageRepo () {
-                return this.$route.params.repo
             },
             curImage () {
                 return this.$store.state.depot.curImage

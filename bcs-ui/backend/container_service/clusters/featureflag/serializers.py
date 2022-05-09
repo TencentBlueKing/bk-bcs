@@ -15,19 +15,20 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .constants import ViewMode
-from .featflag import UNSELECTED_CLUSTER, ClusterFeatureType
+from backend.container_service.clusters.constants import ClusterType
+
+from .constants import UNSELECTED_CLUSTER_PLACEHOLDER, ViewMode
 
 
-class ClusterFeatureTypeSLZ(serializers.Serializer):
+class ClusterFeatureFlagSLZ(serializers.Serializer):
     cluster_id = serializers.CharField()
-    cluster_feature_type = serializers.ChoiceField(choices=ClusterFeatureType.get_choices(), required=False)
+    cluster_type = serializers.ChoiceField(choices=ClusterType.get_choices(), required=False)
     view_mode = serializers.ChoiceField(
         choices=ViewMode.get_choices(), default=ViewMode.ClusterManagement, required=False
     )
 
     def validate(self, data):
         # cluster_id 为 -, 表示未指定具体集群
-        if data['cluster_id'] != UNSELECTED_CLUSTER and 'cluster_feature_type' not in data:
-            raise ValidationError("missing valid parameter cluster_feature_type")
+        if data['cluster_id'] != UNSELECTED_CLUSTER_PLACEHOLDER and 'cluster_type' not in data:
+            raise ValidationError("missing valid parameter cluster_type")
         return data

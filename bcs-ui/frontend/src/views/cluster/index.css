@@ -84,7 +84,8 @@
             }
 
             .stag,
-            .prod {
+            .prod,
+            .common {
                 border: 1px solid $fnMinorColor;
                 padding: 1px 8px;
                 border-radius: 2px;
@@ -101,6 +102,11 @@
             }
 
             .prod {
+                color: $primaryColor;
+                background-color: #e1f3ff;
+                border: solid 1px $primaryColor;
+            }
+            .common {
                 color: $primaryColor;
                 background-color: #e1f3ff;
                 border: solid 1px $primaryColor;

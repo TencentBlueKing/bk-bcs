@@ -549,7 +549,8 @@
                     const params = {
                         projectId: this.projectId,
                         container_ids: this.containerId.split(','),
-                        clusterId: this.clusterId
+                        clusterId: this.clusterId,
+                        namespace: this.containerInfo.namespace
                     }
 
                     const res = await this.$store.dispatch('app/containerCpuUsage', Object.assign({}, params))
@@ -690,7 +691,8 @@
                     const params = {
                         projectId: this.projectId,
                         container_ids: this.containerId.split(','),
-                        clusterId: this.clusterId
+                        clusterId: this.clusterId,
+                        namespace: this.containerInfo.namespace
                     }
 
                     const res = await this.$store.dispatch('app/containerMemUsage', Object.assign({}, params))
@@ -830,7 +832,8 @@
                     const params = {
                         projectId: this.projectId,
                         container_ids: this.containerId.split(','),
-                        clusterId: this.clusterId
+                        clusterId: this.clusterId,
+                        namespace: this.containerInfo.namespace
                     }
 
                     const res = await Promise.all([
@@ -1180,7 +1183,8 @@
 
     .echarts {
         width: 100%;
-        height: 180px;
+        height: 160px;
+        z-index: 100;
     }
 
     .biz-app-container-table-wrapper {

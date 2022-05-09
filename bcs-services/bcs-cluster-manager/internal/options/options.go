@@ -12,6 +12,10 @@
 
 package options
 
+import (
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+)
+
 // EtcdOption option for etcd
 type EtcdOption struct {
 	EtcdEndpoints string `json:"endpoints" value:"" usage:"endpoints of etcd"`
@@ -73,14 +77,86 @@ type MongoConfig struct {
 	MinPoolSize    uint   `json:"minpoolsize"`
 }
 
+// BrokerConfig option for dispatch task broker
+type BrokerConfig struct {
+	QueueAddress string `json:"address"`
+	Exchange     string `json:"exchange"`
+}
+
+// BKOpsConfig for call bkops job
+type BKOpsConfig struct {
+	AppCode       string `json:"appCode"`
+	AppSecret     string `json:"appSecret"`
+	Debug         bool   `json:"debug"`
+	External      bool   `json:"external"`
+	CreateTaskURL string `json:"createTaskURL"`
+	TaskStatusURL string `json:"taskStatusURL"`
+	StartTaskURL  string `json:"startTaskURL"`
+}
+
+// CmdbConfig for cloud different tags info
+type CmdbConfig struct {
+	Enable     bool   `json:"enable"`
+	AppCode    string `json:"appCode"`
+	AppSecret  string `json:"appSecret"`
+	BkUserName string `json:"bkUserName"`
+	Server     string `json:"server"`
+	Debug      bool   `json:"debug"`
+}
+
+// ResourceManagerConfig init resource_module
+type ResourceManagerConfig struct {
+	Enable bool   `json:"enable"`
+	Module string `json:"module"`
+}
+
+// SsmConfig for perm
+type SsmConfig struct {
+	Server    string `json:"server"`
+	AppCode   string `json:"appCode"`
+	AppSecret string `json:"appSecret"`
+	Enable    bool   `json:"enable"`
+	Debug     bool   `json:"debug"`
+}
+
+// PassConfig pass-cc config
+type PassConfig struct {
+	Server string `json:"server"`
+	Enable bool   `json:"enable"`
+	Debug  bool   `json:"debug"`
+}
+
+// AlarmConfig for alarm interface
+type AlarmConfig struct {
+	Server     string `json:"server"`
+	AppCode    string `json:"appCode"`
+	AppSecret  string `json:"appSecret"`
+	BkUserName string `json:"bkUserName"`
+	Enable     bool   `json:"enable"`
+	Debug      bool   `json:"debug"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
-	Etcd    EtcdOption    `json:"etcd"`
-	Swagger SwaggerConfig `json:"swagger"`
-	Tunnel  TunnelConfig  `json:"tunnel"`
-	BcsLog  LogConfig     `json:"bcslog"`
-	Mongo   MongoConfig   `json:"mongo"`
-	Debug   bool          `json:"debug"`
+	Etcd              EtcdOption            `json:"etcd"`
+	Swagger           SwaggerConfig         `json:"swagger"`
+	Tunnel            TunnelConfig          `json:"tunnel"`
+	BcsLog            LogConfig             `json:"bcslog"`
+	Mongo             MongoConfig           `json:"mongo"`
+	Broker            BrokerConfig          `json:"broker"`
+	BKOps             BKOpsConfig           `json:"bkOps"`
+	Cmdb              CmdbConfig            `json:"cmdb"`
+	ResourceManager   ResourceManagerConfig `json:"resource"`
+	CloudTemplatePath string                `json:"cloudTemplatePath"`
+	Ssm               SsmConfig             `json:"ssm"`
+	Passcc            PassConfig            `json:"passcc"`
+	Alarm             AlarmConfig           `json:"alarm"`
+	Debug             bool                  `json:"debug"`
 	ServerConfig
 	ClientConfig
+}
+
+// CloudTemplateList cloud template init config
+type CloudTemplateList struct {
+	CloudList []*cmproto.Cloud `json:"cloudList"`
 }

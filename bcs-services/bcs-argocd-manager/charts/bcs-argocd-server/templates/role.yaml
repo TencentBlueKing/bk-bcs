@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "bcs-argocd-server.fullname" . }}
+  labels:
+    {{- include "bcs-argocd-server.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - argocdinstances
+  - argocdplugins
+  - argocdprojects
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - delete
+  - patch

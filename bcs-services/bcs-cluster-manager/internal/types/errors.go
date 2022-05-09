@@ -29,7 +29,7 @@ const (
 	BcsErrClusterManagerUnknown = common.BCSErrClusterManager + 3
 	// BcsErrClusterManagerUnknownStr unknown error msg
 	BcsErrClusterManagerUnknownStr = "unknown error"
-
+	
 	// BcsErrClusterManagerDatabaseRecordNotFound database record not found
 	BcsErrClusterManagerDatabaseRecordNotFound = common.BCSErrClusterManager + 4
 	// BcsErrClusterManagerDatabaseRecordDuplicateKey database index key is duplicate

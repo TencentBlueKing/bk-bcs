@@ -70,29 +70,37 @@ INSTALLED_APPS = [
     "backend.templatesets.legacy_apps.instance.apps.TemplatesetsInstanceConfig",
     "backend.uniapps.resource",
     "backend.uniapps.network",
-    "backend.apps.ticket",
     "backend.helm.app",
     "backend.helm.helm",
     "backend.helm.authtoken.apps.HelmAuthtokenConfig",
     "backend.container_service.infras.hosts.terraform",
     # 模板集功能模块
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
+    "backend.change_log",
+    "django_prometheus",
 ]
 
 MIDDLEWARE = [
+    # 该中间件必须在最前
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "backend.accounts.middlewares.RequestProvider",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "backend.bcs_web.middleware.MultiDomainSessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "backend.bcs_web.middleware.MultiDomainCsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # admin static file
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    # 该中间件必须在最后
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
+
+# 是否启用 Django-Prometheus Migration，镜像构建时候禁用，原因是没有 DB 服务
+PROMETHEUS_EXPORT_MIGRATIONS = os.environ.get('PROMETHEUS_EXPORT_MIGRATIONS', 'True') == 'True'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -105,7 +113,6 @@ TEMPLATES = [
             os.path.join(BASE_DIR, "templates"),
             os.path.join(BASE_DIR, "backend/web_console/templates"),
             os.path.join(BASE_DIR, "backend/static"),
-            os.path.join(BASE_DIR, "frontend/output"),
             os.path.join(BASE_DIR, "staticfiles"),
             os.path.join(BASE_DIR, "backend/templatesets/legacy_apps/configuration/yaml_mode/manifests"),
             os.path.join(BASE_DIR, "backend/helm/toolkit/kubehelm/templates"),
@@ -186,7 +193,6 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "backend/web_console/static/"),
     os.path.join(BASE_DIR, "backend/static"),
-    os.path.join(BASE_DIR, "frontend/output"),
 ]
 
 
@@ -210,8 +216,8 @@ REST_FRAMEWORK = {
 }
 
 # Change default cookie names to avoid conflict
-SESSION_COOKIE_NAME = "backend_sessionid"
-CSRF_COOKIE_NAME = "backend_csrftoken"
+SESSION_COOKIE_NAME = "bcs_sessionid"
+CSRF_COOKIE_NAME = "bcs_csrftoken"
 # log max bytes：500m
 LOG_MAX_BYTES = 500 * 1024 * 1024
 # log count: 10
@@ -335,7 +341,6 @@ KUBECTL_BIN_MAP = {
     "1.20.13": "/bin/kubectl-v1.20.13",
 }
 KUBECFG = "/root/.kube/config"  # kubectl config path, ex: ~/.kube/config
-BKE_SERVER_HOST = None  # example: http://127.0.0.1:44321
 FORCE_APPLY_CLUSTER_ID = ""  # 强制将资源应用该集群，仅用于开发测试目的, 比如 localkube
 KUBECTL_MAX_VISIBLE_LEVEL = 2
 HELM_INSECURE_SKIP_TLS_VERIFY = False
@@ -461,12 +466,39 @@ DIRECT_ON_FUNC_CODE = ['HAS_IMAGE_SECRET']
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # 访问 bcs-api 服务需要的token
-BCS_AUTH_TOKEN = os.environ.get("BCS_AUTH_TOKEN", "")
-# 访问 bcs-api-gateway 服务需要的token
-BCS_API_GW_AUTH_TOKEN = os.environ.get("BCS_API_GW_AUTH_TOKEN", "")
-# 访问 bcs-api-gateway 服务的域名
-BCS_API_GW_DOMAIN = os.environ.get("BCS_API_GW_DOMAIN", "")
+BCS_APIGW_TOKEN = os.environ.get("BCS_APIGW_TOKEN", "")
+# 直连新版bcs api的地址
+BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
 
+# cluster manager的代理配置
+CLUSTER_MANAGER_PROXY = {
+    # cluster manager 服务的 host
+    "HOST": BCS_APIGW_DOMAIN["prod"],
+    # 访问 cluster manager 的 token
+    "TOKEN": BCS_APIGW_TOKEN,
+    # 前端访问的前缀
+    "PREFIX_PATH": "api/cluster_manager/proxy/",
+}
+
+# 版本日志放置的路径
+CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
+
+# 共享集群命名空间的前缀
+SHARED_CLUSTER_NS_PREFIX = ""
+
+# API 密钥前端渲染用
+BCS_API_HOST = ""
+
+# 基础性能查询数据源
+PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
+
+# 蓝鲸监控 unify-query 地址
+BK_MONITOR_QUERY_HOST = os.environ.get(
+    'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
+)
+
+# 是否支持使用 Mesos 服务
+SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
 
 try:
     from .base_ext import *  # noqa

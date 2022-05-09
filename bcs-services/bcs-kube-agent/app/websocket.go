@@ -44,6 +44,13 @@ const (
 
 	// ModuleName module name for kube agent
 	ModuleName = "kubeagent"
+
+	tunnelsConnectionMode = "tunnels"
+)
+
+var (
+	reconnectTimes  = 0
+	lastConnectTime time.Time
 )
 
 func getenv(env string) (string, error) {
@@ -119,6 +126,8 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 			wsURL := fmt.Sprintf("%s%s", bkeServerAddress, bkeWsPath)
 			blog.Infof("Connecting to %s with token %s", wsURL, registerToken)
 
+			reportBcsKubeAgentReadiness(tunnelsConnectionMode, BCSKubeAgentStatesReady)
+			lastConnectTime = time.Now()
 			err := websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil,
 				func(proto, address string) bool {
 					switch proto {
@@ -133,9 +142,20 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 				blog.Errorf("websocket clientConnect failed: %s, %v", wsURL, err)
 				reportBcsKubeAgentCMWsFail(handler)
 			}
-			time.Sleep(5 * time.Second)
+			reportBcsKubeAgentReadiness(tunnelsConnectionMode, BCSKubeAgentStatesNotReady)
+			time.Sleep(reconnectTimeout())
 		}
 	}()
 
 	return nil
+}
+
+func reconnectTimeout() time.Duration {
+	if time.Now().Sub(lastConnectTime) > time.Second*10 {
+		reconnectTimes = 0
+	}
+	if reconnectTimes < 5 {
+		return time.Duration(0)
+	}
+	return time.Second * 5
 }

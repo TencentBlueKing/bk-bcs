@@ -23,6 +23,7 @@ import (
 	metricutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/metric"
 	templateutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/template"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+
 	"github.com/prometheus/client_golang/api"
 	"github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
@@ -61,7 +62,7 @@ func (p *Provider) Run(run *v1alpha1.HookRun, metric v1alpha1.Metric) v1alpha1.M
 		return metricutil.MarkMeasurementError(newMeasurement, err)
 	}
 
-	response, err := p.api.Query(ctx, query, time.Now())
+	response, _, err := p.api.Query(ctx, query, time.Now())
 	if err != nil {
 		return metricutil.MarkMeasurementError(newMeasurement, err)
 	}

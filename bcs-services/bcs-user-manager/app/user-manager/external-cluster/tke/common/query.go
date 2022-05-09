@@ -14,17 +14,18 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"reflect"
 	"strings"
 )
 
+// QCloudArg interface
 type QCloudArg interface {
 	EncodeStructWithPrefix(prefix string, val reflect.Value, v *url.Values) error
 }
 
+// EncodeStruct xxx
 func EncodeStruct(i interface{}, v *url.Values) error {
 	val := reflect.ValueOf(i)
 	return encodeStructWithPrefix("", val, v)
@@ -48,7 +49,7 @@ func encodeStructWithPrefix(prefix string, val reflect.Value, v *url.Values) err
 				if fieldVal.Kind() == reflect.Ptr {
 					if fieldVal.IsNil() {
 						if opts.Contains("required") {
-							return errors.New(fmt.Sprintf("field %s of %s should not be nil", tag, typ))
+							return fmt.Errorf("field %s of %s should not be nil", tag, typ)
 						}
 						continue
 					}

@@ -8,11 +8,32 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-import { dashbordList, retrieveDetail, podMetric, listWorkloadPods,
-    listStoragePods, listContainers, retrieveContainerDetail, containerMetric,
-    fetchContainerEnvInfo, resourceDelete, resourceCreate, resourceUpdate, exampleManifests,
-    subscribeList, namespaceList, customResourceList, retrieveCustomResourceDetail, customResourceCreate,
-    customResourceUpdate, customResourceDelete, reschedulePod, logLinks } from '@/api/base'
+import {
+    dashbordList,
+    retrieveDetail,
+    podMetric,
+    listWorkloadPods,
+    listStoragePods,
+    listContainers,
+    retrieveContainerDetail,
+    containerMetric,
+    fetchContainerEnvInfo,
+    resourceDelete,
+    resourceCreate,
+    resourceUpdate,
+    exampleManifests,
+    subscribeList,
+    namespaceList,
+    customResourceList,
+    retrieveCustomResourceDetail,
+    customResourceCreate,
+    customResourceUpdate,
+    customResourceDelete,
+    reschedulePod,
+    logLinks,
+    dashbordListWithoutNamespace,
+    crdList
+} from '@/api/base'
 
 export default {
     namespaced: true,
@@ -32,8 +53,20 @@ export default {
             return res
         },
 
+        // 获取表格数据通用方法（无命名空间）
+        async getTableDataWithoutNamespace (context, params) {
+            const res = await dashbordListWithoutNamespace(params, { needRes: true }).catch(() => ({
+                data: {
+                    manifest: {},
+                    manifest_ext: {}
+                }
+            }))
+            return res
+        },
+
         // 订阅接口
         async subscribeList (context, params, config = { needRes: true }) {
+            if (!context.rootState?.curClusterId) return { events: [], latest_rv: null }
             const res = await subscribeList(params, config).catch((err) => {
                 if (err.code === 4005005) { // resourceVersion 重载当前窗口（也可以在每个界面重新调用获取列表详情的接口，目前这样快速处理）
                     location.reload()
@@ -185,6 +218,16 @@ export default {
                 items: []
             }))
             return data
+        },
+        // 获取CRD列表
+        async crdList () {
+            const res = await crdList({}, { needRes: true }).catch(() => ({
+                data: {
+                    manifest: {},
+                    manifest_ext: {}
+                }
+            }))
+            return res
         },
         // 自定义资源列表
         async customResourceList (context, params) {

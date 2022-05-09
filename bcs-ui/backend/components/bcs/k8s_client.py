@@ -22,7 +22,7 @@ from django.utils.functional import cached_property
 from kubernetes import client
 
 from backend.components.bcs import BCSClientBase, resources
-from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.client import BcsKubeConfigurationService
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,10 @@ class K8SAPIClient(BCSClientBase):
 
     @property
     def _headers_for_bcs_agent_api(self):
-        return {"Authorization": getattr(settings, "BCS_AUTH_TOKEN", ""), "Content-Type": "application/json"}
+        return {
+            "Authorization": f'Bearer {getattr(settings, "BCS_APIGW_TOKEN", "")}',
+            "Content-Type": "application/json",
+        }
 
     @cached_property
     def api_client(self):

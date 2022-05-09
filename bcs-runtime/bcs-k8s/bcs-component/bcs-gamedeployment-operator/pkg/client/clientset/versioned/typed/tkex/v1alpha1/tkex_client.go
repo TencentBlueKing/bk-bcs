@@ -18,7 +18,6 @@ package v1alpha1
 import (
 	v1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -27,7 +26,7 @@ type TkexV1alpha1Interface interface {
 	GameDeploymentsGetter
 }
 
-// TkexV1alpha1Client is used to interact with features provided by the tkex group.
+// TkexV1alpha1Client is used to interact with features provided by the tkex.tencent.com group.
 type TkexV1alpha1Client struct {
 	restClient rest.Interface
 }
@@ -68,8 +67,7 @@ func setConfigDefaults(config *rest.Config) error {
 	gv := v1alpha1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
-	//config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
-	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
+	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
 
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()

@@ -15,18 +15,11 @@ specific language governing permissions and limitations under the License.
 from backend.packages.blue_krill.data_types import enum
 
 # 未选择集群使用的占位符
-UNSELECTED_CLUSTER = '-'
-
-
-class ClusterFeatureType(str, enum.StructuredEnum):
-    """ 集群类型 """
-
-    SINGLE = enum.EnumField('SINGLE', label="独立集群")
-    FEDERATION = enum.EnumField('FEDERATION', label="联邦集群")
+UNSELECTED_CLUSTER_PLACEHOLDER = '-'
 
 
 class ViewMode(str, enum.StructuredEnum):
-    """ 查看模式 """
+    """查看模式"""
 
     ClusterManagement = enum.EnumField('ClusterManagement', label='集群管理')
     ResourceDashboard = enum.EnumField('ResourceDashboard', label='资源视图')

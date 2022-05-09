@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import pytest
 
-from backend.container_service.clusters.base import CtxCluster
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.resource import ResourceClient, ResourceList, ResourceObj
 from backend.resources.utils.format import ResourceDefaultFormatter
 from backend.tests.conftest import TEST_NAMESPACE

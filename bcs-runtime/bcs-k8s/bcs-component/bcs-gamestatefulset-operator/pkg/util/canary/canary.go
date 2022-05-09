@@ -20,6 +20,7 @@ import (
 	"time"
 
 	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/klog"
 	hashutil "k8s.io/kubernetes/pkg/util/hash"
@@ -43,23 +44,24 @@ func GetCurrentCanaryStep(set *gstsv1alpha1.GameStatefulSet) (*gstsv1alpha1.Cana
 }
 
 // GetCurrentPartition get current partition of canary
-func GetCurrentPartition(set *gstsv1alpha1.GameStatefulSet) int32 {
+func GetCurrentPartition(set *gstsv1alpha1.GameStatefulSet) (int, error) {
 	currentStep, currentStepIndex := GetCurrentCanaryStep(set)
 	if currentStep == nil {
 		if (set.Spec.UpdateStrategy.CanaryStrategy == nil || len(set.Spec.UpdateStrategy.CanaryStrategy.Steps) == 0) &&
 			set.Spec.UpdateStrategy.RollingUpdate != nil && set.Spec.UpdateStrategy.RollingUpdate.Partition != nil {
-			return *set.Spec.UpdateStrategy.RollingUpdate.Partition
+			return intstrutil.GetValueFromIntOrPercent(set.Spec.UpdateStrategy.RollingUpdate.Partition,
+				int(*set.Spec.Replicas), false)
 		}
-		return 0
+		return 0, nil
 	}
 
 	for i := *currentStepIndex; i >= 0; i-- {
 		step := set.Spec.UpdateStrategy.CanaryStrategy.Steps[i]
 		if step.Partition != nil {
-			return *step.Partition
+			return intstrutil.GetValueFromIntOrPercent(step.Partition, int(*set.Spec.Replicas), false)
 		}
 	}
-	return *set.Spec.Replicas
+	return int(*set.Spec.Replicas), nil
 }
 
 // CheckStepHashChange detects if there is an change in the canary steps

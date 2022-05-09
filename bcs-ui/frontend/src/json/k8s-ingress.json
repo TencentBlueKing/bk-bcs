@@ -32,7 +32,7 @@
             "tls": [
                 {
                     "hosts": "",
-                    "certId": ""
+                    "secretName": ""
                 }
             ],
             "rules": [

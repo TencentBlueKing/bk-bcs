@@ -14,10 +14,12 @@
 package hook
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned/typed/tkex/v1alpha1"
@@ -25,21 +27,31 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var defaultArgs = [...]string{"PodName", "PodNamespace", "PodIP", "PodContainer", "HostIP"}
+var defaultArgs = [...]string{"PodName", "PodNamespace", "PodIP", "PodContainer", "ModifiedContainer", "HostIP"}
 
 const (
-	WorkloadRevisionUniqueLabel string = "workload-revision"
-	HookRunTypeLabel                   = "hookrun-type"
-	HookRunTypeCanaryStepLabel         = "canary-step"
-	HookRunTypePreDeleteLabel          = "pre-delete-step"
-	HookRunTypePreInplaceLabel         = "pre-inplace-step"
-	HookRunTypePostInplaceLabel        = "post-inplace-step"
-	HookRunCanaryStepIndexLabel        = "canary-step-index"
-	PodControllerRevision              = "pod-controller-revision"
-	PodInstanceID                      = "instance-id"
+	// WorkloadRevisionUniqueLabel is the key of label, indicating the revision of workload
+	WorkloadRevisionUniqueLabel = "workload-revision"
+	// HookRunTypeLabel is the key of label, indicating the type of hookrun
+	HookRunTypeLabel = "hookrun-type"
+	// HookRunTypeCanaryStepLabel is the value of label, indicating the type is canary-step
+	HookRunTypeCanaryStepLabel = "canary-step"
+	// HookRunTypePreDeleteLabel is the value of label, indicating the type is predelete
+	HookRunTypePreDeleteLabel = "pre-delete-step"
+	// HookRunTypePreInplaceLabel is the value of label, indicating the type is preinplace
+	HookRunTypePreInplaceLabel = "pre-inplace-step"
+	// HookRunTypePostInplaceLabel is the value of label, indicating the type is postinplace
+	HookRunTypePostInplaceLabel = "post-inplace-step"
+	// HookRunCanaryStepIndexLabel is the key of label, indicating the index of canary step
+	HookRunCanaryStepIndexLabel = "canary-step-index"
+	// PodControllerRevision indicates the controller revision of pod
+	PodControllerRevision = "pod-controller-revision"
+	// PodInstanceID indicates the instance id of pod
+	PodInstanceID = "instance-id"
 )
 
 const (
+	// CancelHookRun show how to cancel hookrun
 	CancelHookRun = `{
 		"spec": {
 			"terminate": true
@@ -47,6 +59,7 @@ const (
 	}`
 )
 
+// StepLabels returns the labels of hookstep
 func StepLabels(index int32, revision string) map[string]string {
 	indexStr := strconv.Itoa(int(index))
 	return map[string]string{
@@ -56,6 +69,7 @@ func StepLabels(index int32, revision string) map[string]string {
 	}
 }
 
+// NewHookRunFromTemplate returns the hookrun based on hooktemplate
 func NewHookRunFromTemplate(template *hookv1alpha1.HookTemplate, args []hookv1alpha1.Argument, name, generateName,
 	namespace string) (*hookv1alpha1.HookRun, error) {
 	newArgs, err := MergeArgs(args, template.Spec.Args)
@@ -71,11 +85,13 @@ func NewHookRunFromTemplate(template *hookv1alpha1.HookTemplate, args []hookv1al
 		Spec: hookv1alpha1.HookRunSpec{
 			Metrics: template.Spec.Metrics,
 			Args:    newArgs,
+			Policy:  template.Spec.Policy,
 		},
 	}
 	return &ar, nil
 }
 
+// MergeArgs generates args for hookrun with hooktemplate's args
 func MergeArgs(incomingArgs, templateArgs []hookv1alpha1.Argument) ([]hookv1alpha1.Argument, error) {
 	newArgs := append(templateArgs[:0:0], templateArgs...)
 	for _, arg := range incomingArgs {
@@ -105,14 +121,16 @@ func findArg(name string, args []hookv1alpha1.Argument) int {
 
 func findDefaultArgs(name string) bool {
 	for _, argName := range defaultArgs {
-		if argName == name {
+		if strings.Contains(name, argName) {
 			return true
 		}
 	}
 	return false
 }
 
-func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run hookv1alpha1.HookRun) (*hookv1alpha1.HookRun, error) {
+// CreateWithCollisionCounter creates hookrun with collosion counter
+func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface,
+	run hookv1alpha1.HookRun) (*hookv1alpha1.HookRun, error) {
 	newControllerRef := metav1.GetControllerOf(&run)
 	if newControllerRef == nil {
 		return nil, errors.New("Supplied run does not have an owner reference")
@@ -120,7 +138,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run ho
 	collisionCount := 1
 	baseName := run.Name
 	for {
-		createdRun, err := hookRunIf.Create(&run)
+		createdRun, err := hookRunIf.Create(context.TODO(), &run, metav1.CreateOptions{})
 		if err == nil {
 			return createdRun, nil
 		}
@@ -128,7 +146,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run ho
 			return nil, err
 		}
 		// TODO(jessesuen): switch from Get to List so that there's no guessing about which collision counter to use.
-		existingRun, err := hookRunIf.Get(run.Name, metav1.GetOptions{})
+		existingRun, err := hookRunIf.Get(context.TODO(), run.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -145,6 +163,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run ho
 	}
 }
 
+// IsSemanticallyEqual determinates two hookrunspec is equal semantically
 func IsSemanticallyEqual(left, right hookv1alpha1.HookRunSpec) bool {
 	leftBytes, err := json.Marshal(left)
 	if err != nil {

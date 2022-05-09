@@ -17,11 +17,13 @@ import (
 	"testing"
 	"time"
 
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager/mocks"
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	"github.com/golang/mock/gomock"
+
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/config"
@@ -30,6 +32,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
+
 )
 
 func Test_parseTimeWithZone(t *testing.T) {
@@ -271,6 +274,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 	provider, _ := bcs.BuildBcsCloudProvider(cache, m, opts, resourceLimiter)
 
 	// Create context with mocked lister registry.
+
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
 	scheduledPodMock := &podListerMock{}
@@ -338,6 +342,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 			},
 			want:        nil,
 			wantDesired: []int{5, 3},
+
 		},
 	}
 	for _, tt := range tests {
@@ -484,6 +489,7 @@ func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("getDesiredNumForNodeGroupWithTime() = %v, want %v", got, tt.want)
 			}
+
 		})
 	}
 }

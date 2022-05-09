@@ -1,0 +1,87 @@
+{
+  "cloudList": [
+    {
+      "cloudID": "bluekingCloud",
+      "name": "蓝鲸云",
+      "engineType": "k8s",
+      "editable": true,
+      "enable": "false",
+      "osManagement": {
+        "availableVersion": [],
+        "instanceType": [],
+        "defaultSecurityGroups": [],
+        "regions": {}
+      },
+      "clusterManagement": {
+        "availableVersion": ["v1.14.3-tk8s-v1.1-1"],
+        "createCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_biz_id": "CM.template.BusinessID",
+                "template_id": "10001",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs",
+                "cluster_id": "CM.cluster.ClusterID"
+              }
+            }
+          }
+        },
+        "deleteCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_biz_id": "CM.template.BusinessID",
+                "template_id": "10003",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs"
+              }
+            }
+          }
+        },
+        "addNodesToCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_biz_id": "CM.template.BusinessID",
+                "template_id": "10001",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs",
+                "node_ip_list": "CM.node.NodeIPList"
+               }
+            }
+          }
+        },
+        "deleteNodesFromCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_id": "10002",
+                "template_biz_id": "CM.template.BusinessID",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs",
+                "node_ip_list": "CM.node.NodeIPList"
+              }
+            }
+          }
+        }
+      },
+      "creator": "admin",
+      "updater": "admin",
+      "cloudProvider": "blueking",
+      "description": ""
+    }
+  ]
+}

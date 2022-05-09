@@ -57,7 +57,7 @@ def node_metric_api_patch():
 def node_info_api_patch():
     with mock.patch(
         'backend.container_service.observability.metric.views.node.get_cluster_nodes',
-        new=lambda *args, **kwargs: [{'inner_ip': '127.0.0.1', 'id': 1}],
+        new=lambda *args, **kwargs: [{'inner_ip': '127.0.0.1'}],
     ), mock.patch(
         'backend.container_service.observability.metric.views.node.prom.get_node_info',
         new=lambda *args, **kwargs: {
@@ -148,25 +148,25 @@ def sm_api_patch():
 
 
 class FakeK8SClientForMetric:
-    """ 指标相关 单元测试用的 K8SClient """
+    """指标相关 单元测试用的 K8SClient"""
 
     def __init__(self, *args, **kwargs):
         pass
 
     def get_service(self, params):
-        """ 获取 Service 列表 """
+        """获取 Service 列表"""
         with open(f'{NETWORK_CONFIG_DIR}/service.json') as fr:
             configs = json.load(fr)
         return {'data': [{'data': configs['normal']}]}
 
     def list_service_monitor(self):
-        """ 获取 ServiceMonitor 列表 """
+        """获取 ServiceMonitor 列表"""
         with open(f'{METRIC_CONFIG_DIR}/service_monitor.json') as fr:
             configs = json.load(fr)
         return {'items': [configs]}
 
     def get_service_monitor(self, namespace, name):
-        """ 获取单个 ServiceMonitor 信息 """
+        """获取单个 ServiceMonitor 信息"""
         with open(f'{METRIC_CONFIG_DIR}/service_monitor.json') as fr:
             configs = json.load(fr)
         return configs

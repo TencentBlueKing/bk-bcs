@@ -7,7 +7,13 @@
                 </bk-button>
                 <ul class="bk-dropdown-list" slot="dropdown-content">
                     <li class="dropdown-item">
-                        <a href="javascript:;" v-for="scopeItem of localScopeList" :title="scopeItem.name" :key="scopeItem.id" @click="handleSechScope(scopeItem)">{{scopeItem.name}}</a>
+                        <a href="javascript:;"
+                            v-for="scopeItem of localScopeList"
+                            :title="scopeItem.name"
+                            :key="scopeItem.id"
+                            :class="{ active: scopeItem.id === curScope.id }"
+                            @click="handleSechScope(scopeItem)"
+                        >{{scopeItem.name}}</a>
                     </li>
                 </ul>
             </bk-dropdown-menu>
@@ -105,7 +111,11 @@
             initLocalScopeList () {
                 this.localScopeList = JSON.parse(JSON.stringify(this.scopeList))
                 if (this.localScopeList.length) {
-                    this.curScope = this.localScopeList[0]
+                    if (this.searchScope) {
+                        this.curScope = this.localScopeList.find(item => item.id === this.searchScope)
+                    } else {
+                        this.curScope = this.localScopeList[0]
+                    }
                 }
             },
             handleSearch () {
@@ -148,6 +158,10 @@
                     display: inline-block;
                     vertical-align: middle;
                     @mixin ellipsis 240px;
+                }
+                .active {
+                    background-color: #eef6fe;
+                    color: #3a84ff;
                 }
             }
             .bk-button {

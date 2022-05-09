@@ -16,10 +16,8 @@ export default function useClusterList (ctx: SetupContext): IUseClusterListResul
     const curClusterList = computed(() => $store.state.cluster.clusterList)
 
     const getClusterList = async () => {
-        const res = await $store.dispatch('cluster/getClusterList', projectId.value).catch(() => ({ data: {} }))
-        if (res.data.results && res.data.results.length) {
-            $store.commit('cluster/forceUpdateClusterList', res.data.results)
-        }
+        const res = await $store.dispatch('cluster/getClusterList', projectId.value).catch(() => ({ data: [] }))
+        $store.commit('cluster/forceUpdateClusterList', res.data)
     }
 
     onMounted(() => {

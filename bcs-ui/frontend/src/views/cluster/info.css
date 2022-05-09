@@ -26,7 +26,6 @@
 
 .biz-cluster-info-inner {
     background-color: $bgHoverColor;
-    border: 1px solid $borderWeightColor;
     border-radius: 2px;
 }
 

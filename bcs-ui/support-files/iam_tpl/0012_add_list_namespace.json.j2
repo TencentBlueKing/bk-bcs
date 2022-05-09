@@ -1,0 +1,33 @@
+{
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_list",
+        "name": "命名空间列举",
+        "name_en": "list namespaces",
+        "description": "用户查询命名空间列表",
+        "description_en": "user list namespaces",
+        "type": "list",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

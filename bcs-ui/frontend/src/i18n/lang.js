@@ -102,10 +102,13 @@ export default {
     '所属地域：': ['Region: '],
     '地域': ['Region'],
     '所属VPC': ['VPC'],
+    '园区': ['Zone'],
     '容器网络': ['Container Network'],
     '请选择地域': ['Please select region'],
+    '请选择园区': ['Please select Zone'],
     '请选择VPC': ['Please select VPC'],
     '请选择所属VPC': ['Please select VPC'],
+    '请选择数据盘': ['Please select Data disk'],
     'Pod总量：': ['Total Pod: '],
     'IP数量': ['Total IP'],
     '请输入Pod总量': ['Please enter the total pod'],
@@ -398,7 +401,7 @@ export default {
     '强制删除': ['Forced delete'],
     '请确保该节点已经没有运行中的容器': ['Make sure the node has no running containers'],
     '更多': ['More'],
-    'pod迁移': ['Pod migration'],
+    'pod迁移': ['Pod Migration'],
     '仅移除记录': ['Remove records only'],
     'taskgroup迁移': ['Taskgroup migration'],
     '按照规则修改主机名': ['Modify the host name according to the rules'],
@@ -907,7 +910,6 @@ export default {
     '值来源': ['Value source'],
     '在线编辑': ['Online Editing'],
     '请输入键': ['Please enter the key'],
-    '的内容': [''],
     '实例化时会将值的内容做base64编码': ['The content of the value is base64 encoded when instantiated'],
     '键名错误，只能包含：字母、数字、连字符(-)、点(.)、下划线(_)，必须是字母开头，长度小于30个字符': ['The key name is incorrect and can only contain: letters, numbers, hyphens (-), dots (.), underscores (_), must be at the beginning of the letter, and the length is less than 30 characters'],
     '键不可重复': ['Key cannot be repeated'],
@@ -1186,7 +1188,6 @@ export default {
     '删除命名空间': ['Delete namespace'],
     '删除Namespace将销毁Namespace下的所有资源，销毁后所有数据将被清除且不可恢复，请提前备份好数据。': ['Delete Namespace will destroy all resources under the Namespace. Then all data will be cleared and cannot be restored. Please backup the data.'],
     '删除Namespace成功': ['Delete namespace successfully'],
-    '共': [''],
     '个模板集': ['TemplateSet'],
 
     '变量管理': ['Variables'],
@@ -1195,7 +1196,6 @@ export default {
     '默认值': ['Defaults'],
     '作用范围': ['Scope'],
     '引用处': ['Reference'],
-    '批量更新': ['Batch Update'],
     '系统内置变量，不能编辑': ['System variables, can not edit'],
     '系统内置变量': ['System Variable'],
     '已经被引用，不能删除': ['Already referenced, cannot be deleted'],
@@ -1227,7 +1227,7 @@ export default {
     '来引用该变量': ['to import this Variable'],
     '变量KEY': ['Variable Key'],
     '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集或使用Helm部署服务': ['Once the cluster is ready, you can create a namespace, push the project image to the repository, then configure the TemplateSet through the service or deploy the service using Helm'],
-    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务': ['Once the cluster is ready, you can create a namespace, push the project image to the warehouse, and then deploy the service through the service configuration TemplateSet'],
+    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ': ['Once the cluster is ready, you can create a namespace, push the project image to the warehouse, and then deploy the service through the service configuration TemplateSet'],
     '集群IP': ['Cluster IP'],
     '复制': ['Copy'],
     '复制IP': ['Copy IP'],
@@ -1345,7 +1345,7 @@ export default {
     '服务器维护中，请稍后重试!': ['In server maintenance, please try again later!'],
     '功能正在建设中···': ['The function is under construction···'],
     '请确认以上内容，才可操作': ['Please confirm the above to operate'],
-    '查看引用': ['View References'],
+    '查看引用': ['References'],
     '添加卷': ['Add Volume'],
     '添加挂载卷': ['Add Mounted volume'],
     '启用容器服务': ['Enable BCS'],
@@ -1371,7 +1371,7 @@ export default {
     '新建CL5': ['Create CL5'],
     '业务模块ID': ['Business Module ID'],
     '业务模块': ['Business Module'],
-    '责任人': ['Responsible Person'],
+    '责任人': ['Responsible'],
     '请输入业务模块': ['Please Enter Business Module'],
     '请输入sid': ['Please Enter sid'],
     '当前功能在灰度中，请联系容器助手下发CL5 controller才能生效': ['Please contact BCS assistant to take effect.'],
@@ -1583,7 +1583,7 @@ export default {
     '新增文件': ['Add File'],
     '新增目录': ['Add Catalog'],
     '新建CL5成功': ['Create CL5 Success'],
-    '是否有sid': ['has sid'],
+    '是否有sid': ['Has Sid'],
     '转换到YAML': ['Export To YAML'],
     '转换YAML功能是一个单向的过程, 相当于复制出一个YAML模板集。该功能还处于beta阶段，如有问题，请联系蓝鲸容器助手': ['Converting YAML functions is a one-way process, which is equivalent to copying out a set of YAML templates. This feature is still in beta stage, if you have any questions, please contact BCS'],
     '草稿不支持转换YAML': ['Draft does not support YAML conversion'],
@@ -1707,17 +1707,8 @@ export default {
     '提示：创建 Pod 时，如果没有指定服务账户，Pod 会被指定成对应命名空间中的 default 服务账户': ['When creating a Pod, if no service account is specified, the Pod will be specified as the default service account in the corresponding namespace'],
     '实例数量没有变化': ['Instances not Change'],
     '若单日志文件打印速度超过10条/秒，可以考虑开启日志打包上报功能以节约带宽并在一定程度上降低日志采集组件的资源占用': ['If the printing speed of a single log file exceeds 10 per second, you can consider enabling the log packaging and reporting function to save bandwidth and reduce the resource usage of the log collection component to a certain extent'],
-    '开通容器服务': [''],
-    '请选择关联业务': [''],
     'k8s容器编排引擎': ['K8S container orchestration engine'],
-    '基于mesos框架自研的容器编排引擎': [''],
-    '申请权限': [''],
-    '前往iwiki查看': [''],
-    '创建集群后，容器编排类型将不可更改': [''],
-    '请联系需要关联的CMDB业务的运维': [''],
     '开启容器服务时，若没有查看业务权限，去“权限中心”申请权限': ['If you do not have the permission to view the service when opening the container service, go to the "permission center" to apply for permission'],
-    '【蓝鲸容器助手】': [''],
-    '开启容器服务时，请首先在“蓝鲸配置平台”上有进行业务绑定': [''],
     '前往绑定业务': ['Bound to business'],
     '如果遇到更多问题，需要了解详细信息，请前往iwiki查看': ['If you encounter more problems and need more detailed information, go to iWiki'],
     '还未选择GameStatefulSets': ['Not select gamestatefulsets'],
@@ -1763,19 +1754,13 @@ export default {
     '关联Service': ['Associated with the Service'],
     '规则名': ['Rule name'],
     'Polaris信息': ['Polaris info'],
-    'Polaris服务是否已存在': [''],
     '服务名': ['Service name'],
-    '如服务已存在则必填，若不存在平台会自动申请服务并创建': [''],
-    '是否直连Pod': [''],
-    '生产环境': [''],
-    '预发布环境': [''],
-    '开发环境': [''],
     '权重': ['Weight'],
     '允许数字、英文字母、.、-、_, 限制128个字符': ['Allows numerals, alphanumeric,., -, and up to 128 characters'],
     '点击查看详情': ['Show Detail'],
     'Notes 为空': ['Notes is empty'],
     '最近一次重启日志': ['The last time the log was restarted'],
-    '集群管理': ['Cluster manage'],
+    '集群管理': ['Cluster Management'],
     '显示时间': ['Enable timestamp'],
     '隐藏时间': ['Disabled timestamp'],
     '开启实时日志': ['Enable real-time logging'],
@@ -1859,7 +1844,6 @@ export default {
     'Agent异常，请先': ['Agent abnormal, please'],
     '安装': ['install'],
     '安装GSE Agent; 可以通过': ['Install GSE Agent; can be installed through'],
-    '操作系统版本: Tencent tlinux release 2.2 (Final)；如果不满足可以在': ['Operating system version: Tencent tlinux release 2.2 (Final); you can reload in'],
     '重装': ['reinstall'],
     '回收外网IP；如果存在外网，可以在': ['Reclaim the external network IP; if there is an external network, you can recycle the external network IP in the'],
     '回收外网IP': ['Sniper'],
@@ -1899,7 +1883,6 @@ export default {
     '所属集群: ': ['Cluster: '],
     '命名空间: ': ['Namespace: '],
     '标签有助于整理你的资源（如 env:prod）': ['Tags help organize your resources (like env:prod)'],
-    '当前容器网络配置下，集群最多 {count} 个节点(包含Master和Node)': ['Under the current container network configuration, the cluster has at most {count} nodes (including Master and Node)'],
     '最少选择三个服务器': ['Choose at least three servers'],
     '设置污点': ['Set Taint'],
     '影响': ['Effect'],
@@ -1944,7 +1927,7 @@ export default {
     '确认重置当前编辑状态': ['Confirm to reset the editing state'],
     '重置后，你修改的内容将丢失': ['After resetting, your modified content will be lost'],
     '缩小': ['Zoom out'],
-    '项目管理': ['Project management'],
+    '项目管理': ['Project Management'],
     '新建项目': ['New Project'],
     '项目英文名': ['Project English name'],
     '请输入2-32字符的小写字母+数字，以小写字母开头': ['Please enter 2-32 characters of lowercase letters + numbers, starting with a lowercase letter'],
@@ -1952,7 +1935,7 @@ export default {
     '请输入项目描述': ['Please enter a project description'],
     '请输入4-12字符的项目名称': ['Please enter a project name of 4-12 characters'],
     '项目名称': ['project name'],
-    '退出': ['exit'],
+    '退出': ['Exit'],
     '创建项目': ['Create Project'],
     '输入关键字搜索': ['Enter a keyword search'],
     '创建者': ['Creator'],
@@ -1962,25 +1945,841 @@ export default {
     '项目下存在主机申请失败的单据，请联系申请者【{name}】或': ['There is a receipt for host application failure under the item, please contact the applicant {name} or'],
     '系统内置变量，不能删除': ['System variables, can not delete'],
     '{count} 个IP节点': ['{count} Ip nodes'],
-    '此操作仅移除节点在平台中的记录；如果集群中节点处于正常状态，会再次同步到平台的记录中': [''],
-    '自有集群不支持通过平台添加节点': [''],
-    '静态选择': [''],
-    '自定义输入': [''],
-    '移除所有': [''],
-    '已选节点': [''],
-    '请输入IP，多IP可使用空格分隔': [''],
-    '搜索拓扑节点': [''],
-    '精确': [''],
-    '请在左侧勾选IP或者节点': [''],
-    '本页全选': [''],
-    '跨页全选': [''],
-    '成功复制IP {number} 个': [''],
-    '查无数据': [''],
-    '集群网络': [''],
     '如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间': ['If the namespace in Chart has been configured, the namespace in Chart will be used, leading to problems such as mismatch.You are advised not to configure namespaces in Chart'],
     'TKEx-IEG 容器平台': ['BCS'],
-    '注意: 节点状态以集群中的状态为准；点击【删除】后，节点状态可能会仍然处于不可调度': ['Note: The status of nodes are from the cluster; after clicking [Delete], the node status may still be unschedulable']
-    // 变量的使用 $t('test', { vari1: 1, vari2: 2 })
-    // // 变量的使用 $t('test', { vari1: 1, vari2: 2 })
-    // 'test': ['{vari1} ---english--- {vari2}'],
+    '注意: 节点状态以集群中的状态为准；点击【删除】后，节点状态可能会仍然处于不可调度': ['Note: The status of nodes are from the cluster; after clicking [Delete], the node status may still be unschedulable'],
+    '产品文档': ['Documentation'],
+    '版本日志': ['ChangeLogs'],
+    '每页': ['Page'],
+    
+    "的内容": [
+        "Content"
+    ],
+    "共": [
+        "Total"
+    ],
+    "开通容器服务": [
+        "Open bcs service"
+    ],
+    "请选择关联业务": [
+        "Please select related business"
+    ],
+    "基于mesos框架自研的容器编排引擎": [
+        "Container arrangement engine based on the MESOS framework"
+    ],
+    "申请权限": [
+        "Request for access"
+    ],
+    "前往iwiki查看": [
+        "Go to IWIKI to view"
+    ],
+    "创建集群后，容器编排类型将不可更改": [
+        "After creating a cluster, the type of container orchestration will not be changed"
+    ],
+    "请联系需要关联的CMDB业务的运维": [
+        "Please contact the operation and maintenance of the CMDB business that needs to be associated"
+    ],
+    "【蓝鲸容器助手】": [
+        "【BCS】"
+    ],
+    "开启容器服务时，请首先在“蓝鲸配置平台”上有进行业务绑定": [
+        "When turning on the container service, please first have business binding on the \"Blue Whale Configuration Platform\""
+    ],
+    "Polaris服务是否已存在": [
+        "Does the Polaris service exist"
+    ],
+    "如服务已存在则必填，若不存在平台会自动申请服务并创建": [
+        "If the service already exists, it is necessary to fill in it. If there is no platform, it will automatically apply for service and create"
+    ],
+    "是否直连Pod": [
+        "Whether to directly connect to pod"
+    ],
+    "生产环境": [
+        "Production Environment"
+    ],
+    "预发布环境": [
+        "Pre release environment"
+    ],
+    "开发环境": [
+        "Development environment"
+    ],
+    "此操作仅移除节点在平台中的记录；如果集群中节点处于正常状态，会再次同步到平台的记录中": [
+        "This operation only removes the records of the node in the platform; if the node in the cluster is in normal state, it will be synchronized to the platform's record again"
+    ],
+    "自有集群不支持通过平台添加节点": [
+        "It does not support its own cluster to add nodes through the platform"
+    ],
+    "静态选择": [
+        "Static selection"
+    ],
+    "自定义输入": [
+        "Custom input"
+    ],
+    "移除所有": [
+        "Remove everything"
+    ],
+    "已选节点": [
+        "Selected node"
+    ],
+    "请输入IP，多IP可使用空格分隔": [
+        "Please enter the IP, multi -ip can be separated by spaces"
+    ],
+    "搜索拓扑节点": [
+        "Search topology node"
+    ],
+    "精确": [
+        "accurate"
+    ],
+    "请在左侧勾选IP或者节点": [
+        "Please check the IP or node on the left"
+    ],
+    "本页全选": [
+        "Selected on this page"
+    ],
+    "跨页全选": [
+        "Cross page"
+    ],
+    "成功复制IP {number} 个": [
+        "Successful copy {number}"
+    ],
+    "查无数据": [
+        "No data"
+    ],
+    "集群网络": [
+        "Cluster network"
+    ],
+    "项目集群": [
+        "Project cluster"
+    ],
+    "配额设置": [
+        "Quota settings"
+    ],
+    "新建集群模板": [
+        "New cluster template"
+    ],
+    "可自定义集群基本信息和集群版本": [
+        "Can customize cluster basic information and cluster versions"
+    ],
+    "支持快速导入已存在的集群": [
+        "Support quickly importing existing clusters"
+    ],
+    "创建或导入K8S集群": [
+        "Create or import K8S cluster"
+    ],
+    "集群模板": [
+        "Cluster Template"
+    ],
+    "模板名称": [
+        "Template Name"
+    ],
+    "更新者": [
+        "updater"
+    ],
+    "网络错误": [
+        "Network Error"
+    ],
+    "操作失败，请重试": [
+        "The operation failed, please try it out"
+    ],
+    "运行中": [
+        "In operation"
+    ],
+    "成功": [
+        "success"
+    ],
+    "超时": [
+        "time out"
+    ],
+    "未执行": [
+        "Not performed"
+    ],
+    "私有集群": [
+        "Private cluster"
+    ],
+    "私有": [
+        "private"
+    ],
+    "规则: 项目英文名称-自定义名称": [
+        "Rules: Project English Name-Custom Name"
+    ],
+    "共享集群": [
+        "Shared cluster"
+    ],
+    "专用集群": [
+        "Dedicated Cluster"
+    ],
+    "专用": [
+        "D"
+    ],
+    "已删除": [
+        "deleted"
+    ],
+    "您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作": [
+        "You are trying to delete the cluster {clustername}, this operation is irreversible, please do it carefully"
+    ],
+    "该集群创建后单个节点最大允许创建 {num} 个pod（TKE内部需占用3个IP），创建后不允许调整，请慎重确认": [
+        "After the cluster is created, a single node allows the creation of {num} a pod (3 IPs internally)."
+    ],
+    "确认删除节点 {ip}": [
+        "Confirm the deletion node {ip}"
+    ],
+    "确认添加节点 {ip}": [
+        "Confirm the added node {ip}"
+    ],
+    "选择所有 {num} 条": [
+        "Choose all {num}"
+    ],
+    "已选 {num} 条": [
+        "Selected {num}"
+    ],
+    "成功复制 {num} 个IP": [
+        "Successful copy {num} IP"
+    ],
+    "搜索IP，标签、状态": [
+        "Search IP, label, status"
+    ],
+    "多IP用换行符分割": [
+        "Multi"
+    ],
+    "批量": [
+        "Batch"
+    ],
+    "勾选IP": [
+        "Checked IP"
+    ],
+    "当前页IP": [
+        "Current Page IP"
+    ],
+    "所有IP": [
+        "All IP"
+    ],
+    "上架失败": [
+        "Failed to be on the shelves"
+    ],
+    "下架失败": [
+        "Failure to get off the shelves"
+    ],
+    "节点删除后服务器如不再使用请尽快回收，避免产生不必要的成本": [
+        "After the node is deleted, the server is recycled as soon as possible if it is not used to avoid unnecessary costs"
+    ],
+    "未知状态": [
+        "Unknown state"
+    ],
+    "CPU": [
+        "CPU"
+    ],
+    "创建失败，请重试": [
+        "Failed to create, please try it out"
+    ],
+    "请确认已清理该集群下的所有应用与节点": [
+        "Please confirm that all applications and nodes have been cleaned up"
+    ],
+    "集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本": [
+        "If the cluster is deleted, the server is recycled as soon as possible if it is not used to avoid unnecessary costs"
+    ],
+    "创建失败": [
+        "Failed to create"
+    ],
+    "集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源": [
+        "When the cluster deletes, all resources on the cluster will clean up all resources on the cluster, services, and routes."
+    ],
+    "步骤": [
+        "step"
+    ],
+    "内容": [
+        "content"
+    ],
+    "确认要对 {ip} 等 {num} 个节点上的Pod进行迁移": [
+        "Confirm that you need to migrate the pod on the {num} node of {ip}"
+    ],
+    "注：IP状态为停止调度才能做POD迁移操作": [
+        "Note: IP status is to stop scheduling to do POD migration operation"
+    ],
+    "API密钥与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的API密钥权限": [
+        "The API key is bound to the personal account, and the permissions control of the Blue Whale Permissions Center can be used. Click {0} to view and set your API key permissions"
+    ],
+    "{num}天": [
+        "{num} Day"
+    ],
+    "当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}": [
+        "The current cluster has added nodes (including MASTER) {nodes}, and the number of nodes can also be added {remainNodes}"
+    ],
+    "更新版本": [
+        "updated version"
+    ],
+    "第{index}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$": [
+        "The value of the label of the group {index} group does not meet the regular expression^([[a-za-z0-9] [-a-za-z0-9 _.]? [A-Za-Z0-9])? $"
+    ],
+    "标签值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$": [
+        "The label value does not meet the regular expression^([[a-za-z0-9] [-a-za-z0-9 _.]*)? [A-Za-Z0-9]? $"
+    ],
+    "{name}中路径组：关联的Service【{serviceName}】不存在，请重新绑定！": [
+        "{name} Mid -road diameter group: related Service [{serviceName}] does not exist, please rebind!"
+    ],
+    "当前操作有权限，请刷新界面": [
+        "The current operation is permanent, please refresh the interface"
+    ],
+    "该操作需要以下权限": [
+        "This operation requires the following permissions"
+    ],
+    "系统": [
+        "system"
+    ],
+    "容器管理平台": [
+        "Container management platform"
+    ],
+    "需要申请的权限": [
+        "Permission required to apply"
+    ],
+    "关联的资源实例": [
+        "Associated resource instance"
+    ],
+    "开启容器服务时，请首先在”蓝鲸配置平台“查看业务": [
+        "When turning on the container service, please first check the business on the \"Blue Whale Configuration Platform\""
+    ],
+    "缺少必要属性": [
+        "Lack of necessary attributes"
+    ],
+    "外网IP": [
+        "Outer network IP"
+    ],
+    "其他IP": [
+        "Other IP"
+    ],
+    "多个IP以回车为分隔符": [
+        "Multiple IP uses Enter as a separator"
+    ],
+    "IP格式有误或不存在，检查后重试！": [
+        "IP format is wrong or does not exist, retry after inspection!"
+    ],
+    "点击解析": [
+        "Click to analyze"
+    ],
+    "搜索结果": [
+        "search results"
+    ],
+    "取消全选": [
+        "Cancel"
+    ],
+    "点击展开": [
+        "Click on"
+    ],
+    "容器状态不是Running": [
+        "The container status is not running"
+    ],
+    "请点击查看详情": [
+        "Please click to view the details"
+    ],
+    "确认创建": [
+        "Confirm the creation"
+    ],
+    "主机申请提交成功": [
+        "The host application is successfully submitted"
+    ],
+    "云服务商": [
+        "Cloud Provider"
+    ],
+    "附加参数": [
+        "Additional parameter"
+    ],
+    "收起更多设置": [
+        "Put more settings"
+    ],
+    "序列": [
+        "sequence"
+    ],
+    "确定创建集群": [
+        "Determine the creation cluster"
+    ],
+    "请确认以下配置": [
+        "Please confirm the following configuration"
+    ],
+    "集群环境": [
+        "Cluster Environment"
+    ],
+    "集群选项": [
+        "Cluster"
+    ],
+    "仅支持数量为3,5和7个": [
+        "Only 3,5 and 7 are supported"
+    ],
+    "请确认以下配置:": [
+        "Please confirm the following configuration:"
+    ],
+    "集群kubeconfig": [
+        "Cluster KubeConfig"
+    ],
+    "导入前提，请确认": [
+        "Import premise, please confirm"
+    ],
+    "蓝鲸部署服务器到被导入集群APIServer网络连通正常": [
+        "The blue whale deployment server is normal"
+    ],
+    "kubeconfig用户是cluster-admin角色": [
+        "Kubeconfig user is a cluster-addmin character"
+    ],
+    "所属区域": [
+        "Area"
+    ],
+    "集群内Service数量上限": [
+        "The max limit of service"
+    ],
+    "单节点Pod数量上限": [
+        "The max limit of pods"
+    ],
+    "集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量": [
+        "The number of nodes can be added with clusters (including Master nodes and node nodes) = (Number of IP -SERVICE quantity"
+    ],
+    "修改成功": [
+        "Successfully modified"
+    ],
+    "确认重新删除": [
+        "Confirm the deletion"
+    ],
+    "确认重新添加": [
+        "Confirm the re -added"
+    ],
+    "停止调度成功": [
+        "Stop scheduling successfully"
+    ],
+    "添加节点成功": [
+        "Add node successfully"
+    ],
+    "集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务": [
+        "After the cluster is ready, you can create a named space, push the project mirror to the warehouse, and then configure the template set deployment service through the service configuration"
+    ],
+    "导入的集群不允许删除操作": [
+        "The imported cluster does not allow delete operations"
+    ],
+    "导入的集群不允许强制删除操作": [
+        "The imported cluster does not allow forced deletion operations"
+    ],
+    "台": [
+        "tower"
+    ],
+    "请输入要搜索的ip，多个ip以|隔开": [
+        "Please enter the IP you want to search, multiple IPs are separated by |"
+    ],
+    "命令空间": [
+        "Command space"
+    ],
+    "确认取消": [
+        "confirm cancel"
+    ],
+    "确认离开": [
+        "Confirm to leave"
+    ],
+    "名称错误，只能包含：小写字母、数字、连字符(-)，首字母必须是字母，长度小于64个字符": [
+        "The name is error, it can only include: lower letters, numbers, and characters (-). The first letter must be a letter, less than 64 characters"
+    ],
+    "键名错误，只能包含：字母、数字、连字符(-)、点(.)、下划线(_)，长度小于30个字符": [
+        "The key name is error, which can only include: letters, numbers, connected characters (-), points (.), Down line (_), less than 30 characters in length"
+    ],
+    "请选择关联的Service": [
+        "Please select the associated service"
+    ],
+    "变量设置": [
+        "Variable settings"
+    ],
+    "规则: ieg-项目英文名称-自定义名称": [
+        "Rules: IEG-Project English Name-Custom Name"
+    ],
+    "命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字": [
+        "Naming space names can only include lowercase letters, numbers, and joint characters (-), and even characters (-) must be connected in English or numbers later"
+    ],
+    "请输入业务名称": [
+        "Please enter the business name"
+    ],
+    "请输入DB访问地址": [
+        "Please enter the DB access address"
+    ],
+    "请输入帐号": [
+        "please enter your account"
+    ],
+    "请输入DB名称": [
+        "Please enter the DB name"
+    ],
+    "请输入标签": [
+        "Please enter the tag"
+    ],
+    "Values 内容发生如下变化，请确认后再点击“确定”更新": [
+        "The content of value changes the following, please confirm after you click \"OK\" to update"
+    ],
+    "配置已下发成功": [
+        "The configuration has been successfully issued"
+    ],
+    "启用失败": [
+        "Enable failure"
+    ],
+    "请联系蓝鲸容器助手": [
+        "Please contact the blue whale container assistant"
+    ],
+    "未知": [
+        "unknown"
+    ],
+    "重新启用": [
+        "Reopen"
+    ],
+    "请选择应用类型": [
+        "Please select the application type"
+    ],
+    "应用名称不合法": [
+        "Application name illegal"
+    ],
+    "请输入容器名": [
+        "Please enter the container name"
+    ],
+    "请输入标准采集ID": [
+        "Please enter the standard collection ID"
+    ],
+    "请输入文件采集ID": [
+        "Please enter the file collection ID"
+    ],
+    "匹配标签和匹配表达式不能同时为空": [
+        "Matching labels and matching expressions cannot be empty at the same time"
+    ],
+    "请输入文件路径": [
+        "Please enter the file path"
+    ],
+    "规则创建成功": [
+        "Rules successfully"
+    ],
+    "规则更新成功": [
+        "Rule update success"
+    ],
+    "Polaris命名空间": [
+        "Polaris naming space"
+    ],
+    "此命名空间不存在": [
+        "This naming space does not exist"
+    ],
+    "确定删除该应用?": [
+        "OK to delete this application?"
+    ],
+    "当前版本含有的Release:": [
+        "The current version contains Release:"
+    ],
+    "您需要先删除所有Release，再进行版本删除操作": [
+        "You need to delete all the release first, and then delete the operation"
+    ],
+    "确定要删除Chart": [
+        "Determine to delete Chart"
+    ],
+    "Chart的版本": [
+        "Chart's version"
+    ],
+    "请选择Chart版本": [
+        "Please select Chart version"
+    ],
+    "无项目权限": [
+        "No project permissions"
+    ],
+    "你没有相应项目的访问权限，请前往申请相关项目权限": [
+        "You have no access to the corresponding items, please go to apply for relevant project permissions"
+    ],
+    "更新Metric中，请稍候...": [
+        "Update in the metric, please wait ..."
+    ],
+    "重复": [
+        "repeat"
+    ],
+    "规则：": [
+        "rule:"
+    ],
+    "规则主机名：": [
+        "Rules host name:"
+    ],
+    "名称错误，只能包含：小写字母、数字、连字符(-)，首字母必须是字母": [
+        "The name is error, it can only be included: lower letters, numbers, and characters (-), the first letter must be the letter"
+    ],
+    "请填写路径！": [
+        "Please fill in the path!"
+    ],
+    "请关联服务！": [
+        "Please associate the service!"
+    ],
+    "请关联服务端口！": [
+        "Please associate the service port!"
+    ],
+    "API密钥": [
+        "API Key"
+    ],
+    "使用说明": [
+        "Instructions for use"
+    ],
+    "用户名": [
+        "username"
+    ],
+    "过期时间": [
+        "Expiration"
+    ],
+    "Kubeconfig使用示例": [
+        "Kubeconfig use example"
+    ],
+    "/root/.kube/demo_config内容示例如下": [
+        "/root/.kube/demo_config content examples are as follows"
+    ],
+    "BCS API使用示例": [
+        "BCS API use example"
+    ],
+    "新建API密钥": [
+        "New API key"
+    ],
+    "申请期限": [
+        "Application period"
+    ],
+    "删除该API密钥": [
+        "Delete the API key"
+    ],
+    "此操作无法撤回，请确认": [
+        "This operation cannot be withdrawn, please confirm"
+    ],
+    "所有使用API密钥的 API 接口与 kubeconfig 将无法使用": [
+        "All API interfaces with the API key and Kubeconfig will not be available"
+    ],
+    "请输入内容": [
+        "Please enter the content"
+    ],
+    "请输入合法的JSON格式": [
+        "Please enter the legal json format"
+    ],
+    "kubeconfig导入集群，节点管理功能不可用": [
+        "Kubeconfig imports cluster, node management function is unavailable"
+    ],
+    "不满足需求，请联系蓝鲸容器助手": [
+        "Don’t meet the needs,contact BCS"
+    ],
+    "可用容器网络IP数量不足": [
+        "The number of available container network IP is insufficient"
+    ],
+    "命名空间创建": [
+        "Named space creation"
+    ],
+    "命名空间删除": [
+        "Delete of naming space"
+    ],
+    "命名空间域使用": [
+        "Naming Space domain use"
+    ],
+    "命名空间域创建": [
+        "Create named space domain"
+    ],
+    "命名空间域删除": [
+        "Delete in naming space"
+    ],
+    "命名空间域更新": [
+        "Naming Space Domain Update"
+    ],
+    "命名空间域查看": [
+        "View named space domain"
+    ],
+    "命名空间更新": [
+        "Naming space update"
+    ],
+    "命名空间查看": [
+        "Named space view"
+    ],
+    "容器监控": [
+        "Container monitoring"
+    ],
+    "必填项": [
+        "Requiring item"
+    ],
+    "模板集创建": [
+        "Template set creation"
+    ],
+    "模板集删除": [
+        "Template set deletion"
+    ],
+    "模板集复制": [
+        "Template collection copy"
+    ],
+    "模板集实例化": [
+        "Template collection"
+    ],
+    "模板集更新": [
+        "Template set update"
+    ],
+    "模板集查看": [
+        "Template collection"
+    ],
+    "申请链接不存在": [
+        "The application link does not exist"
+    ],
+    "确定，导入集群": [
+        "OK, import cluster"
+    ],
+    "集群创建": [
+        "Cluster creation"
+    ],
+    "集群删除": [
+        "Cluster deletion"
+    ],
+    "集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限": [
+        "The number of nodes can be added with clusters (including Master nodes and node nodes) = (Number of IP -quantity of service) / single node POD quantity upper limit"
+    ],
+    "集群域使用": [
+        "Cluster field use"
+    ],
+    "集群域创建": [
+        "Cluster field creation"
+    ],
+    "集群域删除": [
+        "Cluster field deletion"
+    ],
+    "集群域更新": [
+        "Cluster domain update"
+    ],
+    "集群域查看": [
+        "Cluster field view"
+    ],
+    "集群查看": [
+        "Cluster view"
+    ],
+    "项目创建": [
+        "Project creation"
+    ],
+    "项目删除": [
+        "Item delete"
+    ],
+    "项目查看": [
+        "Project View"
+    ],
+    "项目编辑": [
+        "Project editor"
+    ],
+    "允许调度成功": [
+        "Make a successful dispatch"
+    ],
+    "共享": [
+        "S"
+    ],
+    "取消选择所有数据": [
+        "Cancel all data"
+    ],
+    "如果有使用Ingress及LoadBalancer类型的Service，节点停止调度后，Service Controller会剔除LB到nodePort的映射": [
+        "If there is a service that uses Ingress and LoadBARANCER type, after the node stops scheduling, the Service Controller will remove the mapping of LB to NodePort"
+    ],
+    "确认Pod迁移": [
+        "Confirm pod migration"
+    ],
+    "确认允许调度": [
+        "Confirm the allowable scheduling"
+    ],
+    "确认对节点 {ip} 停止调度": [
+        "Confirm stops scheduling {ip} "
+    ],
+    "确认对节点 {ip} 允许调度": [
+        "Confirm allows dispatch  {ip}"
+    ],
+    "确认要对节点 {ip} 上的Pod进行迁移": [
+        "Confirm that you need to migrate the pod on the node {ip}"
+    ],
+    "容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点": [
+        "The container network resources are limited, please allocate it reasonably. Under the current container network configuration, the cluster can be added at most {count} individual nodes"
+    ],
+    "当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点": [
+        "When the container network resources are excessive, the container network will be automatically expanded. After the capacity is expanded, the cluster can be added at most {count}"
+    ],
+    "请确认是否允许 {ip} 等 {num} 个IP调度": [
+        "Please confirm whether {ip} and other {num} individual IP scheduling"
+    ],
+    "请确认是否停止 {ip} 等 {num} 个IP调度": [
+        "Please confirm whether to stop {ip} and other {num} IP scheduling"
+    ],
+    "请确认是否对 {ip} 等 {num} 个IP进行操作系统初始化和安装容器服务相关组件操作": [
+        "Check whether to initialize the operating system and install container service components for {num} IP addresses such as {ip}"
+    ],
+    "确认是否删除 {ip} 等 {num} 个节点": [
+        "Confirm whether to delete {ip} and other {num} nodes"
+    ],
+    "可用容器网络IP {num} 个": [
+        "Available container network IP {num}"
+    ],
+    "API密钥适用于 BCS API 调用与 kubeconfig": [
+        "The API key is suitable for BCS API calls and Kubeconfig"
+    ],
+    "为了您的应用安全，请妥善保存API密钥，请勿通过任何方式上传或者分享您的API密钥信息": [
+        "For your application security, please keep the API key properly. Do not upload or share your API key information in any way"
+    ],
+    "已过期": [
+        "expired"
+    ],
+    "您暂无当前操作权限，请新建API密钥后继续操作": [
+        "You have no current operating permissions, please continue to operate after creating a new API key"
+    ],
+    "永久": [
+        "permanent"
+    ],
+    "续期": [
+        "Renewal"
+    ],
+    "平台将对所有用户操作进行审计。请勿尝试提权及访问无权限资源，请勿在集群中运行挖矿程序、病毒木马等恶意或者不确定的程序，在未备案情况下，私自利用安全测试等手段对集群发起探测攻击属于违反安全高压线！": [
+        "The platform will audit all user operations.Do not try to mention rights and access without authorization. Do not run mining procedures, virus Trojan and other malicious or uncertain procedures in the cluster. Under the condition of not filing, it is violated by the use of safety testing and other means.Safety high -voltage line!"
+    ],
+    '共享集群体验中 {one} 或 {two}，欢迎随时联系我们进行反馈': ["{one} in the shared cluster experience or {two}, welcome to contact us at any time to feedback"],
+    '有优化建议': ['optimization suggestions'],
+    '发现问题': ['Finding problems'],
+    "共享集群功能当前上线 {one} 版本，仅供用户进行功能体验，应 {two}，非必要应 {three}（如云 API 密钥等），仍需添加请加密后使用": ["Sharing cluster function is currently online {one} version. It is only for users to perform functional experiences. {two}. {three} (such as cloud API key, etc.)."],
+    '避免添加敏感配置': ['Formulating formal services should be avoided'],
+    '避免部署正式服务': ['It is necessary to avoid adding sensitive configurations'],
+    '用户须知': ['User Instructions'],
+    '确认删除节点': ['Confirm delete node'],
+    "已解锁": ['Unlocked'],
+    "已锁定": ['Locked'],
+    "确定要删除Service【": ['Confirm delete Service【'],
+    "确认重新添加节点": [
+        "Confirm the re-added node"
+    ],
+    "请确认是否批量停止调度": [
+        "Confirm batch stop dispatch"
+    ],
+    "请确认是否批量允许调度": [
+        "Confirm batch dispatch"
+    ],
+    "service对象不存在": [
+        "The service object does not exist"
+    ],
+    "匹配表达式(expressions)": [
+        "Matching expression (Expressions)"
+    ],
+    "无指标信息": [
+        "No indicator information"
+    ],
+    "系统指标无法修改": [
+        "System indicators cannot be modified"
+    ],
+    "系统指标无法删除": [
+        "System indicators cannot be deleted"
+    ],
+    "Docker数据目录": [
+        "Docker data directory"
+    ],
+    "Docker版本": [
+        "Docker version"
+    ],
+    "kubelet数据目录": [
+        "Kubelet data directory"
+    ],
+    "仅支持奇数个服务器": [
+        "Only support the strange server"
+    ],
+    "展开更多设置": [
+        "Expand more settings"
+    ],
+    "集群Pod网段": [
+        "Cluster POD network segment"
+    ],
+    "集群Service网段": [
+        "Cluster service network segment"
+    ],
+    "续期API密钥": [
+        "Renewal API key"
+    ],
+    "复制示例成功": [
+        "Copy example success"
+    ],
+    "导入方式": ['Import Type'],
+    'kubeconfig可用性测试': ['kubeconfig usability testing'],
+    'IP已被 {name}{id} 占用': ['']
 }

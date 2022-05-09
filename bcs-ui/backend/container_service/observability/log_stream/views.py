@@ -49,8 +49,10 @@ class LogStreamViewSet(SystemViewSet):
         content = client.fetch_log(filter)
         logs = utils.refine_k8s_logs(content, data['started_at'])
 
-        url_prefix = f"{settings.DEVOPS_BCS_API_URL}/api/logs/projects/{project_id}/clusters/{cluster_id}/namespaces/{namespace}/pods/{pod}/stdlogs/"  # noqa
-        previous = utils.calc_previous_page(logs, data, url_prefix)
+        url_path_prefix = (
+            f"/api/logs/projects/{project_id}/clusters/{cluster_id}/namespaces/{namespace}/pods/{pod}/stdlogs/"  # noqa
+        )
+        previous = utils.calc_previous_page(logs, data, url_path_prefix)
 
         result = {"logs": logs, "previous": previous}
         return Response(result)

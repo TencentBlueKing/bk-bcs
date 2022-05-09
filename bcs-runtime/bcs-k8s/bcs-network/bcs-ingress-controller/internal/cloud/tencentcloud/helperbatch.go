@@ -456,6 +456,11 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 
 // batchDeleteListener delete multiple listeners
 func (c *Clb) batchDeleteListener(region, lbID string, listenerIDs []string) error {
+	// It's possible delete all listeners when listenerIds empty
+	if len(listenerIDs) == 0 {
+		return fmt.Errorf("listenerIDs should not be empty when batch delete listener")
+	}
+
 	req := tclb.NewDeleteLoadBalancerListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.ListenerIds = tcommon.StringPtrs(listenerIDs)

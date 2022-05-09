@@ -16,7 +16,6 @@ from django.conf.urls import include, url
 
 from backend.dashboard.configs.urls import router as config_router
 from backend.dashboard.custom_object_v2.urls import router as custom_obj_router
-from backend.dashboard.events.urls import router as event_router
 from backend.dashboard.examples.urls import router as example_router
 from backend.dashboard.hpa.urls import router as hpa_router
 from backend.dashboard.namespaces.urls import router as namespace_router
@@ -40,7 +39,6 @@ urlpatterns = [
     # TODO 自定义资源暂时保持 V1，V2 两个版本，后续会逐步替换掉 V1
     url(r"^crds/v2/", include(custom_obj_router.urls)),
     url(r"^crds/", include("backend.dashboard.custom_object.urls")),
-    url(r"^events/", include(event_router.urls)),
     url(r"^namespaces/", include(namespace_router.urls)),
     url(r"^subscribe/", include(subscribe_router.urls)),
     url(r"^examples/", include(example_router.urls)),

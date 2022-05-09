@@ -114,7 +114,6 @@ def inject_configs(
     # Some pod may has no env config, so we shouldn't add `env` to path,
     # Add it to be injected data, make sure it will merge to pod's env anyway.
     bcs_env = {"env": provider.provide_container_env()}
-    bcs_image_secrets = provider.provide_image_pull_secrets()
 
     configs = [
         {
@@ -150,27 +149,6 @@ def inject_configs(
             "matchers": make_kind_matcher_configs(["Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job"]),
             "paths": ["/spec/template/spec/containers/*"],
             "data": bcs_env,
-            "force_str": True,
-        },
-        {
-            # pod secrets
-            "matchers": make_kind_matcher_configs(["Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job"]),
-            "paths": ["/spec/template/spec"],
-            "data": bcs_image_secrets,
-            "force_str": True,
-        },
-        {
-            # pod secrets
-            "matchers": make_kind_matcher_configs(["CronJob"]),
-            "paths": ["/spec/jobTemplate/spec/template/spec"],
-            "data": bcs_image_secrets,
-            "force_str": True,
-        },
-        {
-            # pod secrets
-            "matchers": make_kind_matcher_configs(["Pod"]),
-            "paths": ["/spec"],
-            "data": bcs_image_secrets,
             "force_str": True,
         },
     ]

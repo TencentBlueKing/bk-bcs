@@ -14,18 +14,20 @@ package clusterops
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	k8scorecliset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // K8SOperator operator of k8s
@@ -42,6 +44,28 @@ func NewK8SOperator(opt *options.ClusterManagerOptions, model store.ClusterManag
 	}
 }
 
+// NewKubeClient get k8s client from kubeConfig file
+func NewKubeClient(kubeConfig string) (k8scorecliset.Interface, error) {
+	data, err := base64.StdEncoding.DecodeString(kubeConfig)
+	if err != nil {
+		return nil, fmt.Errorf("decode kube config failed: %w", err)
+	}
+
+	config, err := clientcmd.RESTConfigFromKubeConfig(data)
+	if err != nil {
+		return nil, fmt.Errorf("build rest config failed: %w", err)
+	}
+
+	config.Burst = 200
+	config.QPS = 100
+	cli, err := k8scorecliset.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("build kube client failed: %s", err)
+	}
+
+	return cli, nil
+}
+
 // GetClusterClient get cluster client
 func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interface, error) {
 	cred, found, err := ko.model.GetClusterCredential(context.TODO(), clusterID)
@@ -56,6 +80,7 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 		if len(ko.opt.ClientCert) != 0 && len(ko.opt.ClientCa) != 0 && len(ko.opt.ClientKey) != 0 {
 			cfg.Host = "https://" + ko.opt.Address + ":" + strconv.Itoa(int(ko.opt.HTTPPort)) +
 				"/clustermanager/clusters/" + clusterID
+
 			cfg.TLSClientConfig = rest.TLSClientConfig{
 				Insecure: false,
 				CertFile: ko.opt.ClientCert,

@@ -1,0 +1,13 @@
+{
+  "kind": "PersistentVolumeClaim",
+  "class": "storages",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_persistent_volume_claim",
+      "alias": "PersistentVolumeClaim Simple Demo",
+      "description": "A simple persistentVolumeClaim demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

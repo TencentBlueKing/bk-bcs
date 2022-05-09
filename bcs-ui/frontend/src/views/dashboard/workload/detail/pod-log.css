@@ -1,0 +1,27 @@
+.log-dialog {
+    /deep/ .bk-dialog-tool {
+        display: none;
+    }
+    /deep/ .bk-dialog-close {
+        display: none;
+    }
+    /deep/ .bk-dialog {
+        top: 0;
+        position: relative;
+        height: calc(100% - 32px);
+        float: right;
+        margin: 16px;
+        border-radius: 6px;
+        transition-property: transform, opacity;
+        transition: transform 200ms cubic-bezier(0.165, 0.84, 0.44, 1),opacity 100ms cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    /deep/ .bk-dialog-body {
+        padding: 0;
+        height: 100%;
+    }
+    /deep/ .bk-dialog-wrapper .bk-dialog-content {
+        border-radius: 6px;
+        height: 100%;
+        width: 100% !important;
+    }
+}

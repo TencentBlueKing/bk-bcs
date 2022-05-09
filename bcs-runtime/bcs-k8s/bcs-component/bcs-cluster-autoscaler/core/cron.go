@@ -28,6 +28,16 @@ import (
 
 const TIME_LAYOUT = "2006-01-02 15:04:05"
 
+
+// TimeRange allow user to define a crontab regular
+type TimeRange struct {
+	// 存放 crontab 语句，如 "* 1-3 * * *"
+	Schedule string
+	// 指定时区，如 "Asia/Shanghai"
+	Zone string
+	// 期望节点数
+	DesiredNum int
+}
 // doCron set the minSize of nodegroups according to the rules
 func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
@@ -39,12 +49,14 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	}
 
 	nodegroups := context.CloudProvider.NodeGroups()
+
 	for _, group := range nodegroups {
 		ng, ok := group.(*bcs.NodeGroup)
 		if !ok {
 			return errors.NewAutoscalerError(errors.InternalError,
 				"Cannot transform cloudprovider to BCSProvider, should run in BCS environment")
 		}
+
 		minSize := ng.MinSize()
 		maxSize := ng.MaxSize()
 		targetSize, err := ng.TargetSize()
@@ -52,6 +64,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 			return errors.NewAutoscalerError(errors.ApiCallError,
 				"failed to get target size of nodegroup %v: %v", ng.Id(), err)
 		}
+
 		timeRanges, err := ng.TimeRanges()
 		if err != nil {
 			return errors.NewAutoscalerError(errors.ApiCallError,
@@ -64,6 +77,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 
 		// get desired num
 		desired, err := getDesiredNumForNodeGroupWithTime(ng, currentTime, timeRanges)
+
 		if err != nil {
 			return errors.NewAutoscalerError(errors.InternalError,
 				"failed to get desiredNum for node group %s in cron mode: %v", ng.Id(), err)
@@ -111,10 +125,12 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	return nil
 }
 
+
 func getDesiredNumForNodeGroupWithTime(ng cloudprovider.NodeGroup,
 	currentTime time.Time, timeRanges []*bcs.TimeRange) (int, error) {
 	max := -1
 	for _, t := range timeRanges {
+
 		_, finalMatch, err := getFinalMatchAndMisMatch(t.Schedule, currentTime, t.Zone)
 		if err != nil {
 			klog.Errorf("CronMode: failed to get match for timerange \"%v\": %v", t, err)
@@ -123,6 +139,7 @@ func getDesiredNumForNodeGroupWithTime(ng cloudprovider.NodeGroup,
 		if finalMatch == nil {
 			klog.V(4).Infof("CronMode: Nodegroup %v, now %v is not in time range \"%v\"",
 				ng.Id(), currentTime, t.Schedule)
+
 			continue
 		}
 		if max < t.DesiredNum {

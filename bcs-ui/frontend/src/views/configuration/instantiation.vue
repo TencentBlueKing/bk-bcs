@@ -250,7 +250,7 @@
                         <span class="bk-outline"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('未实例化过')}}</span>
                         <span class="bk-default"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('已实例化过')}}</span>
                     </div>
-                    <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList" v-if="!curClusterId || (curClusterId && item.cluster_id === curClusterId)">
+                    <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList" v-show="!curClusterId || (curClusterId && item.cluster_id === curClusterId)">
                         <div class="content-trigger" @click="triggerHandler(item, index)">
                             <div class="left-area" style="border-right: none;">
                                 <div class="label">
@@ -289,7 +289,7 @@
                                         </bcs-popover>
                                     </div>
                                 </template>
-                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')">
+                                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')" v-if="!isSharedCluster">
                                     <bcs-popover ref="addNamespaceNode" theme="light" :delay="120000" placement="top-end" ext-cls="add-namespace-popover" :controlled="true" @on-show="showAddNamespace(index)">
                                         <div class="candidate-namespace-name" @click="triggerAddNamespace(index)">
                                             <img src="@/images/plus.svg" class="add-btn" />
@@ -357,6 +357,7 @@
     import yamljs from 'js-yaml'
     import ace from '@/components/ace-editor'
     import { catchErrorHandler } from '@/common/util'
+    import { mapGetters } from 'vuex'
 
     const ARR = [
         'Application',
@@ -511,7 +512,8 @@
             },
             isEn () {
                 return this.$store.state.isEn
-            }
+            },
+            ...mapGetters('cluster', ['isSharedCluster'])
         },
         created () {
             // router > localStorage > onlineProjectList[0]
@@ -619,7 +621,8 @@
                     const res = await this.$store.dispatch('configuration/getAllNamespaceList', {
                         projectId: this.projectId,
                         group_by: 'cluster_name',
-                        perm_can_use: 1
+                        perm_can_use: 1,
+                        with_perms: false
                     })
 
                     const list = res.data
@@ -939,6 +942,7 @@
                     })
                     this.existList.splice(0, this.existList.length, ...existList)
                     this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list)
+                    this.candidateNamespaceList = this.isSharedCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared)
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -1872,15 +1876,7 @@
                             const hasNoProd = !!me.selectedNamespaceList.filter(
                                 item => item.environment !== 'prod'
                             )[0]
-                            me.$router.push({
-                                name: 'deployments',
-                                params: {
-                                    isProdCluster: !hasNoProd,
-                                    projectId: me.projectId,
-                                    projectCode: me.projectCode,
-                                    tplsetId: me.templateId
-                                }
-                            })
+                            me.gotoDeployments(hasNoProd)
                         } catch (e) {
                             console.log(e)
                         } finally {
@@ -1985,15 +1981,7 @@
                             const hasNoProd = !!me.selectedNamespaceList.filter(
                                 item => item.environment !== 'prod'
                             )[0]
-                            me.$router.push({
-                                name: 'deployments',
-                                params: {
-                                    isProdCluster: !hasNoProd,
-                                    projectId: me.projectId,
-                                    projectCode: me.projectCode,
-                                    tplsetId: me.templateId
-                                }
-                            })
+                            me.gotoDeployments(hasNoProd)
                         } catch (e) {
                             console.log(e)
                         } finally {
@@ -2001,6 +1989,23 @@
                         }
                     }
                 })
+            },
+
+            gotoDeployments (hasNoProd) {
+                if (this.isSharedCluster) {
+                    const route = this.$router.resolve({ name: 'dashboardWorkload' })
+                    window.location.href = route.href
+                } else {
+                    this.$router.push({
+                        name: 'deployments',
+                        params: {
+                            isProdCluster: !hasNoProd,
+                            projectId: this.projectId,
+                            projectCode: this.projectCode,
+                            tplsetId: this.templateId
+                        }
+                    })
+                }
             },
 
             /**
@@ -2148,11 +2153,12 @@
                     const res = await this.$store.dispatch('configuration/getAllNamespaceList', {
                         projectId: this.projectId,
                         group_by: 'cluster_name',
-                        perm_can_use: 1
+                        perm_can_use: 1,
+                        with_perms: false
                     })
 
                     const resList = res.data
-                    const resCluster = resList.find(cluster => cluster.name === item.name)
+                    const resCluster = resList.find(cluster => cluster.cluster_id === item.cluster_id)
                     if (resCluster) {
                         const resNamespaces = resCluster.results
                         const itemNamespaces = item.results
@@ -2165,9 +2171,8 @@
                                 ns.isExist = inItemNamespaces.isExist
                             }
                         })
-                        const resClusterIndex = resList.findIndex(cluster => cluster.name === item.name)
-                        this.$set(this.candidateNamespaceList, resClusterIndex, Object.assign(resCluster, {
-                            isOpen: this.candidateNamespaceList[resClusterIndex].isOpen
+                        this.$set(this.candidateNamespaceList, index, Object.assign(resCluster, {
+                            isOpen: this.candidateNamespaceList[index].isOpen
                         }))
 
                         this.selectNamespaceInDialog(index, addedRes.data, 0)

@@ -1,0 +1,2923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./iconcool.js"></script>
+  <style>
+    html,
+    body,
+    ul,
+    li {
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      margin: 0 auto;
+      padding: 50px;
+      width: 980px;
+    }
+    .container .page-title {
+      margin: 0;
+      padding: 0;
+    }
+    .container .page-title .logo {
+      height: 50px;
+    }
+    .tab-wrapper {
+      padding-top: 26px;
+      border-bottom: 1px solid #dcdee5;
+      overflow: hidden;
+    }
+    .tab-wrapper .tab-panel {
+      float: left;
+      padding: 9px;
+      min-width: 124px;
+      font-size: 16px;
+      color: #979ba5;
+      text-align: center;
+      cursor: pointer;
+    }
+    .tab-wrapper .tab-panel.active {
+      color: #313238;
+      border-bottom: 3px solid #361ec6;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .icon-list .icon-item {
+      display: inline-block;
+      margin-top: 20px;
+      width: 116px;
+      color: #313238;
+      text-align: center;
+      vertical-align: top;
+      overflow: hidden;
+      list-style: none;
+    }
+    .icon-list .icon-item .icon {
+      display: inline-block;
+      height: 92px;
+      line-height: 92px;
+      font-size: 44px;
+    }
+    .icon-list .icon-text {
+      margin: 0;
+      font-size: 14px;
+      word-break: break-all;
+    }
+    .icon-list .colorful-icon {
+      display: inline-block;
+      margin-top: 20px;
+      width: 116px;
+      text-align: center;
+      vertical-align: top;
+      overflow: hidden;
+      list-style: none;
+    }
+    .icon-list .colorful-icon .icon {
+      display: block;
+      margin: 0 auto;
+      width: 1em;
+      height: 92px;
+      font-size: 44px;
+    }
+    .describe-title {
+      margin: 60px 0 0;
+      padding-bottom: 10px;
+      font-size: 20px;
+      font-weight: normal;
+      color: #313238;
+      border-bottom: 1px solid #dcdee5;
+    }
+    .use-describe {
+      padding-left: 20px;
+    }
+    .use-describe li {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #313238;
+      line-height: 20px;
+    }
+  </style>
+  <title>Icon Cool</title>
+</head>
+<body>
+  <div class="container">
+    <h2 class="page-title">
+      <img class="logo" src="data:image/svg+xml;base64,PHN2ZyBpZD0i5Zu+5bGCXzEiIGRhdGEtbmFtZT0i5Zu+5bGCIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDMzMSA2NCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNlNWVlZmY7fS5jbHMtMntmaWxsOiMzNjFlYzY7fS5jbHMtM3tmaWxsOiNiNWNiZmY7fS5jbHMtNHtmaWxsOiNkY2U5ZmY7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5pY29uIGNvb2wgbG9nbzwvdGl0bGU+PHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI2LjkgNjIuOTQgMC42OCA0Ny4yMSAwLjY4IDE1LjczIDI2LjkgMzEuNDcgMjYuOSA2Mi45NCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIyMC4zNCA1MS4xNCA3LjIzIDQzLjI3IDcuMjMgMjcuNTQgMjAuMzQgMzUuNCAyMC4zNCA1MS4xNCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIyNi45IDYyLjk0IDUzLjEzIDQ3LjIxIDUzLjEzIDE1LjczIDI2LjkgMzEuNDcgMjYuOSA2Mi45NCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSIyNi45IDAgMC42OCAxNS43MyAyNi45IDMxLjQ3IDUzLjEzIDE1LjczIDI2LjkgMCIvPjxlbGxpcHNlIGNsYXNzPSJjbHMtMiIgY3g9IjI2LjkiIGN5PSIxNS43NCIgcng9IjEwLjQ5IiByeT0iNS44MyIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIzNC4yMyA1MS4xNCA0OC4xOCA0Mi43NyA0MS4zMSAzOS4zNCAzNC4yMyA1MS4xNCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSI0OC4xOCAyNy41NCAzNC4yMyAzNS45MSA0MS4xIDM5LjM0IDQ4LjE4IDI3LjU0Ii8+PHBhdGggZD0iTTcxLjIzLDE4LjU0aDkuOTRWMTUuOGgzLjg5djIuNzRoOC42N1YxNS44aDMuOXYyLjc0aDkuNjd2My4zMUg5Ny42M3YyaC0zLjl2LTJIODUuMDZ2MS45M0g4MS4xN1YyMS44NUg3MS4yM1ptMCwyOS4xSDc1VjM4LjI3aDI4LjY0djkuMzdoMy43VjUxSDcxLjIzWm0yLjg1LTIyaDMuN1YzNi4zNWgtMy43Wm01LDIyaDQuNDNWNDEuNDdINzkuMDlabTIuODUtMjNIODUuOHYxMkg4MS45NFptNC41OSw5LjgzYTI3LjI2LDI3LjI2LDAsMCwwLDUuMzktMTBsMy45LjU3TDk1LDI3LjI1aDExLjY3djMuMjhIOTMuNThhMzcuMjIsMzcuMjIsMCwwLDEtMy44NSw2LjEyQzg4LjgsMzYsODcuNjUsMzUuMTksODYuNTMsMzQuNVptLjU4LDEzLjE0aDQuNDNWNDEuNDdIODcuMTFabTcuMzYtMTQuNDksMi4yNy0yLjI4YzIuMzEsMS40Nyw0LjE2LDIuNyw2LjQsNC4yOGwtMi40MywyLjU0Qzk4LjY3LDM2LjExLDk2Ljc4LDM0LjczLDk0LjQ3LDMzLjE1Wm0uNjEsOC4zMnY2LjE3aDQuNDdWNDEuNDdaIi8+PHBhdGggZD0iTTEwOS4zNCwyNS40YTM2LjgzLDM2LjgzLDAsMCwwLDUuMzYtOS42M2wzLjUxLjVjLS40MywxLS44MSwxLjkyLTEuMjQsMi44MWg2djNsLTIuMiw0LjA5aDMuNTFWNDMuNTlIMTExLjEyVjI4LjUybC0uMzEuMzlBMzcuMTQsMzcuMTQsMCwwLDAsMTA5LjM0LDI1LjRaTTEyNCw0OC4xNGMwLC4zNSwwLC42OSwwLDEuMDgtNS4xMi40Mi05LjgyLjg1LTE0LDEuMzVsLS40Ny0zLjUxYzQuMDUtLjI3LDkuMjEtLjY5LDE0LjQ5LTEuMjMsMCwuNzMsMCwxLjM1LDAsMmE1NSw1NSwwLDAsMCw0Ljc0LTcuNTFsMywxLjYyYy0xLjc3LDMtMy4zMSw1LjQ3LTUuMiw4LjE3QzEyNS43Miw0OS4zNywxMjUsNDguNzksMTI0LDQ4LjE0Wm0tOC42OC0yNS44NmEzOS44MSwzOS44MSwwLDAsMS0yLjUsMy45M2g0LjU1bDIuMTktMy45M1ptLTEuNDIsMTEuMjFoMi41OFYyOS4xOGgtMi41OFptMCw3LjFoMi41OFYzNi4yN2gtMi41OFpNMTE5LDI5LjE4djQuMzFoMi41OFYyOS4xOFptMCwxMS40MWgyLjU4VjM2LjI3SDExOVpNMTI1LjQ1LDIwaDguMzdjLS40My0xLjI3LS44OS0yLjYyLTEuMzItMy43N2w0LjA5LS41Yy40NiwxLjM4LjkyLDIuODUsMS4zNSw0LjI3SDE0NlYyMy40SDEyNS40NVpNMTI5LDQ4LjFjMSwuMDgsMi4xMi4xMiwzLjEyLjEyLDEuMzUsMCwxLjg1LS41NCwxLjg1LTEuODV2LThoLTYuNzVWMjYuNTZoMTYuNjFWMzguMzVoLTYuMjR2OS4yMWMwLDIuNjYtMSw0LTMuNjYsNC4xMi0xLjE2LDAtMi43OC4wOC00LjE2LjA4QzEyOS41OCw1MC41MywxMjkuMzEsNDkuMjYsMTI5LDQ4LjFabTEuNzMtMTNoOS42VjI5LjgzaC05LjZaTTEzOSw0MS43OCwxNDIsNDAuMzVjMS42OSwyLjc4LDIuOTMsNSw0LjQ3LDcuNzlMMTQzLjMsNDkuOEMxNDIsNDcuMSwxNDAuNjgsNDQuNzEsMTM5LDQxLjc4WiIvPjxwYXRoIGQ9Ik0xNjAuNDUsMTcuNDR2NC43N2gtNVYxNy40NFptMCw5LjIyVjUyLjNoLTVWMjYuNjZaIi8+PHBhdGggZD0iTTE4MS41Miw0Mi43NWg1cTAsNC44OS0xLjMyLDYuODJhNi4xNiw2LjE2LDAsMCwxLTMuMzIsMi4zNywyMywyMywwLDAsMS02LjQxLjY4LDI0Ljc1LDI0Ljc1LDAsMCwxLTUuNDUtLjQ4LDguMjgsOC4yOCwwLDAsMS0zLjM4LTEuNTgsNy4yMiw3LjIyLDAsMCwxLTIuMjYtMy44OCwzMS4yMiwzMS4yMiwwLDAsMS0uNjYtNy4zOSwyNCwyNCwwLDAsMSwuODgtNy42Nyw3LjE2LDcuMTYsMCwwLDEsMy42My00LjEzcTIuMy0xLjE1LDcuMDgtMS4xNWExOSwxOSwwLDAsMSw2LjcxLjk0LDUuNzIsNS43MiwwLDAsMSwzLjMyLDMsMTMsMTMsMCwwLDEsLjc3LDUuMWgtNWE3LDcsMCwwLDAtLjUzLTMuMjcsMi44MywyLjgzLDAsMCwwLTEuNzQtMS4zLDEzLjIsMTMuMiwwLDAsMC0zLjcxLS4zOWMtMi41MywwLTQuMjEuNDMtNSwxLjMxcy0xLjIzLDMuNTEtMS4yMyw3LjgzcTAsNS44MiwxLjI2LDcuNTksMSwxLjQsNS42OCwxLjRjMi40MywwLDQtLjM1LDQuNjUtMVMxODEuNTIsNDUuMjQsMTgxLjUyLDQyLjc1WiIvPjxwYXRoIGQ9Ik0yMDAuMjUsMjYuMzRhMjQuMTMsMjQuMTMsMCwwLDEsNi40OS42Miw2LjY5LDYuNjksMCwwLDEsNC43OCw1LjEyLDI5Ljc1LDI5Ljc1LDAsMCwxLC41OSw2Ljg3cTAsNi0uODYsOC41NWE2LjQ2LDYuNDYsMCwwLDEtMy4zMSw0cS0yLjMzLDEuMDgtNy42MywxLjA4YTE5LjY5LDE5LjY5LDAsMCwxLTcuMTEtLjk0LDYuMzEsNi4zMSwwLDAsMS0yLjM5LTEuNjIsNy42NCw3LjY0LDAsMCwxLTEuNDQtMi43NSwzMC41LDMwLjUsMCwwLDEtLjc2LTguMjMsMzMuMjIsMzMuMjIsMCwwLDEsLjQ5LTYuNDEsOC4zOCw4LjM4LDAsMCwxLDEuNjEtMy43LDYuNDQsNi40NCwwLDAsMSwzLjM2LTJBMjQuNjEsMjQuNjEsMCwwLDEsMjAwLjI1LDI2LjM0Wm0uMDgsNC4wNXEtNC41LDAtNS40NywxLjUzdC0xLDcuMzJhNDIuNTQsNDIuNTQsMCwwLDAsLjI0LDUuMjYsNS45LDUuOSwwLDAsMCwuODYsMi42MnExLDEuNDYsNS41MiwxLjQ1LDMuOTIsMCw1LjA3LTEuMTVhNC44MSw0LjgxLDAsMCwwLDEuMDktMi42LDM3LjQzLDM3LjQzLDAsMCwwLC4zLTUuNTVxMC02LTEuMTItNy41MVEyMDQuNzYsMzAuNCwyMDAuMzMsMzAuMzlaIi8+PHBhdGggZD0iTTIxNS4zOSwyNi42Nmg1LjA1bC0uMTYsMi4xNmMxLjMxLTIuMTksNC0yLjQ4LDguMzEtMi40OHM3LDEuMSw4LjI5LDMuM3EuODgsMS41Ljg4LDUuNThWNTIuM2gtNVYzNi40MmExMC4zOSwxMC4zOSwwLDAsMC0uNTQtNC4xMywyLjc0LDIuNzQsMCwwLDAtMS42MS0xLjQsOS40OCw5LjQ4LDAsMCwwLTMuMTktLjQycS0zLjY3LDAtNS4zMSwxLjUzdC0xLjYzLDVWNTIuM2gtNS4wNVoiLz48cGF0aCBkPSJNMjY0LjQ4LDQyLjc1aDVjMCwzLjI2LS40Miw1LjUzLTEuMzIsNi44MmE2LjE2LDYuMTYsMCwwLDEtMy4zMiwyLjM3LDIzLDIzLDAsMCwxLTYuNDEuNjgsMjQuNzUsMjQuNzUsMCwwLDEtNS40NS0uNDgsOC4yOCw4LjI4LDAsMCwxLTMuMzgtMS41OCw3LjI5LDcuMjksMCwwLDEtMi4yNi0zLjg4LDMxLjIyLDMxLjIyLDAsMCwxLS42Ni03LjM5LDI0LDI0LDAsMCwxLC44OS03LjY3LDcuMTEsNy4xMSwwLDAsMSwzLjYyLTQuMTNxMi4yOS0xLjE1LDcuMDgtMS4xNWExOSwxOSwwLDAsMSw2LjcxLjk0LDUuNzIsNS43MiwwLDAsMSwzLjMyLDMsMTMsMTMsMCwwLDEsLjc3LDUuMWgtNWE3LjEsNy4xLDAsMCwwLS41NC0zLjI3LDIuODMsMi44MywwLDAsMC0xLjc0LTEuMywxMy4yLDEzLjIsMCwwLDAtMy43MS0uMzljLTIuNTMsMC00LjIxLjQzLTUsMS4zMXMtMS4yMywzLjUxLTEuMjMsNy44M3EwLDUuODIsMS4yNiw3LjU5Yy42NC45MywyLjU0LDEuNCw1LjY4LDEuNCwyLjQzLDAsNC0uMzUsNC42Ni0xUzI2NC40OCw0NS4yNCwyNjQuNDgsNDIuNzVaIi8+PHBhdGggZD0iTTI4My4yMSwyNi4zNGEyNC4xMywyNC4xMywwLDAsMSw2LjQ5LjYyLDYuNjksNi42OSwwLDAsMSw0Ljc4LDUuMTIsMjkuNzUsMjkuNzUsMCwwLDEsLjU5LDYuODdxMCw2LS44Niw4LjU1YTYuNDYsNi40NiwwLDAsMS0zLjMxLDRxLTIuMzIsMS4wOC03LjYzLDEuMDhhMTkuNjksMTkuNjksMCwwLDEtNy4xMS0uOTQsNi4zMSw2LjMxLDAsMCwxLTIuMzktMS42Miw3LjY0LDcuNjQsMCwwLDEtMS40NC0yLjc1LDMwLjYxLDMwLjYxLDAsMCwxLS43NS04LjIzLDMzLjM2LDMzLjM2LDAsMCwxLC40OC02LjQxLDguMzgsOC4zOCwwLDAsMSwxLjYxLTMuNyw2LjQ4LDYuNDgsMCwwLDEsMy4zNi0yQTI0LjYxLDI0LjYxLDAsMCwxLDI4My4yMSwyNi4zNFptLjA5LDQuMDVjLTMsMC00LjgzLjUxLTUuNDgsMS41M3MtMSwzLjUzLTEsNy4zMkE0Mi41NCw0Mi41NCwwLDAsMCwyNzcsNDQuNWE1LjksNS45LDAsMCwwLC44NiwyLjYycTEsMS40Niw1LjUyLDEuNDUsMy45MiwwLDUuMDctMS4xNWE0LjgxLDQuODEsMCwwLDAsMS4wOS0yLjYsMzcuMTMsMzcuMTMsMCwwLDAsLjMxLTUuNTVxMC02LTEuMTMtNy41MVEyODcuNzIsMzAuNCwyODMuMywzMC4zOVoiLz48cGF0aCBkPSJNMzA5LjE2LDI2LjM0YTI0LjEzLDI0LjEzLDAsMCwxLDYuNDkuNjIsNi42OSw2LjY5LDAsMCwxLDQuNzgsNS4xMkEyOS43NSwyOS43NSwwLDAsMSwzMjEsMzlxMCw2LS44Niw4LjU1YTYuNDYsNi40NiwwLDAsMS0zLjMxLDRxLTIuMzMsMS4wOC03LjYzLDEuMDhhMTkuNjksMTkuNjksMCwwLDEtNy4xMS0uOTQsNi4zMSw2LjMxLDAsMCwxLTIuMzktMS42Miw3LjgsNy44LDAsMCwxLTEuNDUtMi43NSwzMC42MSwzMC42MSwwLDAsMS0uNzUtOC4yMywzMi40NCwzMi40NCwwLDAsMSwuNDktNi40MSw4LjI2LDguMjYsMCwwLDEsMS42MS0zLjcsNi40NCw2LjQ0LDAsMCwxLDMuMzYtMkEyNC42MSwyNC42MSwwLDAsMSwzMDkuMTYsMjYuMzRabS4wOCw0LjA1cS00LjUsMC01LjQ3LDEuNTNjLS43LDEuMDktMSwzLjUzLTEsNy4zMkE0Mi41NCw0Mi41NCwwLDAsMCwzMDMsNDQuNWE1Ljc3LDUuNzcsMCwwLDAsLjg2LDIuNjJxMSwxLjQ2LDUuNTIsMS40NSwzLjkxLDAsNS4wNy0xLjE1YTQuODEsNC44MSwwLDAsMCwxLjA5LTIuNiwzNy40MywzNy40MywwLDAsMCwuMy01LjU1cTAtNi0xLjEyLTcuNTFRMzEzLjY3LDMwLjQsMzA5LjI0LDMwLjM5WiIvPjxwYXRoIGQ9Ik0zMjkuMzQsMTUuNjlWNTIuM2gtNVYxNS42OVoiLz48L3N2Zz4=">
+    </h2>
+    <div class="tab-wrapper">
+      <div class="tab-panel active" data-type="singleColor">单色图标</div>
+      <div class="tab-panel"  data-type="multipleColor">彩色图标</div>
+    </div>
+    <section class="tab-content single-color active" data-type="singleColor">
+      <ul class="icon-list">
+        <li class="icon-item" title="data">
+          <span class="icon bcs-icon bcs-icon-data"></span>
+          <p class="icon-text">data</p>
+        </li>
+        <li class="icon-item" title="alarm-error">
+          <span class="icon bcs-icon bcs-icon-alarm-error"></span>
+          <p class="icon-text">alarm-error</p>
+        </li>
+        <li class="icon-item" title="alarm-insufficient">
+          <span class="icon bcs-icon bcs-icon-alarm-insufficient"></span>
+          <p class="icon-text">alarm-insufficient</p>
+        </li>
+        <li class="icon-item" title="alarm-normal">
+          <span class="icon bcs-icon bcs-icon-alarm-normal"></span>
+          <p class="icon-text">alarm-normal</p>
+        </li>
+        <li class="icon-item" title="angle-double-down">
+          <span class="icon bcs-icon bcs-icon-angle-double-down"></span>
+          <p class="icon-text">angle-double-down</p>
+        </li>
+        <li class="icon-item" title="angle-double-left">
+          <span class="icon bcs-icon bcs-icon-angle-double-left"></span>
+          <p class="icon-text">angle-double-left</p>
+        </li>
+        <li class="icon-item" title="angle-double-up">
+          <span class="icon bcs-icon bcs-icon-angle-double-up"></span>
+          <p class="icon-text">angle-double-up</p>
+        </li>
+        <li class="icon-item" title="angle-double-right">
+          <span class="icon bcs-icon bcs-icon-angle-double-right"></span>
+          <p class="icon-text">angle-double-right</p>
+        </li>
+        <li class="icon-item" title="angle-down">
+          <span class="icon bcs-icon bcs-icon-angle-down"></span>
+          <p class="icon-text">angle-down</p>
+        </li>
+        <li class="icon-item" title="angle-left">
+          <span class="icon bcs-icon bcs-icon-angle-left"></span>
+          <p class="icon-text">angle-left</p>
+        </li>
+        <li class="icon-item" title="angle-right">
+          <span class="icon bcs-icon bcs-icon-angle-right"></span>
+          <p class="icon-text">angle-right</p>
+        </li>
+        <li class="icon-item" title="angle-up">
+          <span class="icon bcs-icon bcs-icon-angle-up"></span>
+          <p class="icon-text">angle-up</p>
+        </li>
+        <li class="icon-item" title="apply-join-project">
+          <span class="icon bcs-icon bcs-icon-apply-join-project"></span>
+          <p class="icon-text">apply-join-project</p>
+        </li>
+        <li class="icon-item" title="apply-perm">
+          <span class="icon bcs-icon bcs-icon-apply-perm"></span>
+          <p class="icon-text">apply-perm</p>
+        </li>
+        <li class="icon-item" title="apply-record">
+          <span class="icon bcs-icon bcs-icon-apply-record"></span>
+          <p class="icon-text">apply-record</p>
+        </li>
+        <li class="icon-item" title="apps-shape">
+          <span class="icon bcs-icon bcs-icon-apps-shape"></span>
+          <p class="icon-text">apps-shape</p>
+        </li>
+        <li class="icon-item" title="apps">
+          <span class="icon bcs-icon bcs-icon-apps"></span>
+          <p class="icon-text">apps</p>
+        </li>
+        <li class="icon-item" title="area-chart">
+          <span class="icon bcs-icon bcs-icon-area-chart"></span>
+          <p class="icon-text">area-chart</p>
+        </li>
+        <li class="icon-item" title="arrows-down-circle-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-down-circle-shape"></span>
+          <p class="icon-text">arrows-down-circle-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-down-circle">
+          <span class="icon bcs-icon bcs-icon-arrows-down-circle"></span>
+          <p class="icon-text">arrows-down-circle</p>
+        </li>
+        <li class="icon-item" title="arrows-down-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-down-shape"></span>
+          <p class="icon-text">arrows-down-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-down">
+          <span class="icon bcs-icon bcs-icon-arrows-down"></span>
+          <p class="icon-text">arrows-down</p>
+        </li>
+        <li class="icon-item" title="arrows-left-circle-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-left-circle-shape"></span>
+          <p class="icon-text">arrows-left-circle-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-left-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-left-shape"></span>
+          <p class="icon-text">arrows-left-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-left-circle">
+          <span class="icon bcs-icon bcs-icon-arrows-left-circle"></span>
+          <p class="icon-text">arrows-left-circle</p>
+        </li>
+        <li class="icon-item" title="arrows-left">
+          <span class="icon bcs-icon bcs-icon-arrows-left"></span>
+          <p class="icon-text">arrows-left</p>
+        </li>
+        <li class="icon-item" title="arrows-m-down-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-m-down-shape"></span>
+          <p class="icon-text">arrows-m-down-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-m-left-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-m-left-shape"></span>
+          <p class="icon-text">arrows-m-left-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-m-right-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-m-right-shape"></span>
+          <p class="icon-text">arrows-m-right-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-m-up-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-m-up-shape"></span>
+          <p class="icon-text">arrows-m-up-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-right-circle-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-right-circle-shape"></span>
+          <p class="icon-text">arrows-right-circle-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-right-circle">
+          <span class="icon bcs-icon bcs-icon-arrows-right-circle"></span>
+          <p class="icon-text">arrows-right-circle</p>
+        </li>
+        <li class="icon-item" title="arrows-right-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-right-shape"></span>
+          <p class="icon-text">arrows-right-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-right">
+          <span class="icon bcs-icon bcs-icon-arrows-right"></span>
+          <p class="icon-text">arrows-right</p>
+        </li>
+        <li class="icon-item" title="arrows-up-circle-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-up-circle-shape"></span>
+          <p class="icon-text">arrows-up-circle-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-up-circle">
+          <span class="icon bcs-icon bcs-icon-arrows-up-circle"></span>
+          <p class="icon-text">arrows-up-circle</p>
+        </li>
+        <li class="icon-item" title="arrows-up-shape">
+          <span class="icon bcs-icon bcs-icon-arrows-up-shape"></span>
+          <p class="icon-text">arrows-up-shape</p>
+        </li>
+        <li class="icon-item" title="arrows-up">
+          <span class="icon bcs-icon bcs-icon-arrows-up"></span>
+          <p class="icon-text">arrows-up</p>
+        </li>
+        <li class="icon-item" title="back-shape">
+          <span class="icon bcs-icon bcs-icon-back-shape"></span>
+          <p class="icon-text">back-shape</p>
+        </li>
+        <li class="icon-item" title="back">
+          <span class="icon bcs-icon bcs-icon-back"></span>
+          <p class="icon-text">back</p>
+        </li>
+        <li class="icon-item" title="back2">
+          <span class="icon bcs-icon bcs-icon-back2"></span>
+          <p class="icon-text">back2</p>
+        </li>
+        <li class="icon-item" title="bar-chart">
+          <span class="icon bcs-icon bcs-icon-bar-chart"></span>
+          <p class="icon-text">bar-chart</p>
+        </li>
+        <li class="icon-item" title="bk">
+          <span class="icon bcs-icon bcs-icon-bk"></span>
+          <p class="icon-text">bk</p>
+        </li>
+        <li class="icon-item" title="block-shape">
+          <span class="icon bcs-icon bcs-icon-block-shape"></span>
+          <p class="icon-text">block-shape</p>
+        </li>
+        <li class="icon-item" title="calendar-shape">
+          <span class="icon bcs-icon bcs-icon-calendar-shape"></span>
+          <p class="icon-text">calendar-shape</p>
+        </li>
+        <li class="icon-item" title="calendar">
+          <span class="icon bcs-icon bcs-icon-calendar"></span>
+          <p class="icon-text">calendar</p>
+        </li>
+        <li class="icon-item" title="chain">
+          <span class="icon bcs-icon bcs-icon-chain"></span>
+          <p class="icon-text">chain</p>
+        </li>
+        <li class="icon-item" title="check-1">
+          <span class="icon bcs-icon bcs-icon-check-1"></span>
+          <p class="icon-text">check-1</p>
+        </li>
+        <li class="icon-item" title="check-circle-shape">
+          <span class="icon bcs-icon bcs-icon-check-circle-shape"></span>
+          <p class="icon-text">check-circle-shape</p>
+        </li>
+        <li class="icon-item" title="check-circle">
+          <span class="icon bcs-icon bcs-icon-check-circle"></span>
+          <p class="icon-text">check-circle</p>
+        </li>
+        <li class="icon-item" title="circle-4-1">
+          <span class="icon bcs-icon bcs-icon-circle-4-1"></span>
+          <p class="icon-text">circle-4-1</p>
+        </li>
+        <li class="icon-item" title="circle-2-1">
+          <span class="icon bcs-icon bcs-icon-circle-2-1"></span>
+          <p class="icon-text">circle-2-1</p>
+        </li>
+        <li class="icon-item" title="circle-shape">
+          <span class="icon bcs-icon bcs-icon-circle-shape"></span>
+          <p class="icon-text">circle-shape</p>
+        </li>
+        <li class="icon-item" title="circle">
+          <span class="icon bcs-icon bcs-icon-circle"></span>
+          <p class="icon-text">circle</p>
+        </li>
+        <li class="icon-item" title="clipboard-shape">
+          <span class="icon bcs-icon bcs-icon-clipboard-shape"></span>
+          <p class="icon-text">clipboard-shape</p>
+        </li>
+        <li class="icon-item" title="ck-store">
+          <span class="icon bcs-icon bcs-icon-ck-store"></span>
+          <p class="icon-text">ck-store</p>
+        </li>
+        <li class="icon-item" title="clipboard">
+          <span class="icon bcs-icon bcs-icon-clipboard"></span>
+          <p class="icon-text">clipboard</p>
+        </li>
+        <li class="icon-item" title="clock-shape">
+          <span class="icon bcs-icon bcs-icon-clock-shape"></span>
+          <p class="icon-text">clock-shape</p>
+        </li>
+        <li class="icon-item" title="clock">
+          <span class="icon bcs-icon bcs-icon-clock"></span>
+          <p class="icon-text">clock</p>
+        </li>
+        <li class="icon-item" title="close-circle-shape">
+          <span class="icon bcs-icon bcs-icon-close-circle-shape"></span>
+          <p class="icon-text">close-circle-shape</p>
+        </li>
+        <li class="icon-item" title="close-circle">
+          <span class="icon bcs-icon bcs-icon-close-circle"></span>
+          <p class="icon-text">close-circle</p>
+        </li>
+        <li class="icon-item" title="close">
+          <span class="icon bcs-icon bcs-icon-close"></span>
+          <p class="icon-text">close</p>
+        </li>
+        <li class="icon-item" title="close3-shape">
+          <span class="icon bcs-icon bcs-icon-close3-shape"></span>
+          <p class="icon-text">close3-shape</p>
+        </li>
+        <li class="icon-item" title="code">
+          <span class="icon bcs-icon bcs-icon-code"></span>
+          <p class="icon-text">code</p>
+        </li>
+        <li class="icon-item" title="cog-shape">
+          <span class="icon bcs-icon bcs-icon-cog-shape"></span>
+          <p class="icon-text">cog-shape</p>
+        </li>
+        <li class="icon-item" title="control-center">
+          <span class="icon bcs-icon bcs-icon-control-center"></span>
+          <p class="icon-text">control-center</p>
+        </li>
+        <li class="icon-item" title="cog">
+          <span class="icon bcs-icon bcs-icon-cog"></span>
+          <p class="icon-text">cog</p>
+        </li>
+        <li class="icon-item" title="cry">
+          <span class="icon bcs-icon bcs-icon-cry"></span>
+          <p class="icon-text">cry</p>
+        </li>
+        <li class="icon-item" title="cry-shape">
+          <span class="icon bcs-icon bcs-icon-cry-shape"></span>
+          <p class="icon-text">cry-shape</p>
+        </li>
+        <li class="icon-item" title="dashboard-2-shape">
+          <span class="icon bcs-icon bcs-icon-dashboard-2-shape"></span>
+          <p class="icon-text">dashboard-2-shape</p>
+        </li>
+        <li class="icon-item" title="dashboard-2">
+          <span class="icon bcs-icon bcs-icon-dashboard-2"></span>
+          <p class="icon-text">dashboard-2</p>
+        </li>
+        <li class="icon-item" title="dashboard-shape">
+          <span class="icon bcs-icon bcs-icon-dashboard-shape"></span>
+          <p class="icon-text">dashboard-shape</p>
+        </li>
+        <li class="icon-item" title="dashboard">
+          <span class="icon bcs-icon bcs-icon-dashboard"></span>
+          <p class="icon-text">dashboard</p>
+        </li>
+        <li class="icon-item" title="data-shape">
+          <span class="icon bcs-icon bcs-icon-data-shape"></span>
+          <p class="icon-text">data-shape</p>
+        </li>
+        <li class="icon-item" title="data">
+          <span class="icon bcs-icon bcs-icon-data"></span>
+          <p class="icon-text">data</p>
+        </li>
+        <li class="icon-item" title="data2-shape">
+          <span class="icon bcs-icon bcs-icon-data2-shape"></span>
+          <p class="icon-text">data2-shape</p>
+        </li>
+        <li class="icon-item" title="data2">
+          <span class="icon bcs-icon bcs-icon-data2"></span>
+          <p class="icon-text">data2</p>
+        </li>
+        <li class="icon-item" title="dedent">
+          <span class="icon bcs-icon bcs-icon-dedent"></span>
+          <p class="icon-text">dedent</p>
+        </li>
+        <li class="icon-item" title="delete">
+          <span class="icon bcs-icon bcs-icon-delete"></span>
+          <p class="icon-text">delete</p>
+        </li>
+        <li class="icon-item" title="dialogue-empty-shape">
+          <span class="icon bcs-icon bcs-icon-dialogue-empty-shape"></span>
+          <p class="icon-text">dialogue-empty-shape</p>
+        </li>
+        <li class="icon-item" title="dialogue-empty">
+          <span class="icon bcs-icon bcs-icon-dialogue-empty"></span>
+          <p class="icon-text">dialogue-empty</p>
+        </li>
+        <li class="icon-item" title="dialogue">
+          <span class="icon bcs-icon bcs-icon-dialogue"></span>
+          <p class="icon-text">dialogue</p>
+        </li>
+        <li class="icon-item" title="dialogue-shape">
+          <span class="icon bcs-icon bcs-icon-dialogue-shape"></span>
+          <p class="icon-text">dialogue-shape</p>
+        </li>
+        <li class="icon-item" title="dispirited">
+          <span class="icon bcs-icon bcs-icon-dispirited"></span>
+          <p class="icon-text">dispirited</p>
+        </li>
+        <li class="icon-item" title="dispirited-shape">
+          <span class="icon bcs-icon bcs-icon-dispirited-shape"></span>
+          <p class="icon-text">dispirited-shape</p>
+        </li>
+        <li class="icon-item" title="docker">
+          <span class="icon bcs-icon bcs-icon-docker"></span>
+          <p class="icon-text">docker</p>
+        </li>
+        <li class="icon-item" title="down-shape">
+          <span class="icon bcs-icon bcs-icon-down-shape"></span>
+          <p class="icon-text">down-shape</p>
+        </li>
+        <li class="icon-item" title="download">
+          <span class="icon bcs-icon bcs-icon-download"></span>
+          <p class="icon-text">download</p>
+        </li>
+        <li class="icon-item" title="edit">
+          <span class="icon bcs-icon bcs-icon-edit"></span>
+          <p class="icon-text">edit</p>
+        </li>
+        <li class="icon-item" title="ellipsis">
+          <span class="icon bcs-icon bcs-icon-ellipsis"></span>
+          <p class="icon-text">ellipsis</p>
+        </li>
+        <li class="icon-item" title="edit2">
+          <span class="icon bcs-icon bcs-icon-edit2"></span>
+          <p class="icon-text">edit2</p>
+        </li>
+        <li class="icon-item" title="email-shape">
+          <span class="icon bcs-icon bcs-icon-email-shape"></span>
+          <p class="icon-text">email-shape</p>
+        </li>
+        <li class="icon-item" title="email">
+          <span class="icon bcs-icon bcs-icon-email"></span>
+          <p class="icon-text">email</p>
+        </li>
+        <li class="icon-item" title="empty-shape">
+          <span class="icon bcs-icon bcs-icon-empty-shape"></span>
+          <p class="icon-text">empty-shape</p>
+        </li>
+        <li class="icon-item" title="empty">
+          <span class="icon bcs-icon bcs-icon-empty"></span>
+          <p class="icon-text">empty</p>
+        </li>
+        <li class="icon-item" title="end">
+          <span class="icon bcs-icon bcs-icon-end"></span>
+          <p class="icon-text">end</p>
+        </li>
+        <li class="icon-item" title="event-query">
+          <span class="icon bcs-icon bcs-icon-event-query"></span>
+          <p class="icon-text">event-query</p>
+        </li>
+        <li class="icon-item" title="exclamation-circle">
+          <span class="icon bcs-icon bcs-icon-exclamation-circle"></span>
+          <p class="icon-text">exclamation-circle</p>
+        </li>
+        <li class="icon-item" title="exclamation-circle-shape">
+          <span class="icon bcs-icon bcs-icon-exclamation-circle-shape"></span>
+          <p class="icon-text">exclamation-circle-shape</p>
+        </li>
+        <li class="icon-item" title="exclamation-triangle-shape">
+          <span class="icon bcs-icon bcs-icon-exclamation-triangle-shape"></span>
+          <p class="icon-text">exclamation-triangle-shape</p>
+        </li>
+        <li class="icon-item" title="exclamation-triangle">
+          <span class="icon bcs-icon bcs-icon-exclamation-triangle"></span>
+          <p class="icon-text">exclamation-triangle</p>
+        </li>
+        <li class="icon-item" title="exclamation">
+          <span class="icon bcs-icon bcs-icon-exclamation"></span>
+          <p class="icon-text">exclamation</p>
+        </li>
+        <li class="icon-item" title="execute">
+          <span class="icon bcs-icon bcs-icon-execute"></span>
+          <p class="icon-text">execute</p>
+        </li>
+        <li class="icon-item" title="eye-shape">
+          <span class="icon bcs-icon bcs-icon-eye-shape"></span>
+          <p class="icon-text">eye-shape</p>
+        </li>
+        <li class="icon-item" title="eye-slash-shape">
+          <span class="icon bcs-icon bcs-icon-eye-slash-shape"></span>
+          <p class="icon-text">eye-slash-shape</p>
+        </li>
+        <li class="icon-item" title="eye-slash">
+          <span class="icon bcs-icon bcs-icon-eye-slash"></span>
+          <p class="icon-text">eye-slash</p>
+        </li>
+        <li class="icon-item" title="eye">
+          <span class="icon bcs-icon bcs-icon-eye"></span>
+          <p class="icon-text">eye</p>
+        </li>
+        <li class="icon-item" title="feedback">
+          <span class="icon bcs-icon bcs-icon-feedback"></span>
+          <p class="icon-text">feedback</p>
+        </li>
+        <li class="icon-item" title="file-plus-shape">
+          <span class="icon bcs-icon bcs-icon-file-plus-shape"></span>
+          <p class="icon-text">file-plus-shape</p>
+        </li>
+        <li class="icon-item" title="file-plus">
+          <span class="icon bcs-icon bcs-icon-file-plus"></span>
+          <p class="icon-text">file-plus</p>
+        </li>
+        <li class="icon-item" title="file-shape">
+          <span class="icon bcs-icon bcs-icon-file-shape"></span>
+          <p class="icon-text">file-shape</p>
+        </li>
+        <li class="icon-item" title="file">
+          <span class="icon bcs-icon bcs-icon-file"></span>
+          <p class="icon-text">file</p>
+        </li>
+        <li class="icon-item" title="folder-open-shape">
+          <span class="icon bcs-icon bcs-icon-folder-open-shape"></span>
+          <p class="icon-text">folder-open-shape</p>
+        </li>
+        <li class="icon-item" title="folder-open">
+          <span class="icon bcs-icon bcs-icon-folder-open"></span>
+          <p class="icon-text">folder-open</p>
+        </li>
+        <li class="icon-item" title="folder-plus-shape">
+          <span class="icon bcs-icon bcs-icon-folder-plus-shape"></span>
+          <p class="icon-text">folder-plus-shape</p>
+        </li>
+        <li class="icon-item" title="folder-plus">
+          <span class="icon bcs-icon bcs-icon-folder-plus"></span>
+          <p class="icon-text">folder-plus</p>
+        </li>
+        <li class="icon-item" title="folder">
+          <span class="icon bcs-icon bcs-icon-folder"></span>
+          <p class="icon-text">folder</p>
+        </li>
+        <li class="icon-item" title="folder-shape">
+          <span class="icon bcs-icon bcs-icon-folder-shape"></span>
+          <p class="icon-text">folder-shape</p>
+        </li>
+        <li class="icon-item" title="heart-shape">
+          <span class="icon bcs-icon bcs-icon-heart-shape"></span>
+          <p class="icon-text">heart-shape</p>
+        </li>
+        <li class="icon-item" title="full-screen">
+          <span class="icon bcs-icon bcs-icon-full-screen"></span>
+          <p class="icon-text">full-screen</p>
+        </li>
+        <li class="icon-item" title="heart">
+          <span class="icon bcs-icon bcs-icon-heart"></span>
+          <p class="icon-text">heart</p>
+        </li>
+        <li class="icon-item" title="helm">
+          <span class="icon bcs-icon bcs-icon-helm"></span>
+          <p class="icon-text">helm</p>
+        </li>
+        <li class="icon-item" title="helper">
+          <span class="icon bcs-icon bcs-icon-helper"></span>
+          <p class="icon-text">helper</p>
+        </li>
+        <li class="icon-item" title="hide">
+          <span class="icon bcs-icon bcs-icon-hide"></span>
+          <p class="icon-text">hide</p>
+        </li>
+        <li class="icon-item" title="home-shape">
+          <span class="icon bcs-icon bcs-icon-home-shape"></span>
+          <p class="icon-text">home-shape</p>
+        </li>
+        <li class="icon-item" title="home">
+          <span class="icon bcs-icon bcs-icon-home"></span>
+          <p class="icon-text">home</p>
+        </li>
+        <li class="icon-item" title="id-shape">
+          <span class="icon bcs-icon bcs-icon-id-shape"></span>
+          <p class="icon-text">id-shape</p>
+        </li>
+        <li class="icon-item" title="image-shape">
+          <span class="icon bcs-icon bcs-icon-image-shape"></span>
+          <p class="icon-text">image-shape</p>
+        </li>
+        <li class="icon-item" title="id">
+          <span class="icon bcs-icon bcs-icon-id"></span>
+          <p class="icon-text">id</p>
+        </li>
+        <li class="icon-item" title="image">
+          <span class="icon bcs-icon bcs-icon-image"></span>
+          <p class="icon-text">image</p>
+        </li>
+        <li class="icon-item" title="indent">
+          <span class="icon bcs-icon bcs-icon-indent"></span>
+          <p class="icon-text">indent</p>
+        </li>
+        <li class="icon-item" title="info-circle-shape">
+          <span class="icon bcs-icon bcs-icon-info-circle-shape"></span>
+          <p class="icon-text">info-circle-shape</p>
+        </li>
+        <li class="icon-item" title="info-circle">
+          <span class="icon bcs-icon bcs-icon-info-circle"></span>
+          <p class="icon-text">info-circle</p>
+        </li>
+        <li class="icon-item" title="info">
+          <span class="icon bcs-icon bcs-icon-info"></span>
+          <p class="icon-text">info</p>
+        </li>
+        <li class="icon-item" title="jd-node">
+          <span class="icon bcs-icon bcs-icon-jd-node"></span>
+          <p class="icon-text">jd-node</p>
+        </li>
+        <li class="icon-item" title="jq-colony">
+          <span class="icon bcs-icon bcs-icon-jq-colony"></span>
+          <p class="icon-text">jq-colony</p>
+        </li>
+        <li class="icon-item" title="key">
+          <span class="icon bcs-icon bcs-icon-key"></span>
+          <p class="icon-text">key</p>
+        </li>
+        <li class="icon-item" title="left-shape">
+          <span class="icon bcs-icon bcs-icon-left-shape"></span>
+          <p class="icon-text">left-shape</p>
+        </li>
+        <li class="icon-item" title="line-chart">
+          <span class="icon bcs-icon bcs-icon-line-chart"></span>
+          <p class="icon-text">line-chart</p>
+        </li>
+        <li class="icon-item" title="lock-shape">
+          <span class="icon bcs-icon bcs-icon-lock-shape"></span>
+          <p class="icon-text">lock-shape</p>
+        </li>
+        <li class="icon-item" title="list">
+          <span class="icon bcs-icon bcs-icon-list"></span>
+          <p class="icon-text">list</p>
+        </li>
+        <li class="icon-item" title="lock">
+          <span class="icon bcs-icon bcs-icon-lock"></span>
+          <p class="icon-text">lock</p>
+        </li>
+        <li class="icon-item" title="manage-center">
+          <span class="icon bcs-icon bcs-icon-manage-center"></span>
+          <p class="icon-text">manage-center</p>
+        </li>
+        <li class="icon-item" title="minus-circle-shape">
+          <span class="icon bcs-icon bcs-icon-minus-circle-shape"></span>
+          <p class="icon-text">minus-circle-shape</p>
+        </li>
+        <li class="icon-item" title="minus-circle">
+          <span class="icon bcs-icon bcs-icon-minus-circle"></span>
+          <p class="icon-text">minus-circle</p>
+        </li>
+        <li class="icon-item" title="minus-square-shape">
+          <span class="icon bcs-icon bcs-icon-minus-square-shape"></span>
+          <p class="icon-text">minus-square-shape</p>
+        </li>
+        <li class="icon-item" title="minus-square">
+          <span class="icon bcs-icon bcs-icon-minus-square"></span>
+          <p class="icon-text">minus-square</p>
+        </li>
+        <li class="icon-item" title="minus">
+          <span class="icon bcs-icon bcs-icon-minus"></span>
+          <p class="icon-text">minus</p>
+        </li>
+        <li class="icon-item" title="mobile">
+          <span class="icon bcs-icon bcs-icon-mobile"></span>
+          <p class="icon-text">mobile</p>
+        </li>
+        <li class="icon-item" title="mobile-shape">
+          <span class="icon bcs-icon bcs-icon-mobile-shape"></span>
+          <p class="icon-text">mobile-shape</p>
+        </li>
+        <li class="icon-item" title="monitor-alarm">
+          <span class="icon bcs-icon bcs-icon-monitor-alarm"></span>
+          <p class="icon-text">monitor-alarm</p>
+        </li>
+        <li class="icon-item" title="monitor-dashboard">
+          <span class="icon bcs-icon bcs-icon-monitor-dashboard"></span>
+          <p class="icon-text">monitor-dashboard</p>
+        </li>
+        <li class="icon-item" title="monitor-list">
+          <span class="icon bcs-icon bcs-icon-monitor-list"></span>
+          <p class="icon-text">monitor-list</p>
+        </li>
+        <li class="icon-item" title="monitor-log">
+          <span class="icon bcs-icon bcs-icon-monitor-log"></span>
+          <p class="icon-text">monitor-log</p>
+        </li>
+        <li class="icon-item" title="monitor-metric">
+          <span class="icon bcs-icon bcs-icon-monitor-metric"></span>
+          <p class="icon-text">monitor-metric</p>
+        </li>
+        <li class="icon-item" title="monitor-notice">
+          <span class="icon bcs-icon bcs-icon-monitor-notice"></span>
+          <p class="icon-text">monitor-notice</p>
+        </li>
+        <li class="icon-item" title="monitor-rule">
+          <span class="icon bcs-icon bcs-icon-monitor-rule"></span>
+          <p class="icon-text">monitor-rule</p>
+        </li>
+        <li class="icon-item" title="monitor-shield">
+          <span class="icon bcs-icon bcs-icon-monitor-shield"></span>
+          <p class="icon-text">monitor-shield</p>
+        </li>
+        <li class="icon-item" title="monitors-cog">
+          <span class="icon bcs-icon bcs-icon-monitors-cog"></span>
+          <p class="icon-text">monitors-cog</p>
+        </li>
+        <li class="icon-item" title="monitors">
+          <span class="icon bcs-icon bcs-icon-monitors"></span>
+          <p class="icon-text">monitors</p>
+        </li>
+        <li class="icon-item" title="more">
+          <span class="icon bcs-icon bcs-icon-more"></span>
+          <p class="icon-text">more</p>
+        </li>
+        <li class="icon-item" title="move">
+          <span class="icon bcs-icon bcs-icon-move"></span>
+          <p class="icon-text">move</p>
+        </li>
+        <li class="icon-item" title="my-approve">
+          <span class="icon bcs-icon bcs-icon-my-approve"></span>
+          <p class="icon-text">my-approve</p>
+        </li>
+        <li class="icon-item" title="my-perm">
+          <span class="icon bcs-icon bcs-icon-my-perm"></span>
+          <p class="icon-text">my-perm</p>
+        </li>
+        <li class="icon-item" title="my-project">
+          <span class="icon bcs-icon bcs-icon-my-project"></span>
+          <p class="icon-text">my-project</p>
+        </li>
+        <li class="icon-item" title="my-resource">
+          <span class="icon bcs-icon bcs-icon-my-resource"></span>
+          <p class="icon-text">my-resource</p>
+        </li>
+        <li class="icon-item" title="namespace">
+          <span class="icon bcs-icon bcs-icon-namespace"></span>
+          <p class="icon-text">namespace</p>
+        </li>
+        <li class="icon-item" title="next-shape">
+          <span class="icon bcs-icon bcs-icon-next-shape"></span>
+          <p class="icon-text">next-shape</p>
+        </li>
+        <li class="icon-item" title="next">
+          <span class="icon bcs-icon bcs-icon-next"></span>
+          <p class="icon-text">next</p>
+        </li>
+        <li class="icon-item" title="notification">
+          <span class="icon bcs-icon bcs-icon-notification"></span>
+          <p class="icon-text">notification</p>
+        </li>
+        <li class="icon-item" title="order-shape">
+          <span class="icon bcs-icon bcs-icon-order-shape"></span>
+          <p class="icon-text">order-shape</p>
+        </li>
+        <li class="icon-item" title="operate-audit">
+          <span class="icon bcs-icon bcs-icon-operate-audit"></span>
+          <p class="icon-text">operate-audit</p>
+        </li>
+        <li class="icon-item" title="order">
+          <span class="icon bcs-icon bcs-icon-order"></span>
+          <p class="icon-text">order</p>
+        </li>
+        <li class="icon-item" title="panel-permission">
+          <span class="icon bcs-icon bcs-icon-panel-permission"></span>
+          <p class="icon-text">panel-permission</p>
+        </li>
+        <li class="icon-item" title="panel">
+          <span class="icon bcs-icon bcs-icon-panel"></span>
+          <p class="icon-text">panel</p>
+        </li>
+        <li class="icon-item" title="panel-shape">
+          <span class="icon bcs-icon bcs-icon-panel-shape"></span>
+          <p class="icon-text">panel-shape</p>
+        </li>
+        <li class="icon-item" title="panels">
+          <span class="icon bcs-icon bcs-icon-panels"></span>
+          <p class="icon-text">panels</p>
+        </li>
+        <li class="icon-item" title="password-shape">
+          <span class="icon bcs-icon bcs-icon-password-shape"></span>
+          <p class="icon-text">password-shape</p>
+        </li>
+        <li class="icon-item" title="password">
+          <span class="icon bcs-icon bcs-icon-password"></span>
+          <p class="icon-text">password</p>
+        </li>
+        <li class="icon-item" title="pause">
+          <span class="icon bcs-icon bcs-icon-pause"></span>
+          <p class="icon-text">pause</p>
+        </li>
+        <li class="icon-item" title="pc-shape">
+          <span class="icon bcs-icon bcs-icon-pc-shape"></span>
+          <p class="icon-text">pc-shape</p>
+        </li>
+        <li class="icon-item" title="pipeline-shape">
+          <span class="icon bcs-icon bcs-icon-pipeline-shape"></span>
+          <p class="icon-text">pipeline-shape</p>
+        </li>
+        <li class="icon-item" title="pipeline">
+          <span class="icon bcs-icon bcs-icon-pipeline"></span>
+          <p class="icon-text">pipeline</p>
+        </li>
+        <li class="icon-item" title="play-shape">
+          <span class="icon bcs-icon bcs-icon-play-shape"></span>
+          <p class="icon-text">play-shape</p>
+        </li>
+        <li class="icon-item" title="play-circle-shape">
+          <span class="icon bcs-icon bcs-icon-play-circle-shape"></span>
+          <p class="icon-text">play-circle-shape</p>
+        </li>
+        <li class="icon-item" title="play">
+          <span class="icon bcs-icon bcs-icon-play"></span>
+          <p class="icon-text">play</p>
+        </li>
+        <li class="icon-item" title="play2">
+          <span class="icon bcs-icon bcs-icon-play2"></span>
+          <p class="icon-text">play2</p>
+        </li>
+        <li class="icon-item" title="play3">
+          <span class="icon bcs-icon bcs-icon-play3"></span>
+          <p class="icon-text">play3</p>
+        </li>
+        <li class="icon-item" title="plus-circle-shape">
+          <span class="icon bcs-icon bcs-icon-plus-circle-shape"></span>
+          <p class="icon-text">plus-circle-shape</p>
+        </li>
+        <li class="icon-item" title="plus-circle">
+          <span class="icon bcs-icon bcs-icon-plus-circle"></span>
+          <p class="icon-text">plus-circle</p>
+        </li>
+        <li class="icon-item" title="plus-square-shape">
+          <span class="icon bcs-icon bcs-icon-plus-square-shape"></span>
+          <p class="icon-text">plus-square-shape</p>
+        </li>
+        <li class="icon-item" title="plus">
+          <span class="icon bcs-icon bcs-icon-plus"></span>
+          <p class="icon-text">plus</p>
+        </li>
+        <li class="icon-item" title="plus-square">
+          <span class="icon bcs-icon bcs-icon-plus-square"></span>
+          <p class="icon-text">plus-square</p>
+        </li>
+        <li class="icon-item" title="project">
+          <span class="icon bcs-icon bcs-icon-project"></span>
+          <p class="icon-text">project</p>
+        </li>
+        <li class="icon-item" title="pz-config">
+          <span class="icon bcs-icon bcs-icon-pz-config"></span>
+          <p class="icon-text">pz-config</p>
+        </li>
+        <li class="icon-item" title="qq-shape">
+          <span class="icon bcs-icon bcs-icon-qq-shape"></span>
+          <p class="icon-text">qq-shape</p>
+        </li>
+        <li class="icon-item" title="question-circle-shape">
+          <span class="icon bcs-icon bcs-icon-question-circle-shape"></span>
+          <p class="icon-text">question-circle-shape</p>
+        </li>
+        <li class="icon-item" title="qq">
+          <span class="icon bcs-icon bcs-icon-qq"></span>
+          <p class="icon-text">qq</p>
+        </li>
+        <li class="icon-item" title="question-circle">
+          <span class="icon bcs-icon bcs-icon-question-circle"></span>
+          <p class="icon-text">question-circle</p>
+        </li>
+        <li class="icon-item" title="question">
+          <span class="icon bcs-icon bcs-icon-question"></span>
+          <p class="icon-text">question</p>
+        </li>
+        <li class="icon-item" title="refresh">
+          <span class="icon bcs-icon bcs-icon-refresh"></span>
+          <p class="icon-text">refresh</p>
+        </li>
+        <li class="icon-item" title="right-shape">
+          <span class="icon bcs-icon bcs-icon-right-shape"></span>
+          <p class="icon-text">right-shape</p>
+        </li>
+        <li class="icon-item" title="rtx">
+          <span class="icon bcs-icon bcs-icon-rtx"></span>
+          <p class="icon-text">rtx</p>
+        </li>
+        <li class="icon-item" title="save-shape">
+          <span class="icon bcs-icon bcs-icon-save-shape"></span>
+          <p class="icon-text">save-shape</p>
+        </li>
+        <li class="icon-item" title="save">
+          <span class="icon bcs-icon bcs-icon-save"></span>
+          <p class="icon-text">save</p>
+        </li>
+        <li class="icon-item" title="script-file">
+          <span class="icon bcs-icon bcs-icon-script-file"></span>
+          <p class="icon-text">script-file</p>
+        </li>
+        <li class="icon-item" title="script-files">
+          <span class="icon bcs-icon bcs-icon-script-files"></span>
+          <p class="icon-text">script-files</p>
+        </li>
+        <li class="icon-item" title="search">
+          <span class="icon bcs-icon bcs-icon-search"></span>
+          <p class="icon-text">search</p>
+        </li>
+        <li class="icon-item" title="sina-shape">
+          <span class="icon bcs-icon bcs-icon-sina-shape"></span>
+          <p class="icon-text">sina-shape</p>
+        </li>
+        <li class="icon-item" title="sina">
+          <span class="icon bcs-icon bcs-icon-sina"></span>
+          <p class="icon-text">sina</p>
+        </li>
+        <li class="icon-item" title="sitemap-shape">
+          <span class="icon bcs-icon bcs-icon-sitemap-shape"></span>
+          <p class="icon-text">sitemap-shape</p>
+        </li>
+        <li class="icon-item" title="smile-shape">
+          <span class="icon bcs-icon bcs-icon-smile-shape"></span>
+          <p class="icon-text">smile-shape</p>
+        </li>
+        <li class="icon-item" title="sitemap">
+          <span class="icon bcs-icon bcs-icon-sitemap"></span>
+          <p class="icon-text">sitemap</p>
+        </li>
+        <li class="icon-item" title="smile">
+          <span class="icon bcs-icon bcs-icon-smile"></span>
+          <p class="icon-text">smile</p>
+        </li>
+        <li class="icon-item" title="sort">
+          <span class="icon bcs-icon bcs-icon-sort"></span>
+          <p class="icon-text">sort</p>
+        </li>
+        <li class="icon-item" title="star-shape">
+          <span class="icon bcs-icon bcs-icon-star-shape"></span>
+          <p class="icon-text">star-shape</p>
+        </li>
+        <li class="icon-item" title="star">
+          <span class="icon bcs-icon bcs-icon-star"></span>
+          <p class="icon-text">star</p>
+        </li>
+        <li class="icon-item" title="stop">
+          <span class="icon bcs-icon bcs-icon-stop"></span>
+          <p class="icon-text">stop</p>
+        </li>
+        <li class="icon-item" title="stop-shape">
+          <span class="icon bcs-icon bcs-icon-stop-shape"></span>
+          <p class="icon-text">stop-shape</p>
+        </li>
+        <li class="icon-item" title="templateset">
+          <span class="icon bcs-icon bcs-icon-templateset"></span>
+          <p class="icon-text">templateset</p>
+        </li>
+        <li class="icon-item" title="tree-application-shape">
+          <span class="icon bcs-icon bcs-icon-tree-application-shape"></span>
+          <p class="icon-text">tree-application-shape</p>
+        </li>
+        <li class="icon-item" title="tree-application">
+          <span class="icon bcs-icon bcs-icon-tree-application"></span>
+          <p class="icon-text">tree-application</p>
+        </li>
+        <li class="icon-item" title="tree-group">
+          <span class="icon bcs-icon bcs-icon-tree-group"></span>
+          <p class="icon-text">tree-group</p>
+        </li>
+        <li class="icon-item" title="tree-group-shape">
+          <span class="icon bcs-icon bcs-icon-tree-group-shape"></span>
+          <p class="icon-text">tree-group-shape</p>
+        </li>
+        <li class="icon-item" title="tree-module-shape">
+          <span class="icon bcs-icon bcs-icon-tree-module-shape"></span>
+          <p class="icon-text">tree-module-shape</p>
+        </li>
+        <li class="icon-item" title="tree-module">
+          <span class="icon bcs-icon bcs-icon-tree-module"></span>
+          <p class="icon-text">tree-module</p>
+        </li>
+        <li class="icon-item" title="tree-process-shape">
+          <span class="icon bcs-icon bcs-icon-tree-process-shape"></span>
+          <p class="icon-text">tree-process-shape</p>
+        </li>
+        <li class="icon-item" title="tree-process">
+          <span class="icon bcs-icon bcs-icon-tree-process"></span>
+          <p class="icon-text">tree-process</p>
+        </li>
+        <li class="icon-item" title="un-full-screen">
+          <span class="icon bcs-icon bcs-icon-un-full-screen"></span>
+          <p class="icon-text">un-full-screen</p>
+        </li>
+        <li class="icon-item" title="unlock-shape">
+          <span class="icon bcs-icon bcs-icon-unlock-shape"></span>
+          <p class="icon-text">unlock-shape</p>
+        </li>
+        <li class="icon-item" title="unlock">
+          <span class="icon bcs-icon bcs-icon-unlock"></span>
+          <p class="icon-text">unlock</p>
+        </li>
+        <li class="icon-item" title="up-shape">
+          <span class="icon bcs-icon bcs-icon-up-shape"></span>
+          <p class="icon-text">up-shape</p>
+        </li>
+        <li class="icon-item" title="upload">
+          <span class="icon bcs-icon bcs-icon-upload"></span>
+          <p class="icon-text">upload</p>
+        </li>
+        <li class="icon-item" title="user-list-detail">
+          <span class="icon bcs-icon bcs-icon-user-list-detail"></span>
+          <p class="icon-text">user-list-detail</p>
+        </li>
+        <li class="icon-item" title="user-shape">
+          <span class="icon bcs-icon bcs-icon-user-shape"></span>
+          <p class="icon-text">user-shape</p>
+        </li>
+        <li class="icon-item" title="user">
+          <span class="icon bcs-icon bcs-icon-user"></span>
+          <p class="icon-text">user</p>
+        </li>
+        <li class="icon-item" title="var">
+          <span class="icon bcs-icon bcs-icon-var"></span>
+          <p class="icon-text">var</p>
+        </li>
+        <li class="icon-item" title="weixin">
+          <span class="icon bcs-icon bcs-icon-weixin"></span>
+          <p class="icon-text">weixin</p>
+        </li>
+        <li class="icon-item" title="weixin-shape">
+          <span class="icon bcs-icon bcs-icon-weixin-shape"></span>
+          <p class="icon-text">weixin-shape</p>
+        </li>
+        <li class="icon-item" title="wl-network">
+          <span class="icon bcs-icon bcs-icon-wl-network"></span>
+          <p class="icon-text">wl-network</p>
+        </li>
+        <li class="icon-item" title="work-manage">
+          <span class="icon bcs-icon bcs-icon-work-manage"></span>
+          <p class="icon-text">work-manage</p>
+        </li>
+        <li class="icon-item" title="yy-apply">
+          <span class="icon bcs-icon bcs-icon-yy-apply"></span>
+          <p class="icon-text">yy-apply</p>
+        </li>
+        <li class="icon-item" title="zy-resource">
+          <span class="icon bcs-icon bcs-icon-zy-resource"></span>
+          <p class="icon-text">zy-resource</p>
+        </li>
+        <li class="icon-item" title="crd">
+          <span class="icon bcs-icon bcs-icon-crd"></span>
+          <p class="icon-text">crd</p>
+        </li>
+        <li class="icon-item" title="crd1">
+          <span class="icon bcs-icon bcs-icon-crd1"></span>
+          <p class="icon-text">crd1</p>
+        </li>
+        <li class="icon-item" title="hpa">
+          <span class="icon bcs-icon bcs-icon-hpa"></span>
+          <p class="icon-text">hpa</p>
+        </li>
+        <li class="icon-item" title="log-collection">
+          <span class="icon bcs-icon bcs-icon-log-collection"></span>
+          <p class="icon-text">log-collection</p>
+        </li>
+        <li class="icon-item" title="lock-line">
+          <span class="icon bcs-icon bcs-icon-lock-line"></span>
+          <p class="icon-text">lock-line</p>
+        </li>
+        <li class="icon-item" title="binding">
+          <span class="icon bcs-icon bcs-icon-binding"></span>
+          <p class="icon-text">binding</p>
+        </li>
+        <li class="icon-item" title="auth">
+          <span class="icon bcs-icon bcs-icon-auth"></span>
+          <p class="icon-text">auth</p>
+        </li>
+        <li class="icon-item" title="wiki">
+          <span class="icon bcs-icon bcs-icon-wiki"></span>
+          <p class="icon-text">wiki</p>
+        </li>
+        <li class="icon-item" title="qiehuan">
+          <span class="icon bcs-icon bcs-icon-qiehuan"></span>
+          <p class="icon-text">qiehuan</p>
+        </li>
+        <li class="icon-item" title="quanbujiqun">
+          <span class="icon bcs-icon bcs-icon-quanbujiqun"></span>
+          <p class="icon-text">quanbujiqun</p>
+        </li>
+        <li class="icon-item" title="prom">
+          <span class="icon bcs-icon bcs-icon-prom"></span>
+          <p class="icon-text">prom</p>
+        </li>
+        <li class="icon-item" title="log">
+          <span class="icon bcs-icon bcs-icon-log"></span>
+          <p class="icon-text">log</p>
+        </li>
+        <li class="icon-item" title="bh">
+          <span class="icon bcs-icon bcs-icon-bh"></span>
+          <p class="icon-text">bh</p>
+        </li>
+        <li class="icon-item" title="bi-2">
+          <span class="icon bcs-icon bcs-icon-bi-2"></span>
+          <p class="icon-text">bi-2</p>
+        </li>
+        <li class="icon-item" title="db-auth">
+          <span class="icon bcs-icon bcs-icon-db-auth"></span>
+          <p class="icon-text">db-auth</p>
+        </li>
+        <li class="icon-item" title="gss">
+          <span class="icon bcs-icon bcs-icon-gss"></span>
+          <p class="icon-text">gss</p>
+        </li>
+        <li class="icon-item" title="gd">
+          <span class="icon bcs-icon bcs-icon-gd"></span>
+          <p class="icon-text">gd</p>
+        </li>
+        <li class="icon-item" title="pol">
+          <span class="icon bcs-icon bcs-icon-pol"></span>
+          <p class="icon-text">pol</p>
+        </li>
+        <li class="icon-item" title="copy">
+          <span class="icon bcs-icon bcs-icon-copy"></span>
+          <p class="icon-text">copy</p>
+        </li>
+        <li class="icon-item" title="prompt">
+          <span class="icon bcs-icon bcs-icon-prompt"></span>
+          <p class="icon-text">prompt</p>
+        </li>
+        <li class="icon-item" title="help-2">
+          <span class="icon bcs-icon bcs-icon-help-2"></span>
+          <p class="icon-text">help-2</p>
+        </li>
+        <li class="icon-item" title="zoom-out">
+          <span class="icon bcs-icon bcs-icon-zoom-out"></span>
+          <p class="icon-text">zoom-out</p>
+        </li>
+        <li class="icon-item" title="upload-2">
+          <span class="icon bcs-icon bcs-icon-upload-2"></span>
+          <p class="icon-text">upload-2</p>
+        </li>
+        <li class="icon-item" title="enlarge">
+          <span class="icon bcs-icon bcs-icon-enlarge"></span>
+          <p class="icon-text">enlarge</p>
+        </li>
+        <li class="icon-item" title="code-example">
+          <span class="icon bcs-icon bcs-icon-code-example"></span>
+          <p class="icon-text">code-example</p>
+        </li>
+        <li class="icon-item" title="reset">
+          <span class="icon bcs-icon bcs-icon-reset"></span>
+          <p class="icon-text">reset</p>
+        </li>
+        <li class="icon-item" title="close-5">
+          <span class="icon bcs-icon bcs-icon-close-5"></span>
+          <p class="icon-text">close-5</p>
+        </li>
+        <li class="icon-item" title="customize">
+          <span class="icon bcs-icon bcs-icon-customize"></span>
+          <p class="icon-text">customize</p>
+        </li>
+        <li class="icon-item" title="help-document-fill">
+          <span class="icon bcs-icon bcs-icon-help-document-fill"></span>
+          <p class="icon-text">help-document-fill</p>
+        </li>
+        <li class="icon-item" title="lang-en">
+          <span class="icon bcs-icon bcs-icon-lang-en"></span>
+          <p class="icon-text">lang-en</p>
+        </li>
+        <li class="icon-item" title="lang-ch">
+          <span class="icon bcs-icon bcs-icon-lang-ch"></span>
+          <p class="icon-text">lang-ch</p>
+        </li>
+      </ul>
+      <h3 class="describe-title">为什么使用</h3>
+      <ul class="use-describe">
+        <li>弹性，在网页或者 app 上，展示字体是很便捷的。用字体图标可以很方便的改变 icon 的颜色，或者加入一些其他的效果</li>
+        <li>可缩放，可以很方便的改变图标的大小</li>
+        <li>矢量，字体图标是矢量的并且具有独立的分辨率，不管在高分辨率还是低分辨率，不管是在网页还是手机端，都具有很好的展示效果，不会出现锯齿或者马赛克模糊</li>
+        <li>节省加载时间，字体图标很小，每个小图标只有几 kb，大大节省了加载时间</li>
+      </ul>
+      <h3 class="describe-title">如何使用</h3>
+      <ul class="use-describe">
+        <li>将整个目录复制到您的项目里</li>
+        <li>引入 style.css</li>
+        <li>挑选相应图标并获取类名，如 .bk-icon .icon-demo</li>
+      </ul>
+    </section>
+    <section class="tab-content multiple-color"  data-type="multipleColor">
+      <ul class="icon-list">
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-data"></use>
+          </svg>
+          <p class="icon-text">data</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-alarm-error"></use>
+          </svg>
+          <p class="icon-text">alarm-error</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-alarm-insufficient"></use>
+          </svg>
+          <p class="icon-text">alarm-insufficient</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-alarm-normal"></use>
+          </svg>
+          <p class="icon-text">alarm-normal</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-double-down"></use>
+          </svg>
+          <p class="icon-text">angle-double-down</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-double-left"></use>
+          </svg>
+          <p class="icon-text">angle-double-left</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-double-up"></use>
+          </svg>
+          <p class="icon-text">angle-double-up</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-double-right"></use>
+          </svg>
+          <p class="icon-text">angle-double-right</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-down"></use>
+          </svg>
+          <p class="icon-text">angle-down</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-left"></use>
+          </svg>
+          <p class="icon-text">angle-left</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-right"></use>
+          </svg>
+          <p class="icon-text">angle-right</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-angle-up"></use>
+          </svg>
+          <p class="icon-text">angle-up</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-apply-join-project"></use>
+          </svg>
+          <p class="icon-text">apply-join-project</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-apply-perm"></use>
+          </svg>
+          <p class="icon-text">apply-perm</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-apply-record"></use>
+          </svg>
+          <p class="icon-text">apply-record</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-apps-shape"></use>
+          </svg>
+          <p class="icon-text">apps-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-apps"></use>
+          </svg>
+          <p class="icon-text">apps</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-area-chart"></use>
+          </svg>
+          <p class="icon-text">area-chart</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-down-circle-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-down-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-down-circle"></use>
+          </svg>
+          <p class="icon-text">arrows-down-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-down-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-down-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-down"></use>
+          </svg>
+          <p class="icon-text">arrows-down</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-left-circle-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-left-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-left-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-left-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-left-circle"></use>
+          </svg>
+          <p class="icon-text">arrows-left-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-left"></use>
+          </svg>
+          <p class="icon-text">arrows-left</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-m-down-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-m-down-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-m-left-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-m-left-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-m-right-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-m-right-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-m-up-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-m-up-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-right-circle-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-right-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-right-circle"></use>
+          </svg>
+          <p class="icon-text">arrows-right-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-right-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-right-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-right"></use>
+          </svg>
+          <p class="icon-text">arrows-right</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-up-circle-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-up-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-up-circle"></use>
+          </svg>
+          <p class="icon-text">arrows-up-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-up-shape"></use>
+          </svg>
+          <p class="icon-text">arrows-up-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-arrows-up"></use>
+          </svg>
+          <p class="icon-text">arrows-up</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-back-shape"></use>
+          </svg>
+          <p class="icon-text">back-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-back"></use>
+          </svg>
+          <p class="icon-text">back</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-back2"></use>
+          </svg>
+          <p class="icon-text">back2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-bar-chart"></use>
+          </svg>
+          <p class="icon-text">bar-chart</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-bk"></use>
+          </svg>
+          <p class="icon-text">bk</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-block-shape"></use>
+          </svg>
+          <p class="icon-text">block-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-calendar-shape"></use>
+          </svg>
+          <p class="icon-text">calendar-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-calendar"></use>
+          </svg>
+          <p class="icon-text">calendar</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-chain"></use>
+          </svg>
+          <p class="icon-text">chain</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-check-1"></use>
+          </svg>
+          <p class="icon-text">check-1</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-check-circle-shape"></use>
+          </svg>
+          <p class="icon-text">check-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-check-circle"></use>
+          </svg>
+          <p class="icon-text">check-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-circle-4-1"></use>
+          </svg>
+          <p class="icon-text">circle-4-1</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-circle-2-1"></use>
+          </svg>
+          <p class="icon-text">circle-2-1</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-circle-shape"></use>
+          </svg>
+          <p class="icon-text">circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-circle"></use>
+          </svg>
+          <p class="icon-text">circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-clipboard-shape"></use>
+          </svg>
+          <p class="icon-text">clipboard-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-ck-store"></use>
+          </svg>
+          <p class="icon-text">ck-store</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-clipboard"></use>
+          </svg>
+          <p class="icon-text">clipboard</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-clock-shape"></use>
+          </svg>
+          <p class="icon-text">clock-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-clock"></use>
+          </svg>
+          <p class="icon-text">clock</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-close-circle-shape"></use>
+          </svg>
+          <p class="icon-text">close-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-close-circle"></use>
+          </svg>
+          <p class="icon-text">close-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-close"></use>
+          </svg>
+          <p class="icon-text">close</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-close3-shape"></use>
+          </svg>
+          <p class="icon-text">close3-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-code"></use>
+          </svg>
+          <p class="icon-text">code</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-cog-shape"></use>
+          </svg>
+          <p class="icon-text">cog-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-control-center"></use>
+          </svg>
+          <p class="icon-text">control-center</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-cog"></use>
+          </svg>
+          <p class="icon-text">cog</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-cry"></use>
+          </svg>
+          <p class="icon-text">cry</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-cry-shape"></use>
+          </svg>
+          <p class="icon-text">cry-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dashboard-2-shape"></use>
+          </svg>
+          <p class="icon-text">dashboard-2-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dashboard-2"></use>
+          </svg>
+          <p class="icon-text">dashboard-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dashboard-shape"></use>
+          </svg>
+          <p class="icon-text">dashboard-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dashboard"></use>
+          </svg>
+          <p class="icon-text">dashboard</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-data-shape"></use>
+          </svg>
+          <p class="icon-text">data-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-data"></use>
+          </svg>
+          <p class="icon-text">data</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-data2-shape"></use>
+          </svg>
+          <p class="icon-text">data2-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-data2"></use>
+          </svg>
+          <p class="icon-text">data2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dedent"></use>
+          </svg>
+          <p class="icon-text">dedent</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-delete"></use>
+          </svg>
+          <p class="icon-text">delete</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dialogue-empty-shape"></use>
+          </svg>
+          <p class="icon-text">dialogue-empty-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dialogue-empty"></use>
+          </svg>
+          <p class="icon-text">dialogue-empty</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dialogue"></use>
+          </svg>
+          <p class="icon-text">dialogue</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dialogue-shape"></use>
+          </svg>
+          <p class="icon-text">dialogue-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dispirited"></use>
+          </svg>
+          <p class="icon-text">dispirited</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-dispirited-shape"></use>
+          </svg>
+          <p class="icon-text">dispirited-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-docker"></use>
+          </svg>
+          <p class="icon-text">docker</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-down-shape"></use>
+          </svg>
+          <p class="icon-text">down-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-download"></use>
+          </svg>
+          <p class="icon-text">download</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-edit"></use>
+          </svg>
+          <p class="icon-text">edit</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-ellipsis"></use>
+          </svg>
+          <p class="icon-text">ellipsis</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-edit2"></use>
+          </svg>
+          <p class="icon-text">edit2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-email-shape"></use>
+          </svg>
+          <p class="icon-text">email-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-email"></use>
+          </svg>
+          <p class="icon-text">email</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-empty-shape"></use>
+          </svg>
+          <p class="icon-text">empty-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-empty"></use>
+          </svg>
+          <p class="icon-text">empty</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-end"></use>
+          </svg>
+          <p class="icon-text">end</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-event-query"></use>
+          </svg>
+          <p class="icon-text">event-query</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-exclamation-circle"></use>
+          </svg>
+          <p class="icon-text">exclamation-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-exclamation-circle-shape"></use>
+          </svg>
+          <p class="icon-text">exclamation-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-exclamation-triangle-shape"></use>
+          </svg>
+          <p class="icon-text">exclamation-triangle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-exclamation-triangle"></use>
+          </svg>
+          <p class="icon-text">exclamation-triangle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-exclamation"></use>
+          </svg>
+          <p class="icon-text">exclamation</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-execute"></use>
+          </svg>
+          <p class="icon-text">execute</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-eye-shape"></use>
+          </svg>
+          <p class="icon-text">eye-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-eye-slash-shape"></use>
+          </svg>
+          <p class="icon-text">eye-slash-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-eye-slash"></use>
+          </svg>
+          <p class="icon-text">eye-slash</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-eye"></use>
+          </svg>
+          <p class="icon-text">eye</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-feedback"></use>
+          </svg>
+          <p class="icon-text">feedback</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-file-plus-shape"></use>
+          </svg>
+          <p class="icon-text">file-plus-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-file-plus"></use>
+          </svg>
+          <p class="icon-text">file-plus</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-file-shape"></use>
+          </svg>
+          <p class="icon-text">file-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-file"></use>
+          </svg>
+          <p class="icon-text">file</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-folder-open-shape"></use>
+          </svg>
+          <p class="icon-text">folder-open-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-folder-open"></use>
+          </svg>
+          <p class="icon-text">folder-open</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-folder-plus-shape"></use>
+          </svg>
+          <p class="icon-text">folder-plus-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-folder-plus"></use>
+          </svg>
+          <p class="icon-text">folder-plus</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-folder"></use>
+          </svg>
+          <p class="icon-text">folder</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-folder-shape"></use>
+          </svg>
+          <p class="icon-text">folder-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-heart-shape"></use>
+          </svg>
+          <p class="icon-text">heart-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-full-screen"></use>
+          </svg>
+          <p class="icon-text">full-screen</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-heart"></use>
+          </svg>
+          <p class="icon-text">heart</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-helm"></use>
+          </svg>
+          <p class="icon-text">helm</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-helper"></use>
+          </svg>
+          <p class="icon-text">helper</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-hide"></use>
+          </svg>
+          <p class="icon-text">hide</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-home-shape"></use>
+          </svg>
+          <p class="icon-text">home-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-home"></use>
+          </svg>
+          <p class="icon-text">home</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-id-shape"></use>
+          </svg>
+          <p class="icon-text">id-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-image-shape"></use>
+          </svg>
+          <p class="icon-text">image-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-id"></use>
+          </svg>
+          <p class="icon-text">id</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-image"></use>
+          </svg>
+          <p class="icon-text">image</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-indent"></use>
+          </svg>
+          <p class="icon-text">indent</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-info-circle-shape"></use>
+          </svg>
+          <p class="icon-text">info-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-info-circle"></use>
+          </svg>
+          <p class="icon-text">info-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-info"></use>
+          </svg>
+          <p class="icon-text">info</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-jd-node"></use>
+          </svg>
+          <p class="icon-text">jd-node</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-jq-colony"></use>
+          </svg>
+          <p class="icon-text">jq-colony</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-key"></use>
+          </svg>
+          <p class="icon-text">key</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-left-shape"></use>
+          </svg>
+          <p class="icon-text">left-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-line-chart"></use>
+          </svg>
+          <p class="icon-text">line-chart</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-lock-shape"></use>
+          </svg>
+          <p class="icon-text">lock-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-list"></use>
+          </svg>
+          <p class="icon-text">list</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-lock"></use>
+          </svg>
+          <p class="icon-text">lock</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-manage-center"></use>
+          </svg>
+          <p class="icon-text">manage-center</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-minus-circle-shape"></use>
+          </svg>
+          <p class="icon-text">minus-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-minus-circle"></use>
+          </svg>
+          <p class="icon-text">minus-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-minus-square-shape"></use>
+          </svg>
+          <p class="icon-text">minus-square-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-minus-square"></use>
+          </svg>
+          <p class="icon-text">minus-square</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-minus"></use>
+          </svg>
+          <p class="icon-text">minus</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-mobile"></use>
+          </svg>
+          <p class="icon-text">mobile</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-mobile-shape"></use>
+          </svg>
+          <p class="icon-text">mobile-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-alarm"></use>
+          </svg>
+          <p class="icon-text">monitor-alarm</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-dashboard"></use>
+          </svg>
+          <p class="icon-text">monitor-dashboard</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-list"></use>
+          </svg>
+          <p class="icon-text">monitor-list</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-log"></use>
+          </svg>
+          <p class="icon-text">monitor-log</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-metric"></use>
+          </svg>
+          <p class="icon-text">monitor-metric</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-notice"></use>
+          </svg>
+          <p class="icon-text">monitor-notice</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-rule"></use>
+          </svg>
+          <p class="icon-text">monitor-rule</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitor-shield"></use>
+          </svg>
+          <p class="icon-text">monitor-shield</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitors-cog"></use>
+          </svg>
+          <p class="icon-text">monitors-cog</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-monitors"></use>
+          </svg>
+          <p class="icon-text">monitors</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-more"></use>
+          </svg>
+          <p class="icon-text">more</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-move"></use>
+          </svg>
+          <p class="icon-text">move</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-my-approve"></use>
+          </svg>
+          <p class="icon-text">my-approve</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-my-perm"></use>
+          </svg>
+          <p class="icon-text">my-perm</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-my-project"></use>
+          </svg>
+          <p class="icon-text">my-project</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-my-resource"></use>
+          </svg>
+          <p class="icon-text">my-resource</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-namespace"></use>
+          </svg>
+          <p class="icon-text">namespace</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-next-shape"></use>
+          </svg>
+          <p class="icon-text">next-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-next"></use>
+          </svg>
+          <p class="icon-text">next</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-notification"></use>
+          </svg>
+          <p class="icon-text">notification</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-order-shape"></use>
+          </svg>
+          <p class="icon-text">order-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-operate-audit"></use>
+          </svg>
+          <p class="icon-text">operate-audit</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-order"></use>
+          </svg>
+          <p class="icon-text">order</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-panel-permission"></use>
+          </svg>
+          <p class="icon-text">panel-permission</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-panel"></use>
+          </svg>
+          <p class="icon-text">panel</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-panel-shape"></use>
+          </svg>
+          <p class="icon-text">panel-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-panels"></use>
+          </svg>
+          <p class="icon-text">panels</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-password-shape"></use>
+          </svg>
+          <p class="icon-text">password-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-password"></use>
+          </svg>
+          <p class="icon-text">password</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-pause"></use>
+          </svg>
+          <p class="icon-text">pause</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-pc-shape"></use>
+          </svg>
+          <p class="icon-text">pc-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-pipeline-shape"></use>
+          </svg>
+          <p class="icon-text">pipeline-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-pipeline"></use>
+          </svg>
+          <p class="icon-text">pipeline</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-play-shape"></use>
+          </svg>
+          <p class="icon-text">play-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-play-circle-shape"></use>
+          </svg>
+          <p class="icon-text">play-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-play"></use>
+          </svg>
+          <p class="icon-text">play</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-play2"></use>
+          </svg>
+          <p class="icon-text">play2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-play3"></use>
+          </svg>
+          <p class="icon-text">play3</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-plus-circle-shape"></use>
+          </svg>
+          <p class="icon-text">plus-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-plus-circle"></use>
+          </svg>
+          <p class="icon-text">plus-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-plus-square-shape"></use>
+          </svg>
+          <p class="icon-text">plus-square-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-plus"></use>
+          </svg>
+          <p class="icon-text">plus</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-plus-square"></use>
+          </svg>
+          <p class="icon-text">plus-square</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-project"></use>
+          </svg>
+          <p class="icon-text">project</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-pz-config"></use>
+          </svg>
+          <p class="icon-text">pz-config</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-qq-shape"></use>
+          </svg>
+          <p class="icon-text">qq-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-question-circle-shape"></use>
+          </svg>
+          <p class="icon-text">question-circle-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-qq"></use>
+          </svg>
+          <p class="icon-text">qq</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-question-circle"></use>
+          </svg>
+          <p class="icon-text">question-circle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-question"></use>
+          </svg>
+          <p class="icon-text">question</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-refresh"></use>
+          </svg>
+          <p class="icon-text">refresh</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-right-shape"></use>
+          </svg>
+          <p class="icon-text">right-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-rtx"></use>
+          </svg>
+          <p class="icon-text">rtx</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-save-shape"></use>
+          </svg>
+          <p class="icon-text">save-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-save"></use>
+          </svg>
+          <p class="icon-text">save</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-script-file"></use>
+          </svg>
+          <p class="icon-text">script-file</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-script-files"></use>
+          </svg>
+          <p class="icon-text">script-files</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-search"></use>
+          </svg>
+          <p class="icon-text">search</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-sina-shape"></use>
+          </svg>
+          <p class="icon-text">sina-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-sina"></use>
+          </svg>
+          <p class="icon-text">sina</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-sitemap-shape"></use>
+          </svg>
+          <p class="icon-text">sitemap-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-smile-shape"></use>
+          </svg>
+          <p class="icon-text">smile-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-sitemap"></use>
+          </svg>
+          <p class="icon-text">sitemap</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-smile"></use>
+          </svg>
+          <p class="icon-text">smile</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-sort"></use>
+          </svg>
+          <p class="icon-text">sort</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-star-shape"></use>
+          </svg>
+          <p class="icon-text">star-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-star"></use>
+          </svg>
+          <p class="icon-text">star</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-stop"></use>
+          </svg>
+          <p class="icon-text">stop</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-stop-shape"></use>
+          </svg>
+          <p class="icon-text">stop-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-templateset"></use>
+          </svg>
+          <p class="icon-text">templateset</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-application-shape"></use>
+          </svg>
+          <p class="icon-text">tree-application-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-application"></use>
+          </svg>
+          <p class="icon-text">tree-application</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-group"></use>
+          </svg>
+          <p class="icon-text">tree-group</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-group-shape"></use>
+          </svg>
+          <p class="icon-text">tree-group-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-module-shape"></use>
+          </svg>
+          <p class="icon-text">tree-module-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-module"></use>
+          </svg>
+          <p class="icon-text">tree-module</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-process-shape"></use>
+          </svg>
+          <p class="icon-text">tree-process-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-tree-process"></use>
+          </svg>
+          <p class="icon-text">tree-process</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-un-full-screen"></use>
+          </svg>
+          <p class="icon-text">un-full-screen</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-unlock-shape"></use>
+          </svg>
+          <p class="icon-text">unlock-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-unlock"></use>
+          </svg>
+          <p class="icon-text">unlock</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-up-shape"></use>
+          </svg>
+          <p class="icon-text">up-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-upload"></use>
+          </svg>
+          <p class="icon-text">upload</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-user-list-detail"></use>
+          </svg>
+          <p class="icon-text">user-list-detail</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-user-shape"></use>
+          </svg>
+          <p class="icon-text">user-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-user"></use>
+          </svg>
+          <p class="icon-text">user</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-var"></use>
+          </svg>
+          <p class="icon-text">var</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-weixin"></use>
+          </svg>
+          <p class="icon-text">weixin</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-weixin-shape"></use>
+          </svg>
+          <p class="icon-text">weixin-shape</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-wl-network"></use>
+          </svg>
+          <p class="icon-text">wl-network</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-work-manage"></use>
+          </svg>
+          <p class="icon-text">work-manage</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-yy-apply"></use>
+          </svg>
+          <p class="icon-text">yy-apply</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-zy-resource"></use>
+          </svg>
+          <p class="icon-text">zy-resource</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-crd"></use>
+          </svg>
+          <p class="icon-text">crd</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-crd1"></use>
+          </svg>
+          <p class="icon-text">crd1</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-hpa"></use>
+          </svg>
+          <p class="icon-text">hpa</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-log-collection"></use>
+          </svg>
+          <p class="icon-text">log-collection</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-lock-line"></use>
+          </svg>
+          <p class="icon-text">lock-line</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-binding"></use>
+          </svg>
+          <p class="icon-text">binding</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-auth"></use>
+          </svg>
+          <p class="icon-text">auth</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-wiki"></use>
+          </svg>
+          <p class="icon-text">wiki</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-qiehuan"></use>
+          </svg>
+          <p class="icon-text">qiehuan</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-quanbujiqun"></use>
+          </svg>
+          <p class="icon-text">quanbujiqun</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-prom"></use>
+          </svg>
+          <p class="icon-text">prom</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-log"></use>
+          </svg>
+          <p class="icon-text">log</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-bh"></use>
+          </svg>
+          <p class="icon-text">bh</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-bi-2"></use>
+          </svg>
+          <p class="icon-text">bi-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-db-auth"></use>
+          </svg>
+          <p class="icon-text">db-auth</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-gss"></use>
+          </svg>
+          <p class="icon-text">gss</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-gd"></use>
+          </svg>
+          <p class="icon-text">gd</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-pol"></use>
+          </svg>
+          <p class="icon-text">pol</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-copy"></use>
+          </svg>
+          <p class="icon-text">copy</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-prompt"></use>
+          </svg>
+          <p class="icon-text">prompt</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-help-2"></use>
+          </svg>
+          <p class="icon-text">help-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-zoom-out"></use>
+          </svg>
+          <p class="icon-text">zoom-out</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-upload-2"></use>
+          </svg>
+          <p class="icon-text">upload-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-enlarge"></use>
+          </svg>
+          <p class="icon-text">enlarge</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-code-example"></use>
+          </svg>
+          <p class="icon-text">code-example</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-reset"></use>
+          </svg>
+          <p class="icon-text">reset</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-close-5"></use>
+          </svg>
+          <p class="icon-text">close-5</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-customize"></use>
+          </svg>
+          <p class="icon-text">customize</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-help-document-fill"></use>
+          </svg>
+          <p class="icon-text">help-document-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-lang-en"></use>
+          </svg>
+          <p class="icon-text">lang-en</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#bcs-icon-lang-ch"></use>
+          </svg>
+          <p class="icon-text">lang-ch</p>
+        </li>
+      </ul>
+      <h3 class="describe-title">为什么使用</h3>
+      <ul class="use-describe">
+          <li>支持彩色图标</li>
+          <li>跨 SVG 使用，使用 use 可调用文档中加载的所有 SVG 图标 </li>
+      </ul>
+      <h3 class="describe-title">如何使用</h3>
+      <ul class="use-describe">
+        <li>将下载的资源文件中 iconcool.js 文件外部资源通过 script 标签引入</li>
+        <li>在 html 模板文件中挑选对应的对应图标的名称使用，例如：
+          <pre>
+    &lt;svg aria-hidden="true"&gt;
+      &lt;use xlink:href="#icon-xxx"&gt;&lt;/use&gt;
+    &lt;/svg&gt;
+          </pre>
+        </li>
+      </ul>
+      </section>
+    </section>
+  </div>
+  <script>
+    document.addEventListener('click', function (e) {
+      if (event.target.classList.contains('tab-panel')) {
+        const type = event.target.dataset.type
+        const tabPanels = document.querySelectorAll('.tab-panel')
+        const tabContents = document.querySelectorAll('.tab-content')
+
+        tabPanels.forEach(function(item) {
+          item.classList.remove('active')
+        })
+
+        e.target.classList.add('active')
+        
+        tabContents.forEach(function (item) {
+          const contentType = item.dataset.type
+          if (contentType === type) {
+            item.classList.add('active')
+          } else {
+            item.classList.remove('active')
+          }
+        })
+      }
+      
+    })
+  </script>
+</body>
+</html>

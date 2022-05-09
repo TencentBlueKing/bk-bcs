@@ -17,20 +17,20 @@ import (
 	"time"
 )
 
+// BcsUser user table
 type BcsUser struct {
-	ID        uint      `json:"id" gorm:"primary_key"`
-	Name      string    `json:"name" gorm:"unique;not null"`
-	UserType  uint      `json:"user_type"`
-	UserToken string    `json:"user_token" gorm:"unique;size:64"`
-	CreatedAt time.Time `json:"created_at"` // 用户创建时间
-	UpdatedAt time.Time `json:"updated_at"` // user-token刷新时间
-	ExpiresAt time.Time `json:"expires_at"` // user-token过期时间
+	ID        uint       `json:"id" gorm:"primary_key"`
+	Name      string     `json:"name" gorm:"not null"`
+	UserType  uint       `json:"user_type"`
+	UserToken string     `json:"user_token" gorm:"unique;size:64"`
+	CreatedBy string     `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at" gorm:"type:timestamp null;default:null"` // 用户创建时间
+	UpdatedAt time.Time  `json:"updated_at" gorm:"type:timestamp null;default:null"` // user-token刷新时间
+	ExpiresAt time.Time  `json:"expires_at" gorm:"type:timestamp null;default:null"` // user-token过期时间
+	DeletedAt *time.Time `json:"deleted_at" gorm:"type:timestamp null;default:null"` // user-token删除时间
 }
 
 // HasExpired mean that is this token has been expired
 func (t *BcsUser) HasExpired() bool {
-	if time.Now().After(t.ExpiresAt) {
-		return true
-	}
-	return false
+	return time.Now().After(t.ExpiresAt)
 }

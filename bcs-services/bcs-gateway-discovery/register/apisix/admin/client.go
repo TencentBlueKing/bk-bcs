@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
@@ -92,6 +93,21 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 	if len(upstream.ID) == 0 {
 		return nil, fmt.Errorf("upstream data err")
 	}
+	nodesOK := false
+	mapStructedNodes := make(map[string]int)
+	var upstreamNodes []UpstreamNode
+	if err = json.Unmarshal(upstream.Nodes, &upstreamNodes); err == nil {
+		upstream.UpstreamNodes = &upstreamNodes
+		nodesOK = true
+	} else if err = json.Unmarshal(upstream.Nodes, &mapStructedNodes); err == nil {
+		upstream.MapStructedNodes = &mapStructedNodes
+		nodesOK = true
+	}
+	if !nodesOK {
+		nodestr, _ := upstream.Nodes.MarshalJSON()
+		blog.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
+		return nil, fmt.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
+	}
 	return upstream, nil
 }
 
@@ -164,7 +180,7 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
-	if response.Count == "1" || response.Data == nil ||
+	if response.Count == 0 || response.Data == nil ||
 		!response.Data.Directory || response.Data.Nodes == nil {
 		// no exact data
 		return nil, nil
@@ -182,6 +198,21 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 		}
 		if len(upstream.ID) == 0 {
 			return nil, fmt.Errorf("upstream data err")
+		}
+		nodesOK := false
+		mapStructedNodes := make(map[string]int)
+		var upstreamNodes []UpstreamNode
+		if err = json.Unmarshal(upstream.Nodes, &upstreamNodes); err == nil {
+			upstream.UpstreamNodes = &upstreamNodes
+			nodesOK = true
+		} else if err = json.Unmarshal(upstream.Nodes, &mapStructedNodes); err == nil {
+			upstream.MapStructedNodes = &mapStructedNodes
+			nodesOK = true
+		}
+		if !nodesOK {
+			nodestr, _ := upstream.Nodes.MarshalJSON()
+			blog.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
+			continue
 		}
 		ups = append(ups, upstream)
 	}
@@ -334,7 +365,7 @@ func (c *client) ListService() ([]*Service, error) {
 		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
-	if response.Count == "1" || response.Data == nil ||
+	if response.Count == 0 || response.Data == nil ||
 		!response.Data.Directory || response.Data.Nodes == nil {
 		// no exact data
 		return nil, nil
@@ -538,7 +569,7 @@ func (c *client) ListRoute() ([]*Route, error) {
 		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
-	if response.Count == "1" || response.Data == nil ||
+	if response.Count == 0 || response.Data == nil ||
 		!response.Data.Directory || response.Data.Nodes == nil {
 		// no exact data
 		return nil, nil

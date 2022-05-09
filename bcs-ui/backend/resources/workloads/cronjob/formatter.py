@@ -20,7 +20,7 @@ from backend.utils.basic import getitems
 
 
 class CronJobFormatter(WorkloadFormatter):
-    """ CronJob 格式化 """
+    """CronJob 格式化"""
 
     def parse_container_images(self, resource_dict: Dict) -> List:
         """

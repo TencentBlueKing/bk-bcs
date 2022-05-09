@@ -24,10 +24,11 @@ const childRoutes = [
                 alias: ''
             },
             {
-                path: 'image-detail',
+                path: 'image-detail/:imageRepo',
                 component: ImageDetail,
                 name: 'imageDetail',
                 alias: '',
+                props: true,
                 meta: {
                     menuId: 'imageLibrary'
                 }

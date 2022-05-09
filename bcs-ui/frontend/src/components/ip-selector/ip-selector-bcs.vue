@@ -28,6 +28,7 @@
         ip-key="bk_host_innerip"
         ellipsis-direction="ltr"
         :default-accurate="true"
+        :default-selected-node="defaultSelectedNode"
         @check-change="handleCheckChange"
         @remove-node="handleRemoveNode"
         @menu-click="handleMenuClick"
@@ -44,7 +45,7 @@
     import { defineComponent, reactive, toRefs, h, ref, watch } from '@vue/composition-api'
     import { ipSelector, AgentStatus } from './ip-selector'
     import './ip-selector.css'
-    import { fetchBizTopo, fetchBizHosts } from '@/api/base'
+    import { fetchBizTopo, fetchBizHosts, nodeAvailable } from '@/api/base'
     import { copyText } from '@/common/util'
 
     export interface ISelectorState {
@@ -170,6 +171,7 @@
 
             // 获取左侧Tree数据
             let treeData: any[] = []
+            const defaultSelectedNode = ref()
             const handleSetTreeId = (nodes: any[] = []) => {
                 nodes.forEach(node => {
                     node.id = `${node.bk_inst_id}-${node.bk_obj_id}`
@@ -181,10 +183,12 @@
             const handleGetDefaultData = async () => {
                 if (!treeData.length) {
                     treeData = await fetchBizTopo().catch(() => [])
+                    defaultSelectedNode.value = `${treeData[0]?.bk_inst_id}-${treeData[0]?.bk_obj_id}`
                     handleSetTreeId(treeData)
                 }
                 return treeData
             }
+            const nodeAvailableMap = {}
             // 静态表格数据处理
             const handleGetStaticTableData = async (params) => {
                 const { selections = [], current, limit, tableKeyword, accurate } = params
@@ -204,6 +208,12 @@
                     bizHostsParams.module_id = node.bk_inst_id
                 }
                 const data = await fetchBizHosts(bizHostsParams).catch(() => ({ results: [] }))
+                const nodeAvailableData = await nodeAvailable({
+                    innerIPs: data.results.map(item => {
+                        return item.bk_host_innerip
+                    })
+                })
+                Object.assign(nodeAvailableMap, nodeAvailableData)
                 return {
                     total: data.count || 0,
                     data: data.results
@@ -337,15 +347,19 @@
             }
             // 表格表格当前行禁用状态
             const getRowDisabledStatus = (row) => {
-                return row.is_used || !row.is_valid
+                return !row.is_valid || nodeAvailableMap[row.bk_host_innerip]?.isExist
             }
             // 获取表格当前行tips内容
             const getRowTipsContent = (row) => {
                 let tips: any = ''
-                if (row.is_used) {
-                    tips = $i18n.t('当前节点已被项目（{projectName}）的集群（{clusterName}）占用', { projectName: row.project_name, clusterName: row.cluster_name })
-                } else if (!row.is_valid) {
+                if (!row.is_valid) {
                     tips = $i18n.t('Docker机不允许使用')
+                } else if (nodeAvailableMap[row.bk_host_innerip]?.isExist) {
+                    const { clusterName = '', clusterID = '' } = nodeAvailableMap[row.bk_host_innerip]
+                    tips = $i18n.t('IP已被 {name}{id} 占用', {
+                        name: clusterName,
+                        id: clusterID ? ` (${clusterID}) ` : ''
+                    })
                 }
                 return tips
             }
@@ -372,7 +386,8 @@
                 handleChange,
                 getRowDisabledStatus,
                 getRowTipsContent,
-                handleGetData
+                handleGetData,
+                defaultSelectedNode
             }
         }
     })

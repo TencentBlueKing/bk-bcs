@@ -16,7 +16,6 @@ import logging
 
 from celery import shared_task
 
-from backend.accounts import bcs_perm
 from backend.components import paas_cc
 from backend.utils import FancyDict
 from backend.utils.errcodes import ErrorCode
@@ -67,13 +66,11 @@ def delete_cc_namespace(access_token, project_id, cluster_id, namespace_id):
 
 
 def register_auth(request, project_id, cluster_id, ns_id, ns_name):
-    perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
-    perm.register(ns_id, f'{ns_name}({cluster_id})')
+    """废弃"""
 
 
 def delete_auth(request, project_id, ns_id):
-    perm = bcs_perm.Namespace(request, project_id, ns_id)
-    perm.delete()
+    """废弃"""
 
 
 def compose_request(access_token, username):
@@ -96,8 +93,6 @@ def create_ns_flow(ns_params):
     cluster_id = ns_params['cluster_id']
     request = compose_request(access_token, creator)
     for ns_name in ns_list:
-        ns_client = resources.Namespace(access_token, project_id, ns_params['project_kind'])
-        ns_client.create_imagepullsecret(ns_params['project_code'], cluster_id, ns_name)
         ns_info = create_cc_namespace(access_token, project_id, cluster_id, ns_name, creator)
         register_auth(request, project_id, cluster_id, ns_info['id'], ns_name)
 

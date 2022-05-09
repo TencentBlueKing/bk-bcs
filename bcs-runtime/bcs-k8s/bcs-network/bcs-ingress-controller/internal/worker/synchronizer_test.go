@@ -65,6 +65,7 @@ func TestEventHandler(t *testing.T) {
 	}
 
 	testCases := []struct {
+		name      string
 		eventType EventType
 		lis       networkextensionv1.Listener
 		segLis    networkextensionv1.Listener
@@ -76,6 +77,7 @@ func TestEventHandler(t *testing.T) {
 		hasErr    bool
 	}{
 		{
+			name:      "test event add",
 			eventType: EventAdd,
 			lis:       listener1,
 			segLis:    listener2,
@@ -87,6 +89,7 @@ func TestEventHandler(t *testing.T) {
 			hasErr:    false,
 		},
 		{
+			name:      "empty listener id",
 			eventType: EventAdd,
 			lis:       listener1,
 			segLis:    listener2,
@@ -98,6 +101,7 @@ func TestEventHandler(t *testing.T) {
 			hasErr:    true,
 		},
 		{
+			name:      "test event add with seg error",
 			eventType: EventAdd,
 			lis:       listener1,
 			segLis:    listener2,
@@ -109,6 +113,7 @@ func TestEventHandler(t *testing.T) {
 			hasErr:    true,
 		},
 		{
+			name:      "test event delete",
 			eventType: EventDelete,
 			lis:       listener1,
 			segLis:    listener2,
@@ -120,6 +125,7 @@ func TestEventHandler(t *testing.T) {
 			hasErr:    false,
 		},
 		{
+			name:      "test event delete with error",
 			eventType: EventDelete,
 			lis:       listener1,
 			segLis:    listener2,
@@ -131,6 +137,7 @@ func TestEventHandler(t *testing.T) {
 			hasErr:    true,
 		},
 		{
+			name:      "test event delete with seg error",
 			eventType: EventDelete,
 			lis:       listener1,
 			segLis:    listener2,
@@ -144,68 +151,69 @@ func TestEventHandler(t *testing.T) {
 	}
 
 	for index := range testCases {
-		t.Logf("test %d", index)
-		ctrl := gomock.NewController(t)
-		mockCloud := mock.NewMockLoadBalance(ctrl)
-		mockCloud.
-			EXPECT().
-			EnsureListener(testCases[index].region, &testCases[index].lis).
-			Return(testCases[index].lisID, testCases[index].lisErr).
-			AnyTimes()
-		mockCloud.
-			EXPECT().
-			DeleteListener(testCases[index].region, &testCases[index].lis).
-			Return(testCases[index].lisErr).
-			AnyTimes()
-		mockCloud.
-			EXPECT().
-			EnsureSegmentListener(testCases[index].region, &testCases[index].segLis).
-			Return(testCases[index].segLisID, testCases[index].segLisErr).
-			AnyTimes()
-		mockCloud.
-			EXPECT().
-			DeleteSegmentListener(testCases[index].region, &testCases[index].segLis).
-			Return(testCases[index].segLisErr).
-			AnyTimes()
+		t.Run(testCases[index].name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			mockCloud := mock.NewMockLoadBalance(ctrl)
+			mockCloud.
+				EXPECT().
+				EnsureListener(testCases[index].region, &testCases[index].lis).
+				Return(testCases[index].lisID, testCases[index].lisErr).
+				AnyTimes()
+			mockCloud.
+				EXPECT().
+				DeleteListener(testCases[index].region, &testCases[index].lis).
+				Return(testCases[index].lisErr).
+				AnyTimes()
+			mockCloud.
+				EXPECT().
+				EnsureSegmentListener(testCases[index].region, &testCases[index].segLis).
+				Return(testCases[index].segLisID, testCases[index].segLisErr).
+				AnyTimes()
+			mockCloud.
+				EXPECT().
+				DeleteSegmentListener(testCases[index].region, &testCases[index].segLis).
+				Return(testCases[index].segLisErr).
+				AnyTimes()
 
-		newScheme := runtime.NewScheme()
-		newScheme.AddKnownTypes(networkextensionv1.GroupVersion, &listener1)
-		opt := EventHandlerOption{
-			Region:   testCases[index].region,
-			LbID:     "lbID",
-			LbClient: mockCloud,
-			K8sCli: k8sfake.NewFakeClientWithScheme(
-				newScheme, &testCases[index].lis, &testCases[index].segLis),
-		}
-		eventHandler := NewEventHandler(opt)
-		eventHandler.eventQueue = workqueue.NewRateLimitingQueue(
-			workqueue.NewItemExponentialFailureRateLimiter(
-				100*time.Millisecond,
-				2*time.Second))
-		eventHandler.PushQueue(k8stypes.NamespacedName{
-			Namespace: testCases[index].lis.GetNamespace(),
-			Name:      testCases[index].lis.GetName(),
+			newScheme := runtime.NewScheme()
+			newScheme.AddKnownTypes(networkextensionv1.GroupVersion, &listener1)
+			opt := EventHandlerOption{
+				Region:   testCases[index].region,
+				LbID:     "lbID",
+				LbClient: mockCloud,
+				K8sCli: k8sfake.NewFakeClientWithScheme(
+					newScheme, &testCases[index].lis, &testCases[index].segLis),
+			}
+			eventHandler := NewEventHandler(opt)
+			eventHandler.eventQueue = workqueue.NewRateLimitingQueue(
+				workqueue.NewItemExponentialFailureRateLimiter(
+					100*time.Millisecond,
+					2*time.Second))
+			eventHandler.PushQueue(k8stypes.NamespacedName{
+				Namespace: testCases[index].lis.GetNamespace(),
+				Name:      testCases[index].lis.GetName(),
+			})
+			eventHandler.PushQueue(k8stypes.NamespacedName{
+				Name:      testCases[index].segLis.GetName(),
+				Namespace: testCases[index].segLis.GetNamespace(),
+			})
+			go eventHandler.RunQueueRecving()
+			time.Sleep(100 * time.Millisecond)
+			err := eventHandler.doHandleMulti()
+			time.Sleep(200 * time.Millisecond)
+			if !testCases[index].hasErr && err != nil {
+				t.Errorf("test failed, err %s", err.Error())
+			}
+			if !testCases[index].hasErr && err != nil {
+				t.Errorf("test failed, err %s", err.Error())
+			}
+			if testCases[index].hasErr && len(eventHandler.eventRecvCache.List()) == 0 {
+				t.Errorf("expected requeue, but no item requeued")
+			}
+			if !testCases[index].hasErr && len(eventHandler.eventRecvCache.List()) != 0 {
+				t.Errorf("expected no requeue, but get item requeued")
+			}
+			ctrl.Finish()
 		})
-		eventHandler.PushQueue(k8stypes.NamespacedName{
-			Name:      testCases[index].segLis.GetName(),
-			Namespace: testCases[index].segLis.GetNamespace(),
-		})
-		go eventHandler.RunQueueRecving()
-		time.Sleep(100 * time.Millisecond)
-		err := eventHandler.doHandleMulti()
-		time.Sleep(200 * time.Millisecond)
-		if err != nil {
-			t.Errorf("test failed, err %s", err.Error())
-			continue
-		}
-		if testCases[index].hasErr && len(eventHandler.eventRecvCache.List()) == 0 {
-			t.Errorf("expected requeue, but no item requeued")
-			continue
-		}
-		if !testCases[index].hasErr && len(eventHandler.eventRecvCache.List()) != 0 {
-			t.Errorf("expected no requeue, but get item requeued")
-			continue
-		}
-		ctrl.Finish()
 	}
 }

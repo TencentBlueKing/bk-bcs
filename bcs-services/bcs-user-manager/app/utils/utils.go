@@ -79,8 +79,8 @@ func FormatValidationError(errList error) *ErrorResponse {
 	}
 }
 
-// CreateResponeData common response
-func CreateResponeData(err error, msg string, data interface{}) string {
+// CreateResponseData common response
+func CreateResponseData(err error, msg string, data interface{}) string {
 	var rpyErr error
 	if err != nil {
 		rpyErr = bhttp.InternalError(common.BcsErrMesosSchedCommon, msg)
@@ -91,4 +91,14 @@ func CreateResponeData(err error, msg string, data interface{}) string {
 	//blog.V(3).Infof("createRespone: %s", rpyErr.Error())
 
 	return rpyErr.Error()
+}
+
+// StringInSlice returns true if given string in slice
+func StringInSlice(s string, l []string) bool {
+	for _, objStr := range l {
+		if s == objStr {
+			return true
+		}
+	}
+	return false
 }

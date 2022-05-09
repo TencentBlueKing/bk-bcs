@@ -1,4 +1,4 @@
-import { defineComponent, PropType, computed } from '@vue/composition-api'
+import { defineComponent, PropType, computed, toRefs } from '@vue/composition-api'
 import './status-icon.css'
 
 export type StatusType = 'running' | 'completed' | 'failed' | 'terminating' | 'pending' | 'unknown' | 'notready'
@@ -9,20 +9,24 @@ export default defineComponent({
         status: {
             type: String as PropType<StatusType>,
             default: ''
+        },
+        // 每种状态对应的颜色, 默认黄色
+        statusColorMap: {
+            type: Object,
+            default: () => ({
+                running: 'green',
+                completed: 'green',
+                failed: 'red',
+                terminating: 'blue',
+                true: 'green',
+                false: 'red'
+            })
         }
     },
     setup (props) {
-        // 每种状态对应的颜色, 默认黄色
-        const statusMap = {
-            running: 'green',
-            completed: 'green',
-            failed: 'red',
-            terminating: 'blue',
-            true: 'green',
-            false: 'red'
-        }
+        const { statusColorMap, status } = toRefs(props)
         const statusClass = computed(() => {
-            return `status-icon status-${statusMap[props.status.toLowerCase()]}`
+            return `status-icon status-${statusColorMap.value[status.value.toLowerCase()]}`
         })
         return {
             statusClass

@@ -19,6 +19,8 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components.bcs.k8s import K8SClient
+from backend.container_service.clusters.base.utils import get_cluster_type, get_shared_cluster_proj_namespaces
+from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.observability.metric.constants import (
     INNER_USE_LABEL_PREFIX,
     INNER_USE_SERVICE_METADATA_FIELDS,
@@ -28,14 +30,20 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceViewSet(SystemViewSet):
-    """ Metric Service 相关接口 """
+    """Metric Service 相关接口"""
 
     def list(self, request, project_id, cluster_id):
-        """ 获取可选 Service 列表"""
+        """获取可选 Service 列表"""
         client = K8SClient(request.user.token.access_token, project_id, cluster_id, env=None)
         resp = client.get_service({'env': 'k8s'})
-        response_data = self._slim_down_service(resp.get('data') or [])
-        return Response(response_data)
+        services = self._slim_down_service(resp.get('data') or [])
+
+        # 共享集群需要再过滤下属于当前项目的命名空间
+        if get_cluster_type(cluster_id) == ClusterType.SHARED:
+            project_namespaces = get_shared_cluster_proj_namespaces(request.ctx_cluster, request.project.english_name)
+            services = [svc for svc in services if svc['namespace'] in project_namespaces]
+
+        return Response(services)
 
     def _slim_down_service(self, service_list: List) -> List:
         """
