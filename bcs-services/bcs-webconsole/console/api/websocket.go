@@ -22,6 +22,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
@@ -116,12 +117,12 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		defer stop()
 
 		// 关闭需要主动发送 Ctrl-D 命令
-		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.AdminClusterId)
+		bcsConf := k8sclient.GetBCSConfByClusterId(podCtx.AdminClusterId)
 		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
 
 	func() {
-		wsConnStart := time.Now()
+		start := time.Now()
 		atomic.AddInt64(&s.wsConnection, 1)
 
 		// 单独统计 ws metrics
@@ -129,7 +130,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 		defer func() {
 			// 过滤掉 ws 长链接时间
-			wsConnDuration := time.Since(wsConnStart)
+			wsConnDuration := time.Since(start)
 			metrics.SetRequestIgnoreDuration(c, wsConnDuration)
 
 			atomic.AddInt64(&s.wsConnection, -1)

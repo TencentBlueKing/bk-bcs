@@ -104,14 +104,17 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	// 统计耗时
 	func() {
-		queryPodCtxStart := time.Now()
+		start := time.Now()
 		defer func() {
 			if consoleQuery.IsContainerDirectMode() {
 				return
 			}
 
-			podWaitDuration := time.Since(queryPodCtxStart)
-			metrics.SetRequestIgnoreDuration(c, podWaitDuration)
+			// 单独统计 pod metrics
+			podReadyDuration := time.Since(start)
+			metrics.SetRequestIgnoreDuration(c, podReadyDuration)
+
+			metrics.CollectPodReady(podmanager.GetNamespace(), podmanager.GetPodName(clusterId, authCtx.Username), err, podReadyDuration)
 		}()
 
 		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)

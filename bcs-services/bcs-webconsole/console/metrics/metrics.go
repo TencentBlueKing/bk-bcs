@@ -39,39 +39,22 @@ var (
 		Buckets:   []float64{0.1, 0.2, 0.5, 1, 5, 10, 30, 60},
 	}, []string{"handler", "method", "status", "code"})
 
-	// 创建pod数量
-	podCreateTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// 创建/等待 pod Ready 数量
+	podReadyTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "pod_create_total",
-		Help:      "Counter of pod create to bcs-webconsole.",
+		Name:      "pod_ready_total",
+		Help:      "Counter of pod create/wait to bcs-webconsole.",
 	}, []string{"namespace", "name", "status"})
 
-	// 创建pod延迟指标
-	podCreateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	// 创建/等待 pod Ready 延迟指标
+	podReadyDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "pod_create_duration_seconds",
-		Help:      "create duration(seconds) of pod",
+		Name:      "pod_ready_duration_seconds",
+		Help:      "create/wait duration(seconds) of pod",
 		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
 	}, []string{"namespace", "name", "status"})
-
-	// 删除pod数量
-	podDeleteTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_total",
-		Help:      "Counter of pod delete total to bcs-webconsole.",
-	}, []string{"namespace", "name", "status", "reason"})
-
-	// 删除pod延迟指标
-	podDeleteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_duration_seconds",
-		Help:      "delete duration(seconds) of pod",
-		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
-	}, []string{"namespace", "name", "status", "reason"})
 
 	// ws连接
 	wsConnectionTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -85,10 +68,8 @@ var (
 func init() {
 	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpRequestDuration)
-	prometheus.MustRegister(podCreateTotal)
-	prometheus.MustRegister(podDeleteTotal)
-	prometheus.MustRegister(podCreateDuration)
-	prometheus.MustRegister(podDeleteDuration)
+	prometheus.MustRegister(podReadyTotal)
+	prometheus.MustRegister(podReadyDuration)
 	prometheus.MustRegister(wsConnectionTotal)
 }
 
@@ -117,22 +98,17 @@ func collectHTTPRequestMetric(handler, method, status, code string, duration tim
 	httpRequestDuration.WithLabelValues(handler, method, status, code).Observe(duration.Seconds())
 }
 
-// CollectPodDeleteDurations collect below metrics:
-// 1.the delete duration(seconds) of each pod
-// 2.the max delete duration(seconds) of pod
-// 3.the min delete duration(seconds) of pod
-func CollectPodDeleteDurations(namespace, name, status, podName string, started time.Time) {
-	duration := time.Since(started).Seconds()
-
-	podDeleteTotal.WithLabelValues(namespace, name, status).Inc()
-	podDeleteDuration.WithLabelValues(namespace, name, status).Observe(duration)
-
+// CollectPodReady Pod 拉起耗时统计
+func CollectPodReady(namespace, podName string, err error, duration time.Duration) {
+	podReadyTotal.WithLabelValues(namespace, podName, makePodStatus(err)).Inc()
+	podReadyDuration.WithLabelValues(namespace, podName, makePodStatus(err)).Observe(duration.Seconds())
 }
 
-// PodCollect Pod拉起耗时统计
-func PodCollect(namespace, podName, status string, duration time.Duration) {
-	podCreateTotal.WithLabelValues(namespace, podName, status).Inc()
-	podCreateDuration.WithLabelValues(namespace, podName, status).Observe(duration.Seconds())
+func makePodStatus(err error) string {
+	if err != nil {
+		return ErrStatus
+	}
+	return SucStatus
 }
 
 // CollectWsConnection Websocket 长链接统计

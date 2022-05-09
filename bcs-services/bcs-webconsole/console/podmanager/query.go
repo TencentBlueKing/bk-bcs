@@ -99,7 +99,7 @@ func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetCl
 	image := config.G.WebConsole.KubectldImage + ":" + imageTag
 
 	// 确保 pod 配置正确
-	podName := getPodName(targetClusterId, username)
+	podName := GetPodName(targetClusterId, username)
 	// 外部集群, 默认 default 即可
 	serviceAccountName := "default"
 	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
@@ -150,7 +150,7 @@ func queryByClusterIdInternal(ctx context.Context, clusterId, username string) (
 	}
 	image := config.G.WebConsole.KubectldImage + ":" + imageTag
 
-	podName := getPodName(clusterId, username)
+	podName := GetPodName(clusterId, username)
 	serviceAccountName := namespace
 	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
 
