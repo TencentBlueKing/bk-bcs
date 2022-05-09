@@ -21,6 +21,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const (
+	HttpRequestDurationKey = "http_request_duration_seconds"
+)
+
 var (
 	// http 请求总量
 	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -119,9 +123,9 @@ func HandlerFunc() gin.HandlerFunc {
 	}
 }
 
-func ReportAPIRequestMetric(handler, method, status, code string, started time.Time) {
+func ReportAPIRequestMetric(handler, method, status, code string, duration time.Duration) {
 	httpRequestsTotal.WithLabelValues(handler, method, status, code).Inc()
-	httpRequestDurationSeconds.WithLabelValues(handler, method, status, code).Observe(time.Since(started).Seconds())
+	httpRequestDurationSeconds.WithLabelValues(handler, method, status, code).Observe(duration.Seconds())
 }
 
 // CollectPodCreateDurations collect below metrics:

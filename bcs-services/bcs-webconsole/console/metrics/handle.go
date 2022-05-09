@@ -21,13 +21,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func APIMetricHandlerFunc(handler string) gin.HandlerFunc {
+// RequestCollect 统计请求耗时
+func RequestCollect(handler string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
 		code := strconv.FormatInt(int64(c.Writer.Status()), 10)
-		ReportAPIRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), code, start)
+		requestDuration := getRequestDuration(c, start)
+		ReportAPIRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), code, requestDuration)
 	}
+}
+
+// getRequestDuration 获取请求耗时, 可以是统计整个函数时间，或者在函数内计算好(长链接场景)
+func getRequestDuration(c *gin.Context, start time.Time) time.Duration {
+	requestDuration := c.Value(HttpRequestDurationKey)
+	duration, ok := requestDuration.(time.Duration)
+	if ok {
+		return duration
+	}
+
+	return time.Since(start)
 }
 
 func respStatusTransform(status int) string {

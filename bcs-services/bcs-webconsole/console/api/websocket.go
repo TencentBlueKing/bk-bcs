@@ -40,6 +40,8 @@ var upgrader = websocket.Upgrader{
 
 // BCSWebSocketHandler WebSocket 连接处理函数
 func (s *service) BCSWebSocketHandler(c *gin.Context) {
+	start := time.Now()
+
 	// 还未建立 WebSocket 连接, 使用 Json 返回
 	errResp := types.APIResponse{
 		Code: 400,
@@ -87,7 +89,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	start := time.Now()
 	metrics.CollectWsConnection(podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName, podCtx.ContainerName, start)
 	defer metrics.CollectCloseWs(podCtx.Namespace, podCtx.PodName)
 
@@ -122,6 +123,8 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.AdminClusterId)
 		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
 	})
+
+	c.Set(metrics.HttpRequestDurationKey, time.Since(start))
 
 	if err := eg.Wait(); err != nil {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, err)

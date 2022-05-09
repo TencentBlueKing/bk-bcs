@@ -45,20 +45,20 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",
-		metrics.APIMetricHandlerFunc("CreateWebConsoleSession"), route.PermissionRequired(), s.CreateWebConsoleSession)
+		metrics.RequestCollect("CreateWebConsoleSession"), route.PermissionRequired(), s.CreateWebConsoleSession)
 	api.GET("/api/projects/:projectId/clusters/",
-		metrics.APIMetricHandlerFunc("ListClusters"), s.ListClusters)
+		metrics.RequestCollect("ListClusters"), s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	api.GET("/api/portal/sessions/:sessionId/",
-		metrics.APIMetricHandlerFunc("CreatePortalSession"), s.CreatePortalSession)
+		metrics.RequestCollect("CreatePortalSession"), s.CreatePortalSession)
 	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/",
-		metrics.APIMetricHandlerFunc("CreateContainerPortalSession"), route.CredentialRequired(), s.CreateContainerPortalSession)
+		metrics.RequestCollect("CreateContainerPortalSession"), route.CredentialRequired(), s.CreateContainerPortalSession)
 	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/",
-		metrics.APIMetricHandlerFunc("CreateClusterPortalSession"), route.CredentialRequired(), s.CreateClusterPortalSession)
+		metrics.RequestCollect("CreateClusterPortalSession"), route.CredentialRequired(), s.CreateClusterPortalSession)
 
 	// websocket协议, session鉴权
-	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
+	api.GET("/ws/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
 }
 
 func (s *service) ListClusters(c *gin.Context) {
