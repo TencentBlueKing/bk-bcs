@@ -22,42 +22,37 @@ import (
 )
 
 var (
-	podCreateDurationMaxVal = map[string]float64{}
-	podCreateDurationMinVal = map[string]float64{}
-	podDeleteDurationMaxVal = map[string]float64{}
-	podDeleteDurationMinVal = map[string]float64{}
-)
-
-var (
-	requestsTotalLib = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// http 请求总量
+	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "api_request_total_num",
-		Help:      "Counter of requests to bcs-web-console.",
-	}, []string{"handler", "method", "status"})
+		Name:      "http_requests_total",
+		Help:      "Counter of requests to bcs-webconsole.",
+	}, []string{"handler", "method", "status", "code"})
 
-	requestLatencyLib = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	// http 请求耗时, 包含页面返回, API请求, WebSocket(去掉pod_create耗时)
+	httpRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "api_request_latency_time",
+		Name:      "http_request_duration_seconds",
 		Help:      "Histogram of the time (in seconds) each request took.",
-		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
-	}, []string{"handler", "method", "status"})
+		Buckets:   []float64{0.1, 0.2, 0.5, 1, 5, 10, 30, 60},
+	}, []string{"handler", "method", "status", "code"})
 
 	// 创建pod数量
 	podCreateTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "pod_create_total_num",
-		Help:      "Counter of pod create to bcs-web-console.",
+		Name:      "pod_create_total",
+		Help:      "Counter of pod create to bcs-webconsole.",
 	}, []string{"namespace", "name", "status"})
 
 	// 删除pod数量
 	podDeleteTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "pod_delete_total_num",
-		Help:      "Counter of pod delete total to bcs-web-console.",
+		Name:      "pod_delete_total",
+		Help:      "Counter of pod delete total to bcs-webconsole.",
 	}, []string{"namespace", "name", "status"})
 
 	// 创建pod延迟指标
@@ -67,7 +62,7 @@ var (
 		Name:      "pod_create_duration_seconds",
 		Help:      "create duration(seconds) of pod",
 		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
-	}, []string{"namespace", "name", "status"})
+	}, []string{"namespace", "name", "status", "reason"})
 
 	// 删除pod延迟指标
 	podDeleteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -78,51 +73,19 @@ var (
 		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
 	}, []string{"namespace", "name", "status"})
 
-	// 创建pod最大时间
-	podCreateDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_create_duration_seconds_max",
-		Help:      "the max create duration(seconds) of pod",
-	}, []string{"namespace", "name", "status"})
-
-	// 创建pod最小时间
-	podCreateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_create_duration_seconds_min",
-		Help:      "the min create duration(seconds) of pod",
-	}, []string{"namespace", "name", "status"})
-
-	// 删除pod最大时间
-	podDeleteDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_duration_seconds_max",
-		Help:      "the max delete duration(seconds) of pod",
-	}, []string{"namespace", "name", "status"})
-
-	// 删除pod最小时间
-	podDeleteDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "pod_delete_duration_seconds_min",
-		Help:      "the min delete duration(seconds) of pod",
-	}, []string{"namespace", "name", "status"})
-
 	// ws连接
 	wsConnectionTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "ws_connection_total_num",
+		Name:      "ws_connection_total",
 		Help:      "The total number of websocket connection",
-	}, []string{"namespace", "name"})
+	}, []string{"username", "tg_cluster_id", "tg_namespace", "tg_pod_name", "tg_container_name"})
 
 	// 断开ws连接
-	wsCloseTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+	wsConnectionCloseTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "ws_close_total_num",
+		Name:      "ws_connection_close_total",
 		Help:      "The total number of websocket disconnections",
 	}, []string{"namespace", "name"})
 
@@ -131,24 +94,20 @@ var (
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "ws_connection_duration_seconds",
-		Help:      "Counter of websocket connection to bcs-web-console.",
-		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
-	}, []string{"namespace", "name"})
+		Help:      "Counter of websocket connection to bcs-webconsole.",
+		Buckets:   []float64{0.1, 1, 5, 10, 30, 60, 1800, 3600},
+	}, []string{"username", "tg_cluster_id", "tg_namespace", "tg_pod_name", "tg_container_name"})
 )
 
 func init() {
-	prometheus.MustRegister(requestsTotalLib)
-	prometheus.MustRegister(requestLatencyLib)
+	prometheus.MustRegister(httpRequestsTotal)
+	prometheus.MustRegister(httpRequestDurationSeconds)
 	prometheus.MustRegister(podCreateTotal)
 	prometheus.MustRegister(podDeleteTotal)
 	prometheus.MustRegister(podCreateDuration)
 	prometheus.MustRegister(podDeleteDuration)
-	prometheus.MustRegister(podCreateDurationMax)
-	prometheus.MustRegister(podCreateDurationMin)
-	prometheus.MustRegister(podDeleteDurationMax)
-	prometheus.MustRegister(podDeleteDurationMin)
 	prometheus.MustRegister(wsConnectionTotal)
-	prometheus.MustRegister(wsCloseTotal)
+	prometheus.MustRegister(wsConnectionCloseTotal)
 	prometheus.MustRegister(wsConnectionDuration)
 }
 
@@ -160,9 +119,9 @@ func HandlerFunc() gin.HandlerFunc {
 	}
 }
 
-func ReportAPIRequestMetric(handler, method, status string, started time.Time) {
-	requestsTotalLib.WithLabelValues(handler, method, status).Inc()
-	requestLatencyLib.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
+func ReportAPIRequestMetric(handler, method, status, code string, started time.Time) {
+	httpRequestsTotal.WithLabelValues(handler, method, status, code).Inc()
+	httpRequestDurationSeconds.WithLabelValues(handler, method, status, code).Observe(time.Since(started).Seconds())
 }
 
 // CollectPodCreateDurations collect below metrics:
@@ -174,18 +133,7 @@ func CollectPodCreateDurations(namespace, podName, status string, started time.T
 
 	podCreateTotal.WithLabelValues(namespace, podName, status).Inc()
 	podCreateDuration.WithLabelValues(namespace, podName, status).Observe(duration)
-	if duration > podCreateDurationMaxVal[podName] {
-		podCreateDurationMaxVal[podName] = duration
-		podCreateDurationMax.WithLabelValues(namespace, podName, status).Set(duration)
-	}
 
-	if podCreateDurationMinVal[podName] == float64(0) {
-		podCreateDurationMinVal[podName] = duration
-		podCreateDurationMin.WithLabelValues(namespace, podName, status).Set(duration)
-	} else if duration < podCreateDurationMinVal[podName] {
-		podCreateDurationMinVal[podName] = duration
-		podCreateDurationMin.WithLabelValues(namespace, podName, status).Set(duration)
-	}
 }
 
 // CollectPodDeleteDurations collect below metrics:
@@ -198,26 +146,14 @@ func CollectPodDeleteDurations(namespace, name, status, podName string, started 
 	podDeleteTotal.WithLabelValues(namespace, name, status).Inc()
 	podDeleteDuration.WithLabelValues(namespace, name, status).Observe(duration)
 
-	if duration > podDeleteDurationMaxVal[podName] {
-		podDeleteDurationMaxVal[podName] = duration
-		podDeleteDurationMax.WithLabelValues(namespace, name, status).Set(duration)
-	}
-
-	if podDeleteDurationMinVal[podName] == float64(0) {
-		podDeleteDurationMinVal[podName] = duration
-		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
-	} else if duration < podDeleteDurationMinVal[podName] {
-		podDeleteDurationMinVal[podName] = duration
-		podCreateDurationMin.WithLabelValues(namespace, name, status).Set(duration)
-	}
 }
 
-func CollectWsConnection(namespace, name string, started time.Time) {
-	wsConnectionTotal.WithLabelValues(namespace, name).Inc()
-	wsConnectionDuration.WithLabelValues(namespace, name).Observe(time.Since(started).Seconds())
+func CollectWsConnection(username, targetClusterId, namespace, podName, containerName string, started time.Time) {
+	wsConnectionTotal.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Inc()
+	wsConnectionDuration.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Observe(time.Since(started).Seconds())
 }
 
 // CollectCloseWs 断开ws连接
 func CollectCloseWs(namespace, name string) {
-	wsCloseTotal.WithLabelValues(namespace, name).Inc()
+	wsConnectionCloseTotal.WithLabelValues(namespace, name).Inc()
 }

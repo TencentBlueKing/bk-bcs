@@ -121,7 +121,6 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	if username != "" {
 		authCtx.BindEnv = &EnvToken{Username: username}
 		authCtx.Username = username
-		return true
 	}
 
 	// AppCode 认证
@@ -130,6 +129,9 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 		authCtx.BindAPIGW = &APIGWToken{
 			App: &APIGWApp{AppCode: appCode, Verified: true},
 		}
+	}
+
+	if username != "" || appCode != "" {
 		return true
 	}
 

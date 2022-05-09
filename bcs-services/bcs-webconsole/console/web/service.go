@@ -38,14 +38,14 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web := router.Use(route.WebAuthRequired())
 
 	// 跳转 URL
-	web.GET("/user/login/", s.UserLoginRedirect)
-	web.GET("/user/perm_request/", route.APIAuthRequired(), s.UserPermRequestRedirect)
+	web.GET("/user/login/", metrics.APIMetricHandlerFunc("UserLoginRedirect"), s.UserLoginRedirect)
+	web.GET("/user/perm_request/", metrics.APIMetricHandlerFunc("UserPermRequestRedirect"), route.APIAuthRequired(), s.UserPermRequestRedirect)
 
 	// html 页面
-	web.GET("/projects/:projectId/clusters/:clusterId/", s.IndexPageHandler)
-	web.GET("/projects/:projectId/mgr/", s.MgrPageHandler)
-	web.GET("/portal/container/", s.ContainerGatePageHandler)
-	web.GET("/portal/cluster/", s.ClusterGatePageHandler)
+	web.GET("/projects/:projectId/clusters/:clusterId/", metrics.APIMetricHandlerFunc("IndexPage"), s.IndexPageHandler)
+	web.GET("/projects/:projectId/mgr/", metrics.APIMetricHandlerFunc("MgrPage"), s.MgrPageHandler)
+	web.GET("/portal/container/", metrics.APIMetricHandlerFunc("ContainerGatePage"), s.ContainerGatePageHandler)
+	web.GET("/portal/cluster/", metrics.APIMetricHandlerFunc("ClusterGatePage"), s.ClusterGatePageHandler)
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)

@@ -15,6 +15,7 @@ package metrics
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,8 +25,8 @@ func APIMetricHandlerFunc(handler string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
-		ReportAPIRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), start)
-		return
+		code := strconv.FormatInt(int64(c.Writer.Status()), 10)
+		ReportAPIRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), code, start)
 	}
 }
 

@@ -88,7 +88,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 
 	start := time.Now()
-	metrics.CollectWsConnection(podCtx.Namespace, podCtx.PodName, start)
+	metrics.CollectWsConnection(podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName, podCtx.ContainerName, start)
 	defer metrics.CollectCloseWs(podCtx.Namespace, podCtx.PodName)
 
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
