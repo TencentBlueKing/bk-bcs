@@ -14,7 +14,6 @@
 package metrics
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
@@ -29,7 +28,7 @@ func RequestCollect(handler string) gin.HandlerFunc {
 		c.Next()
 		code := strconv.FormatInt(int64(c.Writer.Status()), 10)
 		requestDuration := getRequestDuration(c)
-		collectHTTPRequestMetric(handler, c.Request.Method, makeRespStatus(c.Writer.Status()), code, requestDuration)
+		collectHTTPRequestMetric(handler, code, requestDuration)
 	}
 }
 
@@ -50,12 +49,4 @@ func getRequestDuration(c *gin.Context) time.Duration {
 	}
 
 	return duration
-}
-
-// makeRespStatus HTTP请求状态
-func makeRespStatus(status int) string {
-	if status == http.StatusOK {
-		return SucStatus
-	}
-	return ErrStatus
 }

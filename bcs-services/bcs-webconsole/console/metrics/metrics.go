@@ -27,24 +27,24 @@ var (
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "http_requests_total",
-		Help:      "Counter of requests to bcs-webconsole.",
-	}, []string{"handler", "method", "status", "code"})
+		Help:      "Counter of HTTP requests to bcs-webconsole.",
+	}, []string{"handler", "code"})
 
 	// http 请求耗时, 包含页面返回, API请求, WebSocket(去掉pod_create耗时)
 	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "http_request_duration_seconds",
-		Help:      "Histogram of the time (in seconds) each request took.",
+		Help:      "Histogram of latencies for HTTP requests to bcs-webconsole.",
 		Buckets:   []float64{0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60},
-	}, []string{"handler", "method", "status", "code"})
+	}, []string{"handler", "code"})
 
 	// 创建/等待 pod Ready 数量
 	podReadyTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "pod_ready_total",
-		Help:      "Counter of pod create/wait to bcs-webconsole.",
+		Help:      "Counter of create/wait pod ready.",
 	}, []string{"tg_cluster_id", "tg_namespace", "tg_pod_name", "status"})
 
 	// 创建/等待 pod Ready 延迟指标
@@ -52,7 +52,7 @@ var (
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "pod_ready_duration_seconds",
-		Help:      "create/wait duration(seconds) of pod",
+		Help:      "Histogram of latencies for create/wait pod ready.",
 		Buckets:   []float64{0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60},
 	}, []string{"tg_cluster_id", "tg_namespace", "tg_pod_name", "status"})
 
@@ -61,7 +61,7 @@ var (
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      "ws_connection_total",
-		Help:      "The total number of websocket connection",
+		Help:      "Counter of websocket connection.",
 	}, []string{"username", "tg_cluster_id", "tg_namespace", "tg_pod_name", "tg_container_name"})
 
 	// pod 存活数量
@@ -103,9 +103,9 @@ func PromMetricHandler() gin.HandlerFunc {
 }
 
 // collectHTTPRequestMetric http metrics 处理
-func collectHTTPRequestMetric(handler, method, status, code string, duration time.Duration) {
-	httpRequestsTotal.WithLabelValues(handler, method, status, code).Inc()
-	httpRequestDuration.WithLabelValues(handler, method, status, code).Observe(duration.Seconds())
+func collectHTTPRequestMetric(handler, code string, duration time.Duration) {
+	httpRequestsTotal.WithLabelValues(handler, code).Inc()
+	httpRequestDuration.WithLabelValues(handler, code).Observe(duration.Seconds())
 }
 
 // CollectWsConnection Websocket 长链接统计

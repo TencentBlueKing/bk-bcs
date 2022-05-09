@@ -97,13 +97,8 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	consoleQuery := new(podmanager.ConsoleQuery)
 	c.BindQuery(consoleQuery)
 
-	var (
-		podCtx *types.PodContext
-		err    error
-	)
-
-	// 统计耗时
-	func() {
+	// 封装一个独立函数, 统计耗时
+	podCtx, err := func() (podCtx *types.PodContext, err error) {
 		start := time.Now()
 		defer func() {
 			if consoleQuery.IsContainerDirectMode() {
@@ -124,11 +119,12 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		}()
 
 		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
-		if err != nil {
-			APIError(c, i18n.GetMessage(err.Error()))
-			return
-		}
+		return
 	}()
+	if err != nil {
+		APIError(c, i18n.GetMessage(err.Error()))
+		return
+	}
 
 	podCtx.ProjectId = projectId
 	podCtx.Username = authCtx.Username
