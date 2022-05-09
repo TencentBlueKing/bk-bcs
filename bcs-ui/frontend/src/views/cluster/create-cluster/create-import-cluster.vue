@@ -17,12 +17,12 @@
                     </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
-            <bk-form-item :label="$t('导入方式')">
+            <!-- <bk-form-item :label="$t('导入方式')">
                 <bk-radio-group v-model="importClusterInfo.importType">
                     <bk-radio value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
                     <bk-radio value="provider">{{$t('云服务商')}}</bk-radio>
                 </bk-radio-group>
-            </bk-form-item>
+            </bk-form-item> -->
             <bk-form-item :label="$t('云服务商')"
                 property="provider"
                 error-display-type="normal"
@@ -58,10 +58,10 @@
                 ></Ace>
             </bk-form-item>
             <bk-form-item>
-                <!-- <bk-button theme="primary"
+                <bk-button theme="primary"
                     :loading="testLoading"
                     @click="handleTest"
-                >{{$t('kubeconfig可用性测试')}}</bk-button> -->
+                >{{$t('kubeconfig可用性测试')}}</bk-button>
                 <bk-button class="btn"
                     theme="primary"
                     :loading="loading"
@@ -153,10 +153,13 @@
                 const validate = await importFormRef.value.validate()
                 if (!validate) return
                 testLoading.value = true
-                setTimeout(() => {
-                    testLoading.value = false
+                const result = await $store.dispatch('clustermanager/kubeConfig', {
+                    kubeConfig: importClusterInfo.value.yaml
+                })
+                if (result) {
                     isTestSuccess.value = true
-                }, 2000)
+                }
+                testLoading.value = false
             }
             const handleImport = async () => {
                 const validate = await importFormRef.value.validate()
@@ -168,7 +171,7 @@
                     description: importClusterInfo.value.description,
                     projectID: curProject.value.project_id,
                     businessID: String(curProject.value.cc_app_id),
-                    provider: importClusterInfo.value.provider,
+                    provider: 'bluekingCloud', // importClusterInfo.value.provider,
                     region: 'default',
                     environment: "prod",
                     engineType: "k8s",

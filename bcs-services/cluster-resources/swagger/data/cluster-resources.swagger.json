@@ -252,6 +252,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -300,6 +307,13 @@
           {
             "name": "namespace",
             "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -886,6 +900,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -941,6 +962,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1170,6 +1198,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1393,6 +1428,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1622,6 +1664,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1845,6 +1894,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2074,6 +2130,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2297,6 +2360,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2526,6 +2596,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2749,6 +2826,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2978,6 +3062,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3204,6 +3295,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3427,6 +3525,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3660,6 +3765,13 @@
           {
             "name": "ownerKind",
             "description": "所属资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4301,6 +4413,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4614,6 +4733,72 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes": {
+      "get": {
+        "summary": "ListNode API",
+        "description": "获取节点列表",
+        "operationId": "Node_ListNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "labelSelector",
+            "description": "标签选择器.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Node"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/rbac/service_accounts": {
       "post": {
         "summary": "CreateSA API",
@@ -4801,6 +4986,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5068,6 +5260,13 @@
           {
             "name": "apiVersion",
             "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/selectItems）.",
             "in": "query",
             "required": false,
             "type": "string"

@@ -49,3 +49,10 @@ fmt:
 
 clean:
 	rm -r ./bin
+
+generate-code:
+	hack/generate-groups.sh  "defaulter,deepcopy,client,informer,lister" \
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client \
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis \
+	"autoscaling:v1alpha1" \
+	--go-header-file ./hack/boilerplate.go.txt

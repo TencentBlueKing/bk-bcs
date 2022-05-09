@@ -47,6 +47,7 @@ import (
 	hpaHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/hpa"
 	nsHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/namespace"
 	networkHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/network"
+	nodeHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/node"
 	rbacHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/rbac"
 	resHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/resource"
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
@@ -152,6 +153,9 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	if err := clusterRes.RegisterBasicHandler(crSvc.microSvc.Server(), basicHdlr.New()); err != nil {
 		return err
 	}
+	if err := clusterRes.RegisterNodeHandler(crSvc.microSvc.Server(), nodeHdlr.New()); err != nil {
+		return err
+	}
 	if err := clusterRes.RegisterNamespaceHandler(crSvc.microSvc.Server(), nsHdlr.New()); err != nil {
 		return err
 	}
@@ -189,7 +193,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 
 	var etcdTLS *tls.Config
 	var err error
-	if len(crSvc.conf.Etcd.EtcdCa) != 0 && len(crSvc.conf.Etcd.EtcdCert) != 0 && len(crSvc.conf.Etcd.EtcdKey) != 0 {
+	if crSvc.conf.Etcd.EtcdCa != "" && crSvc.conf.Etcd.EtcdCert != "" && crSvc.conf.Etcd.EtcdKey != "" {
 		etcdSecure = true
 		etcdTLS, err = ssl.ClientTslConfVerity(
 			crSvc.conf.Etcd.EtcdCa, crSvc.conf.Etcd.EtcdCert, crSvc.conf.Etcd.EtcdKey, "",
@@ -206,7 +210,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 		registry.Secure(etcdSecure),
 		registry.TLSConfig(etcdTLS),
 	)
-	if err := crSvc.microRtr.Init(); err != nil {
+	if err = crSvc.microRtr.Init(); err != nil {
 		return err
 	}
 	return nil
@@ -214,7 +218,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 
 // 初始化 Server 与 client TLS 配置
 func (crSvc *clusterResourcesService) initTLSConfig() error {
-	if len(crSvc.conf.Server.Cert) != 0 && len(crSvc.conf.Server.Key) != 0 && len(crSvc.conf.Server.Ca) != 0 {
+	if crSvc.conf.Server.Cert != "" && crSvc.conf.Server.Key != "" && crSvc.conf.Server.Ca != "" {
 		tlsConfig, err := ssl.ServerTslConfVerityClient(
 			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, crSvc.conf.Server.CertPwd,
 		)
@@ -226,7 +230,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 		log.Info(crSvc.ctx, "load cluster resources server tls config successfully")
 	}
 
-	if len(crSvc.conf.Client.Cert) != 0 && len(crSvc.conf.Client.Key) != 0 && len(crSvc.conf.Client.Ca) != 0 {
+	if crSvc.conf.Client.Cert != "" && crSvc.conf.Client.Key != "" && crSvc.conf.Client.Ca != "" {
 		tlsConfig, err := ssl.ClientTslConfVerity(
 			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, crSvc.conf.Client.CertPwd,
 		)
@@ -258,6 +262,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	endpoint := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.Port)
 	for _, epRegister := range []func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 		clusterRes.RegisterBasicGwFromEndpoint,
+		clusterRes.RegisterNodeGwFromEndpoint,
 		clusterRes.RegisterNamespaceGwFromEndpoint,
 		clusterRes.RegisterWorkloadGwFromEndpoint,
 		clusterRes.RegisterNetworkGwFromEndpoint,
@@ -283,7 +288,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	originMux.Handle("/", router)
 
 	// 检查是否需要启用 swagger 服务
-	if crSvc.conf.Swagger.Enabled && len(crSvc.conf.Swagger.Dir) != 0 {
+	if crSvc.conf.Swagger.Enabled && crSvc.conf.Swagger.Dir != "" {
 		log.Info(crSvc.ctx, "swagger doc is enabled")
 		// 挂载 swagger.json 文件目录
 		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {

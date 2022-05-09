@@ -14,9 +14,14 @@
 package jwt
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/dgrijalva/jwt-go"
 )
+
+var username = "admin"
 
 // openssl genrsa -out app.rsa -aes256 123456
 // openssl rsa -in app.rsa -pubout > app.rsa.pub
@@ -59,12 +64,67 @@ func TestJWTClient_JWTDecode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	jwtTokenString := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJfdHlwZSI6InVzZXIiLCJ1c2VybmFtZSI6ImphbWVzIiwiY2xpZW50X2lkIjoiIiwiY2xpZW50X3NlY3JldCI6IiIsImV4cCI6MTY0MzAwNjkzMywiaXNzIjoiQkNTIn0.GW_iX7a8AfVKu7tuWrBDemc3J7GWbWZDVh4H_HerJCSvKuJA48PwAn_QMzw5V2YgkZMg6_kiSuhbGWwbsWfnUnT2880kA-hB01duIbU8j8fqsnouzb1-Srz7pY4_bkxNpXJPOkvW7ydY3C1Up-PseU-TdUCAgyJxnn8DsouUU6s"
-	user, err := cli.JWTDecode(jwtTokenString)
+	// generate jwt token
+	token, err := cli.JWTSign(&UserInfo{
+		SubType:     User.String(),
+		UserName:    username,
+		ExpiredTime: 100,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	user, err := cli.JWTDecode(token)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Logf("%+v", user)
+}
+
+func newErrPubKeyClient() (*JWTClient, error) {
+	path, _ := os.Getwd()
+	privateKeyPath := path + "/jwt_file/app.rsa"
+	// read
+	privateKeyByte, _ := ioutil.ReadFile(privateKeyPath)
+
+	// error public key
+	publicKeyStr := `
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCozhk0uWnt0FYtaDyZR1A/ejKM 
+Caj8B/axFyHzrW8GV07zOwlesbXykS8OOOtJ4AO61AdhoIPAz9p08TvBFd4R2tYe 
+MpCm9MeZnMJcEilFbh980JfdDMjioVdzpgJMJrnF99wYjNZpmBsPMFdBOq4K8WJL 
+E4g1rOJKpJfc30YsfQIDAQAa 
+-----END PUBLIC KEY-----`
+
+	publicKey, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(publicKeyStr))
+	privateKey, _ := jwt.ParseRSAPrivateKeyFromPEM(privateKeyByte)
+
+	opts := JWTOptions{
+		VerifyKey: publicKey,
+		SignKey:   privateKey,
+	}
+	cli, err := NewJWTClient(opts)
+	if err != nil {
+		return nil, err
+	}
+	return cli, nil
+}
+
+func TestErrPubKey(t *testing.T) {
+	cli, err := newErrPubKeyClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	token, err := cli.JWTSign(&UserInfo{
+		SubType:     User.String(),
+		UserName:    username,
+		ExpiredTime: 100,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = cli.JWTDecode(token)
+	if err == nil {
+		t.Fatal("err is not nil when error public key")
+	}
 }

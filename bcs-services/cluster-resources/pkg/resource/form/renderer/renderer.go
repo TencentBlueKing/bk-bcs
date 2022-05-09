@@ -74,7 +74,7 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 // 获取资源对应 APIVersion 并更新 Renderer 配置
 func (r *ManifestRenderer) setAPIVersion() error {
 	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
-	r.APIVersion = mapx.Get(r.FormData, "apiVersion", "").(string)
+	r.APIVersion = mapx.GetStr(r.FormData, "apiVersion")
 	if r.APIVersion == "" {
 		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
 		if err != nil {

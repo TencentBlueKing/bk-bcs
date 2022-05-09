@@ -96,3 +96,16 @@ class TestBcsClusterMaster:
         # 判断包含对应的字段
         for field_name in ["inner_ip", "idc", "rack", "device_class", "bk_cloud_id", "agent"]:
             assert field_name in detail
+
+
+class TestNodeDetail:
+    def test_detail(self, ctx_cluster, node_name, create_and_delete_node):
+        client = node_tools.NodeDetailQuerier(node_name, ctx_cluster)
+        node = client.detail()
+        # 判断名称
+        assert node["name"] == node_name
+        # 判断 IP
+        assert node["hostIP"] == FAKE_INNER_IP
+        # 判断字段存在
+        for field in ["kernelVersion", "kubeletVersion", "osImage", "images", "pods", "labels", "annotations"]:
+            assert field in node
