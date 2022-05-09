@@ -45,7 +45,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "pod_ready_total",
 		Help:      "Counter of pod create/wait to bcs-webconsole.",
-	}, []string{"namespace", "name", "status"})
+	}, []string{"tg_namespace", "tg_pod_name", "status"})
 
 	// 创建/等待 pod Ready 延迟指标
 	podReadyDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -54,7 +54,7 @@ var (
 		Name:      "pod_ready_duration_seconds",
 		Help:      "create/wait duration(seconds) of pod",
 		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
-	}, []string{"namespace", "name", "status"})
+	}, []string{"tg_namespace", "tg_pod_name", "status"})
 
 	// ws连接
 	wsConnectionTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
