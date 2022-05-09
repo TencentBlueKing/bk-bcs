@@ -59,7 +59,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 		}
 		if len(timeRanges) == 0 {
 			klog.V(4).Infof("CronMode: there is no timerange definition for nodegroup %s", ng.Id())
-			return nil
+			continue
 		}
 
 		// get desired num
