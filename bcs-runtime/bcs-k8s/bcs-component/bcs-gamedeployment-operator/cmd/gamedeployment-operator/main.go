@@ -22,11 +22,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/cmd/gamedeployment-operator/validator"
 	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/informers/externalversions"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/controllers/gamedeployment"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/admission"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/metrics/restclient"
@@ -76,7 +76,7 @@ var (
 	metricPort uint
 )
 
-var webhookOptions = validator.NewServerRunOptions()
+var webhookOptions = admission.NewServerRunOptions()
 
 func main() {
 
@@ -98,7 +98,8 @@ func main() {
 	}
 	fmt.Println("Operator building kube client for election success...")
 	broadcaster := record.NewBroadcaster()
-	broadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(lockNameSpace)})
+	broadcaster.StartRecordingToSink(
+		&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(lockNameSpace)})
 	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: lockComponentName})
 
 	rl, err := resourcelock.New(
@@ -227,7 +228,7 @@ func run() {
 		os.Exit(1)
 	}
 	go func() {
-		if runErr := validator.Run(webhookOptions, gdClient, stopCh); runErr != nil {
+		if runErr := admission.Run(webhookOptions, admission.GameDeploymentType, gdClient, stopCh); runErr != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", runErr)
 			os.Exit(1)
 		}

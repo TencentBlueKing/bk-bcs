@@ -22,10 +22,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/cmd/gamestatefulset-operator/validator"
 	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/client/informers/externalversions"
 	gamestatefulset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/controllers"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/admission"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/metrics/restclient"
@@ -74,7 +74,7 @@ var (
 	metricPort uint
 )
 
-var webhookOptions = validator.NewServerRunOptions()
+var webhookOptions = admission.NewServerRunOptions()
 
 func main() {
 
@@ -220,7 +220,7 @@ func run() {
 		os.Exit(1)
 	}
 	go func() {
-		if runErr := validator.Run(webhookOptions, gstsClient, stopCh); runErr != nil {
+		if runErr := admission.Run(webhookOptions, admission.GameStatefulSetType, gstsClient, stopCh); runErr != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", runErr)
 			os.Exit(1)
 		}

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package validator
+package admission
 
 import (
 	"context"
@@ -24,9 +24,6 @@ import (
 	"time"
 
 	"k8s.io/klog"
-
-	gdclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/validation"
 )
 
 // ServerRunOptions Server Run Options
@@ -75,9 +72,12 @@ func getTLSConfig(s *ServerRunOptions) (*tls.Config, error) {
 }
 
 // Run run
-func Run(s *ServerRunOptions, gdClient gdclientset.Interface, stopCh <-chan struct{}) error {
+func Run(s *ServerRunOptions, serverType string, client interface{}, stopCh <-chan struct{}) error {
 
-	webHook := validation.NewWebhookServer(gdClient)
+	webHook, err := NewWebhookServer(client, serverType)
+	if err != nil {
+		return err
+	}
 
 	// Start debug monitor.
 	mux := http.NewServeMux()

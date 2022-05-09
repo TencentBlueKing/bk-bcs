@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/cmd/hook-operator/validator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/controllers/hook"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/admission"
 	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/metrics/restclient"
@@ -73,7 +73,7 @@ var (
 	metricPort uint
 )
 
-var webhookOptions = validator.NewServerRunOptions()
+var webhookOptions = admission.NewServerRunOptions()
 
 func main() {
 
@@ -95,7 +95,8 @@ func main() {
 	}
 	fmt.Println("Operator building kube client for election success...")
 	broadcaster := record.NewBroadcaster()
-	broadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(LockNameSpace)})
+	broadcaster.StartRecordingToSink(
+		&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(LockNameSpace)})
 	recorder := broadcaster.NewRecorder(scheme.Scheme, api.EventSource{Component: LockComponentName})
 
 	rl, err := resourcelock.New(
@@ -207,7 +208,7 @@ func run() {
 		os.Exit(1)
 	}
 	go func() {
-		if runErr := validator.Run(webhookOptions, tkexClient, stopCh); runErr != nil {
+		if runErr := admission.Run(webhookOptions, admission.HookType, tkexClient, stopCh); runErr != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", runErr)
 			os.Exit(1)
 		}
