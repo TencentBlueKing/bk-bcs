@@ -719,17 +719,19 @@
                 const searchValues: { id: string; value: Set<any> }[] = []
                 searchSelectValue.value.forEach(item => {
                     let tmp: string[] = []
-                    if (item.id === 'inner_ip') {
-                        item.values.forEach(v => {
-                            tmp.push(...v.id.replace(/\s+/g, "").split('|'))
+                    if (Array.isArray(item.values)) {
+                        if (item.id === 'inner_ip') {
+                            item.values.forEach(v => {
+                                tmp.push(...v.id.replace(/\s+/g, "").split('|'))
+                            })
+                        } else {
+                            tmp = item.values.map(v => v.id)
+                        }
+                        searchValues.push({
+                            id: item.id,
+                            value: new Set(tmp)
                         })
-                    } else {
-                        tmp = item.values.map(v => v.id)
                     }
-                    searchValues.push({
-                        id: item.id,
-                        value: new Set(tmp)
-                    })
                 })
                 return searchValues
             })

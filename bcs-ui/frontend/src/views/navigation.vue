@@ -36,6 +36,7 @@
                                                 active: isSharedCluster,
                                                 disable: !firstShareCluster
                                             }]"
+                                        v-if="$INTERNAL"
                                         @click="handleGotoShareCluster"
                                     >{{$t('共享集群')}}<span class="beta">beta</span>
                                     </li>
