@@ -16,7 +16,6 @@ package inplaceupdate
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update"
@@ -28,15 +27,18 @@ import (
 	"k8s.io/klog"
 )
 
+// UpdateOptions is the option of update
 type UpdateOptions struct {
 	GracePeriodSeconds int32
 }
 
+// RefreshResult is the result of refresh
 type RefreshResult struct {
 	RefreshErr    error
 	DelayDuration time.Duration
 }
 
+// UpdateResult is the result of update
 type UpdateResult struct {
 	InPlaceUpdate bool
 	UpdateErr     error
@@ -57,10 +59,12 @@ type realControl struct {
 	now func() metav1.Time
 }
 
+// NewForTypedClient constructs realControl
 func NewForTypedClient(c clientset.Interface, revisionKey string) Interface {
 	return &realControl{adp: &update.AdapterTypedClient{Client: c}, revisionKey: revisionKey, now: metav1.Now}
 }
 
+// Refresh refreshs condition and grace period of inplace
 func (c *realControl) Refresh(pod *v1.Pod, opts *UpdateOptions) RefreshResult {
 	if err := c.refreshCondition(pod, opts); err != nil {
 		return RefreshResult{RefreshErr: err}
@@ -77,7 +81,9 @@ func (c *realControl) Refresh(pod *v1.Pod, opts *UpdateOptions) RefreshResult {
 	return RefreshResult{DelayDuration: delayDuration}
 }
 
-func (c *realControl) Update(pod *v1.Pod, oldRevision, newRevision *apps.ControllerRevision, opts *UpdateOptions) UpdateResult {
+// Update executes inplace update
+func (c *realControl) Update(pod *v1.Pod, oldRevision, newRevision *apps.ControllerRevision,
+	opts *UpdateOptions) UpdateResult {
 	// 1. calculate inplace update spec
 	spec := update.CalculateInPlaceUpdateSpec(oldRevision, newRevision)
 
@@ -146,7 +152,6 @@ func (c *realControl) updateCondition(pod *v1.Pod, condition v1.PodCondition) er
 		}
 
 		setPodCondition(clone, condition)
-		updatePodReadyCondition(clone)
 		return c.adp.UpdatePodStatus(clone)
 	})
 }
@@ -164,7 +169,7 @@ func (c *realControl) finishGracePeriod(pod *v1.Pod, opts *UpdateOptions) (time.
 		if !ok {
 			return nil
 		}
-		if err := json.Unmarshal([]byte(updateSpecJSON), &spec); err != nil {
+		if jsonErr := json.Unmarshal([]byte(updateSpecJSON), &spec); jsonErr != nil {
 			return err
 		}
 		graceDuration := time.Second * time.Duration(spec.GraceSeconds)
@@ -174,7 +179,7 @@ func (c *realControl) finishGracePeriod(pod *v1.Pod, opts *UpdateOptions) (time.
 		if !ok {
 			return fmt.Errorf("pod has %s but %s not found", InPlaceUpdateGraceKey, InPlaceUpdateStateKey)
 		}
-		if err := json.Unmarshal([]byte(updateStateJSON), &updateState); err != nil {
+		if jsonErr := json.Unmarshal([]byte(updateStateJSON), &updateState); jsonErr != nil {
 			return nil
 		}
 
@@ -263,7 +268,8 @@ func CheckInPlaceUpdateCompleted(pod *v1.Pod) error {
 
 	for _, cs := range pod.Status.ContainerStatuses {
 		if oldStatus, ok := inPlaceUpdateState.LastContainerStatuses[cs.Name]; ok {
-			// TODO: we assume that users should not update workload template with new image which actually has the same imageID as the old image
+			// TODO: we assume that users should not update workload template with new image which
+			// actually has the same imageID as the old image
 			if oldStatus.ImageID == cs.ImageID {
 				return fmt.Errorf("container %s imageID not changed", cs.Name)
 			}
@@ -311,46 +317,6 @@ func setPodCondition(pod *v1.Pod, condition v1.PodCondition) {
 		}
 	}
 	pod.Status.Conditions = append(pod.Status.Conditions, condition)
-}
-
-func updatePodReadyCondition(pod *v1.Pod) {
-	podReady := getCondition(pod, v1.PodReady)
-	if podReady == nil {
-		return
-	}
-
-	containersReady := getCondition(pod, v1.ContainersReady)
-	if containersReady == nil || containersReady.Status != v1.ConditionTrue {
-		return
-	}
-
-	var unreadyMessages []string
-	for _, rg := range pod.Spec.ReadinessGates {
-		c := getCondition(pod, rg.ConditionType)
-		if c == nil {
-			unreadyMessages = append(unreadyMessages, fmt.Sprintf("corresponding condition of pod readiness gate %q does not exist.", string(rg.ConditionType)))
-		} else if c.Status != v1.ConditionTrue {
-			unreadyMessages = append(unreadyMessages, fmt.Sprintf("the status of pod readiness gate %q is not \"True\", but %v", string(rg.ConditionType), c.Status))
-		}
-	}
-
-	newPodReady := v1.PodCondition{
-		Type:               v1.PodReady,
-		Status:             v1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-	}
-	// Set "Ready" condition to "False" if any readiness gate is not ready.
-	if len(unreadyMessages) != 0 {
-		unreadyMessage := strings.Join(unreadyMessages, ", ")
-		newPodReady = v1.PodCondition{
-			Type:    v1.PodReady,
-			Status:  v1.ConditionFalse,
-			Reason:  "ReadinessGatesNotReady",
-			Message: unreadyMessage,
-		}
-	}
-
-	setPodCondition(pod, newPodReady)
 }
 
 func roundupSeconds(d time.Duration) time.Duration {

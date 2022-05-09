@@ -54,14 +54,14 @@ func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[stri
 	}
 	manifest := ret.UnstructuredContent()
 	// 共享集群命名空间，需要过滤出属于指定项目的
-	clusterInfo, err := cluster.GetClusterInfo(c.ResClient.conf.ClusterID)
+	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared {
 		crdList := []interface{}{}
 		for _, crd := range manifest["items"].([]interface{}) {
-			crdName := mapx.Get(crd.(map[string]interface{}), "metadata.name", "").(string)
+			crdName := mapx.GetStr(crd.(map[string]interface{}), "metadata.name")
 			if IsSharedClusterEnabledCRD(crdName) {
 				crdList = append(crdList, crd)
 			}
@@ -102,7 +102,7 @@ func (w *CRDWatcher) ResultChan() <-chan watch.Event {
 	go func() {
 		for event := range w.Interface.ResultChan() {
 			if obj, ok := event.Object.(*unstructured.Unstructured); ok {
-				crdName := mapx.Get(obj.UnstructuredContent(), "metadata.name", "").(string)
+				crdName := mapx.GetStr(obj.UnstructuredContent(), "metadata.name")
 				if !IsSharedClusterEnabledCRD(crdName) {
 					continue
 				}

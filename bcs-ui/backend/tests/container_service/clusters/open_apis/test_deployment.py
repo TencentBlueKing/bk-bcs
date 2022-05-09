@@ -25,7 +25,7 @@ pytestmark = pytest.mark.django_db
 
 
 class TestDeployment:
-    """ Deployment OpenAPI 相关接口测试 """
+    """Deployment OpenAPI 相关接口测试"""
 
     deployment_name = 'deployment-for-test-{}'.format(generate_random_string(8))
     common_prefix = '/apis/resources/projects/{p_id}/clusters/{c_id}/namespaces/{ns}/deployments'.format(
@@ -42,13 +42,13 @@ class TestDeployment:
         Deployment(ctx_cluster).delete(namespace=TEST_NAMESPACE, name=self.deployment_name)
 
     def test_list_by_namespace(self, api_client):
-        """ 测试获取指定命名空间下的 Deployment """
+        """测试获取指定命名空间下的 Deployment"""
         response = api_client.get(f'{self.common_prefix}/')
         assert response.json()['code'] == 0
         assert isinstance(response.json()['data'], list)
 
     def test_list_pods_by_deployment(self, api_client):
-        """ 测试获取指定 Deployment 下属 Pod """
+        """测试获取指定 Deployment 下属 Pod"""
         response = api_client.get(f'{self.common_prefix}/{self.deployment_name}/pods/')
         assert response.json()['code'] == 0
         response_data = response.json()['data']
@@ -69,7 +69,7 @@ class TestDeployment:
 
 
 def gen_deployment_body(name: str) -> Dict:
-    """ 生成用于测试的 Deployment 配置 TODO 后续接入 load_demo_manifest """
+    """生成用于测试的 Deployment 配置 TODO 后续接入 load_demo_manifest"""
     return {
         'apiVersion': 'apps/v1',
         'kind': 'Deployment',

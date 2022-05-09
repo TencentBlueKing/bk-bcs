@@ -18,6 +18,8 @@ import (
 	"context"
 
 	"github.com/micro/go-micro/v2/server"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/ctxkey"
 )
 
 type validator interface {
@@ -29,7 +31,8 @@ func NewValidatorWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
 		if v, ok := req.Body().(validator); ok {
 			if err := v.Validate(); err != nil {
-				return err
+				requestID := ctx.Value(ctxkey.RequestIDKey).(string)
+				return RenderResponse(rsp, requestID, err)
 			}
 		}
 		return fn(ctx, req, rsp)

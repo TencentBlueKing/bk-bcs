@@ -1016,7 +1016,7 @@
                                                                 </template>
                                                                 <template v-else-if="instance.state.getRet().scale === 0">
                                                                     <template v-if="instance.hpa">
-                                                                        <bcs-popover class="mr15" :content="$t('该应用已经设置HPA')" placement="top">
+                                                                        <bcs-popover class="mr10" :content="$t('该应用已经设置HPA')" placement="top">
                                                                             <a href="javascript:void(0);" class="bk-text-button is-disabled"
                                                                                 :style="{marginRight: instance.state.getRet().rebuild === 1 ? '45px' : '0', marginLeft: instance.state.getRet().rebuild === 1 ? '15px' : '0'}">
                                                                                 {{$t('扩缩容')}}

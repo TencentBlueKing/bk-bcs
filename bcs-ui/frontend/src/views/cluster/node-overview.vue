@@ -1131,7 +1131,8 @@
 
     .echarts {
         width: 100%;
-        height: 180px;
+        height: 160px;
+        z-index: 100;
     }
 
     .biz-cluster-node-overview-table-wrapper {

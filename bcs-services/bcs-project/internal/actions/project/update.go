@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
@@ -44,25 +44,25 @@ func NewUpdateAction(model store.ProjectModel) *UpdateAction {
 }
 
 // Do update project request
-func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (*pm.Project, *errorx.ProjectError) {
+func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest) (*pm.Project, error) {
 	ua.ctx = ctx
 	ua.req = req
 
 	if err := ua.validate(); err != nil {
-		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
+		return nil, errorx.NewParamErr(err)
 	}
 
 	// 获取要更新的项目信息
 	p, err := ua.model.GetProject(ua.ctx, req.ProjectID)
 	if err != nil {
 		logging.Error("project: %s not found", req.ProjectID)
-		return nil, errorx.New(errcode.ParamErr, errcode.ParamErrMsg, err)
+		return nil, errorx.NewParamErr(err)
 	}
 	if err := ua.updateProject(p); err != nil {
-		return nil, errorx.New(errcode.DBErr, errcode.DbErrMsg, err)
+		return nil, errorx.NewDBErr(err)
 	}
 
-	return p, errorx.New(errcode.Success, errcode.SuccessMsg)
+	return p, nil
 }
 
 func (ua *UpdateAction) validate() error {
@@ -85,9 +85,11 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	// 更新时间
 	p.UpdateTime = timeStr
-	p.Updater = ua.req.Updater
+	// 从 context 中获取 username
+	username := auth.GetUserFromCtx(ua.ctx)
+	p.Updater = username
 	// 更新管理员，添加项目更新者，并且去重
-	managers := stringx.JoinString(p.Managers, ua.req.Updater)
+	managers := stringx.JoinString(p.Managers, username)
 	managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
 	p.Managers = strings.Join(managerList, ",")
 

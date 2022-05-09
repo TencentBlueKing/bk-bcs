@@ -170,51 +170,6 @@ class NodeUpdateLog(GcloudPollingTask):
     status = models.CharField(max_length=32, null=True, blank=True)
     oper_type = models.CharField(max_length=16, choices=OPER_TYPE, default="initialize")
 
-    def node_check_and_init_polling(self):
-        """节点前置检查&初始化"""
-        from celery import chain
-
-        from backend.celery_app.tasks import cluster
-
-        chain(
-            cluster.polling_initial_task.s(self.__class__.__name__, self.pk),
-            cluster.so_init.s(),
-            cluster.polling_so_init.s(),
-            cluster.node_exec_bcs_task.s(),
-            cluster.chain_polling_task.s(self.__class__.__name__),
-            cluster.chain_polling_bke_status.s(),
-        ).apply_async()
-
-    def node_so_and_init_polling(self):
-        """节点so&初始化"""
-        from celery import chain
-
-        from backend.celery_app.tasks import cluster
-
-        chain(
-            cluster.polling_so_init.s(None, self.pk, self.__class__.__name__),
-            cluster.node_exec_bcs_task.s(),
-            cluster.chain_polling_task.s(self.__class__.__name__),
-            cluster.chain_polling_bke_status.s(),
-        ).apply_async()
-
-    def bke_polling(self):
-        from backend.celery_app.tasks import cluster
-
-        cluster.polling_bke_status.delay(self.pk)
-
-    def node_force_delete_polling(self):
-        """强制删除节点"""
-        from celery import chain
-
-        from backend.celery_app.tasks import cluster
-
-        chain(
-            cluster.force_delete_node.s(self.__class__.__name__, self.pk),
-            cluster.delete_cluster_node.s(),
-            cluster.delete_cluster_node_polling.s(),
-        ).apply_async()
-
 
 def log_factory(log_type):
     if log_type == "ClusterInstallLog":

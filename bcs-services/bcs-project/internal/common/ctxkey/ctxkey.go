@@ -22,4 +22,6 @@ const (
 	RequestIDKey ContextKey = "requestID"
 	// TraceIDKey 链路跟踪需要的trace id
 	TraceIDKey ContextKey = "traceID"
+	// UsernameKey 用户名
+	UsernameKey ContextKey = "username"
 )

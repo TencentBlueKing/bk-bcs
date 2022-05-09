@@ -19,4 +19,8 @@ const (
 	ServiceDomain = "clusterresources.bkbcs.tencent.com"
 	// DefaultConfPath 默认配置存放路径
 	DefaultConfPath = "etc/conf.yaml"
+	// ProjectMgrServiceName 项目管理服务名
+	ProjectMgrServiceName = "project.bkbcs.tencent.com"
+	// ClusterMgrServiceName 集群管理服务名
+	ClusterMgrServiceName = "clustermanager.bkbcs.tencent.com"
 )

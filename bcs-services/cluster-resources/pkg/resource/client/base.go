@@ -23,16 +23,20 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // NewDynamicClient ...
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {
-	client, _ := dynamic.NewForConfig(conf.Rest)
-	return client
+	dynamicCli, _ := dynamic.NewForConfig(conf.Rest)
+	return dynamicCli
 }
 
 // ResClient K8S 集群资源管理客户端
@@ -51,6 +55,9 @@ func NewResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *
 func (c *ResClient) List(
 	ctx context.Context, namespace string, opts metav1.ListOptions,
 ) (*unstructured.UnstructuredList, error) {
+	if err := c.permValidate(ctx, action.List, namespace); err != nil {
+		return nil, err
+	}
 	return c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
 }
 
@@ -58,6 +65,9 @@ func (c *ResClient) List(
 func (c *ResClient) Get(
 	ctx context.Context, namespace, name string, opts metav1.GetOptions,
 ) (*unstructured.Unstructured, error) {
+	if err := c.permValidate(ctx, action.View, namespace); err != nil {
+		return nil, err
+	}
 	return c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, opts)
 }
 
@@ -67,10 +77,13 @@ func (c *ResClient) Create(
 ) (*unstructured.Unstructured, error) {
 	namespace := ""
 	if isNSScoped {
-		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
+		namespace = mapx.GetStr(manifest, "metadata.namespace")
 		if namespace == "" {
 			return nil, errorx.New(errcode.ValidateErr, "创建 %s 需要指定 metadata.namespace", c.res.Resource)
 		}
+	}
+	if err := c.permValidate(ctx, action.Create, namespace); err != nil {
+		return nil, err
 	}
 	return c.cli.Resource(c.res).Namespace(namespace).Create(ctx, &unstructured.Unstructured{Object: manifest}, opts)
 }
@@ -84,15 +97,34 @@ func (c *ResClient) Update(
 	if err != nil || name != manifestName {
 		return nil, errorx.New(errcode.ValidateErr, "metadata.name 必须指定且与准备编辑的资源名保持一致")
 	}
+	if err = c.permValidate(ctx, action.Update, namespace); err != nil {
+		return nil, err
+	}
 	return c.cli.Resource(c.res).Namespace(namespace).Update(ctx, &unstructured.Unstructured{Object: manifest}, opts)
 }
 
 // Delete 删除单个资源
 func (c *ResClient) Delete(ctx context.Context, namespace, name string, opts metav1.DeleteOptions) error {
+	if err := c.permValidate(ctx, action.Delete, namespace); err != nil {
+		return err
+	}
 	return c.cli.Resource(c.res).Namespace(namespace).Delete(ctx, name, opts)
 }
 
 // Watch 获取某类资源 watcher
 func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
+}
+
+// IAM 权限校验
+func (c *ResClient) permValidate(ctx context.Context, action, namespace string) error {
+	projInfo, err := project.FromContext(ctx)
+	if err != nil {
+		return errorx.New(errcode.General, "由 Context 获取项目信息失败")
+	}
+	clusterInfo, err := cluster.FromContext(ctx)
+	if err != nil {
+		return errorx.New(errcode.General, "由 Context 获取集群信息失败")
+	}
+	return perm.Validate(ctx, c.res.Resource, action, projInfo.ID, clusterInfo.ID, namespace)
 }

@@ -39,6 +39,7 @@ from backend.components import paas_cc
 from backend.components.base import ComponentAuth
 from backend.components.bcs import k8s
 from backend.components.paas_cc import PaaSCCClient
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.misc.bke_client.client import BCSClusterCredentialsNotFound, BCSClusterNotFound
 from backend.helm.app.repo import get_or_create_private_repo
 from backend.helm.app.serializers import FilterNamespacesSLZ
@@ -48,6 +49,7 @@ from backend.helm.helm.models.chart import ChartVersion
 from backend.helm.helm.providers.repo_provider import add_plain_repo, add_platform_public_repos, add_repo
 from backend.helm.helm.serializers import ChartVersionSLZ
 from backend.helm.permissions import check_cluster_perm
+from backend.helm.releases.utils.release_secret import RecordReleases
 from backend.helm.toolkit.diff import parser
 from backend.iam.permissions.decorators import response_perms
 from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
@@ -138,15 +140,25 @@ class AppView(ActionSerializerMixin, AppViewBase):
         qs = self.get_queryset()
         # 获取过滤参数
         params = request.query_params
+        # 集群和命名空间必须传递
         cluster_id = params.get('cluster_id')
         namespace = params.get("namespace")
+        # TODO: 先写入db中，防止前端通过ID，获取数据失败；后续通过helm服务提供API
+        if cluster_id:
+            try:
+                ctx_cluster = CtxCluster.create(
+                    id=cluster_id, token=request.user.token.access_token, project_id=project_id
+                )
+                RecordReleases(ctx_cluster, namespace).record()
+            except Exception as e:
+                logger.error("获取集群内release数据失败，%s", e)
+
         if cluster_id:
             qs = qs.filter(cluster_id=cluster_id)
         if namespace:
             if not cluster_id:
                 raise ValidationError(_("命名空间作为过滤参数时，需要提供集群ID"))
             qs = qs.filter(namespace=namespace)
-
         # 获取返回的数据
         slz = ReleaseListSLZ(qs, many=True)
         data = slz.data
@@ -518,7 +530,7 @@ class ClusterHelmInitView(ClusterImporterView):
                 },
             }
             english_name = project['data']['english_name']
-            url = '%s/chartrepo/%s/' % (settings.HELM_MERELY_REPO_URL, english_name)
+            url = '%s/chartrepo/%s/' % (settings.HELM_REPO_DOMAIN, english_name)
             private_repo = add_plain_repo(
                 target_project_id=project_id, name=english_name, url=url, repo_auth=repo_auth
             )

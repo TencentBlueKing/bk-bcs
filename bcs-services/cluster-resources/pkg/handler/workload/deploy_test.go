@@ -15,7 +15,6 @@
 package workload
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,7 +32,7 @@ import (
 
 func TestDeploy(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
@@ -51,6 +50,15 @@ func TestDeploy(t *testing.T) {
 
 	respData := listResp.Data.AsMap()
 	assert.Equal(t, "DeploymentList", mapx.Get(respData, "manifest.kind", ""))
+
+	// List SelectItems Format
+	listReq.Format = action.SelectItemsFormat
+	err = h.ListDeploy(ctx, &listReq, &listResp)
+	assert.Nil(t, err)
+
+	respData = listResp.Data.AsMap()
+	selectItems := mapx.GetList(respData, "selectItems")
+	assert.True(t, len(selectItems) > 0)
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.replicas", 5)
@@ -121,9 +129,26 @@ var deployManifest4FormTest = map[string]interface{}{
 	},
 }
 
+func TestDeployWithUnavailableAPIVersion(t *testing.T) {
+	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
+
+	// List
+	listReq, listResp := handler.GenResListReq(), clusterRes.CommonResp{}
+	listReq.ApiVersion = "deprecated/v1beta1"
+	err := h.ListDeploy(ctx, &listReq, &listResp)
+	assert.NotNil(t, err)
+
+	// Get
+	getReq, getResp := handler.GenResGetReq("resName"), clusterRes.CommonResp{}
+	getReq.ApiVersion = "deprecated/v1"
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.NotNil(t, err)
+}
+
 func TestDeployWithForm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", "")
 
 	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
 
@@ -185,7 +210,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 	assert.Nil(t, err)
 
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")
@@ -209,6 +234,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
+		Format:    action.ManifestFormat,
 	}
 	err = h.ListDeploy(ctx, &listReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -249,7 +275,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 
 func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	h := New()
-	ctx := context.TODO()
+	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	resName := mapx.Get(manifest, "metadata.name", "")

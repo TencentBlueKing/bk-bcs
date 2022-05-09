@@ -130,11 +130,11 @@ func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 
 	liveGroups, err := d.delegate.ServerGroups()
 	if err != nil {
-		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
+		log.Warn(d.ctx, "cluster: %s, skip caching discovery info due to %v", d.clusterID, err)
 		return liveGroups, err
 	}
 	if liveGroups == nil || len(liveGroups.Groups) == 0 {
-		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info, no groups found", d.clusterID)
+		log.Warn(d.ctx, "cluster: %s, skip caching discovery info, no groups found", d.clusterID)
 		return liveGroups, err
 	}
 	if err = d.writeCache("", liveGroups); err != nil {
@@ -155,11 +155,11 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 
 	liveResources, err := d.delegate.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
-		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info due to %v", d.clusterID, err)
+		log.Warn(d.ctx, "cluster: %s, skip caching %s discovery info due to %v", d.clusterID, groupVersion, err)
 		return liveResources, err
 	}
 	if liveResources == nil || len(liveResources.APIResources) == 0 {
-		log.Warn(d.ctx, "cluster: %s, skipped caching discovery info, no resources found", d.clusterID)
+		log.Warn(d.ctx, "cluster: %s, skip caching %s discovery info, no res found", d.clusterID, groupVersion)
 		return liveResources, err
 	}
 	if err = d.writeCache(groupVersion, liveResources); err != nil {
@@ -175,7 +175,7 @@ func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (sc
 	if err != nil {
 		return schema.GroupVersionResource{}, err
 	}
-	return filterResByKind(kind, d.clusterID, []*metav1.APIResourceList{all})
+	return filterResByKind(kind, d.clusterID, groupVersion, []*metav1.APIResourceList{all})
 }
 
 // 获取指定资源当前集群 Preferred 版本
@@ -185,7 +185,7 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 		return schema.GroupVersionResource{}, err
 	}
 	// 逐个检查出第一个同名资源，作为 Preferred 结果返回
-	return filterResByKind(kind, d.clusterID, all)
+	return filterResByKind(kind, d.clusterID, "", all)
 }
 
 // 读缓存逻辑
@@ -263,7 +263,9 @@ func NewRedisCacheClient4Conf(ctx context.Context, conf *ClusterConf) (*RedisCac
 }
 
 // 根据 kind 过滤出对应的资源信息
-func filterResByKind(kind, clusterID string, allRes []*metav1.APIResourceList) (schema.GroupVersionResource, error) {
+func filterResByKind(
+	kind, clusterID, groupVersion string, allRes []*metav1.APIResourceList,
+) (schema.GroupVersionResource, error) {
 	for _, apiResList := range allRes {
 		for _, res := range apiResList.APIResources {
 			if res.Kind == kind {
@@ -276,7 +278,11 @@ func filterResByKind(kind, clusterID string, allRes []*metav1.APIResourceList) (
 			}
 		}
 	}
-	return schema.GroupVersionResource{}, errorx.New(errcode.General, "kind %s not found in cluster %s", kind, clusterID)
+	errMsg := fmt.Sprintf("kind %s not found in cluster %s", kind, clusterID)
+	if groupVersion != "" {
+		errMsg += ", groupVersion: " + groupVersion
+	}
+	return schema.GroupVersionResource{}, errorx.New(errcode.General, errMsg)
 }
 
 func genCacheKey(clusterID, groupVersion string) cache.StringKey {

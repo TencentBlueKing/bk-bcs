@@ -359,8 +359,8 @@
                     if (value !== old) {
                         this.formdata.vpc_name = ''
                         this.vpcList = []
-                        await this.fetchVPC()
                         await this.fetchZone()
+                        await this.fetchVPC()
                     }
                 }
             },
@@ -554,7 +554,8 @@
                         region: this.formdata.region,
                         vpc_name: this.formdata.vpc_name,
                         cpu_core_num: this.hostData.cpu,
-                        mem_size: this.hostData.mem
+                        mem_size: this.hostData.mem,
+                        zone_id: this.formdata.zone_id
                     })
                     const list = res.data || []
                     this.hostTableData = list.map(item => {

@@ -15,18 +15,12 @@ import logging
 
 from django.conf import settings
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
 from kubernetes import client
 from kubernetes.client.rest import ApiException
-from rest_framework.exceptions import ValidationError
 
-from backend.components import paas_cc
 from backend.components.bcs import BCSClientBase
 from backend.components.cluster_manager import get_shared_clusters
 from backend.components.utils import http_delete, http_get, http_patch, http_post
-from backend.utils import FancyDict, cache, exceptions
-from backend.utils.cache import region
-from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 
 from . import resources
@@ -46,19 +40,20 @@ class K8SClient(BCSClientBase):
 
     @cached_property
     def _context(self):
-        context = {}
-        cluster_info = self.query_cluster()
-        context.update(cluster_info)
-        credentials = self.get_client_credentials(cluster_info["id"])
-        context.update(credentials)
-        context["host"] = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        return context
+        server_address_path = f'/clusters/{self.cluster_id}'
+        return {
+            'server_address': f'{self._bcs_server_host}{server_address_path}',
+            'server_address_path': server_address_path,
+            'identifier': self.cluster_id,
+            'user_token': settings.BCS_APIGW_TOKEN,
+            'host': f'{self._bcs_server_host}{server_address_path}',
+        }
 
     @cached_property
     def _context_for_shared_cluster(self):
         return {
-            "host": f"{settings.BCS_API_GW_DOMAIN}/{self._bcs_server_stag}/v4/clusters/{self.cluster_id}",
-            "user_token": settings.BCS_API_GW_AUTH_TOKEN,
+            "host": f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/clusters/{self.cluster_id}",
+            "user_token": settings.BCS_APIGW_TOKEN,
         }
 
     @cached_property
@@ -333,7 +328,7 @@ class K8SClient(BCSClientBase):
 
     def get_events(self, params):
         # storage可以获取比较长的event信息，因此，通过storage查询event
-        url = f"{settings.BCS_API_SERVER_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
+        url = f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
         resp = http_get(url, params=params, headers=self.headers)
         return resp
 
@@ -344,7 +339,10 @@ class K8SClient(BCSClientBase):
 
     @property
     def _headers_for_bcs_agent_api(self):
-        return {"Authorization": getattr(settings, "BCS_AUTH_TOKEN", ""), "Content-Type": "application/json"}
+        return {
+            "Authorization": f'Bearer {getattr(settings, "BCS_APIGW_TOKEN", "")}',
+            "Content-Type": "application/json",
+        }
 
     def query_cluster(self):
         """获取bke_cluster_id, identifier"""

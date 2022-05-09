@@ -496,8 +496,6 @@ def get_all_cluster_host_ips(access_token):
 
 
 # new client module start
-
-
 class PaaSCCConfig:
     """PaaSCC 系统配置对象，为 Client 提供地址等信息"""
 
@@ -505,16 +503,24 @@ class PaaSCCConfig:
         self.host = host
 
         # PaaSCC 系统接口地址
+        # 项目
+        self.list_projects = f'{host}/projects/'
+        self.get_project_url = f"{host}/projects/{{project_id}}/"
+        self.list_projects_by_ids = f"{host}/project_list/"
+        # 集群
         self.get_cluster_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}"
         self.get_cluster_by_id_url = f"{host}/clusters/{{cluster_id}}/"
-        self.get_project_url = f"{host}/projects/{{project_id}}/"
         self.update_cluster_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/"
         self.delete_cluster_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/"
         self.list_clusters_url = f"{host}/cluster_list/"
         self.update_node_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/nodes/"
+        # TODO 兼容容器化版本的逻辑，直连 SVC，后续随 PaaSCC 一并移除
+        if getattr(settings, "BCS_CC_GET_PROJECT_NODES", None):
+            self.get_node_list_url = f"{host}/projects/{{project_id}}/clusters/null/nodes/"
+        else:
+            self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
+        # 命名空间
         self.get_cluster_namespace_list_url = f"{host}/projects/{{project_id}}/clusters/{{cluster_id}}/namespaces/"
-        self.get_node_list_url = f"{host}/projects/{{project_id}}/nodes/"
-        self.list_projects_by_ids = f"{host}/project_list/"
         self.list_namespaces_in_shared_cluster = f"{host}/shared_clusters/{{cluster_id}}/"
 
 
@@ -657,3 +663,7 @@ class PaaSCCClient(BkApiClient):
         url = self._config.list_namespaces_in_shared_cluster.format(cluster_id=cluster_id)
         # TODO 支持分页查询
         return self._client.request_json("GET", url, params={'offset': 0, 'limit': 1000})
+
+    @response_handler(default=[])
+    def list_all_projects(self) -> Dict:
+        return self._client.request_json('GET', url=self._config.list_projects, params={'desire_all_data': 1})

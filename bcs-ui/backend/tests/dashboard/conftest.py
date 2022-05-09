@@ -37,14 +37,14 @@ def dashboard_api_common_patch():
 
 
 def gen_mock_pod_manifest(*args, **kwargs) -> Dict:
-    """ 构造并返回 mock 的 pod 配置信息 """
+    """构造并返回 mock 的 pod 配置信息"""
     with open(f'{settings.BASE_DIR}/backend/tests/resources/formatter/workloads/contents/pod.json') as fr:
         configs = json.load(fr)
     return configs['status_running']
 
 
 def gen_mock_env_info(*args, **kwargs) -> str:
-    """ 构造并返回 mock 的 exec_command 查询到的 env_info """
+    """构造并返回 mock 的 exec_command 查询到的 env_info"""
     return "env1=xxx\nenv2=xxx\nenv3=xxx"
 
 

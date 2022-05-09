@@ -17,14 +17,28 @@ package resource
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
+	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 // InvalidateDiscoveryCache 清理集群 Discovery 缓存内容，慎用
 func (h *Handler) InvalidateDiscoveryCache(
-	ctx context.Context, req *clusterRes.InvalidateDiscoveryCacheReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.InvalidateDiscoveryCacheReq, _ *clusterRes.CommonResp,
 ) error {
+	permCtx := clusterAuth.NewPermCtx(
+		ctx.Value(ctxkey.UsernameKey).(string), req.ProjectID, req.ClusterID,
+	)
+	if allow, err := iam.NewClusterPerm(req.ProjectID).CanManage(permCtx); err != nil {
+		return err
+	} else if !allow {
+		return errorx.New(errcode.NoIAMPerm, "无指定操作权限")
+	}
+
 	cli, err := res.NewRedisCacheClient4Conf(ctx, res.NewClusterConfig(req.ClusterID))
 	if err != nil {
 		return err

@@ -18,7 +18,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components import prometheus as prom
+from backend.components import bcs_monitor as prom
 from backend.container_service.observability.metric.constants import (
     METRICS_DEFAULT_CONTAINER_LIST,
     METRICS_DEFAULT_NAMESPACE,
@@ -48,10 +48,8 @@ class ContainerMetricViewSet(SystemViewSet):
         query_params = {
             'cluster_id': cluster_id,
             'namespace': params['namespace'],
-            'pod_name': pod_name if pod_name != URL_DEFAULT_PLACEHOLDER else METRICS_DEFAULT_POD_NAME,
-            'container_id_list': params['container_ids']
-            if params.get('container_ids')
-            else METRICS_DEFAULT_CONTAINER_LIST,
+            'pod_name': pod_name,
+            'container_name': params.get('container_name') or ".*",
         }
         # 部分指标如 Limit 不需要时间范围
         if need_time_range:
@@ -61,6 +59,10 @@ class ContainerMetricViewSet(SystemViewSet):
                     'end': params['end_at'],
                 }
             )
+
+        # 添加业务ID
+        query_params['bk_biz_id'] = self.request.project.cc_app_id
+
         return query_metric_func(**query_params)
 
     @action(methods=['POST'], url_path='cpu_limit', detail=False)

@@ -21,15 +21,18 @@ import (
 	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	goAttr "github.com/ssrathi/go-attr"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
@@ -57,6 +60,16 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 				}
 			}
 			ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
+
+			// 3. 注入 Project，Cluster 信息
+			if needInjectProjCluster(req) {
+				projInfo, clusterInfo, err := fetchProjCluster(ctx, req)
+				if err != nil {
+					return err
+				}
+				ctx = context.WithValue(ctx, ctxkey.ProjKey, projInfo)
+				ctx = context.WithValue(ctx, ctxkey.ClusterKey, clusterInfo)
+			}
 
 			// 实际执行业务逻辑，获取返回结果
 			return fn(ctx, req, rsp)
@@ -87,15 +100,15 @@ func canExemptAuth(req server.Request) bool {
 
 // 通过 micro metadata（headers）信息，解析出用户名
 func parseUsername(md metadata.Metadata) (string, error) {
-	jwtToken, ok := md.Get("Authorization")
+	authorization, ok := md.Get("Authorization")
 	if !ok {
 		return "", errorx.New(errcode.Unauth, "failed to get authorization token!")
 	}
-	if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
+	if len(authorization) == 0 || !strings.HasPrefix(authorization, "Bearer ") {
 		return "", errorx.New(errcode.Unauth, "authorization token error")
 	}
 
-	claims, err := jwtDecode(jwtToken[7:])
+	claims, err := jwtDecode(authorization[7:])
 	if err != nil {
 		return "", err
 	}
@@ -128,4 +141,48 @@ func jwtDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 		return nil, errorx.New(errcode.Unauth, "jwt token's issuer isn't bcs")
 	}
 	return claims, nil
+}
+
+// NoInjectProjClusterEndpoints 不需要注入项目 & 集群信息的方法
+var NoInjectProjClusterEndpoints = []string{
+	"Basic.Version",
+	"Basic.Ping",
+	"Basic.Healthz",
+	"Basic.Echo",
+	// 订阅 API 比较特殊，单独走 Info 注入逻辑
+	"Resource.Subscribe",
+	// Example & Tmpl API 不需要 Info 注入
+	"Resource.GetK8SResTemplate",
+	"Resource.GetResFormSchema",
+	"Resource.GetFormSupportedAPIVersions",
+}
+
+// 需要注入项目 & 集群信息
+func needInjectProjCluster(req server.Request) bool {
+	return !slice.StringInSlice(req.Endpoint(), NoInjectProjClusterEndpoints)
+}
+
+// 获取项目，集群信息
+func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project, *cluster.Cluster, error) {
+	projectID, err := goAttr.GetValue(req.Body(), "ProjectID")
+	if err != nil {
+		return nil, nil, errorx.New(errcode.General, "Get ProjectID from Request Failed: %v", err)
+	}
+	projInfo, err := project.GetProjectInfo(ctx, projectID.(string))
+	if err != nil {
+		return nil, nil, errorx.New(errcode.General, "获取项目 %s 信息失败：%v", projectID, err)
+	}
+	clusterID, err := goAttr.GetValue(req.Body(), "ClusterID")
+	if err != nil {
+		return nil, nil, errorx.New(errcode.General, "Get ClusterID from Request Failed: %v", err)
+	}
+	clusterInfo, err := cluster.GetClusterInfo(ctx, clusterID.(string))
+	if err != nil {
+		return nil, nil, errorx.New(errcode.General, "获取集群 %s 信息失败：%v", clusterID, err)
+	}
+	// 若集群类型非共享集群，则需确认集群的项目 ID 与请求参数中的一致
+	if !slice.StringInSlice(clusterInfo.Type, cluster.SharedClusterTypes) && clusterInfo.ProjID != projInfo.ID {
+		return nil, nil, errorx.New(errcode.ValidateErr, "集群 %s 不属于指定项目!", clusterID)
+	}
+	return projInfo, clusterInfo, nil
 }

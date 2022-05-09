@@ -18,7 +18,7 @@ from backend.resources.utils.format import ResourceDefaultFormatter
 
 
 class EventFormatter(ResourceDefaultFormatter):
-    """ 事件 格式化器 """
+    """事件 格式化器"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         return self.format_common_dict(resource_dict)

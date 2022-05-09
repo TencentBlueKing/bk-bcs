@@ -21,5 +21,4 @@ app_name = 'user'
 urlpatterns = [
     url(r'^api/user/$', views.UserInfoViewSet.as_view(), name='api.accounts.user'),
     url(r'^api/accounts/userinfo/$', views.UserInfoViewSet.as_view(), name='api.accounts.userinfo'),
-    url(r'^api/bklogin/users/$', views.BkLoginUser.as_view()),
 ]

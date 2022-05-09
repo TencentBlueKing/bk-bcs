@@ -43,7 +43,7 @@ def config_map_configs():
 
 class TestConfigMapFormatter:
     def test_format_dict(self, config_map_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = ConfigMapFormatter().format_dict(config_map_configs)
         assert set(result.keys()) == {'data', 'age', 'createTime', 'updateTime'}
         assert result['data'] == ['game.properties', 'ui.properties']

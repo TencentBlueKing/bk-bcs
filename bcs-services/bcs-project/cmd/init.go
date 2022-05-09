@@ -17,21 +17,18 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	"github.com/micro/go-micro/v2/server"
 	serverGrpc "github.com/micro/go-micro/v2/server/grpc"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
@@ -45,6 +42,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/wrapper"
@@ -56,8 +54,7 @@ type ProjectService struct {
 	opt *conf.ProjectConfig
 
 	// mongo DB options
-	mongoOptions *mongo.Options
-	model        store.ProjectModel
+	model store.ProjectModel
 
 	microSvc  microSvc.Service
 	microRgt  microRgt.Registry
@@ -120,8 +117,13 @@ func (p *ProjectService) Run() error {
 // init server and client tls config
 func (p *ProjectService) initTLSConfig() error {
 	if len(p.opt.Server.Cert) != 0 && len(p.opt.Server.Key) != 0 && len(p.opt.Server.Ca) != 0 {
+		// 获取 cert paasword
+		serverCertPwd := static.ServerCertPwd
+		if p.opt.Server.CertPwd != "" {
+			serverCertPwd = p.opt.Server.CertPwd
+		}
 		tlsConfig, err := ssl.ServerTslConfVerityClient(p.opt.Server.Ca, p.opt.Server.Cert,
-			p.opt.Server.Key, p.opt.Server.CertPwd)
+			p.opt.Server.Key, serverCertPwd)
 		if err != nil {
 			logging.Error("load project server tls config failed, err %s", err.Error())
 			return err
@@ -131,8 +133,13 @@ func (p *ProjectService) initTLSConfig() error {
 	}
 
 	if len(p.opt.Client.Cert) != 0 && len(p.opt.Client.Key) != 0 && len(p.opt.Client.Ca) != 0 {
+		// 获取 cert paasword
+		clientCertPwd := static.ClientCertPwd
+		if p.opt.Client.CertPwd != "" {
+			clientCertPwd = p.opt.Client.CertPwd
+		}
 		tlsConfig, err := ssl.ClientTslConfVerity(p.opt.Client.Ca, p.opt.Client.Cert,
-			p.opt.Client.Key, p.opt.Client.CertPwd)
+			p.opt.Client.Key, clientCertPwd)
 		if err != nil {
 			logging.Error("load project client tls config failed, err %s", err.Error())
 			return err
@@ -145,43 +152,9 @@ func (p *ProjectService) initTLSConfig() error {
 
 // init mongo client
 func (p *ProjectService) initMongo() error {
-	if len(p.opt.Mongo.Address) == 0 {
-		return fmt.Errorf("mongo address cannot be empty")
-	}
-	if len(p.opt.Mongo.Database) == 0 {
-		return fmt.Errorf("mongo database cannot be empty")
-	}
-	// 判断 password 是否加密，如果加密需要解密获取到原始数据
-	// 使用 bcs service 统一的 pwd
-	password := p.opt.Mongo.Password
-	if password != "" && p.opt.Mongo.Encrypted {
-		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
-		password = string(realPwd)
-	}
-
-	mongoOptions := &mongo.Options{
-		Hosts:                 strings.Split(p.opt.Mongo.Address, ","),
-		ConnectTimeoutSeconds: int(p.opt.Mongo.ConnectTimeout),
-		Database:              p.opt.Mongo.Database,
-		Username:              p.opt.Mongo.Username,
-		Password:              password,
-		MaxPoolSize:           uint64(p.opt.Mongo.MaxPoolSize),
-		MinPoolSize:           uint64(p.opt.Mongo.MinPoolSize),
-	}
-	p.mongoOptions = mongoOptions
-
-	mongoDB, err := mongo.NewDB(mongoOptions)
-	if err != nil {
-		logging.Error("create mongo error, err: %s", err.Error())
-		return err
-	}
-	if err = mongoDB.Ping(); err != nil {
-		logging.Error("connect mongo error, err: %s", err.Error())
-		return err
-	}
+	store.InitMongo(&p.opt.Mongo)
+	p.model = store.New(store.GetMongo())
 	logging.Info("init mongo successfully")
-	modelSet := store.New(mongoDB)
-	p.model = modelSet
 	return nil
 }
 
@@ -222,8 +195,10 @@ func (p *ProjectService) initDiscovery() error {
 // init micro service
 func (p *ProjectService) initMicro() error {
 	// max size: 50M, add grpc address to access
-	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize), server.Address(fmt.Sprintf(":%d", p.opt.Server.Port)))
+	// NOTE: 针对server的调整，需要放在前面，避免覆盖service内置的server
+	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize))
 	svc := microGrpc.NewService(
+		microSvc.Server(server),
 		microSvc.Name(config.ServiceDomain),
 		microSvc.Metadata(map[string]string{
 			config.MicroMetaKeyHTTPPort: strconv.Itoa(int(p.opt.Server.HTTPPort)),
@@ -235,7 +210,6 @@ func (p *ProjectService) initMicro() error {
 		microSvc.RegisterTTL(30*time.Second),      // add ttl to config
 		microSvc.RegisterInterval(25*time.Second), // add interval to config
 		microSvc.Context(p.ctx),
-		microSvc.Server(server),
 		microSvc.AfterStart(func() error {
 			return p.discovery.Start()
 		}),
@@ -244,7 +218,7 @@ func (p *ProjectService) initMicro() error {
 			return nil
 		}),
 		microSvc.WrapHandler(
-			wrapper.NewInjectRequestIDWrapper,
+			wrapper.NewInjectContextWrapper,
 			wrapper.NewLogWrapper,
 			wrapper.NewResponseWrapper,
 			wrapper.NewValidatorWrapper,
@@ -252,9 +226,14 @@ func (p *ProjectService) initMicro() error {
 	)
 	svc.Init()
 
-	// project hander
+	// project handler
 	if err := proto.RegisterBCSProjectHandler(svc.Server(), handler.NewProject(p.model)); err != nil {
 		logging.Error("register handler failed, err: %s", err.Error())
+		return err
+	}
+	// 添加健康检查相关handler
+	if err := proto.RegisterHealthzHandler(svc.Server(), handler.NewHealthz()); err != nil {
+		logging.Error("register healthz handler failed, err: %s", err.Error())
 		return err
 	}
 
@@ -266,7 +245,7 @@ func (p *ProjectService) initMicro() error {
 // init http gateway
 func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	gwMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		runtime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			OrigName:     true,
 			EmitDefaults: true,
@@ -281,24 +260,41 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(config.MaxMsgSize), grpc.MaxCallSendMsgSize(config.MaxMsgSize)))
-	err := proto.RegisterBCSProjectGwFromEndpoint(
-		context.TODO(),
-		gwMux,
-		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
-		grpcDialOpts,
-	)
-	if err != nil {
-		logging.Error("register http gateway failed, err %s", err.Error())
-		return fmt.Errorf("register http gateway failed, err %s", err.Error())
+	if err := p.registerGatewayFromEndPoint(gwMux, grpcDialOpts); err != nil {
+		return err
 	}
 	router.Handle("/{uri:.*}", gwMux)
 	logging.Info("register grpc gateway handler to path /")
 	return nil
 }
 
+func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, grpcDialOpts []grpc.DialOption) error {
+	// 注册项目功能 endpoint
+	if err := proto.RegisterBCSProjectGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register http gateway failed, err %s", err.Error())
+		return err
+	}
+	// 注册健康检查相关 endpoint
+	if err := proto.RegisterHealthzGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register healthz gateway failed, err %s", err.Error())
+		return err
+	}
+	return nil
+}
+
 // init swagger
 func (p *ProjectService) initSwagger(mux *http.ServeMux) {
-	if len(p.opt.Swagger.Dir) != 0 {
+	if p.opt.Swagger.Enable {
 		logging.Info("swagger doc is enabled")
 		mux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, path.Join(p.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
@@ -360,14 +356,4 @@ func (p *ProjectService) initMetric() error {
 		}
 	}()
 	return nil
-}
-
-// CustomMatcher for http header
-func CustomMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
-	}
 }

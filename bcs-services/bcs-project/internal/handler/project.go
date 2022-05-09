@@ -18,7 +18,11 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/actions/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
+	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
@@ -35,38 +39,113 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
+	// 判断是否有创建权限
+	if err := perm.CanCreateProject(auth.GetUserFromCtx(ctx)); err != nil {
+		return err
+	}
+	// 创建项目
 	ca := project.NewCreateAction(p.model)
-	projectInfo, err := ca.Do(ctx, req)
-	setResp(resp, err, projectInfo)
+	projectInfo, e := ca.Do(ctx, req)
+	if e != nil {
+		return e
+	}
+	// 处理返回数据及权限
+	setResp(resp, projectInfo)
 	return nil
 }
 
 // GetProject get project info
 func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRequest, resp *proto.ProjectResponse) error {
+	// 查询项目信息
 	ga := project.NewGetAction(p.model)
 	projectInfo, err := ga.Do(ctx, req)
-	setResp(resp, err, projectInfo)
+	if err != nil {
+		return err
+	}
+	// 校验项目的查看权限
+	if err := perm.CanViewProject(auth.GetUserFromCtx(ctx), projectInfo.ProjectID); err != nil {
+		return err
+	}
+	// 处理返回数据及权限
+	setResp(resp, projectInfo)
 	return nil
 }
 
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
+	// 校验项目的删除权限
+	if err := perm.CanDeleteProject(auth.GetUserFromCtx(ctx), req.ProjectID); err != nil {
+		return err
+	}
+	// 删除项目
 	da := project.NewDeleteAction(p.model)
-	err := da.Do(ctx, req)
-	setResp(resp, err, nil)
+	if err := da.Do(ctx, req); err != nil {
+		return err
+	}
+	// 处理返回数据及权限
+	setResp(resp, nil)
 	return nil
 }
 
 func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
+	// 校验项目的删除权限
+	if err := perm.CanEditProject(auth.GetUserFromCtx(ctx), req.ProjectID); err != nil {
+		return err
+	}
+
 	ua := project.NewUpdateAction(p.model)
-	projectInfo, err := ua.Do(ctx, req)
-	setResp(resp, err, projectInfo)
+	projectInfo, e := ua.Do(ctx, req)
+	if e != nil {
+		return e
+	}
+	// 处理返回数据及权限
+	setResp(resp, projectInfo)
 	return nil
 }
 
 func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
 	la := project.NewListAction(p.model)
-	projects, err := la.Do(ctx, req)
-	setListResp(resp, err, projects)
+	projects, e := la.Do(ctx, req)
+	if e != nil {
+		return e
+	}
+	// 获取权限
+	permClient, err := perm.NewPermClient()
+	if err != nil {
+		return errorx.NewIAMClientErr(err)
+	}
+	// 获取 project id, 用以获取对应的权限
+	ids := getProjectIDs(projects)
+	perms, err := permClient.GetMultiProjectMultiActionPermission(
+		auth.GetUserFromCtx(ctx), ids,
+		[]string{perm.ProjectCreate, perm.ProjectView, perm.ProjectEdit, perm.ProjectDelete},
+	)
+	if err != nil {
+		return err
+	}
+	// 处理返回
+	setListPermsResp(resp, projects, perms)
 	return nil
+}
+
+func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context, req *proto.ListAuthorizedProjReq, resp *proto.ListAuthorizedProjResp) error {
+	lap := project.NewListAuthorizedProj(p.model)
+	projects, e := lap.Do(ctx, req)
+	if e != nil {
+		return e
+	}
+	setListResp(resp, projects)
+	return nil
+}
+
+// getProjectIDs 获取项目ID
+func getProjectIDs(p *map[string]interface{}) []string {
+	var ids []string
+	results := (*p)["results"]
+	if val, ok := results.([]*pm.Project); ok {
+		for _, i := range val {
+			ids = append(ids, i.ProjectID)
+		}
+	}
+	return ids
 }

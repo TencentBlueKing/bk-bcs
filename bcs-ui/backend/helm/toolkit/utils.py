@@ -14,6 +14,8 @@ specific language governing permissions and limitations under the License.
 """
 from dataclasses import dataclass
 
+from django.conf import settings
+
 from backend.templatesets.legacy_apps.instance import constants as instance_constants
 from backend.utils.basic import get_bcs_component_version
 
@@ -24,6 +26,10 @@ except ImportError:
 
 
 def get_kubectl_version(cluster_version, kubectl_version_info, default_kubectl_version):
+    # CE 版本目前仅提供默认版本的 kubectld
+    if settings.REGION == 'ce':
+        return default_kubectl_version
+
     return get_bcs_component_version(cluster_version, kubectl_version_info, default_kubectl_version)
 
 

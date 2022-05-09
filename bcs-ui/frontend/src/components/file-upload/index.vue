@@ -118,7 +118,7 @@
                 const formData = new FormData()
                 formData.append('image', fileObj.origin)
                 fileObj.status = 'uploading'
-                fileObj.statusText = '上传中'
+                fileObj.statusText = this.$t('上传中')
 
                 const xhr = new XMLHttpRequest()
                 fileObj.xhr = xhr // 保存，用于中断请求
@@ -133,7 +133,7 @@
                             if (response.code === 0) {
                                 this.isUploadLoading = false
                                 fileObj.status = 'success'
-                                fileObj.statusText = '上传成功'
+                                fileObj.statusText = this.$t('上传成功')
                                 setTimeout(() => {
                                     this.$emit('uploadSuccess', response.data)
                                     this.clearUploadQueue()

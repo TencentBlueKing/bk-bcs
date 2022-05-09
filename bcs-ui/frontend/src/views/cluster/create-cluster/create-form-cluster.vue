@@ -1,7 +1,7 @@
 <template>
     <section class="create-form-cluster">
         <FormGroup :title="$t('基本信息')">
-            <bk-form :label-width="100" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
+            <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
                 <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                     <bk-input v-model="basicInfo.clusterName"></bk-input>
                 </bk-form-item>
@@ -49,6 +49,7 @@
                     :cloud-id="basicInfo.provider"
                     :cidr-step-list="cidrStepList"
                     :environment="basicInfo.environment"
+                    :label-width="labelWidth"
                     ref="formMode"
                 >
                 </FormMode>
@@ -106,6 +107,7 @@
     import YamlMode from './yaml-mode.vue'
     import { TranslateResult } from 'vue-i18n'
     import tipDialog from '@/components/tip-dialog/index.vue'
+    import useFormLabel from '@/common/use-form-label'
 
     export default defineComponent({
         name: 'CreateFormCluster',
@@ -135,6 +137,7 @@
             const handleGetTemplateList = async () => {
                 templateLoading.value = true
                 templateList.value = await $store.dispatch('clustermanager/fetchCloudList')
+                basicInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
             // 版本列表
@@ -266,10 +269,13 @@
             const handleCancel = async () => {
                 $router.push({ name: 'clusterMain' })
             }
+            const { labelWidth, initFormLabelWidth } = useFormLabel()
             onMounted(() => {
                 handleGetTemplateList()
+                initFormLabelWidth(basicForm.value)
             })
             return {
+                labelWidth,
                 runEnv,
                 creating,
                 ipErrorTips,

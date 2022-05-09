@@ -14,7 +14,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -48,7 +47,7 @@ func becomeLeader(ctx context.Context, opt *cmd.DataManagerOptions) sync.Leader 
 	// ready to campaign
 	etcdTLS, err := opt.GetEtcdRegistryTLS()
 	if err != nil {
-		fmt.Printf("etcd configuration err: %s, service exit.\n", err.Error())
+		blog.Errorf("etcd configuration err: %s, service exit.", err.Error())
 		os.Exit(-1)
 	}
 
@@ -62,7 +61,7 @@ func becomeLeader(ctx context.Context, opt *cmd.DataManagerOptions) sync.Leader 
 	blog.Infof("Node %s waiting to become a leader...", id)
 	leader, err := etcdSync.Leader(id, sync.LeaderContext(ctx))
 	if err != nil {
-		fmt.Printf("create etcd leader election failed: %s, service exit.\n", err.Error())
+		blog.Errorf("create etcd leader election failed: %s, service exit.", err.Error())
 		os.Exit(-1)
 	}
 	blog.Infof("I'm leader!")
@@ -92,10 +91,7 @@ func workAsProducer(ctx context.Context, server *cmd.Server, leader sync.Leader,
 
 func workAsConsumer(ctx context.Context, server *cmd.Server) {
 	server.RunAsConsumer()
-	select {
-	case <-ctx.Done():
-		blog.Infof("ctx done, leader resign")
-		server.StopConsumer()
-	}
-
+	<-ctx.Done()
+	blog.Infof("ctx done, exit consumer")
+	server.StopConsumer()
 }
