@@ -275,5 +275,5 @@ func APIError(c *gin.Context, msg string) {
 		RequestID: authCtx.RequestId,
 	}
 
-	c.AbortWithStatusJSON(http.StatusOK, data)
+	c.AbortWithStatusJSON(http.StatusBadRequest, data)
 }
