@@ -36,7 +36,7 @@ import (
 
 type service struct {
 	opts         *route.Options
-	wsConnection int64
+	wsConnection int64 // 长连接数量
 }
 
 func NewRouteRegistrar(opts *route.Options) route.Registrar {

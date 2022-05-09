@@ -84,6 +84,18 @@ func RegisterWsConnection(loader func() float64) {
 	prometheus.MustRegister(wsConnectionOnlineCount)
 }
 
+// RegisterPodCount
+func RegisterPodCount(tgNamespace string, loader func() float64) {
+	podCount := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+		Namespace:   namespace,
+		Subsystem:   subsystem,
+		Name:        "pod_count",
+		Help:        "The number of current pod in namespace",
+		ConstLabels: prometheus.Labels{"tg_namespace": tgNamespace},
+	}, loader)
+	prometheus.MustRegister(podCount)
+}
+
 // PromMetricHandler prometheus handler 转换为 Gin Handler
 func PromMetricHandler() gin.HandlerFunc {
 	h := promhttp.Handler()
