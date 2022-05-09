@@ -36,7 +36,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "http_request_duration_seconds",
 		Help:      "Histogram of the time (in seconds) each request took.",
-		Buckets:   []float64{0.1, 0.2, 0.5, 1, 5, 10, 30, 60},
+		Buckets:   []float64{0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60},
 	}, []string{"handler", "method", "status", "code"})
 
 	// 创建/等待 pod Ready 数量
@@ -53,7 +53,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "pod_ready_duration_seconds",
 		Help:      "create/wait duration(seconds) of pod",
-		Buckets:   []float64{0.1, 1, 5, 10, 30, 60},
+		Buckets:   []float64{0.1, 1, 2, 5, 10, 30, 60},
 	}, []string{"tg_cluster_id", "tg_namespace", "tg_pod_name", "status"})
 
 	// ws连接
