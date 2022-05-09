@@ -34,15 +34,15 @@ create_update_params = {
 
 
 class TestServiceMonitor:
-    """ 指标：ServiceMonitor 相关测试 """
+    """指标：ServiceMonitor 相关测试"""
 
     common_prefix = '/api/metrics/projects/{project_id}/clusters/{cluster_id}/service_monitors'.format(
         project_id=TEST_PROJECT_ID, cluster_id=TEST_CLUSTER_ID
     )
 
     def test_list(self, api_client, sm_api_patch, patch_k8s_client):
-        """ 测试获取列表接口 """
-        response = api_client.get(f'{self.common_prefix}/')
+        """测试获取列表接口"""
+        response = api_client.get(f'{self.common_prefix}/?with_perms=false')
         assert response.json()['code'] == 0
         assert set(response.json()['data'][0].keys()) == {
             'namespace_id',
@@ -53,31 +53,32 @@ class TestServiceMonitor:
             'spec',
             'cluster_name',
             'environment',
-            'permissions',
             'status',
             'namespace',
             'name',
             'instance_id',
+            'iam_ns_id',
+            'is_system',
         }
 
     def test_create(self, api_client, sm_api_patch):
-        """ 测试创建接口 """
+        """测试创建接口"""
         response = api_client.post(f'{self.common_prefix}/', data=create_update_params)
         assert response.json()['code'] == 0
 
     def test_batch_delete(self, api_client, sm_api_patch):
-        """ 测试批量删除接口 """
+        """测试批量删除接口"""
         params = {'service_monitors': [{'namespace': namespace, 'name': sm_name}]}
         response = api_client.delete(f'{self.common_prefix}/batch/', data=params)
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client, sm_api_patch, patch_k8s_client):
-        """ 测试获取单个接口 """
+        """测试获取单个接口"""
         response = api_client.get(f'{self.common_prefix}/{namespace}/{sm_name}/')
         assert response.json()['code'] == 0
 
     def test_destroy(self, api_client, sm_api_patch):
-        """ 测试删除接口 """
+        """测试删除接口"""
         response = api_client.delete(f'{self.common_prefix}/{namespace}/{sm_name}/')
         assert response.json()['code'] == 0
 

@@ -38,6 +38,21 @@ func (cm *ClusterManager) CreateCluster(ctx context.Context,
 	return nil
 }
 
+// ImportCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ImportCluster(ctx context.Context,
+	req *cmproto.ImportClusterReq, resp *cmproto.ImportClusterResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewImportAction(cm.model, cm.locker)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ImportCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ImportCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // RetryCreateClusterTask implements interface cmproto.ClusterManagerServer for retry create task
 func (cm *ClusterManager) RetryCreateClusterTask(ctx context.Context,
 	req *cmproto.RetryCreateClusterReq, resp *cmproto.RetryCreateClusterResp) error {

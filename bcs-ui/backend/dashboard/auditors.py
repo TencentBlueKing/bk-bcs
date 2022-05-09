@@ -16,6 +16,6 @@ from backend.bcs_web.audit_log.audit.auditors import Auditor
 
 
 class DashboardAuditor(Auditor):
-    """ Dashboard 操作审计类 """
+    """Dashboard 操作审计类"""
 
     pass

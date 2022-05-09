@@ -22,11 +22,11 @@ from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, Template, VersionedEntity
 from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
@@ -50,7 +50,7 @@ from backend.uniapps.apis.utils import check_user_project, skip_authentication
 from backend.uniapps.application import constants as app_constants
 from backend.uniapps.application import utils
 from backend.uniapps.application import views as app_views
-from backend.uniapps.application.constants import FUNC_MAP, NORMAL_STATUS, REVERSE_CATEGORY_MAP, UNNORMAL_STATUS
+from backend.uniapps.application.constants import FUNC_MAP, REVERSE_CATEGORY_MAP
 from backend.utils import FancyDict
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
@@ -510,12 +510,7 @@ class InstanceNamespace(BaseAPIViews, app_views.BaseAPI):
         if not (len(set(project_id_list)) == 1 and project_id_list[0] == project_id):
             raise error_codes.CheckFailed.f("实例不属于项目，请确认")
         ret_data = list(namespace_data.values())
-
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        ns_ret_instance_list = ns_perm_client.hook_perms(
-            ret_data, filter_use=False, ns_id_flag="namespace_id", ns_name_flag="namespace"
-        )
-        return JsonResponse({"code": 0, "data": ns_ret_instance_list})
+        return JsonResponse({"code": 0, "data": ret_data})
 
 
 class InstanceStatus(BaseAPIViews):
@@ -1535,9 +1530,30 @@ class ProjectMuster(BaseProjectMuster):
         self.get_request_user(request, request.GET.get("access_token"), project_id)
 
         ret_data = list(self.get_project_tmpl_set(project_id))
-        tmpl_perm_client = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-        tmpl_ret_list = tmpl_perm_client.hook_perms(ret_data, id_flag="id", filter_use=False)
-        return JsonResponse({"code": 0, "data": tmpl_ret_list})
+        # TODO 调整为带 web_annotations 的新协议
+        resources_actions_allowed = TemplatesetPermission().resources_actions_allowed(
+            res=[tpl['id'] for tpl in ret_data],
+            action_ids=[
+                TemplatesetAction.CREATE,
+                TemplatesetAction.DELETE,
+                TemplatesetAction.VIEW,
+                TemplatesetAction.UPDATE,
+                TemplatesetAction.INSTANTIATE,
+            ],
+            perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id),
+        )
+
+        for tpl in ret_data:
+            action_allowed = resources_actions_allowed[tpl['id']]
+            tpl['permissions'] = {
+                'create': action_allowed[TemplatesetAction.CREATE],
+                'delete': action_allowed[TemplatesetAction.DELETE],
+                'view': action_allowed[TemplatesetAction.VIEW],
+                'edit': action_allowed[TemplatesetAction.UPDATE],
+                'use': action_allowed[TemplatesetAction.INSTANTIATE],
+            }
+
+        return JsonResponse({"code": 0, "data": ret_data})
 
 
 class ProjectMusterVersion(BaseProjectMuster):
@@ -1633,8 +1649,4 @@ class ProjectNamespace(BaseProjectMuster, app_views.BaseAPI):
                 ns_data_new.append(i)
 
         self.compose_cluster_env(request, project_id, ns_data_new)
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        ns_ret_list = ns_perm_client.hook_perms(
-            ns_data_new, filter_use=False, ns_id_flag="namespace_id", ns_name_flag="namespace"
-        )
-        return JsonResponse({"code": 0, "data": ns_ret_list})
+        return JsonResponse({"code": 0, "data": ns_data_new})

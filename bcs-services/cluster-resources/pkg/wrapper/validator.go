@@ -17,7 +17,7 @@ package wrapper
 import (
 	"context"
 
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/server"
 )
 
 type validator interface {

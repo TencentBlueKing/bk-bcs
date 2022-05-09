@@ -25,29 +25,31 @@ class OptionalNamespaceSLZ(serializers.Serializer):
     namespace = serializers.CharField(label=_('命名空间'), required=False)
 
     def validate(self, attrs):
-        """ 若没有指定命名空间，则检查，若资源有命名空间维度，抛出异常 """
-        if not (attrs.get('namespace') or get_crd_info(**self.context).get('scope') == ResourceScope.Cluster):
-            raise ValidationError(_('查看/操作自定义资源 {} 需要指定 Namespace').format(self.context['crd_name']))
+        """若没有指定命名空间，则检查，若资源有命名空间维度，抛出异常"""
+        if get_crd_info(**self.context).get('scope') == ResourceScope.Cluster:
+            attrs['namespace'] = None
+        elif not attrs.get('namespace'):
+            raise ValidationError(_('查看/操作自定义资源 {} 需指定命名空间').format(self.context['crd_name']))
         return attrs
 
 
 class ListCustomObjectSLZ(OptionalNamespaceSLZ):
-    """ 获取自定义资源列表 """
+    """获取自定义资源列表"""
 
 
 class FetchCustomObjectSLZ(OptionalNamespaceSLZ):
-    """ 获取单个自定义对象 """
+    """获取单个自定义对象"""
 
 
 class CreateCustomObjectSLZ(serializers.Serializer):
-    """ 创建自定义对象 """
+    """创建自定义对象"""
 
     manifest = serializers.JSONField(label=_('资源配置信息'))
 
 
 class UpdateCustomObjectSLZ(CreateCustomObjectSLZ, OptionalNamespaceSLZ):
-    """ 更新（replace）某个自定义对象 """
+    """更新（replace）某个自定义对象"""
 
 
 class DestroyCustomObjectSLZ(OptionalNamespaceSLZ):
-    """ 删除单个自定义对象 """
+    """删除单个自定义对象"""

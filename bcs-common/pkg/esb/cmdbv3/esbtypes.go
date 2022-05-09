@@ -78,7 +78,7 @@ type ESBBusinessInfo struct {
 	BkPmpSvcPm        string      `json:"bk_pmp_svc_pm"`
 	BkPmpTestTm       string      `json:"bk_pmp_test_tm"`
 	BkProductName     string      `json:"bk_product_name"`
-	BkSourceID        int64       `json:"bk_source_id"`
+	BkSourceID        string      `json:"bk_source_id"`
 	BkSupplierAccount string      `json:"bk_supplier_account"`
 	BkTclsID          string      `json:"bk_tcls_id"`
 	BkTcmID           string      `json:"bk_tcm_id"`
@@ -125,7 +125,7 @@ type ESBTopoInst struct {
 // ESBSearchBizInstTopoResult result for search business inst topo
 type ESBSearchBizInstTopoResult struct {
 	ESBBaseResp `json:",inline"`
-	Data        *ESBTopoInst `json:"data"`
+	Data        []ESBTopoInst `json:"data"`
 }
 
 // ESBTransferHostModuleResult result for transfer host module
@@ -178,10 +178,10 @@ type ESBHostInfo struct {
 	BkBakOperator        string          `json:"bk_bak_operator"`
 	BkLogicZone          string          `json:"bk_logic_zone"`
 	IdcID                int64           `json:"idc_id"`
-	BkIsVirtual          string          `json:"bk_is_virtual"`
+	BkIsVirtual          bool            `json:"bk_is_virtual"`
 	Operator             string          `json:"operator"`
 	BkSvrDeviceClsName   string          `json:"bk_svr_device_cls_name"`
-	IdcCityID            int64           `json:"idc_city_id"`
+	IdcCityID            string          `json:"idc_city_id"`
 	NetStructName        string          `json:"net_struct_name"`
 	SvrInputTime         time.Time       `json:"svr_input_time"`
 	ClassifyLevelName    string          `json:"classify_level_name"`
@@ -243,6 +243,24 @@ type ESBListHostsWitoutBizResult struct {
 	Data        *ESBHostListInfo `json:"data"`
 }
 
+// ESBListBizHostsRequest request for list biz hosts
+type ESBListBizHostsRequest struct {
+	Page               *BasePage              `json:"page"`
+	BkBizID            int64                  `json:"bk_biz_id"`
+	BkSetIDs           []int64                `json:"bk_set_ids,omitempty"`
+	SetCond            []interface{}          `json:"set_cond,omitempty"`
+	BkModuleIDs        []int64                `json:"bk_module_ids,omitempty"`
+	ModuleCond         []interface{}          `json:"module_cond,omitempty"`
+	HostPropertyFilter map[string]interface{} `json:"host_property_filter,omitempty"`
+	Fields             []string               `json:"fields"`
+}
+
+// ESBListBizHostsResult result for list biz hosts
+type ESBListBizHostsResult struct {
+	ESBBaseResp `json:",inline"`
+	Data        *ESBHostListInfo `json:"data"`
+}
+
 // ESBBizLocation struct for biz location
 type ESBBizLocation struct {
 	BkBizID    int64  `json:"bk_biz_id"`
@@ -253,4 +271,64 @@ type ESBBizLocation struct {
 type ESBGetBizLocationResult struct {
 	ESBBaseResp `json:",inline"`
 	Data        []ESBBizLocation `json:"data"`
+}
+
+// ESBModule module info
+type ESBModule struct {
+	BkModuleID   int64  `json:"bk_module_id"`
+	BkModuleName string `json:"bk_module_name"`
+}
+
+// ESBSet set info
+type ESBSet struct {
+	BkSetID   int64       `json:"bk_set_id"`
+	BkSetName string      `json:"bk_set_name"`
+	Module    []ESBModule `json:"module"`
+}
+
+// ESBGetBizInternalModuleResult result for get_biz_internal_module
+type ESBGetBizInternalModuleResult struct {
+	ESBBaseResp `json:",inline"`
+	Data        *ESBSet `json:"data"`
+}
+
+// ESBListBizHostsTopoRequest request for list business hosts topo
+type ESBListBizHostsTopoRequest struct {
+	Page                 *BasePage              `json:"page"`
+	BkBizID              int64                  `json:"bk_biz_id"`
+	SetPropertyFilter    map[string]interface{} `json:"set_property_filter,omitempty"`
+	ModulePropertyFilter map[string]interface{} `json:"module_property_filter,omitempty"`
+	HostPropertyFilter   map[string]interface{} `json:"host_property_filter,omitempty"`
+	Fields               []string               `json:"fields,omitempty"`
+}
+
+// ESBTopoModuleInfo struct for host topo module
+type ESBTopoModuleInfo struct {
+	BkModuleID   int64  `json:"bk_module_id"`
+	BkModuleName string `json:"bk_module_name"`
+}
+
+// ESBTopoInfo struct for host topo
+type ESBTopoInfo struct {
+	BkSetID   int64               `json:"bk_set_id"`
+	BkSetName string              `json:"bk_set_name"`
+	Module    []ESBTopoModuleInfo `json:"module,omitempty"`
+}
+
+// ESBHostsTopoInfo topo info for hosts
+type ESBHostsTopoInfo struct {
+	Host *ESBHostInfo  `json:"host"`
+	Topo []ESBTopoInfo `json:"topo"`
+}
+
+// ListBizHostsTopoData data field for ESBListBizHostsTopoResult
+type ListBizHostsTopoData struct {
+	Count int64              `json:"count"`
+	Info  []ESBHostsTopoInfo `json:"info,omitempty"`
+}
+
+// ESBListBizHostsTopoResult response for list business hosts topo
+type ESBListBizHostsTopoResult struct {
+	ESBBaseResp `json:",inline"`
+	Data        *ListBizHostsTopoData `json:"data"`
 }

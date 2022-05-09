@@ -31,7 +31,7 @@ from backend.utils.string import decapitalize
 
 
 class Pod(ResourceClient):
-    """ Pod 相关资源 Client """
+    """Pod 相关资源 Client"""
 
     kind = K8sResourceKind.Pod.value
     formatter = PodFormatter()

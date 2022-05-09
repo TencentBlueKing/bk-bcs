@@ -1,0 +1,4 @@
+# don't commit the service binary to vcs
+/_output
+etc/*dev*
+*.pem

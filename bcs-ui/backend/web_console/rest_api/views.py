@@ -26,9 +26,9 @@ from backend.components.bcs.k8s import K8SClient
 from backend.container_service.clusters.base.utils import get_cluster
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
+from backend.utils.funutils import remove_url_domain
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.response import BKAPIResponse
-from backend.utils.funutils import remove_url_domain
 from backend.web_console import constants, pod_life_cycle
 from backend.web_console.bcs_client import k8s
 from backend.web_console.utils import get_kubectld_version

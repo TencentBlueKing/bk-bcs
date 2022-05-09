@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes
 
-go 1.14
+go 1.17
 
 require (
 	github.com/go-logr/logr v0.2.0

@@ -23,8 +23,8 @@ import (
 	"unicode"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/i18n"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/websocket"
@@ -123,7 +123,7 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	return inputMsg, nil
 }
 
-// Read : executor 回调读取 web 端的输入
+// Read : executor 回调读取 web 端的输入, 主动断开链接逻辑
 func (r *RemoteStreamConn) Read(p []byte) (int, error) {
 	select {
 	case <-r.ctx.Done():
@@ -182,15 +182,24 @@ func (r *RemoteStreamConn) Run() error {
 	defer pingInterval.Stop()
 
 	guideMessages := helloMessage(r.bindMgr.PodCtx.Source)
-
-	PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+	notSendMsg := true
 
 	for {
 		select {
 		case <-r.ctx.Done():
-			logger.Info("close RemoteStreamConn done")
-			return r.ctx.Err()
-		case output := <-r.outputMsgChan:
+			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
+			return nil
+		case output, ok := <-r.outputMsgChan:
+			if !ok {
+				logger.Infof("close %s RemoteStreamConn done by chan", r.bindMgr.PodCtx.PodName)
+				return nil
+			}
+			// 收到首个字节才发送 hello 信息
+			if notSendMsg {
+				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+				notSendMsg = false
+			}
+
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
 			}
@@ -203,11 +212,13 @@ func (r *RemoteStreamConn) Run() error {
 }
 
 // WaitStreamDone: stream 流处理
-func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
-	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, podCtx.ClusterId)
+func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types.PodContext) error {
+	defer r.Close()
+
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.AdminClusterId)
 	k8sConfig := &rest.Config{
 		Host:        host,
-		BearerToken: config.G.BCS.Token,
+		BearerToken: bcsConf.Token,
 	}
 	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
@@ -220,21 +231,18 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 		Namespace(podCtx.Namespace).
 		SubResource("exec")
 
-	req.VersionedParams(
-		&v1.PodExecOptions{
-			Command:   podCtx.Commands,
-			Container: podCtx.ContainerName,
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       true,
-		},
-		scheme.ParameterCodec,
-	)
+	req.VersionedParams(&v1.PodExecOptions{
+		Command:   podCtx.Commands,
+		Container: podCtx.ContainerName,
+		Stdin:     true,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       true,
+	}, scheme.ParameterCodec)
 
 	executor, err := remotecommand.NewSPDYExecutor(k8sConfig, "POST", req.URL())
 	if err != nil {
-		logger.Warnf("start remote stream error, reason: %s", err)
+		logger.Warnf("start remote stream error, err: %s", err)
 		return err
 	}
 
@@ -251,12 +259,11 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	})
 
 	if err != nil {
-		logger.Warnf("remote stream closed, reason: %s", err)
+		logger.Warnf("close %s WaitStreamDone err, %s", podCtx.PodName, err)
 		return err
 	}
 
-	logger.Info("remote stream closed normal")
-
+	logger.Infof("close %s WaitStreamDone done", podCtx.PodName)
 	return nil
 }
 
@@ -279,7 +286,7 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error()),
 		time.Now().Add(time.Second*5), // 最迟 5 秒
 	); err != nil {
-		logger.Warnf("gracefully close websocket error, %s", err)
+		logger.Warnf("gracefully close websocket [%s] error: %s", errMsg, err)
 	}
 
 	// 如果没有建立双向连接前, 需要ReadMessage才能正常结束

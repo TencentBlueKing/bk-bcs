@@ -39,6 +39,13 @@ var (
 	errServerNotInit = errors.New("ClusterManagerClient not inited")
 )
 
+const (
+	// CacheClusterProjectKeyPrefix key prefix for cluster project id
+	CacheClusterProjectKeyPrefix = "cached_cluster_manager"
+	// CacheClusterBusinessKeyPrefix key prefix for cluster business id
+	CacheClusterBusinessKeyPrefix = "cached_cluster_manager_cluster_business"
+)
+
 // Options for init clusterManager
 type Options struct {
 	Module          string
@@ -99,7 +106,7 @@ func (cm *ClusterManagerClient) GetProjectIDByClusterID(clusterID string) (strin
 	}
 
 	cacheName := func(id string) string {
-		return fmt.Sprintf("cached_cluster_manager_%v", id)
+		return fmt.Sprintf("%s_%v", CacheClusterProjectKeyPrefix, id)
 	}
 	val, ok := cm.cache.Get(cacheName(clusterID))
 	if ok && val != nil {
@@ -128,10 +135,52 @@ func (cm *ClusterManagerClient) GetProjectIDByClusterID(clusterID string) (strin
 
 	err = cm.cache.Add(cacheName(clusterID), projectID, cache.DefaultExpiration)
 	if err != nil {
-		blog.Errorf("GetProjectIDByClusterID set cache by cacheName[%s] failed: %v", err)
+		blog.Errorf("GetProjectIDByClusterID set cache by cacheName[%s] failed: %v", cacheName(clusterID), err)
 	}
 
 	return projectID, nil
+}
+
+// GetBusinessIDByClusterID get businessID by clusterID
+func (cm *ClusterManagerClient) GetBusinessIDByClusterID(clusterID string) (string, error) {
+	if cm == nil {
+		return "", errServerNotInit
+	}
+
+	cacheName := func(id string) string {
+		return fmt.Sprintf("%s_%v", CacheClusterBusinessKeyPrefix, id)
+	}
+	val, ok := cm.cache.Get(cacheName(clusterID))
+	if ok && val != nil {
+		if businessID, ok1 := val.(string); ok1 {
+			return businessID, nil
+		}
+	}
+	blog.V(3).Infof("GetBusinessIDByClusterID miss clusterID cache")
+
+	cli, err := cm.getClusterManagerClient()
+	if err != nil {
+		blog.Errorf("GetBusinessIDByClusterID failed: %v", err)
+		return "", err
+	}
+	resp, err := cli.GetCluster(context.Background(), &bcsapicm.GetClusterReq{ClusterID: clusterID})
+	if err != nil {
+		blog.Errorf("GetBusinessIDByClusterID failed: %v", err.Error())
+		return "", err
+	}
+
+	if !resp.Result {
+		blog.Errorf("GetBusinessIDByClusterID failed: %v", resp.Message)
+		return "", err
+	}
+	businessID := resp.Data.BusinessID
+
+	err = cm.cache.Add(cacheName(clusterID), businessID, cache.DefaultExpiration)
+	if err != nil {
+		blog.Errorf("GetBusinessIDByClusterID set cache by cacheName[%s] failed: %v", cacheName(clusterID), err)
+	}
+
+	return businessID, nil
 }
 
 func (cm *ClusterManagerClient) getClusterManagerClient() (bcsapicm.ClusterManagerClient, error) {

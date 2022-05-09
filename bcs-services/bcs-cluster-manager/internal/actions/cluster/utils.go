@@ -38,8 +38,11 @@ import (
 const (
 	// Builder self builder cluster
 	Builder = "builder"
-	// Exporter export external cluster
-	Exporter = "exporter"
+	// Importer export external cluster
+	Importer = "importer"
+
+	// Prod environment
+	Prod = "prod"
 )
 
 const (
@@ -296,5 +299,13 @@ func importClusterExtraOperation(cluster *proto.Cluster) {
 	if err != nil {
 		blog.Errorf("ImportClusterExtraOperation CreatePassCCClusterSnapshoot[%s] failed: %v",
 			cluster.ClusterID, err)
+	}
+}
+
+// syncDeletePassCluster deletePassCluster
+func syncDeletePassCluster(cluster *proto.Cluster) {
+	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
+	if err != nil {
+		blog.Errorf("syncDeletePassCluster[%s] failed: %v", cluster.ClusterID, err)
 	}
 }

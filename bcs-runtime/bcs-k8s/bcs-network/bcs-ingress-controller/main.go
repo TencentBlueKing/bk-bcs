@@ -24,7 +24,8 @@ import (
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/ingresscontroller"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/nstencentcloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/namespacedlb"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloudcollector"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
@@ -156,12 +157,20 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			lbClient = nstencentcloud.NewNamespacedClb(mgr.GetClient())
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), tencentcloud.NewClbWithSecret)
 		}
 
 	case constant.CloudAWS:
-		blog.Errorf("aws not implemented")
-		os.Exit(1)
+		validater = aws.NewELbValidater()
+		if !opts.IsNamespaceScope {
+			lbClient, err = aws.NewElb()
+			if err != nil {
+				blog.Errorf("init cloud failed, err %s", err.Error())
+				os.Exit(1)
+			}
+		} else {
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), aws.NewElbWithSecret)
+		}
 	}
 
 	if len(opts.Region) == 0 {

@@ -145,7 +145,7 @@ func TestGetGameStatefulSetRevisions(t *testing.T) {
 			informer := informerFactory.Apps().V1().ControllerRevisions()
 			informerFactory.WaitForCacheSync(stop)
 			for i := range s.revisions {
-				informer.Informer().GetIndexer().Add(s.revisions[i])
+				_ = informer.Informer().GetIndexer().Add(s.revisions[i])
 			}
 			controllerHistory := history.NewFakeHistory(informer)
 			control := &defaultGameStatefulSetControl{controllerHistory: controllerHistory}
@@ -167,7 +167,7 @@ func TestGetGameStatefulSetRevisions(t *testing.T) {
 	}
 }
 
-func TestDeleteUnexpectedPreDeleteHookRuns(t *testing.T) {
+func TestDeleteUnexpectedPreDeleteHRs(t *testing.T) {
 	tests := []struct {
 		name            string
 		hrList          []*v1alpha12.HookRun
@@ -284,7 +284,7 @@ func TestTruncatePreDeleteHookRuns(t *testing.T) {
 	}
 }
 
-func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
+func TestDeleteUnexpectedPreInPlaceHRs(t *testing.T) {
 	tests := []struct {
 		name            string
 		hrList          []*v1alpha12.HookRun
@@ -1297,7 +1297,7 @@ func TestHandleUpdateStrategy(t *testing.T) {
 	}
 }
 
-func TestTruncatePreInplaceHookConditions(t *testing.T) {
+func TestTruncatePreInPlaceHookCond(t *testing.T) {
 	tests := []struct {
 		name           string
 		pods           []*corev1.Pod
@@ -1355,7 +1355,7 @@ func TestTruncatePreInplaceHookConditions(t *testing.T) {
 	}
 }
 
-func TestTruncatePreDeleteHookConditions(t *testing.T) {
+func TestTruncatePreDeleteHookCond(t *testing.T) {
 	tests := []struct {
 		name           string
 		pods           []*corev1.Pod

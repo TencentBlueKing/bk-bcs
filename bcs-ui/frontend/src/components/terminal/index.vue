@@ -67,9 +67,6 @@
             clusterList () {
                 return [...this.$store.state.cluster.clusterList]
             },
-            clusterPerm () {
-                return this.$store.state.cluster.clusterPerm
-            },
             curProject () {
                 return this.$store.state.curProject
             },
@@ -107,18 +104,6 @@
                 }, 400)
             },
             async goWebConsole (cluster) {
-                if (!this.clusterPerm[cluster.clusterID]?.policy?.use) {
-                    const type = `cluster_${cluster.environment === 'prod' ? 'prod' : 'test'}`
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: cluster.cluster_id,
-                        resource_name: cluster.name,
-                        resource_type: type
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 const clusterId = cluster.cluster_id
                 const url = `${DEVOPS_BCS_API_URL}/web_console/projects/${this.projectId}/mgr/#cluster=${clusterId}`
 
@@ -129,7 +114,7 @@
                         this.terminalWins.postMessage({
                             clusterId: clusterId,
                             clusterName: cluster.name
-                        }, DEVOPS_BCS_HOST)
+                        }, location.origin)
                         this.terminalWins.focus()
                     } else {
                         this.terminalWins = window.open(url, '')

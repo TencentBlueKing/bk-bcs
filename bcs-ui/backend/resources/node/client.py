@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Type
 
 from kubernetes.dynamic.resource import ResourceInstance
 
-from backend.resources.constants import K8sResourceKind, NodeConditionStatus, NodeConditionType
+from backend.resources import constants
 from backend.resources.resource import ResourceClient, ResourceObj
 from backend.utils.async_run import async_run
 from backend.utils.basic import getitems
@@ -43,21 +43,28 @@ class NodeObj(ResourceObj):
         logger.warning("inner ip of addresses is null, address is %s", addresses)
         return ""
 
+    def is_master(self) -> bool:
+        """当key对应的值为空或者true时，认为当前"""
+        for key in constants.NODE_ROLE_MASTER_KEYS:
+            if self.labels.get(key) in ["", "true"]:
+                return True
+        return False
+
     @property
     def node_status(self) -> str:
         """获取节点状态
         ref: https://github.com/kubernetes/dashboard/blob/0de61860f8d24e5a268268b1fbadf327a9bb6013/src/app/backend/resource/node/list.go#L106  # noqa
         """
         for condition in self.data.status.conditions:
-            if condition.type != NodeConditionType.Ready:
+            if condition.type != constants.NodeConditionType.Ready:
                 continue
             # 正常可用状态
             if condition.status == "True":
-                return NodeConditionStatus.Ready
+                return constants.NodeConditionStatus.Ready
             # 节点不健康而且不能接收 Pod
-            return NodeConditionStatus.NotReady
+            return constants.NodeConditionStatus.NotReady
         # 节点控制器在最近 node-monitor-grace-period 期间（默认 40 秒）没有收到节点的消息
-        return NodeConditionStatus.Unknown
+        return constants.NodeConditionStatus.Unknown
 
 
 class Node(ResourceClient):
@@ -65,7 +72,7 @@ class Node(ResourceClient):
     针对节点的查询、操作等
     """
 
-    kind = K8sResourceKind.Node.value
+    kind = constants.K8sResourceKind.Node.value
     result_type: Type['ResourceObj'] = NodeObj
 
     def set_labels_for_multi_nodes(self, node_labels: List[Dict]):
@@ -99,6 +106,16 @@ class Node(ResourceClient):
         # 下发的body格式: {"spec": {"taints": [{"key": xxx, "value": xxx, "effect": xxx}]}}
         tasks = [functools.partial(self.patch, {"spec": {"taints": t["taints"]}}, t["node_name"]) for t in node_taints]
         # 当有操作失败的，抛出异常
+        async_run(tasks)
+
+    def set_nodes_schedule_status(self, unschedulable: bool, node_names: List[str]):
+        """设置节点调度状态
+
+        unschedulable: 节点是否可以调度
+        node_names: 节点名称, 允许多个, 格式[节点名称]
+        """
+        tasks = [functools.partial(self.patch, {"spec": {"unschedulable": unschedulable}}, n) for n in node_names]
+        # 如有失败, 则抛出异常
         async_run(tasks)
 
     def filter_nodes_field_data(

@@ -66,7 +66,12 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('关联资源')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
                             <template slot-scope="{ row }">
-                                <a class="bk-text-button biz-text-wrapper" target="_blank" :href="row.deployment_link">{{row.deployment_name}}</a>
+                                <bk-button
+                                    :disabled="!['Deployment', 'StatefulSet'].includes(row.ref_kind)"
+                                    text
+                                    @click="handleGotoAppDetail(row)">
+                                    <span class="bcs-ellipsis">{{row.ref_name}}</span>
+                                </bk-button>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('来源')" prop="source_type">
@@ -86,13 +91,8 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('操作')" prop="permissions">
                             <template slot-scope="{ row }">
-                                <div v-if="row.permissions.use">
+                                <div>
                                     <a href="javascript:void(0);" :class="['bk-text-button']" @click="removeHPA(row)">{{$t('删除')}}</a>
-                                </div>
-                                <div v-else>
-                                    <bcs-popover :content="row.permissions.use_msg" placement="left">
-                                        <a href="javascript:void(0);" :class="['bk-text-button is-disabled']">{{$t('删除')}}</a>
-                                    </bcs-popover>
                                 </div>
                             </template>
                         </bk-table-column>
@@ -186,63 +186,35 @@
 
                 return results
             },
-            isCheckCurPageAll () {
-                if (this.curPageData.length) {
-                    const list = this.curPageData
-                    const selectList = list.filter((item) => {
-                        return item.isChecked === true
-                    })
-                    const canSelectList = list.filter((item) => {
-                        return item.permissions.use
-                    })
-                    if (selectList.length && (selectList.length === canSelectList.length)) {
-                        return true
-                    } else {
-                        return false
-                    }
-                } else {
-                    return false
-                }
-            },
-            isClusterDataReady () {
-                return this.$store.state.cluster.isClusterDataReady
-            },
             curClusterId () {
                 return this.$store.state.curClusterId
             }
         },
         watch: {
-            isClusterDataReady: {
-                immediate: true,
-                handler (val) {
-                    if (val) {
-                        setTimeout(() => {
-                            if (this.searchScopeList.length) {
-                                const clusterIds = this.searchScopeList.map(item => item.id)
-                                // 使用当前缓存
-                                if (this.curClusterId) {
-                                    this.searchScope = this.curClusterId
-                                } else if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-                                    this.searchScope = sessionStorage['bcs-cluster']
-                                } else {
-                                    this.searchScope = this.searchScopeList[0].id
-                                }
-                            }
-                        }, 1000)
-                    }
-                }
-            },
             searchScope () {
-                this.searchHPA()
+                this.init()
             },
             curClusterId () {
                 this.searchScope = this.curClusterId
                 this.searchHPA()
             }
         },
-        mounted () {
-            this.init()
+        created () {
+            if (this.searchScopeList.length) {
+                const clusterIds = this.searchScopeList.map(item => item.id)
+                // 使用当前缓存
+                if (this.curClusterId) {
+                    this.searchScope = this.curClusterId
+                } else if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
+                    this.searchScope = sessionStorage['bcs-cluster']
+                } else {
+                    this.searchScope = this.searchScopeList[0].id
+                }
+            }
         },
+        // mounted () {
+        //     this.init()
+        // },
         methods: {
             /**
              * 初始化入口
@@ -257,7 +229,10 @@
              */
             async getHPAList () {
                 try {
-                    await this.$store.dispatch('hpa/getHPAList', this.projectId)
+                    await this.$store.dispatch('hpa/getHPAList', {
+                        projectId: this.projectId,
+                        clusterId: this.searchScope
+                    })
 
                     this.initPageConf()
                     this.curPageData = this.getDataByPage(this.pageConf.curPage)
@@ -270,30 +245,9 @@
                     catchErrorHandler(e, this)
                 } finally {
                     // 晚消失是为了防止整个页面loading和表格数据loading效果叠加产生闪动
-                    setTimeout(() => {
-                        this.isInitLoading = false
-                        this.isPageLoading = false
-                    }, 200)
+                    this.isInitLoading = false
+                    this.isPageLoading = false
                 }
-            },
-
-            /**
-             * Toogle当前页面全选
-             * @return {[type]} [description]
-             */
-            toogleCheckCurPage () {
-                const isChecked = this.isCheckCurPageAll
-                this.$nextTick(() => {
-                    this.curPageData.forEach((item) => {
-                        // 能删除且有权限才可操作
-                        if (item.permissions.use) {
-                            item.isChecked = !isChecked
-                        }
-                    })
-                    // this.selectHPAs()
-                    this.curPageData.splice(0, this.curPageData.length, ...this.curPageData)
-                    this.alreadySelectedNums = this.HPAList.filter(item => item.isChecked).length
-                })
             },
 
             /**
@@ -371,7 +325,7 @@
                 list.forEach(item => {
                     item.isChecked = false
                     for (const key of keyList) {
-                        if (item[key].indexOf(keyword) > -1) {
+                        if (item[key]?.indexOf(keyword) > -1) {
                             results.push(item)
                             return true
                         }
@@ -488,16 +442,6 @@
              */
             async removeHPA (HPA) {
                 const self = this
-                // if (!HPA.permissions.use) {
-                //     const params = {
-                //         project_id: this.projectId,
-                //         policy_code: 'use',
-                //         resource_code: HPA.namespace_id,
-                //         resource_name: HPA.namespace,
-                //         resource_type: 'namespace'
-                //     }
-                //     await this.$store.dispatch('getResourcePermissions', params)
-                // }
 
                 this.$bkInfo({
                     title: this.$t('确认删除'),
@@ -602,7 +546,25 @@
             },
 
             rowSelectable (row, index) {
-                return row.can_delete || !row.permissions.use
+                return row.can_delete
+            },
+            handleGotoAppDetail (row) {
+                const kindMap = {
+                    Deployment: 'deploymentsInstanceDetail2',
+                    StatefulSet: 'statefulsetInstanceDetail2'
+                }
+                const location = this.$router.resolve({
+                    name: kindMap[row.ref_kind] || '404',
+                    params: {
+                        instanceName: row.ref_name,
+                        instanceNamespace: row.namespace,
+                        instanceCategory: row.ref_kind
+                    },
+                    query: {
+                        cluster_id: row.cluster_id
+                    }
+                })
+                window.open(location.href)
             }
         }
     }

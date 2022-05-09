@@ -18,25 +18,30 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+//MockProvider mock provider for test
 type MockProvider struct {
 	mock.Mock
 }
 
+// Run mock provider run
 func (p *MockProvider) Run(run *hookv1alpha1.HookRun, metric hookv1alpha1.Metric) hookv1alpha1.Measurement {
 	args := p.Called(run, metric)
 	return args.Get(0).(hookv1alpha1.Measurement)
 }
 
+// Resume mock provider resume
 func (p *MockProvider) Resume(run *hookv1alpha1.HookRun, metric hookv1alpha1.Metric, measurement hookv1alpha1.Measurement) hookv1alpha1.Measurement {
 	args := p.Called(run, metric, measurement)
 	return args.Get(0).(hookv1alpha1.Measurement)
 }
 
+// Terminate mock provider terminate
 func (p *MockProvider) Terminate(run *hookv1alpha1.HookRun, metric hookv1alpha1.Metric, measurement hookv1alpha1.Measurement) hookv1alpha1.Measurement {
 	args := p.Called(run, metric, measurement)
 	return args.Get(0).(hookv1alpha1.Measurement)
 }
 
+// GarbageCollect mock provider garbage collector
 func (p *MockProvider) GarbageCollect(run *hookv1alpha1.HookRun, metric hookv1alpha1.Metric, i int) error {
 	args := p.Called(run, metric, i)
 	return args.Error(0)

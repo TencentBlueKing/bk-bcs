@@ -220,26 +220,6 @@
             },
             curProject () {
                 return this.$store.state.curProject
-            },
-            clusterPerm () {
-                return this.$store.state.cluster.clusterPerm
-            }
-        },
-        async created () {
-            if (!this.clusterPerm[this.curCluster?.clusterID]?.policy?.view) {
-                await this.$store.dispatch('getResourcePermissions', {
-                    project_id: this.projectId,
-                    policy_code: 'view',
-                    // eslint-disable-next-line camelcase
-                    resource_code: this.curCluster?.cluster_id,
-                    resource_name: this.curCluster?.name,
-                    resource_type: `cluster_${this.curCluster?.environment === 'prod' ? 'prod' : 'test'}`
-                }).catch(err => {
-                    this.exceptionCode = {
-                        code: err.code,
-                        msg: err.message
-                    }
-                })
             }
         },
         async mounted () {

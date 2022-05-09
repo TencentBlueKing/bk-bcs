@@ -12,8 +12,6 @@
  */
 package manager
 
-import "time"
-
 //DefaultCommand 默认命令, 可以优先使用bash, 如果没有, 回退到sh
 var DefaultCommand = []string{
 	"/bin/sh",
@@ -31,17 +29,10 @@ const (
 	// WebsocketPingInterval ping/pong时间间隔
 	WebsocketPingInterval = 10
 
-	// LockShift 锁偏差时间常量
-	LockShift = -2
-
 	// TickTimeout 链接自动断开时间, 30分钟
 	TickTimeout = 60 * 30
 	// LoginTimeout 自动登出时间
 	LoginTimeout = 60 * 60 * 24
-
-	writeWait  = 10 * time.Second
-	pongWait   = 60 * time.Second
-	pingPeriod = (pongWait * 9) / 10
 
 	// InputLineBreaker 输入分行标识
 	InputLineBreaker = "\r"

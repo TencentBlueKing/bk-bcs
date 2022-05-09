@@ -32,7 +32,7 @@ class FakeBkRepoMod:
     def create_project(self, project_code: str, project_name: str, description: str) -> Dict:
         return bk_repo_json.fake_create_project_resp
 
-    def create_chart_repo(self, project_code: str) -> Dict:
+    def create_repo(self, project_code: str) -> Dict:
         return bk_repo_json.fake_create_repo_resp
 
     def set_auth(self, project_code: str, repo_admin_user: str, repo_admin_pwd: str) -> bool:

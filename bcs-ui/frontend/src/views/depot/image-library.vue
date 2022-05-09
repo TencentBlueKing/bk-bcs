@@ -75,10 +75,6 @@
     export default {
         data () {
             return {
-                permissions: {
-                    pushImage: null,
-                    syncImage: null
-                },
                 winHeight: 0,
                 isInitLoading: true,
                 isPageLoading: false,
@@ -163,7 +159,7 @@
                 this.$router.push({
                     name: 'imageDetail',
                     params: {
-                        repo: item.repo
+                        imageRepo: item.repo
                     }
                 })
             },

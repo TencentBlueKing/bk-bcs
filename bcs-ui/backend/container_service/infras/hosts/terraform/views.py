@@ -21,7 +21,7 @@ from rest_framework.response import Response
 
 from backend.bcs_web.audit_log.client import ContextActivityLogClient
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.container_service.infras.hosts.terraform.engines.sops import create_and_start_host_application
+from backend.container_service.infras.hosts.terraform.engines.sops import HostData, create_and_start_host_application
 from backend.container_service.projects.cmdb import is_biz_maintainer
 from backend.utils.exceptions import PermissionDeniedError
 
@@ -51,8 +51,8 @@ class ApplyHostViewSet(SystemViewSet):
         slz = ApplyHostDataSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
         data = slz.validated_data
-        # 添加业务ID和申请人信息
-        data.update({"cc_app_id": request.project.cc_app_id, "username": username})
+        # 组装申请主机需要的信息
+        host_data = HostData.from_dict(data)
 
         with ContextActivityLogClient(
             project_id=project_id,
@@ -62,7 +62,7 @@ class ApplyHostViewSet(SystemViewSet):
             extra=data,
             description=_("申请主机"),
         ).log_add():
-            task_id, task_url = create_and_start_host_application(**data)
+            task_id, task_url = create_and_start_host_application(request.project.cc_app_id, username, host_data)
 
         # 存储数据，用于后续的查询
         log_record = HostApplyTaskLog.objects.create(
@@ -92,6 +92,6 @@ class ApplyHostViewSet(SystemViewSet):
 
 
 try:
-    from .views_ext import CVMTypeViewSet
+    from .views_ext import CVMTypeViewSet, DiskTypeViewSet, ZoneViewSet
 except ImportError as e:
     logger.debug("Load extension failed: %s", e)

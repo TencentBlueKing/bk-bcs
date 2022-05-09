@@ -15,9 +15,10 @@ package user
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -180,7 +181,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	metrics.ReportRequestAPIMetrics("CreatePlainUser", request.Request.Method, metrics.SucStatus, start)
 }
 
-// GetPlainUser get an plain user and usertoken information
+// GetPlainUser get a plain user and usertoken information
 func GetPlainUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 

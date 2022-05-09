@@ -13,6 +13,7 @@
 package imageloader
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -98,7 +99,7 @@ func (i *imageLoader) jobChanged(job *batchv1.Job) {
 	// TODO retry on conflict
 	// TODO create or update
 	if event != nil {
-		_, err := i.k8sClient.CoreV1().Events(event.Namespace).Create(event)
+		_, err := i.k8sClient.CoreV1().Events(event.Namespace).Create(context.Background(), event, metav1.CreateOptions{})
 		if err != nil {
 			blog.Errorf("attach event(%v) to workload instance failed: %v", event, err)
 			return
@@ -182,7 +183,7 @@ func (i *imageLoader) isJobDone(job *batchv1.Job) (*corev1.Event, bool) {
 
 func (i *imageLoader) createJob(job *batchv1.Job) error {
 	// TODO retry on conflict
-	_, err := i.k8sClient.BatchV1().Jobs(pluginName).Create(job)
+	_, err := i.k8sClient.BatchV1().Jobs(pluginName).Create(context.Background(), job, metav1.CreateOptions{})
 	if err != nil {
 		blog.Errorf("create job(%v) failed: %v", job, err)
 	}
@@ -190,8 +191,10 @@ func (i *imageLoader) createJob(job *batchv1.Job) error {
 }
 
 func (i *imageLoader) deleteJob(job *batchv1.Job) error {
-	err := i.k8sClient.BatchV1().Jobs(job.Namespace).Delete(job.Name,
-		&metav1.DeleteOptions{
+	err := i.k8sClient.BatchV1().Jobs(job.Namespace).Delete(
+		context.Background(),
+		job.Name,
+		metav1.DeleteOptions{
 			PropagationPolicy: &jobDeletePropagationPolicy,
 		})
 	if err != nil {

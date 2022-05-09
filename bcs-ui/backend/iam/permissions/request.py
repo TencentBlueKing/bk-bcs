@@ -22,30 +22,24 @@ from iam.apply import models
 
 
 class ResourceRequest(ABC):
-    resource_type: str = ''
-    attr: Optional[Dict] = None
+    resource_type = ''
 
-    def __init__(self, res: Union[List[str], str], **attr_kwargs):
-        """
-        :param res: 单个资源 ID 或资源 ID 列表
-        :param attr_kwargs: 用于替换 attr 中可能需要 format 的值
-        """
-        self.res = [str(res_id) for res_id in res] if isinstance(res, list) else str(res)
-        self.attr_kwargs = dict(**attr_kwargs)
-        self._validate_attr_kwargs()
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> 'ResourceRequest':
+        """从字典构建对象"""
 
-    def make_resources(self) -> List[Resource]:
-        if isinstance(self.res, str):
-            return [Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, self.res, self._make_attribute(self.res))]
+    def make_resources(self, res_ids: Union[List[str], str]) -> List[Resource]:
+        """
+        :param res_ids: 单个资源 ID 或资源 ID 列表
+        """
+        if isinstance(res_ids, (str, int)):
+            res_ids = [res_ids]
+
+        res_ids = [str(_id) for _id in res_ids]
 
         return [
-            Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, res_id, self._make_attribute(res_id))
-            for res_id in self.res
+            Resource(settings.BK_IAM_SYSTEM_ID, self.resource_type, _id, self._make_attribute(_id)) for _id in res_ids
         ]
-
-    def _validate_attr_kwargs(self):
-        """如果校验不通过，抛出 AttrValidateError 异常"""
-        return
 
     def _make_attribute(self, res_id: str) -> Dict:
         return {}
@@ -56,9 +50,7 @@ IAMResource = namedtuple('IAMResource', 'resource_type resource_id')
 
 class ActionResourcesRequest:
     """
-    操作资源请求.
-    note: resources 是由资源 ID 构成的列表. 为 None 时，表示资源无关.
-    资源实例相关时，resources 表示的资源必须具有相同的父实例。以命名空间为例，它们必须是同项目同集群下
+    操作资源请求
     """
 
     def __init__(
@@ -71,7 +63,8 @@ class ActionResourcesRequest:
         """
         :param action_id: 操作 ID
         :param resource_type: 资源类型
-        :param resources: 资源 ID 列表
+        :param resources: 资源 ID 列表. 为 None 时, 表示资源无关; 资源实例相关时, resources 表示的资源必须具有相同的父实例.
+            以命名空间为例, 它们必须是同项目同集群下
         :param parent_chain: 按照父类层级排序(父->子) [(resource_type, resource_id), ]
         """
         self.action_id = action_id

@@ -158,7 +158,7 @@
                 this.$router.push({
                     name: 'imageDetail',
                     params: {
-                        repo: item.repo
+                        imageRepo: item.repo
                     }
                 })
             },

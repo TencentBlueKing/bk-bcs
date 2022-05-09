@@ -22,6 +22,7 @@ etcd:
 
 # Server 配置信息
 server:
+  useLocalIP: false
   address: ""
   insecureAddress: ""
   port: 9090
@@ -54,6 +55,8 @@ log:
   level: "info"
   # 日志刷新间隔，单位: 秒
   flushInterval: 5
+  # 是否自动创建日志目录（若不存在）
+  autoCreateDir: false
   # 文件绝对路径
   path: "/tmp/logs"
   # 文件名称
@@ -76,3 +79,36 @@ redis:
   # writeTimeout: 1
   # poolSize: 64
   # minIdleConns: 64
+
+crGlobal:
+  # 用户身份认证配置
+  auth:
+    #【重要】非调试模式不应禁用
+    disabled: false
+    jwtPublicKey: ""
+
+  # 项目基础类配置
+  basic:
+    appCode: "bk_bcs_app"
+    appSecret: "your_app_secret"
+    bkApiGWHost: "http://bkapigw.com"
+    bkPaaSHost: "http://bkpaas.com"
+
+  # BCS API 网关配置
+  bcsApiGW:
+    host: "http://bcs.apigw.com"
+    authToken: ""
+    readAuthTokenFromEnv: false
+
+  # 权限中心相关配置
+  iam:
+    host: "http://iam.com"
+    systemID: "bk_bcs_app"
+    useBKApiGW: false
+    metric: false
+    debug: false
+
+  # 共享集群相关配置
+  sharedCluster:
+    enabledCObjKinds: []
+    enabledCRDs: []

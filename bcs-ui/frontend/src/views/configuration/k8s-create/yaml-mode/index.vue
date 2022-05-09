@@ -121,14 +121,48 @@
                     <bk-button type="primary" disabled>{{$t('保存')}}</bk-button>
                 </template>
                 <template v-else>
-                    <bk-button type="primary" @click="handleSaveTemplate">{{$t('保存')}}</bk-button>
+                    <bk-button type="primary"
+                        v-authority="{
+                            actionId: isNewTemplate ? 'templateset_create' : 'templateset_update',
+                            resourceName: curTemplate.name,
+                            permCtx: {
+                                resource_type: isNewTemplate ? 'project' : 'templateset',
+                                project_id: projectId,
+                                template_id: isNewTemplate ? undefined : Number(curTemplate.id)
+                            }
+                        }"
+                        @click="handleSaveTemplate"
+                    >{{$t('保存')}}</bk-button>
                 </template>
 
-                <bk-button :disabled="templateId === 0" @click="createInstance">
+                <bk-button :disabled="templateId === 0"
+                    v-authority="{
+                        clickable: isNewTemplate ? true : getAuthority('templateset_instantiate', Number(curTemplate.id)),
+                        actionId: 'templateset_instantiate',
+                        resourceName: curTemplate.name,
+                        disablePerms: true,
+                        permCtx: {
+                            project_id: projectId,
+                            template_id: Number(curTemplate.id)
+                        }
+                    }"
+                    @click="createInstance">
                     {{$t('实例化')}}
                 </bk-button>
 
-                <bk-button :disabled="!allVersionList.length" @click="showVersionPanel">{{$t('版本列表')}}</bk-button>
+                <bk-button :disabled="!allVersionList.length"
+                    v-authority="{
+                        clickable: isNewTemplate ? true : getAuthority('templateset_view', Number(curTemplate.id)),
+                        actionId: 'templateset_view',
+                        resourceName: curTemplate.name,
+                        disablePerms: true,
+                        permCtx: {
+                            project_id: projectId,
+                            template_id: Number(curTemplate.id)
+                        }
+                    }"
+                    @click="showVersionPanel"
+                >{{$t('版本列表')}}</bk-button>
             </div>
         </section>
 
@@ -439,7 +473,7 @@
                             <th>{{$t('版本号')}}</th>
                             <th>{{$t('更新时间')}}</th>
                             <th>{{$t('最后更新人')}}</th>
-                            <th style="width: 128px;">{{$t('操作')}}</th>
+                            <th style="width: 138px;">{{$t('操作')}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -658,7 +692,8 @@
                 },
                 zipTooltipText: this.$t('请选择zip压缩包导入，包中的文件名以.yaml结尾。其中的yaml文件(非"_常用Manifest"目录下的文件)将会统一导入到自定义Manifest分类下。注意：同名文件会被覆盖'),
                 curVersionNotes: '',
-                displayVersionNotes: '--'
+                displayVersionNotes: '--',
+                webAnnotations: { perms: {} }
             }
         },
         computed: {
@@ -920,6 +955,9 @@
         },
 
         methods: {
+            getAuthority (actionId, templateId) {
+                return !!this.webAnnotations?.perms[templateId]?.[actionId]
+            },
             /**
              * 初始化入口
              */
@@ -1802,6 +1840,7 @@
                         projectId: this.projectId,
                         templateId: this.templateId
                     })
+                    this.webAnnotations = res.web_annotations || { perms: {} }
                     this.setCurTemplte(res.data)
                 } catch (e) {
                     this.curTemplate = originYamlParams

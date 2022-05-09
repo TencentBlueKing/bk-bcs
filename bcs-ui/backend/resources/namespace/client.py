@@ -158,15 +158,10 @@ class Namespace(ResourceClient):
     def is_project_ns_in_shared_cluster(ns: Dict, project_code: str) -> bool:
         """
         检查指定的命名空间是否属于项目
-        规则：属于项目的命名空间满足以下两点：
-            1. 命名(name) 以 {project_code}- 开头
-            2. annotations 中包含 io.tencent.bcs.projectcode: {project_code}
+        如果 annotations 中包含 io.tencent.bcs.projectcode: {project_code} 和当前项目的 code 相同，则认为属于当前项目
 
         :param ns: 命名空间 manifest
         :param project_code: 项目英文名
         :return: True / False
         """
-        return (
-            getitems(ns, 'metadata.name').startswith(f'{project_code}-')
-            and getitems(ns, ['metadata', 'annotations', PROJ_CODE_ANNO_KEY]) == project_code
-        )
+        return getitems(ns, ['metadata', 'annotations', PROJ_CODE_ANNO_KEY]) == project_code

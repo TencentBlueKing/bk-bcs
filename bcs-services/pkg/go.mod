@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/pkg
 
-go 1.14
+go 1.17
 
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4

@@ -47,8 +47,8 @@ const (
 	idleTimeout = 3
 )
 
-// newStandaloneClient 创建单实例模式 RedisClient（非哨兵模式）
-func newStandaloneClient(conf *config.RedisConf) *redis.Client {
+// NewStandaloneClient 创建单实例模式 RedisClient（非哨兵模式）
+func NewStandaloneClient(conf *config.RedisConf) *redis.Client {
 	opt := &redis.Options{
 		Addr:     conf.Address,
 		Password: conf.Password,
@@ -80,7 +80,7 @@ func newStandaloneClient(conf *config.RedisConf) *redis.Client {
 		opt.MinIdleConns = conf.MinIdleConns
 	}
 
-	log.Info("start connect redis: %s [db=%d, dialTimeout=%s, readTimeout=%s, writeTimeout=%s, poolSize=%d, minIdleConns=%d, idleTimeout=%s]", //nolint:lll
+	log.Info(context.TODO(), "start connect redis: %s [db=%d, dialTimeout=%s, readTimeout=%s, writeTimeout=%s, poolSize=%d, minIdleConns=%d, idleTimeout=%s]", //nolint:lll
 		opt.Addr, opt.DB, opt.DialTimeout, opt.ReadTimeout, opt.WriteTimeout, opt.PoolSize, opt.MinIdleConns, opt.IdleTimeout)
 
 	return redis.NewClient(opt)
@@ -92,7 +92,7 @@ func InitRedisClient(conf *config.RedisConf) {
 		return
 	}
 	initOnce.Do(func() {
-		rds = newStandaloneClient(conf)
+		rds = NewStandaloneClient(conf)
 		// 若 Redis 服务异常，应重置 rds 并 panic
 		if _, err := rds.Ping(context.TODO()).Result(); err != nil {
 			rds = nil

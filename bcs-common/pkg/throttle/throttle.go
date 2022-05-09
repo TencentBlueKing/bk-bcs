@@ -49,40 +49,49 @@ type TokenBucket struct {
 	burst   int64
 }
 
+// TryAccept try to accept one token
 func (t *TokenBucket) TryAccept() bool {
 	return t.limiter.TakeAvailable(1) == 1
 }
 
+// Accept accept one token
 func (t *TokenBucket) Accept() {
 	t.limiter.Wait(1)
 }
 
+// QPS get qps
 func (t *TokenBucket) QPS() int64 {
 	return t.qps
 }
 
+// Burst get burst
 func (t *TokenBucket) Burst() int64 {
 	return t.burst
 }
 
+// NewMockRateLimiter create mock rate limiter
 func NewMockRateLimiter() RateLimiter {
 	return &mockRatelimiter{}
 }
 
 type mockRatelimiter struct{}
 
+// TryAccept try to accept one token
 func (*mockRatelimiter) TryAccept() bool {
 	return true
 }
 
+// Accept accept one token
 func (*mockRatelimiter) Accept() {
 
 }
 
+// QPS get qps
 func (*mockRatelimiter) QPS() int64 {
 	return 0
 }
 
+// Burst get burst
 func (*mockRatelimiter) Burst() int64 {
 	return 0
 }

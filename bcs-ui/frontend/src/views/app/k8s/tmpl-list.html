@@ -87,7 +87,20 @@
                 </p>
                 <div class="biz-app-list" v-if="tmplMusterList.length">
                     <div class="list-item-tplset" :class="tmplMuster.isOpen ? 'expand' : ''" v-for="(tmplMuster, tmplMusterIndex) in tmplMusterList">
-                        <div class="list-item-tplset-inner" @click="toggleTmplMuster(tmplMuster, tmplMusterIndex)">
+                        <div class="list-item-tplset-inner"
+                            v-authority="{
+                                clickable: templateWebAnnotations.perms[tmplMuster.tmpl_muster_id]
+                                    && templateWebAnnotations.perms[tmplMuster.tmpl_muster_id].templateset_instantiate,
+                                actionId: 'templateset_instantiate',
+                                resourceName: tmplMuster.tmpl_muster_name,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: projectId,
+                                    template_id: tmplMuster.tmpl_muster_id
+                                }
+                            }"
+                            @click="toggleTmplMuster(tmplMuster, tmplMusterIndex)"
+                        >
                             <div class="app-name" :title="tmplMuster.tmpl_muster_name">
                                 {{tmplMuster.tmpl_muster_name}}
                             </div>
@@ -145,15 +158,9 @@
                                                     <thead>
                                                         <tr>
                                                             <th style="width: 40px; text-align: center; top: 0; position: relative; padding: 0;">
-                                                                <!-- <label class="bk-form-checkbox">
-                                                                    <input type="checkbox" name="check-all-instance"
-                                                                        v-model="tpl.isAllChecked"
-                                                                        v-if="tpl.instanceList && tpl.instanceList.length && tpl.instanceList.filter(item => item.state.islock === true).length === 0 && tpl.instanceList.filter(instance => instance.permissions && instance.permissions.use).length"
-                                                                        @click.stop="checkAllInstance($event, tpl, index, tmplMuster.templateList)" />
-                                                                    <input v-else type="checkbox" name="check-all-instance" disabled="disabled" />
-                                                                </label> -->
+                                                               
                                                                 <bk-checkbox name="check-all-instance" v-model="tpl.isAllChecked"
-                                                                    v-if="tpl.instanceList && tpl.instanceList.length && tpl.instanceList.filter(item => item.state.islock === true).length === 0 && tpl.instanceList.filter(instance => instance.permissions && instance.permissions.use).length"
+                                                                    v-if="tpl.instanceList && tpl.instanceList.length && tpl.instanceList.filter(item => item.state.islock === true).length === 0"
                                                                     @change="checkAllInstance(tpl, index, tmplMuster.templateList, ...arguments)" />
                                                                 <bk-checkbox v-else name="check-all-instance" disabled="disabled" />
                                                             </th>
@@ -178,15 +185,21 @@
                                                         <template v-if="tpl.instanceList && tpl.instanceList.length">
                                                             <tr v-for="(instance, instanceIndex) in tpl.instanceList">
                                                                 <td style="width: 40px; text-align: center; top: 0; position: relative;">
-                                                                    <!-- <label class="bk-form-checkbox">
-                                                                        <input type="checkbox" name="check-instance"
-                                                                            v-if="instance.state.islock === false && instance.permissions.use"
-                                                                            v-model="instance.isChecked"
-                                                                            @click.stop="checkInstance(instance, instanceIndex, tpl, index, tmplMuster.templateList)" />
-                                                                        <input v-else type="checkbox" name="check-instance" disabled="disabled" />
-                                                                    </label> -->
-                                                                    <bk-checkbox name="check-instance" v-if="instance.state.islock === false && instance.permissions.use"
+                                                                    
+                                                                    <bk-checkbox name="check-instance" v-if="instance.state.islock === false"
                                                                         v-model="instance.isChecked"
+                                                                        v-authority="{
+                                                                            clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_delete,
+                                                                            actionId: 'namespace_scoped_delete',
+                                                                            resourceName: instance.namespace,
+                                                                            disablePerms: true,
+                                                                            permCtx: {
+                                                                                project_id: projectId,
+                                                                                cluster_id: instance.cluster_id,
+                                                                                name: instance.namespace
+                                                                            }
+                                                                        }"
                                                                         @change="checkInstance(instance, instanceIndex, tpl, index, tmplMuster.templateList, ...arguments)" />
                                                                     <bk-checkbox v-else name="check-instance" disabled="disabled" />
                                                                 </td>
@@ -195,7 +208,23 @@
                                                                 <template v-if="instance.state.getRet().showError === true">
                                                                     <td style="text-align: left; padding-left: 0; font-weight: 700;">
                                                                         <bcs-popover placement="top">
-                                                                            <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;" @click="goInstanceDetail(instance)">{{instance.name}}</a>
+                                                                            <a href="javascript:void(0);"
+                                                                                class="bk-text-button instance-name"
+                                                                                style="font-weight: 700;"
+                                                                                v-authority="{
+                                                                                    clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                        && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_view,
+                                                                                    actionId: 'namespace_scoped_view',
+                                                                                    resourceName: instance.namespace,
+                                                                                    disablePerms: true,
+                                                                                    permCtx: {
+                                                                                        project_id: projectId,
+                                                                                        cluster_id: instance.cluster_id,
+                                                                                        name: instance.namespace
+                                                                                    }
+                                                                                }"
+                                                                                @click="goInstanceDetail(instance)"
+                                                                            >{{instance.name}}</a>
                                                                             <template slot="content">
                                                                                 <p style="text-align: left; white-space: normal;word-break: break-all;">{{instance.name}}</p>
                                                                             </template>
@@ -254,7 +283,20 @@
                                                                     <template v-if="instance.state.getRet().showLoading === true">
                                                                         <td style="text-align: left; padding-left: 0; font-weight: 700;">
                                                                             <bcs-popover placement="top">
-                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;" @click="goInstanceDetail(instance)">{{instance.name}}</a>
+                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;"
+                                                                                    v-authority="{
+                                                                                        clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                            && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_view,
+                                                                                        actionId: 'namespace_scoped_view',
+                                                                                        resourceName: instance.namespace,
+                                                                                        disablePerms: true,
+                                                                                        permCtx: {
+                                                                                            project_id: projectId,
+                                                                                            cluster_id: instance.cluster_id,
+                                                                                            name: instance.namespace
+                                                                                        }
+                                                                                    }" 
+                                                                                    @click="goInstanceDetail(instance)">{{instance.name}}</a>
                                                                                 <template slot="content">
                                                                                     <p style="text-align: left; white-space: normal;word-break: break-all;">{{instance.name}}</p>
                                                                                 </template>
@@ -277,7 +319,20 @@
                                                                     <template v-else-if="instance.state.getRet().showLoading === false">
                                                                         <td style="text-align: left; padding: 0; font-weight: 700;">
                                                                             <bcs-popover placement="top">
-                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;" @click="goInstanceDetail(instance)">{{instance.name}}</a>
+                                                                                <a href="javascript:void(0);" class="bk-text-button instance-name" style="font-weight: 700;"
+                                                                                    v-authority="{
+                                                                                        clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                            && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_view,
+                                                                                        actionId: 'namespace_scoped_view',
+                                                                                        resourceName: instance.namespace,
+                                                                                        disablePerms: true,
+                                                                                        permCtx: {
+                                                                                            project_id: projectId,
+                                                                                            cluster_id: instance.cluster_id,
+                                                                                            name: instance.namespace
+                                                                                        }
+                                                                                    }"  
+                                                                                    @click="goInstanceDetail(instance)">{{instance.name}}</a>
                                                                                 <template slot="content">
                                                                                     <p style="text-align: left; white-space: normal;word-break: break-all;">{{instance.name}}</p>
                                                                                 </template>
@@ -331,6 +386,18 @@
                                                                             </template>
                                                                             <template v-if="instance.state.islock === false">
                                                                                 <a href="javascript:void(0);" class="bk-text-button"
+                                                                                    v-authority="{
+                                                                                        clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                            && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_update,
+                                                                                        actionId: 'namespace_scoped_update',
+                                                                                        resourceName: instance.namespace,
+                                                                                        disablePerms: true,
+                                                                                        permCtx: {
+                                                                                            project_id: projectId,
+                                                                                            cluster_id: instance.cluster_id,
+                                                                                            name: instance.namespace
+                                                                                        }
+                                                                                    }"
                                                                                     @click="showRollingUpdate(instance, instanceIndex, tpl.instanceList)">
                                                                                     {{$t('滚动升级')}}
                                                                                 </a>
@@ -373,6 +440,18 @@
                                                                                         marginRight: instance.status === 'Paused' && (instance.oper_type === 'rollingupdate' || instance.oper_type === 'pause')
                                                                                             ? '55px'
                                                                                             : '0'
+                                                                                    }"
+                                                                                    v-authority="{
+                                                                                        clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                            && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_update,
+                                                                                        actionId: 'namespace_scoped_update',
+                                                                                        resourceName: instance.namespace,
+                                                                                        disablePerms: true,
+                                                                                        permCtx: {
+                                                                                            project_id: projectId,
+                                                                                            cluster_id: instance.cluster_id,
+                                                                                            name: instance.namespace
+                                                                                        }
                                                                                     }"
                                                                                     @click="resumeRollingUpdate(instance, instanceIndex, tpl.instanceList)">
                                                                                     {{$t('恢复升级')}}
@@ -418,6 +497,18 @@
                                                                                 <template v-if="instance.state.islock === false">
                                                                                     <a href="javascript:void(0);" class="bk-text-button"
                                                                                         :style="{marginRight: instance.state.getRet().rebuild === 1 ? '55px' : '0'}"
+                                                                                        v-authority="{
+                                                                                            clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                                && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_update,
+                                                                                            actionId: 'namespace_scoped_update',
+                                                                                            resourceName: instance.namespace,
+                                                                                            disablePerms: true,
+                                                                                            permCtx: {
+                                                                                                project_id: projectId,
+                                                                                                cluster_id: instance.cluster_id,
+                                                                                                name: instance.namespace
+                                                                                            }
+                                                                                        }"
                                                                                         @click="showInstanceNum(instance, instanceIndex, tpl.instanceList)">
                                                                                         {{$t('扩缩容')}}
                                                                                     </a>
@@ -449,13 +540,55 @@
                                                                                     </a>
                                                                                     <ul class="bk-dropdown-list" slot="dropdown-content">
                                                                                         <li v-if="instance.from_platform === true">
-                                                                                            <a href="javascript:void(0)" @click="showRollbackPrevious(instance, instanceIndex, tpl.instanceList)">{{$t('回滚上一版本')}}</a>
+                                                                                            <a href="javascript:void(0)"
+                                                                                                v-authority="{
+                                                                                                    clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                                        && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_update,
+                                                                                                    actionId: 'namespace_scoped_update',
+                                                                                                    resourceName: instance.namespace,
+                                                                                                    disablePerms: true,
+                                                                                                    permCtx: {
+                                                                                                        project_id: projectId,
+                                                                                                        cluster_id: instance.cluster_id,
+                                                                                                        name: instance.namespace
+                                                                                                    }
+                                                                                                }"
+                                                                                                @click="showRollbackPrevious(instance, instanceIndex, tpl.instanceList)"
+                                                                                            >{{$t('回滚上一版本')}}</a>
                                                                                         </li>
                                                                                         <li>
-                                                                                            <a href="javascript:void(0)" @click="showReBuild(instance, instanceIndex, tpl.instanceList)">{{$t('重建')}}</a>
+                                                                                            <a href="javascript:void(0)"
+                                                                                                @click="showReBuild(instance, instanceIndex, tpl.instanceList)"
+                                                                                                v-authority="{
+                                                                                                    clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                                        && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_delete,
+                                                                                                    actionId: 'namespace_scoped_delete',
+                                                                                                    resourceName: instance.namespace,
+                                                                                                    disablePerms: true,
+                                                                                                    permCtx: {
+                                                                                                        project_id: projectId,
+                                                                                                        cluster_id: instance.cluster_id,
+                                                                                                        name: instance.namespace
+                                                                                                    }
+                                                                                                }"
+                                                                                            >{{$t('重建')}}</a>
                                                                                         </li>
                                                                                         <li>
-                                                                                            <a href="javascript:void(0)" @click="showDelete(instance, instanceIndex, tpl.instanceList)">{{$t('删除')}}</a>
+                                                                                            <a href="javascript:void(0)"
+                                                                                                v-authority="{
+                                                                                                    clickable: templateInstanceWebAnnotations.perms[instance.iam_ns_id]
+                                                                                                        && templateInstanceWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_delete,
+                                                                                                    actionId: 'namespace_scoped_delete',
+                                                                                                    resourceName: instance.namespace,
+                                                                                                    disablePerms: true,
+                                                                                                    permCtx: {
+                                                                                                        project_id: projectId,
+                                                                                                        cluster_id: instance.cluster_id,
+                                                                                                        name: instance.namespace
+                                                                                                    }
+                                                                                                }"
+                                                                                                @click="showDelete(instance, instanceIndex, tpl.instanceList)"
+                                                                                            >{{$t('删除')}}</a>
                                                                                         </li>
                                                                                     </ul>
                                                                                 </bk-dropdown-menu>
@@ -513,7 +646,21 @@
                 <div class="biz-app-namespace-list k8s" v-if="namespaceList.length">
                     <div class="list-item-tplset" :class="namespace.isOpen ? 'expand' : ''"
                         v-for="(namespace, namespaceIndex) in namespaceList">
-                        <div class="list-item-tplset-inner" @click="toggleNamespace(namespace, namespaceIndex)">
+                        <div class="list-item-tplset-inner"
+                            v-authority="{
+                                clickable: namespaceWebAnnotations.perms[namespace.iam_ns_id]
+                                    && namespaceWebAnnotations.perms[namespace.iam_ns_id].namespace_scoped_view,
+                                actionId: 'namespace_scoped_view',
+                                resourceName: namespace.name,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: projectId,
+                                    cluster_id: namespace.cluster_id,
+                                    name: namespace.name
+                                }
+                            }"
+                            @click="toggleNamespace(namespace, namespaceIndex)"
+                        >
                             <div class="app-name" :title="namespace.name">
                                 <span class="name">{{namespace.name}}</span>
                                 <span class="app-env">
@@ -554,12 +701,8 @@
                                             <tr>
                                                 <th style="width: 40px; text-align: center; top: 0; position: relative; padding: 0;">
                                                     <label class="bk-form-checkbox">
-                                                        <!-- <input type="checkbox" name="check-all-app-instance" v-model="namespace.isAllChecked"
-                                                            v-if="namespace.appList && namespace.appList.length && namespace.appList.filter(item => item.state.islock === true).length === 0 && namespace.appList.filter(app => app.permissions && app.permissions.use).length"
-                                                            @click.stop="checkAllNamespace($event, namespace, namespaceIndex, namespaceList)" />
-                                                        <input v-else type="checkbox" name="check-all-instance" disabled="disabled" /> -->
                                                         <bk-checkbox name="check-all-app-instance" v-model="namespace.isAllChecked"
-                                                            v-if="namespace.appList && namespace.appList.length && namespace.appList.filter(item => item.state.islock === true).length === 0 && namespace.appList.filter(app => app.permissions && app.permissions.use).length"
+                                                            v-if="namespace.appList && namespace.appList.length && namespace.appList.filter(item => item.state.islock === true).length === 0"
                                                             @change="checkAllNamespace(namespace, namespaceIndex, namespaceList, ...arguments)" />
                                                         <bk-checkbox v-else name="check-all-app-instance" disabled="disabled" />
                                                     </label>
@@ -586,16 +729,21 @@
                                             <template v-if="namespace.appList && namespace.appList.length">
                                                 <tr v-for="(instance, instanceIndex) in namespace.appList">
                                                     <td style="width: 40px; text-align: center; top: 0; position: relative;">
-                                                        <!-- <label class="bk-form-checkbox">
-                                                            <input type="checkbox" name="check-app-instance"
-                                                                v-if="instance.state.islock === false && instance.permissions.use"
-                                                                v-model="instance.isChecked"
-                                                                @click="checkNamespace(instance, instanceIndex, namespace, namespaceIndex, namespaceList)" />
-                                                            <input v-else type="checkbox" name="check-app-instance" disabled="disabled" />
-                                                        </label> -->
                                                         <bk-checkbox name="check-app-instance"
-                                                            v-if="instance.state.islock === false && instance.permissions.use"
+                                                            v-if="instance.state.islock === false"
                                                             v-model="instance.isChecked"
+                                                            v-authority="{
+                                                                clickable: namespaceInsWebAnnotations.perms[instance.iam_ns_id]
+                                                                    && namespaceInsWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_delete,
+                                                                actionId: 'namespace_scoped_delete',
+                                                                resourceName: instance.namespace,
+                                                                disablePerms: true,
+                                                                permCtx: {
+                                                                    project_id: projectId,
+                                                                    cluster_id: instance.cluster_id,
+                                                                    name: instance.namespace
+                                                                }
+                                                            }"
                                                             @change="checkNamespace(instance, instanceIndex, namespace, namespaceIndex, namespaceList, ...arguments)" />
                                                         <bk-checkbox v-else name="check-app-instance" disabled="disabled" />
                                                     </td>
@@ -728,6 +876,18 @@
                                                                 </template>
                                                                 <template v-if="instance.state.islock === false">
                                                                     <a href="javascript:void(0);" class="bk-text-button"
+                                                                        v-authority="{
+                                                                            clickable: namespaceInsWebAnnotations.perms[instance.iam_ns_id]
+                                                                                && namespaceInsWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_update,
+                                                                            actionId: 'namespace_scoped_update',
+                                                                            resourceName: instance.namespace,
+                                                                            disablePerms: true,
+                                                                            permCtx: {
+                                                                                project_id: projectId,
+                                                                                cluster_id: instance.cluster_id,
+                                                                                name: instance.namespace
+                                                                            }
+                                                                        }"
                                                                         @click="showRollingUpdate(instance, instanceIndex, namespace.appList)">
                                                                         {{$t('滚动升级')}}
                                                                     </a>
@@ -770,6 +930,18 @@
                                                                             marginRight: instance.status === 'Paused' && (instance.oper_type === 'rollingupdate' || instance.oper_type === 'pause')
                                                                                 ? '55px'
                                                                                 : '0'
+                                                                        }"
+                                                                        v-authority="{
+                                                                            clickable: namespaceInsWebAnnotations.perms[instance.iam_ns_id]
+                                                                                && namespaceInsWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_update,
+                                                                            actionId: 'namespace_scoped_update',
+                                                                            resourceName: instance.namespace,
+                                                                            disablePerms: true,
+                                                                            permCtx: {
+                                                                                project_id: projectId,
+                                                                                cluster_id: instance.cluster_id,
+                                                                                name: instance.namespace
+                                                                            }
                                                                         }"
                                                                         @click="resumeRollingUpdate(instance, instanceIndex, namespace.appList)">
                                                                         {{$t('恢复升级')}}
@@ -815,6 +987,18 @@
                                                                     <template v-if="instance.state.islock === false">
                                                                         <a href="javascript:void(0);" class="bk-text-button"
                                                                             :style="{marginRight: instance.state.getRet().rebuild === 1 ? '55px' : '0'}"
+                                                                            v-authority="{
+                                                                                clickable: namespaceInsWebAnnotations.perms[instance.iam_ns_id]
+                                                                                    && namespaceInsWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_update,
+                                                                                actionId: 'namespace_scoped_update',
+                                                                                resourceName: instance.namespace,
+                                                                                disablePerms: true,
+                                                                                permCtx: {
+                                                                                    project_id: projectId,
+                                                                                    cluster_id: instance.cluster_id,
+                                                                                    name: instance.namespace
+                                                                                }
+                                                                            }"
                                                                             @click="showInstanceNum(instance, instanceIndex, namespace.appList)">
                                                                             {{$t('扩缩容')}}
                                                                         </a>
@@ -832,7 +1016,7 @@
                                                                 </template>
                                                                 <template v-else-if="instance.state.getRet().scale === 0">
                                                                     <template v-if="instance.hpa">
-                                                                        <bcs-popover class="mr15" :content="$t('该应用已经设置HPA')" placement="top">
+                                                                        <bcs-popover class="mr10" :content="$t('该应用已经设置HPA')" placement="top">
                                                                             <a href="javascript:void(0);" class="bk-text-button is-disabled"
                                                                                 :style="{marginRight: instance.state.getRet().rebuild === 1 ? '45px' : '0', marginLeft: instance.state.getRet().rebuild === 1 ? '15px' : '0'}">
                                                                                 {{$t('扩缩容')}}
@@ -859,7 +1043,21 @@
                                                                     </a>
                                                                 </template>
                                                                 <template v-if="instance.state.islock === false">
-                                                                    <bk-dropdown-menu class="dropdown-menu" :align="'center'" ref="dropdown">
+                                                                    <bk-dropdown-menu class="dropdown-menu" 
+                                                                        :align="'center'" 
+                                                                        ref="dropdown"
+                                                                        v-authority="{
+                                                                            clickable: namespaceInsWebAnnotations.perms[instance.iam_ns_id]
+                                                                                && namespaceInsWebAnnotations.perms[instance.iam_ns_id].namespace_scoped_delete,
+                                                                            actionId: 'namespace_scoped_delete',
+                                                                            resourceName: instance.namespace,
+                                                                            disablePerms: true,
+                                                                            permCtx: {
+                                                                                project_id: projectId,
+                                                                                cluster_id: instance.cluster_id,
+                                                                                name: instance.namespace
+                                                                            }
+                                                                        }">
                                                                         <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
                                                                             {{$t('更多')}}
                                                                             <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down"></i>

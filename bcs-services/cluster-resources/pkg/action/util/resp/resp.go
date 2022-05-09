@@ -15,74 +15,87 @@
 package resp
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 )
 
 // BuildListAPIResp ...
 func BuildListAPIResp(
-	clusterID, resKind, groupVersion, namespace string, opts metav1.ListOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, format string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.UnstructuredList
-	ret, err = cli.NewResClient(clusterConf, k8sRes).List(namespace, opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).List(ctx, namespace, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return GenListResRespData(ret.UnstructuredContent(), resKind)
+	respDataBuilder, err := NewRespDataBuilder(ret.UnstructuredContent(), resKind, format)
+	if err != nil {
+		return nil, err
+	}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return nil, err
+	}
+	return pbstruct.Map2pbStruct(respData)
 }
 
 // BuildRetrieveAPIResp ...
 func BuildRetrieveAPIResp(
-	clusterID, resKind, groupVersion, namespace, name string, opts metav1.GetOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name, format string, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(namespace, name, opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(ctx, namespace, name, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	manifest := ret.UnstructuredContent()
-	respData := map[string]interface{}{
-		"manifest": manifest, "manifestExt": formatter.GetFormatFunc(resKind)(manifest),
+	respDataBuilder, err := NewRespDataBuilder(ret.UnstructuredContent(), resKind, format)
+	if err != nil {
+		return nil, err
+	}
+	respData, err := respDataBuilder.Build()
+	if err != nil {
+		return nil, err
 	}
 	return pbstruct.Map2pbStruct(respData)
 }
 
 // BuildCreateAPIResp ...
 func BuildCreateAPIResp(
-	clusterID, resKind, groupVersion string, manifest *structpb.Struct, isNSScoped bool, opts metav1.CreateOptions,
+	ctx context.Context, clusterID, resKind, groupVersion string, manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(manifest.AsMap(), isNSScoped, opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Create(ctx, manifest, isNSScoped, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -91,16 +104,16 @@ func BuildCreateAPIResp(
 
 // BuildUpdateAPIResp ...
 func BuildUpdateAPIResp(
-	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(namespace, name, manifest.AsMap(), opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(ctx, namespace, name, manifest, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -109,43 +122,38 @@ func BuildUpdateAPIResp(
 
 // BuildDeleteAPIResp ...
 func BuildDeleteAPIResp(
-	clusterID, resKind, groupVersion, namespace, name string, opts metav1.DeleteOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, opts metav1.DeleteOptions,
 ) error {
 	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return err
 	}
-	return cli.NewResClient(clusterConf, k8sRes).Delete(namespace, name, opts)
+	return cli.NewResClient(clusterConf, k8sRes).Delete(ctx, namespace, name, opts)
 }
 
 // BuildListPodRelatedResResp ...
-func BuildListPodRelatedResResp(clusterID, namespace, podName, resKind string) (*structpb.Struct, error) {
-	relatedRes, err := cli.NewPodCliByClusterID(clusterID).ListPodRelatedRes(namespace, podName, resKind)
+func BuildListPodRelatedResResp(
+	ctx context.Context, clusterID, namespace, podName, format, resKind string,
+) (*structpb.Struct, error) {
+	relatedRes, err := cli.NewPodCliByClusterID(ctx, clusterID).ListPodRelatedRes(ctx, namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
-	return GenListResRespData(relatedRes, resKind)
-}
-
-// GenListResRespData 根据 ResList Manifest 生成获取某类资源列表的响应结果
-func GenListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
-	manifestExt := map[string]interface{}{}
-	formatFunc := formatter.GetFormatFunc(resKind)
-	// 遍历列表中的每个资源，生成 manifestExt
-	for _, item := range manifest["items"].([]interface{}) {
-		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
-		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
+	respDataBuilder, err := NewRespDataBuilder(relatedRes, resKind, format)
+	if err != nil {
+		return nil, err
 	}
-
-	// 组装数据，并转换为 structpb.Struct 格式
-	respData := map[string]interface{}{"manifest": manifest, "manifestExt": manifestExt}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return nil, err
+	}
 	return pbstruct.Map2pbStruct(respData)
 }
 
 // BuildListContainerAPIResp ...
-func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.ListValue, error) {
-	podManifest, err := cli.NewPodCliByClusterID(clusterID).GetManifest(namespace, podName)
+func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podName string) (*structpb.ListValue, error) {
+	podManifest, err := cli.NewPodCliByClusterID(ctx, clusterID).GetManifest(ctx, namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +171,7 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 			message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
 		}
 		containers = append(containers, map[string]interface{}{
-			"containerID": extractContainerID(mapx.Get(cs, "containerID", "").(string)),
+			"containerID": extractContainerID(mapx.GetStr(cs, "containerID")),
 			"image":       cs["image"].(string),
 			"name":        cs["name"].(string),
 			"status":      status,
@@ -175,8 +183,8 @@ func BuildListContainerAPIResp(clusterID, namespace, podName string) (*structpb.
 }
 
 // BuildGetContainerAPIResp ...
-func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
-	podManifest, err := cli.NewPodCliByClusterID(clusterID).GetManifest(namespace, podName)
+func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
+	podManifest, err := cli.NewPodCliByClusterID(ctx, clusterID).GetManifest(ctx, namespace, podName)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +206,7 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 		}
 	}
 	if len(curContainerSpec) == 0 || len(curContainerStatus) == 0 {
-		return nil, fmt.Errorf("container %s spec or status not found", containerName)
+		return nil, errorx.New(errcode.General, "container %s spec or status not found", containerName)
 	}
 
 	// 各项容器数据组装
@@ -206,7 +214,7 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 		"hostName":      mapx.Get(podManifest, "spec.nodeName", "--"),
 		"hostIP":        mapx.Get(podManifest, "status.hostIP", "--"),
 		"containerIP":   mapx.Get(podManifest, "status.podIP", "--"),
-		"containerID":   extractContainerID(mapx.Get(curContainerStatus, "containerID", "").(string)),
+		"containerID":   extractContainerID(mapx.GetStr(curContainerStatus, "containerID")),
 		"containerName": containerName,
 		"image":         mapx.Get(curContainerStatus, "image", "--"),
 		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "--"),
@@ -233,16 +241,16 @@ func BuildGetContainerAPIResp(clusterID, namespace, podName, containerName strin
 
 // BuildUpdateCObjAPIResp 构建更新自定义资源请求响应结果
 func BuildUpdateCObjAPIResp(
-	clusterID, resKind, groupVersion, namespace, name string, manifest *structpb.Struct, opts metav1.UpdateOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
-	cobjRes, err := res.GetGroupVersionResource(clusterConf, resKind, groupVersion)
+	cobjRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	// CustomObject 需要自行更新到最新的 ResourceVersion，否则会更新失败
-	cobjManifest, err := cli.GetCObjManifest(clusterConf, cobjRes, namespace, name)
+	cobjManifest, err := cli.GetCObjManifest(ctx, clusterConf, cobjRes, namespace, name)
 	if err != nil {
 		return nil, err
 	}
@@ -250,15 +258,14 @@ func BuildUpdateCObjAPIResp(
 	if err != nil {
 		return nil, err
 	}
-	newCObjManifest := manifest.AsMap()
-	err = mapx.SetItems(newCObjManifest, "metadata.resourceVersion", latestRV)
+	err = mapx.SetItems(manifest, "metadata.resourceVersion", latestRV)
 	if err != nil {
 		return nil, err
 	}
 
 	// 下发更新指令到集群
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, cobjRes).Update(namespace, name, newCObjManifest, opts)
+	ret, err = cli.NewResClient(clusterConf, cobjRes).Update(ctx, namespace, name, manifest, opts)
 	if err != nil {
 		return nil, err
 	}

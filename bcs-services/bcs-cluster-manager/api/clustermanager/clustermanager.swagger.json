@@ -872,6 +872,40 @@
         ]
       }
     },
+    "/clustermanager/v1/cluster/import": {
+      "post": {
+        "summary": "导入用户Cluster任务",
+        "description": "导入用户集群(支持多云集群导入功能: 集群ID/kubeConfig)",
+        "operationId": "ClusterManager_ImportCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerImportClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerImportClusterReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cluster/{clusterID}": {
       "get": {
         "summary": "查询Cluster",
@@ -3371,6 +3405,14 @@
           "type": "string",
           "description": "扩容模式，CLASSIC_SCALING(默认)：扩容时创建新实例，缩容时销毁实例；WAKE_UP_STOPPED_SCALING：缩容时关机不销毁，扩容时优先唤醒关机实例。",
           "title": "scalingMode"
+        },
+        "timeRanges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTimeRange"
+          },
+          "description": "定时自动扩容集群节点配置信息",
+          "title": "timeRanges"
         }
       },
       "title": "AutoScalingGroup define auto scaling information"
@@ -3883,7 +3925,7 @@
         },
         "clusterCategory": {
           "type": "string",
-          "description": "集群类别，主要用于区分该集群是否是自建、导入(builder/exporter), 默认是自建",
+          "description": "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建",
           "title": "clusterCategory"
         },
         "is_shared": {
@@ -3891,6 +3933,11 @@
           "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
+        },
+        "kubeConfig": {
+          "type": "string",
+          "description": "导入集群时若是kubeConfig导入则存储",
+          "title": "kubeConfig"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -4660,7 +4707,7 @@
         },
         "clusterCategory": {
           "type": "string",
-          "description": "集群类别，主要用于区分该集群是否是自建、导入(builder/exporter), 默认是自建",
+          "description": "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建",
           "title": "clusterCategory"
         },
         "is_shared": {
@@ -6105,6 +6152,184 @@
       },
       "title": "ImageInfo 创建cvm实例的镜像信息"
     },
+    "clustermanagerImportCloudMode": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云集群ID(例如: 腾讯云: cls-xxx)",
+          "title": "cloudID"
+        },
+        "kubeConfig": {
+          "type": "string",
+          "description": "集群kubeConfig文件",
+          "title": "kubeConfig"
+        }
+      },
+      "description": "云provider导入集群模式",
+      "title": "ImportCloudMode"
+    },
+    "clustermanagerImportClusterReq": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID，例如BCS-K8S-000000(手动录入信息时直接指定clusterID,自动导入会默认生成集群ID)",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "description": {
+          "type": "string",
+          "description": "集群简要描述",
+          "title": "description"
+        },
+        "provider": {
+          "type": "string",
+          "description": "云模版ID, 集群所属云进行流程管理",
+          "title": "provider"
+        },
+        "region": {
+          "type": "string",
+          "description": "集群所在地域",
+          "title": "region"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "集群所属项目",
+          "title": "projectID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "CMDB业务ID",
+          "title": "businessID"
+        },
+        "environment": {
+          "type": "string",
+          "description": "集群环境, 例如[prod, debug, stag]",
+          "title": "environment"
+        },
+        "engineType": {
+          "type": "string",
+          "description": "引擎类型，默认k8s",
+          "title": "engineType"
+        },
+        "isExclusive": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为业务独占集群,默认为true",
+          "title": "isExclusive"
+        },
+        "clusterType": {
+          "type": "string",
+          "description": "集群类型, 例如[federation, single], federation表示为联邦集群，single表示独立集群，默认为single",
+          "title": "clusterType"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建人",
+          "title": "creator"
+        },
+        "cloudMode": {
+          "$ref": "#/definitions/clustermanagerImportCloudMode",
+          "description": "纳管云包含2种模式: 云ID和kubeConfig, 任意一种即可, 默认以集群ID为准",
+          "title": "cloudMode"
+        },
+        "manageType": {
+          "type": "string",
+          "description": "集群管理类型，公有云时生效，MANAGED_CLUSTER(云上托管集群)，默认是 INDEPENDENT_CLUSTER(独立集群，自行维护)",
+          "title": "manageType"
+        },
+        "networkType": {
+          "type": "string",
+          "description": "集群网络类型(underlay/overlay),默认是overlay",
+          "title": "networkType"
+        },
+        "extraInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "extraClusterID": {
+          "type": "string",
+          "description": "导入集群的额外集群ID标识信息,默认时空值",
+          "title": "extraClusterID"
+        },
+        "clusterCategory": {
+          "type": "string",
+          "description": "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建",
+          "title": "clusterCategory"
+        },
+        "is_shared": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为共享集群,默认false",
+          "title": "is_shared"
+        },
+        "version": {
+          "type": "string",
+          "description": "导入集群版本信息",
+          "title": "version"
+        }
+      },
+      "description": "用户已存在的集群导入BCS进行纳管",
+      "title": "ImportClusterReq",
+      "required": [
+        "clusterName",
+        "provider",
+        "projectID",
+        "businessID",
+        "environment",
+        "engineType",
+        "isExclusive",
+        "clusterType",
+        "creator"
+      ]
+    },
+    "clustermanagerImportClusterResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "object",
+          "description": "返回导入集群和任务",
+          "title": "data"
+        }
+      },
+      "description": "导入集群的返回",
+      "title": "ImportClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerInitFederationClusterReq": {
       "type": "object"
     },
@@ -6987,6 +7212,20 @@
           "format": "int64",
           "description": "VPC-CNI网络模式下,弹性网卡IP回收时间",
           "title": "claimExpiredSeconds"
+        },
+        "multiClusterCIDR": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "集群扩展CIDR,不同cloud配置不同",
+          "title": "multiClusterCIDR"
+        },
+        "cidrStep": {
+          "type": "integer",
+          "format": "int64",
+          "description": "自动分配cidr步长设置(默认是生产环境4096、其他环境2048)",
+          "title": "cidrStep"
         }
       }
     },
@@ -7865,6 +8104,34 @@
       "description": "集群管理，节点管理背后所映射任务信息，主要是关联的自动化步骤（整合云api与蓝鲸标准运维）",
       "title": "Task"
     },
+    "clustermanagerTimeRange": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "定时扩缩job名称",
+          "title": "name"
+        },
+        "schedule": {
+          "type": "string",
+          "description": "定时cron时间",
+          "title": "schedule"
+        },
+        "zone": {
+          "type": "string",
+          "description": "定时cron时区",
+          "title": "zone"
+        },
+        "desiredNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "期望节点数",
+          "title": "desiredNum"
+        }
+      },
+      "description": "autoScale定时扩缩配置",
+      "title": "TimeRange"
+    },
     "clustermanagerUpdateAutoScalingOptionRequest": {
       "type": "object",
       "properties": {
@@ -8452,6 +8719,11 @@
           "type": "string",
           "description": "更新集群创建时间,格式为(time.Now().Format(time.RFC3339))",
           "title": "createTime"
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建人员名称",
+          "title": "creator"
         }
       },
       "description": "更新集群信息请求，该接口仅用于信息更新和修正，不会触发任何行为动作。如果需要执行自动化相关流程，请根据需要使用对应的接口",
@@ -9149,6 +9421,14 @@
         }
       },
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "runtimeError": {
       "type": "object",

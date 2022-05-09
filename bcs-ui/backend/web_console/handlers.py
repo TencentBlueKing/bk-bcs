@@ -27,8 +27,8 @@ from django.utils.translation.trans_real import get_supported_language_variant
 from tornado import locale
 from tornado.ioloop import IOLoop, PeriodicCallback
 
-from backend.utils.funutils import remove_url_domain
 from backend.utils import FancyDict
+from backend.utils.funutils import remove_url_domain
 from backend.web_console import bcs_client, constants, utils
 from backend.web_console.auth import authenticated
 from backend.web_console.pod_life_cycle import PodLifeCycle

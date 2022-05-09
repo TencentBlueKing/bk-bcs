@@ -25,7 +25,7 @@ pytestmark = pytest.mark.django_db
 
 
 class TestPod:
-    """ Pod OpenAPI 相关接口测试 """
+    """Pod OpenAPI 相关接口测试"""
 
     pod_name = 'pod-for-test-{}'.format(generate_random_string(8))
 
@@ -39,7 +39,7 @@ class TestPod:
         Pod(ctx_cluster).delete(namespace=TEST_NAMESPACE, name=self.pod_name)
 
     def test_get_pod(self, api_client):
-        """ 测试获取指定命名空间下的 Deployment """
+        """测试获取指定命名空间下的 Deployment"""
         response = api_client.get(
             '/apis/resources/projects/{p_id}/clusters/{c_id}/namespaces/{ns}/pods/{pod_name}/'.format(
                 p_id=TEST_PROJECT_ID, c_id=TEST_CLUSTER_ID, ns=TEST_NAMESPACE, pod_name=self.pod_name
@@ -62,7 +62,7 @@ class TestPod:
 
 
 def gen_pod_body(name: str) -> Dict:
-    """ 生成用于测试的 Pod 配置 TODO 后续接入 load_demo_manifest """
+    """生成用于测试的 Pod 配置 TODO 后续接入 load_demo_manifest"""
     return {
         'apiVersion': 'v1',
         'kind': 'Pod',

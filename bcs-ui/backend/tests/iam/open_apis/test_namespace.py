@@ -31,14 +31,14 @@ def patch_paas_cc():
 
 
 class TestNamespaceAPI:
-    def test_list_instance(self, cluster_id):
+    def test_list_instance(self, project_id, cluster_id):
         request = factory.post(
             '/apis/iam/v1/namespaces/',
             {
                 'method': MethodType.LIST_INSTANCE,
                 'type': ResourceType.Namespace,
                 'page': {'offset': 0, 'limit': 5},
-                'filter': {'parent': {'id': cluster_id}},
+                'filter': {'parent': {'id': cluster_id}, 'ancestors': [{'id': project_id}, {'id': cluster_id}]},
             },
         )
         p_view = ResourceAPIView.as_view()
@@ -64,7 +64,7 @@ class TestNamespaceAPI:
         assert data[0]['id'] == iam_ns_id
         assert data[0]['display_name'] == 'default'
 
-    def test_search_instance(self, cluster_id):
+    def test_search_instance(self, project_id, cluster_id):
         # 匹配到关键字
         request = factory.post(
             '/apis/iam/v1/namespaces/',
@@ -72,7 +72,11 @@ class TestNamespaceAPI:
                 'method': MethodType.SEARCH_INSTANCE,
                 'type': ResourceType.Namespace,
                 'page': {'offset': 0, 'limit': 5},
-                'filter': {'keyword': 'def', 'parent': {'id': cluster_id}},
+                'filter': {
+                    'keyword': 'def',
+                    'parent': {'id': cluster_id},
+                    'ancestors': [{'id': project_id}, {'id': cluster_id}],
+                },
             },
         )
         p_view = ResourceAPIView.as_view()
@@ -87,7 +91,11 @@ class TestNamespaceAPI:
                 'method': MethodType.SEARCH_INSTANCE,
                 'type': ResourceType.Namespace,
                 'page': {'offset': 0, 'limit': 5},
-                'filter': {'keyword': 'test', 'parent': {'id': cluster_id}},
+                'filter': {
+                    'keyword': 'test',
+                    'parent': {'id': cluster_id},
+                    'ancestors': [{'id': project_id}, {'id': cluster_id}],
+                },
             },
         )
         p_view = ResourceAPIView.as_view()

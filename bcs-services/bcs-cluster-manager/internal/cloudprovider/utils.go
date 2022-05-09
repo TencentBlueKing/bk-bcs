@@ -20,6 +20,7 @@ import (
 	"time"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 )
 
 const (
@@ -138,6 +139,8 @@ func (tt TaskType) String() string {
 var (
 	// CreateCluster task
 	CreateCluster TaskType = "CreateCluster"
+	// ImportCluster task
+	ImportCluster TaskType = "ImportCluster"
 	// DeleteCluster task
 	DeleteCluster TaskType = "DeleteCluster"
 	// AddNodesToCluster task
@@ -149,4 +152,53 @@ var (
 // GetTaskType getTaskType by cloud
 func GetTaskType(cloud string, taskName TaskType) string {
 	return fmt.Sprintf("%s-%s", cloud, taskName.String())
+}
+
+// CloudDependBasicInfo cloud depend cluster info
+type CloudDependBasicInfo struct {
+	// Cluster info
+	Cluster  *proto.Cluster
+	// Cloud info
+	Cloud    *proto.Cloud
+	// Project info
+	Project  *proto.Project
+	// CmOption option
+	CmOption *CommonOption
+}
+
+// GetClusterDependBasicInfo get cluster and cloud depend info
+func GetClusterDependBasicInfo(clusterID string, cloudID string) (*CloudDependBasicInfo, error) {
+	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	cloud, project, err := actions.GetProjectAndCloud(GetStorageModel(), cluster.ProjectID, cloudID)
+	if err != nil {
+		return nil, err
+	}
+
+	cmOption, err := GetCredential(project, cloud)
+	if err != nil {
+		return nil, err
+	}
+	cmOption.Region = cluster.Region
+
+	return &CloudDependBasicInfo{cluster, cloud, project, cmOption}, nil
+}
+
+// UpdateClusterStatus set cluster status
+func UpdateClusterStatus(clusterID string, status string) error {
+	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+	if err != nil {
+		return err
+	}
+
+	cluster.Status = status
+	err = GetStorageModel().UpdateCluster(context.Background(), cluster)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

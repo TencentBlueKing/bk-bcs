@@ -119,7 +119,12 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 func generateMetricTasks(run *v1alpha1.HookRun) []metricTask {
 	var tasks []metricTask
 	terminating := hooksutil.IsTerminating(run)
-	for _, metric := range run.Spec.Metrics {
+	for i, metric := range run.Spec.Metrics {
+		// if previous metric has not been completed, wait until next reconcile
+		if i > 0 && run.Spec.Policy == v1alpha1.OrderedPolicy && !hooksutil.MetricCompleted(run, run.Spec.Metrics[i-1].Name) {
+			klog.Infof("With Ordered policy, waitting %s to be completed", run.Spec.Metrics[i-1].Name)
+			break
+		}
 		if hooksutil.MetricCompleted(run, metric.Name) {
 			continue
 		}
@@ -337,6 +342,8 @@ func (hc *HookController) assessRunStatus(run *v1alpha1.HookRun) v1alpha1.HookPh
 					}
 				}
 			}
+		} else {
+			everythingCompleted = false
 		}
 	}
 	if !everythingCompleted || worstStatus == "" {

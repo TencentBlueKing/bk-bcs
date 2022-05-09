@@ -243,11 +243,6 @@
                 ccHostLoading: false,
                 showStagTip: false,
                 exceptionCode: null,
-                permissions: {
-                    create: true,
-                    prod: true,
-                    test: true
-                },
                 curProject: {},
                 isK8sProject: false,
                 ccApplicationName: '',
@@ -339,19 +334,6 @@
             async getClusters () {
                 try {
                     const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-                    // if (!this.permissions.create) {
-                    //     const url = this.createApplyPermUrl({
-                    //         policy: 'create',
-                    //         projectCode: this.projectCode,
-                    //         idx: 'cluster_test,cluster_prod'
-                    //     })
-                    //     bus.$emit('show-apply-perm', {
-                    //         data: {
-                    //             apply_url: url
-                    //         }
-                    //     })
-                    // }
                 } catch (e) {
                     console.warn(e)
                 }
@@ -433,21 +415,6 @@
                 this.fetchCCData({
                     offset: this.pageConf.pageSize * (page - 1),
                     ipList: this.ccSearchKeys || []
-                })
-            },
-
-            /**
-             * 弹层表格全选
-             */
-            toogleCheckCurPage () {
-                setTimeout(() => {
-                    const isChecked = this.isCheckCurPageAll
-                    this.candidateHostList.forEach(host => {
-                        if (!host.is_used && String(host.agent) === '1') {
-                            host.isChecked = isChecked
-                        }
-                    })
-                    this.selectHost()
                 })
             },
 

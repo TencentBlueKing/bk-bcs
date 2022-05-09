@@ -18,6 +18,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -119,6 +120,53 @@ func updateNodeStatusByNodeID(idList []string, status string) error {
 		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
 		if err != nil {
 			continue
+		}
+	}
+
+	return nil
+}
+
+func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) {
+	nodeMgr := api.NodeManager{}
+	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+		Common:       opt.Common,
+		ClusterVPCID: opt.ClusterVPCID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return nodes, nil
+}
+
+func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprovider.ListNodesOption) error {
+	nodeMgr := api.NodeManager{}
+	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+		Common:       opt.Common,
+		ClusterVPCID: opt.ClusterVPCID,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, n := range nodes {
+		node, err := cloudprovider.GetStorageModel().GetNodeByIP(ctx, n.InnerIP)
+		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+			blog.Errorf("importClusterNodes GetNodeByIP[%s] failed: %v", n.InnerIP, err)
+			// no import node when found err
+			continue
+		}
+
+		if node == nil {
+			err := cloudprovider.GetStorageModel().CreateNode(ctx, node)
+			if err != nil {
+				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)
+			}
+			continue
+		}
+		err = cloudprovider.GetStorageModel().UpdateNode(ctx, n)
+		if err != nil {
+			blog.Errorf("importClusterNodes UpdateNode[%s] failed: %v", n.InnerIP, err)
 		}
 	}
 

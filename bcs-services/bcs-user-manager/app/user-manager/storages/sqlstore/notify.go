@@ -21,12 +21,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
+// TokenNotifyStore is an interface of token notify store
 type TokenNotifyStore interface {
 	CreateTokenNotify(notify *models.BcsTokenNotify) error
 	GetTokenNotifyByCondition(cond *models.BcsTokenNotify) []models.BcsTokenNotify
 	DeleteTokenNotify(token string) error
 }
 
+// NewTokenNotifyStore creates a new token notify store
 func NewTokenNotifyStore(db *gorm.DB) TokenNotifyStore {
 	return &realTokenNotifyStore{db: db}
 }
@@ -41,6 +43,7 @@ func (t *realTokenNotifyStore) CreateTokenNotify(notify *models.BcsTokenNotify) 
 	return err
 }
 
+// ExpireToken specify the response of token
 type ExpireToken struct {
 	Username  string    `json:"username"`
 	Token     string    `json:"token"`
@@ -48,9 +51,9 @@ type ExpireToken struct {
 }
 
 // GetTokenNotifyByCondition get token that has expired and not notified
-func (u *realTokenNotifyStore) GetTokenNotifyByCondition(cond *models.BcsTokenNotify) []models.BcsTokenNotify {
-	token := []models.BcsTokenNotify{}
-	u.db.Where(cond).Find(&token)
+func (t *realTokenNotifyStore) GetTokenNotifyByCondition(cond *models.BcsTokenNotify) []models.BcsTokenNotify {
+	token := make([]models.BcsTokenNotify, 0)
+	t.db.Where(cond).Find(&token)
 	return token
 }
 

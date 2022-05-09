@@ -139,7 +139,7 @@
                     if (clusterId) {
                         this.curScopeId = clusterId
                     } else {
-                        this.curScopeId = this.localScopeList[0]
+                        this.curScopeId = this.localScopeList[0].id
                     }
 
                     sessionStorage['bcs-cluster'] = this.curScopeId

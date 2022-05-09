@@ -33,8 +33,8 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 	schemes: HTTP
 };
 
-service ClusterResources {
-	// 基础类接口
+// 基础类接口
+service Basic {
 	rpc Echo(EchoReq) returns (EchoResp) {
 		option (google.api.http) = {
 			post: "/clusterresources/v1/echo"
@@ -75,8 +75,23 @@ service ClusterResources {
 			summary: "Version API"
 		};
 	}
+}
 
-	// 命名空间接口
+// 节点接口
+service Node {
+	rpc ListNode(ResListReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取节点列表"
+			summary: "ListNode API"
+		};
+	}
+}
+
+// 命名空间接口
+service Namespace {
 	rpc ListNS(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces"
@@ -86,8 +101,10 @@ service ClusterResources {
 			summary: "ListNS API"
 		};
 	}
+}
 
-	// 工作负载类接口
+// 工作负载类接口
+service Workload {
 	rpc ListDeploy(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments"
@@ -470,8 +487,10 @@ service ClusterResources {
 			summary: "GetContainerEnvInfo API"
 		};
 	}
+}
 
-	// 网络类接口
+// 网络类接口
+service Network {
 	rpc ListIng(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses"
@@ -627,8 +646,10 @@ service ClusterResources {
 			summary: "DeleteEP API"
 		};
 	}
+}
 
-	// 配置类接口
+// 配置类接口
+service Config {
 	rpc ListCM(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps"
@@ -732,8 +753,10 @@ service ClusterResources {
 			summary: "DeleteSecret API"
 		};
 	}
+}
 
-	// 存储类接口
+// 存储类接口
+service Storage {
 	rpc ListPV(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"
@@ -889,8 +912,10 @@ service ClusterResources {
 			summary: "DeleteSC API"
 		};
 	}
+}
 
-	// RBAC 类接口
+// RBAC 类接口
+service RBAC {
 	rpc ListSA(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts"
@@ -942,8 +967,10 @@ service ClusterResources {
 			summary: "DeleteSA API"
 		};
 	}
+}
 
-	// HPA 接口
+// HPA 接口
+service HPA {
 	rpc ListHPA(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa"
@@ -995,19 +1022,10 @@ service ClusterResources {
 			summary: "DeleteHPA API"
 		};
 	}
+}
 
-	// 示例模板接口
-	rpc GetK8SResTemplate(GetK8SResTemplateReq) returns (CommonResp) {
-		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"
-		};
-		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-			description: "获取 K8S 资源模版"
-			summary: "GetK8SResTemplate API"
-		};
-	}
-
-	// 自定义资源类接口
+// 自定义资源类接口
+service CustomRes {
 	rpc ListCRD(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds"
@@ -1079,6 +1097,19 @@ service ClusterResources {
 			summary: "DeleteCObj API"
 		};
 	}
+}
+
+service Resource {
+	// 示例模板接口
+	rpc GetK8SResTemplate(GetK8SResTemplateReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/examples/manifests"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 K8S 资源模版"
+			summary: "GetK8SResTemplate API"
+		};
+	}
 
 	// 订阅接口
 	rpc Subscribe(SubscribeReq) returns (stream SubscribeResp) {
@@ -1095,10 +1126,44 @@ service ClusterResources {
 	rpc InvalidateDiscoveryCache(InvalidateDiscoveryCacheReq) returns (CommonResp) {
 		option (google.api.http) = {
 			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"
+			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "主动使 Discovery 缓存失效"
 			summary: "Invalidate Discovery Cache API"
+		};
+	}
+
+	// 表单化数据渲染预览
+	rpc FormDataRenderPreview(FormRenderPreviewReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "表单化数据渲染预览"
+			summary: "Form data render preview API"
+		};
+	}
+
+	// 获取指定资源表单 Schema
+	rpc GetResFormSchema(GetResFormSchemaReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取指定资源表单 Schema"
+			summary: "Get resource's form schema API"
+		};
+	}
+
+	rpc GetFormSupportedAPIVersions(GetFormSupportedApiVersionsReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取指定资源可用于表单化的 APIVersion"
+			summary: "Get resource's supported apiVersions for form"
 		};
 	}
 }
@@ -1141,6 +1206,9 @@ message HealthzReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "HealthzReq", description: "Healthz API 请求（无需参数）"}
 	};
+	bool raiseErr = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "raiseErr", description: "存在依赖服务异常的情况，是否返回错误（默认只在响应体中标记）"
+	}];
 }
 
 message HealthzResp {
@@ -1205,6 +1273,12 @@ message ResListReq {
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}, (validate.rules).string = {max_len: 128}];
+	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "apiVersion"
+	}, (validate.rules).string = {max_len: 63}];
+	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
 }
 
 message ResGetReq {
@@ -1223,6 +1297,12 @@ message ResGetReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "apiVersion"
+	}, (validate.rules).string = {max_len: 63}];
+	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["manifest", "formData"]}];
 }
 
 message ResCreateReq {
@@ -1235,9 +1315,10 @@ message ResCreateReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	google.protobuf.Struct manifest = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct rawData = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	string format = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["manifest", "formData"]}];
 }
 
 message ResUpdateReq {
@@ -1256,9 +1337,10 @@ message ResUpdateReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
-	google.protobuf.Struct manifest = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct rawData = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["manifest", "formData"]}];
 }
 
 message ResDeleteReq {
@@ -1301,6 +1383,9 @@ message PodResListReq {
 	string ownerKind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "所属资源类型"
 	}, (validate.rules).string = {max_len: 64}];
+	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
 }
 
 message ContainerListReq {
@@ -1355,6 +1440,9 @@ message GetK8SResTemplateReq {
 	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源类型"
 	}, (validate.rules).string = {min_len: 3, max_len: 64}];
+	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
 }
 
 message CObjListReq {
@@ -1373,6 +1461,9 @@ message CObjListReq {
 	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["manifest", "selectItems"]}];
 }
 
 message CObjGetReq {
@@ -1394,6 +1485,9 @@ message CObjGetReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["manifest", "formData"]}];
 }
 
 message CObjCreateReq {
@@ -1409,9 +1503,10 @@ message CObjCreateReq {
 	string CRDName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "CRD 名称"
 	}, (validate.rules).string = {max_len: 256}];
-	google.protobuf.Struct manifest = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct rawData = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["manifest", "formData"]}];
 }
 
 message CObjUpdateReq {
@@ -1433,9 +1528,10 @@ message CObjUpdateReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
-	google.protobuf.Struct manifest = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置信息"
-	}];
+	google.protobuf.Struct rawData = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["manifest", "formData"]}];
 }
 
 message CObjDeleteReq {
@@ -1562,4 +1658,52 @@ message InvalidateDiscoveryCacheReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+}
+
+message FormRenderPreviewReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "FormRenderPreviewReq", description: "表单数据渲染为 Manifest 预览"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
+	google.protobuf.Struct formData = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "表单化数据"
+	}];
+}
+
+message GetResFormSchemaReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetResFormSchemaReq", description: "获取资源表单化 Schema 请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
+}
+
+message GetFormSupportedApiVersionsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetFormSupportedApiVersionsReq", description: "获取指定资源可用于表单化的 ApiVersions"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
 }

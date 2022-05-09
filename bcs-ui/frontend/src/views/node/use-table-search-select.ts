@@ -27,7 +27,7 @@ export default function useTableSearchSelect (
     })
     const searchSelectValue = ref<any[]>([])
     // 刷新表格
-    const tableKey = ref(new Date())
+    const tableKey = ref(new Date().getTime())
     const handleFilterChange = (filtersData) => {
         Object.keys(filtersData).forEach(prop => {
             const data = searchSelectDataSource.value.find(data => data.id === prop)
@@ -53,7 +53,7 @@ export default function useTableSearchSelect (
                 filteredValue.value[item.id] = item.values.map(v => v.id)
             }
         })
-        tableKey.value = new Date()
+        tableKey.value = new Date().getTime()
     }
     const handleClearSearchSelect = () => {
         handleSearchSelectChange(searchSelectValue.value)
@@ -63,7 +63,7 @@ export default function useTableSearchSelect (
         Object.keys(filteredValue.value).forEach(prop => {
             filteredValue.value[prop] = []
         })
-        tableKey.value = new Date()
+        tableKey.value = new Date().getTime()
     }
 
     return {

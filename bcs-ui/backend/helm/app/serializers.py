@@ -19,7 +19,7 @@ import subprocess
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError, ValidationError
+from rest_framework.exceptions import ParseError
 from ruamel.yaml.error import YAMLFutureWarning
 
 from backend.components import paas_cc
@@ -35,13 +35,13 @@ from backend.helm.toolkit.diff.diff import simple_diff
 from backend.helm.toolkit.diff.parser import parse
 from backend.helm.toolkit.kubehelm import exceptions as helm_exceptions
 from backend.helm.toolkit.kubehelm.helm import KubeHelmClient
-from backend.utils.client import get_bcs_client, make_kubectl_client
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.utils.client import make_kubectl_client
 from backend.utils.error_codes import error_codes
 from backend.utils.serializers import HelmValueField, YamlField
 from backend.utils.tempfile import save_to_temporary_dir
 
 from . import bcs_info_injector, utils
-from .deployer import AppDeployer
 from .models import App
 
 
@@ -55,7 +55,7 @@ def preview_parse(manifest, namespace):
 
 
 class AppMixin:
-    """ app serializer 公用方法 """
+    """app serializer 公用方法"""
 
     @property
     def project_id(self):
@@ -108,8 +108,6 @@ class AppMixin:
 class AppBaseSLZ(AppMixin, serializers.ModelSerializer):
     def save(self, **kwargs):
         instance = super(AppBaseSLZ, self).save(**kwargs)
-
-        # AppDeployer(app=instance, access_token=self.access_token).install_app()
         instance.refresh_from_db()
         return instance
 
@@ -387,6 +385,16 @@ class AppUpgradeSLZ(AppBaseSLZ):
     cmd_flags = serializers.JSONField(required=False, default=[])
 
     def update(self, instance, validated_data):
+        ns_info = self.get_ns_info_by_id(instance.namespace_id)
+
+        perm_ctx = NamespaceScopedPermCtx(
+            username=self.context["request"].user.username,
+            project_id=instance.project_id,
+            cluster_id=ns_info['cluster_id'],
+            name=ns_info['name'],
+        )
+        NamespaceScopedPermission().can_update(perm_ctx)
+
         # update sys variable
         sys_variables = collect_system_variable(
             access_token=self.context["request"].user.token.access_token,
@@ -552,7 +560,7 @@ class AppReleaseDiffSLZ(serializers.Serializer):
 
 
 class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
-    """ 发布预览 """
+    """发布预览"""
 
     upgrade_verion = UpgradeVersionField(write_only=True, required=True)
     answers = HelmValueField(
@@ -593,7 +601,7 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
     new_content = serializers.JSONField(read_only=True)
 
     def create(self, validated_data):
-        """ 应用更新时的预览数据，这个时候目标release还没有创建 """
+        """应用更新时的预览数据，这个时候目标release还没有创建"""
         instance = App.objects.get(id=self.app_id)
 
         check_cluster_perm(
@@ -710,7 +718,7 @@ class AppReleasePreviewSLZ(AppMixin, serializers.Serializer):
 
 
 class AppRollbackPreviewSLZ(AppMixin, serializers.Serializer):
-    """ 回滚预览 """
+    """回滚预览"""
 
     release = HistoryReleaseField(write_only=True, required=True)
 
@@ -720,7 +728,7 @@ class AppRollbackPreviewSLZ(AppMixin, serializers.Serializer):
     difference = serializers.JSONField(read_only=True)
 
     def create(self, validated_data):
-        """ 生成应用的预览数据 """
+        """生成应用的预览数据"""
         instance = App.objects.get(id=self.app_id)
 
         check_cluster_perm(
@@ -755,7 +763,7 @@ class AppRollbackPreviewSLZ(AppMixin, serializers.Serializer):
 
 
 class AppPreviewSLZ(serializers.Serializer):
-    """ 获取 app 的预览信息 """
+    """获取 app 的预览信息"""
 
     content = serializers.JSONField(read_only=True)
     notes = serializers.JSONField(read_only=True)
@@ -775,7 +783,7 @@ class AppPreviewSLZ(serializers.Serializer):
 
 
 class AppCreatePreviewSLZ(AppMixin, serializers.Serializer):
-    """ 创建预览 """
+    """创建预览"""
 
     name = serializers.CharField(write_only=True)
     namespace_info = NamespaceInfoField(write_only=True, label="Namespace")
@@ -813,7 +821,7 @@ class AppCreatePreviewSLZ(AppMixin, serializers.Serializer):
     cmd_flags = serializers.JSONField(required=False, default=[])
 
     def create(self, validated_data):
-        """ 生成应用的预览数据，这个时候应用没有创建，release也没有创建 """
+        """生成应用的预览数据，这个时候应用没有创建，release也没有创建"""
         namespace_info = self.get_ns_info_by_id(validated_data["namespace_info"])
 
         cluster_id = namespace_info["cluster_id"]
@@ -1132,8 +1140,7 @@ def _template_with_bcs_renderer(
 
 
 class FilterNamespacesSLZ(serializers.Serializer):
-    filter_use_perm = serializers.BooleanField(default=True)
-    cluster_id = serializers.CharField(required=False)
+    cluster_id = serializers.CharField()
     chart_id = serializers.IntegerField(required=False)
 
 

@@ -138,7 +138,7 @@ func TestGetActiveRevisions(t *testing.T) {
 			informer := informerFactory.Apps().V1().ControllerRevisions()
 			informerFactory.WaitForCacheSync(stop)
 			for i := range s.revisions {
-				informer.Informer().GetIndexer().Add(s.revisions[i])
+				_ = informer.Informer().GetIndexer().Add(s.revisions[i])
 			}
 			controllerHistory := history.NewFakeHistory(informer)
 			control := &defaultGameDeploymentControl{revisionControl: revisionControl, controllerHistory: controllerHistory}
@@ -174,7 +174,7 @@ func newHR(name string, phase v1alpha12.HookPhase, deleted bool, hrType string) 
 	return hr
 }
 
-func TestDeleteUnexpectedPreDeleteHookRuns(t *testing.T) {
+func TestDeleteUnexpectedPreDeleteHRs(t *testing.T) {
 	tests := []struct {
 		name            string
 		hrList          []*v1alpha12.HookRun
@@ -291,7 +291,7 @@ func TestTruncatePreDeleteHookRuns(t *testing.T) {
 	}
 }
 
-func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
+func TestDeleteUnexpectedPreInPlaceHRs(t *testing.T) {
 	tests := []struct {
 		name            string
 		hrList          []*v1alpha12.HookRun
@@ -344,7 +344,7 @@ func TestDeleteUnexpectedPreInplaceHookRuns(t *testing.T) {
 	}
 }
 
-func TestTruncatePreInplaceHookRuns(t *testing.T) {
+func TestTruncatePreInPlaceHookRuns(t *testing.T) {
 	tests := []struct {
 		name            string
 		pods            []*corev1.Pod
@@ -427,7 +427,7 @@ func TestGDCDeletePod(t *testing.T) {
 
 	pod := test.NewPod(0)
 	_ = kubeInformer.Core().V1().Pods().Informer().GetIndexer().Add(pod)
-	gdc.deletePod(test.NewGameDeployment(1), pod.Name, &v1alpha1.GameDeploymentStatus{})
+	_ = gdc.deletePod(test.NewGameDeployment(1), pod.Name, &v1alpha1.GameDeploymentStatus{})
 	if got, want := len(kubeClient.Actions()), 1; got != want {
 		t.Fatalf("not expected pod actions count, want: %d, got: %d", want, got)
 	}
@@ -438,7 +438,7 @@ func TestGDCDeletePod(t *testing.T) {
 
 	// test pod not exist
 	pod2 := test.NewPod(2)
-	gdc.deletePod(test.NewGameDeployment(1), pod2.Name, &v1alpha1.GameDeploymentStatus{})
+	_ = gdc.deletePod(test.NewGameDeployment(1), pod2.Name, &v1alpha1.GameDeploymentStatus{})
 	if got, want := len(kubeClient.Actions()), 0; got != want {
 		t.Fatalf("not expected pod actions count, want: %d, got: %d", want, got)
 	}
@@ -576,7 +576,7 @@ func TestTruncateHistory(t *testing.T) {
 				controllerHistory: history.NewFakeHistory(kubeInformer.Apps().V1().ControllerRevisions()),
 			}
 			for _, controllerRevision := range s.revisions {
-				kubeInformer.Apps().V1().ControllerRevisions().Informer().GetIndexer().Add(controllerRevision)
+				_ = kubeInformer.Apps().V1().ControllerRevisions().Informer().GetIndexer().Add(controllerRevision)
 			}
 			err := gdc.truncateHistory(newDeploy(s.revisionHistoryLimit), s.pods, s.revisions,
 				newControllerRevision(s.currentRevisionName), newControllerRevision(s.updateRevisionName))

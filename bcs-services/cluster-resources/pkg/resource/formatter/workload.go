@@ -175,7 +175,7 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 
 // 根据 pod.Status.ContainerStatuses 更新 总状态
 func (p *PodStatusParser) updateStatusByContainerStatuses(podStatus *LightPodStatus) { //nolint:cyclop
-	var hasRunning = false
+	hasRunning := false
 	for i := len(podStatus.ContainerStatuses) - 1; i >= 0; i-- {
 		container := podStatus.ContainerStatuses[i]
 		if container.State.Waiting != nil && container.State.Waiting.Reason != "" {

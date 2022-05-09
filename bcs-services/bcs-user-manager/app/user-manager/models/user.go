@@ -24,10 +24,10 @@ type BcsUser struct {
 	UserType  uint       `json:"user_type"`
 	UserToken string     `json:"user_token" gorm:"unique;size:64"`
 	CreatedBy string     `json:"created_by"`
-	CreatedAt time.Time  `json:"created_at"`                       // 用户创建时间
-	UpdatedAt time.Time  `json:"updated_at"`                       // user-token刷新时间
-	ExpiresAt time.Time  `json:"expires_at"`                       // user-token过期时间
-	DeletedAt *time.Time `json:"deleted_at" gorm:"type:timestamp"` // user-token删除时间
+	CreatedAt time.Time  `json:"created_at" gorm:"type:timestamp null;default:null"` // 用户创建时间
+	UpdatedAt time.Time  `json:"updated_at" gorm:"type:timestamp null;default:null"` // user-token刷新时间
+	ExpiresAt time.Time  `json:"expires_at" gorm:"type:timestamp null;default:null"` // user-token过期时间
+	DeletedAt *time.Time `json:"deleted_at" gorm:"type:timestamp null;default:null"` // user-token删除时间
 }
 
 // HasExpired mean that is this token has been expired

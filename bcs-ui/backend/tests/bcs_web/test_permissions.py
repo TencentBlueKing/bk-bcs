@@ -37,8 +37,8 @@ HAS_PERM_PROJECT_ID = generate_random_string(32)
 class FakeProjectPermission(FakeProjectPermissionAllowAll):
     """对于 project_id = HAS_PERM_PROJECT_ID, 权限放行"""
 
-    def can_view(self, username, project_id, raise_exception=False):
-        if project_id == HAS_PERM_PROJECT_ID:
+    def can_view(self, perm_ctx, raise_exception=False):
+        if perm_ctx.project_id == HAS_PERM_PROJECT_ID:
             return True
         return False
 
@@ -54,27 +54,17 @@ class FakePaaSCCClient(StubPaaSCCClient):
         return p
 
 
-def fake_verify_project_by_user(project_id, *args, **kwargs):
-    """ 验证用户是否有项目权限（测试用） """
-    if project_id == HAS_PERM_PROJECT_ID:
-        return True
-    return False
-
-
 @pytest.fixture(autouse=True)
 def patch_permissions():
     """Patch permission checks to allow API requests, includes:
 
     - paas_cc module: return faked project infos
-    - ProjectPermission: allow all permission checks
     - get_api_public_key: return None
-    - verify_project_by_user: return True if is mocked project id else False
+    - ProjectPermission.can_view: return True if is mocked project id else False
     """
     with mock.patch('backend.bcs_web.permissions.PaaSCCClient', new=FakePaaSCCClient), mock.patch(
-        'backend.bcs_web.permissions.permissions.ProjectPermission', new=FakeProjectPermission
-    ), mock.patch('backend.components.apigw.get_api_public_key', return_value=None), mock.patch(
-        'backend.bcs_web.permissions.bcs_perm.verify_project_by_user', new=fake_verify_project_by_user
-    ):
+        'backend.components.apigw.get_api_public_key', return_value=None
+    ), mock.patch('backend.bcs_web.permissions.ProjectPermission', new=FakeProjectPermission):
         yield
 
 

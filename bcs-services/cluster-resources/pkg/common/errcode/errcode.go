@@ -15,6 +15,20 @@
 package errcode
 
 const (
-	// DefaultErrCode 默认错误码
-	DefaultErrCode = 500
+	// NoErr 没有错误
+	NoErr = 0
+	// General 通用错误码（未分类）
+	General = 1
+	// ValidateErr 参数校验失败
+	ValidateErr = 2
+	// Unsupported 功能未支持
+	Unsupported = 3
+	// NoPerm 无权限
+	NoPerm = 4
+	// Unauth 未认证/认证失败
+	Unauth = 5
+	// NoIAMPerm 权限中心鉴权失败（特殊错误码，前端有相关逻辑）
+	NoIAMPerm = 40300
+	// ComponentErr 依赖组件异常
+	ComponentErr = 6
 )

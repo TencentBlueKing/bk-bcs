@@ -15,198 +15,272 @@ package app
 
 import (
 	"context"
-	"crypto/tls"
-	"fmt"
+	"net/http"
 	"os"
-	"path/filepath"
-	"strconv"
+	"os/signal"
 	"strings"
-	"time"
+	"syscall"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	comconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
-	"github.com/go-redis/redis/v8"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
+	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
+	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/urfave/cli/v2"
+	"go-micro.dev/v4"
+	"go-micro.dev/v4/cmd"
+	microConf "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/reader"
+	"go-micro.dev/v4/config/reader/json"
+	"go-micro.dev/v4/config/source/file"
+	"go-micro.dev/v4/registry"
+	"golang.org/x/sync/errgroup"
 )
 
-// ConsoleManager is an console struct
-type ConsoleManager struct {
-	// options for console manager
-	opt *options.ConsoleManagerOption
+var (
+	// 变量, 编译后覆盖
+	service              = "webconsole.bkbcs.tencent.com"
+	version              = "latest"
+	credentialConfigPath = cli.StringSlice{}
+)
 
-	// tls config for cluster manager server
-	tlsConfig *tls.Config
-
-	k8sClient   *kubernetes.Clientset
-	k8sConfig   *rest.Config
-	redisClient *redis.Client // redis 客户端
-
-	backend manager.Manager
-	route   *api.Router
-	conf    *config.ConsoleConfig
+// WebConsoleManager is an console struct
+type WebConsoleManager struct {
+	ctx           context.Context
+	opt           *options.WebConsoleManagerOption
+	microService  micro.Service
+	microConfig   microConf.Config
+	multiCredConf *options.MultiCredConf
 }
 
-// NewConsoleManager create an ConsoleProxy object
-func NewConsoleManager(opt *options.ConsoleManagerOption) *ConsoleManager {
-
-	return &ConsoleManager{
-		opt:     opt,
-		backend: nil,
-		route:   nil,
-		conf:    nil,
+// NewWebConsoleManager
+func NewWebConsoleManager(opt *options.WebConsoleManagerOption) *WebConsoleManager {
+	return &WebConsoleManager{
+		ctx: context.Background(),
+		opt: opt,
 	}
 }
 
-func (c *ConsoleManager) Init() error {
+func (c *WebConsoleManager) Init() error {
+	// 初始化服务注册, 配置文件等
+	microService, microConfig, multiCredConf := c.initMicroService()
+	c.microService = microService
+	c.microConfig = microConfig
+	c.multiCredConf = multiCredConf
 
-	err := setConfig(c.opt)
+	// etcd 服务发现注册
+	etcdRegistry, err := c.initEtcdRegistry()
 	if err != nil {
 		return err
 	}
-	// init server and client tls config
-	c.initTLSConfig()
-	// init redis
-	if err := c.initRedisCli(); err != nil {
+
+	if etcdRegistry != nil {
+		microService.Init(micro.Registry(etcdRegistry))
+	}
+
+	// http 路由注册
+	router, err := c.initHTTPService()
+	if err != nil {
 		return err
 	}
-	// init k8s client
-	if err := c.initK8sClient(); err != nil {
+
+	if err := micro.RegisterHandler(microService.Server(), router); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, *options.MultiCredConf) {
+	var (
+		configPath string
+	)
+
+	// new config
+	conf, _ := microConf.NewConfig(
+		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
+	)
+	var multiCredConf *options.MultiCredConf
+
+	cmdOptions := []cmd.Option{
+		cmd.Description("bcs webconsole micro service"),
+		cmd.Version(version),
+	}
+
+	microCmd := cmd.NewCmd(cmdOptions...)
+	microCmd.App().Flags = []cli.Flag{
+		&cli.StringFlag{
+			Name:    "server_address",
+			EnvVars: []string{"MICRO_SERVER_ADDRESS"},
+			Usage:   "Bind address for the server. 127.0.0.1:8080",
+		},
+		&cli.StringFlag{
+			Name:        "config",
+			Usage:       "config file path",
+			Required:    true,
+			Destination: &configPath,
+		},
+		&cli.StringSliceFlag{
+			Name:        "credential-config",
+			Usage:       "credential config file path",
+			Required:    false,
+			Destination: &credentialConfigPath,
+		},
+	}
+
+	microCmd.App().Action = func(c *cli.Context) error {
+		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
+			return err
+		}
+
+		// 初始化配置文件
+		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
+			logger.Errorf("config not valid, err: %s, exited", err)
+			os.Exit(1)
+		}
+
+		logger.Infof("load conf from %s", configPath)
+
+		// 授权信息
+		if len(credentialConfigPath.Value()) > 0 {
+			credConf, err := options.NewMultiCredConf(credentialConfigPath.Value())
+			if err != nil {
+				logger.Errorf("config not valid, err: %s, exited", err)
+				os.Exit(1)
+			}
+			multiCredConf = credConf
+
+		}
+		return nil
+	}
+
+	srv := micro.NewService(micro.Server(mhttp.NewServer()))
+	opts := []micro.Option{
+		micro.Name(service),
+		micro.Version(version),
+		micro.Cmd(microCmd),
+	}
+
+	// 配置文件, 日志这里才设置完成
+	srv.Init(opts...)
+
+	return srv, conf, multiCredConf
+}
+
+// initHTTPService 初始化 gin Http 配置
+func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Recovery(), gin.Logger(), cors.Default())
+	router.Use(i18n.Localize())
+
+	// 注册模板和静态资源
+	router.SetHTMLTemplate(web.WebTemplate())
+
+	// 静态资源
+	routePrefix := config.G.Web.RoutePrefix
+	if routePrefix == "" {
+		routePrefix = "/webconsole"
+	}
+
+	// 支持路径 prefix 透传和 rewrite 的场景
+	router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))
+	router.Group("").StaticFS("/web/static", http.FS(web.WebStatic()))
+
+	handlerOpts := &route.Options{
+		RoutePrefix: routePrefix,
+		Client:      c.microService.Client(),
+		Router:      router,
+	}
+
+	// 注册 HTTP 请求
+	for _, r := range []route.Registrar{
+		web.NewRouteRegistrar(handlerOpts),
+		api.NewRouteRegistrar(handlerOpts),
+	} {
+		r.RegisterRoute(router.Group(routePrefix))
+		r.RegisterRoute(router.Group(""))
+	}
+
+	return router, nil
+}
+
+// initEtcdRegistry etcd 服务注册
+func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
+	endpoints := c.microConfig.Get("etcd", "endpoints").String("")
+	if endpoints == "" {
+		return nil, nil
+	}
+
+	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
+
+	ca := c.microConfig.Get("etcd", "ca").String("")
+	cert := c.microConfig.Get("etcd", "cert").String("")
+	key := c.microConfig.Get("etcd", "key").String("")
+	if ca != "" && cert != "" && key != "" {
+		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
+		if err != nil {
+			return nil, err
+		}
+		etcdRegistry.Init(registry.TLSConfig(tlsConfig))
+	}
+
+	return etcdRegistry, nil
 }
 
 // Run create a pid
-func (c *ConsoleManager) Run() error {
+func (c *WebConsoleManager) Run() error {
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(c.ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	//pid
-	if err := common.SavePid(comconf.ProcessConfig{}); err != nil {
-		blog.Error("fail to save pid: err:%s", err.Error())
+	logger.Info("starting bcs-webconsole.")
+
+	c.microService.Init(micro.AfterStop(func() error {
+		// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
+		logger.Info("receive interput, gracefully shutdown")
+		<-ctx.Done()
+		return nil
+	}))
+
+	eg, ctx := errgroup.WithContext(ctx)
+
+	podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
+	eg.Go(func() error {
+		return podCleanUpMgr.Run()
+	})
+
+	if c.multiCredConf != nil {
+		c.microService.Init(micro.AfterStop(func() error {
+			c.multiCredConf.Stop()
+			return nil
+		}))
+
+		eg.Go(func() error {
+			return c.multiCredConf.Watch()
+		})
 	}
 
-	c.backend = manager.NewManager(&c.opt.Conf, c.k8sClient, c.k8sConfig, c.redisClient, nil)
-	c.route = api.NewRouter(c.backend, &c.opt.Conf)
-	stopCh := make(chan struct{})
-	// 定期清理pod
-	go wait.NonSlidingUntil(c.backend.CleanUserPod, manager.CleanUserPodInterval*time.Second, stopCh)
-
-	return nil
-}
-
-func (c *ConsoleManager) initTLSConfig() {
-
-	// server cert directoty
-	if c.opt.CertConfig.ServerCertFile != "" && c.opt.CertConfig.CAFile != "" && c.opt.CertConfig.ServerKeyFile != "" {
-		c.opt.Conf.ServCert.IsSSL = true
-	}
-}
-
-func (c *ConsoleManager) initRedisCli() error {
-
-	dbNum, err := strconv.Atoi(c.opt.Redis.Database)
-	if nil != err {
-		return err
-	}
-	if c.opt.Redis.PoolSize == 0 {
-		c.opt.Redis.PoolSize = 3000
-	}
-
-	var client *redis.Client
-
-	if c.opt.Redis.MasterName == "" {
-		option := &redis.Options{
-			Addr:     c.opt.Redis.Address,
-			Password: c.opt.Redis.Password,
-			DB:       dbNum,
-			PoolSize: c.opt.Redis.PoolSize,
-		}
-		client = redis.NewClient(option)
-
-	} else {
-		hosts := strings.Split(c.opt.Redis.Address, ",")
-		option := &redis.FailoverOptions{
-			MasterName:       c.opt.Redis.MasterName,
-			SentinelAddrs:    hosts,
-			Password:         c.opt.Redis.Password,
-			DB:               dbNum,
-			PoolSize:         c.opt.Redis.PoolSize,
-			SentinelPassword: c.opt.Redis.SentinelPassword,
-		}
-		client = redis.NewFailoverClient(option)
-	}
-
-	err = client.Ping(context.Background()).Err()
-	if err != nil {
-		return err
-	}
-
-	c.redisClient = client
-
-	return nil
-}
-
-func (c *ConsoleManager) initK8sClient() error {
-	// 配置 k8s 集群外 kubeconfig 配置文件
-	if home := homeDir(); home != "" {
-		c.opt.KubeConfigFile = filepath.Join(home, ".kube", "config")
-	}
-
-	//在 kubeconfig 中使用当前上下文环境，config 获取支持 url 和 path 方式
-	k8sConfig, err := rest.InClusterConfig()
-	if err != nil {
-		k8sConfig, err = clientcmd.BuildConfigFromFlags("", c.opt.KubeConfigFile)
-		if err != nil {
+	eg.Go(func() error {
+		if err := c.microService.Run(); err != nil {
 			return err
 		}
-	}
+		return nil
+	})
 
-	//在 kubeconfig 中使用当前上下文环境，config 获取支持 url 和 path 方式
-	config, err := clientcmd.BuildConfigFromFlags("", c.opt.KubeConfigFile)
-	if err != nil {
+	if err := eg.Wait(); err != nil {
+		defer logger.CloseLogs()
 		return err
 	}
-
-	k8sClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
-	c.k8sConfig = k8sConfig
-	c.k8sClient = k8sClient
-
 	return nil
-}
-
-func setConfig(op *options.ConsoleManagerOption) error {
-	op.Redis.Address = op.RedisAddress
-	op.Redis.Password = op.RedisPassword
-	op.Redis.Database = op.RedisDatabase
-	op.Redis.MasterName = op.RedisMasterName
-	op.Redis.SentinelPassword = op.RedisSentinelPassword
-	op.Redis.PoolSize = op.RedisPoolSize
-
-	op.Conf.Address = op.Address
-	op.Conf.Port = int(op.Port)
-	if op.WebConsoleImage == "" {
-		return fmt.Errorf("web-console-image required")
-	}
-	op.Conf.WebConsoleImage = op.WebConsoleImage
-	return nil
-}
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
 }

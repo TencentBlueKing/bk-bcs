@@ -759,15 +759,6 @@
         },
         methods: {
             async handleShowLog (node) {
-                if (!node?.permissions?.edit) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'view',
-                        resource_code: this.curClusterInPage.cluster_id,
-                        resource_name: this.curClusterInPage.name,
-                        resource_type: `cluster_${this.curClusterInPage?.environment === 'prod' ? 'prod' : 'test'}`
-                    })
-                }
                 this.logSideDialogConf.isShow = true
                 this.logSideDialogConf.title = node.inner_ip
 

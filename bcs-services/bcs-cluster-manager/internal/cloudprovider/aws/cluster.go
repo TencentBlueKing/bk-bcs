@@ -31,6 +31,12 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// ImportCluster import cluster according cloudprovider
+func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
+	// call qcloud interface to create cluster
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 //DeleteCluster delete kubenretes cluster according cloudprovider
 func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented

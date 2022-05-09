@@ -21,6 +21,7 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -50,7 +51,9 @@ func main() {
 	}
 	defer func() {
 		if etcdRegistry != nil {
+			// waiting for api gateway to close all connections
 			_ = etcdRegistry.Deregister()
+			time.Sleep(time.Second * 5)
 		}
 	}()
 

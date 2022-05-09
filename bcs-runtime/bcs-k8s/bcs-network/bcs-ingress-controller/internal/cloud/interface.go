@@ -92,10 +92,19 @@ func toMSTimestamp(t time.Time) int64 {
 type LoadBalanceObject struct {
 	LbID   string   `json:"lbID"`
 	Region string   `json:"region"`
-	Type   string   `json:"type"`
 	Name   string   `json:"name"`
 	IPs    []string `json:"ips"`
-	VIPs   []string `json:"vips,omitempty"`
+	// LoadBalancerType OPEN or INTERNAL https://cloud.tencent.com/document/api/214/30694#LoadBalancer
+	Type string `json:"type,omitempty"`
+	// dns for lb
+	DNSName string   `json:"dnsName,omitempty"`
+	VIPs    []string `json:"vips,omitempty"`
+	// LoadBalancerScheme define Internet-facing or Internal. An internet-facing load balancer routes
+	// requests from clients to targets over the internet.
+	// An internal load balancer routes requests to targets using private IP addresses.
+	Scheme string `json:"scheme,omitempty"`
+	// AWSLBType define aws lb type, application, network, or gateway
+	AWSLBType string `json:"awsLBType,omitempty"`
 }
 
 // BackendHealthStatus health status of cloud loadbalancer backend
