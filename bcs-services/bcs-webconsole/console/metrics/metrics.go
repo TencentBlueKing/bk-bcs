@@ -84,7 +84,8 @@ func RegisterWsConnection(loader func() float64) {
 	prometheus.MustRegister(wsConnectionOnlineCount)
 }
 
-func HandlerFunc() gin.HandlerFunc {
+// PromMetricHandler prometheus handler 转换为 Gin Handler
+func PromMetricHandler() gin.HandlerFunc {
 	h := promhttp.Handler()
 
 	return func(c *gin.Context) {
@@ -104,6 +105,7 @@ func CollectPodReady(namespace, podName string, err error, duration time.Duratio
 	podReadyDuration.WithLabelValues(namespace, podName, makePodStatus(err)).Observe(duration.Seconds())
 }
 
+// makePodStatus Pod 状态
 func makePodStatus(err error) string {
 	if err != nil {
 		return ErrStatus

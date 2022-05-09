@@ -18,8 +18,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	"github.com/gin-gonic/gin"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
 // RequestCollect 统计请求耗时
@@ -28,7 +29,7 @@ func RequestCollect(handler string) gin.HandlerFunc {
 		c.Next()
 		code := strconv.FormatInt(int64(c.Writer.Status()), 10)
 		requestDuration := getRequestDuration(c)
-		collectHTTPRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), code, requestDuration)
+		collectHTTPRequestMetric(handler, c.Request.Method, makeRespStatus(c.Writer.Status()), code, requestDuration)
 	}
 }
 
@@ -51,7 +52,8 @@ func getRequestDuration(c *gin.Context) time.Duration {
 	return duration
 }
 
-func respStatusTransform(status int) string {
+// makeRespStatus HTTP请求状态
+func makeRespStatus(status int) string {
 	if status == http.StatusOK {
 		return SucStatus
 	}

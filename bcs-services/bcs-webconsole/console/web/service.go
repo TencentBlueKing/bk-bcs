@@ -49,8 +49,8 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
-	web.GET("/-/ready", s.HealthyHandler)
-	web.GET("/metrics", metrics.HandlerFunc())
+	web.GET("/-/ready", s.ReadyHandler)
+	web.GET("/metrics", metrics.PromMetricHandler())
 }
 
 func (s *service) IndexPageHandler(c *gin.Context) {
