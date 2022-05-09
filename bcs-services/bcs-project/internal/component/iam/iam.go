@@ -26,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 )
 
-const (
+var (
 	grantActionPath = "/api/v1/open/authorization/resource_creator_action/"
 	timeout         = 10
 )
@@ -40,8 +40,8 @@ func GrantResourceCreatorActions(username string, projectID string, projectName 
 		Url:    reqUrl,
 		Method: "POST",
 		Data: map[string]interface{}{
-			"bk_app_code":   iamConf.AppCode,
-			"bk_app_secret": iamConf.AppSecret,
+			"bk_app_code":   config.GlobalConf.AppCodeSecret.AppCode,
+			"bk_app_secret": config.GlobalConf.AppCodeSecret.AppSecret,
 			"creator":       username,
 			"system":        bcsIAM.SystemIDBKBCS,
 			"type":          "project",

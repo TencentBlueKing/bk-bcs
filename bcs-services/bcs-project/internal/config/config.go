@@ -90,23 +90,19 @@ type JWTConfig struct {
 	PrivateKeyFile string `yaml:"privateKeyFile" usage:"private key file"`
 }
 
+// AppCodeSecretConfig  app code and secret for requesting third service api
+type AppCodeSecretConfig struct {
+	AppCode   string `yaml:"appCode" usage:"app code"`
+	AppSecret string `yaml:"appSecret" usage:"app secret"`
+}
+
 // IAMConfig iam操作需要的配置
 type IAMConfig struct {
-	AppCode     string `yaml:"appCode" usage:"app code"`
-	AppSecret   string `yaml:"appSecret" usage:"app secret"`
 	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
 	UseGWHost   bool   `yaml:"useGWHost" usage:"use gatewayHost when true, else use iamHost and bkPaaSHost"`
 	IAMHost     string `yaml:"iamHost" usage:"iam host"`
 	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"bk paas host"`
 	Debug       bool   `yaml:"debug" usage:"debug mode"`
-}
-
-// ActionExemptPermConfig 用于标识操作是否开启权限
-type ActionExemptPermConfig struct {
-	Create bool `yaml:"create" usage:"exempt create action perm"`
-	View   bool `yaml:"view" usage:"exempt view action perm"`
-	Update bool `yaml:"update" usage:"exempt update action perm"`
-	Delete bool `yaml:"delete" usage:"exempt delete action perm"`
 }
 
 type ClientActionsConfig struct {
@@ -120,14 +116,15 @@ type ClientActionExemptPermConfig struct {
 }
 
 type CMDBConfig struct {
-	AppCode           string `yaml:"appCode" usage:"app code"`
-	AppSecret         string `yaml:"appSecret" usage:"app secret"`
 	BKSupplierAccount string `yaml:"bkSupplierAccount" usage:"developer account"`
 	Domain            string `yaml:"domain" usage:"cmdb api domain"`
 	Timeout           int    `yaml:"timeout" usage:"request cmdb api timeout"`
-	SearchBizPath     string `yaml:"searchBizPath" usage:"the path of search biz api"`
 	Proxy             string `yaml:"proxy" usage:"proxy"`
 	Debug             bool   `yaml:"debug" usage:"debug"`
+}
+
+type BCSCCConfig struct {
+	Domain string `yaml:"domain" usage:"bcs cc api domain"`
 }
 
 // ProjectConfig 项目的配置信息
@@ -142,6 +139,8 @@ type ProjectConfig struct {
 	IAM                    IAMConfig                    `yaml:"iam"`
 	ClientActionExemptPerm ClientActionExemptPermConfig `yaml:"clientActionExemptPerm"`
 	CMDB                   CMDBConfig                   `yaml:"cmdb"`
+	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`
+	AppCodeSecret          AppCodeSecretConfig          `yaml:"app"`
 }
 
 func (conf *ProjectConfig) initServerAddress() error {

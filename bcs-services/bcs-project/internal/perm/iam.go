@@ -37,8 +37,8 @@ const (
 func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 	opts := &bcsIAM.Options{
 		SystemID:    bcsIAM.SystemIDBKBCS,
-		AppCode:     config.GlobalConf.IAM.AppCode,
-		AppSecret:   config.GlobalConf.IAM.AppSecret,
+		AppCode:     config.GlobalConf.AppCodeSecret.AppCode,
+		AppSecret:   config.GlobalConf.AppCodeSecret.AppSecret,
 		External:    !config.GlobalConf.IAM.UseGWHost,
 		GateWayHost: config.GlobalConf.IAM.GatewayHost,
 		Metric:      false,
@@ -48,7 +48,6 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return iamPerm.NewBCSProjectPermClient(cli), nil
 }
 

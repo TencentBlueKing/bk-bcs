@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	defaultTimeout         int = 10
-	defaultSupplierAccount     = "tencent"
+	defaultTimeout         = 10
+	defaultSupplierAccount = "tencent"
+	searchBizPath          = "/api/c/compapi/v2/cc/search_business/"
 )
 
 type cmdbResp struct {
@@ -59,13 +60,13 @@ func CheckUseIsMaintainer(username string, bizID string) error {
 // SearchBizByUserAndID 通过用户和业务ID，查询业务
 func SearchBizByUserAndID(username string, bizID string) (*cmdbResp, error) {
 	cmdbConf := config.GlobalConf.CMDB
-	reqUrl := fmt.Sprintf("%s%s", cmdbConf.Domain, cmdbConf.SearchBizPath)
+	reqUrl := fmt.Sprintf("%s%s", cmdbConf.Domain, searchBizPath)
 	// 获取超时时间
 	timeout := getTimeout()
 	headers := map[string]string{"Content-Type": "application/json"}
 	bizIDInt, _ := strconv.Atoi(bizID)
 	// 组装请求参数
-	req := getReqParams(cmdbConf, reqUrl, username, bizIDInt)
+	req := getReq(cmdbConf, reqUrl, username, bizIDInt)
 	// 获取返回数据
 	body, err := component.Request(req, timeout, cmdbConf.Proxy, headers)
 	if err != nil {
@@ -80,7 +81,7 @@ func SearchBizByUserAndID(username string, bizID string) (*cmdbResp, error) {
 	return &resp, nil
 }
 
-func getReqParams(c config.CMDBConfig, reqUrl string, username string, bizIDInt int) gorequest.SuperAgent {
+func getReq(c config.CMDBConfig, reqUrl string, username string, bizIDInt int) gorequest.SuperAgent {
 	return gorequest.SuperAgent{
 		Url:    reqUrl,
 		Method: "POST",
@@ -90,8 +91,8 @@ func getReqParams(c config.CMDBConfig, reqUrl string, username string, bizIDInt 
 				"bk_biz_maintainer": username,
 			},
 			"bk_supplier_account": c.BKSupplierAccount,
-			"bk_app_code":         c.AppCode,
-			"bk_app_secret":       c.AppSecret,
+			"bk_app_code":         config.GlobalConf.AppCodeSecret.AppCode,
+			"bk_app_secret":       config.GlobalConf.AppCodeSecret.AppSecret,
 			"bk_username":         username,
 		},
 		Debug: c.Debug,

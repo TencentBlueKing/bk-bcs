@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
@@ -62,6 +63,9 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	if err := ua.updateProject(p); err != nil {
 		return nil, errorx.NewDBErr(err)
 	}
+
+	// 更新 bcs cc 中的数据
+	go bcscc.UpdateProject(p)
 
 	return p, nil
 }

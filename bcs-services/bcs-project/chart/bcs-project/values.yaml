@@ -99,18 +99,16 @@ affinity: {}
 livenessProbe:
   enabled: true
   conf:
-    httpGet:
-      path: /bcsproject/v1/ping
-      port: http
+    tcpSocket:
+      port: 8090
     initialDelaySeconds: 20
     periodSeconds: 10
 
 readinessProbe:
   enabled: true
   conf:
-    httpGet:
-      path: /bcsproject/v1/healthz
-      port: http
+    tcpSocket:
+      port: 8090
     initialDelaySeconds: 20
     periodSeconds: 10
 
@@ -166,11 +164,26 @@ svcConf:
     enable: true
     publicKeyFile: "/data/project/cert/jwt/public.key"
     privateKeyFile: "/data/project/cert/jwt/private.key"
-  iam:
+  app:
     appCode: "bk_bcs"
-    appSecret: ""
+    appSecret: "" 
+  iam:
     gatewayHost: ""
     useGWHost: true
     iamHost: ""
     bkPaaSHost: ""
     debug: false
+  # 访问 cmdb api 的配置
+  cmdb:
+    enable: true
+    bkSupplierAccount: ""
+    domain: ""
+  # 针对特定系统权限的忽略
+  clientActionExemptPerm:
+    clientActions:
+    - clientID: test
+      actions:
+      - create
+      - update
+  bcscc:
+    domain: ""

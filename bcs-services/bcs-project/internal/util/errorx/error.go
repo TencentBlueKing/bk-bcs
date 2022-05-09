@@ -86,3 +86,8 @@ func NewRequestCMDBErr(msg ...interface{}) *ProjectError {
 func NewNoMaintainerRoleErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(NoMaintainerRoleErr, NoMaintainerRoleErrMsg, msg...)
 }
+
+// NewRequestBCSCCErr ...
+func NewRequestBCSCCErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(RequestCMDBErr, RequestBCSCCErrMsg, msg...)
+}
