@@ -53,7 +53,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "pod_ready_duration_seconds",
 		Help:      "create/wait duration(seconds) of pod",
-		Buckets:   []float64{0.1, 1, 2, 5, 10, 30, 60},
+		Buckets:   []float64{0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60},
 	}, []string{"tg_cluster_id", "tg_namespace", "tg_pod_name", "status"})
 
 	// ws连接
