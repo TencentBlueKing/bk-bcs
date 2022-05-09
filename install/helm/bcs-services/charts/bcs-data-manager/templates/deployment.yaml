@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-data-manager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-data-manager.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-data-manager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bcs-data-manager.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if or .Values.hostAliases .Values.global.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" append .Values.hostAliases .Values.global.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- include "common.images.pullSecrets" ( dict "images" (list .Values) "global" .Values.global) | nindent 6  }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.global.pullPolicy | default .Values.image.pullPolicy }}
+          command: [ "/data/bcs/bcs-data-manager/container-start.sh" ]
+          args:
+            - -f
+            - /data/bcs/bcs-data-manager/bcs-data-manager.json
+          env:
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.global.env.BK_BCS_CONFIG_TYPE | default .Values.env.BK_BCS_CONFIG_TYPE}}"
+            - name: bcsDataManagerPort
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerPort }}"
+            {{ include "bcs-common.messagequeue.addressEnvFormat" ( dict "root" . "envName" "dataManagerQueueAddress" ) | indent 12 }}
+            - name: dataManagerExchange
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerExchange }}"
+            - name: bcsDataManagerHTTPPort
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerHTTPPort }}"
+            - name: bcsDataManagerMetricPort
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerMetricPort }}"
+            - name: publishDelivery
+              value: "{{ .Values.env.publishDelivery }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: caFile
+              value: "/data/bcs/cert/bcs/bcs-ca.crt"
+            - name: serverCertFile
+              value: "/data/bcs/cert/bcs/bcs-server.crt"
+            - name: serverKeyFile
+              value: "/data/bcs/cert/bcs/bcs-server.key"
+            - name: clientCertFile
+              value: "/data/bcs/cert/bcs/bcs-client.crt"
+            - name: clientKeyFile
+              value: "/data/bcs/cert/bcs/bcs-client.key"
+            # log options
+            - name: log_dir
+              value: "/data/bcs/logs/bcs"
+            - name: bcsDataManagerAlsoToStdErr
+              value: "{{ .Values.global.env.BK_BCS_also_log_to_stderr }}"
+            - name: bcsDataManagerVerbosity
+              value: "{{ .Values.global.env.BK_BCS_log_level }}"
+            # etcd options
+            - name: bcsEtcdHost
+              value: "{{ include "bcs-common.etcd.host" ( dict "localStorage" .Values.storage "globalStorage" .Values.global.storage "namespace" .Release.Namespace ) }}"
+            - name: bcsEtcdCAFile
+              value: "/data/bcs/cert/etcd/etcd-ca.pem"
+            - name: bcsEtcdCertFile
+              value: "/data/bcs/cert/etcd/etcd.pem"
+            - name: bcsEtcdKeyFile
+              value: "/data/bcs/cert/etcd/etcd-key.pem"
+            # swagger options
+            - name: bcsDataManagerSwaggerDir
+              value: "/data/bcs/swagger"
+            # mongo options
+            - name: bcsDataManagerMongoAddress
+              value: "{{ include "bcs-common.mongodb.host" ( dict "localStorage" .Values.storage "globalStorage" .Values.global.storage "namespace" .Release.Namespace ) }}"
+            - name: bcsDataManagerMongoConnectTimeout
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerMongoConnectTimeout }}"
+            - name: bcsDataManagerMongoDatabase
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerMongoDatabase }}"
+            - name: bcsDataManagerMongoUsername
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerMongoUsername }}"
+            {{ include "bcs-common.bcspwd.mongodb" ( dict "root" . "envName" "bcsDataManagerMongoPassword" ) | indent 12 }}
+            - name: bcsDataManagerMongoMaxPoolSize
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerMongoMaxPoolSize }}"
+            - name: bcsDataManagerMongoMinPoolSize
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerMongoMinPoolSize }}"
+            - name: bcsApiGatewayUrl
+              value: "{{ .Values.env.BK_BCS_bcsApiGwUrl }}"
+            {{ include "bcs-common.bcspwd.gatewayToken" ( dict "root" . "localPwd" .Values.env.BK_BCS_adminToken "externalToken" .Values.env.BK_BCS_adminToken "envName" "bcsAdminToken" )  | indent 12 }}
+            - name: grpcGwAddress
+              value: "{{ .Values.env.BK_BCS_grpcGwAddress}}"
+            - name: bcsMonitorSchema
+              value: "{{ .Values.env.BK_BCS_bcsMonitorSchema }}"
+            - name: bcsMonitorEndpoints
+              value: "{{ .Values.env.BK_BCS_bcsMonitorEp }}"
+            - name: bcsMonitorUser
+              value: "{{ .Values.env.BK_BCS_bcsMonitorUser }}"
+            - name: bcsMonitorPassword
+              value: "{{ .Values.env.BK_BCS_bcsMonitorPassword }}"
+            - name: bcsDataManagerDebug
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerDebug }}"
+            - name: concurrency
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerConcurrency }}"
+            - name: chanQueueLen
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerChanLen }}"
+            - name: needFilter
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerNeedFilterCluster }}"
+            - name: selectClusterID
+              value: "{{ .Values.env.BK_BCS_bcsDataManagerSelectedCluster }}"
+            - name: GODEBUG
+              value: "x509sha1=1"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: bcs-certs
+            mountPath: /data/bcs/cert/bcs
+          - name: etcd-certs
+            mountPath: /data/bcs/cert/etcd
+      initContainers:
+        - name: init-etcd
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.global.telnet "global" .Values.global) }}
+          command: ['sh', '-c', 'until [ {{ include "bcs-common.utils.telnet" ( dict "listStr" ( include "bcs-common.etcd.host" ( dict "localStorage" .Values.storage "globalStorage" .Values.global.storage "namespace" .Release.Namespace ) ) "seperator" "," "condOp" "-o" ) }} ]; do echo waiting for readiness of etcd; sleep 2; done']
+      volumes:
+        {{- include "bcs-common.volumes.bcsServices" . | indent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
