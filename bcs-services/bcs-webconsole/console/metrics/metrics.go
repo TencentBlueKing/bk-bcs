@@ -56,6 +56,14 @@ var (
 		Buckets:   []float64{0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60},
 	}, []string{"tg_cluster_id", "tg_namespace", "tg_pod_name", "status"})
 
+	// pod 存活数量
+	podCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      "pod_count",
+		Help:      "The number of current pod in namespace",
+	}, []string{"tg_cluster_id", "tg_namespace"})
+
 	// ws连接
 	wsConnectionTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
@@ -64,33 +72,23 @@ var (
 		Help:      "Counter of websocket connection.",
 	}, []string{"username", "tg_cluster_id", "tg_namespace", "tg_pod_name", "tg_container_name"})
 
-	// pod 存活数量
-	podCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	// 连接数统计
+	wsConnectionOnlineCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
-		Name:      "pod_count",
-		Help:      "The number of current pod in namespace",
-	}, []string{"tg_cluster_id", "tg_namespace"})
+		Name:      "ws_connection_online_count",
+		Help:      "The number of websocket current connections",
+	}, []string{})
 )
 
 func init() {
 	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpRequestDuration)
 	prometheus.MustRegister(wsConnectionTotal)
+	prometheus.MustRegister(wsConnectionOnlineCount)
 	prometheus.MustRegister(podReadyTotal)
 	prometheus.MustRegister(podReadyDuration)
 	prometheus.MustRegister(podCount)
-}
-
-// RegisterWsConnection
-func RegisterWsConnection(loader func() float64) {
-	wsConnectionOnlineCount := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: subsystem,
-		Name:      "ws_connection_online_count",
-		Help:      "The number of websocket current connections",
-	}, loader)
-	prometheus.MustRegister(wsConnectionOnlineCount)
 }
 
 // PromMetricHandler prometheus handler 转换为 Gin Handler
@@ -108,9 +106,14 @@ func collectHTTPRequestMetric(handler, code string, duration time.Duration) {
 	httpRequestDuration.WithLabelValues(handler, code).Observe(duration.Seconds())
 }
 
-// CollectWsConnection Websocket 长链接统计
+// CollectWsConnection Websocket 请求统计
 func CollectWsConnection(username, targetClusterId, namespace, podName, containerName string) {
 	wsConnectionTotal.WithLabelValues(username, targetClusterId, namespace, podName, containerName).Inc()
+}
+
+// CollectWsConnectionOnline  Websocket 长链接统计
+func CollectWsConnectionOnline(value float64) {
+	wsConnectionOnlineCount.WithLabelValues().Add(value)
 }
 
 // CollectPodReady Pod 拉起耗时统计

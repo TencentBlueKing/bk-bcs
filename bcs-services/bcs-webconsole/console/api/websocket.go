@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"os/signal"
 	"strconv"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -124,17 +123,17 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	// 封装一个独立函数, 统计耗时
 	if err := func() error {
 		start := time.Now()
-		atomic.AddInt64(&s.wsConnection, 1)
 
 		// 单独统计 ws metrics
 		metrics.CollectWsConnection(podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName, podCtx.ContainerName)
+		metrics.CollectWsConnectionOnline(1)
 
 		defer func() {
 			// 过滤掉 ws 长链接时间
 			wsConnDuration := time.Since(start)
 			metrics.SetRequestIgnoreDuration(c, wsConnDuration)
 
-			atomic.AddInt64(&s.wsConnection, -1)
+			metrics.CollectWsConnectionOnline(-1)
 		}()
 
 		return eg.Wait()
