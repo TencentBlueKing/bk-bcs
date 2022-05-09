@@ -95,6 +95,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 
 	podCtx.ProjectId = projectId
+	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 
 	store := sessions.NewRedisStore(projectId, clusterId)
@@ -190,7 +191,10 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		APIError(c, msg)
 		return
 	}
+
 	podCtx.ProjectId = authCtx.ProjectId
+	// bkapigw 校验, 使用 Operator 做用户标识
+	podCtx.Username = consoleQuery.Operator
 
 	if len(commands) > 0 {
 		podCtx.Commands = commands
