@@ -117,7 +117,7 @@
                     clusterID: this.clusterId,
                     projectID: this.curProject.project_id,
                     baseUrl: CR_API_URL
-                }, this.formSchema.context)
+                }, this.formSchema.context || {})
             },
             isEdit () {
                 return !!this.name
