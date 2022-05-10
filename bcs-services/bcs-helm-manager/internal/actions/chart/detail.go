@@ -80,7 +80,10 @@ func (g *GetChartDetailAction) getDetail() error {
 	}
 
 	origin, err := g.platform.
-		User(repository.Username).
+		User(repo.User{
+			Name:     repository.Username,
+			Password: repository.Password,
+		}).
 		Project(repository.ProjectID).
 		Repository(
 			repo.GetRepositoryType(repository.Type),

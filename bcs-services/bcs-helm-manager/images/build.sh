@@ -18,7 +18,7 @@ PASSWORD=
 
 cd $(dirname $0)
 WORKING_DIR=$(pwd)
-ROOT_DIR=${WORKING_DIR%/*/*}
+ROOT_DIR=${WORKING_DIR%/*}
 
 usage () {
     cat <<EOF
