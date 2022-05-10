@@ -21,7 +21,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
@@ -116,8 +115,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		defer stop()
 
 		// 关闭需要主动发送 Ctrl-D 命令
-		bcsConf := k8sclient.GetBCSConfByClusterId(podCtx.AdminClusterId)
-		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
+		return remoteStreamConn.WaitStreamDone(podCtx)
 	})
 
 	// 封装一个独立函数, 统计耗时

@@ -45,14 +45,20 @@ func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
 	return config.G.BCS
 }
 
-// GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
-func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
+// GetK8SConfigByClusterId 通过集群 ID 获取 K8S Rest Config
+func GetK8SConfigByClusterId(clusterId string) *rest.Config {
 	bcsConf := GetBCSConfByClusterId(clusterId)
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: bcsConf.Token,
 	}
+	return config
+}
+
+// GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
+func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
+	config := GetK8SConfigByClusterId(clusterId)
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
