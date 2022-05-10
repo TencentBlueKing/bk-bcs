@@ -15,9 +15,9 @@ package cluster
 import (
 	"context"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -178,9 +178,11 @@ func (ca *CheckNodeAction) checkNodesInCluster() error {
 	if ca.nodeResult == nil {
 		ca.nodeResult = make(map[string]*cmproto.NodeResult)
 	}
+	// get all masterIPs
+	masterIPs := getAllMasterIPs(ca.model)
 
 	for i := range ca.req.InnerIPs {
-		nodeResult, err := ca.getNodeResultByNodeIP(ca.req.InnerIPs[i])
+		nodeResult, err := ca.getNodeResultByNodeIP(ca.req.InnerIPs[i], masterIPs)
 		if err != nil {
 			blog.Errorf("CheckNodeAction getNodeResultByNodeIP failed: %v", err)
 			continue
@@ -192,13 +194,23 @@ func (ca *CheckNodeAction) checkNodesInCluster() error {
 	return nil
 }
 
-func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string) (*cmproto.NodeResult, error) {
+func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map[string]clusterInfo) (*cmproto.NodeResult, error) {
 	nodeResult := &cmproto.NodeResult{
 		IsExist:     false,
 		ClusterID:   "",
 		ClusterName: "",
 	}
 
+	// check if exist masterIPs
+	if cls, ok := masterMapIPs[nodeIP]; ok {
+		nodeResult.IsExist = true
+		nodeResult.ClusterID = cls.clusterID
+		nodeResult.ClusterName = cls.clusterName
+
+		return nodeResult, nil
+	}
+
+	// check if exist nodeIPs
 	node, err := ca.model.GetNodeByIP(ca.ctx, nodeIP)
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		return nodeResult, err

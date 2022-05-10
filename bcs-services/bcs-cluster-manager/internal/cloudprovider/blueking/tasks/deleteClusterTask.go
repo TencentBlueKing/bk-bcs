@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
@@ -83,6 +84,11 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 		return retErr
 	}
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete cluster[%s] in DB successful", taskID, clusterID)
+
+	// sync clean cluster dependency(pass-cc/token/credential)
+	utils.SyncDeletePassCCCluster(taskID, cluster)
+	utils.DeleteBcsAgentToken(cluster)
+	utils.DeleteClusterCredentialInfo(cluster.ClusterID)
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)

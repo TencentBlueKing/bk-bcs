@@ -37,6 +37,3 @@ func TestNewKubeClient(t *testing.T) {
 
 	t.Log(version.GitVersion)
 }
-
-
-

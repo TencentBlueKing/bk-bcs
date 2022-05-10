@@ -354,6 +354,40 @@
         ]
       }
     },
+    "/clustermanager/v1/cloud/kubeConfig": {
+      "put": {
+        "summary": "kubeConfig可用性检测",
+        "description": "kubeConfig连接集群可用性检测",
+        "operationId": "ClusterManager_CheckCloudKubeConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cloud/{cloudID}": {
       "get": {
         "summary": "查询Cloud",
@@ -3652,10 +3686,65 @@
           "type": "string",
           "description": "云模版是否返回给用户可见(值为true或false)",
           "title": "enable"
+        },
+        "networkInfo": {
+          "$ref": "#/definitions/clustermanagerCloudNetworkInfo",
+          "description": "该云下统一定义网络配置信息",
+          "title": "networkInfo"
+        },
+        "confInfo": {
+          "$ref": "#/definitions/clustermanagerCloudConfigInfo",
+          "description": "该云下统一云配置信息",
+          "title": "confInfo"
+        },
+        "platformInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "云信息，多云管理下用于定义共享信息，BCS默认地提供蓝鲸云预定义，腾讯云预定义信息",
       "title": "Cloud"
+    },
+    "clustermanagerCloudConfigInfo": {
+      "type": "object",
+      "properties": {
+        "cloudInternalEnable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud是否开启内部配置",
+          "title": "cloudInternalEnable"
+        },
+        "cloudDomain": {
+          "type": "string",
+          "description": "cloudDomain内部域名配置",
+          "title": "cloudDomain"
+        },
+        "machineDomain": {
+          "type": "string",
+          "description": "machineDomain内部域名配置",
+          "title": "machineDomain"
+        }
+      },
+      "description": "用于记录云公共配置信息",
+      "title": "CloudConfigInfo"
+    },
+    "clustermanagerCloudNetworkInfo": {
+      "type": "object",
+      "properties": {
+        "cidrStep": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "cidr自动扩容步长设置",
+          "title": "cidrStep"
+        }
+      },
+      "description": "用于记录公共网络配置信息",
+      "title": "CloudNetworkInfo"
     },
     "clustermanagerCloudRegion": {
       "type": "object",
@@ -3938,6 +4027,11 @@
           "type": "string",
           "description": "导入集群时若是kubeConfig导入则存储",
           "title": "kubeConfig"
+        },
+        "importCategory": {
+          "type": "string",
+          "description": "当clusterCategory参数为importer时, 主要用于区分该集群是kubeConfig/cloud导入,默认为空",
+          "title": "importCategory"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -4145,6 +4239,12 @@
           "type": "string"
         },
         "updateTime": {
+          "type": "string"
+        },
+        "clientCert": {
+          "type": "string"
+        },
+        "clientKey": {
           "type": "string"
         }
       },
@@ -4395,6 +4495,22 @@
           "type": "string",
           "description": "云模版是否返回给用户可见",
           "title": "enable"
+        },
+        "networkInfo": {
+          "$ref": "#/definitions/clustermanagerCloudNetworkInfo",
+          "description": "该云下统一定义网络配置信息",
+          "title": "networkInfo"
+        },
+        "confInfo": {
+          "$ref": "#/definitions/clustermanagerCloudConfigInfo",
+          "description": "该云下统一云配置信息",
+          "title": "confInfo"
+        },
+        "platformInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "创建cloud请求",
@@ -6461,6 +6577,50 @@
       },
       "title": "InternetAccessible 公网带宽设置"
     },
+    "clustermanagerKubeConfigReq": {
+      "type": "object",
+      "properties": {
+        "kubeConfig": {
+          "type": "string",
+          "description": "集群kubeConfig文件",
+          "title": "kubeConfig"
+        }
+      },
+      "description": "用户输入检测kubeConfig文件",
+      "title": "KubeConfigReq",
+      "required": [
+        "kubeConfig"
+      ]
+    },
+    "clustermanagerKubeConfigResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "检测kubeConfig可用性结果返回",
+      "title": "KubeConfigResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerLaunchConfiguration": {
       "type": "object",
       "properties": {
@@ -8348,6 +8508,22 @@
           "type": "string",
           "description": "云模版是否返回给用户可见(值为true或false)",
           "title": "enable"
+        },
+        "networkInfo": {
+          "$ref": "#/definitions/clustermanagerCloudNetworkInfo",
+          "description": "该云下统一定义网络配置信息",
+          "title": "networkInfo"
+        },
+        "confInfo": {
+          "$ref": "#/definitions/clustermanagerCloudConfigInfo",
+          "description": "该云下统一云配置信息",
+          "title": "confInfo"
+        },
+        "platformInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "创建项目请求",
@@ -8500,6 +8676,16 @@
           "type": "string",
           "description": "集群域名",
           "title": "clusterDomain"
+        },
+        "clientCert": {
+          "type": "string",
+          "description": "集群clientCert证书",
+          "title": "clientCert"
+        },
+        "clientKey": {
+          "type": "string",
+          "description": "集群clientKey证书",
+          "title": "clientKey"
         }
       },
       "description": "更新集群Credential请求",
@@ -8724,6 +8910,11 @@
           "type": "string",
           "description": "创建人员名称",
           "title": "creator"
+        },
+        "importCategory": {
+          "type": "string",
+          "description": "当clusterCategory参数为importer时, 主要用于区分该集群是kubeConfig/cloud导入,默认为空",
+          "title": "importCategory"
         }
       },
       "description": "更新集群信息请求，该接口仅用于信息更新和修正，不会触发任何行为动作。如果需要执行自动化相关流程，请根据需要使用对应的接口",
