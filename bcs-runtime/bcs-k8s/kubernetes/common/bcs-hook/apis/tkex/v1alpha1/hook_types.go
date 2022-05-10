@@ -12,6 +12,7 @@
  */
 
 // +kubebuilder:validation:Optional
+
 package v1alpha1
 
 import (
@@ -21,14 +22,21 @@ import (
 )
 
 const (
-	HookPhasePending      HookPhase = "Pending"
-	HookPhaseRunning      HookPhase = "Running"
-	HookPhaseSuccessful   HookPhase = "Successful"
-	HookPhaseFailed       HookPhase = "Failed"
-	HookPhaseError        HookPhase = "Error"
+	// HookPhasePending indicates the hook is pending
+	HookPhasePending HookPhase = "Pending"
+	// HookPhaseRunning indicates the hook is running
+	HookPhaseRunning HookPhase = "Running"
+	// HookPhaseSuccessful indicates the hook is successful
+	HookPhaseSuccessful HookPhase = "Successful"
+	// HookPhaseFailed indicates the hook is failed
+	HookPhaseFailed HookPhase = "Failed"
+	// HookPhaseError indicates the hook is error
+	HookPhaseError HookPhase = "Error"
+	// HookPhaseInconclusive indicates the hook is inconclusive
 	HookPhaseInconclusive HookPhase = "Inconclusive"
 )
 
+// Completed returns whether the hook has been completed
 func (hp HookPhase) Completed() bool {
 	switch hp {
 	case HookPhaseSuccessful, HookPhaseFailed, HookPhaseError, HookPhaseInconclusive:
@@ -37,6 +45,7 @@ func (hp HookPhase) Completed() bool {
 	return false
 }
 
+// HookPhase is the phase of hook
 type HookPhase string
 
 // HookTemplate is the Schema for the hooktemplates API
@@ -59,11 +68,27 @@ type HookTemplateList struct {
 	Items           []HookTemplate `json:"items"`
 }
 
+// HookTemplateSpec is the spec of hooktemplate
 type HookTemplateSpec struct {
 	// +kubebuilder:validation:Required
 	Metrics []Metric   `json:"metrics"`
 	Args    []Argument `json:"args,omitempty"`
+	// Policy indicates the way to run metrics. Only supports Parallel and Ordered.
+	// Default is Parallel.
+	// +kubebuilder:validation:Enum=Parallel;Ordered
+	// +kubebuilder:default=Parallel
+	Policy PolicyType `json:"policy,omitempty"`
 }
+
+// PolicyType is the type of policy
+type PolicyType string
+
+const (
+	// ParallPolicy is parallel policy
+	ParallPolicy PolicyType = "Parallel"
+	// OrderedPolicy is ordered policy
+	OrderedPolicy PolicyType = "Ordered"
+)
 
 // Argument is an argument to an AnalysisRun
 type Argument struct {
@@ -75,6 +100,7 @@ type Argument struct {
 	Value *string `json:"value,omitempty"`
 }
 
+// DurationString is the string of duration
 type DurationString string
 
 // Duration converts DurationString into a time.Duration
@@ -82,6 +108,7 @@ func (d DurationString) Duration() (time.Duration, error) {
 	return time.ParseDuration(string(d))
 }
 
+// Metric defines the struct of metric
 type Metric struct {
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
@@ -125,6 +152,7 @@ type Metric struct {
 	Provider MetricProvider `json:"provider"`
 }
 
+// EffectiveCount returns the counts
 func (m *Metric) EffectiveCount() *int32 {
 	if m.Count == 0 {
 		if m.Interval == "" {
@@ -136,6 +164,7 @@ func (m *Metric) EffectiveCount() *int32 {
 	return &m.Count
 }
 
+// MetricProvider defines the supported types of provider
 type MetricProvider struct {
 	Web *WebMetric `json:"web,omitempty"`
 	// Prometheus specifies the prometheus metric to query
@@ -162,6 +191,7 @@ type KubernetesMetric struct {
 	Function string `json:"function,omitempty"`
 }
 
+// PrometheusMetric is the metric type of Prometheus
 type PrometheusMetric struct {
 	// Address is the HTTP address and port of the prometheus server
 	// +kubebuilder:validation:Required
@@ -171,6 +201,7 @@ type PrometheusMetric struct {
 	Query string `json:"query,omitempty"`
 }
 
+// WebMetric is the metric type of web
 type WebMetric struct {
 	// +kubebuilder:validation:Required
 	URL            string            `json:"url"`
@@ -180,6 +211,7 @@ type WebMetric struct {
 	JsonPath string `json:"jsonPath"`
 }
 
+// WebMetricHeader defines values of the header in web
 type WebMetricHeader struct {
 	// +kubebuilder:validation:Required
 	Key string `json:"key"`
@@ -209,12 +241,15 @@ type HookRunList struct {
 	Items           []HookRun `json:"items"`
 }
 
+// HookRunSpec is the spec of hookrun
 type HookRunSpec struct {
 	Metrics   []Metric   `json:"metrics"`
 	Args      []Argument `json:"args,omitempty"`
 	Terminate bool       `json:"terminate,omitempty"`
+	Policy    PolicyType `json:"policy,omitempty"`
 }
 
+// HookRunStatus defines the status of hookrun
 type HookRunStatus struct {
 	Phase         HookPhase      `json:"phase"`
 	Message       string         `json:"message,omitempty"`
@@ -222,6 +257,7 @@ type HookRunStatus struct {
 	StartedAt     *metav1.Time   `json:"startedAt,omitempty"`
 }
 
+// MetricResult defines the struct of result of metric
 type MetricResult struct {
 	Name                  string        `json:"name"`
 	Phase                 HookPhase     `json:"phase"`
@@ -236,6 +272,7 @@ type MetricResult struct {
 	ConsecutiveSuccessful int32         `json:"consecutiveSuccessful,omitempty"`
 }
 
+// Measurement is the result of each run
 type Measurement struct {
 	Phase      HookPhase    `json:"phase"`
 	Message    string       `json:"message,omitempty"`
@@ -245,12 +282,14 @@ type Measurement struct {
 	Value      string       `json:"value,omitempty"`
 }
 
+// PreDeleteHookCondition defines the condition of predelete hook
 type PreDeleteHookCondition struct {
 	PodName   string      `json:"podName"`
 	StartTime metav1.Time `json:"startTime"`
 	HookPhase HookPhase   `json:"phase"`
 }
 
+// PreInplaceHookCondition defines the condition of preinplace hook
 type PreInplaceHookCondition struct {
 	PodName   string      `json:"podName"`
 	StartTime metav1.Time `json:"startTime"`
@@ -264,12 +303,14 @@ type PostInplaceHookCondition struct {
 	HookPhase HookPhase   `json:"phase"`
 }
 
+// HookStep defines the step of hook
 type HookStep struct {
 	// +kubebuilder:validation:Required
 	TemplateName string            `json:"templateName"`
 	Args         []HookRunArgument `json:"args,omitempty"`
 }
 
+// HookRunArgument defines the arguments of hookrun
 type HookRunArgument struct {
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
@@ -277,13 +318,17 @@ type HookRunArgument struct {
 	Value string `json:"value,omitempty"`
 }
 
+// PauseReason is the reason of pause
 type PauseReason string
 
 const (
+	// PauseReasonCanaryPauseStep means the update process is paused by canaryPauseStep
 	PauseReasonCanaryPauseStep PauseReason = "PausedByCanaryPauseStep"
-	PauseReasonStepBasedHook   PauseReason = "PausedByStepBasedHook"
+	// PauseReasonStepBasedHook means the update process is paused by basedhook
+	PauseReasonStepBasedHook PauseReason = "PausedByStepBasedHook"
 )
 
+// PauseCondition defines the condition of pause
 type PauseCondition struct {
 	Reason    PauseReason `json:"reason"`
 	StartTime metav1.Time `json:"startTime"`

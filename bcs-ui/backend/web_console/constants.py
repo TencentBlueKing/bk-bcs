@@ -14,11 +14,7 @@ specific language governing permissions and limitations under the License.
 
 常量定义
 """
-import copy
-import re
 from enum import Enum
-
-from django.conf import settings
 
 from backend.web_console.constant_bk import *  # noqa
 

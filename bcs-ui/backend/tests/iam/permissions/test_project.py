@@ -49,7 +49,7 @@ class TestProjectPermission:
         with pytest.raises(PermissionDeniedError) as exec:
             project_permission_obj.can_create(perm_ctx)
         assert exec.value.code == PermissionDeniedError.code
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             action_request_list=[ActionResourcesRequest(ProjectAction.CREATE, resource_type=ResourceType.Project)],
         )
@@ -71,7 +71,7 @@ class TestProjectPermission:
         with pytest.raises(PermissionDeniedError) as exec:
             project_permission_obj.can_view(perm_ctx)
         assert exec.value.code == PermissionDeniedError.code
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(
@@ -88,7 +88,7 @@ class TestProjectPermission:
         perm_ctx = ProjectPermCtx(username=username, project_id=project_id)
         with pytest.raises(PermissionDeniedError) as exec:
             project_permission_obj.can_edit(perm_ctx)
-        assert exec.value.data['apply_url'] == generate_apply_url(
+        assert exec.value.data['perms']['apply_url'] == generate_apply_url(
             username,
             [
                 ActionResourcesRequest(

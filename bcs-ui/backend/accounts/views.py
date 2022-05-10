@@ -39,14 +39,3 @@ class UserInfoViewSet(APIView):
             "username": user.username,
         }
         return Response(data)
-
-
-class BkLoginUser(APIView):
-    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
-
-    def get(self, request):
-        """
-        蓝鲸登录平台提供的用户信息
-        """
-        users = bcs_perm.get_all_user()
-        return Response(users)

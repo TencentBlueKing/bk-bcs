@@ -86,6 +86,7 @@ type UserPermissions struct {
 
 // PermissionsCache local cache for speed up
 var PermissionsCache map[uint][]UserPermissions
+
 // Mutex rwLock
 var Mutex *sync.RWMutex
 
@@ -148,12 +149,14 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 		blog.Warnf("BcsPermission kind must be permission")
 		message := fmt.Sprintf("errcode: %d, BcsPermission kind must be permission", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if bp.APIVersion != "v1" {
 		blog.Warnf("BcsPermission apiVersion must be v1")
 		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -257,14 +260,17 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 		blog.Warnf("BcsPermission kind must be permission")
 		message := fmt.Sprintf("errcode: %d, BcsPermission kind must be permission", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if bp.APIVersion != "v1" {
 		blog.Warnf("BcsPermission apiVersion must be v1")
 		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
+
 	for _, v := range bp.Spec.Permissions {
 		user := &models.BcsUser{
 			Name: v.UserName,
@@ -337,6 +343,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			Message: fmt.Sprintf("usertoken [%s] is invalid", form.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if hasExpired {
@@ -348,6 +355,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			Message: fmt.Sprintf("usertoken [%s] is expired", form.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -415,6 +423,32 @@ func verifyResourceReplica(userID uint, resourceType, resource, action string) (
 	return false, "no permission"
 }
 
+func getUserInfoByToken(s string) (*models.BcsUser, bool, bool) {
+	user, hasExpired := getUserFromToken(s)
+	if user != nil {
+		blog.V(4).Infof("getUserInfoByToken getUserFromToken success: %+v", user)
+		return user, false, hasExpired
+	}
+
+	tempToken, hasExpired := getUserFromTempToken(s)
+	if tempToken != nil {
+		blog.V(4).Infof("getUserInfoByToken getUserFromTempToken success: %+v", tempToken)
+		return &models.BcsUser{
+			ID:        tempToken.ID,
+			Name:      tempToken.Username,
+			UserType:  tempToken.UserType,
+			UserToken: tempToken.Token,
+			CreatedBy: tempToken.CreatedBy,
+			CreatedAt: tempToken.CreatedAt,
+			UpdatedAt: tempToken.UpdatedAt,
+			ExpiresAt: tempToken.ExpiresAt,
+		}, true, hasExpired
+	}
+
+	blog.Errorf("getUserInfoByToken failed: invalid token[%s]", s)
+	return nil, false, false
+}
+
 func getUserFromToken(s string) (*models.BcsUser, bool) {
 	u := models.BcsUser{
 		UserToken: s,
@@ -430,6 +464,22 @@ func getUserFromToken(s string) (*models.BcsUser, bool) {
 	}
 
 	return user, false
+}
+
+func getUserFromTempToken(s string) (*models.BcsTempToken, bool) {
+	token := &models.BcsTempToken{
+		Token: s,
+	}
+	tempUser := sqlstore.GetTempTokenByCondition(token)
+	if tempUser == nil {
+		return nil, false
+	}
+
+	if tempUser.HasExpired() {
+		return tempUser, true
+	}
+
+	return tempUser, false
 }
 
 func parseAuthToken(authInfo string) string {
@@ -496,7 +546,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 	}
 
 	// userInfo by token
-	user, hasExpired := getUserFromToken(req.UserToken)
+	user, temp, hasExpired := getUserInfoByToken(req.UserToken)
 	if user == nil {
 		blog.Warnf("AuthToken [%s] is invalid from %s, type: %s, resource: %s",
 			req.UserToken, request.Request.RemoteAddr, req.ResourceType, req.Resource)
@@ -505,6 +555,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Message: fmt.Sprintf("AuthToken [%s] is invalid", req.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 	if hasExpired {
@@ -516,6 +567,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Message: fmt.Sprintf("usertoken [%s] is expired", req.UserToken),
 		})
 		_, _ = response.Write([]byte(data))
+		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
@@ -525,21 +577,29 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Allowed: true,
 			Message: fmt.Sprintf("admin user skip cluster permission check"),
 		})
+		err = buildAdminOperationLog(user.Name, req)
+		if err != nil {
+			blog.Errorf("VerifyPermissionV2 buildAdminOperationLog failed: %v", err)
+		}
 		blog.Infof("admin user %s access to type: %s, permission: %t", user.Name, req.ResourceType, true)
 		_, _ = response.Write([]byte(data))
 
+		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
 
 	// v2 permission will be compatible with v1 permission
-	allowed, message := verifyPermissionV1(user, req)
-	if allowed {
-		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
-			Allowed: allowed,
-			Message: message,
-		})
-		_, _ = response.Write([]byte(data))
-		return
+	if !temp {
+		allowed, message := verifyPermissionV1(user, req)
+		if allowed {
+			data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
+				Allowed: allowed,
+				Message: message,
+			})
+			_, _ = response.Write([]byte(data))
+			metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
+			return
+		}
 	}
 
 	// verify v2 permission

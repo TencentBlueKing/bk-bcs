@@ -17,17 +17,24 @@ import logging
 
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
+from rest_framework.renderers import BrowsableAPIRenderer
+from rest_framework.response import Response
 
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import NamespaceRequest
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.templatesets.legacy_apps.configuration.serializers import K8sSecretCreateOrUpdateSLZ
 from backend.templatesets.legacy_apps.instance.constants import K8S_SECRET_SYS_CONFIG
 from backend.uniapps import utils as app_utils
 from backend.uniapps.application.base_views import BaseAPI
-from backend.uniapps.application.utils import APIResponse
 from backend.uniapps.resource.constants import DEFAULT_SEARCH_FIELDS
+from backend.utils.basic import str2bool
 from backend.utils.errcodes import ErrorCode
+from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 from .base import ResourceOperate
 
@@ -35,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 
 class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 
     category = 'secret'
     cate = 'K8sSecret'
@@ -58,44 +66,37 @@ class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
         data = resp.get("data") or []
         return 0, data
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.VIEW, NamespaceScopedAction.UPDATE, NamespaceScopedAction.DELETE],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def get(self, request, project_id):
-        """ 获取项目下所有的secrets """
-        cluster_dicts = self.get_project_cluster_info(request, project_id)
-        cluster_data = cluster_dicts.get('results', {}) or {}
-
-        data = []
+        """获取项目下所有的secrets"""
         params = dict(request.GET.items())
-        is_decode = request.GET.get('decode')
-        is_decode = True if is_decode == '1' else False
-        # get project namespace info
-        namespace_dict = app_utils.get_ns_id_map(request.user.token.access_token, project_id)
+        is_decode = str2bool(request.GET.get('decode'))
 
-        for cluster_info in cluster_data:
-            cluster_id = cluster_info.get('cluster_id')
-            # 当参数中集群ID存在时，判断集群ID匹配成功后，继续后续逻辑
-            if params.get('cluster_id') and params['cluster_id'] != cluster_id:
-                continue
-            cluster_env = cluster_info.get('environment')
-            code, cluster_secrets = self.get_secrets_by_cluster_id(request, params, project_id, cluster_id)
-            # 单个集群错误时，不抛出异常信息
-            if code != ErrorCode.NoError:
-                continue
-            self.handle_data(
-                request,
-                cluster_secrets,
-                self.cate,
-                project_id,
-                cluster_id,
-                is_decode,
-                cluster_env,
-                cluster_info.get('name', ''),
-                namespace_dict=namespace_dict,
-            )
-            data += cluster_secrets
+        cluster_id = params['cluster_id']
+
+        code, cluster_secrets = self.get_secrets_by_cluster_id(request, params, project_id, cluster_id)
+        if code != ErrorCode.NoError:
+            return Response({'code': code, 'message': cluster_secrets})
+
+        self.handle_data(
+            cluster_secrets,
+            self.cate,
+            cluster_id,
+            is_decode,
+            namespace_dict=app_utils.get_ns_id_map(request.user.token.access_token, project_id),
+        )
 
         # 按时间倒序排列
-        data.sort(key=lambda x: x.get('createTime', ''), reverse=True)
-        return APIResponse({"code": ErrorCode.NoError, "data": {"data": data, "length": len(data)}, "message": "ok"})
+        cluster_secrets.sort(key=lambda x: x.get('createTime', ''), reverse=True)
+
+        return PermsResponse(
+            cluster_secrets,
+            NamespaceRequest(project_id=project_id, cluster_id=cluster_id),
+        )
 
     def delete_secret(self, request, project_id, cluster_id, namespace, name):
         return self.delete_resource(request, project_id, cluster_id, namespace, name)

@@ -69,7 +69,7 @@ func newRealControl() testControl {
 
 	// init hook controller
 	hookClient := hookFake.NewSimpleClientset()
-	hookFake.AddToScheme(scheme.Scheme)
+	_ = hookFake.AddToScheme(scheme.Scheme)
 	hookInformerFactory := hookinformers.NewSharedInformerFactory(hookClient, controller.NoResyncPeriodFunc())
 	hookStop := make(chan struct{})
 	hookInformerFactory.Start(hookStop)

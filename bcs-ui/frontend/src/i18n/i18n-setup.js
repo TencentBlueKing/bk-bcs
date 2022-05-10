@@ -34,6 +34,7 @@ const i18n = new VueI18n({
 })
 
 locale.i18n((key, value) => i18n.t(key, value))
+locale.getCurLang().bk.lang = curLang
 
 global.i18n = i18n
 

@@ -25,10 +25,10 @@ container_name = 'echoserver'
 
 
 class TestContainerRespBuilder:
-    """ 测试容器信息构造逻辑 """
+    """测试容器信息构造逻辑"""
 
     def test_build_list(self):
-        """ 测试组装 Container 列表信息方法 """
+        """测试组装 Container 列表信息方法"""
         ret = ContainerRespBuilder(pod_manifest).build_list()
         assert ret == [
             {
@@ -42,7 +42,7 @@ class TestContainerRespBuilder:
         ]
 
     def test_build(self):
-        """ 测试组装单个 Container 信息方法 """
+        """测试组装单个 Container 信息方法"""
         ret = ContainerRespBuilder(pod_manifest, container_name).build()
         assert ret == {
             'host_name': 'minikube',

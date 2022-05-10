@@ -150,3 +150,117 @@ func (c *Client) ESBGetBizLocation(username string, bizIDs []int64) (*ESBGetBizL
 	}
 	return result, nil
 }
+
+// ESBGetBizInternalModule get module info by biz id and module name
+func (c *Client) ESBGetBizInternalModule(username string, bizID int64, bkSupplierAccount string) (*ESBGetBizInternalModuleResult, error) {
+	request := map[string]interface{}{
+		"bk_biz_id":           bizID,
+		"bk_username":         username,
+		"bk_supplier_account": bkSupplierAccount,
+	}
+	common.MergeMap(request, c.baseReq)
+	result := new(ESBGetBizInternalModuleResult)
+	err := c.client.Post().
+		WithEndpoints([]string{c.host}).
+		WithBasePath("/api/c/compapi/v2/cc/").
+		SubPathf("get_biz_internal_module").
+		WithHeaders(c.defaultHeader).
+		Body(request).
+		Do().
+		Into(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ESBListBizHosts list hosts in a business
+func (c *Client) ESBListBizHosts(username string, req *ESBListBizHostsRequest) (*ESBListBizHostsResult, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is empty")
+	}
+	request := map[string]interface{}{
+		"bk_username": username,
+	}
+	if req.BkBizID != 0 {
+		request["bk_biz_id"] = req.BkBizID
+	}
+	if req.HostPropertyFilter != nil {
+		request["host_property_filter"] = req.HostPropertyFilter
+	}
+	if req.Page != nil {
+		request["page"] = req.Page
+	}
+	if req.SetCond != nil {
+		request["set_cond"] = req.SetCond
+	}
+	if req.ModuleCond != nil {
+		request["module_cond"] = req.ModuleCond
+	}
+	if len(req.BkSetIDs) != 0 {
+		request["bk_set_ids"] = req.BkSetIDs
+	}
+	if len(req.BkModuleIDs) != 0 {
+		request["bk_module_ids"] = req.BkModuleIDs
+	}
+	request["fields"] = req.Fields
+
+	result := new(ESBListBizHostsResult)
+	common.MergeMap(request, c.baseReq)
+	err := c.client.Post().
+		WithEndpoints([]string{c.host}).
+		WithBasePath("/api/c/compapi/v2/cc/").
+		SubPathf("list_biz_hosts").
+		WithHeaders(c.defaultHeader).
+		Body(request).
+		Do().
+		Into(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ESBListBizHostsTopo list hosts topo in a business
+func (c *Client) ESBListBizHostsTopo(
+	username string, req *ESBListBizHostsTopoRequest) (*ESBListBizHostsTopoResult, error) {
+	if req == nil {
+		return nil, fmt.Errorf("request is empty")
+	}
+	request := map[string]interface{}{
+		"bk_username": username,
+	}
+	if req.BkBizID != 0 {
+		request["bk_biz_id"] = req.BkBizID
+	}
+	if req.Page != nil {
+		request["page"] = req.Page
+	}
+	if req.SetPropertyFilter != nil {
+		request["set_property_filter"] = req.SetPropertyFilter
+	}
+	if req.ModulePropertyFilter != nil {
+		request["module_property_filter"] = req.ModulePropertyFilter
+	}
+	if req.HostPropertyFilter != nil {
+		request["host_property_filter"] = req.HostPropertyFilter
+	}
+	if len(req.Fields) != 0 {
+		request["fields"] = req.Fields
+	}
+
+	result := new(ESBListBizHostsTopoResult)
+	common.MergeMap(request, c.baseReq)
+	err := c.client.Post().
+		WithEndpoints([]string{c.host}).
+		WithBasePath("/api/c/compapi/v2/cc/").
+		SubPathf("list_biz_hosts_topo").
+		WithHeaders(c.defaultHeader).
+		Body(request).
+		Do().
+		Into(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

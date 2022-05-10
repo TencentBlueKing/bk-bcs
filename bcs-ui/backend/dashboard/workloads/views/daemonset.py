@@ -18,6 +18,6 @@ from backend.resources.workloads.daemonset import DaemonSet
 
 
 class DaemonSetViewSet(AccessClusterPermMixin, NamespaceScopeViewSet):
-    """ DaemonSet 相关接口 """
+    """DaemonSet 相关接口"""
 
     resource_client = DaemonSet

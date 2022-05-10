@@ -79,20 +79,11 @@ class FakePaaSCCMod:
 class FakeProjectPermissionAllowAll:
     """A fake object which replace the original ProjectPermission, allows all operations"""
 
-    def can_create(self, username, raise_exception=False):
+    def can_create(self, perm_ctx, raise_exception=False):
         return True
 
-    def can_view(self, username, project_id, raise_exception=False):
+    def can_view(self, perm_ctx, raise_exception=False):
         return True
 
-    def can_edit(self, username, project_id, raise_exception=False):
+    def can_edit(self, perm_ctx, raise_exception=False):
         return True
-
-    def query_authorized_users(self, project_id, action_id):
-        return []
-
-    def grant_related_action_perms(self, username, project_id, project_name):
-        return []
-
-    def verify_project(self, access_token, project_id, user_id):
-        return {"code": 0}

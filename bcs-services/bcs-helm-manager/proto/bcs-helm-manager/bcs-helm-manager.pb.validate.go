@@ -3437,50 +3437,48 @@ func (m *ChartDetail) validate(all bool) error {
 
 	// no validation rules for Readme
 
-	{
-		sorted_keys := make([]string, len(m.GetContents()))
-		i := 0
-		for key := range m.GetContents() {
-			sorted_keys[i] = key
-			i++
-		}
-		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
-		for _, key := range sorted_keys {
-			val := m.GetContents()[key]
-			_ = val
+	sorted_keys := make([]string, len(m.GetContents()))
+	i := 0
+	for key := range m.GetContents() {
+		sorted_keys[i] = key
+		i++
+	}
+	sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+	for _, key := range sorted_keys {
+		val := m.GetContents()[key]
+		_ = val
 
-			// no validation rules for Contents[key]
+		// no validation rules for Contents[key]
 
-			if all {
-				switch v := interface{}(val).(type) {
-				case interface{ ValidateAll() error }:
-					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, ChartDetailValidationError{
-							field:  fmt.Sprintf("Contents[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				case interface{ Validate() error }:
-					if err := v.Validate(); err != nil {
-						errors = append(errors, ChartDetailValidationError{
-							field:  fmt.Sprintf("Contents[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				}
-			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-				if err := v.Validate(); err != nil {
-					return ChartDetailValidationError{
+		if all {
+			switch v := interface{}(val).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ChartDetailValidationError{
 						field:  fmt.Sprintf("Contents[%v]", key),
 						reason: "embedded message failed validation",
 						cause:  err,
-					}
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ChartDetailValidationError{
+						field:  fmt.Sprintf("Contents[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
 				}
 			}
-
+		} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ChartDetailValidationError{
+					field:  fmt.Sprintf("Contents[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
 		}
+
 	}
 
 	if len(errors) > 0 {

@@ -26,34 +26,80 @@ func (rt ResourceType) String() string {
 
 var (
 	// Cluster type
-	Cluster           ResourceType = "cluster"
+	Cluster ResourceType = "cluster"
 	// AutoScalingOption type
 	AutoScalingOption ResourceType = "autoscalingoption"
 	// Cloud type
-	Cloud             ResourceType = "cloud"
+	Cloud ResourceType = "cloud"
 	// CloudVPC type
-	CloudVPC          ResourceType = "cloudvpc"
+	CloudVPC ResourceType = "cloudvpc"
 	// ClusterCredential type
 	ClusterCredential ResourceType = "clustercredential"
 	// NameSpace type
-	NameSpace         ResourceType = "namespace"
+	NameSpace ResourceType = "namespace"
 	// NameSpaceQuota type
-	NameSpaceQuota    ResourceType = "namespacequota"
+	NameSpaceQuota ResourceType = "namespacequota"
 	// NodeGroup type
-	NodeGroup         ResourceType = "nodegroup"
+	NodeGroup ResourceType = "nodegroup"
 	// Project type
-	Project           ResourceType = "project"
+	Project ResourceType = "project"
 	// Task type
-	Task              ResourceType = "task"
+	Task ResourceType = "task"
 )
 
 const (
+	// MasterRole label
+	MasterRole = "node-role.kubernetes.io/master"
+)
+
+const (
+	// KubeAPIServer cluster apiserver key
+	KubeAPIServer = "KubeAPIServer"
+	// KubeController cluster controller key
+	KubeController = "KubeController"
+	// KubeScheduler cluster scheduler key
+	KubeScheduler = "KubeScheduler"
+	// Etcd cluster etcd key
+	Etcd = "Etcd"
+	// Kubelet cluster kubelet key
+	Kubelet = "kubelet"
+)
+
+// DefaultClusterConfig cluster default service config
+var DefaultClusterConfig = map[string]string{
+	Etcd: "node-data-dir=/data/bcs/lib/etcd;",
+}
+
+const (
+	// Prod prod env
+	Prod = "prod"
+	// Debug debug env
+	Debug = "debug"
+
 	// ClusterAddNodesLimit cluster addNodes limit
 	ClusterAddNodesLimit = 100
 	// ClusterManagerServiceDomain domain name for service
 	ClusterManagerServiceDomain = "clustermanager.bkbcs.tencent.com"
 	// ResourceManagerServiceDomain domain name for service
 	ResourceManagerServiceDomain = "resourcemanager.bkbcs.tencent.com"
+
+	// ClusterOverlayNetwork overlay
+	ClusterOverlayNetwork = "overlay"
+	// ClusterUnderlayNetwork underlay
+	ClusterUnderlayNetwork = "underlay"
+
+	// DockerGraphPath docker path
+	DockerGraphPath = "/data/bcs/service/docker"
+	// MountTarget default mount path
+	MountTarget = "/data"
+
+	// DefaultImageName default image name
+	DefaultImageName = "Tencent Linux Release 2.2 (Final)"
+
+	// DockerContainerRuntime runtime
+	DockerContainerRuntime = "docker"
+	// DockerRuntimeVersion runtime version
+	DockerRuntimeVersion = "19.3"
 
 	// ClusterEngineTypeMesos mesos cluster
 	ClusterEngineTypeMesos = "mesos"
@@ -84,6 +130,8 @@ const (
 	StatusInitialization = "INITIALIZATION"
 	//StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
+	//StatusImportClusterFailed status import failed
+	StatusImportClusterFailed = "IMPORT-FAILURE"
 	//StatusRunning status running
 	StatusRunning = "RUNNING"
 	//StatusDeleting status deleting for scaling down
@@ -145,20 +193,25 @@ const (
 	// BcsErrClusterManagerNodeManagerErr build clusterID error
 	BcsErrClusterManagerNodeManagerErr = bcscommon.BCSErrClusterManager + 29
 	// BcsErrClusterManagerTaskDoneErr build task doing or done error
-	BcsErrClusterManagerTaskDoneErr = bcscommon.BCSErrClusterManager + 29
+	BcsErrClusterManagerTaskDoneErr = bcscommon.BCSErrClusterManager + 30
+	// BcsErrClusterManagerSyncCloudErr cloud config error
+	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 31
+	// BcsErrClusterManagerSyncCloudErr cloud config error
+	BcsErrClusterManagerCheckKubeErr = bcscommon.BCSErrClusterManager + 32
 )
 
 // ClusterIDRange for generate clusterID range
 var ClusterIDRange = map[string][]int{
-	"mesos-stag":  []int{10000, 15000},
-	"mesos-debug": []int{20000, 25000},
-	"mesos-prod":  []int{30000, 399999},
-	"k8s-stag":    []int{15001, 19999},
-	"k8s-debug":   []int{25001, 29999},
-	"k8s-prod":    []int{40000, 1000000},
+	"mesos-stag":  {10000, 15000},
+	"mesos-debug": {20000, 25000},
+	"mesos-prod":  {30000, 399999},
+	"k8s-stag":    {15001, 19999},
+	"k8s-debug":   {25001, 29999},
+	"k8s-prod":    {40000, 1000000},
 }
 
 // Develop dev env
 var Develop = "dev"
+
 // StagClusterENV stag env
 var StagClusterENV = "stag"

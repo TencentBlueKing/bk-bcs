@@ -28,6 +28,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/expectations"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apiextensionfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -61,9 +63,10 @@ type fixture struct {
 	hookRunLister    []*hookv1alpha1.HookRun
 
 	// informers
-	kubeInformer   informers.SharedInformerFactory
-	deployInformer deployInformer.SharedInformerFactory
-	hookInformer   hookInformers.SharedInformerFactory
+	kubeInformer       informers.SharedInformerFactory
+	deployInformer     deployInformer.SharedInformerFactory
+	hookInformer       hookInformers.SharedInformerFactory
+	apiextensionClient apiextension.Interface
 
 	// Actions expected to happen on the client.
 	kubeActions   []core.Action
@@ -118,7 +121,7 @@ func (f *fixture) expectGetGameDeploymentAction(namespace, name string) {
 	f.deployActions = append(f.deployActions, action)
 }
 
-func (f *fixture) expectUpdateGameDeploymentStatusAction(d *v1alpha1.GameDeployment) {
+func (f *fixture) expectUpdateGDStatusAction(d *v1alpha1.GameDeployment) {
 	action := core.NewUpdateAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 		Resource: v1alpha1.Plural}, d.Namespace, d)
 	action.Subresource = "status"
@@ -150,7 +153,7 @@ func (f *fixture) expectPatchGameDeploymentAction(deploy *v1alpha1.GameDeploymen
 	f.deployActions = append(f.deployActions, action)
 }
 
-func (f *fixture) expectPatchGameDeploymentSubResourceAction(deploy *v1alpha1.GameDeployment, patch []byte) {
+func (f *fixture) expectPatchGDSubResourceAction(deploy *v1alpha1.GameDeployment, patch []byte) {
 	action := core.NewPatchSubresourceAction(schema.GroupVersionResource{Group: v1alpha1.GroupName, Version: v1alpha1.Version,
 		Resource: v1alpha1.Plural}, deploy.Namespace, deploy.Name, types.MergePatchType, patch, "status")
 	f.deployActions = append(f.deployActions, action)
@@ -184,10 +187,11 @@ func (f *fixture) newController() {
 	f.kubeInformer = informers.NewSharedInformerFactory(f.kubeClient, controller.NoResyncPeriodFunc())
 	f.deployInformer = deployInformer.NewSharedInformerFactory(f.deployClient, controller.NoResyncPeriodFunc())
 	f.hookInformer = hookInformers.NewSharedInformerFactory(f.hookClient, controller.NoResyncPeriodFunc())
+	f.apiextensionClient = apiextensionfake.NewSimpleClientset()
 
-	c := NewGameDeploymentController(f.kubeInformer.Core().V1().Pods(), f.deployInformer.Tkex().V1alpha1().GameDeployments(),
+	c := NewGameDeploymentController(f.kubeInformer.Core().V1().Pods(), f.kubeInformer.Core().V1().Nodes(), f.deployInformer.Tkex().V1alpha1().GameDeployments(),
 		f.hookInformer.Tkex().V1alpha1().HookRuns(), f.hookInformer.Tkex().V1alpha1().HookTemplates(),
-		f.kubeInformer.Apps().V1().ControllerRevisions(), f.kubeClient, f.deployClient, &record.FakeRecorder{}, f.hookClient,
+		f.kubeInformer.Apps().V1().ControllerRevisions(), f.kubeClient, f.apiextensionClient, f.deployClient, &record.FakeRecorder{}, f.hookClient,
 		history.NewFakeHistory(f.kubeInformer.Apps().V1().ControllerRevisions()))
 	c.podListerSynced = alwaysReady
 	c.gdListerSynced = alwaysReady
@@ -261,7 +265,7 @@ func assertActions(expect, got []core.Action, t testing.TB) {
 }
 
 func filterInformerActions(actions []core.Action) []core.Action {
-	ret := []core.Action{}
+	ret := make([]core.Action, 0)
 	for _, action := range actions {
 		if len(action.GetNamespace()) == 0 &&
 			(action.Matches("list", "pods") ||
@@ -304,7 +308,7 @@ func TestSyncGameDeploymentCreatePods(t *testing.T) {
 	f.expectCreatePodAction(test.NewPod(1))
 	f.expectCreatePodAction(test.NewPod(2))
 	// update game deployment status
-	f.expectPatchGameDeploymentSubResourceAction(deploy, nil)
+	f.expectPatchGDSubResourceAction(deploy, nil)
 
 	f.run(types.NamespacedName{
 		Namespace: deploy.Namespace,
@@ -334,7 +338,7 @@ func TestSyncRollingUpdate(t *testing.T) {
 	// delete pod to update
 	f.expectDeletePodAction(pod.Namespace, pod.Name)
 	// update game deployment status
-	f.expectPatchGameDeploymentSubResourceAction(deploy, nil)
+	f.expectPatchGDSubResourceAction(deploy, nil)
 	f.run(types.NamespacedName{
 		Namespace: deploy.Namespace,
 		Name:      deploy.Name,
@@ -372,7 +376,7 @@ func TestSyncInPlaceUpdate(t *testing.T) {
 	f.expectUpdatePodAction(pod.Namespace, nil)
 	f.expectGetPodAction(pod.Namespace, pod.Name)
 	// update game deployment status
-	f.expectPatchGameDeploymentSubResourceAction(deploy, nil)
+	f.expectPatchGDSubResourceAction(deploy, nil)
 	f.run(types.NamespacedName{
 		Namespace: deploy.Namespace,
 		Name:      deploy.Name,
@@ -405,7 +409,7 @@ func TestSyncCanaryStep(t *testing.T) {
 	// only patch pod, no delete
 	f.expectPatchPodAction(pod.Namespace, pod.Name)
 	// update game deployment status
-	f.expectPatchGameDeploymentSubResourceAction(deploy, nil)
+	f.expectPatchGDSubResourceAction(deploy, nil)
 	f.run(types.NamespacedName{
 		Namespace: deploy.Namespace,
 		Name:      deploy.Name,
@@ -441,7 +445,7 @@ func TestSyncCanaryStepChange(t *testing.T) {
 	// only patch pod, no delete
 	f.expectPatchPodAction(pod.Namespace, pod.Name)
 	// update game deployment status
-	f.expectPatchGameDeploymentSubResourceAction(deploy, nil)
+	f.expectPatchGDSubResourceAction(deploy, nil)
 	f.run(types.NamespacedName{
 		Namespace: deploy.Namespace,
 		Name:      deploy.Name,
@@ -476,7 +480,7 @@ func TestSyncRevisionChange(t *testing.T) {
 	// only patch pod, no delete
 	f.expectPatchPodAction(pod.Namespace, pod.Name)
 	// update game deployment status
-	f.expectPatchGameDeploymentSubResourceAction(deploy, nil)
+	f.expectPatchGDSubResourceAction(deploy, nil)
 	f.run(types.NamespacedName{
 		Namespace: deploy.Namespace,
 		Name:      deploy.Name,

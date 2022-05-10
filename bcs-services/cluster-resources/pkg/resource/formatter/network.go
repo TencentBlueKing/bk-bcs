@@ -155,6 +155,9 @@ func parseSVCPorts(manifest map[string]interface{}) (ports []string) {
 
 // 解析所有 Endpoints
 func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
+	if _, ok := manifest["subsets"]; !ok {
+		return endpoints
+	}
 	// endpoints 为 subsets ips 与 ports 的笛卡儿积
 	for _, subset := range manifest["subsets"].([]interface{}) {
 		ss, _ := subset.(map[string]interface{})

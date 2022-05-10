@@ -14,6 +14,7 @@ package generator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -114,7 +116,7 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 	li.SetLabels(map[string]string{
 		rc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
+		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
@@ -169,7 +171,7 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li.SetLabels(map[string]string{
 		rc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
+		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
@@ -255,7 +257,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		// to pod directly and no subset
 		if len(svcRoute.Subsets) == 0 {
 			backends, err := rc.getServiceBackendsFromPods(
-				svcNamespace, svc.Spec.Selector, svcPort, svcRoute.GetWeight())
+				svcNamespace, svc.Spec.Selector, svcPort, svcRoute.GetWeight(), svcRoute)
 			if err != nil {
 				return nil, err
 			}
@@ -264,7 +266,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		var retBackends []networkextensionv1.ListenerBackend
 		// to pod directly and have subset
 		for _, subset := range svcRoute.Subsets {
-			subsetBackends, err := rc.getSubsetBackends(svc, svcPort, subset)
+			subsetBackends, err := rc.getSubsetBackends(svc, svcPort, subset, svcRoute)
 			if err != nil {
 				return nil, err
 			}
@@ -297,7 +299,9 @@ func mergeBackendList(
 
 // get backends from subset
 func (rc *RuleConverter) getSubsetBackends(
-	svc *k8scorev1.Service, svcPort *k8scorev1.ServicePort, subset networkextensionv1.IngressSubset) (
+	svc *k8scorev1.Service, svcPort *k8scorev1.ServicePort,
+	subset networkextensionv1.IngressSubset,
+	svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
 	labels := make(map[string]string)
 	for k, v := range svc.Spec.Selector {
@@ -306,13 +310,15 @@ func (rc *RuleConverter) getSubsetBackends(
 	for k, v := range subset.LabelSelector {
 		labels[k] = v
 	}
-	return rc.getServiceBackendsFromPods(svc.GetNamespace(), labels, svcPort, subset.GetWeight())
+	return rc.getServiceBackendsFromPods(svc.GetNamespace(), labels, svcPort,
+		subset.GetWeight(), svcRoute)
 }
 
 // get backends from pods
 func (rc *RuleConverter) getServiceBackendsFromPods(
 	ns string, selectorMap map[string]string,
-	svcPort *k8scorev1.ServicePort, weight int) (
+	svcPort *k8scorev1.ServicePort, weight int,
+	svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
 
 	podList, err := rc.getPodsByLabels(ns, selectorMap)
@@ -325,7 +331,7 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 		if len(pod.Status.PodIP) == 0 {
 			continue
 		}
-		backendWeight := weight
+		backendWeight := rc.getPodWeight(pod, weight)
 		if pod.DeletionTimestamp != nil {
 			backendWeight = 0
 		}
@@ -349,11 +355,17 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 			for _, port := range container.Ports {
 				if (port.ContainerPort == int32(svcPort.TargetPort.IntValue()) && port.Protocol == svcPort.Protocol) ||
 					(port.Name == svcPort.TargetPort.String() && port.Protocol == svcPort.Protocol) {
-					retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+					backend := networkextensionv1.ListenerBackend{
 						IP:     pod.Status.PodIP,
 						Port:   int(port.ContainerPort),
 						Weight: backendWeight,
-					})
+					}
+					// if the hostport is specified, use it as backend port
+					if svcRoute.HostPort {
+						backend.IP = pod.Status.HostIP
+						backend.Port = int(port.HostPort)
+					}
+					retBackends = append(retBackends, backend)
 					found = true
 					break
 				}
@@ -396,6 +408,7 @@ func (rc *RuleConverter) getNodePortBackends(
 			Port:   int(svcPort.NodePort),
 			Weight: weight,
 		}
+		newBackend.Weight = rc.getPodWeight(pod, weight)
 		backendMap[pod.Status.HostIP+strconv.Itoa(int(svcPort.NodePort))] = newBackend
 		retBackends = append(retBackends, newBackend)
 	}
@@ -421,4 +434,47 @@ func (rc *RuleConverter) getPodsByLabels(ns string, labels map[string]string) ([
 		retPods = append(retPods, &podList.Items[i])
 	}
 	return retPods, nil
+}
+
+// get pod clb-weight from annotations
+func (rc *RuleConverter) getPodWeight(pod *k8scorev1.Pod, weight int) int {
+	if clbWeightValue, ok := pod.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceWeight]; ok {
+		clbWeight, err := strconv.Atoi(clbWeightValue)
+		if err != nil {
+			blog.Warnf("get pod %s/%s's clb-weight error: %s", pod.Namespace, pod.Name, err.Error())
+			return weight
+		}
+		err = rc.patchPodLBWeightReady(pod)
+		if err != nil {
+			blog.Warnf("patch pod %s/%s's clb-weight error: %s", pod.Namespace, pod.Name, err.Error())
+			return weight
+		}
+		return clbWeight
+	}
+	return weight
+}
+
+// patch pod annotations for clb weight, if pod lb weight be set, then switch annotation ready to true
+func (rc *RuleConverter) patchPodLBWeightReady(pod *k8scorev1.Pod) error {
+	if pod.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceWeightReady] == "true" {
+		return nil
+	}
+	patchStruct := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]string{
+				networkextensionv1.AnnotationKeyForLoadbalanceWeightReady: "true",
+			},
+		},
+	}
+	patchData, err := json.Marshal(patchStruct)
+	if err != nil {
+		return err
+	}
+	updatePod := &k8scorev1.Pod{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      pod.GetName(),
+			Namespace: pod.GetNamespace(),
+		},
+	}
+	return rc.cli.Patch(context.TODO(), updatePod, client.RawPatch(k8stypes.MergePatchType, patchData))
 }

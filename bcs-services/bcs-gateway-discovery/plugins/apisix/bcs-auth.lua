@@ -15,6 +15,8 @@ local core = require("apisix.core")
 local stringx = require('pl.stringx')
 local authentication = require("apisix.plugins.bcs-auth.authentication")
 
+local ngx = ngx
+local ngx_escape_uri = ngx.escape_uri
 local tab_concat = table.concat
 local plugin_name = "bcs-auth"
 
@@ -23,6 +25,7 @@ local schema = {
     properties = {
         bk_login_host = {type = "string", description = "bk login host (with scheme prefix)"},
         private_key = {type = "string", description = "jwt private_key"},
+        bkapigw_jwt_verify_key = {type = "string", description = "jwt verify key for bkapigw"},
         exp = {type = "integer", default = 300, description = "jwt exp time in seconds"},
         -- redis backend config
         redis_host = {type = "string", description = "redis for bcs-auth plugin: host"},
@@ -57,9 +60,8 @@ local function is_from_browser(user_agent)
 end
 
 
--- 本地测试用，后面移除
 local function concat_login_uri(conf, ctx)
-    local c_url = tab_concat({ctx.var.scheme, "://", ctx.var.host, ":", "31399", ctx.var.request_uri})
+    local c_url = tab_concat({ctx.var.scheme, "://", ctx.var.host, ngx_escape_uri(ctx.var.request_uri)})
     return tab_concat({conf.bk_login_host, "/plain/?size=big&c_url=", c_url})
 end
 
@@ -75,7 +77,7 @@ function _M.rewrite(conf, ctx)
     local use_login = is_from_browser(user_agent) -- 是否对接蓝鲸统一登录
 
     local auth = authentication:new(use_login, conf.run_env)
-    local jwt_token = auth:authenticate(conf)
+    local jwt_token = auth:authenticate(conf, ctx)
 
     if not jwt_token then
         if use_login then

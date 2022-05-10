@@ -28,8 +28,8 @@
                         <label :class="isK8sProject || isTkeProject ? 'long' : ''">{{$t('集群类型')}}</label>
                         <div class="form-item-inner" style="line-height: 30px;">
                             <bk-radio-group v-model="clusterType" @change="toggleDev">
-                                <bk-radio class="mr30" value="stag" :disabled="!permissions.test">{{$t('测试环境')}}</bk-radio>
-                                <bk-radio class="cluster-prod" value="prod" :disabled="!permissions.prod">{{$t('正式环境')}}</bk-radio>
+                                <bk-radio class="mr30" value="stag">{{$t('测试环境')}}</bk-radio>
+                                <bk-radio class="cluster-prod" value="prod">{{$t('正式环境')}}</bk-radio>
                             </bk-radio-group>
                         </div>
                     </div>
@@ -469,11 +469,6 @@
                 remainCount: 0,
                 ccHostLoading: false,
                 exceptionCode: null,
-                permissions: {
-                    create: true,
-                    prod: true,
-                    test: true
-                },
                 curProject: {},
                 isK8sProject: false,
                 isTkeProject: false,
@@ -778,20 +773,7 @@
              */
             async getClusters () {
                 try {
-                    const res = await this.$store.dispatch('cluster/getClusterList', this.projectId)
-                    this.permissions = JSON.parse(JSON.stringify(res.permissions || {}))
-                    // if (!this.permissions.create) {
-                    //     const url = this.createApplyPermUrl({
-                    //         policy: 'create',
-                    //         projectCode: this.projectCode,
-                    //         idx: 'cluster_test,cluster_prod'
-                    //     })
-                    //     bus.$emit('show-apply-perm', {
-                    //         data: {
-                    //             apply_url: url
-                    //         }
-                    //     })
-                    // }
+                    await this.$store.dispatch('cluster/getClusterList', this.projectId)
                 } catch (e) {
                     console.warn(e)
                 }
@@ -1071,21 +1053,6 @@
              */
             handleInputCheckCurPage (value) {
                 this.isCheckCurPageAll = value
-            },
-
-            /**
-             * 弹层表格全选
-             */
-            toogleCheckCurPage () {
-                this.$nextTick(() => {
-                    const isChecked = this.isCheckCurPageAll
-                    this.candidateHostList.forEach(host => {
-                        if (!host.is_used && String(host.agent) === '1' && host.is_valid) {
-                            host.isChecked = isChecked
-                        }
-                    })
-                    this.selectHost()
-                })
             },
 
             /**

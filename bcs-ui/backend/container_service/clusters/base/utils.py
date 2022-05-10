@@ -16,9 +16,9 @@ import json
 import logging
 from typing import List, Optional
 
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
+from backend.components import cluster_manager as cm
 from backend.components import paas_cc
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.constants import ClusterType
@@ -93,13 +93,6 @@ def get_cluster_snapshot(access_token, project_id, cluster_id):
     return resp.get("data") or {}
 
 
-def get_cluster_info(access_token, project_id, cluster_id):
-    resp = paas_cc.get_cluster(access_token, project_id, cluster_id)
-    if resp.get("code") != ErrorCode.NoError:
-        raise error_codes.APIError(_("获取集群信息失败，{}").format(resp.get("message")))
-    return resp.get("data") or {}
-
-
 def update_cluster_status(access_token, project_id, cluster_id, status):
     """更新集群状态"""
     data = {"status": status}
@@ -149,8 +142,8 @@ def update_cc_nodes_status(access_token, project_id, cluster_id, nodes):
 
 
 def append_shared_clusters(clusters: List) -> List:
-    """"追加共享集群，返回包含共享集群的列表"""
-    shared_clusters = settings.SHARED_CLUSTERS
+    """ "追加共享集群，返回包含共享集群的列表"""
+    shared_clusters = cm.get_shared_clusters()
     if not shared_clusters:
         return clusters
 
@@ -166,8 +159,8 @@ def append_shared_clusters(clusters: List) -> List:
 
 
 def get_cluster_type(cluster_id: str) -> ClusterType:
-    """ 根据集群 ID 获取集群类型（独立/联邦/共享） """
-    for cluster in settings.SHARED_CLUSTERS:
+    """根据集群 ID 获取集群类型（独立/联邦/共享）"""
+    for cluster in cm.get_shared_clusters():
         if cluster_id == cluster['cluster_id']:
             return ClusterType.SHARED
     return ClusterType.SINGLE

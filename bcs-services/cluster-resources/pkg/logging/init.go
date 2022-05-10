@@ -15,6 +15,7 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -22,6 +23,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
@@ -106,18 +108,24 @@ func GetLogger() *zap.Logger {
 // 		log ".../pkg/logging"
 // )
 // func main() {
-// 		log.Info("log content: %s", content)
+// 		log.Info(ctx, "log content: %s", content)
 // }
-func Info(msg string, vars ...interface{}) {
-	GetLogger().Info(fmt.Sprintf(msg, vars...))
+func Info(ctx context.Context, msg string, vars ...interface{}) {
+	GetLogger().Info(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }
 
 // Warn ....
-func Warn(msg string, vars ...interface{}) {
-	GetLogger().Warn(fmt.Sprintf(msg, vars...))
+func Warn(ctx context.Context, msg string, vars ...interface{}) {
+	GetLogger().Warn(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }
 
 // Error ...
-func Error(msg string, vars ...interface{}) {
-	GetLogger().Error(fmt.Sprintf(msg, vars...))
+func Error(ctx context.Context, msg string, vars ...interface{}) {
+	GetLogger().Error(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
+}
+
+// wrapLogMsg 向日志中补充 requestID，username 信息
+func wrapLogMsg(ctx context.Context, msg string) string {
+	requestID, username := ctx.Value(ctxkey.RequestIDKey), ctx.Value(ctxkey.UsernameKey)
+	return fmt.Sprintf("requestID: %v, username: %v, ", requestID, username) + msg
 }

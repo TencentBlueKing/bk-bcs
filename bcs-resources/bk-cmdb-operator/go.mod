@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator
 
-go 1.13
+go 1.17
 
 require (
 	github.com/go-logr/logr v0.1.0

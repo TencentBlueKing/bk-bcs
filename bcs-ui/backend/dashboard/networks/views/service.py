@@ -18,6 +18,6 @@ from backend.resources.networks.service import Service
 
 
 class ServiceViewSet(NamespaceScopeViewSet):
-    """ Service 相关接口 """
+    """Service 相关接口"""
 
     resource_client = Service

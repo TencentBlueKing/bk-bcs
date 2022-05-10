@@ -1,7 +1,7 @@
 <template>
     <section class="create-form-cluster">
         <FormGroup :title="$t('基本信息')">
-            <bk-form :label-width="100" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
+            <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
                 <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                     <bk-input v-model="basicInfo.clusterName"></bk-input>
                 </bk-form-item>
@@ -43,10 +43,16 @@
                 </div>
             </template> -->
             <template #default>
-                <FormMode v-if="createMode === 'form'"
+                <FormMode
+                    v-if="createMode === 'form'"
                     :version-list="versionList"
                     :cloud-id="basicInfo.provider"
-                    ref="formMode"></FormMode>
+                    :cidr-step-list="cidrStepList"
+                    :environment="basicInfo.environment"
+                    :label-width="labelWidth"
+                    ref="formMode"
+                >
+                </FormMode>
                 <YamlMode v-else></YamlMode>
             </template>
         </FormGroup>
@@ -101,6 +107,7 @@
     import YamlMode from './yaml-mode.vue'
     import { TranslateResult } from 'vue-i18n'
     import tipDialog from '@/components/tip-dialog/index.vue'
+    import useFormLabel from '@/common/use-form-label'
 
     export default defineComponent({
         name: 'CreateFormCluster',
@@ -130,12 +137,22 @@
             const handleGetTemplateList = async () => {
                 templateLoading.value = true
                 templateList.value = await $store.dispatch('clustermanager/fetchCloudList')
+                basicInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
             // 版本列表
             const versionList = computed(() => {
                 const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
                 return cloud?.clusterManagement.availableVersion || []
+            })
+            // IP数量列表
+            const cidrStepList = computed(() => {
+                const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
+                const cidrStep = cloud?.networkInfo?.cidrStep || []
+                // 测试环境不允许选择4096
+                return basicInfo.value.environment === 'prod'
+                    ? cidrStep
+                    : cidrStep.filter(ip => ip !== 4096)
             })
 
             const showIpSelector = ref(false)
@@ -214,19 +231,18 @@
                 ]
             })
             const confirmDialog = ref<any>(null)
-            const showConfirmDialog = () => {
+            const showConfirmDialog = async () => {
+                await Promise.all([basicForm.value.validate(), formMode.value.validate()])
+                const validate = validateServer(ipList.value)
+                if (!validate) return
+
                 if (confirmDialog.value) {
                     confirmDialog.value.show()
                 }
             }
             const handleCreateCluster = async () => {
                 confirmDialog.value.hide()
-                await Promise.all([basicForm.value.validate(), formMode.value.validate()])
-
                 const clusterData = formMode.value?.formData
-                const validate = validateServer(ipList.value)
-                if (!validate) return
-
                 creating.value = true
                 const params = {
                     projectID: curProject.value.project_id,
@@ -253,10 +269,13 @@
             const handleCancel = async () => {
                 $router.push({ name: 'clusterMain' })
             }
+            const { labelWidth, initFormLabelWidth } = useFormLabel()
             onMounted(() => {
                 handleGetTemplateList()
+                initFormLabelWidth(basicForm.value)
             })
             return {
+                labelWidth,
                 runEnv,
                 creating,
                 ipErrorTips,
@@ -277,7 +296,8 @@
                 handleChooseServer,
                 handleDeleteIp,
                 handleCreateCluster,
-                handleCancel
+                handleCancel,
+                cidrStepList
             }
         }
     })
@@ -353,6 +373,9 @@
     .error-btn {
         border: 1px solid #ea3636;
         color: #ea3636;
+        &:hover {
+            border: 1px solid #ea3636;
+        }
     }
     .error-tips {
         margin-top: 5px;

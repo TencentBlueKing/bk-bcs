@@ -28,14 +28,19 @@ class Namespace:
         self.project_id = project_id
         self.client = k8s
 
-    def delete(self, namespace_id):
-        # namespace exist
-        ns_resp = paas_cc.get_namespace(self.access_token, self.project_id, namespace_id)
-        ns_data = ns_resp['data']
-        if ns_resp.get('code') != ErrorCode.NoError or not ns_data:
-            raise error_codes.APIError(f'query namespace exist error, {ns_resp.get("message")}')
-        # get namespace info
-        cluster_id, ns_name = ns_data.get('cluster_id'), ns_data.get('name')
+    def delete(self, namespace_id, **kwargs):
+        cluster_id = kwargs.get('cluster_id')
+        ns_name = kwargs.get('ns_name')
+
+        # TODO 重构
+        if not cluster_id or not ns_name:
+            # namespace exist
+            ns_resp = paas_cc.get_namespace(self.access_token, self.project_id, namespace_id)
+            ns_data = ns_resp['data']
+            if ns_resp.get('code') != ErrorCode.NoError or not ns_data:
+                raise error_codes.APIError(f'query namespace exist error, {ns_resp.get("message")}')
+            # get namespace info
+            cluster_id, ns_name = ns_data.get('cluster_id'), ns_data.get('name')
 
         self.client.delete(self.access_token, self.project_id, cluster_id, ns_name)
         # delete db resource record

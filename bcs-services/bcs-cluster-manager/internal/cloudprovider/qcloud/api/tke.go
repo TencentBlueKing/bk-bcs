@@ -14,6 +14,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -33,6 +34,9 @@ func NewTkeClient(opt *cloudprovider.CommonOption) (*TkeClient, error) {
 	}
 	credential := common.NewCredential(opt.Key, opt.Secret)
 	cpf := profile.NewClientProfile()
+	if opt.CommonConf.CloudInternalEnable {
+		cpf.HttpProfile.Endpoint = opt.CommonConf.CloudDomain
+	}
 
 	cli, err := tke.NewClient(credential, opt.Region, cpf)
 	if err != nil {
@@ -465,6 +469,117 @@ func (cli *TkeClient) GetTKEClusterVersions() ([]*Versions, error) {
 	}
 
 	return versions, nil
+}
+
+// GetTKEClusterKubeConfig get clusterKubeConfig: isExtranet internal/external kubeConfig
+func (cli *TkeClient) GetTKEClusterKubeConfig(clusterID string, isExtranet bool) (string, error){
+	if cli == nil {
+		return "", cloudprovider.ErrServerIsNil
+	}
+
+	req := tke.NewDescribeClusterKubeconfigRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.IsExtranet = common.BoolPtr(isExtranet)
+
+	resp, err := cli.tke.DescribeClusterKubeconfig(req)
+	if err != nil {
+		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig failed: %v", err)
+		return "", err
+	}
+
+	if resp.Response == nil {
+		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig but lost response information")
+		return "", cloudprovider.ErrCloudLostResponse
+	}
+	//check response data
+	blog.Infof("RequestId[%s] tke client DescribeClusterKubeconfig response successful", resp.Response.RequestId)
+	baseRet := base64.StdEncoding.EncodeToString([]byte(*resp.Response.Kubeconfig))
+
+	return baseRet, nil
+}
+
+// GetClusterEndpointStatus 查询集群访问端口状态
+func (cli *TkeClient) GetClusterEndpointStatus(clusterID string, isExtranet bool) (EndpointStatus, error) {
+	if cli == nil {
+		return "", cloudprovider.ErrServerIsNil
+	}
+	if clusterID == "" {
+		return "", fmt.Errorf("clusterID is null")
+	}
+
+	req := tke.NewDescribeClusterEndpointStatusRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.IsExtranet = common.BoolPtr(isExtranet)
+
+	resp, err := cli.tke.DescribeClusterEndpointStatus(req)
+	if err != nil {
+		blog.Errorf("GetClusterEndpointStatus client DescribeClusterEndpointStatus failed: %v", err)
+		return "", err
+	}
+
+	if resp.Response == nil {
+		blog.Errorf("GetClusterEndpointStatus client DescribeClusterEndpointStatus but lost response information")
+		return "", cloudprovider.ErrCloudLostResponse
+	}
+	//check response data
+	blog.Infof("RequestId[%s] tke client DescribeClusterEndpointStatus response successful", *resp.Response.RequestId)
+
+	if resp.Response.Status == nil {
+		blog.Errorf("GetClusterEndpointStatus client DescribeClusterEndpointStatus failed: %v", "status nil")
+		return "", cloudprovider.ErrCloudLostResponse
+	}
+
+	return EndpointStatus(*resp.Response.Status), nil
+}
+
+// CreateClusterEndpoint 创建集群访问端口,默认开启公网访问
+func (cli *TkeClient) CreateClusterEndpoint(clusterID string) error {
+	if cli == nil {
+		return cloudprovider.ErrServerIsNil
+	}
+	if clusterID == "" {
+		return fmt.Errorf("clusterID is null")
+	}
+
+	req := tke.NewCreateClusterEndpointRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.IsExtranet = common.BoolPtr(true)
+
+	resp, err := cli.tke.CreateClusterEndpoint(req)
+	if err != nil {
+		blog.Errorf("client CreateClusterEndpoint failed: %v", err)
+		return err
+	}
+
+	//check response data
+	blog.Infof("RequestId[%s] tke client CreateClusterEndpoint response successful", *resp.Response.RequestId)
+
+	return nil
+}
+
+// DeleteClusterEndpoint 删除集群访问端口,默认开启公网访问
+func (cli *TkeClient) DeleteClusterEndpoint(clusterID string) error {
+	if cli == nil {
+		return cloudprovider.ErrServerIsNil
+	}
+	if clusterID == "" {
+		return fmt.Errorf("clusterID is null")
+	}
+
+	req := tke.NewDeleteClusterEndpointRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.IsExtranet = common.BoolPtr(true)
+
+	resp, err := cli.tke.DeleteClusterEndpoint(req)
+	if err != nil {
+		blog.Errorf("client DeleteClusterEndpoint failed: %v", err)
+		return err
+	}
+
+	//check response data
+	blog.Infof("RequestId[%s] tke client DeleteClusterEndpoint response successful", *resp.Response.RequestId)
+
+	return nil
 }
 
 // GetTKEClusterImages get tke cluster images info

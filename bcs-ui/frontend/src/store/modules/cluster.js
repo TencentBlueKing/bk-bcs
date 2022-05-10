@@ -37,8 +37,8 @@ export default {
         // 如果是从浏览器地址栏输入 url 进去的，这个为空，需要根据 clusterId 发送请求来获取当前的集群
         // 同样，当根据 clusterId 获取到集群后，会把获取到的集群赋值给这个变量
         curCluster: null,
-        clusterPerm: {},
-        allClusterList: []
+        allClusterList: [],
+        clusterWebAnnotations: { perms: {} }
     },
     getters: {
         // eslint-disable-next-line camelcase
@@ -87,8 +87,8 @@ export default {
         forceUpdateCurCluster (state, cluster) {
             state.curCluster = Object.assign({}, cluster)
         },
-        updateClusterPerm  (state, perm) {
-            state.clusterPerm = perm
+        updateClusterWebAnnotations (state, data) {
+            state.clusterWebAnnotations = data
         }
     },
     actions: {
@@ -105,7 +105,7 @@ export default {
             const res = await fetchClusterList({
                 projectID,
                 operator: context.rootState.user?.username
-            }, { needRes: true }).catch(() => ({ data: [], clusterPerm: {} }))
+            }, { needRes: true }).catch(() => ({ data: [] }))
             const clusterExtraInfo = res.clusterExtraInfo || {}
             // 兼容以前集群数据
             res.data = res.data.map(item => {
@@ -117,8 +117,14 @@ export default {
                     ...clusterExtraInfo[item.clusterID]
                 }
             })
+            const exitSessionStorageCluster = res.data.find(item => {
+                return item.clusterID === sessionStorage['bcs-cluster']
+            })
+            if (!exitSessionStorageCluster) {
+                sessionStorage['bcs-cluster'] = ""
+            }
             context.commit('forceUpdateClusterList', res?.data || [])
-            context.commit('updateClusterPerm', res.clusterPerm)
+            context.commit('updateClusterWebAnnotations', res.web_annotations || { perms: {} })
             return res
         },
 
@@ -150,19 +156,6 @@ export default {
          */
         getAreaList (context, params, config = {}) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${params.projectId}/areas?${json2Query(params.data)}`, {}, config)
-        },
-
-        /**
-         * 创建集群时根据所属地域获取所属 VPC 信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {string} projectId 项目 id
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getVPCByArea (context, areaId, config = {}) {
-            return http.get(`${DEVOPS_BCS_API_URL}/api/areas/${areaId}/`, {}, config)
         },
 
         /**
@@ -278,42 +271,6 @@ export default {
         },
 
         /**
-         * 节点详情页面获取节点的 cpu, 内存, 网络, 存储使用率等信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getNodeMetrics (context, params, config = {}) {
-            const projectId = params.projectId
-
-            const list = Object.keys(params)
-            const len = list.length
-
-            for (let i = 0; i < len; i++) {
-                const key = list[i]
-                const value = params[key]
-                if (value === null || value === '' || key === 'projectId') {
-                    delete params[key]
-                    continue
-                }
-                delete params[key]
-                params[_.snakeCase(key)] = value
-            }
-
-            delete params.projectId
-
-            // return http.get(`/api/projects/cluster?invoke=getNodeMetrics`, {
-            return http.get(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/metrics/node/?${json2Query(params)}`,
-                params,
-                config
-            )
-        },
-
-        /**
          * 集群总览页面获取下面三个圈的数据
          *
          * @param {Object} context store 上下文对象
@@ -351,40 +308,6 @@ export default {
             // return http.get(`/app/cluster?invoke=getNodeList&${json2Query(params)}&${projectId}&${clusterId}`, params, config)
             return http.get(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster_nodes/${clusterId}?with_containers=1&${json2Query(params)}`,
-                params,
-                config
-            )
-        },
-
-        /**
-         * 集群 节点列表获取数据，过滤节点，支持标签和ip
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getNodeListByLabelAndIp (context, params, config = {}) {
-            const projectId = params.projectId
-            const clusterId = params.clusterId
-            delete params.projectId
-            delete params.clusterId
-
-            if (!params.ip) {
-                delete params.ip
-            }
-            if (!params.labels || !params.labels.length) {
-                delete params.labels
-            }
-
-            // return http.post(
-            //     `/app/cluster?invoke=getNodeListByLabelAndIp&${json2Query(params)}&${projectId}&${clusterId}`,
-            //     params,
-            //     config
-            // )
-            return http.post(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/`,
                 params,
                 config
             )
@@ -477,10 +400,10 @@ export default {
             )
         },
         batchUpdateNodeStatus (context, params, config = {}) {
-            const { projectId, clusterId, ipList, status } = params
+            const { projectId, clusterId, nodeNameList, status } = params
             return http.put(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
-                { inner_ip_list: ipList, status },
+                `${DEVOPS_BCS_API_URL}/api/cluster_mgr/projects/${projectId}/clusters/${clusterId}/nodes/schedule_status/`,
+                { node_name_list: nodeNameList, status },
                 config
             )
         },
@@ -501,27 +424,6 @@ export default {
 
             return http.post(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/reinstall/`,
-                params,
-                config
-            )
-        },
-
-        /**
-         * 节点列表添加节点
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        addNode (context, params, config = {}) {
-            const { projectId, clusterId } = params
-            delete params.projectId
-            delete params.clusterId
-            // return http.get(`/app/cluster?invoke=addNode&${json2Query(params)}&${projectId}&${clusterId}`, params, config)
-            return http.post(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster_nodes/${clusterId}`,
                 params,
                 config
             )
@@ -625,13 +527,13 @@ export default {
             // return http.put(`/api/projects/cluster?invoke=updateNodeStatus`, params).then(response => {
             //     return response.data
             // })
-            const { projectId, clusterId, nodeIP } = params
+            const { projectId, clusterId, nodeName, status } = params
             delete params.projectId
             delete params.clusterId
-            delete params.nodeIP
+            delete params.nodeName
             return http.put(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster/${clusterId}/node/${nodeIP}`,
-                params,
+                `${DEVOPS_BCS_API_URL}/api/cluster_mgr/projects/${projectId}/clusters/${clusterId}/nodes/schedule_status/`,
+                { node_name_list: nodeName, status },
                 config
             )
         },
@@ -675,23 +577,6 @@ export default {
         },
 
         /**
-         * 集群初始化查看日志以及初始化失败查看日志接口
-         *
-         * @param {Object} context store 上下文对象
-         * @param {string} projectId 项目 id
-         * @param {string} clusterId 集群 id
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getClusterLogs (context, { projectId, clusterId }, config = {}) {
-            // return http.get(`/app/cluster?invoke=getClusterLogs`
-            return http.get(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster/${clusterId}/logs`, {}, config
-            )
-        },
-
-        /**
          * 节点详情页面 下方容器选项卡 表格数据接口
          *
          * @param {Object} context store 上下文对象
@@ -705,24 +590,6 @@ export default {
         getNodeContainerList (context, { projectId, clusterId, nodeId }, config = {}) {
             return http.get(
                 `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster/${clusterId}/node/containers/?res_id=${nodeId}`,
-                {},
-                config
-            )
-        },
-
-        /**
-         * 删除集群
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        deleteCluster (context, { projectId, clusterId }, config = {}) {
-            // return http.delete(`/api/projects/cluster?invoke=deleteCluster`).then(response => response.data)
-            return http.delete(
-                `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/cluster/${clusterId}/opers/`,
                 {},
                 config
             )
@@ -761,34 +628,6 @@ export default {
                 {},
                 config
             )
-        },
-
-        /**
-         * 创建或更新节点标签
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        updateLabel (context, params, config = {}) {
-            const projectId = params.projectId
-            delete params.projectId
-            return http.post(`${DEVOPS_BCS_API_URL}/api/projects/${projectId}/node_label_info/`, params, config)
-        },
-
-        /**
-         * 获取集群信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getClusterInfo (context, { projectId, clusterId }, config = {}) {
-            return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/info/`, {}, config)
         },
 
         /**
@@ -1411,6 +1250,28 @@ export default {
         async getNodeTaints (context, params = {}, config = {}) {
             const data = await getNodeTaints(params, config).catch(() => ({}))
             return data
+        },
+
+        /**
+         * 获取园区列表
+         * @param {String} projectId 项目ID
+         * @param {String} region 所属地域
+         */
+        async getZoneList (context, { projectId, region }, config = {}) {
+            return http.get(
+                `${DEVOPS_BCS_API_URL}/api/hosts/projects/${projectId}/zones/?region=${region}`,
+                config
+            )
+        },
+
+        /**
+         * 获取数据盘类型列表
+         */
+        async getDiskTypeList (context, { projectId }, config = {}) {
+            return http.get(
+                `${DEVOPS_BCS_API_URL}/api/hosts/projects/${projectId}/disk_types/`,
+                config
+            )
         }
     }
 }

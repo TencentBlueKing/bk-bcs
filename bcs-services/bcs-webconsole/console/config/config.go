@@ -14,23 +14,45 @@
 package config
 
 import (
+	"sync"
+
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
 // Configurations : manage all configurations
 type Configurations struct {
-	Base       *BaseConf       `yaml:"base_conf"`
-	Logging    *LogConf        `yaml:"logging"`
-	BCS        *BCSConf        `yaml:"bcs_conf"`
-	Redis      *RedisConf      `yaml:"redis"`
-	WebConsole *WebConsoleConf `yaml:"webconsole"`
-	Web        *WebConf        `yaml:"web"`
+	mtx         sync.Mutex
+	Base        *BaseConf                  `yaml:"base_conf"`
+	Auth        *AuthConf                  `yaml:"auth_conf"`
+	BkLogin     *BKLoginConf               `yaml:"bklogin_conf"`
+	Logging     *LogConf                   `yaml:"logging"`
+	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
+	BCS         *BCSConf                   `yaml:"bcs_conf"`
+	BCSCC       *BCSCCConf                 `yaml:"bcs_cc_conf"`
+	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
+	Credentials map[string][]*Credential   `yaml:"-"`
+	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
+	Redis       *RedisConf                 `yaml:"redis"`
+	WebConsole  *WebConsoleConf            `yaml:"webconsole"`
+	Web         *WebConf                   `yaml:"web"`
 }
 
 // ReadFrom : read from file
 func (c *Configurations) Init() error {
 	c.Base = &BaseConf{}
 	c.Base.Init()
+
+	// Auth Config
+	c.Auth = &AuthConf{}
+	c.Auth.Init()
+
+	// BkLogin Config
+	c.BkLogin = &BKLoginConf{}
+	c.BkLogin.Init()
+
+	c.BKAPIGW = &BKAPIGWConf{}
+	c.BKAPIGW.Init()
 
 	// logging
 	c.Logging = &LogConf{}
@@ -40,16 +62,30 @@ func (c *Configurations) Init() error {
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
 
+	// BCS-CC Config
+	c.BCSCC = &BCSCCConf{}
+	c.BCSCC.Init()
+
+	c.BCSEnvConf = []*BCSConf{}
+	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
+
 	c.Redis = &RedisConf{}
 	c.Redis.Init()
 
 	c.WebConsole = &WebConsoleConf{}
 	c.WebConsole.Init()
 
+	c.Credentials = map[string][]*Credential{}
+
 	c.Web = &WebConf{}
 	c.Web.Init()
 
 	return nil
+}
+
+// IsDevMode 是否本地开发模式
+func (c *Configurations) IsDevMode() bool {
+	return c.Base.RunEnv == DevEnv
 }
 
 // G : Global Configurations
@@ -60,10 +96,56 @@ func init() {
 	G.Init()
 }
 
+func (c *Configurations) ReadCred(name string, content []byte) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	cred := []*Credential{}
+	err := yaml.Unmarshal(content, &cred)
+	if err != nil {
+		return err
+	}
+	c.Credentials[name] = cred
+	for _, v := range c.Credentials[name] {
+		if err := v.InitCred(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ValidateCred 校验凭证是否合法
+func (c *Configurations) ValidateCred(credType CredentialType, credName string, scopeType ScopeType, scopeValue string) bool {
+	for _, creds := range c.Credentials {
+		for _, cred := range creds {
+			if cred.Matches(credType, credName, scopeType, scopeValue) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// IsManager 校验固定的 manager 和 集群维度动态凭证
+func (c *Configurations) IsManager(username, clusterId string) bool {
+	if _, ok := c.Base.ManagerMap[username]; ok {
+		return true
+	}
+
+	if c.ValidateCred(CredentialManager, username, ScopeClusterId, clusterId) {
+		return true
+	}
+
+	return false
+}
+
 // ReadFrom : read from file
 func (c *Configurations) ReadFrom(content []byte) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
 	if len(content) == 0 {
-		panic("conf content is empty, will use default values")
+		return errors.New("conf content is empty, will use default values")
 	}
 
 	err := yaml.Unmarshal(content, &G)
@@ -71,5 +153,24 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 	c.Logging.InitBlog()
+	c.Base.InitManagers()
+
+	// 把列表类型转换为map，方便检索
+	for _, conf := range c.BCSEnvConf {
+		c.BCSEnvMap[conf.ClusterEnv] = conf
+	}
+
+	if err := c.WebConsole.InitTagPatterns(); err != nil {
+		return err
+	}
+
+	if err := c.BCS.InitJWTPubKey(); err != nil {
+		return err
+	}
+
+	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
+		return err
+	}
+
 	return nil
 }

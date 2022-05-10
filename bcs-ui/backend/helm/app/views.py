@@ -18,8 +18,6 @@ import logging
 import os
 import tempfile
 from datetime import datetime, timedelta
-from itertools import groupby
-from operator import itemgetter
 
 import yaml
 from django.conf import settings
@@ -32,13 +30,16 @@ from jinja2 import Template
 from rest_framework import viewsets
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components import paas_cc
+from backend.components.base import ComponentAuth
 from backend.components.bcs import k8s
+from backend.components.paas_cc import PaaSCCClient
+from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.misc.bke_client.client import BCSClusterCredentialsNotFound, BCSClusterNotFound
 from backend.helm.app.repo import get_or_create_private_repo
 from backend.helm.app.serializers import FilterNamespacesSLZ
@@ -48,11 +49,17 @@ from backend.helm.helm.models.chart import ChartVersion
 from backend.helm.helm.providers.repo_provider import add_plain_repo, add_platform_public_repos, add_repo
 from backend.helm.helm.serializers import ChartVersionSLZ
 from backend.helm.permissions import check_cluster_perm
+from backend.helm.releases.utils.release_secret import RecordReleases
 from backend.helm.toolkit.diff import parser
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.kube_core.toolkit.dashboard_cli.exceptions import DashboardError, DashboardExecutionError
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.utils import client as bcs_utils_client
 from backend.utils.errcodes import ErrorCode
+from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 from backend.utils.views import AccessTokenMixin, ActionSerializerMixin, AppMixin, ProjectMixin, with_code_wrapper
 
 from .models import App
@@ -122,26 +129,42 @@ class AppView(ActionSerializerMixin, AppViewBase):
             return True
         return False
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.VIEW, NamespaceScopedAction.UPDATE, NamespaceScopedAction.DELETE],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def list(self, request, project_id, *args, **kwargs):
         """"""
         project_cluster = self.get_project_cluster(request, project_id)
         qs = self.get_queryset()
         # 获取过滤参数
         params = request.query_params
+        # 集群和命名空间必须传递
         cluster_id = params.get('cluster_id')
         namespace = params.get("namespace")
+        # TODO: 先写入db中，防止前端通过ID，获取数据失败；后续通过helm服务提供API
+        if cluster_id:
+            try:
+                ctx_cluster = CtxCluster.create(
+                    id=cluster_id, token=request.user.token.access_token, project_id=project_id
+                )
+                RecordReleases(ctx_cluster, namespace).record()
+            except Exception as e:
+                logger.error("获取集群内release数据失败，%s", e)
+
         if cluster_id:
             qs = qs.filter(cluster_id=cluster_id)
         if namespace:
             if not cluster_id:
                 raise ValidationError(_("命名空间作为过滤参数时，需要提供集群ID"))
             qs = qs.filter(namespace=namespace)
-
         # 获取返回的数据
         slz = ReleaseListSLZ(qs, many=True)
         data = slz.data
 
         # do fix on the data which version is emtpy
+        iam_ns_ids = []
         app_list = []
         for item in data:
             # 过滤掉k8s系统和bcs平台命名空间下的release
@@ -149,6 +172,10 @@ class AppView(ActionSerializerMixin, AppViewBase):
                 continue
             cluster_info = project_cluster.get(item['cluster_id']) or {'name': item['cluster_id']}
             item['cluster_name'] = cluster_info['name']
+
+            item['iam_ns_id'] = calc_iam_ns_id(item['cluster_id'], item['namespace'])
+            iam_ns_ids.append({'iam_ns_id': item['iam_ns_id']})
+
             item['cluster_env'] = settings.CLUSTER_ENV_FOR_FRONT.get(cluster_info.get('environment'))
             item["current_version"] = item.pop("version")
             if not item["current_version"]:
@@ -173,7 +200,16 @@ class AppView(ActionSerializerMixin, AppViewBase):
             app_list.append(item)
 
         result = {"count": len(app_list), "next": None, "previous": None, "results": app_list}
-        return Response(data=result)
+        try:
+            ns_request = NamespaceRequest(project_id=project_id, cluster_id=cluster_id)
+        except TypeError:
+            return Response(result)
+        else:
+            return PermsResponse(
+                data=result,
+                resource_request=ns_request,
+                resource_data=iam_ns_ids,
+            )
 
     def retrieve(self, request, *args, **kwargs):
         app_id = self.request.parser_context["kwargs"]["app_id"]
@@ -237,55 +273,32 @@ class AppRollbackView(AppViewBase):
     serializer_class = AppRollbackSLZ
 
 
-@with_code_wrapper
 class AppNamespaceView(AccessTokenMixin, ProjectMixin, viewsets.ReadOnlyModelViewSet):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
     serializer_class = NamespaceSLZ
 
-    def filter_namespaces(self, filter_use_perm):
+    def filter_namespaces(self, cluster_id: str):
+        paas_cc = PaaSCCClient(auth=ComponentAuth(self.access_token))
+        ns_data = paas_cc.get_cluster_namespace_list(project_id=self.project_id, cluster_id=cluster_id)
+        ns_list = ns_data['results'] or []
 
-        result = paas_cc.get_namespace_list(self.access_token, self.project_id, desire_all_data=True)
-        results = result["data"]["results"]
-        if not results:
-            return []
-        # 补充cluster_name字段
-        cluster_ids = [i['cluster_id'] for i in results]
-        cluster_list = paas_cc.get_cluster_list(self.access_token, self.project_id, cluster_ids).get('data') or []
-        # cluster_list = bcs_perm.Cluster.hook_perms(request, project_id, cluster_list)
-        cluster_dict = {i['cluster_id']: i for i in cluster_list}
+        # 过滤掉 k8s 系统和 bcs 平台使用的命名空间
+        return [ns for ns in ns_list if ns['name'] not in K8S_PLAT_NAMESPACE]
 
-        filter_ns_list = []
-        for i in results:
-            # 过滤掉k8s系统和bcs平台使用的命名空间
-            if i["name"] in K8S_PLAT_NAMESPACE:
-                continue
-            # ns_vars = NameSpaceVariable.get_ns_vars(i['id'], project_id)
-            i['ns_vars'] = []
-
-            if i['cluster_id'] in cluster_dict:
-                i['cluster_name'] = cluster_dict[i['cluster_id']]['name']
-                i['environment'] = cluster_dict[i['cluster_id']]['environment']
-            else:
-                i['cluster_name'] = i['cluster_id']
-                i['environment'] = None
-            filter_ns_list.append(i)
-
-        perm = bcs_perm.Namespace(self.request, self.project_id, bcs_perm.NO_RES)
-        results = perm.hook_perms(filter_ns_list, filter_use=filter_use_perm)
-        return results
-
+    @response_perms(
+        action_ids=[NamespaceScopedAction.USE], permission_cls=NamespaceScopedPermission, resource_id_key='iam_ns_id'
+    )
     def list(self, request, project_id):
         slz = FilterNamespacesSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         params = slz.validated_data
 
-        ns_list = self.filter_namespaces(params.get("filter_use_perm"))
+        cluster_id = params["cluster_id"]
+        ns_list = self.filter_namespaces(cluster_id)
+
         if not ns_list:
             return Response([])
-        cluster_id = params.get("cluster_id")
-        if cluster_id:
-            ns_list = [info for info in ns_list if info["cluster_id"] == cluster_id]
 
-        cluster_id_name_map = {item["cluster_id"]: item["cluster_name"] for item in ns_list}
         # check which namespace has the chart_id initialized
         namespace_ids = []
         chart_id = params.get("chart_id")
@@ -298,17 +311,12 @@ class AppNamespaceView(AccessTokenMixin, ProjectMixin, viewsets.ReadOnlyModelVie
 
         serializer = self.serializer_class(ns_list, many=True)
         data = serializer.data
-        for item in data:
-            has_initialized = item["id"] in namespace_ids
-            item["has_initialized"] = has_initialized
 
-        # Sort by the desired field first
-        data.sort(key=itemgetter('cluster_id'))
-        # Iterate in groups
-        result = []
-        for cluster_id, items in groupby(data, key=itemgetter('cluster_id')):
-            result.append({"name": "%s(%s)" % (cluster_id_name_map[cluster_id], cluster_id), "children": list(items)})
-        return Response(result)
+        for item in data:
+            item["has_initialized"] = item["id"] in namespace_ids
+            item['iam_ns_id'] = calc_iam_ns_id(cluster_id, item['name'])
+
+        return PermsResponse(data, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
 
 @with_code_wrapper
@@ -522,7 +530,7 @@ class ClusterHelmInitView(ClusterImporterView):
                 },
             }
             english_name = project['data']['english_name']
-            url = '%s/chartrepo/%s/' % (settings.HELM_MERELY_REPO_URL, english_name)
+            url = '%s/chartrepo/%s/' % (settings.HELM_REPO_DOMAIN, english_name)
             private_repo = add_plain_repo(
                 target_project_id=project_id, name=english_name, url=url, repo_auth=repo_auth
             )
@@ -844,8 +852,6 @@ class HowToPushHelmChartView(SystemViewSet):
 class ContainerRegistryDomainView(AccessTokenMixin, ProjectMixin, viewsets.ViewSet):
     def retrieve(self, request, project_id, *args, **kwargs):
         cluster_id = request.query_params.get("cluster_id")
-
-        check_cluster_perm(user=request.user, project_id=project_id, cluster_id=cluster_id, request=request)
 
         # 获取镜像地址
         jfrog_domain = paas_cc.get_jfrog_domain(

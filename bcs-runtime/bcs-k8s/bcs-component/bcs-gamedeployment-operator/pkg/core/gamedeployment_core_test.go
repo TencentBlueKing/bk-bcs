@@ -176,17 +176,17 @@ func TestNewVersionedPods(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			control := New(test.updateGD)
-			expectedPods, err := control.NewVersionedPods(test.currentGD, test.updateGD, test.currentRevision,
-				test.updateRevision, test.expectedCreations, test.expectedCurrentCreations, test.availableIDs,
-				test.availableIndex)
-			if err != test.expectedErr {
+	for _, s := range tests {
+		t.Run(s.name, func(t *testing.T) {
+			control := New(s.updateGD)
+			expectedPods, err := control.NewVersionedPods(s.currentGD, s.updateGD, s.currentRevision,
+				s.updateRevision, s.expectedCreations, s.expectedCurrentCreations, s.availableIDs,
+				s.availableIndex)
+			if err != s.expectedErr {
 				t.Error("not expected error")
 			}
-			if !reflect.DeepEqual(expectedPods, test.expectedPods) {
-				t.Errorf("expected %v, but got %v", test.expectedPods, expectedPods)
+			if !reflect.DeepEqual(expectedPods, s.expectedPods) {
+				t.Errorf("expected %v, but got %v", s.expectedPods, expectedPods)
 			}
 		})
 	}

@@ -17,8 +17,6 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from django.conf import settings
-
 from backend.resources.hpa.utils import HPAMetricsParser
 from backend.resources.utils.format import ResourceDefaultFormatter
 from backend.templatesets.legacy_apps.instance import constants as instance_constants
@@ -109,11 +107,9 @@ def sort_by_normalize_transition_time(conditions: List[Condition]) -> List[Condi
 
 
 class HPAFormatter(ResourceDefaultFormatter):
-    def __init__(self, cluster_id: str, project_code: str, cluster_name: str, cluster_env: str) -> Dict:
+    def __init__(self, cluster_id: str, project_code: str):
         self.cluster_id = cluster_id
         self.project_code = project_code
-        self.cluster_name = cluster_name
-        self.cluster_env = cluster_env
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         labels = resource_dict.get("metadata", {}).get("labels") or {}
@@ -126,9 +122,7 @@ class HPAFormatter(ResourceDefaultFormatter):
 
         annotations = resource_dict.get("metadata", {}).get("annotations") or {}
         namespace = resource_dict["metadata"]["namespace"]
-        deployment_name = resource_dict["spec"]["scaleTargetRef"]["name"]
 
-        deployment_link = f"{settings.DEVOPS_HOST}/console/bcs/{self.project_code}/app/deployments/{deployment_name}/{namespace}/deployment?cluster_id={self.cluster_id}"  # noqa
         current_metrics = get_current_metrics(resource_dict)
 
         # k8s 注意需要调用 autoscaling/v2beta2 版本 api
@@ -136,8 +130,6 @@ class HPAFormatter(ResourceDefaultFormatter):
         conditions = sort_by_normalize_transition_time(conditions)
 
         data = {
-            "cluster_name": self.cluster_name,
-            "environment": self.cluster_env,
             "cluster_id": self.cluster_id,
             "name": resource_dict["metadata"]["name"],
             "namespace": namespace,
@@ -150,8 +142,8 @@ class HPAFormatter(ResourceDefaultFormatter):
             "source_type": application_constants.SOURCE_TYPE_MAP.get(source_type),
             "creator": annotations.get(instance_constants.ANNOTATIONS_CREATOR, ""),
             "create_time": annotations.get(instance_constants.ANNOTATIONS_CREATE_TIME, ""),
-            "deployment_name": deployment_name,
-            "deployment_link": deployment_link,
+            "ref_name": getitems(resource_dict, "spec.scaleTargetRef.name", ""),
+            "ref_kind": getitems(resource_dict, "spec.scaleTargetRef.kind", ""),
         }
 
         data["update_time"] = annotations.get(instance_constants.ANNOTATIONS_UPDATE_TIME, data["create_time"])
@@ -160,7 +152,7 @@ class HPAFormatter(ResourceDefaultFormatter):
 
 
 class HPAFormatter4Dashboard(ResourceDefaultFormatter):
-    """ HPA 格式化（资源视图用）"""
+    """HPA 格式化（资源视图用）"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         res = self.format_common_dict(resource_dict)

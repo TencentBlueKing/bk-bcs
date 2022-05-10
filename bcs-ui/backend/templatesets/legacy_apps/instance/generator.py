@@ -28,15 +28,14 @@ import re
 import shlex
 import uuid
 from collections import OrderedDict
+from typing import List
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
-from backend.apps.ticket.models import TlsCert
 from backend.components import paas_cc
-from backend.components.ticket import TicketClient
 from backend.container_service.projects.base.constants import ProjectKindName
 from backend.resources.constants import K8sServiceTypes
 from backend.templatesets.legacy_apps.instance import constants as instance_constants
@@ -93,16 +92,25 @@ HANDLED_NUM_VAR_PATTERN = re.compile(r"%s}" % NUM_VAR_PATTERN)
 k8s_res_mapping = OrderedDict()
 
 
-def is_use_bcs_registry(origin_image, bcs_registry_list):
-    bcs_registry_list.append(settings.DEVOPS_ARTIFACTORY_HOST)
-    registry_list = [registry.split(":")[0] for registry in bcs_registry_list]
+def is_use_bcs_registry(origin_image: str, bcs_registry_list: List[str]) -> bool:
+    registry_list = [registry.split(":")[0] for registry in bcs_registry_list if registry]
     for r in registry_list:
         if r in origin_image:
             return True
     return False
 
 
-def generate_image_str(origin_image, default_registry, bcs_registry_list):
+def generate_image_str(origin_image: str, default_registry: str, bcs_registry_list: List[str]) -> str:
+    """
+    按规则生成最终的镜像值. 目的是统一所用到的 bcs 镜像仓库 domain
+
+    @param: origin_image: 原始镜像值
+    @param: default_registry: bcs 统一的镜像仓库 domain
+    @param: bcs_registry_list: bcs 所有支持过的镜像仓库 domain
+
+    TODO 重新梳理表单模板集的镜像组成规则, 并将这段特殊逻辑从 github 仓库中废弃掉
+    """
+    bcs_registry_list.append(settings.DEVOPS_ARTIFACTORY_HOST)
     if not is_use_bcs_registry(origin_image, bcs_registry_list):
         return origin_image
 
@@ -171,16 +179,6 @@ class ProfileGenerator:
             resource_kind = name_list[2]
             log_config = self.handle_application_log_config(application_id, container_name, resource_kind)
             return self.handle_db_config(log_config)
-        # k8s ingress 生成的 secret
-        is_k8s_ingress_srt = True if str(self.resource_id).find(INGRESS_ID_SEPARATOR) >= 0 else False
-        if self.resource_name in ["K8sSecret"] and is_k8s_ingress_srt:
-            name_list = str(self.resource_id).split(INGRESS_ID_SEPARATOR)
-            cert_id = name_list[1]
-            ingress_id = name_list[0]
-            ingress_type = name_list[2]
-            cert_type = name_list[3]
-            srt_config = self.handle_k8s_ingress_srt(cert_id, ingress_id, ingress_type, cert_type)
-            return self.handle_db_config(srt_config)
 
         try:
             self.resource = MODULE_DICT.get(self.resource_name).objects.get(id=self.resource_id)
@@ -327,51 +325,6 @@ class ProfileGenerator:
             log_config["data"] = {log_key: json.dumps(log_content)}
 
         return log_config
-
-    def handle_k8s_ingress_srt(self, cert_id, ingress_id, ingress_type, cert_type):
-        ingress = MODULE_DICT.get(ingress_type).objects.get(id=ingress_id)
-        ingress_name = ingress.name
-
-        project_code = self.context["SYS_PROJECT_CODE"]
-        self.resource_show_name = get_secret_name_by_certid(cert_id, ingress_name)
-        if cert_type == "bcstls":
-            try:
-                tls_cert = TlsCert.objects.get(id=cert_id)
-                crt_content = tls_cert.cert
-                key_content = tls_cert.key
-            except Exception:
-                raise ValidationError(
-                    "Ingress{ingress_name}{prefix_msg} TLS {cert}(id:{cert_id}){suffix_msg}".format(
-                        ingress_name=ingress_name,
-                        prefix_msg=_("中使用的"),
-                        cert=_("证书"),
-                        cert_id=cert_id,
-                        suffix_msg=_("不存在"),
-                    )
-                )
-        else:
-            try:
-                client = TicketClient(self.project_id, project_code)
-                crt_content = client.get_tls_crt_content(cert_id)
-                key_content = client.get_tls_key_content(cert_id)
-            except Exception as e:
-                message = "Ingress{ingress_name}{prefix_msg} TLS {cert}(id:{cert_id}){suffix_msg}:{e}".format(
-                    ingress_name=ingress_name,
-                    prefix_msg=_("中使用的"),
-                    cert=_("证书"),
-                    cert_id=cert_id,
-                    suffix_msg=_("异常"),
-                    e=e,
-                )
-                raise ValidationError(message)
-
-        srt_config = {
-            "data": {"tls.crt": crt_content, "tls.key": key_content},
-            "kind": "Secret",
-            "metadata": {"name": self.resource_show_name},
-            "type": "kubernetes.io/tls",
-        }
-        return srt_config
 
     def inject_labels_for_monitor(self, labels, resource_kind, name):
         # labels
@@ -572,13 +525,6 @@ class K8sIngressGenerator(K8sProfileGenerator):
         # 根据证书获取secretName
         tls_list = db_config.get("spec", {}).get("tls", [])
         for _tls in tls_list:
-            cert_id = _tls.get("certId")
-            if cert_id:
-                secret_name = get_secret_name_by_certid(cert_id, self.resource_show_name)
-                _tls["secretName"] = secret_name
-            remove_key(_tls, "certId")
-            remove_key(_tls, "certType")
-
             # 移除 host 里面为空的项目（前端的占位符)
             if "hosts" in _tls:
                 _tls_host = _tls["hosts"]
@@ -775,7 +721,7 @@ class K8sDeploymentGenerator(K8sProfileGenerator):
                 remove_key(_c, "imageVersion")
 
                 _c["image"] = generate_image_str(
-                    _c.get("image"), self.context["SYS_JFROG_DOMAIN"], self.context["SYS_IMAGE_REGISTRY_LIST"]
+                    _c.get("image"), self.context["SYS_JFROG_DOMAIN"], self.context["SYS_IMAGE_REGISTRY_LIST"][:]
                 )
 
                 # 2.1 启动命令和参数用 shellhex 命令处理为数组
@@ -1053,9 +999,13 @@ class K8sStatefulSetGenerator(K8sDeploymentGenerator):
             remove_key(db_config["spec"], "volumeClaimTemplates")
 
         # 获取关联的Service
-        service_app = VersionedEntity.get_k8s_service_by_statefulset_id(self.version_id, self.resource_id)
-        service_name = service_app.name
-        db_config["spec"]["serviceName"] = service_name
+        try:
+            service_app = VersionedEntity.get_k8s_service_by_statefulset_id(self.version_id, self.resource_id)
+            service_name = service_app.name
+            db_config["spec"]["serviceName"] = service_name
+        except ValidationError:
+            # 去除对 serviceName 的强制校验
+            db_config['spec']['serviceName'] = ''
 
         # OnDelete 时删除 rollingUpdate
         update_strategy = db_config["spec"]["updateStrategy"]

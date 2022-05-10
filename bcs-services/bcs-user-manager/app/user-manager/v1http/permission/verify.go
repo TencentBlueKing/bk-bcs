@@ -123,6 +123,11 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(user, action string,
 
 	switch verifyType {
 	case clusterScopedType:
+		// clusterScopedType nonResourceRequest will just skip
+		if !requestInfo.IsResourceRequest {
+			blog.V(4).Infof("verifyUserClusterScopedPermission skip nonResourceRequest[%s]", requestInfo.Path)
+			return true, nil
+		}
 		clusterScopedAllow, err := cli.verifyUserClusterScopedPermission(user, action, resource)
 		if err != nil {
 			blog.Errorf("verifyUserClusterScopedPermission failed: %v", err)
@@ -458,6 +463,28 @@ func buildK8sOperationLog(user string, resource ClusterResource, info *parser.Re
 		OpUser:    user,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+	}
+	err := sqlstore.CreateOperationLog(log)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func buildAdminOperationLog(user string, req VerifyPermissionReq) error {
+	const (
+		MessageTemplate = "管理员用户[%s]操作[%s]资源类型[%s]资源[%s]allow[%v]"
+	)
+
+	log := &models.BcsOperationLog{
+		ClusterType: req.ResourceType,
+		ClusterID:   req.Resource,
+		Path:        req.RequestURL,
+		Message:     fmt.Sprintf(MessageTemplate, user, req.Action, req.ResourceType, req.Resource, true),
+		OpUser:      user,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	err := sqlstore.CreateOperationLog(log)
 	if err != nil {

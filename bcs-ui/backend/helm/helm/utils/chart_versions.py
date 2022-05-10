@@ -58,7 +58,7 @@ class RepoAuth:
 
 def get_chart_version_list(chart_data: ChartData, repo_auth: RepoAuth) -> List[str]:
     """获取 chart 对应的版本列表"""
-    client = BkRepoClient(repo_auth.username, password=repo_auth.password)
+    client = BkRepoClient(username=repo_auth.username, password=repo_auth.password)
     chart_versions = client.get_chart_versions(**asdict(chart_data))
     # 如果不为列表，则返回为空
     if isinstance(chart_versions, list):
@@ -76,7 +76,7 @@ def delete_chart_version(chart_data: ChartData, client: BkRepoClient, version: s
 def batch_delete_chart_versions(chart_data: ChartData, repo_auth: RepoAuth, versions: List[str]):
     """批量删除chart版本"""
     # 组装并发任务
-    client = BkRepoClient(repo_auth.username, password=repo_auth.password)
+    client = BkRepoClient(username=repo_auth.username, password=repo_auth.password)
     delete_version = functools.partial(delete_chart_version, chart_data, client)
     tasks = [functools.partial(delete_version, version) for version in versions]
     async_run(tasks)

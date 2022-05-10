@@ -42,6 +42,10 @@ func newtask() *Task {
 
 	// init qcloud cluster-manager task, may be call bkops interface to call extra operation
 
+	// import task
+	task.works[importClusterNodesTask] = tasks.ImportClusterNodesTask
+	task.works[registerClusterKubeConfigTask] = tasks.RegisterClusterKubeConfigTask
+
 	// create cluster task
 	task.works[createClusterShieldAlarmTask] = tasks.CreateClusterShieldAlarmTask
 	task.works[createTKEClusterTask] = tasks.CreateTkeClusterTask
@@ -219,6 +223,90 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	task.CommonParams["operator"] = opt.Operator
 	task.CommonParams["user"] = opt.Operator
 	task.CommonParams["JobType"] = cloudprovider.CreateClusterJob.String()
+
+	return task, nil
+}
+
+// BuildImportClusterTask build import cluster task
+func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
+	// import cluster currently only has two steps:
+	// 0. import cluster: call TKEInterface import cluster master and node instances from cloud(clusterID or kubeConfig)
+	// 1. internal install bcs-k8s-watch & agent service; external import qcloud kubeConfig
+	// may be need to call external previous or behind operation by bkops
+
+	// validate request params
+	if cls == nil {
+		return nil, fmt.Errorf("BuildImportClusterTask cluster info empty")
+	}
+	if opt == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("BuildImportClusterTask TaskOptions is lost")
+	}
+
+	//init task information
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.ImportCluster),
+		TaskName:       "纳管TKE集群",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      cls.ClusterID,
+		ProjectID:      cls.ProjectID,
+		Creator:        opt.Operator,
+		Updater:        opt.Operator,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+
+	// preAction bkops
+
+	// setting all steps details
+	// step0: import cluster nodes step
+	importNodesStep := &proto.Step{
+		Name:       importClusterNodesTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: importClusterNodesTask,
+		TaskName:   "导入集群节点",
+	}
+	importNodesStep.Params["ClusterID"] = cls.ClusterID
+	importNodesStep.Params["CloudID"] = cls.Provider
+
+	task.Steps[importClusterNodesTask] = importNodesStep
+	task.StepSequence = append(task.StepSequence, importClusterNodesTask)
+
+	// setting all steps details
+	// step1: import cluster registerKubeConfigStep
+	registerKubeConfigStep := &proto.Step{
+		Name:       registerClusterKubeConfigTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: registerClusterKubeConfigTask,
+		TaskName:   "注册集群kubeConfig认证",
+	}
+	registerKubeConfigStep.Params["ClusterID"] = cls.ClusterID
+	registerKubeConfigStep.Params["CloudID"] = cls.Provider
+
+	task.Steps[registerClusterKubeConfigTask] = registerKubeConfigStep
+	task.StepSequence = append(task.StepSequence, registerClusterKubeConfigTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildImportClusterTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams["operator"] = opt.Operator
+	task.CommonParams["JobType"] = cloudprovider.ImportCluster.String()
 
 	return task, nil
 }

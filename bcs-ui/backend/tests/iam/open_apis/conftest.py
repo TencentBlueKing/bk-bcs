@@ -23,5 +23,9 @@ def patch4resource_api():
     ), mock.patch(
         'backend.iam.open_apis.providers.utils.get_client_access_token',
         new=lambda *args, **kwargs: {"access_token": "test"},
+    ), mock.patch(
+        'backend.iam.open_apis.providers.namespace.get_shared_clusters', new=lambda *args, **kwargs: []
+    ), mock.patch(
+        'backend.iam.open_apis.providers.cluster.get_shared_clusters', new=lambda *args, **kwargs: []
     ):
         yield

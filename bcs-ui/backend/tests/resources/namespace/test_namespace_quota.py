@@ -41,13 +41,13 @@ class TestNamespaceQuota:
         client_obj.create_namespace_quota(TEST_NAMESPACE, {'cpu': '1000m'})
 
     def test_get_namespace_quota(self, client_obj):
-        """ 测试获取 单个 NamespaceQuota """
+        """测试获取 单个 NamespaceQuota"""
         quota = client_obj.get_namespace_quota(TEST_NAMESPACE)
         assert isinstance(quota, dict)
         assert 'hard' in quota
 
     def test_list_namespace_quota(self, client_obj):
-        """ 测试获取 NamespaceQuota 列表 """
+        """测试获取 NamespaceQuota 列表"""
         results = client_obj.list_namespace_quota(TEST_NAMESPACE)
         assert len(results) > 0
 

@@ -1,7 +1,7 @@
 <template>
-    <div :class="systemCls">
+    <div :class="systemCls" id="app">
         <Navigation @create-project="handleCreateProject">
-            <router-view :key="routerKey" v-if="!isLoading && !err" />
+            <router-view :key="routerKey" v-if="!isLoading" />
         </Navigation>
         <!-- 项目创建弹窗 -->
         <ProjectCreate v-model="showCreateDialog" :project-data="null"></ProjectCreate>
@@ -18,15 +18,15 @@
     import SharedClusterTips from '@/components/shared-cluster-tips'
     import BkPaaSLogin from '@blueking/paas-login'
     import { bus } from '@/common/bus'
+    import { userPermsByAction } from '@/api/base'
 
     export default {
         name: 'app',
         components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips },
         data () {
             return {
-                isLoading: false,
-                showCreateDialog: false,
-                err: null
+                isLoading: true,
+                showCreateDialog: false
             }
         },
         computed: {
@@ -36,24 +36,54 @@
                 return this.$store.state.isEn ? `${cls} english` : cls
             },
             routerKey () {
+                // 切换不同界面时刷新路由
                 return this.$route.params.projectCode || ''
-            },
-            curProjectCode () {
-                return this.$store.state.curProjectCode
             },
             width () {
                 return this.$INTERNAL ? 700 : 400
             },
             height () {
                 return this.$INTERNAL ? 510 : 400
+            },
+            projectList () {
+                return this.$store.state.sideMenu.onlineProjectList
             }
         },
         created () {
-            // 权限弹窗弹窗
+            // 异步权限弹窗
+            bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName }) => {
+                if (!this.$refs.bkApplyPerm) return
+                this.$refs.bkApplyPerm.dialogConf.isShow = true
+                this.$refs.bkApplyPerm.isLoading = true
+                const data = await userPermsByAction({
+                    $actionId: $actionId,
+                    perm_ctx: permCtx
+                }).catch(() => ({}))
+                if (data?.perms?.[$actionId]) {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: this.$t('当前操作有权限，请刷新界面')
+                    })
+                    this.$refs.bkApplyPerm.hide()
+                } else {
+                    // eslint-disable-next-line camelcase
+                    this.$refs.bkApplyPerm.applyUrl = data?.perms?.apply_url
+                    this.$refs.bkApplyPerm.actionList = [
+                        {
+                            action_id: $actionId,
+                            resource_name: resourceName
+                        }
+                    ]
+                }
+                
+                this.$refs.bkApplyPerm.isLoading = false
+            })
+            // 权限弹窗
             bus.$on('show-apply-perm-modal', (data) => {
                 if (!data) return
-                this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(this.curProjectCode, data)
+                this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(data)
             })
+            // 登录弹窗
             bus.$on('close-login-modal', () => {
                 window.location.reload()
             })
@@ -71,9 +101,9 @@
             bus.$off('show-apply-perm-modal')
             bus.$off('close-login-modal')
             bus.$off('show-shared-cluster-tips')
+            bus.$off('show-apply-perm-modal-async')
         },
         mounted () {
-            document.title = this.$t('容器服务')
             window.$loginModal = this.$refs.login
         },
         methods: {
@@ -84,9 +114,10 @@
                     this.$store.dispatch('userInfo'),
                     this.$store.dispatch('getProjectList')
                 ]).catch((err) => {
-                    this.err = err
+                    console.error(err)
                 })
                 this.isLoading = false
+                document.title = this.$t('容器服务')
             },
             handleCreateProject () {
                 this.showCreateDialog = true
@@ -98,6 +129,7 @@
     @import '@/css/reset.css';
     @import '@/css/app.css';
     @import '@/css/animation.css';
+    @import '@/fonts/style.css';
 
     .app-container {
         min-width: 1280px;
@@ -136,5 +168,19 @@
         .bk-dialog-style {
             width: 500px;
         }
+    }
+    .text-subtitle {
+        color: #979BA5;
+        font-size: 14px;
+        text-align: center;
+        margin-top: 14px;
+    }
+    .text-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3A84FF;
+        font-size: 14px;
+        margin-top: 12px;
     }
 </style>

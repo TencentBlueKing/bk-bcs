@@ -20,6 +20,7 @@ from backend.utils import healthz
 from backend.utils.views import LoginSuccessView, VueTemplateView
 
 urlpatterns = [
+    url("", include("django_prometheus.urls")),
     url(r"^admin/", admin.site.urls),
     url(r"^api/healthz/", healthz.healthz_view),
     url(r"^api/test/sentry/", healthz.test_sentry),
@@ -52,13 +53,10 @@ urlpatterns = [
     url(r"^", include("backend.uniapps.application.urls")),
     url(r"^", include("backend.bcs_web.audit_log.urls")),
     # 权限验证
-    url(r"^", include("backend.bcs_web.legacy_verify.urls")),
     url(r"^api-auth/", include("rest_framework.urls")),
     # BCS K8S special urls
     url(r"^", include("backend.helm.helm.urls")),
     url(r"^", include("backend.helm.app.urls")),
-    # Ticket凭证管理
-    url(r"^", include("backend.apps.ticket.urls")),
     url(
         r"^api/hpa/projects/(?P<project_id>\w{32})/",
         include(
@@ -105,6 +103,6 @@ except ImportError:
 urlpatterns_vue = [
     # fallback to vue view
     url(r"^login_success.html", never_cache(LoginSuccessView.as_view())),
-    url(r"^(?P<project_code>[\w\-]+)", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
+    url(r"^(?P<project_code>[\w\-]+)?", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
 ]
 urlpatterns += urlpatterns_vue

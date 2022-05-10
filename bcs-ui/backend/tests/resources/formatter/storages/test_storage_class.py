@@ -29,6 +29,6 @@ def storage_class_configs():
 
 class TestStorageClassFormatter:
     def test_format_dict(self, storage_class_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = StorageClassFormatter().format_dict(storage_class_configs['normal'])
         assert set(result.keys()) == {'age', 'createTime', 'updateTime'}

@@ -22,6 +22,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from backend.accounts import bcs_perm
+from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 from backend.utils.basic import RequestClass
 
 from .fixture.template_k8s import K8S_TEMPLATE
@@ -34,12 +35,11 @@ TEMPLATE_DESC = _("这是一款开源的吃豆游戏的配置模板集，您可�
 
 
 def _delete_old_init_templates(template_qsets, project_id, project_code, access_token, username):
-    request = RequestClass(username=username, access_token=access_token, project_code=project_code)
     for template in template_qsets:
         template_id = template.id
-        perm = bcs_perm.Templates(request, project_id, template_id, template.name)
-        perm.can_delete(raise_exception=True)
-        perm.delete()
+
+        perm_ctx = TemplatesetPermCtx(username=username, project_id=project_id, template_id=template_id)
+        TemplatesetPermission().can_delete(perm_ctx)
 
         VersionedEntity.objects.filter(template_id=template_id).delete()
         ShowVersion.objects.filter(template_id=template_id, name='init_version').delete()
@@ -107,10 +107,5 @@ def init_template(project_id, project_code, access_token, username):
         real_version_id=new_ver.id,
         name='init_version',
     )
-
-    # 将模板集注册到权限中心
-    request = RequestClass(username=username, access_token=access_token, project_code=project_code)
-    perm = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-    perm.register(str(init_template.id), str(init_template.name))
 
     logger.info(f'init_template [end] project_id: {project_id}')

@@ -59,9 +59,9 @@ Case = namedtuple('Case', ['username', 'expectation', 'no_auth_nums', 'project_i
 @pytest.fixture(
     params=[
         [roles.ADMIN_USER, does_not_raise(), 0],
-        [roles.ANONYMOUS_USER, pytest.raises(PermissionDeniedError), 8],
-        [roles.NAMESPACE_SCOPED_NO_VIEW_USER, pytest.raises(PermissionDeniedError), 5],
-        [roles.CLUSTER_SCOPED_NO_CLUSTER_USER, pytest.raises(PermissionDeniedError), 8],
+        [roles.ANONYMOUS_USER, pytest.raises(PermissionDeniedError), 10],
+        [roles.NAMESPACE_SCOPED_NO_VIEW_USER, pytest.raises(PermissionDeniedError), 6],
+        [roles.CLUSTER_SCOPED_NO_CLUSTER_USER, pytest.raises(PermissionDeniedError), 10],
     ]
 )
 def case(request, project_id, cluster_id, namespace_name):
@@ -90,4 +90,4 @@ def test_can_not_instantiate_in_cluster(case):
         assert can_apply_in_cluster(perm_ctx)
 
     if exec:
-        assert len(exec.value.data['apply_url']) == case.no_auth_nums
+        assert len(exec.value.data['perms']['apply_url'].split(' and ')) == case.no_auth_nums

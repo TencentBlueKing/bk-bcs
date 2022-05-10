@@ -251,7 +251,7 @@ def fetch_provider(provider_name):
 
 
 def add_platform_public_repos(target_project_id, repo_auth=None):
-    """ 将平台提供的公用集群信息加入 target_project_id 对应的项目中 """
+    """将平台提供的公用集群信息加入 target_project_id 对应的项目中"""
     repo = add_plain_repo(
         url=PUBLIC_REPO_URL, name="public-repo", target_project_id=target_project_id, repo_auth=repo_auth
     )
@@ -260,7 +260,7 @@ def add_platform_public_repos(target_project_id, repo_auth=None):
 
 
 def add_plain_repo(target_project_id, name, url, repo_auth=None):
-    """ 为 target_project_id 对应的项目添加一个 plain 仓库"""
+    """为 target_project_id 对应的项目添加一个 plain 仓库"""
     # TODO support add plain repo with auth info
     repo = add_repo(
         target_project_id=target_project_id,

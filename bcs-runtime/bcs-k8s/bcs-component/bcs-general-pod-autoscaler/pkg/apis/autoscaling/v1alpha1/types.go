@@ -22,7 +22,16 @@ import (
 )
 
 // +genclient
+// +kubebuilder:resource:shortName=gpa
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:printcolumn:JSONPath=.spec.minReplicas,name=MinReplicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.spec.maxReplicas,name=MaxReplicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.desiredReplicas,name=Desired,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.currentReplicas,name=Current,type=integer
+// +kubebuilder:printcolumn:JSONPath=.spec.scaleTargetRef.kind,name=TargetKind,type=string
+// +kubebuilder:printcolumn:JSONPath=.spec.scaleTargetRef.name,name=TargetName,type=string
+// +kubebuilder:subresource:status
+// +k8s:defaulter-gen=true
 
 // GeneralPodAutoscaler is the configuration for a general pod
 // autoscaler, which automatically manages the replica count of any resource
@@ -37,6 +46,7 @@ type GeneralPodAutoscaler struct {
 	// spec is the specification for the behaviour of the autoscaler.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status.
 	// +optional
+	// +kubebuilder:validation:Required
 	Spec GeneralPodAutoscalerSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 
 	// status is the current information about the autoscaler.
@@ -61,6 +71,7 @@ type GeneralPodAutoscalerSpec struct {
 	// metric is configured.  Scaling is active as long as at least one metric value is
 	// available.
 	// +optional
+	// +kubebuilder:default=1
 	MinReplicas *int32 `json:"minReplicas,omitempty" protobuf:"varint,2,opt,name=minReplicas"`
 
 	// maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up.
@@ -74,7 +85,7 @@ type GeneralPodAutoscalerSpec struct {
 	Behavior *GeneralPodAutoscalerBehavior `json:"behavior,omitempty" protobuf:"bytes,4,opt,name=behavior"`
 }
 
-// ExternalAutoScalingDrivenMode defines the mode to trigger auto scaling
+// AutoScalingDrivenMode defines the mode to trigger auto scaling
 type AutoScalingDrivenMode struct {
 	// EventMode is the metric driven mode.
 	// +optional
@@ -137,7 +148,7 @@ type TimeMode struct {
 	TimeRanges []TimeRange `json:"ranges,omitempty" protobuf:"bytes,1,opt,name=ranges"`
 }
 
-// TimeTimeRange is a mode allows user to define a crontab regular
+// TimeRange is a mode allows user to define a crontab regular
 type TimeRange struct {
 	// Schedule should match crontab format
 	Schedule string `json:"schedule,omitempty" protobuf:"bytes,1,opt,name=schedule"`
@@ -148,7 +159,8 @@ type TimeRange struct {
 
 // CrossVersionObjectReference contains enough information to let you identify the referred resource.
 type CrossVersionObjectReference struct {
-	// Kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+	// Kind of the referent;
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
 	Kind string `json:"kind" protobuf:"bytes,1,opt,name=kind"`
 	// Name of the referent; More info: http://kubernetes.io/docs/user-guide/identifiers#names
 	Name string `json:"name" protobuf:"bytes,2,opt,name=name"`
@@ -241,7 +253,7 @@ type GPAScalingRules struct {
 	// - For scale up: 0 (i.e. no stabilization is done).
 	// - For scale down: 300 (i.e. the stabilization window is 300 seconds long).
 	// +optional
-	StabilizationWindowSeconds *int32 `json:"stabilizationWindowSeconds" protobuf:"varint,3,opt,name=stabilizationWindowSeconds"`
+	StabilizationWindowSeconds *int32 `json:"stabilizationWindowSeconds,omitempty" protobuf:"varint,3,opt,name=stabilizationWindowSeconds"`
 	// selectPolicy is used to specify which policy should be used.
 	// If not set, the default value MaxPolicySelect is used.
 	// +optional
@@ -431,14 +443,15 @@ type GeneralPodAutoscalerStatus struct {
 
 	// currentMetrics is the last read state of the metrics used by this autoscaler.
 	// +optional
-	CurrentMetrics []MetricStatus `json:"currentMetrics" protobuf:"bytes,5,rep,name=currentMetrics"`
+	CurrentMetrics []MetricStatus `json:"currentMetrics,omitempty" protobuf:"bytes,5,rep,name=currentMetrics"`
 
 	// conditions is the set of conditions required for this autoscaler to scale its target,
 	// and indicates whether or not those conditions are met.
 	Conditions []GeneralPodAutoscalerCondition `json:"conditions" protobuf:"bytes,6,rep,name=conditions"`
 
 	// LastCronScheduleTime is the schedule time of time mode
-	LastCronScheduleTime *metav1.Time `json:"lastCronScheduleTime" protobuf:"bytes,7,rep,name=lastCronScheduleTime"`
+	// +optional
+	LastCronScheduleTime *metav1.Time `json:"lastCronScheduleTime,omitempty" protobuf:"bytes,7,rep,name=lastCronScheduleTime"`
 }
 
 // GeneralPodAutoscalerConditionType are the valid conditions of

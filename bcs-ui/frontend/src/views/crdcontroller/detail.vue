@@ -47,7 +47,14 @@
                                         <div class="inner-item">
                                             <label class="title">{{$t('版本')}}</label>
                                             <div>
-                                                <bkbcs-input style="width: 250px;" :value="curApp.chart_version || '--'" disabled></bkbcs-input>
+                                                <bcs-select v-model="curApp.chart_version" style="width: 250px;">
+                                                    <bcs-option
+                                                        v-for="(opt, index) in chartVersionsList"
+                                                        :key="index"
+                                                        :name="opt.version"
+                                                        :id="opt.version"
+                                                    ></bcs-option>
+                                                </bcs-select>
                                             </div>
                                         </div>
                                     </div>
@@ -200,7 +207,8 @@
                 curApp: {
                     namespace: ''
                 },
-                namespaceList: []
+                namespaceList: [],
+                chartVersionsList: []
             }
         },
         computed: {
@@ -216,6 +224,7 @@
             this.curClusterId = this.$route.params.clusterId
             this.curCrdId = this.$route.params.id
             this.curCrdName = this.$route.params.name
+            this.chartName = this.$route.params.chartName
 
             if (window.sessionStorage['bcs-crdcontroller']) {
                 const obj = JSON.parse(window.sessionStorage['bcs-crdcontroller'])
@@ -224,6 +233,7 @@
                 }
             }
             this.getCommonCrdInstanceDetail()
+            this.fetchChartVersionsList()
         },
         methods: {
             async getCommonCrdInstanceDetail () {
@@ -238,6 +248,12 @@
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }
+            },
+            async fetchChartVersionsList () {
+                const projectId = this.projectId
+                const chartName = this.chartName
+                const res = await this.$store.dispatch('crdcontroller/getChartVersionsList', { projectId, chartName })
+                this.chartVersionsList = res.data
             },
 
             goBack () {
@@ -289,12 +305,14 @@
 
                 this.updateInstanceLoading = true
                 try {
+                    const curVersion = this.chartVersionsList.find(i => i.version === this.curApp.chart_version)
+                    const chartUrl = curVersion && curVersion.urls[0]
                     const projectId = this.projectId
                     const clusterId = this.curClusterId
                     const crdId = this.curApp.crd_ctr_id
                     const data = {
                         values_content: this.editorOptions.content,
-                        chart_url: this.curApp.chart_url
+                        chart_url: chartUrl
                     }
                     await this.$store.dispatch('crdcontroller/updateCommonCrdInstance', { projectId, clusterId, crdId, data })
                     this.$bkMessage({

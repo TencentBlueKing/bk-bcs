@@ -27,6 +27,8 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log import client
 from backend.components import data, paas_cc
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.resources.workloads.pod.utils import PodStatusParser
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, VersionedEntity
 from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
@@ -64,7 +66,7 @@ DEFAULT_INSTANCE_NUM = 0
 class BaseTaskgroupCls(InstanceAPI):
     def common_handler_for_platform(self, request, project_id, instance_id, project_kind, field=None):
         """公共信息的处理"""
-        # 获取instnace info
+        # 获取instance info
         inst_info = self.get_instance_info(instance_id)
         # 获取namespace
         curr_inst = inst_info[0]
@@ -76,9 +78,7 @@ class BaseTaskgroupCls(InstanceAPI):
         namespace = metadata.get("namespace")
         name = metadata.get("name")
         # 添加权限
-        self.bcs_single_app_perm_handler(
-            request, project_id, labels.get("io.tencent.paas.templateid"), curr_inst.namespace
-        )
+        self.validate_view_perms(request, project_id, labels.get("io.tencent.paas.templateid"), curr_inst.namespace)
         return cluster_id, namespace, [name], curr_inst.category
 
     def common_handler_for_client(self, request, project_id):
@@ -151,7 +151,7 @@ class QueryAllTaskgroups(BaseTaskgroupCls):
             message, reason = self.get_pod_conditions(condition)
             item.update(
                 {
-                    "status": status.get("phase"),
+                    "status": PodStatusParser(pod=info_data).parse(),
                     "podIP": status.get("podIP"),
                     "host_ip": status.get("hostIP"),
                     "message": message,
@@ -626,13 +626,14 @@ class GetInstanceInfo(InstanceAPI):
             cluster_id = labels.get("io.tencent.bcs.clusterid")
             namespace = metadata.get("namespace")
             # 添加权限
-            self.bcs_single_app_perm_handler(
+            self.validate_view_perms(
                 request, project_id, labels.get("io.tencent.paas.templateid"), curr_inst.namespace
             )
             name = self.get_instance_name(instance_conf)
             create_time = curr_inst.created
             update_time = curr_inst.updated
             template_id = self.get_template_id(instance_conf)
+
         all_cluster_info = self.get_cluster_id_env(request, project_id)
         cluster_name = all_cluster_info.get(cluster_id).get("cluster_name") or cluster_id
         return APIResponse(
@@ -673,6 +674,14 @@ class ReschedulerTaskgroup(InstanceAPI):
         project_kind = self.project_kind(request)
         if not self._from_template(instance_id):
             cluster_id, namespace_name, instance_name, category = self.get_instance_resource(request, project_id)
+            # 增加命名空间域的权限校验
+            perm_ctx = NamespaceScopedPermCtx(
+                username=request.user.username,
+                project_id=project_id,
+                cluster_id=cluster_id,
+                name=namespace_name,
+            )
+            NamespaceScopedPermission().can_use(perm_ctx)
         else:
             # 获取instance info
             inst_info = self.get_instance_info(instance_id)

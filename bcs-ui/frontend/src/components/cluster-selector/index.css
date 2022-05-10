@@ -24,8 +24,8 @@
     top: 0;
     display: flex;
     flex-direction: column;
-    z-index: 9999;
-    width: 256px;
+    z-index: 100;
+    width: 270px;
     height: 345px;
     border: 1px solid #dcdee5;
     background-color: #fff;

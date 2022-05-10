@@ -27,6 +27,7 @@ import hpa from '@/store/modules/hpa'
 import storage from '@/store/modules/storage'
 import dashboard from '@/store/modules/dashboard'
 import clustermanager from '@/store/modules/clustermanager'
+import token from '@/store/modules/token'
 import { projectFeatureFlag } from '@/api/base'
 
 Vue.use(Vuex)
@@ -59,7 +60,8 @@ const store = new Vuex.Store({
         storage,
         dashboard,
         log,
-        clustermanager
+        clustermanager,
+        token
     },
     // 公共 store
     state: {
@@ -283,7 +285,7 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         getProjectList (context, params, config = {}) {
-            return http.get(DEVOPS_BCS_API_URL + '/api/projects/', params, config).then(response => {
+            return http.get(DEVOPS_BCS_API_URL + '/api/authorized_projects/', params, config).then(response => {
                 const data = response.data || []
                 context.commit('forceUpdateOnlineProjectList', data)
                 return data
@@ -301,32 +303,6 @@ const store = new Vuex.Store({
          */
         getProjectPerm (context, { projectCode }, config = {}) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${projectCode}/`)
-        },
-
-        /**
-         * 获取资源权限
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} 参数 对象
-         */
-        getResourcePermissions (context, params, config = {}) {
-            return http.post(`${DEVOPS_BCS_API_URL}/api/perm/verify/`, params, config)
-        },
-
-        /**
-         * 获取多个资源权限
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} 参数 对象
-         */
-        getMultiResourcePermissions (context, params, config = {}) {
-            return http.post(`${DEVOPS_BCS_API_URL}/api/perm/multi/verify/`, params, config)
         },
 
         /**

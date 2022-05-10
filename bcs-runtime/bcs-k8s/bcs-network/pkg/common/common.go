@@ -13,6 +13,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
@@ -87,4 +88,9 @@ func MinInt(x, y int) int {
 		return x
 	}
 	return y
+}
+
+func ToJsonString(i interface{}) string {
+	b, _ := json.Marshal(i)
+	return string(b)
 }

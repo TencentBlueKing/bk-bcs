@@ -17,18 +17,18 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
+	jwt2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/emicklei/go-restful"
-)
-
-const (
-	//CurrentUserAttr user header
-	CurrentUserAttr = "current-user"
 )
 
 // TokenAuthenticater wrapper for http request
@@ -46,39 +46,26 @@ type TokenAuthConfig struct {
 }
 
 // GetUser get specified user according token
-func (ta *TokenAuthenticater) GetUser() (*models.BcsUser, bool) {
+func (ta *TokenAuthenticater) GetUser() *models.BcsUser {
 	tokenString := ta.ParseTokenString()
 	if tokenString == "" {
-		return nil, false
+		return nil
 	}
 
-	user, hasExpired := ta.GetUserFromToken(tokenString)
-	if user == nil {
-		return user, hasExpired
-	} else if hasExpired {
-		blog.Warnf("usertoken has been expired: %s", tokenString)
-		return user, hasExpired
-	} else {
-		return user, false
+	// get user from 32 bytes token
+	if len(tokenString) == constant.DefaultTokenLength {
+		return ta.GetUserFromToken(tokenString)
 	}
+	// get user from jwt
+	return ta.GetJWTUser()
 }
 
 // GetUserFromToken returns a user object if the given token is valid
-func (ta *TokenAuthenticater) GetUserFromToken(s string) (*models.BcsUser, bool) {
+func (ta *TokenAuthenticater) GetUserFromToken(s string) *models.BcsUser {
 	u := models.BcsUser{
 		UserToken: s,
 	}
-	user := sqlstore.GetUserByCondition(&u)
-
-	if user == nil {
-		return nil, false
-	}
-
-	if user.HasExpired() {
-		return user, true
-	}
-
-	return user, false
+	return sqlstore.GetUserByCondition(&u)
 }
 
 // ParseTokenString parses token string from incoming request, currently supports authorization header and basicauth
@@ -115,6 +102,62 @@ func (ta *TokenAuthenticater) ParseTokenBasicAuth() string {
 	return ""
 }
 
+// GetJWTUser get specified user according jwt token
+func (ta *TokenAuthenticater) GetJWTUser() *models.BcsUser {
+	// resolve jwt token
+	tokenString := ta.ParseTokenBearer()
+	if tokenString == "" {
+		return nil
+	}
+
+	jwtUser, err := jwt2.JWTClient.JWTDecode(tokenString)
+	if err != nil {
+		blog.Errorf("decode jwt user failed: %s", err.Error())
+		return nil
+	}
+
+	// check expired time
+	if time.Now().Unix() > jwtUser.ExpiresAt {
+		return nil
+	}
+
+	// normal user or client
+	var username string
+	switch jwtUser.SubType {
+	case jwt.User.String():
+		if jwtUser.UserName == "" {
+			blog.Errorf("invalid jwt user: %v", jwtUser)
+			return nil
+		}
+		username = jwtUser.UserName
+	case jwt.Client.String():
+		if jwtUser.ClientID == "" {
+			blog.Errorf("invalid jwt user: %v", jwtUser)
+			return nil
+		}
+		username = jwtUser.ClientID
+	default:
+		blog.Errorf("invalid jwt user: %v", jwtUser)
+		return nil
+	}
+
+	// get user from db
+	u := models.BcsUser{
+		Name: username,
+	}
+	user := sqlstore.GetUserByCondition(&u)
+	// user is not exist in db, it means the jwt user is from browser client.
+	// we need to create a new plain user.
+	if user == nil {
+		user = &models.BcsUser{
+			Name:      username,
+			UserType:  sqlstore.PlainUser,
+			ExpiresAt: time.Unix(jwtUser.ExpiresAt, 0),
+		}
+	}
+	return user
+}
+
 // AdminAuthFunc auth filter
 func AdminAuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	rb.Filter(AdminTokenAuthenticate)
@@ -127,19 +170,25 @@ func AuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	return rb
 }
 
+// TokenAuthFunc user token auth filter
+func TokenAuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	rb.Filter(TokenAuthAuthenticate)
+	return rb
+}
+
 // AdminTokenAuthenticate admin token verification
 func AdminTokenAuthenticate(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	authenticater := newTokenAuthenticater(request.Request, &TokenAuthConfig{
 		SourceBearerEnabled: true,
 	})
-	user, hasExpired := authenticater.GetUser()
-	if user != nil && !hasExpired && user.UserType == sqlstore.AdminUser {
-		request.SetAttribute(CurrentUserAttr, user)
+	user := authenticater.GetUser()
+	if user != nil && !user.HasExpired() && user.UserType == sqlstore.AdminUser {
+		request.SetAttribute(constant.CurrentUserAttr, user)
 		chain.ProcessFilter(request, response)
 		return
 	}
 
-	message := fmt.Sprintf("errcode：%d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 	return
 }
@@ -149,15 +198,32 @@ func TokenAuthenticate(request *restful.Request, response *restful.Response, cha
 	authenticater := newTokenAuthenticater(request.Request, &TokenAuthConfig{
 		SourceBearerEnabled: true,
 	})
-	user, hasExpired := authenticater.GetUser()
-	if user != nil && !hasExpired && (user.UserType == sqlstore.AdminUser || user.UserType == sqlstore.SaasUser) {
+	user := authenticater.GetUser()
+	if user != nil && !user.HasExpired() && (user.UserType == sqlstore.AdminUser || user.UserType == sqlstore.SaasUser) {
 		chain.ProcessFilter(request, response)
 		return
 	}
 
-	message := fmt.Sprintf("errcode：%d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 	return
+}
+
+// TokenAuthAuthenticate verify user token permission, when user is admin, it will bypass this filter.
+// if user is not admin, it will check whether user has permission to access token service.
+func TokenAuthAuthenticate(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	authenticater := newTokenAuthenticater(request.Request, &TokenAuthConfig{
+		SourceBearerEnabled: true,
+	})
+	user := authenticater.GetUser()
+	if user == nil || user.HasExpired() {
+		message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
+		return
+	}
+
+	request.SetAttribute(constant.CurrentUserAttr, user)
+	chain.ProcessFilter(request, response)
 }
 
 func newTokenAuthenticater(req *http.Request, config *TokenAuthConfig) *TokenAuthenticater {
@@ -166,7 +232,7 @@ func newTokenAuthenticater(req *http.Request, config *TokenAuthConfig) *TokenAut
 
 // GetUser get CurrentUser from request object
 func GetUser(req *restful.Request) *models.BcsUser {
-	user := req.Attribute(CurrentUserAttr)
+	user := req.Attribute(constant.CurrentUserAttr)
 	ret, ok := user.(*models.BcsUser)
 	if ok {
 		return ret

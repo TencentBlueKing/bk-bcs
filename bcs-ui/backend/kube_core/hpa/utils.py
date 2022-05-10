@@ -21,6 +21,7 @@ from backend.bcs_web.audit_log import client as activity_client
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.resources.constants import K8sResourceKind
 from backend.resources.exceptions import DeleteResourceError
 from backend.resources.hpa import client as hpa_client
 from backend.resources.hpa.formatter import HPAFormatter
@@ -48,7 +49,7 @@ def get_current_metrics_display(_current_metrics):
     return display
 
 
-def get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_name, namespace=None):
+def get_cluster_hpa_list(request, project_id, cluster_id, namespace=None):
     """获取基础hpa列表"""
     # 共享集群 HPA 不展示
     if get_cluster_type(cluster_id) == ClusterType.SHARED:
@@ -60,7 +61,7 @@ def get_cluster_hpa_list(request, project_id, cluster_id, cluster_env, cluster_n
     try:
         ctx_cluster = CtxCluster.create(token=request.user.token.access_token, project_id=project_id, id=cluster_id)
         client = hpa_client.HPA(ctx_cluster)
-        formatter = HPAFormatter(cluster_id, project_code, cluster_name, cluster_env)
+        formatter = HPAFormatter(cluster_id, project_code)
         hpa_list = client.list(formatter=formatter, namespace=namespace)
     except Exception as error:
         logger.error("get hpa list error, %s", error)
@@ -93,11 +94,9 @@ def delete_hpa(request, project_id, cluster_id, ns_name, namespace_id, name):
 
 def get_deployment_hpa(request, project_id, cluster_id, ns_name, deployments):
     """通过deployment查询HPA关联信息"""
-    hpa_list = get_cluster_hpa_list(
-        request, project_id, cluster_id, cluster_env=None, cluster_name=None, namespace=ns_name
-    )
+    hpa_list = get_cluster_hpa_list(request, project_id, cluster_id, namespace=ns_name)
 
-    hpa_deployment_list = [i["deployment_name"] for i in hpa_list]
+    hpa_deployment_list = [i["ref_name"] for i in hpa_list if i["ref_kind"] == K8sResourceKind.Deployment.value]
 
     for deployment in deployments:
         if deployment["resourceName"] in hpa_deployment_list:

@@ -248,7 +248,7 @@ class BkCommonResponseHandler:
         raise CompParseBkCommonResponseError(resp, resp.get("message"))
 
     def _get_default(self):
-        """ 参考 drf Serializer Field get_default 方法，兼容可调用对象，如 dict, list """
+        """参考 drf Serializer Field get_default 方法，兼容可调用对象，如 dict, list"""
         return self.default() if callable(self.default) else self.default
 
     def raw_request(self, *args, **kwargs) -> Any:

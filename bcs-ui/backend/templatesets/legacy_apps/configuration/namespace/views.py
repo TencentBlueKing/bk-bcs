@@ -15,12 +15,11 @@ specific language governing permissions and limitations under the License.
 import logging
 from itertools import groupby
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import response, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 
-from backend.accounts import bcs_perm
-from backend.apps.whitelist import enabled_sync_namespace
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
@@ -28,19 +27,29 @@ from backend.components.bcs.k8s import K8SClient
 from backend.container_service.clusters.base.utils import append_shared_clusters, get_cluster_type, get_clusters
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import (
+    NamespaceAction,
+    NamespaceCreatorAction,
+    NamespacePermCtx,
+    NamespacePermission,
+    NamespaceRequest,
+    calc_iam_ns_id,
+)
 from backend.resources import namespace as ns_resource
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE, PROJ_CODE_ANNO_KEY
 from backend.resources.namespace.utils import get_namespace_by_id
 from backend.templatesets.legacy_apps.configuration.constants import EnvType
 from backend.templatesets.legacy_apps.configuration.utils import get_cluster_env_name
 from backend.templatesets.var_mgmt.models import NameSpaceVariable
+from backend.utils.basic import str2bool
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
-from backend.utils.response import APIResult
+from backend.utils.response import PermsResponse
 
 from . import serializers as slz
-from .auditor import NamespaceAuditor
+from .auditor import NamespaceAuditor, NamespaceQuotaAuditor
 from .resources import Namespace
 from .tasks import sync_namespace as sync_ns_task
 
@@ -72,7 +81,7 @@ class NamespaceBase:
             raise error_codes.ComponentError.f(_("创建Namespace失败，{}").format(result.get('message')))
 
     def init_namespace_by_bcs(self, access_token, project_id, project_code, data):
-        """k8s 的集群需要创建 Namespace 和 jfrog Sercret"""
+        """k8s 的集群需要创建 Namespace"""
         client = K8SClient(access_token, project_id, data['cluster_id'], env=None)
         name = data['name']
         # 创建 ns
@@ -85,6 +94,7 @@ class NamespaceBase:
 
 class NamespaceView(NamespaceBase, viewsets.ViewSet):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+    iam_perm = NamespacePermission()
 
     def get_ns(self, request, project_id, namespace_id):
         """获取单个命名空间的信息"""
@@ -115,6 +125,11 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         """针对k8s集群，过滤掉系统和平台命名空间"""
         return [ns for ns in ns_list if ns["name"] not in K8S_PLAT_NAMESPACE]
 
+    @response_perms(
+        action_ids=[NamespaceAction.VIEW, NamespaceAction.UPDATE, NamespaceAction.DELETE],
+        permission_cls=NamespacePermission,
+        resource_id_key='iam_ns_id',
+    )
     def list(self, request, project_id):
         """命名空间列表
         权限控制: 必须有对应集群的使用权限
@@ -124,27 +139,15 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         group_by = request.GET.get('group_by')
         cluster_id = request.GET.get('cluster_id')
-        with_lb = request.GET.get('with_lb', 0)
-
-        # 过滤有使用权限的命名空间
-        perm_can_use = request.GET.get('perm_can_use')
-        if perm_can_use == '1':
-            perm_can_use = True
-        else:
-            perm_can_use = False
 
         # 获取全部namespace，前台分页
-        result = paas_cc.get_namespace_list(access_token, project_id, with_lb=with_lb, limit=LIMIT_FOR_ALL_DATA)
+        result = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
         if result.get('code') != 0:
             raise error_codes.APIError.f(result.get('message', ''))
 
         results = result["data"]["results"] or []
         # 针对k8s集群过滤掉平台命名空间
         results = self._ignore_ns_for_k8s(results)
-
-        # 是否有创建权限
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        can_create = perm.can_create(raise_exception=False)
 
         # 补充cluster_name字段
         cluster_list = get_clusters(access_token, project_id)
@@ -184,9 +187,6 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 i['cluster_name'] = i['cluster_id']
                 i['environment'] = None
 
-        # 添加permissions到数据中
-        results = perm.hook_perms(results, perm_can_use)
-
         if cluster_id:
             results = filter(lambda x: x['cluster_id'] == cluster_id, results)
 
@@ -219,11 +219,18 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         else:
             results = sorted(results, key=lambda x: x['id'], reverse=True)
 
-        permissions = {'create': can_create, 'sync_namespace': enabled_sync_namespace(project_id)}
+        with_perms = str2bool(request.query_params.get('with_perms', True))
+        if not with_perms:
+            return response.Response(results)
 
-        return APIResult(results, 'success', permissions=permissions)
+        namespace_list = []
+        for namespace in results:
+            namespace['iam_ns_id'] = calc_iam_ns_id(namespace['cluster_id'], namespace['name'])
+            namespace_list.append(namespace)
 
-    def create_flow(self, request, project_id, data, perm):
+        return PermsResponse(namespace_list, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
+
+    def create_flow(self, request, project_id, data):
         access_token = request.user.token.access_token
         project_code = request.project.english_name
         ns_name = data['name']
@@ -250,8 +257,11 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 message = result.get('message', '')
             return response.Response({'code': result['code'], 'data': None, 'message': message})
         else:
-            # 注册资源到权限中心
-            perm.register(result['data']['id'], f'{ns_name}({cluster_id})')
+            self.iam_perm.grant_resource_creator_actions(
+                NamespaceCreatorAction(
+                    project_id=project_id, cluster_id=cluster_id, creator=request.user.username, name=ns_name
+                ),
+            )
 
         # 创建成功后需要保存变量信息
         result_data = result.get('data')
@@ -276,24 +286,23 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
 
         # 判断权限
         cluster_id = data['cluster_id']
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES, cluster_id)
-        perm.can_create(raise_exception=is_validate_perm)
+        perm_ctx = NamespacePermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id)
+        self.iam_perm.can_create(perm_ctx)
 
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
-            data["name"] = f"{request.project.project_code}-{data['name']}"
+            data["name"] = f"{settings.SHARED_CLUSTER_NS_PREFIX}{request.project.project_code}-{data['name']}"
 
         request.audit_ctx.update_fields(
             resource=data['name'], description=_('集群: {}, 创建命名空间: 命名空间[{}]').format(cluster_id, data["name"])
         )
-        result = self.create_flow(request, project_id, data, perm)
+        result = self.create_flow(request, project_id, data)
 
         return response.Response(result)
 
+    @log_audit_on_view(NamespaceAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id, namespace_id, is_validate_perm=True):
-        """修改命名空间
-        不允许修改命名空间信息，只能修改变量信息
-        TODO: 在wesley提供集群下使用的命名空间后，允许命名空间修改名称
-        """
+        """修改命名空间下变量"""
+        # TODO 增加权限控制
         serializer = slz.UpdateNSVariableSLZ(
             data=request.data, context={'request': request, 'project_id': project_id, 'ns_id': namespace_id}
         )
@@ -308,24 +317,36 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
                 not_exist_show_msg = ['%s[id:%s]' % (i['key'], i['id']) for i in not_exist_vars]
                 result['message'] = _("以下变量不存在:{}").format(";".join(not_exist_show_msg))
             result['data']['ns_vars'] = NameSpaceVariable.get_ns_vars(namespace_id, project_id)
+        request.audit_ctx.update_fields(
+            resource=namespace_id, description=_("调整命名空间({})下的变量").format(namespace_id, extra=data)
+        )
         return response.Response(result)
 
+    @log_audit_on_view(NamespaceAuditor, activity_type=ActivityType.Delete)
     def delete(self, request, project_id, namespace_id, is_validate_perm=True):
         access_token = request.user.token.access_token
 
-        # perm
-        perm = bcs_perm.Namespace(request, project_id, namespace_id)
-        perm.can_delete(raise_exception=is_validate_perm)
+        # TODO 重构
+        # namespace exist
+        ns_resp = paas_cc.get_namespace(access_token, project_id, namespace_id)
+        ns_data = ns_resp['data']
+        if ns_resp.get('code') != ErrorCode.NoError or not ns_data:
+            raise error_codes.APIError(f'query namespace exist error, {ns_resp.get("message")}')
+        # get namespace info
+        cluster_id, ns_name = ns_data.get('cluster_id'), ns_data.get('name')
 
-        # start delete oper
+        perm_ctx = NamespacePermCtx(
+            username=request.user.username, project_id=project_id, cluster_id=cluster_id, name=ns_name
+        )
+        self.iam_perm.can_delete(perm_ctx)
+
         client = Namespace(access_token, project_id, request.project.kind)
-        resp = client.delete(namespace_id)
+        resp = client.delete(namespace_id, cluster_id=cluster_id, ns_name=ns_name)
 
-        # delete ns registered perm
-        perm.delete()
-
+        request.audit_ctx.update_fields(resource=f"{cluster_id}/{ns_name}", description=_("删除命名空间"))
         return response.Response(resp)
 
+    @log_audit_on_view(NamespaceAuditor, activity_type=ActivityType.Modify)
     def sync_namespace(self, request, project_id):
         """同步命名空间
         用来同步线上和本地存储的数据，并进行secret等的处理，保证数据一致
@@ -351,6 +372,7 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
             cluster_id_list,
             request.user.username,
         )
+        request.audit_ctx.update_fields(description=_("同步项目下所有集群的命名空间"))
         return response.Response({'code': 0, 'message': 'task is running'})
 
 
@@ -369,6 +391,7 @@ class NamespaceQuotaViewSet(viewsets.ViewSet):
         ns = {"project_id": project_id, "cluster_id": cluster_id, "name": namespace, "quota": quota}
         return response.Response(ns)
 
+    @log_audit_on_view(NamespaceQuotaAuditor, activity_type=ActivityType.Modify)
     def update_namespace_quota(self, request, project_id, cluster_id, namespace):
         """更新命名空间下的资源配额"""
         serializer = slz.UpdateNamespaceQuotaSLZ(data=request.data)
@@ -377,10 +400,15 @@ class NamespaceQuotaViewSet(viewsets.ViewSet):
 
         client = self._ns_quota_client(request.user.token.access_token, project_id, cluster_id)
         client.update_or_create_namespace_quota(namespace, data["quota"])
+        request.audit_ctx.update_fields(
+            resource=f"{cluster_id}/{namespace}", description=_("更新命名空间下的资源配额"), extra=data["quota"]
+        )
         return response.Response()
 
+    @log_audit_on_view(NamespaceQuotaAuditor, activity_type=ActivityType.Delete)
     def delete_namespace_quota(self, request, project_id, cluster_id, namespace):
         """删除命名空间资源配额"""
         client = self._ns_quota_client(request.user.token.access_token, project_id, cluster_id)
         client.delete_namespace_quota(namespace)
+        request.audit_ctx.update_fields(resource=f"{cluster_id}/{namespace}", description=_("删除命名空间下的资源配额"))
         return response.Response()

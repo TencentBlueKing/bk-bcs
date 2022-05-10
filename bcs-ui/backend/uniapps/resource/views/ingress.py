@@ -16,22 +16,30 @@ import logging
 
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
+from rest_framework.renderers import BrowsableAPIRenderer
+from rest_framework.response import Response
 
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace import NamespaceRequest
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.templatesets.legacy_apps.configuration.k8s.serializers import K8sIngressSLZ
 from backend.templatesets.legacy_apps.instance.constants import K8S_INGRESS_SYS_CONFIG
 from backend.uniapps import utils as app_utils
 from backend.uniapps.application.base_views import BaseAPI
-from backend.uniapps.application.utils import APIResponse
 from backend.uniapps.resource.views import ResourceOperate
 from backend.utils.errcodes import ErrorCode
+from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 logger = logging.getLogger(__name__)
 
 
 class IngressResource(viewsets.ViewSet, BaseAPI, ResourceOperate):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
     category = 'ingress'
     cate = 'K8sIngress'
     sys_config = K8S_INGRESS_SYS_CONFIG
@@ -51,46 +59,32 @@ class IngressResource(viewsets.ViewSet, BaseAPI, ResourceOperate):
         data = resp.get("data") or []
         return 0, data
 
+    @response_perms(
+        action_ids=[NamespaceScopedAction.VIEW, NamespaceScopedAction.UPDATE, NamespaceScopedAction.DELETE],
+        permission_cls=NamespaceScopedPermission,
+        resource_id_key='iam_ns_id',
+    )
     def get(self, request, project_id):
         """获取项目下的所有Ingress"""
-        cluster_dicts = self.get_project_cluster_info(request, project_id)
-        cluster_data = cluster_dicts.get('results', {}) or {}
+        cluster_id = request.query_params.get("cluster_id")
 
-        # 获取命名空间的id
-        namespace_dict = app_utils.get_ns_id_map(request.user.token.access_token, project_id)
+        code, cluster_ingress = self.get_ingress_by_cluser_id(request, {}, project_id, cluster_id)
+        # 单个集群错误时，不抛出异常信息
+        if code != ErrorCode.NoError:
+            return Response({'code': code, 'message': cluster_ingress})
 
-        is_decode = False
-        params = {}
-        data = []
-        # 如果请求参数中cluster_id存在，根据cluster_id过滤集群信息
-        query_cluster_id = request.query_params.get("cluster_id")
-        if query_cluster_id:
-            cluster_data = [info for info in cluster_data if query_cluster_id == info.get('cluster_id')]
-
-        for cluster_info in cluster_data:
-            cluster_id = cluster_info.get('cluster_id')
-            cluster_env = cluster_info.get('environment')
-            code, cluster_data = self.get_ingress_by_cluser_id(request, params, project_id, cluster_id)
-            # 单个集群错误时，不抛出异常信息
-            if code != ErrorCode.NoError:
-                continue
-            self.handle_data(
-                request,
-                cluster_data,
-                self.cate,
-                project_id,
-                cluster_id,
-                is_decode,
-                cluster_env,
-                cluster_info.get('name', ''),
-                namespace_dict=namespace_dict,
-            )
-            data += cluster_data
+        self.handle_data(
+            cluster_ingress,
+            self.cate,
+            cluster_id,
+            False,
+            namespace_dict=app_utils.get_ns_id_map(request.user.token.access_token, project_id),
+        )
 
         # 按时间倒序排列
-        data.sort(key=lambda x: x.get('createTime', ''), reverse=True)
+        cluster_ingress.sort(key=lambda x: x.get('createTime', ''), reverse=True)
 
-        return APIResponse({"code": ErrorCode.NoError, "data": {"data": data, "length": len(data)}, "message": "ok"})
+        return PermsResponse(cluster_ingress, NamespaceRequest(project_id=project_id, cluster_id=cluster_id))
 
     def delete_ingress(self, request, project_id, cluster_id, namespace, name):
         return self.delete_resource(request, project_id, cluster_id, namespace, name)

@@ -91,7 +91,7 @@
                         @page-limit-change="handlePageLimitChange">
                         <bk-table-column :render-header="renderSelectionHeader" width="60">
                             <template slot-scope="{ row, $index }">
-                                <bcs-checkbox v-model="row.isChecked" @change="checkNode(row, $index)" :disabled="!row.permissions.edit"></bcs-checkbox>
+                                <bcs-checkbox v-model="row.isChecked" @change="checkNode(row, $index)"></bcs-checkbox>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('主机名/IP')" prop="name" :show-overflow-tooltip="true" width="200">
@@ -535,17 +535,6 @@
                                 value: entries[1]
                             })
                         })
-
-                        // 兼容数据格式
-                        item.permissions = {
-                            create: true,
-                            delete: true,
-                            deploy: false,
-                            download: false,
-                            edit: true,
-                            use: true,
-                            view: true
-                        }
                         item.transformTaints = []
                         for (const taint of (item.taints || [])) {
                             item.transformTaints.push(Object.assign({}, taint, {
@@ -1073,18 +1062,6 @@
              * @param {Object} node 当前节点对象
              */
             async showSetLabelInRow (node) {
-                if (!node.permissions.view) {
-                    const type = `cluster_${node.cluster_env === 'stag' ? 'test' : 'prod'}`
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'view',
-                        resource_code: node.cluster_id,
-                        resource_name: node.cluster_name,
-                        resource_type: type
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 try {
                     this.setLabelConf.isShow = true
                     this.setLabelConf.loading = true
@@ -1248,16 +1225,6 @@
              * @param {Object} node 节点信息
              */
             async goNodeOverview (node) {
-                if (!node.permissions.view) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'view',
-                        resource_code: node.cluster_id,
-                        resource_name: node.cluster_name,
-                        resource_type: `cluster_${node.cluster_env === 'stag' ? 'test' : 'prod'}`
-                    })
-                }
-
                 this.$router.push({
                     name: 'clusterNodeOverview',
                     params: {
@@ -1276,18 +1243,6 @@
              * @param {Object} node 当前节点对象
              */
             async goClusterOverview (node) {
-                if (!node.permissions.view) {
-                    const type = `cluster_${node.cluster_env === 'stag' ? 'test' : 'prod'}`
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'view',
-                        resource_code: node.cluster_id,
-                        resource_name: node.cluster_name,
-                        resource_type: type
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 this.$router.push({
                     name: 'clusterOverview',
                     params: {
@@ -1305,18 +1260,6 @@
              * @param {Object} node 当前节点对象
              */
             async goClusterNode (node) {
-                if (!node.permissions.view) {
-                    const type = `cluster_${node.cluster_env === 'stag' ? 'test' : 'prod'}`
-                    const params = {
-                        project_id: this.projectId,
-                        policy_code: 'view',
-                        resource_code: node.cluster_id,
-                        resource_name: node.cluster_name,
-                        resource_type: type
-                    }
-                    await this.$store.dispatch('getResourcePermissions', params)
-                }
-
                 this.$router.push({
                     name: 'clusterNode',
                     params: {

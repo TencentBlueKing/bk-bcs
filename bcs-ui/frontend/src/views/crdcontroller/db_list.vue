@@ -499,16 +499,6 @@
              * @param  {number} index 索引
              */
             async editCrdInstance (crdInstance, isReadonly) {
-                if (crdInstance.permissions && !crdInstance.permissions.use) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: crdInstance.namespace,
-                        resource_name: crdInstance.namespace_name,
-                        resource_type: 'namespace'
-                    })
-                }
-
                 try {
                     const projectId = this.projectId
                     const clusterId = this.clusterId
@@ -564,16 +554,6 @@
              * @param  {number} index 索引
              */
             async removeCrdInstance (crdInstance, index) {
-                if (crdInstance.permissions && !crdInstance.permissions.use) {
-                    await this.$store.dispatch('getResourcePermissions', {
-                        project_id: this.projectId,
-                        policy_code: 'use',
-                        resource_code: crdInstance.namespace,
-                        resource_name: crdInstance.namespace_name,
-                        resource_type: 'namespace'
-                    })
-                }
-
                 const self = this
                 const projectId = this.projectId
                 const clusterId = this.clusterId
@@ -843,7 +823,7 @@
                         if (!/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/.test(item.value)) {
                             this.$bkMessage({
                                 theme: 'error',
-                                message: this.$t(`第${index + 1}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$`),
+                                message: this.$t('第{index}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$', { index: index + 1 }),
                                 delay: 5000
                             })
                             result = false
