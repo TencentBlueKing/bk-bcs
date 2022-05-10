@@ -87,7 +87,7 @@ func TestNewManifestRenderer(t *testing.T) {
 
 func TestSchemaRenderer(t *testing.T) {
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(kind).Render()
+		_, err := NewSchemaRenderer(kind, "default").Render()
 		assert.Nil(t, err)
 	}
 }

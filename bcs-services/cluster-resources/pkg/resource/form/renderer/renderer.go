@@ -144,14 +144,35 @@ func (r *ManifestRenderer) setEditMode() error {
 	return mapx.SetItems(r.Manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeForm)
 }
 
+const (
+	// RandomSuffixLength 资源名称随机后缀长度
+	RandomSuffixLength = 8
+	// SuffixCharset 后缀可选字符集（小写 + 数字）
+	SuffixCharset = "abcdefghijklmnopqrstuvwxyz1234567890"
+)
+
 // SchemaRenderer 渲染并加载表单 Schema 模板
 type SchemaRenderer struct {
-	Kind string
+	Kind    string
+	Context map[string]interface{}
 }
 
 // NewSchemaRenderer ...
-func NewSchemaRenderer(kind string) *SchemaRenderer {
-	return &SchemaRenderer{Kind: kind}
+func NewSchemaRenderer(kind, namespace string) *SchemaRenderer {
+	// 若没有指定命名空间，则使用 default
+	if namespace == "" {
+		namespace = "default"
+	}
+	// 避免名称重复，每次默认添加随机后缀
+	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
+	return &SchemaRenderer{
+		Kind: kind,
+		Context: map[string]interface{}{
+			"kind":      kind,
+			"namespace": namespace,
+			"resName":   fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix),
+		},
+	}
 }
 
 // Render ...
@@ -188,7 +209,7 @@ func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) 
 
 	// 2. 渲染模板并转换成 Map 格式（模板名称格式：{r.Kind}.yaml）
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", nil)
+	err = tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.Context)
 	if err != nil {
 		return errorx.New(errcode.General, "渲染模板失败：%v", err)
 	}

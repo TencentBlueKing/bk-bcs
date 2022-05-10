@@ -25,6 +25,7 @@ podAffinity:
       priority:
         title: 优先级
         type: string
+        default: preferred
         ui:component:
           name: radio
           props:
@@ -33,6 +34,15 @@ podAffinity:
                 value: preferred
               - label: 必须
                 value: required
+        ui:reactions:
+          - target: "{{`{{`}} $widgetNode?.getSibling('weight')?.id {{`}}`}}"
+            if: "{{`{{`}} $self.value === 'required' {{`}}`}}"
+            then:
+              state:
+                disabled: true
+            else:
+              state:
+                disabled: false
       selector:
         type: object
         properties:
@@ -89,6 +99,7 @@ podAffinity:
       type:
         title: 类型
         type: string
+        default: affinity
         ui:component:
           name: radio
           props:
@@ -128,6 +139,7 @@ nodeAffinity:
       priority:
         title: 优先级
         type: string
+        default: preferred
         ui:component:
           name: radio
           props:
@@ -136,6 +148,15 @@ nodeAffinity:
                 value: preferred
               - label: 必须
                 value: required
+        ui:reactions:
+          - target: "{{`{{`}} $widgetNode?.getSibling('weight')?.id {{`}}`}}"
+            if: "{{`{{`}} $self.value === 'required' {{`}}`}}"
+            then:
+              state:
+                disabled: true
+            else:
+              state:
+                disabled: false
       selector:
         type: object
         properties:

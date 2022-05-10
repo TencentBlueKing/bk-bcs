@@ -28,7 +28,7 @@ import (
 func (h *Handler) GetResFormSchema(
 	_ context.Context, req *clusterRes.GetResFormSchemaReq, resp *clusterRes.CommonResp,
 ) error {
-	schema, err := renderer.NewSchemaRenderer(req.Kind).Render()
+	schema, err := renderer.NewSchemaRenderer(req.Kind, req.Namespace).Render()
 	if err != nil {
 		return err
 	}

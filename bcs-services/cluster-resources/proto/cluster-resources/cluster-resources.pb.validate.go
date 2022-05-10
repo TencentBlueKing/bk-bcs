@@ -4434,6 +4434,17 @@ func (m *GetResFormSchemaReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetNamespace()) > 64 {
+		err := GetResFormSchemaReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return GetResFormSchemaReqMultiError(errors)
 	}

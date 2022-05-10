@@ -6,9 +6,14 @@ replicas:
     cnt:
       title: 副本数量
       type: integer
+      default: 3
+      ui:component:
+        props:
+          min: 1
     updateStrategy:
       title: 升级策略
       type: string
+      default: RollingUpdate
       ui:component:
         name: radio
         props:
@@ -104,9 +109,9 @@ nodeSelect:
       ui:component:
         name: noTitleArray
     type:
-      default: specificNode
       title: 节点类型
       type: string
+      default: anyAvailable
       ui:component:
         name: radio
         props:
@@ -195,7 +200,9 @@ toleration:
             title: 容忍时间
             type: integer
             ui:component:
+              name: unitInput
               props:
+                unit: s
                 max: 86400
           value:
             title: 值
@@ -214,18 +221,19 @@ networking:
     dnsPolicy:
       title: DNS 策略
       type: string
+      default: ClusterFirst
       ui:component:
         name: radio
         props:
           datasource:
-            - label: Default
-              value: Default
             - label: ClusterFirst
               value: ClusterFirst
-            - label: None
-              value: None
             - label: ClusterFirstWithHostNet
               value: ClusterFirstWithHostNet
+            - label: Default
+              value: Default
+            - label: None
+              value: None
     hostIPC:
       title: HostIPC
       type: boolean
@@ -333,9 +341,26 @@ other:
         type: string
       ui:component:
         name: select
+        props:
+          clearable: true
+          searchable: true
+          remoteConfig:
+            params:
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/configs/secrets` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+        - source: "metadata.namespace"
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
     restartPolicy:
       title: 重启策略
       type: string
+      default: Always
       ui:component:
         name: radio
         props:
@@ -352,6 +377,22 @@ other:
       type: string
       ui:component:
         name: select
+        props:
+          clearable: true
+          searchable: true
+          remoteConfig:
+            params:
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/rbac/service_accounts` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+        - source: "metadata.namespace"
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
     terminationGracePeriodSecs:
       title: 终止容忍期
       type: integer

@@ -10,9 +10,11 @@ metadata:
     name:
       title: 名称
       type: string
+      default: {{ .resName }}
     namespace:
       title: 命名空间
       type: string
+      default: {{ .namespace }}
       ui:component:
         name: select
         props:
