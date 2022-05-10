@@ -69,7 +69,7 @@ func init() {
 	// rootCmd.SilenceErrors = true
 	// rootCmd.SilenceUsage = true
 
-	rootCmd.AddCommand(APICmd())
+	rootCmd.AddCommand(APIServerCmd())
 	rootCmd.AddCommand(QueryCmd())
 	rootCmd.AddCommand(StoreGWCmd())
 	rootCmd.AddCommand(VersionCmd())

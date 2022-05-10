@@ -24,3 +24,4 @@ etc/dev*
 /main
 /bcs-monitor
 /scripts/*.json
+etc/*dev*

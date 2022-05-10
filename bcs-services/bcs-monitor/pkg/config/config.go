@@ -26,9 +26,12 @@ func UnmarshalKey(key string, out interface{}) error {
 }
 
 type Configuration struct {
-	Redis   *RedisConf   `yaml:"redis" mapstructure:"redis"`
-	StoreGW *StoreGWConf `yaml:"store" mapstructure:"store"`
-	API     *APIConf     `yaml:"query" mapstructure:"query"`
+	Redis      *RedisConf                 `yaml:"redis"`
+	StoreGW    *StoreGWConf               `yaml:"store"`
+	API        *APIConf                   `yaml:"query"`
+	BCS        *BCSConf                   `yaml:"bcs_conf"`
+	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
+	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
 }
 
 func (c *Configuration) Init() error {
