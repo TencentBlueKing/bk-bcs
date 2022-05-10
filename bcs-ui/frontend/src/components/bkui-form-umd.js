@@ -2036,6 +2036,10 @@
         });
       });
     }
+  }; // 销毁widget对应的reaction
+
+  var reactionUnRegister = function reactionUnRegister(path) {
+    delete reactionsMap[path];
   };
   var reactionDispatch = function reactionDispatch(path, typeName) {
     var _typeName$split3 = typeName.split('/'),
@@ -9547,6 +9551,7 @@
     },
     beforeDestroy: function beforeDestroy() {
       widgetTree.removeWidgetNode(this.path, this);
+      reactionUnRegister(this.path);
     },
     methods: {
       setState: function setState(key, value) {
