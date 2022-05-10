@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
-const (
+var (
 	// BKSOPTask bk-sops common job
 	BKSOPTask = "bksopsjob"
 	// TaskID inject taskID into ctx
@@ -43,7 +43,7 @@ func GetTaskIDFromContext(ctx context.Context) string {
 
 // WithTaskIDForContext will return a new context wrapped taskID flag around the original ctx
 func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
-	return context.WithValue(ctx, TaskID,taskID)
+	return context.WithValue(ctx, TaskID, taskID)
 }
 
 // GetCredential get specified credential information according Project configuration, if Project conf is nil, try Cloud.

@@ -81,7 +81,7 @@ type UserManagerClient struct {
 
 // Options for init clusterManager
 type Options struct {
-	Enable          bool
+	Enable bool
 	// GateWay address
 	GateWay         string
 	IsVerifyTLS     bool
@@ -112,7 +112,7 @@ func NewUserManagerClient(opts *Options) *UserManagerClient {
 	if !ok {
 		return nil
 	}
-	
+
 	userClient := &UserManagerClient{
 		opts: opts,
 	}
@@ -158,9 +158,9 @@ func (um *UserManagerClient) CreateUserToken(user CreateTokenReq) (string, error
 	}
 
 	var (
-		_ = "CreateUserToken"
-		path    = usermanagerPrefixV1 + "/tokens"
-		resp    = &CreateTokenResp{}
+		_    = "CreateUserToken"
+		path = usermanagerPrefixV1 + "/tokens"
+		resp = &CreateTokenResp{}
 	)
 
 	url, err := um.getUserManagerServerPath(path)
@@ -200,9 +200,9 @@ func (um *UserManagerClient) DeleteUserToken(token string) error {
 	}
 
 	var (
-		_ = "DeleteUserToken"
-		path    = fmt.Sprintf(usermanagerPrefixV1 + "/tokens/%s", token)
-		resp    = &GetTokenResp{}
+		_    = "DeleteUserToken"
+		path = fmt.Sprintf(usermanagerPrefixV1+"/tokens/%s", token)
+		resp = &GetTokenResp{}
 	)
 
 	url, err := um.getUserManagerServerPath(path)
@@ -241,9 +241,9 @@ func (um *UserManagerClient) GetUserToken(user string) (string, error) {
 	}
 
 	var (
-		_ = "GetUserToken"
-		path    = fmt.Sprintf(usermanagerPrefixV1 + "/users/%s/tokens", user)
-		resp    = &GetTokenResp{}
+		_    = "GetUserToken"
+		path = fmt.Sprintf(usermanagerPrefixV1+"/users/%s/tokens", user)
+		resp = &GetTokenResp{}
 	)
 
 	url, err := um.getUserManagerServerPath(path)
@@ -287,9 +287,9 @@ func (um *UserManagerClient) GrantUserPermission(permissions []types.Permission)
 	}
 
 	var (
-		_ = "GrantUserPermission"
-		path    = usermanagerPrefixV1 + "/permissions"
-		resp    = &CommonResp{}
+		_    = "GrantUserPermission"
+		path = usermanagerPrefixV1 + "/permissions"
+		resp = &CommonResp{}
 	)
 
 	url, err := um.getUserManagerServerPath(path)
@@ -330,9 +330,9 @@ func (um *UserManagerClient) RevokeUserPermission(permissions []types.Permission
 	}
 
 	var (
-		_ = "RevokeUserPermission"
-		path    = usermanagerPrefixV1 + "/permissions"
-		resp    = &CommonResp{}
+		_    = "RevokeUserPermission"
+		path = usermanagerPrefixV1 + "/permissions"
+		resp = &CommonResp{}
 	)
 
 	url, err := um.getUserManagerServerPath(path)
@@ -373,9 +373,9 @@ func (um *UserManagerClient) VerifyUserPermission(permReq VerifyPermissionReq) (
 	}
 
 	var (
-		_ = "VerifyUserPermission"
-		path    = usermanagerPrefixV2 + "/permissions/verify"
-		resp    = &VerifyPermissionResponse{}
+		_    = "VerifyUserPermission"
+		path = usermanagerPrefixV2 + "/permissions/verify"
+		resp = &VerifyPermissionResponse{}
 	)
 
 	url, err := um.getUserManagerServerPath(path)

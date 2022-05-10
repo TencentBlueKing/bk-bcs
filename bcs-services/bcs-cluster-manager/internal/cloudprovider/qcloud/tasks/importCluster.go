@@ -33,7 +33,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s get detail task information from storage failed, %s. " +
+		blog.Errorf("ImportClusterNodesTask[%s]: task %s get detail task information from storage failed, %s. "+
 			"task retry", taskID, taskID, err.Error())
 		return err
 	}
@@ -94,7 +94,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s get detail task information from storage failed, %s. " +
+		blog.Errorf("ImportClusterNodesTask[%s]: task %s get detail task information from storage failed, %s. "+
 			"task retry", taskID, taskID, err.Error())
 		return err
 	}
@@ -169,7 +169,7 @@ func registerTKEExternalClusterEndpoint(ctx context.Context, data *cloudprovider
 	case endpointStatus.Created():
 		return importClusterCredential(ctx, data)
 	case endpointStatus.NotFound():
-		err := tkeCli.CreateClusterEndpoint(data.Cluster.SystemID)
+		err = tkeCli.CreateClusterEndpoint(data.Cluster.SystemID)
 		if err != nil {
 			return err
 		}
@@ -197,7 +197,7 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10 * time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
@@ -216,9 +216,9 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 		default:
 			return nil
 		}
-	}, cloudprovider.LoopInterval(20 * time.Second))
+	}, cloudprovider.LoopInterval(20*time.Second))
 	if err != nil {
-		blog.Errorf("taskID[%s] GetClusterEndpointStatus failed: %v", err)
+		blog.Errorf("taskID[%s] GetClusterEndpointStatus failed: %v", taskID, err)
 		return err
 	}
 

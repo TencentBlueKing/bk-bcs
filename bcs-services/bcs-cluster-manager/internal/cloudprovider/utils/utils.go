@@ -137,7 +137,7 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 func DeleteClusterCredentialInfo(clusterID string) error {
 	err := cloudprovider.GetStorageModel().DeleteClusterCredential(context.Background(), clusterID)
 	if err != nil{
-		blog.Errorf("DeleteClusterCredentialInfo[%s] failed: %v", err)
+		blog.Errorf("DeleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
 		return err
 	}
 

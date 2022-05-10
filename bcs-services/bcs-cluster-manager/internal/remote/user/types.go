@@ -90,6 +90,7 @@ const (
 	TokenStatusActive
 )
 
+// TokenResp xxx
 type TokenResp struct {
 	Token     string     `json:"token"`
 	ExpiredAt *time.Time `json:"expired_at"` // nil means never expired
@@ -103,6 +104,7 @@ type VerifyPermissionReq struct {
 	Action       string `json:"action" validate:"required"`
 }
 
+// VerifyPermissionResponse xxx
 type VerifyPermissionResponse struct {
 	CommonResp `json:",inline"`
 	Data       VerifyPermissionResult `json:"data"`

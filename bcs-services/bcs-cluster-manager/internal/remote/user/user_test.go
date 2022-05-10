@@ -21,15 +21,15 @@ import (
 
 func getUserManagerClient() UserManager {
 	return NewUserManagerClient(&Options{
-		Enable:          true,
-		GateWay:         "https://xxx/bcsapi/v4/",
-		Token:           "xxx",
+		Enable:  true,
+		GateWay: "https://xxx/bcsapi/v4/",
+		Token:   "xxx",
 	})
 }
 
 var cli = getUserManagerClient()
 
-func TestUserManagerClient_CreateUserToken(t *testing.T) {
+func TestUser_CreateUserToken(t *testing.T) {
 	token, err := cli.CreateUserToken(CreateTokenReq{
 		Username:   "xxx",
 		Expiration: -1,
@@ -41,7 +41,7 @@ func TestUserManagerClient_CreateUserToken(t *testing.T) {
 	t.Log(token)
 }
 
-func TestUserManagerClient_GetUserToken(t *testing.T) {
+func TestUser_GetUserToken(t *testing.T) {
 	token, err := cli.GetUserToken("BCS-K8S-40025")
 	if err != nil {
 		t.Fatal(err)
@@ -50,7 +50,7 @@ func TestUserManagerClient_GetUserToken(t *testing.T) {
 	t.Log(token)
 }
 
-func TestUserManagerClient_DeleteUserToken(t *testing.T) {
+func TestUser_DeleteUserToken(t *testing.T) {
 	err := cli.DeleteUserToken("xxx")
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +59,7 @@ func TestUserManagerClient_DeleteUserToken(t *testing.T) {
 	t.Log("success")
 }
 
-func TestUserManagerClient_GrantUserPermission(t *testing.T) {
+func TestUser_GrantUserPermission(t *testing.T) {
 	err := cli.GrantUserPermission([]types.Permission{
 		types.Permission{
 			UserName:     "xxx",
@@ -75,7 +75,7 @@ func TestUserManagerClient_GrantUserPermission(t *testing.T) {
 	t.Log("success")
 }
 
-func TestUserManagerClient_RevokeUserPermission(t *testing.T) {
+func TestUser_RevokeUserPermission(t *testing.T) {
 	err := cli.RevokeUserPermission([]types.Permission{
 		types.Permission{
 			UserName:     "xxx",
@@ -91,6 +91,6 @@ func TestUserManagerClient_RevokeUserPermission(t *testing.T) {
 	t.Log("success")
 }
 
-func TestUserManagerClient_VerifyUserPermission(t *testing.T) {
+func TestUser_VerifyUserPermission(t *testing.T) {
 
 }

@@ -81,13 +81,13 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 		Updater:         ia.req.Creator,
 		ClusterCategory: ia.req.ClusterCategory,
 		// import cluster category
-		ImportCategory:  func() string {
+		ImportCategory: func() string {
 			if ia.req.CloudMode.KubeConfig != "" {
 				return KubeConfig
 			}
 			return Cloud
 		}(),
-		IsShared:        ia.req.IsShared,
+		IsShared: ia.req.IsShared,
 	}
 
 	return cls
@@ -206,7 +206,7 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	defer ia.locker.Unlock(createClusterIDLockKey)
 
 	// import validate cluster
-	if err := ia.validate(); err != nil {
+	if err = ia.validate(); err != nil {
 		ia.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
