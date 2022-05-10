@@ -22,12 +22,6 @@ type Result struct {
 	Data      interface{} `json:"data"`
 }
 
-// Context
-type Context struct {
-	*gin.Context
-	RequestId string
-}
-
 // HandlerFunc
 type HandlerFunc func(*Context) (interface{}, error)
 

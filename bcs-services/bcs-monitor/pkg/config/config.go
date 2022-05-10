@@ -26,15 +26,20 @@ func UnmarshalKey(key string, out interface{}) error {
 }
 
 type Configuration struct {
+	Base       *BaseConf                  `yaml:"base_conf"`
 	Redis      *RedisConf                 `yaml:"redis"`
 	StoreGW    *StoreGWConf               `yaml:"store"`
 	API        *APIConf                   `yaml:"query"`
+	BKAPIGW    *BKAPIGWConf               `yaml:"bkapigw_conf"`
 	BCS        *BCSConf                   `yaml:"bcs_conf"`
 	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
 	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
 }
 
 func (c *Configuration) Init() error {
+	c.Base = &BaseConf{}
+	c.Base.Init()
+
 	c.StoreGW = &StoreGWConf{}
 	c.StoreGW.Init()
 
