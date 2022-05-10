@@ -38,12 +38,10 @@ type service struct {
 }
 
 func NewRouteRegistrar(opts *route.Options) route.Registrar {
-	s := &service{opts: opts}
-
-	return s
+	return service{opts: opts}
 }
 
-func (s *service) RegisterRoute(router gin.IRoutes) {
+func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
 	// 用户登入态鉴权, session鉴权

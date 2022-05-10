@@ -43,12 +43,10 @@ type CleanUpManager struct {
 func NewCleanUpManager(ctx context.Context) *CleanUpManager {
 	redisClient := storage.GetDefaultRedisSession().Client
 
-	mgr := &CleanUpManager{
+	return &CleanUpManager{
 		ctx:         ctx,
 		redisClient: redisClient,
 	}
-
-	return mgr
 }
 
 // Heartbeat : 记录pod心跳, 定时上报存活, 清理时需要使用
