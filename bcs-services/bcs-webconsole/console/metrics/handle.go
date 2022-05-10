@@ -28,7 +28,7 @@ func RequestCollect(handler string) gin.HandlerFunc {
 		c.Next()
 		code := strconv.FormatInt(int64(c.Writer.Status()), 10)
 		requestDuration := getRequestDuration(c)
-		collectHTTPRequestMetric(handler, code, requestDuration)
+		collectHTTPRequestMetric(handler, c.Request.Method, code, requestDuration)
 	}
 }
 

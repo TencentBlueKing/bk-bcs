@@ -28,7 +28,7 @@ var (
 		Subsystem: subsystem,
 		Name:      "http_requests_total",
 		Help:      "Counter of HTTP requests to bcs-webconsole.",
-	}, []string{"handler", "code"})
+	}, []string{"handler", "method", "code"})
 
 	// http 请求耗时, 包含页面返回, API请求, WebSocket(去掉pod_create耗时)
 	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -37,7 +37,7 @@ var (
 		Name:      "http_request_duration_seconds",
 		Help:      "Histogram of latencies for HTTP requests to bcs-webconsole.",
 		Buckets:   []float64{0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60},
-	}, []string{"handler", "code"})
+	}, []string{"handler", "method", "code"})
 
 	// 创建/等待 pod Ready 数量
 	podReadyTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -101,9 +101,9 @@ func PromMetricHandler() gin.HandlerFunc {
 }
 
 // collectHTTPRequestMetric http metrics 处理
-func collectHTTPRequestMetric(handler, code string, duration time.Duration) {
-	httpRequestsTotal.WithLabelValues(handler, code).Inc()
-	httpRequestDuration.WithLabelValues(handler, code).Observe(duration.Seconds())
+func collectHTTPRequestMetric(handler, method, code string, duration time.Duration) {
+	httpRequestsTotal.WithLabelValues(handler, method, code).Inc()
+	httpRequestDuration.WithLabelValues(handler, method, code).Observe(duration.Seconds())
 }
 
 // CollectWsConnection Websocket 请求统计
