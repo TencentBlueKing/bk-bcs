@@ -418,7 +418,7 @@
         return false;
 
       case 'integer':
-        return 0;
+        return undefined;
 
       case 'null':
         return null;
@@ -1955,9 +1955,13 @@
 
   var resolveReaction = function resolveReaction(crtInsPath, targetPath, reaction) {
     return function () {
-      var crtInstance = widgetTree.widgetMap[crtInsPath].instance; // 当前组件实例，用来条件表达式判断
+      var _ref = widgetTree.widgetMap[crtInsPath] || {},
+          crtInstance = _ref.instance; // 当前组件实例，用来条件表达式判断
 
-      var operateInstance = widgetTree.widgetMap[targetPath].instance; // 需要执行操作的组件实例，可能为其他组件也可能为当前组件
+
+      var _ref2 = widgetTree.widgetMap[targetPath] || {},
+          operateInstance = _ref2.instance; // 需要执行操作的组件实例，可能为其他组件也可能为当前组件
+
 
       var fullfill = true;
       var deps = [];

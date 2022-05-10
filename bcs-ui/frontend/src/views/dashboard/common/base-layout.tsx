@@ -77,7 +77,7 @@ export default defineComponent({
         }
     },
     setup (props, ctx) {
-        const { $router, $i18n, $bkInfo, $store, $bkMessage, $route } = ctx.root
+        const { $router, $i18n, $bkInfo, $store, $bkMessage } = ctx.root
         const { type, category, kind, showNameSpace, showCrd, defaultActiveDetailType, defaultCrd } = toRefs(props)
 
         // crd
@@ -183,7 +183,7 @@ export default defineComponent({
                 const customResourceNamespace = currentCrdExt.value?.scope === 'Namespaced'
                     || ['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com'].includes(defaultCrd.value)
                     ? namespaceValue.value
-                    : ''
+                    : undefined
                 // crd 界面无需传当前crd参数
                 const crd = customCrd.value ? currentCrd.value : ''
                 await handleFetchCustomResourceList(crd, category.value, customResourceNamespace)
@@ -241,12 +241,7 @@ export default defineComponent({
         const apiVersion = computed(() => {
             return ['GameDeployment', 'GameStatefulSet'].includes(kind.value) ? 'tkex.tencent.com/v1alpha1' : currentCrdExt.value.api_version
         })
-        const projectId = computed(() => $route.params.projectId)
-        const clusterId = computed(() => $route.params.clusterId)
-        const subscribeURL = computed(() => {
-            // todo
-            return `wss://test`
-        })
+        
         const handleStartSubscribe = () => {
             // 自定义的CRD订阅时必须传apiVersion
             // eslint-disable-next-line @typescript-eslint/camelcase
@@ -264,7 +259,7 @@ export default defineComponent({
             if (customCrd.value) {
                 params.CRDName = currentCrd.value
             }
-            handleSubscribe(`${subscribeURL.value}?${new URLSearchParams(params as Record<string, any>)}`)
+            handleSubscribe(params)
         }
 
         // 获取额外字段方法
@@ -332,13 +327,15 @@ export default defineComponent({
             $router.push({
                 name: 'dashboardResourceUpdate',
                 params: {
-                    defaultShowExample: (type.value !== 'crd') as any
+                    defaultShowExample: (type.value !== 'crd') as any,
+                    formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                 },
                 query: {
                     type: type.value,
                     category: category.value,
                     kind: kind.value,
-                    crd: currentCrd.value
+                    crd: currentCrd.value,
+                    namespace: namespaceValue.value
                 }
             })
         }
@@ -346,11 +343,15 @@ export default defineComponent({
         const handleCreateFormResource = () => {
             $router.push({
                 name: 'dashboardFormResourceUpdate',
+                params: {
+                    formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
+                },
                 query: {
                     type: type.value,
                     category: category.value,
                     kind: kind.value,
-                    crd: currentCrd.value
+                    crd: currentCrd.value,
+                    namespace: namespaceValue.value
                 }
             })
         }
@@ -377,7 +378,8 @@ export default defineComponent({
                     name: 'dashboardFormResourceUpdate',
                     params: {
                         namespace,
-                        name
+                        name,
+                        formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                     },
                     query: {
                         type: type.value,
@@ -395,7 +397,7 @@ export default defineComponent({
                 type: 'warning',
                 clsName: 'custom-info-confirm',
                 title: $i18n.t('确认删除当前资源'),
-                subTitle: $i18n.t('确认删除资源 {kind}: {name}', { kind: row.kind, name }),
+                subTitle: `${row.kind} ${name}`,
                 defaultInfo: true,
                 confirmFn: async (vm) => {
                     let result = false
@@ -540,7 +542,7 @@ export default defineComponent({
                     </div>
                     <DashboardTopActions />
                 </div>
-                <div class="biz-content-wrapper" v-bkloading={{ isLoading: this.isLoading, zIndex: 10 }}>
+                <div class="biz-content-wrapper" v-bkloading={{ isLoading: this.isLoading, opacity: 1 }}>
                     <div class="base-layout-operate mb20">
                         {
                             renderCreate()

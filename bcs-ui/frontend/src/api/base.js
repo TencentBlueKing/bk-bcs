@@ -35,7 +35,8 @@ export const containerMetric = request('post', '/api/metrics/projects/$projectId
 
 // cluster resource
 // todo
-const crPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/clusterresources/v1`
+export const crPrefix = `/bcsapi/v4/clusterresources/v1`
+export const CR_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${crPrefix}`
 export const namespaceList = request('get', `${crPrefix}/projects/$projectId/clusters/$clusterId/namespaces`)
 export const dashbordList = request('get', `${crPrefix}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category`)// 注意：HPA类型没有子分类$category
 export const formSchema = request('get', `${crPrefix}/projects/$projectId/clusters/$clusterId/form_schema`)

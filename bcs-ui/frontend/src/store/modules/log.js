@@ -21,7 +21,7 @@ export default {
         },
 
         async previousLogList (context, url) {
-            const data = await http.get(`${DEVOPS_BCS_API_URL}/${url}`).catch(_ => ({ data: { logs: [] } }))
+            const data = await http.get(`${DEVOPS_BCS_API_URL ? `${DEVOPS_BCS_API_URL}/` : ''}${url}`).catch(_ => ({ data: { logs: [] } }))
             return data
         },
 

@@ -278,9 +278,9 @@
 
                 const data = await $store.dispatch('dashboard/listWorkloadPods', {
                     $namespaceId: props.namespace,
-                    label_selector: labelSelector,
-                    owner_kind: props.kind,
-                    owner_name: props.name,
+                    labelSelector: labelSelector,
+                    ownerKind: props.kind,
+                    ownerName: props.name,
                     format: "manifest"
                 })
                 return data

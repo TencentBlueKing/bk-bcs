@@ -41,6 +41,7 @@
     import DashboardTopActions from '../common/dashboard-top-actions'
     import SwitchButton from './switch-mode.vue'
     import { CUR_SELECT_NAMESPACE } from '@/common/constant'
+    import { CR_API_URL } from '@/api/base'
 
     const BKForm = createForm({
         namespace: 'bcs',
@@ -93,6 +94,10 @@
             formData: {
                 type: Object,
                 default: () => ({})
+            },
+            formUpdate: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -110,11 +115,9 @@
             context () {
                 return Object.assign({
                     clusterID: this.clusterId,
-                    projectID: this.curProject.project_id
-                }, {
-                    ...this.formSchema.context,
-                    baseUrl: '/bcsapi/v4/clusterresources/v1' // todo
-                })
+                    projectID: this.curProject.project_id,
+                    baseUrl: CR_API_URL
+                }, this.formSchema.context)
             },
             isEdit () {
                 return !!this.name
@@ -155,7 +158,8 @@
             async handleGetFormSchemaData () {
                 this.isLoading = true
                 this.formSchema = await this.$store.dispatch('dashboard/getFormSchema', {
-                    kind: this.kind
+                    kind: this.kind,
+                    namespace: this.namespace
                 })
                 this.isLoading = false
             },
@@ -172,8 +176,7 @@
                 let params = {}
                 if (this.isEdit) {
                     params = {
-                        name: this.name,
-                        namespace: this.namespace
+                        name: this.name
                     }
                 } else {
                     params = {
@@ -185,13 +188,14 @@
                     params: {
                         ...params,
                         formData: this.schemaFormData,
-                        editMode: 'form'
+                        formUpdate: this.formUpdate
                     },
                     query: {
                         type: this.type,
                         category: this.category,
                         kind: this.kind,
-                        crd: this.crd
+                        crd: this.crd,
+                        namespace: this.namespace
                     }
                 })
             },

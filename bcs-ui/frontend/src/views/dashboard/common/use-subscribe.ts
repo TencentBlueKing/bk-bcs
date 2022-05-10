@@ -1,8 +1,9 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-import { SetupContext, Ref, onBeforeUnmount } from '@vue/composition-api'
+import { SetupContext, Ref, onBeforeUnmount, computed } from '@vue/composition-api'
 import BCSWebSocket from '@/components/bcs-log/common/websocket'
+import { crPrefix } from '@/api/base'
 export interface ISubscribeParams {
     kind: string;
     resourceVersion: string;
@@ -38,7 +39,7 @@ export interface ISubscribeData {
 }
 
 export interface IUseSubscribeResult {
-    handleSubscribe: (url: string) => Promise<void>;
+    handleSubscribe: (params: Record<string, any>) => Promise<void>;
     handleAddSubscribe: (event: IEvent) => void;
     handleDeleteSubscribe: (event: IEvent) => void;
     handleModifySubscribe: (event: IEvent) => void;
@@ -51,6 +52,7 @@ export interface IUseSubscribeResult {
  * @returns
  */
 export default function useSubscribe (data: Ref<ISubscribeData>, ctx: SetupContext): IUseSubscribeResult {
+    const { $route } = ctx.root
     let bcsWebSocket: BCSWebSocket | null = null
 
     // 添加事件
@@ -83,32 +85,37 @@ export default function useSubscribe (data: Ref<ISubscribeData>, ctx: SetupConte
         }
     }
 
+    const projectId = computed(() => $route.params.projectId)
+    const clusterId = computed(() => $route.params.clusterId)
+    const subscribeURL = computed(() => {
+        return `ws://${window.BCS_API_HOST}${crPrefix}/projects/${projectId.value}/clusters/${clusterId.value}/subscribe`
+    })
+
     // 订阅事件处理
-    const handleSubscribe = async (url) => {
+    const handleSubscribe = async (params: any) => {
+        const url = `${subscribeURL.value}?${new URLSearchParams(params as Record<string, any>)}`
         bcsWebSocket?.ws?.close()
+        bcsWebSocket = null
         bcsWebSocket = new BCSWebSocket(url)
 
         bcsWebSocket.ws.onmessage = (event: MessageEvent) => {
             try {
-                const data = JSON.parse(event.data)
+                const { result } = JSON.parse(event.data)
         
-                if (!data || !data.length) {
-                    return
-                }
+                if (!result) return
+                console.log(result)
                 // 处理具体订阅事件
-                data.forEach((event: IEvent) => {
-                    switch (event.type) {
-                        case 'DELETED':
-                            handleDeleteSubscribe(event)
-                            break
-                        case 'ADDED':
-                            handleAddSubscribe(event)
-                            break
-                        case 'MODIFIED':
-                            handleModifySubscribe(event)
-                            break
-                    }
-                })
+                switch (result.type) {
+                    case 'DELETED':
+                        handleDeleteSubscribe(result)
+                        break
+                    case 'ADDED':
+                        handleAddSubscribe(result)
+                        break
+                    case 'MODIFIED':
+                        handleModifySubscribe(result)
+                        break
+                }
             } catch (err) {
                 console.log(err)
             }
@@ -117,6 +124,7 @@ export default function useSubscribe (data: Ref<ISubscribeData>, ctx: SetupConte
 
     onBeforeUnmount(() => {
         bcsWebSocket?.ws?.close()
+        bcsWebSocket = null
     })
 
     return {

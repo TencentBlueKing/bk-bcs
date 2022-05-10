@@ -3,10 +3,10 @@
         <bcs-popconfirm
             class="switch-button-pop"
             :title="$t('确认切换为表单模式？')"
-            :content="$t('Yaml 模式可以兼容表单模式，但从 Yaml 切换回表单，会丢失配置，请确认')"
+            :content="$t('切换为表单模式将不会保留 Yaml 模式下的修改内容！')"
             width="280"
             trigger="click"
-            v-if="showSwitchBtn"
+            v-if="formUpdate"
             @confirm="handleChangeMode">
             <SwitchButton :title="$t('切换为表单模式')" />
         </bcs-popconfirm>
@@ -219,9 +219,9 @@
                 type: Object,
                 default: () => ({})
             },
-            editMode: {
-                type: String,
-                default: 'yaml'
+            formUpdate: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
@@ -235,7 +235,7 @@
                 crd,
                 defaultShowExample,
                 formData,
-                editMode
+                formUpdate
             } = toRefs(props)
             const clientHeight = document.body.clientHeight
 
@@ -425,7 +425,8 @@
 
                 exampleLoading.value = true
                 examples.value = await $store.dispatch('dashboard/exampleManifests', {
-                    kind: type.value === 'crd' ? 'CustomObject' : kind.value // crd类型的模板kind固定为CustomObject
+                    kind: type.value === 'crd' ? 'CustomObject' : kind.value, // crd类型的模板kind固定为CustomObject
+                    namespace: namespace.value
                 })
                 activeExample.value = examples.value?.items?.[0] || {}
                 exampleLoading.value = false
@@ -567,21 +568,20 @@
             const handleCancel = () => { // 取消
                 $router.push({ name: $store.getters.curNavName })
             }
-            const showSwitchBtn = computed(() => {
-                return !isEdit.value || editMode.value === 'form'
-            })
             // 切换到表单模式
             const handleChangeMode = () => {
                 $router.push({
                     name: 'dashboardFormResourceUpdate',
                     params: {
-                        ...(isEdit.value ? { name: name.value, namespace: namespace.value } : {}),
-                        formData: formData.value as any
+                        ...(isEdit.value ? { name: name.value } : {}),
+                        formData: formData.value as any,
+                        formUpdate: formUpdate.value as any
                     },
                     query: {
                         type: type.value,
                         category: category.value,
-                        kind: kind.value
+                        kind: kind.value,
+                        namespace: namespace.value
                     }
                 })
             }
@@ -591,7 +591,6 @@
             })
 
             return {
-                showSwitchBtn,
                 showDiff,
                 isEdit,
                 title,
