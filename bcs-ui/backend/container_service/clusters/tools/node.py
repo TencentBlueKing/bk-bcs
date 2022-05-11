@@ -188,7 +188,7 @@ class BcsClusterMaster:
         masters = []
         for node in cluster_nodes.items:
             if not node.is_master():
-                return
+                continue
             masters.append({"inner_ip": node.inner_ip, "host_name": node.name})
         return masters
 
