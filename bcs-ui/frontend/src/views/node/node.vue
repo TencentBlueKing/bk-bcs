@@ -6,11 +6,12 @@
         >
             <div slot="title">
                 {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ')}}
-                <i18n path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}"
-                    v-if="remainNodesCount > 0"
+                <i18n path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点"
+                    v-if="maxRemainNodesCount > 0"
                 >
                     <span place="nodes" class="num">{{nodesCount}}</span>
-                    <span place="remainNodes" class="num">{{remainNodesCount}}</span>
+                    <span place="realRemainNodesCount" class="num">{{realRemainNodesCount}}</span>
+                    <span place="maxRemainNodesCount" class="num">{{maxRemainNodesCount}}</span>
                 </i18n>
             </div>
         </bcs-alert>
@@ -1336,7 +1337,17 @@
                 }
                 return Math.pow(2, 32 - mask)
             }
-            const remainNodesCount = computed(() => {
+            // 当前CIDR可添加节点数
+            const realRemainNodesCount = computed(() => {
+                const { maxNodePodNum, maxServiceNum, clusterIPv4CIDR, multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {}
+                const totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce((pre, cidr) => {
+                    pre += getCidrIpNum(cidr)
+                    return pre
+                }, 0)
+                return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum)
+            })
+            // 扩容后最大节点数量
+            const maxRemainNodesCount = computed(() => {
                 const { cidrStep, maxNodePodNum, maxServiceNum, clusterIPv4CIDR, multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {}
                 let totalCidrStep = 0
                 if (multiClusterCIDR.length < 3) {
@@ -1361,7 +1372,8 @@
             })
             return {
                 nodesCount,
-                remainNodesCount,
+                realRemainNodesCount,
+                maxRemainNodesCount,
                 isSingleCluster,
                 curSelectedCluster,
                 taskStatusTextMap,
