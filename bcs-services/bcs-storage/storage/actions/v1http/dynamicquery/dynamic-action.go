@@ -46,10 +46,11 @@ var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
 const dbConfig = "mongodb/dynamic"
 
 func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name string) error {
+	logTracer := blog.WithID("doQuery", blog.GetTraceFromRequest(req.Request).ID())
 	request := newReqDynamic(req, filter, name)
 	r, err := request.queryDynamic()
 	if err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return err
 	}
@@ -69,6 +70,7 @@ func grepNamespace(req *restful.Request, filter qFilter, name string, origin []s
 
 // GetNameSpace get namespace
 func GetNameSpace(req *restful.Request, resp *restful.Response) {
+	logTracer := blog.WithID("GetNameSpace", blog.GetTraceFromRequest(req.Request).ID())
 	// init Form
 	req.Request.FormValue("")
 	req.Request.Form[fieldTag] = []string{namespaceTag}
@@ -77,42 +79,42 @@ func GetNameSpace(req *restful.Request, resp *restful.Response) {
 
 	// grep application
 	if result, err = grepNamespace(req, &ApplicationFilter{Kind: ",application"}, "application", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep process
 	if result, err = grepNamespace(req, &ProcessFilter{Kind: "process"}, "application", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep deployment
 	if result, err = grepNamespace(req, &DeploymentFilter{}, "deployment", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep service
 	if result, err = grepNamespace(req, &ServiceFilter{}, "service", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep configMap
 	if result, err = grepNamespace(req, &ConfigMapFilter{}, "configmap", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep secret
 	if result, err = grepNamespace(req, &SecretFilter{}, "secret", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
@@ -248,6 +250,7 @@ func GetExportService(req *restful.Request, resp *restful.Response) {
 
 // GetNameSpaceK8sUsed get namespace k8s used
 func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
+	logTracer := blog.WithID("GetNameSpaceK8sUsed", blog.GetTraceFromRequest(req.Request).ID())
 	// init Form
 	req.Request.FormValue("")
 	req.Request.Form[fieldTag] = []string{namespaceTag}
@@ -256,7 +259,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep replicaSet
 	if result, err = grepNamespace(req, &ReplicaSetFilter{}, "ReplicaSet", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -265,7 +268,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep deployment
 	if result, err = grepNamespace(req, &DeploymentK8sFilter{}, "Deployment", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -274,7 +277,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep service
 	if result, err = grepNamespace(req, &ServiceK8sFilter{}, "Service", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -283,7 +286,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep configMap
 	if result, err = grepNamespace(req, &ConfigMapK8sFilter{}, "ConfigMap", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -292,7 +295,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep secret
 	if result, err = grepNamespace(req, &SecretK8sFilter{}, "Secret", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -301,7 +304,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep ingress
 	if result, err = grepNamespace(req, &IngressFilter{}, "Ingress", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -310,7 +313,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep daemonSet
 	if result, err = grepNamespace(req, &DaemonSetFilter{}, "DaemonSet", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -319,7 +322,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep job
 	if result, err = grepNamespace(req, &JobFilter{}, "Job", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
@@ -328,7 +331,7 @@ func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
 
 	// grep statefulSet
 	if result, err = grepNamespace(req, &StatefulSetFilter{}, "StatefulSet", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})

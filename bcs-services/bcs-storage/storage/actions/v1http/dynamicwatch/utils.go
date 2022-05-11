@@ -58,9 +58,11 @@ func (rd *reqDynamic) watch() {
 		Req:       rd.req,
 		Resp:      rd.resp,
 	}
+	logTracer := blog.WithID("dynamicWatch", blog.GetTraceFromRequest(rd.req.Request).ID())
+
 	ws, err := lib.NewWatchServer(newWatchOption)
 	if err != nil {
-		blog.Error("dynamic get watch server failed, err %s", err.Error())
+		logTracer.Error("dynamic get watch server failed, err %s", err.Error())
 		rd.resp.Write(lib.EventWatchBreakBytes)
 		return
 	}

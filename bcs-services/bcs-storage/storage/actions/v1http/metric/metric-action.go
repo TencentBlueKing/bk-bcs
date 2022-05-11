@@ -55,13 +55,14 @@ func GetMetric(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetMetric"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := getMetric(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		if err == storageErr.ResourceDoesNotExist {
 			lib.ReturnRest(&lib.RestResponse{
 				Resp: resp, ErrCode: common.BcsErrStorageResourceNotExist,
@@ -76,6 +77,7 @@ func GetMetric(req *restful.Request, resp *restful.Response) {
 	if len(r) == 0 {
 		err := fmt.Errorf("resource does not exist")
 		utils.SetSpanLogTagError(span, err)
+		logTracer.Errorf("err: %v", err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, ErrCode: common.BcsErrStorageResourceNotExist,
 			Message: common.BcsErrStorageResourceNotExistStr})
@@ -89,12 +91,13 @@ func PutMetric(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutMetric"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := put(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, ErrCode: common.BcsErrStoragePutResourceFail,
 			Message: common.BcsErrStoragePutResourceFailStr})
@@ -108,12 +111,13 @@ func DeleteMetric(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteMetric"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := remove(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		if err == storageErr.ResourceDoesNotExist {
 			lib.ReturnRest(&lib.RestResponse{
 				Resp: resp, ErrCode: common.BcsErrStorageResourceNotExist,
@@ -133,13 +137,14 @@ func QueryMetric(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "QueryMetric"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := queryMetric(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
 			Message: common.BcsErrStorageListResourceFailStr})
@@ -153,13 +158,14 @@ func ListMetricTables(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "ListMetricTables"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	r, err := tables(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDecodeListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageDecodeListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageDecodeListResourceFail,
 			Message: common.BcsErrStorageDecodeListResourceFailStr})

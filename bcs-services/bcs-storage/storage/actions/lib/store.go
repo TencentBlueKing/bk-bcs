@@ -120,6 +120,8 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		OperationName   = "storage-Get"
 		OperationMethod = "Get"
 	)
+	logTracer := blog.WithID(OperationName, blog.GetTraceFromContext(ctx).ID())
+
 	span, ctx := utils.StartSpanFromContext(ctx, OperationName)
 	defer span.Finish()
 	setDBSpanTags(a, span, resourceType, OperationMethod)
@@ -154,7 +156,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	}
 
 	if err := finder.All(ctx, &mList); err != nil {
-		blog.Errorf("failed to query, err %s", err.Error())
+		logTracer.Errorf("failed to query, err %s", err.Error())
 		utils.SetSpanLogTagError(span, err)
 		return nil, fmt.Errorf("failed to query, err %s", err.Error())
 	}
