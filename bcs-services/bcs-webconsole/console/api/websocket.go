@@ -78,8 +78,9 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	connected := false
 
 	query := &wsQuery{}
-	if err := c.Bind(query); err != nil {
+	if err := c.BindQuery(query); err != nil {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "参数不合法"))
+		return
 	}
 
 	sessionId := route.GetSessionId(c)
