@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	jwtGo "github.com/dgrijalva/jwt-go"
+	"github.com/golang/glog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/ctxkey"
@@ -25,7 +26,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
 )
 
-type JWTConfig struct {
+type JWTClient struct {
+	Enable         bool
+	PublicKey      string
+	PublicKeyFile  string
+	PrivateKey     string
+	PrivateKeyFile string
+}
+
+func NewJWTClient(c JWTClient) *JWTClient {
+	if !c.Enable {
+		glog.Warning("jwt function not enabled")
+		return nil
+	}
+
 }
 
 // GetUserFromCtx 通过 ctx 获取当前用户
