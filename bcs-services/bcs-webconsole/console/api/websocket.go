@@ -84,7 +84,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 
 	sessionId := route.GetSessionId(c)
-	podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
+	podCtx, err := sessions.NewStore().WebSocketScope().Get(ctx, sessionId)
 	if err != nil {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "获取session失败"))
 		return
