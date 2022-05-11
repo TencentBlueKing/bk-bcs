@@ -38,8 +38,8 @@ type Configurations struct {
 	Web         *WebConf                   `yaml:"web"`
 }
 
-// NewConfigurations 新增配置
-func NewConfigurations() (*Configurations, error) {
+// newConfigurations 新增配置
+func newConfigurations() (*Configurations, error) {
 	c := &Configurations{}
 
 	c.Base = &BaseConf{}
@@ -85,7 +85,7 @@ func NewConfigurations() (*Configurations, error) {
 }
 
 // init 初始化
-func (c *Configurations) Init() error {
+func (c *Configurations) init() error {
 	if err := c.Web.init(); err != nil {
 		return err
 	}
@@ -98,27 +98,20 @@ func (c *Configurations) IsDevMode() bool {
 	return c.Base.RunEnv == DevEnv
 }
 
-var (
-	// G : Global Configurations
-	G            *Configurations
-	loadConfOnce sync.Once
-)
+// G : Global Configurations
+var G *Configurations
 
 // 初始化
 func init() {
-	if G == nil {
-		loadConfOnce.Do(func() {
-			g, err := NewConfigurations()
-			if err != nil {
-				panic(err)
-			}
-			if err := g.Init(); err != nil {
-				panic(err)
-			}
-
-			G = g
-		})
+	g, err := newConfigurations()
+	if err != nil {
+		panic(err)
 	}
+	if err := g.init(); err != nil {
+		panic(err)
+	}
+
+	G = g
 }
 
 func (c *Configurations) ReadCred(name string, content []byte) error {
@@ -178,7 +171,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 
-	if err := c.Init(); err != nil {
+	if err := c.init(); err != nil {
 		return err
 	}
 
