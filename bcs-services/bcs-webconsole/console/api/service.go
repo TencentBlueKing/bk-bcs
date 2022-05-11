@@ -130,19 +130,10 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	query := url.Values{}
-	query.Set("session_id", sessionId)
-	if consoleQuery.Lang != "" {
-		query.Set("lang", consoleQuery.Lang)
-	}
-
-	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
-		projectId, clusterId, query.Encode()))
-
 	data := types.APIResponse{
 		Data: map[string]string{
 			"session_id": sessionId,
-			"ws_url":     wsUrl,
+			"ws_url":     makeWebSocketUrl(sessionId, consoleQuery.Lang, false),
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -169,13 +160,10 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 		return
 	}
 
-	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		podCtx.ProjectId, podCtx.ClusterId, sessionId))
-
 	data := types.APIResponse{
 		Data: map[string]string{
 			"session_id": sessionId,
-			"ws_url":     wsUrl,
+			"ws_url":     makeWebSocketUrl(sessionId, "", false),
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -237,7 +225,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	}
 
 	if consoleQuery.WSAcquire {
-		data["ws_url"] = makeWebSocketUrl(sessionId, podCtx)
+		data["ws_url"] = makeWebSocketUrl(sessionId, "cn", true)
 	}
 
 	respData := types.APIResponse{
@@ -265,15 +253,28 @@ func makeWebConsoleUrl(sessionId string, podCtx *types.PodContext) string {
 }
 
 // makeWebSocketUrl http 转换为 ws 协议链接
-func makeWebSocketUrl(sessionId string, podCtx *types.PodContext) string {
+func makeWebSocketUrl(sessionId, lang string, withScheme bool) string {
 	u := *config.G.Web.BaseURL
 	u.Path = path.Join(u.Path, "/ws/sessions/", sessionId) + "/"
+
+	query := url.Values{}
+	if lang != "" {
+		query.Set("lang", lang)
+	}
+
+	u.RawQuery = query.Encode()
 
 	// https 协议 转换为 wss
 	if u.Scheme == "https" {
 		u.Scheme = "wss"
 	} else {
 		u.Scheme = "ws"
+	}
+
+	// 去掉前缀, web 使用
+	if !withScheme {
+		u.Scheme = ""
+		u.Host = ""
 	}
 
 	return u.String()

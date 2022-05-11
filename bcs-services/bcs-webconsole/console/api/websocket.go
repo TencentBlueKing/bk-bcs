@@ -42,6 +42,7 @@ type wsQuery struct {
 	Rows       uint16 `form:"rows"`
 	Cols       uint16 `form:"cols"`
 	ShowBanner bool   `form:"show_banner"`
+	Lang       string `form:"lang"` // banner 国际化, 在中间件已经处理，这里只做记录
 }
 
 // GetTerminalSize 获取初始宽高
