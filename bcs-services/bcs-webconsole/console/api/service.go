@@ -123,7 +123,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 
-	sessionId, err := sessions.NewStore().Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
@@ -153,7 +153,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 
 	podCtx := authCtx.BindSession
 
-	sessionId, err := sessions.NewStore().Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
@@ -211,7 +211,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		podCtx.Commands = commands
 	}
 
-	sessionId, err := sessions.NewStore().Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().OpenAPIScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
@@ -224,8 +224,16 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		// "ws_acquire_url":  makeWSAcquireUrl(sessionId, podCtx),
 	}
 
+	// 这里直接置换新的session_id
 	if consoleQuery.WSAcquire {
-		data["ws_url"] = makeWebSocketUrl(sessionId, "cn", true)
+		wsSessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
+		if err != nil {
+			msg := i18n.GetMessage("获取session失败{}", err)
+			APIError(c, msg)
+			return
+		}
+
+		data["ws_url"] = makeWebSocketUrl(wsSessionId, "", true)
 	}
 
 	respData := types.APIResponse{

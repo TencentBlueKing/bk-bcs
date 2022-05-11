@@ -253,7 +253,7 @@ func initContextWithPortalSession(c *gin.Context, authCtx *AuthContext) bool {
 		return false
 	}
 
-	podCtx, err := sessions.NewStore().Get(c.Request.Context(), sessionId)
+	podCtx, err := sessions.NewStore().OpenAPIScope().Get(c.Request.Context(), sessionId)
 	if err != nil {
 		return false
 	}

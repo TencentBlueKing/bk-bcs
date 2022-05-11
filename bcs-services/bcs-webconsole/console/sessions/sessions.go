@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -29,23 +30,42 @@ import (
 const (
 	// bcs::webconsole::sessions::{run_env}
 	keyPrefix      = "bcs::webconsole::sessions::%s"
+	fieldKeyPrefix = "%s:%s" // "{scope}:{session_id}"
 	expireDuration = time.Minute * 30
 )
 
 type RedisStore struct {
 	client *redis.Client
 	Id     string
+	scope  string
 	key    string
 }
 
 func NewStore() *RedisStore {
 	redisClient := storage.GetDefaultRedisSession().Client
 	key := fmt.Sprintf(keyPrefix, config.G.Base.RunEnv)
-	return &RedisStore{client: redisClient, key: key}
+	return &RedisStore{client: redisClient, key: key, scope: "global"}
+}
+
+// WebSocket 类型
+func (rs *RedisStore) WebSocketScope() *RedisStore {
+	rs.scope = "websocket"
+	return rs
+}
+
+// OpenAPI 类型
+func (rs *RedisStore) OpenAPIScope() *RedisStore {
+	rs.scope = "openapi"
+	return rs
+}
+
+func (rs *RedisStore) cacheKey(id string) string {
+	key := fmt.Sprintf(fieldKeyPrefix, rs.scope, id)
+	return key
 }
 
 func (rs *RedisStore) Get(ctx context.Context, id string) (*types.PodContext, error) {
-	value, err := rs.client.HGet(ctx, rs.key, id).Result()
+	value, err := rs.client.HGet(ctx, rs.key, rs.cacheKey(id)).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -64,12 +84,12 @@ func (rs *RedisStore) Set(ctx context.Context, values *types.PodContext) (string
 		PodContext: *values,
 		Timestamp:  time.Now().Unix(),
 	}
-	id := uuid.NewString()
+	id := sessionIdGenerator()
 	payload, err := json.Marshal(podCtx)
 	if err != nil {
 		return "", err
 	}
-	if _, err := rs.client.HSet(ctx, rs.key, id, payload).Result(); err != nil {
+	if _, err := rs.client.HSet(ctx, rs.key, rs.cacheKey(id), payload).Result(); err != nil {
 		return "", err
 	}
 	return id, nil
@@ -102,4 +122,11 @@ func (rs *RedisStore) Cleanup(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// sessionIdGenerator
+func sessionIdGenerator() string {
+	uid := uuid.New().String()
+	requestId := strings.Replace(uid, "-", "", -1)
+	return requestId
 }
