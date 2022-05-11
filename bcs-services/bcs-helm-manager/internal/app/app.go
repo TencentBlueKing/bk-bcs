@@ -41,6 +41,7 @@ import (
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
@@ -109,6 +110,7 @@ func (hm *HelmManager) Init() error {
 		hm.initMicro,
 		hm.initHTTPService,
 		hm.initMetric,
+		hm.initJWTClient,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -419,6 +421,22 @@ func (hm *HelmManager) initTLSConfig() error {
 		}
 		hm.clientTLSConfig = tlsConfig
 		blog.Infof("load helm manager client tls config successfully")
+	}
+	return nil
+}
+
+func (hm *HelmManager) initJWTClient() error {
+	conf := auth.JWTClientConfig{
+		Enable:         hm.opt.JWT.Enable,
+		PublicKey:      hm.opt.JWT.PublicKey,
+		PublicKeyFile:  hm.opt.JWT.PublicKeyFile,
+		PrivateKey:     hm.opt.JWT.PrivateKey,
+		PrivateKeyFile: hm.opt.JWT.PrivateKeyFile,
+		ExemptClients:  hm.opt.ExemptClients.ClientIDs,
+	}
+	if _, err := auth.NewJWTClient(conf); err != nil {
+		blog.Error("init jwt client error, %s", err.Error())
+		return err
 	}
 	return nil
 }

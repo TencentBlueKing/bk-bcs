@@ -98,18 +98,21 @@ type JWTConfig struct {
 	PrivateKeyFile string `json:"privatekeyfile"`
 }
 
+type ExemptClientsConfig struct {
+	ClientIDs string `json:"clientids"`
+}
+
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd    EtcdOption    `json:"etcd"`
-	BcsLog  LogConfig     `json:"bcslog"`
-	Swagger SwaggerConfig `json:"swagger"`
-	Mongo   MongoConfig   `json:"mongo"`
-	Repo    RepoConfig    `json:"repo"`
-	Release ReleaseConfig `json:"release"`
-	JWT     JWTConfig     `json:"jwt"`
-	Debug   bool          `json:"debug"`
+	Etcd          EtcdOption          `json:"etcd"`
+	BcsLog        LogConfig           `json:"bcslog"`
+	Swagger       SwaggerConfig       `json:"swagger"`
+	Mongo         MongoConfig         `json:"mongo"`
+	Repo          RepoConfig          `json:"repo"`
+	Release       ReleaseConfig       `json:"release"`
+	JWT           JWTConfig           `json:"jwt"`
+	ExemptClients ExemptClientsConfig `json:"exemptclients"`
+	Debug         bool                `json:"debug"`
 	ServerConfig
 	ClientConfig
 }
-
-var GlobalConfig *HelmManagerOptions

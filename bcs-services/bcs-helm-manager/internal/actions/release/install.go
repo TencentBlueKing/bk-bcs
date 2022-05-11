@@ -17,6 +17,7 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -76,15 +77,15 @@ func (i *InstallReleaseAction) install() error {
 	repoName := i.req.GetRepository()
 	chartName := i.req.GetChart()
 	chartVersion := i.req.GetVersion()
-	opName := i.req.GetOperator()
 	values := i.req.GetValues()
+	username := auth.GetUserFromCtx(i.ctx)
 
 	// 获取对应的仓库信息
 	repository, err := i.model.GetRepository(i.ctx, projectID, repoName)
 	if err != nil {
 		blog.Errorf("install release get repository failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -102,7 +103,7 @@ func (i *InstallReleaseAction) install() error {
 	if err != nil {
 		blog.Errorf("install release get chart detail failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -131,8 +132,8 @@ func (i *InstallReleaseAction) install() error {
 				common.PTKProjectID: "",
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   opName,
-				common.PTKUpdator:   opName,
+				common.PTKCreator:   username,
+				common.PTKUpdator:   username,
 				common.PTKVersion:   "",
 				common.PTKName:      "",
 			},
@@ -141,7 +142,7 @@ func (i *InstallReleaseAction) install() error {
 	if err != nil {
 		blog.Errorf("install release failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -150,7 +151,7 @@ func (i *InstallReleaseAction) install() error {
 	if err = i.model.DeleteReleases(i.ctx, clusterID, releaseNamespace, releaseNamespace); err != nil {
 		blog.Errorf("install release, delete release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -165,14 +166,14 @@ func (i *InstallReleaseAction) install() error {
 	}); err != nil {
 		blog.Errorf("install release, create release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
 
 	blog.Infof("install release successfully, with revision %d, "+
 		"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-		result.Revision, projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+		result.Revision, projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 	i.setResp(common.ErrHelmManagerSuccess, "ok", (&release.Release{
 		Name:         releaseName,
 		Namespace:    releaseNamespace,

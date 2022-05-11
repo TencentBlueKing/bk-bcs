@@ -15,12 +15,10 @@
 package stringx
 
 import (
-	"strings"
-
 	"github.com/google/uuid"
 )
 
 // GenUuid 长度为32
 func GenUUID() string {
-	return strings.Replace(uuid.New().String(), "-", "", -1)
+	return uuid.New().String()
 }

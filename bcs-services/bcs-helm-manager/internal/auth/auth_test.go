@@ -37,6 +37,7 @@ func newClient() *jwt.JWTClient {
 func newJWTToken() string {
 	jwtClient := newClient()
 	jwtToken, err := jwtClient.JWTSign(&jwt.UserInfo{
+		ClientName:  "test",
 		SubType:     jwt.User.String(),
 		UserName:    adminName,
 		ExpiredTime: 10000,
@@ -49,8 +50,12 @@ func newJWTToken() string {
 
 func TestParseUsername(t *testing.T) {
 	jwtToken := newJWTToken()
-	config, _ := microCfg.NewConfig()
-	config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))))
+	jwtClient, _ = jwt.NewJWTClient(
+		jwt.JWTOptions{
+			VerifyKeyFile: "./test/app.rsa.pub",
+			SignKeyFile:   "./test/app.rsa",
+		},
+	)
 	userAuth, _ := ParseUserFromJWT(jwtToken)
 	assert.Equal(t, userAuth.Username, adminName)
 }

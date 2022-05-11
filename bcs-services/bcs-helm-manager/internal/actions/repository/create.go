@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
@@ -60,6 +61,8 @@ func (c *CreateRepositoryAction) Handle(ctx context.Context,
 		return nil
 	}
 
+	// 获取username
+	username := auth.GetUserFromCtx(ctx)
 	return c.create(c.req.GetTakeover(), &helmmanager.Repository{
 		ProjectID:      c.req.ProjectID,
 		Name:           c.req.Name,
@@ -70,7 +73,7 @@ func (c *CreateRepositoryAction) Handle(ctx context.Context,
 		RemotePassword: c.req.RemotePassword,
 		Username:       c.req.Username,
 		Password:       c.req.Password,
-		CreateBy:       c.req.Operator,
+		CreateBy:       &username,
 	})
 }
 

@@ -16,5 +16,5 @@ const (
 	// RequestIDKey ...
 	RequestIDKey = "X-Request-Id"
 	// UsernameKey ...
-	UsernameKey = "X-BCS-Username"
+	UsernameKey = "X-Bcs-Username"
 )

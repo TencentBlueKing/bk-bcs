@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
@@ -66,13 +67,13 @@ func (l *ListChartVersionAction) list() error {
 	projectID := l.req.GetProjectID()
 	repoName := l.req.GetRepository()
 	chartName := l.req.GetName()
-	opName := l.req.GetOperator()
+	username := auth.GetUserFromCtx(l.ctx)
 
 	repository, err := l.model.GetRepository(l.ctx, projectID, repoName)
 	if err != nil {
 		blog.Errorf(
 			"list chart version failed, %s, projectID: %s, repository: %s, chartName: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, opName)
+			err.Error(), projectID, repoName, chartName, username)
 		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -88,7 +89,7 @@ func (l *ListChartVersionAction) list() error {
 		ListVersion(l.ctx, l.getOption())
 	if err != nil {
 		blog.Errorf("list chart version failed, %s, projectID: %s, repository: %s, chartName: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, opName)
+			err.Error(), projectID, repoName, chartName, username)
 		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
 		return nil
 	}

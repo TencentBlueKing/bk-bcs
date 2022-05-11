@@ -60,6 +60,14 @@ data:
         "vardir": "/data/bcs/vars/bcs-helm-manager/"
         "encrypted": {{ .Values.helmmanager.release.encrypted }}
       },
+      "jwt": {
+          "enable": true,
+          "publickeyfile": "",
+          "privatekeyfile": ""
+      },
+      "exemptclients": {
+          clientids: "test"
+      },
       "debug": false,
       "address": "{{ .Values.helmmanager.service.address }}",
       "insecureaddress": "{{ .Values.helmmanager.service.insecureaddress }}",

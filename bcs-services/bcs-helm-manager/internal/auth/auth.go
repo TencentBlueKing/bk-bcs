@@ -18,11 +18,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	jwtGo "github.com/dgrijalva/jwt-go"
-	"github.com/golang/glog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/ctxkey"
-	opts "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
 )
 
@@ -32,14 +30,26 @@ type JWTClientConfig struct {
 	PublicKeyFile  string
 	PrivateKey     string
 	PrivateKeyFile string
+	ExemptClients  string
 }
 
-func NewJWTClient(c JWTClientConfig) *JWTClientConfig {
-	if !c.Enable {
-		glog.Warning("jwt function not enabled")
-		return nil
+var (
+	jwtClient *jwt.JWTClient
+	JWTConfig *JWTClientConfig
+)
+
+func NewJWTClient(c JWTClientConfig) (*jwt.JWTClient, error) {
+	jwtOpt, err := getJWTOpt(c)
+	if err != nil {
+		return nil, common.ErrHelmManagerAuthFailed.GenError()
 	}
-	getJWTOpt(c)
+	JWTConfig = &c
+	jwtClient, err = jwt.NewJWTClient(*jwtOpt)
+	if err != nil {
+		return nil, err
+	}
+
+	return jwtClient, nil
 }
 
 // GetUserFromCtx 通过 ctx 获取当前用户
@@ -73,15 +83,6 @@ func ParseUserFromJWT(jwtToken string) (*AuthUser, error) {
 }
 
 func parseClaims(jwtToken string) (*jwt.UserClaimsInfo, error) {
-	// 组装 jwt client
-	jwtOpt, err := getJWTOpt()
-	if err != nil {
-		return nil, common.ErrHelmManagerAuthFailed.GenError()
-	}
-	jwtClient, err := jwt.NewJWTClient(*jwtOpt)
-	if err != nil {
-		return nil, err
-	}
 	// 解析token
 	claims, err := jwtClient.JWTDecode(jwtToken)
 	if err != nil {
@@ -90,13 +91,13 @@ func parseClaims(jwtToken string) (*jwt.UserClaimsInfo, error) {
 	return claims, nil
 }
 
-func getJWTOpt(c) (*jwt.JWTOptions, error) {
+func getJWTOpt(c JWTClientConfig) (*jwt.JWTOptions, error) {
 	jwtOpt := &jwt.JWTOptions{
-		VerifyKeyFile: opts.GlobalConfig.JWT.PublicKeyFile,
-		SignKeyFile:   opts.GlobalConfig.JWT.PrivateKeyFile,
+		VerifyKeyFile: c.PublicKeyFile,
+		SignKeyFile:   c.PrivateKeyFile,
 	}
-	publicKey := opts.GlobalConfig.JWT.PublicKey
-	privateKey := opts.GlobalConfig.JWT.PrivateKey
+	publicKey := c.PublicKey
+	privateKey := c.PrivateKey
 
 	if publicKey != "" {
 		key, err := jwtGo.ParseRSAPublicKeyFromPEM([]byte(publicKey))
@@ -123,7 +124,7 @@ var NoAuthEndpoints = []string{
 // 检查当前请求是否允许免除用户认证
 func CanExemptAuth(ep string) bool {
 	// 禁用身份认证
-	if !opts.GlobalConfig.JWT.Enable {
+	if !JWTConfig.Enable {
 		return true
 	}
 	// 特殊指定的Handler，不需要认证的方法

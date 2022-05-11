@@ -133,6 +133,14 @@ helmmanager:
     maxPoolSize: 0
     minPoolSize: 0
     encrypted: false
+  
+  jwt:
+    enable: true
+    publickeyfile: ""
+    privatekeyfile: ""
+
+  exemptclients:
+    clientids: "test"
 
 image:
   registry: ""

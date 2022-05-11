@@ -93,6 +93,9 @@ func parseFlags() {
 	flag.String("jwt_privatekey", "", "private key")
 	flag.String("jwt_privatekeyfile", "", "the file of private key")
 
+	// exempt clients
+	flag.String("exemptclients_clientids", "", "exempt client ids")
+
 	// config file path
 	flag.String("conf", "", "config file path")
 	flag.Parse()
@@ -125,8 +128,6 @@ func main() {
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
-	// 添加全局变量，用于后续直接获取配置
-	options.GlobalConfig = opt
 
 	blog.InitLogs(conf.LogConfig{
 		LogDir:          opt.BcsLog.LogDir,

@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/headerkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
 )
 
@@ -56,6 +57,16 @@ func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 				return err
 			}
 			username = authUser.Username
+			// 如果jwt token解析的username为空，并且clientid在豁免的白名单中，通过指定header获取用户名
+			if username == "" && isClientIDInWhitelist(authUser.ClientID) {
+				username, ok = md.Get(headerkey.UsernameKey)
+				if !ok {
+					return errors.New("username not found from header")
+				}
+			}
+			if username == "" {
+				return errors.New("username is null")
+			}
 		}
 		ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 		return fn(ctx, req, rsp)
@@ -69,10 +80,18 @@ func getRequestID(ctx context.Context) string {
 		return stringx.GenUUID()
 	}
 	// 当request id不存在或者为空时，生成id
-	requestID, ok := md.Get("X-Request-Id")
+	requestID, ok := md.Get(headerkey.RequestIDKey)
 	if !ok || requestID == "" {
 		return stringx.GenUUID()
 	}
 
 	return requestID
+}
+
+func isClientIDInWhitelist(clientID string) bool {
+	if clientID == "" {
+		return false
+	}
+	clientIDs := stringx.SplitString(auth.JWTConfig.ExemptClients)
+	return stringx.StringInSlice(clientID, clientIDs)
 }
