@@ -285,12 +285,11 @@ func PreparedGuideMessage(ctx context.Context, ws *websocket.Conn, guideMessages
 
 // GracefulCloseWebSocket : 优雅停止 websocket 连接
 func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected bool, errMsg error) {
-	if err := ws.WriteControl(
-		websocket.CloseMessage,
-		websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error()),
-		time.Now().Add(time.Second*5), // 最迟 5 秒
-	); err != nil {
+	closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error())
+	deadline := time.Now().Add(time.Second * 5) // 最迟 5 秒
+	if err := ws.WriteControl(websocket.CloseMessage, closeMsg, deadline); err != nil {
 		logger.Warnf("gracefully close websocket [%s] error: %s", errMsg, err)
+		return
 	}
 
 	// 如果没有建立双向连接前, 需要ReadMessage才能正常结束
