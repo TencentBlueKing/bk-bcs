@@ -38,8 +38,10 @@ type Configurations struct {
 	Web         *WebConf                   `yaml:"web"`
 }
 
-// ReadFrom : read from file
-func (c *Configurations) Init() error {
+// NewConfigurations 新增配置
+func NewConfigurations() (*Configurations, error) {
+	c := &Configurations{}
+
 	c.Base = &BaseConf{}
 	c.Base.Init()
 
@@ -77,8 +79,16 @@ func (c *Configurations) Init() error {
 
 	c.Credentials = map[string][]*Credential{}
 
-	c.Web = &WebConf{}
-	c.Web.Init()
+	c.Web = defaultWebConf()
+
+	return c, nil
+}
+
+// init 初始化
+func (c *Configurations) Init() error {
+	if err := c.Web.init(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -88,12 +98,27 @@ func (c *Configurations) IsDevMode() bool {
 	return c.Base.RunEnv == DevEnv
 }
 
-// G : Global Configurations
-var G = &Configurations{}
+var (
+	// G : Global Configurations
+	G            *Configurations
+	loadConfOnce sync.Once
+)
 
 // 初始化
 func init() {
-	G.Init()
+	if G == nil {
+		loadConfOnce.Do(func() {
+			g, err := NewConfigurations()
+			if err != nil {
+				panic(err)
+			}
+			if err := g.Init(); err != nil {
+				panic(err)
+			}
+
+			G = g
+		})
+	}
 }
 
 func (c *Configurations) ReadCred(name string, content []byte) error {
@@ -152,6 +177,11 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if err != nil {
 		return err
 	}
+
+	if err := c.Init(); err != nil {
+		return err
+	}
+
 	c.Logging.InitBlog()
 	c.Base.InitManagers()
 

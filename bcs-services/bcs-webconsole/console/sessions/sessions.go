@@ -47,16 +47,12 @@ func NewRedisStore(projectId, clusterId string) *RedisStore {
 	return &RedisStore{client: redisClient, projectId: projectId, clusterId: clusterId, key: key}
 }
 
-func (rs *RedisStore) cacheKey(id string) string {
-	key := fmt.Sprintf(fieldKeyPrefix, rs.projectId, rs.clusterId, id)
-	return key
-}
-
 func (rs *RedisStore) Get(ctx context.Context, id string) (*types.PodContext, error) {
-	value, err := rs.client.HGet(ctx, rs.key, rs.cacheKey(id)).Result()
+	value, err := rs.client.HGet(ctx, rs.key, id).Result()
 	if err != nil {
 		return nil, err
 	}
+
 	var podCtx types.TimestampPodContext
 	if err := json.Unmarshal([]byte(value), &podCtx); err != nil {
 		return nil, err
@@ -76,7 +72,7 @@ func (rs *RedisStore) Set(ctx context.Context, values *types.PodContext) (string
 	if err != nil {
 		return "", err
 	}
-	if _, err := rs.client.HSet(ctx, rs.key, rs.cacheKey(id), payload).Result(); err != nil {
+	if _, err := rs.client.HSet(ctx, rs.key, id, payload).Result(); err != nil {
 		return "", err
 	}
 	return id, nil

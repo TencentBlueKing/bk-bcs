@@ -151,9 +151,8 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+// CreatePortalSession
 func (s *service) CreatePortalSession(c *gin.Context) {
-	sessionId := c.Query("session_id")
-
 	authCtx := route.MustGetAuthContext(c)
 	if authCtx.BindSession == nil {
 		msg := i18n.GetMessage("sessin_id不正确")
@@ -176,7 +175,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 
 	data := types.APIResponse{
 		Data: map[string]string{
-			"session_id": sessionId,
+			"session_id": NewSessionId,
 			"ws_url":     wsUrl,
 		},
 		Code:      types.NoError,
@@ -186,6 +185,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+// CreateContainerPortalSession 创建 webconsole url api
 func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
@@ -233,25 +233,66 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		return
 	}
 
-	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/portal/container/") + "/"
+	data := map[string]string{
+		"session_id":      sessionId,
+		"web_console_url": makeWebConsoleUrl(sessionId, podCtx),
+	}
 
-	query := url.Values{}
-	query.Set("session_id", sessionId)
-	query.Set("container_name", podCtx.ContainerName)
-
-	webConsoleUrl = fmt.Sprintf("%s%s?%s", config.G.Web.Host, webConsoleUrl, query.Encode())
+	if consoleQuery.WSAcquire {
+		data["ws_url"] = makeWebSocketUrl(sessionId, podCtx)
+	}
 
 	respData := types.APIResponse{
-		Data: map[string]string{
-			"session_id":      sessionId,
-			"web_console_url": webConsoleUrl,
-		},
+		Data:      data,
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
 		RequestID: authCtx.RequestId,
 	}
 
 	c.JSON(http.StatusOK, respData)
+}
+
+// makeWebSocketUrl webconsole 页面访问地址
+func makeWebConsoleUrl(sessionId string, podCtx *types.PodContext) string {
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, "/portal/container/")
+
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	query.Set("container_name", podCtx.ContainerName)
+
+	u.RawQuery = query.Encode()
+
+	return u.String()
+}
+
+// makeWebSocketUrl http 转换为 ws 协议链接
+func makeWebSocketUrl(sessionId string, podCtx *types.PodContext) string {
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, "/ws/sessions/", sessionId) + "/"
+
+	// https 协议 转换为 wss
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
+
+	return u.String()
+}
+
+// makeWSAcquireUrl webconsole 页面访问地址
+func makeWSAcquireUrl(sessionId string, podCtx *types.PodContext) string {
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, "/portal/container/") + "/"
+
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	query.Set("container_name", podCtx.ContainerName)
+
+	u.RawQuery = query.Encode()
+
+	return u.String()
 }
 
 func (s *service) CreateClusterPortalSession(c *gin.Context) {
