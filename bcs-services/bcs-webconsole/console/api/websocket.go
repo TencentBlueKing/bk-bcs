@@ -41,7 +41,7 @@ var upgrader = websocket.Upgrader{
 type wsQuery struct {
 	Rows       uint16 `form:"rows"`
 	Cols       uint16 `form:"cols"`
-	ShowBanner bool   `form:"show_banner"`
+	HideBanner bool   `form:"hide_banner"`
 	Lang       string `form:"lang"` // banner 国际化, 在中间件已经处理，这里只做记录
 }
 
@@ -90,7 +90,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
-	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, query.GetTerminalSize(), query.ShowBanner)
+	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, query.GetTerminalSize(), query.HideBanner)
 	connected = true
 
 	// kubectl 容器， 需要定时上报心跳

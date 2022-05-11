@@ -260,7 +260,6 @@
             ws_url = new URL(raw_ws_url);
             ws_url.searchParams.set("rows", term.rows)
             ws_url.searchParams.set("cols", term.cols)
-            ws_url.searchParams.set("show_banner", "true")
             ws = new WebSocket(ws_url.toString());
 
             // term handler

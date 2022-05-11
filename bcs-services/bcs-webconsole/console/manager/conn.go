@@ -52,18 +52,18 @@ type RemoteStreamConn struct {
 	resizeMsgChan chan *TerminalSize
 	inputMsgChan  <-chan wsMessage
 	outputMsgChan chan []byte
-	showBanner    bool
+	hideBanner    bool
 }
 
 // NewRemoteStreamConn :
-func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize, showBanner bool) *RemoteStreamConn {
+func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize, hideBanner bool) *RemoteStreamConn {
 	conn := &RemoteStreamConn{
 		ctx:           ctx,
 		wsConn:        wsConn,
 		bindMgr:       mgr,
 		resizeMsgChan: make(chan *TerminalSize, 1), // 放入初始宽高
 		outputMsgChan: make(chan []byte),
-		showBanner:    showBanner,
+		hideBanner:    hideBanner,
 	}
 
 	// 初始化命令行宽和高
@@ -203,7 +203,7 @@ func (r *RemoteStreamConn) Run() error {
 				return nil
 			}
 			// 收到首个字节才发送 hello 信息
-			if notSendMsg && r.showBanner {
+			if notSendMsg && !r.hideBanner {
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 				notSendMsg = false
 			}
