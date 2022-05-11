@@ -44,7 +44,7 @@ type RedisStore struct {
 func NewStore() *RedisStore {
 	redisClient := storage.GetDefaultRedisSession().Client
 	key := fmt.Sprintf(keyPrefix, config.G.Base.RunEnv)
-	return &RedisStore{client: redisClient, key: key, scope: "command"}
+	return &RedisStore{client: redisClient, key: key, scope: "internal"}
 }
 
 // WebSocket 类型
