@@ -51,6 +51,7 @@ initContainers:
 containers:
   title: 标准容器
   type: array
+  minItems: 1
   items:
     type: object
     properties:
@@ -88,18 +89,26 @@ basic:
     - name
     - image
   properties:
-    image:
-      title: 容器镜像
-      type: string
     name:
       title: 容器名称
       type: string
+      ui:rules:
+        - required
+        - maxLength64
+    image:
+      title: 容器镜像
+      type: string
+      ui:rules:
+        - required
+        - maxLength128
     pullPolicy:
       title: 拉取策略
       type: string
+      default: IfNotPresent
       ui:component:
         name: select
         props:
+          clearable: false
           datasource:
             - label: IfNotPresent
               value: IfNotPresent
@@ -117,6 +126,8 @@ command:
     workingDir:
       title: 工作目录
       type: string
+      ui:rules:
+        - maxLength128
     stdin:
       title: 标准输入
       type: boolean
@@ -131,6 +142,8 @@ command:
       type: array
       items:
         type: string
+        ui:rules:
+          - maxLength250
       ui:component:
         name: noTitleArray
     args:
@@ -138,6 +151,8 @@ command:
       type: array
       items:
         type: string
+        ui:rules:
+          - maxLength250
       ui:component:
         name: noTitleArray
 {{- end }}
@@ -155,6 +170,9 @@ service:
           name:
             title: 名称
             type: string
+            ui:rules:
+              - required
+              - maxLength64
           containerPort:
             title: 容器端口
             type: integer
@@ -164,6 +182,7 @@ service:
           protocol:
             title: 协议
             type: string
+            default: TCP
             ui:component:
               name: select
               props:
@@ -197,9 +216,11 @@ envs:
           type:
             title: 类型
             type: string
+            default: keyValue
             ui:component:
               name: select
               props:
+                clearable: false
                 datasource:
                   - label: Key-Value
                     value: keyValue
@@ -232,15 +253,24 @@ envs:
                 else:
                   state:
                     disabled: false
+            ui:rules:
+              - required
           name:
             title: 内容（Name/Prefix）
             type: string
+            ui:rules:
+              - required
+              - maxLength128
           source:
             title: 来源
             type: string
+            ui:rules:
+              - maxLength128
           value:
             title: 值
             type: string
+            ui:rules:
+              - maxLength128
       ui:component:
         name: noTitleArray
       ui:props:
@@ -272,6 +302,7 @@ properties:
     ui:component:
       name: select
       props:
+        clearable: false
         datasource:
           - label: httpGet
             value: httpGet
@@ -279,6 +310,23 @@ properties:
             value: tcpSocket
           - label: exec
             value: exec
+    ui:reactions:
+      - target: "{{`{{`}} $widgetNode?.getSibling('path')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'httpGet' {{`}}`}}"
+        then:
+          state:
+            disabled: false
+        else:
+          state:
+            disabled: true
+      - target: "{{`{{`}} $widgetNode?.getSibling('command')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'exec' {{`}}`}}"
+        then:
+          state:
+            disabled: false
+        else:
+          state:
+            disabled: true
   port:
     title: 端口
     type: integer
@@ -288,6 +336,8 @@ properties:
   path:
     title: 请求路径
     type: string
+    ui:rules:
+      - maxLength250
   initialDelaySecs:
     title: 初始延时
     type: integer
@@ -322,6 +372,9 @@ properties:
     items:
       title: 命令
       type: string
+      ui:rules:
+        - required
+        - maxLength128
     title: 命令
     type: array
     ui:component:
@@ -399,6 +452,8 @@ security:
     procMount:
       title: 掩码挂载
       type: string
+      ui:rules:
+        - maxLength64
     capabilities:
       type: object
       properties:
@@ -504,12 +559,20 @@ security:
       properties:
         level:
           type: string
+          ui:rules:
+            - maxLength64
         role:
           type: string
+          ui:rules:
+            - maxLength64
         type:
           type: string
+          ui:rules:
+            - maxLength64
         user:
           type: string
+          ui:rules:
+            - maxLength64
       ui:group:
         props:
           showTitle: true
@@ -529,12 +592,20 @@ mount:
           name:
             title: 数据卷名称
             type: string
+            ui:rules:
+              - required
+              - maxLength64
           mountPath:
             title: 挂载路径
             type: string
+            ui:rules:
+              - required
+              - maxLength128
           subPath:
             title: 卷内子路径
             type: string
+            ui:rules:
+              - maxLength128
           readOnly:
             title: 只读
             type: boolean

@@ -77,37 +77,6 @@ nodeSelect:
   title: 节点选择
   type: object
   properties:
-    nodeName:
-      title: 节点名称
-      type: string
-      ui:component:
-        name: select
-        props:
-          clearable: false
-          searchable: true
-          remoteConfig:
-            params:
-              format: selectItems
-            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/nodes` {{`}}`}}"
-      ui:reactions:
-        - lifetime: init
-          then:
-            actions:
-              - "{{`{{`}} $loadDataSource {{`}}`}}"
-    selector:
-      title: 调度规则
-      type: array
-      items:
-        properties:
-          key:
-            title: 键
-            type: string
-          value:
-            title: 值
-            type: string
-        type: object
-      ui:component:
-        name: noTitleArray
     type:
       title: 节点类型
       type: string
@@ -139,6 +108,42 @@ nodeSelect:
             state:
               visible: false
           target: spec.nodeSelect.selector
+    nodeName:
+      title: 节点名称
+      type: string
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          searchable: true
+          remoteConfig:
+            params:
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/nodes` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+    selector:
+      title: 调度规则
+      type: array
+      items:
+        properties:
+          key:
+            title: 键
+            type: string
+            ui:rules:
+              - required
+              - maxLength128
+          value:
+            title: 值
+            type: string
+            ui:rules:
+              - maxLength128
+        type: object
+      ui:component:
+        name: noTitleArray
   ui:order:
     - type
     - selector
@@ -164,6 +169,29 @@ toleration:
       items:
         type: object
         properties:
+          key:
+            title: 键
+            type: string
+            ui:rules:
+              - required
+              - maxLength128
+          op:
+            title: 运算符
+            type: string
+            ui:component:
+              name: select
+              props:
+                clearable: true
+                datasource:
+                  - label: Equal
+                    value: Equal
+                  - label: Exists
+                    value: Exists
+          value:
+            title: 值
+            type: string
+            ui:rules:
+              - maxLength128
           effect:
             title: 影响
             type: string
@@ -180,21 +208,6 @@ toleration:
                     value: PreferNoSchedule
                   - label: 不执行
                     value: NoExecute
-          key:
-            title: 键
-            type: string
-          op:
-            title: 运算符
-            type: string
-            ui:component:
-              name: select
-              props:
-                clearable: true
-                datasource:
-                  - label: Equal
-                    value: Equal
-                  - label: Exists
-                    value: Exists
           tolerationSecs:
             default: 0
             title: 容忍时间
@@ -204,9 +217,12 @@ toleration:
               props:
                 unit: s
                 max: 86400
-          value:
-            title: 值
-            type: string
+        ui:order:
+          - key
+          - op
+          - value
+          - effect
+          - tolerationSecs
       ui:component:
         name: noTitleArray
       ui:props:
@@ -249,14 +265,20 @@ networking:
     hostName:
       title: 主机名称
       type: string
+      ui:rules:
+        - maxLength128
     subdomain:
       title: 域名
       type: string
+      ui:rules:
+        - maxLength128
     nameServers:
       title: 服务器地址
       type: array
       items:
         type: string
+        ui:rules:
+          - maxLength128
       ui:component:
         name: noTitleArray
     searches:
@@ -264,6 +286,8 @@ networking:
       type: array
       items:
         type: string
+        ui:rules:
+          - maxLength128
       ui:component:
         name: noTitleArray
     dnsResolverOpts:
@@ -275,9 +299,13 @@ networking:
           name:
             title: 键
             type: string
+            ui:rules:
+              - maxLength128
           value:
             title: 值
             type: string
+            ui:rules:
+              - maxLength128
       ui:component:
         name: noTitleArray
     hostAliases:
@@ -289,9 +317,13 @@ networking:
           alias:
             title: 主机别名
             type: string
+            ui:rules:
+              - maxLength64
           ip:
             title: IP 地址
             type: string
+            ui:rules:
+              - maxLength64
       ui:component:
         name: noTitleArray
 {{- end }}
@@ -318,12 +350,20 @@ security:
       properties:
         level:
           type: string
+          ui:rules:
+            - maxLength64
         role:
           type: string
+          ui:rules:
+            - maxLength64
         type:
           type: string
+          ui:rules:
+            - maxLength64
         user:
           type: string
+          ui:rules:
+            - maxLength64
       ui:group:
         props:
           showTitle: true

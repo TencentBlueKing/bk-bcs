@@ -11,6 +11,10 @@ metadata:
       title: 名称
       type: string
       default: {{ .resName }}
+      ui:rules:
+        - required
+        - maxLength128
+        - nameRegex
     namespace:
       title: 命名空间
       type: string
@@ -29,20 +33,31 @@ metadata:
           then:
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
+      ui:rules:
+        - required
+        - maxLength64
+        - nameRegex
     labels:
       title: 标签
       type: array
       description: 将作为 Pod & Selector 标签
+      minItems: 1
       items:
         properties:
           key:
             title: 键
             type: string
+            ui:rules:
+              - required
+              - maxLength128
+              - nameRegex
           value:
             title: 值
             type: string
+            ui:rules:
+              - maxLength64
+              - labelValRegex
         type: object
-      minItems: 1
       ui:component:
         name: noTitleArray
     annotations:
@@ -53,6 +68,9 @@ metadata:
           key:
             title: 键
             type: string
+            ui:rules:
+              - required
+              - maxLength128
           value:
             title: 值
             type: string

@@ -54,6 +54,9 @@ podAffinity:
                 key:
                   title: key
                   type: string
+                  ui:rules:
+                    - required
+                    - maxLength128
                 op:
                   title: op
                   type: string
@@ -76,6 +79,8 @@ podAffinity:
                 values:
                   title: values
                   type: string
+                  ui:rules:
+                    - maxLength128
               type: object
             ui:component:
               name: noTitleArray
@@ -87,15 +92,22 @@ podAffinity:
                 key:
                   title: key
                   type: string
+                  ui:rules:
+                    - required
+                    - maxLength128
                 value:
                   title: value
                   type: string
+                  ui:rules:
+                    - maxLength128
               type: object
             ui:component:
               name: noTitleArray
       topologyKey:
         title: 拓扑键
         type: string
+        ui:rules:
+          - maxLength250
       type:
         title: 类型
         type: string
@@ -111,6 +123,7 @@ podAffinity:
       weight:
         title: 权重
         type: integer
+        default: 10
         ui:component:
           props:
             max: 100
@@ -166,6 +179,9 @@ nodeAffinity:
                 key:
                   title: key
                   type: string
+                  ui:rules:
+                    - required
+                    - maxLength128
                 op:
                   title: op
                   type: string
@@ -188,6 +204,8 @@ nodeAffinity:
                 values:
                   title: values
                   type: string
+                  ui:rules:
+                    - maxLength128
               type: object
             title: matchExpressions
             type: array
@@ -199,6 +217,9 @@ nodeAffinity:
                 key:
                   title: key
                   type: string
+                  ui:rules:
+                    - required
+                    - maxLength128
                 op:
                   title: op
                   type: string
@@ -221,15 +242,21 @@ nodeAffinity:
                 values:
                   title: values
                   type: string
+                  ui:rules:
+                    - maxLength128
               type: object
             title: matchFields
             type: array
             ui:component:
               name: noTitleArray
       weight:
-        default: 1
+        default: 10
         title: 权重
         type: integer
+        ui:component:
+          props:
+            max: 100
+            min: 1
     ui:group:
       props:
         showTitle: false

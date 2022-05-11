@@ -8,6 +8,9 @@ pvc:
       name:
         title: 名称
         type: string
+        ui:rules:
+          - required
+          - maxLength64
       pvcName:
         title: PersistentVolumeClaim
         type: string
@@ -29,6 +32,8 @@ pvc:
             then:
               actions:
                 - "{{`{{`}} $loadDataSource {{`}}`}}"
+        ui:rules:
+          - required
       readOnly:
         title: 只读
         type: boolean
@@ -50,12 +55,19 @@ hostPath:
       name:
         title: 名称
         type: string
+        ui:rules:
+          - required
+          - maxLength128
       path:
         title: 路径或节点
         type: string
+        ui:rules:
+          - required
+          - maxLength250
       type:
         title: 类型
         type: string
+        default: Directory
         ui:component:
           name: select
           props:
@@ -91,6 +103,9 @@ configMap:
       name:
         title: 名称
         type: string
+        ui:rules:
+          - required
+          - maxLength128
       defaultMode:
         description: 三位数字，如 644
         title: 默认模式
@@ -116,6 +131,8 @@ configMap:
             then:
               actions:
                 - "{{`{{`}} $loadDataSource {{`}}`}}"
+        ui:rules:
+          - required
       items:
         title: Items
         type: array
@@ -124,9 +141,15 @@ configMap:
             key:
               title: 键
               type: string
+              ui:rules:
+                - required
+                - maxLength128
             path:
               title: 映射目标路径
               type: string
+              ui:rules:
+                - required
+                - maxLength128
           type: object
         ui:component:
           name: noTitleArray
@@ -151,6 +174,9 @@ secret:
       name:
         title: 名称
         type: string
+        ui:rules:
+          - required
+          - maxLength128
       defaultMode:
         title: 默认模式
         type: integer
@@ -176,6 +202,8 @@ secret:
             then:
               actions:
                 - "{{`{{`}} $loadDataSource {{`}}`}}"
+        ui:rules:
+          - required
       items:
         title: Items
         type: array
@@ -184,9 +212,15 @@ secret:
             key:
               title: 键
               type: string
+              ui:rules:
+                - required
+                - maxLength128
             path:
               title: 映射目标路径
               type: string
+              ui:rules:
+                - required
+                - maxLength128
           type: object
         ui:component:
           name: noTitleArray
@@ -211,6 +245,9 @@ emptyDir:
       name:
         title: 名称
         type: string
+        ui:rules:
+          - required
+          - maxLength128
   ui:component:
     name: noTitleArray
   ui:props:
@@ -227,12 +264,21 @@ nfs:
       name:
         title: 名称
         type: string
+        ui:rules:
+          - required
+          - maxLength128
       path:
         title: 路径
         type: string
+        ui:rules:
+          - required
+          - maxLength128
       server:
         title: Server
         type: string
+        ui:rules:
+          - required
+          - maxLength128
       readOnly:
         title: 只读
         type: boolean

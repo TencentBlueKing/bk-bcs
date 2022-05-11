@@ -91,7 +91,6 @@ crGlobal:
   basic:
     appCode: "bk_bcs_app"
     appSecret: "your_app_secret"
-    apiBaseURL: "http://prod-bcs.com/api/v1"
     bkApiGWHost: "http://bkapigw.com"
     bkPaaSHost: "http://bkpaas.com"
 

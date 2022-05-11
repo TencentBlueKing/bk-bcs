@@ -26,7 +26,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -193,11 +192,7 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 		return nil, err
 	}
 
-	// 表单交互相关依赖上下文
-	schemaCtx := map[string]interface{}{
-		"baseUrl": conf.G.Basic.APIBaseURL,
-	}
-	return map[string]interface{}{"context": schemaCtx, "schema": schema, "layout": layout}, nil
+	return map[string]interface{}{"schema": schema, "layout": layout, "rules": genSchemaRules()}, nil
 }
 
 func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) error {
@@ -245,4 +240,34 @@ func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 	}
 
 	return tmpl.Funcs(funcMap), nil
+}
+
+// 生成 JsonSchema 校验规则
+func genSchemaRules() map[string]interface{} {
+	return map[string]interface{}{
+		"required": map[string]interface{}{
+			"validator": "{{ $self.value != '' }}",
+			"message":   "值不能为空",
+		},
+		"nameRegex": map[string]interface{}{
+			"validator": "/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/",
+			"message":   "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾",
+		},
+		"maxLength64": map[string]interface{}{
+			"validator": "{{ $self.value.length < 64 }}",
+			"message":   "超过长度限制（64）",
+		},
+		"maxLength128": map[string]interface{}{
+			"validator": "{{ $self.value.length < 128 }}",
+			"message":   "超过长度限制（128）",
+		},
+		"maxLength250": map[string]interface{}{
+			"validator": "{{ $self.value.length < 250 }}",
+			"message":   "超过长度限制（250）",
+		},
+		"labelValRegex": map[string]interface{}{
+			"validator": "/^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?(\\.[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$/",
+			"message":   "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字",
+		},
+	}
 }
