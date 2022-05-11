@@ -194,10 +194,10 @@
             const demoConfigExample = ref(yamljs.dump(demoConfig)
                 .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
-                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), `https://${window.BCS_API_HOST}`))
             const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/clusters/${cluster_id}/version"'
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
-                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), `https://${window.BCS_API_HOST}`))
             
             const timeList = ref([
                 {
