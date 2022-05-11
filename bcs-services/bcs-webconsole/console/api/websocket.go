@@ -15,13 +15,13 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
@@ -58,31 +58,23 @@ func (q *wsQuery) GetTerminalSize() *manager.TerminalSize {
 // BCSWebSocketHandler WebSocket 连接处理函数
 func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	// 还未建立 WebSocket 连接, 使用 Json 返回
-	errResp := types.APIResponse{
-		Code: 400,
-		Data: map[string]string{},
-	}
-
 	if !websocket.IsWebSocketUpgrade(c.Request) {
-		errResp.Message = "invalid websocket connection"
-		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
+		rest.AbortWithBadRequestError(c, errors.New("invalid websocket connection"))
 		return
 	}
 
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		errResp.Message = fmt.Sprintf("upgrade websocket connection error, %s", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, errResp)
+		rest.AbortWithBadRequestError(c, errors.Wrap(err, "upgrade websocket connection"))
 		return
 	}
 	defer ws.Close()
 
+	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket 返回
 	ctx, stop := context.WithCancel(c.Request.Context())
 	defer stop()
 
 	connected := false
-
-	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket
 
 	query := &wsQuery{}
 	if err := c.Bind(query); err != nil {
