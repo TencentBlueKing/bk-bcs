@@ -328,14 +328,14 @@ export default defineComponent({
                 name: 'dashboardResourceUpdate',
                 params: {
                     defaultShowExample: (type.value !== 'crd') as any,
-                    formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
+                    namespace: namespaceValue.value
                 },
                 query: {
                     type: type.value,
                     category: category.value,
                     kind: kind.value,
                     crd: currentCrd.value,
-                    namespace: namespaceValue.value
+                    formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                 }
             })
         }
@@ -344,14 +344,14 @@ export default defineComponent({
             $router.push({
                 name: 'dashboardFormResourceUpdate',
                 params: {
-                    formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
+                    namespace: namespaceValue.value
                 },
                 query: {
                     type: type.value,
                     category: category.value,
                     kind: kind.value,
                     crd: currentCrd.value,
-                    namespace: namespaceValue.value
+                    formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                 }
             })
         }
@@ -378,14 +378,14 @@ export default defineComponent({
                     name: 'dashboardFormResourceUpdate',
                     params: {
                         namespace,
-                        name,
-                        formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
+                        name
                     },
                     query: {
                         type: type.value,
                         category: category.value,
                         kind: type.value === 'crd' ? kind.value : row.kind,
-                        crd: currentCrd.value
+                        crd: currentCrd.value,
+                        formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                     }
                 })
             }

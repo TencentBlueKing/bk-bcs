@@ -269,7 +269,7 @@ const childRoutes = [
         name: 'dashboardResourceUpdate',
         props: (route) => ({ ...route.params, ...route.query }),
         component: DashboardResourceUpdate,
-        meta: { isDashboard: true },
+        meta: { isDashboard: true, backConfirm: true, backConfirmExcludeRoutes: ['dashboardFormResourceUpdate'] },
         beforeEnter: (to, from, next) => {
             // 设置当前详情的父级菜单
             const menuIdMap = {
@@ -303,7 +303,7 @@ const childRoutes = [
         name: 'dashboardFormResourceUpdate',
         props: (route) => ({ ...route.params, ...route.query }),
         component: DashboardFormResourceUpdate,
-        meta: { isDashboard: true, keepAlive: ['dashboardResourceUpdate'] },
+        meta: { isDashboard: true, backConfirm: true, backConfirmExcludeRoutes: ['dashboardResourceUpdate'] },
         beforeEnter: (to, from, next) => {
             // 设置当前详情的父级菜单
             const menuIdMap = {

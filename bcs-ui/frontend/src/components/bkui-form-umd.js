@@ -407,6 +407,12 @@
   } // 获取type对应的初始化值
 
   function initializationValue(type) {
+    var defaultInitValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+      integer: undefined,
+      number: undefined // 默认初始化值（number类型0值会有特殊含义）
+
+    };
+
     switch (type) {
       case 'any':
         return undefined;
@@ -418,13 +424,13 @@
         return false;
 
       case 'integer':
-        return undefined;
+        return defaultInitValue.integer;
 
       case 'null':
         return null;
 
       case 'number':
-        return 0;
+        return defaultInitValue.number;
 
       case 'object':
         return {};
@@ -1750,15 +1756,18 @@
       this.id = void 0;
       this.instance = void 0;
       this.parent = void 0;
+      this.type = void 0;
       this.index = void 0;
       this.children = void 0;
       var id = config.id,
           instance = config.instance,
           parent = config.parent,
           index = config.index,
+          type = config.type,
           _config$children = config.children,
           children = _config$children === void 0 ? [] : _config$children;
       this.id = id;
+      this.type = type;
       this.index = index;
       this.instance = instance;
       this.parent = parent;
@@ -1857,11 +1866,12 @@
 
     _createClass(WidgetTree, [{
       key: "addWidgetNode",
-      value: function addWidgetNode(path, instance, index) {
+      value: function addWidgetNode(path, instance, type, index) {
         if (path === '') {
           // 根节点
           var node = new WidgetNode({
             id: '',
+            type: type,
             index: index,
             parent: null,
             instance: instance,
@@ -1880,6 +1890,7 @@
 
           var _node = new WidgetNode({
             id: path,
+            type: type,
             index: index,
             parent: parentNode,
             instance: instance,
@@ -9275,12 +9286,6 @@
       throwErr(error);
     }
   };
-  var formItems = new Map();
-  var registryFormItems = function registryFormItems(path, instance) {
-    formItems.set(path, {
-      instance: instance
-    });
-  };
   /**
    * 校验规则
    */
@@ -9318,13 +9323,17 @@
   var validateFormItem = function validateFormItem(path) {
     var _instance$schema;
 
-    var formItem = formItems.get(path);
+    var formItem = widgetTree.widgetMap[path];
     if (!formItem) return true;
     var instance = formItem.instance;
     var ownSchema = instance.schema; // json schema validate
 
     var schemaValidate = ajv.compile(ownSchema);
-    var schemaValid = schemaValidate(instance.value);
+    var value = instance.value === undefined ? initializationValue(ownSchema.type, {
+      integer: 0,
+      number: 0
+    }) : instance.value;
+    var schemaValid = schemaValidate(value);
 
     if (!schemaValid) {
       var _schemaValidate$error;
@@ -9372,7 +9381,13 @@
 
   var validateForm = function validateForm() {
     var isValid = true;
-    formItems.forEach(function (value, path) {
+    Object.keys(widgetTree.widgetMap).filter(function (path) {
+      var _ref = widgetTree.widgetMap[path] || {},
+          type = _ref.type; // todo 组类型校验
+
+
+      return type === 'node';
+    }).forEach(function (path) {
       if (!validateFormItem(path)) isValid = false;
     });
     return isValid;
@@ -9539,8 +9554,7 @@
         }
       }); // 注册widget TreeNode
 
-      widgetTree.addWidgetNode(this.path, this);
-      registryFormItems(this.path, this);
+      widgetTree.addWidgetNode(this.path, this, 'node');
     },
     mounted: function mounted() {
       // 注册联动
@@ -10140,7 +10154,7 @@
     }),
     created: function created() {
       // 注册widget TreeNode
-      widgetTree.addWidgetNode(this.path, this);
+      widgetTree.addWidgetNode(this.path, this, 'group');
     },
     beforeDestroy: function beforeDestroy() {
       widgetTree.removeWidgetNode(this.path, this);

@@ -2780,9 +2780,19 @@ export default {
     ],
     "导入方式": ['Import Type'],
     'kubeconfig可用性测试': ['kubeconfig usability testing'],
-    "切换为表单模式将不会保留 Yaml 模式下的修改内容！": [""],
-    "切换为 YAML 模式": [""],
-    "确认切换为表单模式？": [""],
-    '将执行 Replace 操作，若多人同时编辑可能存在冲突': [''],
-    '确认资源更新': ['']
+    "切换为表单模式将不会保留 Yaml 模式下的修改内容！": [
+        "Switching to form mode will not retain the modification content in YAML mode!"
+    ],
+    "切换为 YAML 模式": [
+        "Switch to YAML mode"
+    ],
+    "确认切换为表单模式？": [
+        "Confirm that switching to form mode?"
+    ],
+    "将执行 Replace 操作，若多人同时编辑可能存在冲突": [
+        "The replace operation will be performed. If multiple people edit at the same time, there may be conflicts"
+    ],
+    "确认资源更新": [
+        "Confirm resource update"
+    ]
 }

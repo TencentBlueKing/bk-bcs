@@ -113,7 +113,9 @@ router.beforeEach(async (to, from, next) => {
     await cancelRequest()
 
     // 路由切换二次确认
-    if (from.meta?.backConfirm) {
+    if (from.meta?.backConfirm
+        && !from.meta?.backConfirmExcludeRoutes?.includes(to.name)
+        && !to.params.skipBackConfirm) {
         Vue.prototype.$bkInfo({
             type: 'warning',
             clsName: 'custom-info-confirm',

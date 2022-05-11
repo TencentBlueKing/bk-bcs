@@ -502,7 +502,7 @@
                         message: $i18n.t('创建成功')
                     })
                     sessionStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace)
-                    $router.push({ name: $store.getters.curNavName })
+                    $router.push({ name: $store.getters.curNavName, params: { skipBackConfirm: true as any } })
                 }
             }
             const handleUpdateResource = () => {
@@ -551,7 +551,7 @@
                                 theme: 'success',
                                 message: $i18n.t('更新成功')
                             })
-                            $router.push({ name: $store.getters.curNavName })
+                            $router.push({ name: $store.getters.curNavName, params: { skipBackConfirm: true as any } })
                         }
                     }
                 })
@@ -575,13 +575,13 @@
                     params: {
                         ...(isEdit.value ? { name: name.value } : {}),
                         formData: formData.value as any,
-                        formUpdate: formUpdate.value as any
+                        namespace: namespace.value
                     },
                     query: {
                         type: type.value,
                         category: category.value,
                         kind: kind.value,
-                        namespace: namespace.value
+                        formUpdate: formUpdate.value as any
                     }
                 })
             }

@@ -18,6 +18,7 @@
             class="form-resource-content"
             :schema="formSchema.schema"
             :layout="formSchema.layout"
+            :rules="formSchema.rules"
             :context="context"
             :http-adapter="{
                 request
@@ -127,9 +128,13 @@
                 return `${prefix} ${this.kind}`
             }
         },
-        created () {
-            this.handleGetFormSchemaData()
-            this.handleGetDetail()
+        async created () {
+            this.isLoading = true
+            await Promise.all([
+                this.handleGetFormSchemaData(),
+                this.handleGetDetail()
+            ])
+            this.isLoading = false
         },
         methods: {
             async handleGetDetail () {
@@ -156,12 +161,10 @@
                 this.schemaFormData = res.data.formData
             },
             async handleGetFormSchemaData () {
-                this.isLoading = true
                 this.formSchema = await this.$store.dispatch('dashboard/getFormSchema', {
                     kind: this.kind,
                     namespace: this.namespace
                 })
-                this.isLoading = false
             },
             async request (url, config) {
                 const requestMethods = request(config.method || 'get', url)
@@ -188,21 +191,22 @@
                     params: {
                         ...params,
                         formData: this.schemaFormData,
-                        formUpdate: this.formUpdate
+                        namespace: this.namespace
                     },
                     query: {
                         type: this.type,
                         category: this.category,
                         kind: this.kind,
                         crd: this.crd,
-                        namespace: this.namespace
+                        formUpdate: this.formUpdate
                     }
                 })
             },
             // 保存数据
             async handleSaveFormData () {
-                const valid = this.$refs.bkuiFormRef.validateForm()
-                console.log(valid)
+                const valid = this.$refs.bkuiFormRef?.validateForm()
+                if (!valid) return
+
                 this.loading = true
                 if (this.isEdit) {
                     await this.handleUpdateFormResource()
@@ -213,6 +217,9 @@
             },
             // 更新表单资源
             async handleUpdateFormResource () {
+                const valid = this.$refs.bkuiFormRef?.validateForm()
+                if (!valid) return
+
                 this.$bkInfo({
                     type: 'warning',
                     clsName: 'custom-info-confirm',
@@ -252,7 +259,7 @@
                                 theme: 'success',
                                 message: this.$t('更新成功')
                             })
-                            this.$router.push({ name: this.$store.getters.curNavName })
+                            this.$router.push({ name: this.$store.getters.curNavName, params: { skipBackConfirm: true } })
                         }
                     }
                 })
@@ -288,7 +295,7 @@
                         message: this.$t('创建成功')
                     })
                     sessionStorage.setItem(CUR_SELECT_NAMESPACE, this.schemaFormData.metadata?.namespace)
-                    this.$router.push({ name: this.$store.getters.curNavName })
+                    this.$router.push({ name: this.$store.getters.curNavName, params: { skipBackConfirm: true } })
                 }
             }
         }
