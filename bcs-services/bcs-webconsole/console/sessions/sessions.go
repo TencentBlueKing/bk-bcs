@@ -20,51 +20,55 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/go-redis/redis/v8"
-	"github.com/google/uuid"
 )
 
 const (
-	// bcs::webconsole::sessions::{run_env}
-	keyPrefix      = "bcs::webconsole::sessions::%s"
-	fieldKeyPrefix = "%s:%s" // "{scope}:{session_id}"
+	// bcs::webconsole::sessions::{run_env} 格式
+	keyPrefix = "bcs::webconsole::sessions::%s"
+	// "{scope}:{session_id}" 格式
+	fieldKeyPrefix = "%s:%s"
 	expireDuration = time.Minute * 30
 )
 
-type RedisStore struct {
+// redisStore: redis 全局 session 存储
+type redisStore struct {
 	client *redis.Client
-	Id     string
 	scope  string
 	key    string
 }
 
-func NewStore() *RedisStore {
+// NewStore 新建 session 存储
+func NewStore() *redisStore {
 	redisClient := storage.GetDefaultRedisSession().Client
 	key := fmt.Sprintf(keyPrefix, config.G.Base.RunEnv)
-	return &RedisStore{client: redisClient, key: key, scope: "internal"}
+	return &redisStore{client: redisClient, key: key, scope: "internal"}
 }
 
 // WebSocket 类型
-func (rs *RedisStore) WebSocketScope() *RedisStore {
+func (rs *redisStore) WebSocketScope() *redisStore {
 	rs.scope = "websocket"
 	return rs
 }
 
 // OpenAPI 类型
-func (rs *RedisStore) OpenAPIScope() *RedisStore {
+func (rs *redisStore) OpenAPIScope() *redisStore {
 	rs.scope = "openapi"
 	return rs
 }
 
-func (rs *RedisStore) cacheKey(id string) string {
+func (rs *redisStore) cacheKey(id string) string {
 	key := fmt.Sprintf(fieldKeyPrefix, rs.scope, id)
 	return key
 }
 
-func (rs *RedisStore) Get(ctx context.Context, id string) (*types.PodContext, error) {
+// Get 读取 session
+func (rs *redisStore) Get(ctx context.Context, id string) (*types.PodContext, error) {
 	value, err := rs.client.HGet(ctx, rs.key, rs.cacheKey(id)).Result()
 	if err != nil {
 		return nil, err
@@ -78,8 +82,8 @@ func (rs *RedisStore) Get(ctx context.Context, id string) (*types.PodContext, er
 	return &podCtx.PodContext, nil
 }
 
-// Save 保存数据到 Redis, 使用 HSET 数据结构
-func (rs *RedisStore) Set(ctx context.Context, values *types.PodContext) (string, error) {
+// Set 保存数据到 Redis, 使用 HSET 数据结构
+func (rs *redisStore) Set(ctx context.Context, values *types.PodContext) (string, error) {
 	podCtx := types.TimestampPodContext{
 		PodContext: *values,
 		Timestamp:  time.Now().Unix(),
@@ -96,7 +100,7 @@ func (rs *RedisStore) Set(ctx context.Context, values *types.PodContext) (string
 }
 
 // Cleanup 清理过期数据
-func (rs *RedisStore) Cleanup(ctx context.Context) error {
+func (rs *redisStore) Cleanup(ctx context.Context) error {
 	values, err := rs.client.HGetAll(ctx, rs.key).Result()
 	if err != nil {
 		return nil
