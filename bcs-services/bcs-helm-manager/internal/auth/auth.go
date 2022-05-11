@@ -26,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
 )
 
-type JWTClient struct {
+type JWTClientConfig struct {
 	Enable         bool
 	PublicKey      string
 	PublicKeyFile  string
@@ -34,12 +34,12 @@ type JWTClient struct {
 	PrivateKeyFile string
 }
 
-func NewJWTClient(c JWTClient) *JWTClient {
+func NewJWTClient(c JWTClientConfig) *JWTClientConfig {
 	if !c.Enable {
 		glog.Warning("jwt function not enabled")
 		return nil
 	}
-
+	getJWTOpt(c)
 }
 
 // GetUserFromCtx 通过 ctx 获取当前用户
@@ -90,7 +90,7 @@ func parseClaims(jwtToken string) (*jwt.UserClaimsInfo, error) {
 	return claims, nil
 }
 
-func getJWTOpt() (*jwt.JWTOptions, error) {
+func getJWTOpt(c) (*jwt.JWTOptions, error) {
 	jwtOpt := &jwt.JWTOptions{
 		VerifyKeyFile: opts.GlobalConfig.JWT.PublicKeyFile,
 		SignKeyFile:   opts.GlobalConfig.JWT.PrivateKeyFile,
