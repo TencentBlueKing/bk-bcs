@@ -5,8 +5,9 @@
 replicaCount: 1
 
 etcd:
-  enabled: true
+  enabled: false
 
+  address: "127.0.0.1:2379"
   ## Authentication parameters
   ##
   auth:
@@ -36,10 +37,10 @@ etcd:
       enableAuthentication: false
       ## @param auth.client.certFilename Name of the file containing the client certificate
       ##
-      certFilename: cert.pem
+      certFilename: ""
       ## @param auth.client.certKeyFilename Name of the file containing the client certificate private key
       ##
-      certKeyFilename: key.pem
+      certKeyFilename: ""
       ## @param auth.client.caFilename Name of the file containing the client CA certificate
       ## If not specified and `auth.client.enableAuthentication=true` or `auth.rbac.enabled=true`, the default is is `ca.crt`
       ##
@@ -52,7 +53,8 @@ mongodb:
   ## @param mongodb.enabled Whether to install or not the MongoDB&reg; chart
   ## To use an external database set this to false and configure the externaldb parameters
   ##
-  enabled: true
+  enabled: false
+  address: ""
   ## MongoDB&reg; Authentication parameters
   ##
   auth:
@@ -67,43 +69,46 @@ mongodb:
     ## @param mongodb.auth.username MongoDB&reg; custom user
     ## ref: https://github.com/bitnami/bitnami-docker-mongodb/blob/master/README.md#creating-a-user-and-database-on-first-run
     ##
-    username: helmmanager
+    username: "admin"
     ## @param mongodb.auth.database MongoDB&reg; custom database
     ##
-    database: helmmanager
+    database: "bcshelmmanager"
     ## @param mongodb.auth.password MongoDB&reg; custom password
     ##
-    password: secret_password
+    password: ""
 
 externalEtcd:
   address: "http://127.0.0.1:2379"
-  ca: /data/bcs/cert/etcd/etcd-ca.pem
-  cert: /data/bcs/cert/etcd/etcd.pem
-  key: /data/bcs/cert/etcd/etcd-key.pem
+  ca: ""
+  cert: ""
+  key: ""
 
 externalMongo:
-  host: localhost
-  port: 27017
+  address: ""
   username: helmmanager
-  password: secret_password
+  password: ""
   database: helmmanager
   authDatabase: admin
 
 helmmanager:
   service:
-    grpcPort: 8080
-    httpPort: 8081
+    uselocalip: false
+    address: ""
+    insecureaddress: ""
+    grpcPort: 8081
+    httpPort: 8080
     metricPort: 8082
 
   repo:
-    url:
-    username:
+    url: "http://127.0.0.1"
+    username: ""
     password:
     encrypted: false
 
   release:
     api:
     token:
+    encrypted: false
 
   log:
     dir: /data/bcs/logs/bcs
@@ -112,13 +117,13 @@ helmmanager:
     maxNum: 10
 
   tls:
-    ca: /data/bcs/cert/bcs/bcs-ca.crt
+    ca: ""
     server:
-      cert: /data/bcs/cert/bcs/bcs-server.crt
-      key: /data/bcs/cert/bcs/bcs-server.key
+      cert: ""
+      key: ""
     client:
-      cert: /data/bcs/cert/bcs/bcs-client.crt
-      key: /data/bcs/cert/bcs/bcs-client.key
+      cert: ""
+      key: ""
 
   swagger:
     dir: /data/bcs/swagger
@@ -131,17 +136,19 @@ helmmanager:
 
 image:
   registry: ""
-  repository: /bcs/bcs-helm-manager
-  tag: ""
+  repository: ""
+  tag: "0.1.0"
   pullPolicy: Always
 
 volumes:
   - name: cert-config
-    configMap:
-      name: bk-bcs-certs
+    secret:
+      defaultMode: 420
+      secretName: bk-bcs-certs
   - name: etcd-cert
-    configMap:
-      name: bcs-etcd-cert
+    secret:
+      defaultMode: 420
+      secretName: bcs-etcd-certs
 
 volumeMounts:
   - name: cert-config
@@ -193,3 +200,12 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+envs:
+- name: BCS_CONFIG_TYPE
+  value: render
+- name: localIp
+  valueFrom:
+    fieldRef:
+      apiVersion: v1
+      fieldPath: status.podIP

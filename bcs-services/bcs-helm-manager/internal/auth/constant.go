@@ -10,15 +10,11 @@
  * limitations under the License.
  */
 
-package common
+package auth
 
 const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
-
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+	// UserType 用户态类型
+	UserType = "user"
+	// UserTypeClient 非用户态类型
+	UserTypeClient = "client"
 )

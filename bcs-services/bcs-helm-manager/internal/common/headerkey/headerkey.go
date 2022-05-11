@@ -10,15 +10,11 @@
  * limitations under the License.
  */
 
-package common
+package headerkey
 
 const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
-
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+	// RequestIDKey ...
+	RequestIDKey = "X-Request-Id"
+	// UsernameKey ...
+	UsernameKey = "X-BCS-Username"
 )

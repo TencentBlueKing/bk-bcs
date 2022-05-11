@@ -10,15 +10,22 @@
  * limitations under the License.
  */
 
-package common
+package runtimex
 
-const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
+import (
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/headerkey"
 )
+
+// CustomHeaderMatcher for http header
+func CustomHeaderMatcher(key string) (string, bool) {
+	switch key {
+	case headerkey.RequestIDKey:
+		return headerkey.RequestIDKey, true
+	case headerkey.UsernameKey:
+		return headerkey.UsernameKey, true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
+}

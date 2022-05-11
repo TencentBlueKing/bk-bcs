@@ -45,7 +45,7 @@ client: proto
 	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-client internal/client/main.go
 
 test:
-	go test -v ./... -cover
+	go test -v ./internal/... -cover -count=1
 
 docker: build
 	cp helm/images/bcs-helm-manager/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/

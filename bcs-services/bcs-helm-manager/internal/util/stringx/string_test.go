@@ -10,15 +10,33 @@
  * limitations under the License.
  */
 
-package common
+package stringx
 
-const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
+import (
+	"testing"
 
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestSplitString(t *testing.T) {
+	// 以逗号分隔
+	srcStr := "str,str1"
+	splitList := SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
+
+	// 以分号分隔
+	srcStr = "str,str1"
+	splitList = SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
+
+	// 以空格分隔
+	srcStr = "str str1"
+	splitList = SplitString(srcStr)
+	assert.Equal(t, []string{"str", "str1"}, splitList)
+}
+
+func TestJoinString(t *testing.T) {
+	str1, str2 := "str1", "str2"
+	joinedStr := JoinString(str1, str2)
+	assert.Equal(t, "str1,str2", joinedStr)
+}

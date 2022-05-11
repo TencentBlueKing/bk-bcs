@@ -90,6 +90,14 @@ type ReleaseConfig struct {
 	Encrypted          bool   `json:"encrypted"`
 }
 
+type JWTConfig struct {
+	Enable         bool   `json:"enable"`
+	PublicKey      string `json:"publickey"`
+	PublicKeyFile  string `json:"publickeyfile"`
+	PrivateKey     string `json:"privatekey"`
+	PrivateKeyFile string `json:"privatekeyfile"`
+}
+
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
 	Etcd    EtcdOption    `json:"etcd"`
@@ -98,7 +106,10 @@ type HelmManagerOptions struct {
 	Mongo   MongoConfig   `json:"mongo"`
 	Repo    RepoConfig    `json:"repo"`
 	Release ReleaseConfig `json:"release"`
+	JWT     JWTConfig     `json:"jwt"`
 	Debug   bool          `json:"debug"`
 	ServerConfig
 	ClientConfig
 }
+
+var GlobalConfig *HelmManagerOptions

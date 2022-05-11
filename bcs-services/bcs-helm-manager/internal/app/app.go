@@ -31,6 +31,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"github.com/gorilla/mux"
+	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	microRgt "github.com/micro/go-micro/v2/registry"
+	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	microSvc "github.com/micro/go-micro/v2/service"
+	microGrpc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
+	gCred "google.golang.org/grpc/credentials"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
@@ -41,17 +51,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/envx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/runtimex"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/gorilla/mux"
-	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	microSvc "github.com/micro/go-micro/v2/service"
-	microGrpc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	gCred "google.golang.org/grpc/credentials"
 )
 
 // HelmManager describe the helm-service manager instance
@@ -298,6 +300,9 @@ func (hm *HelmManager) initMicro() error {
 			hm.discovery.Stop()
 			return nil
 		}),
+		microSvc.WrapHandler(
+			wrapper.NewInjectContextWrapper,
+		),
 	)
 	svc.Init()
 
@@ -314,7 +319,7 @@ func (hm *HelmManager) initMicro() error {
 
 func (hm *HelmManager) initHTTPService() error {
 	rmMux := ggRuntime.NewServeMux(
-		ggRuntime.WithIncomingHeaderMatcher(CustomMatcher),
+		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
 		ggRuntime.WithDisablePathLengthFallback(),
 	)
@@ -416,16 +421,6 @@ func (hm *HelmManager) initTLSConfig() error {
 		blog.Infof("load helm manager client tls config successfully")
 	}
 	return nil
-}
-
-// CustomMatcher for http header
-func CustomMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	default:
-		return ggRuntime.DefaultHeaderMatcher(key)
-	}
 }
 
 func loadYamlFilesFromDir(dir string) ([]*release.File, error) {

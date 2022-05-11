@@ -10,15 +10,23 @@
  * limitations under the License.
  */
 
-package common
+package runtimex
 
-const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
+import (
+	"testing"
 
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
+	"github.com/stretchr/testify/assert"
 
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/headerkey"
 )
+
+func TestCustomMatcher(t *testing.T) {
+	ret, _ := CustomHeaderMatcher(headerkey.RequestIDKey)
+	assert.Equal(t, headerkey.RequestIDKey, ret)
+
+	ret, _ = CustomHeaderMatcher(headerkey.UsernameKey)
+	assert.Equal(t, headerkey.UsernameKey, ret)
+
+	ret, _ = CustomHeaderMatcher("Content-Type")
+	assert.Equal(t, "grpcgateway-Content-Type", ret)
+}

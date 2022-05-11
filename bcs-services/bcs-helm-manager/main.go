@@ -86,6 +86,13 @@ func parseFlags() {
 	flag.String("bcslog_vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
 	flag.String("bcslog_backtraceat", "", "when logging hits line file:N, emit a stack trace")
 
+	// jwt config
+	flag.Bool("jwt_enable", true, "enable jwt authentication")
+	flag.String("jwt_publickey", "", "public key")
+	flag.String("jwt_publickeyfile", "", "the file of public key")
+	flag.String("jwt_privatekey", "", "private key")
+	flag.String("jwt_privatekeyfile", "", "the file of private key")
+
 	// config file path
 	flag.String("conf", "", "config file path")
 	flag.Parse()
@@ -118,6 +125,8 @@ func main() {
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
+	// 添加全局变量，用于后续直接获取配置
+	options.GlobalConfig = opt
 
 	blog.InitLogs(conf.LogConfig{
 		LogDir:          opt.BcsLog.LogDir,

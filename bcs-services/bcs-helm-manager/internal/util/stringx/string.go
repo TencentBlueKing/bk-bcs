@@ -10,15 +10,20 @@
  * limitations under the License.
  */
 
-package common
+package stringx
 
-const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
+import "strings"
 
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
+// SplitString 分割字符串, 允许半角逗号、分号及空格
+func SplitString(str string) []string {
+	str = strings.Replace(str, ";", ",", -1)
+	str = strings.Replace(str, " ", ",", -1)
+	return strings.Split(str, ",")
+}
 
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
-)
+// AddString 拼接字符串
+func JoinString(str ...string) string {
+	var strList []string
+	strList = append(strList, str...)
+	return strings.Join(strList, ",")
+}

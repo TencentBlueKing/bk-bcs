@@ -10,15 +10,16 @@
  * limitations under the License.
  */
 
-package common
+package ctxkey
+
+// ContextKey ...
+type ContextKey string
 
 const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
-
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+	// RequestIDKey 请求的requestID
+	RequestIDKey ContextKey = "requestID"
+	// TraceIDKey 链路跟踪需要的trace id
+	TraceIDKey ContextKey = "traceID"
+	// UsernameKey 用户名
+	UsernameKey ContextKey = "username"
 )

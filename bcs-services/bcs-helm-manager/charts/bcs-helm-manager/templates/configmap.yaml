@@ -49,7 +49,7 @@ data:
         "url": "{{ .Values.helmmanager.repo.url }}",
         "username": "{{ .Values.helmmanager.repo.username }}",
         "password": "{{ .Values.helmmanager.repo.password }}",
-        "encrypted": {{ .Values.helmmanager.repo.encrypted }}, 
+        "encrypted": {{ .Values.helmmanager.repo.encrypted }}
       },
       "release": {
         "api": "{{ .Values.helmmanager.release.api }}",
@@ -58,14 +58,18 @@ data:
         "binary": "helm",
         "patchdir": "/data/bcs/patches/bcs-helm-manager/",
         "vardir": "/data/bcs/vars/bcs-helm-manager/"
+        "encrypted": {{ .Values.helmmanager.release.encrypted }}
       },
       "debug": false,
-      "address": "",
-      "insecureaddress": "",
+      "address": "{{ .Values.helmmanager.service.address }}",
+      "insecureaddress": "{{ .Values.helmmanager.service.insecureaddress }}",
       "port": {{ .Values.helmmanager.service.grpcPort }},
       "httpport": {{ .Values.helmmanager.service.httpPort }},
       "metricport": {{ .Values.helmmanager.service.metricPort }},
       "serverca": "{{ .Values.helmmanager.tls.ca }}",
       "servercert": "{{ .Values.helmmanager.tls.server.cert }}",
-      "serverkey": "{{ .Values.helmmanager.tls.server.ket }}"
+      "serverkey": "{{ .Values.helmmanager.tls.server.key }}",
+      "clientca": "{{ .Values.helmmanager.tls.ca }}",
+      "clientcert": "{{ .Values.helmmanager.tls.client.cert }}",
+      "clientkey": "{{ .Values.helmmanager.tls.client.key }}"
     }
