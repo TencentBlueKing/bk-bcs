@@ -59,7 +59,6 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		metrics.RequestCollect("CreateClusterPortalSession"), route.CredentialRequired(), s.CreateClusterPortalSession)
 
 	// websocket协议, session鉴权
-	api.GET("/ws/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
 	api.GET("/ws/sessions/:sessionId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
 }
 
