@@ -60,6 +60,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// websocket协议, session鉴权
 	api.GET("/ws/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
+	api.GET("/ws/sessions/:sessionId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
 }
 
 func (s *service) ListClusters(c *gin.Context) {

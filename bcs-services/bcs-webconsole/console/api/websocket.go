@@ -14,11 +14,9 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"os/signal"
-	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
@@ -26,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -36,6 +35,24 @@ import (
 var upgrader = websocket.Upgrader{
 	EnableCompression: true,
 	CheckOrigin:       func(r *http.Request) bool { return true },
+}
+
+// wsQuery websocket 支持的参数
+type wsQuery struct {
+	Rows       uint16 `form:"rows"`
+	Cols       uint16 `form:"cols"`
+	ShowBanner bool   `form:"show_banner"`
+}
+
+// GetTerminalSize 获取初始宽高
+func (q *wsQuery) GetTerminalSize() *manager.TerminalSize {
+	if q.Rows > 0 && q.Cols > 0 {
+		return &manager.TerminalSize{
+			Rows: q.Rows,
+			Cols: q.Cols,
+		}
+	}
+	return nil
 }
 
 // BCSWebSocketHandler WebSocket 连接处理函数
@@ -60,24 +77,19 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 	defer ws.Close()
 
-	// 监听 Ctrl-C 信号
-	ctx, stop := signal.NotifyContext(c.Request.Context(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := context.WithCancel(c.Request.Context())
 	defer stop()
 
-	eg, ctx := errgroup.WithContext(ctx)
+	connected := false
 
 	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket
-	sessionId := c.Query("session_id")
 
-	rows, _ := strconv.Atoi(c.Query("rows"))
-	cols, _ := strconv.Atoi(c.Query("cols"))
-
-	initTerminalSize := &manager.TerminalSize{
-		Rows: uint16(rows),
-		Cols: uint16(cols),
+	query := &wsQuery{}
+	if err := c.Bind(query); err != nil {
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "参数不合法"))
 	}
 
-	connected := false
+	sessionId := route.GetSessionId(c)
 	podCtx, err := sessions.NewStore().Get(c.Request.Context(), sessionId)
 	if err != nil {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "获取session失败"))
@@ -85,7 +97,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
-	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
+	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, query.GetTerminalSize(), query.ShowBanner)
 	connected = true
 
 	// kubectl 容器， 需要定时上报心跳
@@ -94,6 +106,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		consoleMgr.AddMgrFunc(podCleanUpMgr.Heartbeat)
 	}
 
+	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		defer stop()
 

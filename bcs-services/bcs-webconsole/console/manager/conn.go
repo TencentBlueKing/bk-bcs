@@ -46,26 +46,36 @@ type wsMessage struct {
 // RemoteStreamConn 流式处理器
 type RemoteStreamConn struct {
 	ctx           context.Context
+	once          sync.Once
 	wsConn        *websocket.Conn
 	bindMgr       *ConsoleManager
 	resizeMsgChan chan *TerminalSize
 	inputMsgChan  <-chan wsMessage
 	outputMsgChan chan []byte
-	once          sync.Once
+	showBanner    bool
 }
 
 // NewRemoteStreamConn :
-func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize) *RemoteStreamConn {
+func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize, showBanner bool) *RemoteStreamConn {
 	conn := &RemoteStreamConn{
 		ctx:           ctx,
 		wsConn:        wsConn,
 		bindMgr:       mgr,
 		resizeMsgChan: make(chan *TerminalSize, 1), // 放入初始宽高
 		outputMsgChan: make(chan []byte),
+		showBanner:    showBanner,
 	}
 
 	// 初始化命令行宽和高
-	conn.resizeMsgChan <- initTerminalSize
+	if initTerminalSize != nil {
+		conn.resizeMsgChan <- initTerminalSize
+	} else {
+		// 前端没有指定长宽高, 使用默认值
+		conn.resizeMsgChan <- &TerminalSize{
+			Rows: DefaultRows,
+			Cols: DefaultCols,
+		}
+	}
 
 	return conn
 }
@@ -193,7 +203,7 @@ func (r *RemoteStreamConn) Run() error {
 				return nil
 			}
 			// 收到首个字节才发送 hello 信息
-			if notSendMsg {
+			if notSendMsg && r.showBanner {
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 				notSendMsg = false
 			}

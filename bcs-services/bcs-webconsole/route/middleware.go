@@ -293,5 +293,8 @@ func GetSessionId(c *gin.Context) string {
 	if c.Param("sessionId") != "" {
 		return c.Param("sessionId")
 	}
+	if c.Query("session_id") != "" {
+		return c.Query("session_id")
+	}
 	return ""
 }
