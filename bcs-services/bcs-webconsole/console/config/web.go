@@ -40,8 +40,8 @@ func (c *WebConf) init() error {
 // defaultWebConf 默认配置
 func defaultWebConf() *WebConf {
 	c := &WebConf{
-		Host:        "http://127.0.0.1",
-		RoutePrefix: "/bcs-webconsole",
+		Host:        "http://127.0.0.1:8083",
+		RoutePrefix: "/webconsole",
 	}
 	return c
 }

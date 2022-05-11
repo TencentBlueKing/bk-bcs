@@ -206,7 +206,7 @@ func (p *CleanUpManager) Run() error {
 	interval := time.NewTicker(CleanUserPodInterval)
 	defer interval.Stop()
 
-	sessionCleanupMgr := sessions.NewRedisStore("cleanup", "cleanup")
+	sessionCleanupMgr := sessions.NewStore()
 
 	for {
 		select {

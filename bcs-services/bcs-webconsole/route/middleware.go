@@ -253,8 +253,7 @@ func initContextWithPortalSession(c *gin.Context, authCtx *AuthContext) bool {
 		return false
 	}
 
-	store := sessions.NewRedisStore("open-session", "open-session")
-	podCtx, err := store.Get(c.Request.Context(), sessionId)
+	podCtx, err := sessions.NewStore().Get(c.Request.Context(), sessionId)
 	if err != nil {
 		return false
 	}

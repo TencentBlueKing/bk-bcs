@@ -122,8 +122,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 
-	store := sessions.NewRedisStore(projectId, clusterId)
-	sessionId, err := store.Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
@@ -162,8 +161,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 
 	podCtx := authCtx.BindSession
 
-	newStore := sessions.NewRedisStore(podCtx.ProjectId, podCtx.ClusterId)
-	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
@@ -171,11 +169,11 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 	}
 
 	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		podCtx.ProjectId, podCtx.ClusterId, NewSessionId))
+		podCtx.ProjectId, podCtx.ClusterId, sessionId))
 
 	data := types.APIResponse{
 		Data: map[string]string{
-			"session_id": NewSessionId,
+			"session_id": sessionId,
 			"ws_url":     wsUrl,
 		},
 		Code:      types.NoError,
@@ -224,9 +222,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		podCtx.Commands = commands
 	}
 
-	store := sessions.NewRedisStore("open-session", "open-session")
-
-	sessionId, err := store.Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
@@ -236,6 +232,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	data := map[string]string{
 		"session_id":      sessionId,
 		"web_console_url": makeWebConsoleUrl(sessionId, podCtx),
+		// "ws_acquire_url":  makeWSAcquireUrl(sessionId, podCtx),
 	}
 
 	if consoleQuery.WSAcquire {
@@ -284,13 +281,7 @@ func makeWebSocketUrl(sessionId string, podCtx *types.PodContext) string {
 // makeWSAcquireUrl webconsole 页面访问地址
 func makeWSAcquireUrl(sessionId string, podCtx *types.PodContext) string {
 	u := *config.G.Web.BaseURL
-	u.Path = path.Join(u.Path, "/portal/container/") + "/"
-
-	query := url.Values{}
-	query.Set("session_id", sessionId)
-	query.Set("container_name", podCtx.ContainerName)
-
-	u.RawQuery = query.Encode()
+	u.Path = path.Join(u.Path, "/portal/sessions/", sessionId) + "/"
 
 	return u.String()
 }

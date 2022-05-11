@@ -67,8 +67,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	eg, ctx := errgroup.WithContext(ctx)
 
 	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
 	sessionId := c.Query("session_id")
 
 	rows, _ := strconv.Atoi(c.Query("rows"))
@@ -80,8 +78,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 
 	connected := false
-	store := sessions.NewRedisStore(projectId, clusterId)
-	podCtx, err := store.Get(c.Request.Context(), sessionId)
+	podCtx, err := sessions.NewStore().Get(c.Request.Context(), sessionId)
 	if err != nil {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "获取session失败"))
 		return

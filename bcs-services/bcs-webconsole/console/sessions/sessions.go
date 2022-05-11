@@ -29,22 +29,19 @@ import (
 const (
 	// bcs::webconsole::sessions::{run_env}
 	keyPrefix      = "bcs::webconsole::sessions::%s"
-	fieldKeyPrefix = "%s:%s:%s" // "{project_id}:{cluster_id}:{session_id}"
 	expireDuration = time.Minute * 30
 )
 
 type RedisStore struct {
-	client    *redis.Client
-	projectId string
-	clusterId string
-	Id        string
-	key       string
+	client *redis.Client
+	Id     string
+	key    string
 }
 
-func NewRedisStore(projectId, clusterId string) *RedisStore {
+func NewStore() *RedisStore {
 	redisClient := storage.GetDefaultRedisSession().Client
 	key := fmt.Sprintf(keyPrefix, config.G.Base.RunEnv)
-	return &RedisStore{client: redisClient, projectId: projectId, clusterId: clusterId, key: key}
+	return &RedisStore{client: redisClient, key: key}
 }
 
 func (rs *RedisStore) Get(ctx context.Context, id string) (*types.PodContext, error) {
