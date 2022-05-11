@@ -554,7 +554,7 @@ class PaaSCCClient(BkApiClient):
         url = self._config.get_cluster_by_id_url.format(cluster_id=cluster_id)
         return self._client.request_json('GET', url)
 
-    @response_handler()
+    @response_handler(default=[])
     def list_clusters(self, cluster_ids: List[str]) -> Dict:
         """根据集群ID列表批量获取集群信息"""
         url = self._config.list_clusters_url
