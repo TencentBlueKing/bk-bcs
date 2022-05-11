@@ -70,7 +70,6 @@ from backend.tests.conftest import TEST_SHARED_CLUSTER_ID
                 'TEMPLATESET',
                 'VARIABLE',
                 'HELM',
-                'METRICS',
             },
         ),
         (
