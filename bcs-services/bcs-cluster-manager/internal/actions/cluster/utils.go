@@ -347,6 +347,17 @@ func deleteClusterExtraOperation(cluster *proto.Cluster) {
 	}
 }
 
+// updatePassCCClusterInfo update cc clusterInfo when update cm cluster
+func updatePassCCClusterInfo(cluster *proto.Cluster) {
+	err := passcc.GetCCClient().UpdatePassCCCluster(cluster)
+	if err != nil {
+		blog.Errorf("updatePassCCClusterInfo[%s] failed: %v", cluster.ClusterID, err)
+		return
+	}
+
+	blog.V(4).Infof("updatePassCCClusterInfo[%s] successful", cluster.ClusterID)
+}
+
 // deleteClusterCredentialInfo sync delete cluster credential
 func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID string) {
 	err := store.DeleteClusterCredential(context.Background(), clusterID)

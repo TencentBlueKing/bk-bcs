@@ -167,7 +167,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		}
 		if data.Data.State == FAILED.String() || data.Data.State == REVOKED.String() || data.Data.State == SUSPENDED.String() {
 			blog.Errorf("RunBKsopsJob[%s] GetTaskStatus task[%s] step[%s] failed: %v", taskID, taskID, stepName, err)
-			retErr := fmt.Errorf("GetTaskStatus %s %s err: %v, utl: %s", startTaskReq.TaskID, data.Data.State, err, taskRes.Data.TaskURL)
+			retErr := fmt.Errorf("GetTaskStatus %s %s err: %v, url: %s", startTaskReq.TaskID, data.Data.State, err, taskRes.Data.TaskURL)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
