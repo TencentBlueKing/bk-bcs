@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config/multicfg"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/prometheus/common/version"
@@ -122,6 +123,8 @@ func initConfig(cmd *cobra.Command) {
 
 	// 命令行日志级别
 	config.G.Logging.SetByCmd(logLevel)
+
+	multicfg.NewMultiCredConf(certCfgFiles)
 
 	// init tracer
 	ctx := cmd.Context()

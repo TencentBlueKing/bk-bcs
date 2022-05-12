@@ -12,22 +12,27 @@
 package config
 
 import (
+	"sync"
+
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
 // Configuration 配置
 type Configuration struct {
-	Base       *BaseConf                  `yaml:"base_conf"`
-	Redis      *RedisConf                 `yaml:"redis"`
-	StoreGW    *StoreGWConf               `yaml:"store"`
-	API        *APIConf                   `yaml:"query"`
-	Logging    *LogConf                   `yaml:"logging"`
-	BKAPIGW    *BKAPIGWConf               `yaml:"bkapigw_conf"`
-	BCS        *BCSConf                   `yaml:"bcs_conf"`
-	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
-	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
-	Web        *WebConf                   `yaml:"web"`
+	mtx         sync.Mutex
+	Base        *BaseConf                  `yaml:"base_conf"`
+	Redis       *RedisConf                 `yaml:"redis"`
+	StoreGW     *StoreGWConf               `yaml:"store"`
+	API         *APIConf                   `yaml:"query"`
+	Logging     *LogConf                   `yaml:"logging"`
+	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
+	BCS         *BCSConf                   `yaml:"bcs_conf"`
+	Credentials map[string][]*Credential   `yaml:"-"`
+	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
+	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
+	Web         *WebConf                   `yaml:"web"`
 }
 
 // init 初始化
@@ -60,6 +65,8 @@ func newConfiguration() (*Configuration, error) {
 
 	c.Logging = defaultLogConf()
 	c.Web = defaultWebConf()
+
+	c.Credentials = map[string][]*Credential{}
 	return c, nil
 }
 
@@ -82,6 +89,48 @@ func init() {
 // IsDevMode 是否本地开发模式
 func (c *Configuration) IsDevMode() bool {
 	return c.Base.RunEnv == DevEnv
+}
+
+func (c *Configuration) ReadCred(name string, content []byte) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	cred := []*Credential{}
+	err := yaml.Unmarshal(content, &cred)
+	if err != nil {
+		return err
+	}
+	c.Credentials[name] = cred
+	for _, v := range c.Credentials[name] {
+		if err := v.InitCred(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Configuration) ReadCredViper(name string, v *viper.Viper) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	cred := []*Credential{}
+
+	// 使用 yaml tag 反序列化
+	opt := viper.DecoderConfigOption(func(decoderConfig *mapstructure.DecoderConfig) {
+		decoderConfig.TagName = "yaml"
+	})
+
+	if err := v.UnmarshalKey("credentials", &cred, opt); err != nil {
+		return err
+	}
+
+	c.Credentials[name] = cred
+	for _, v := range c.Credentials[name] {
+		if err := v.InitCred(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ReadFrom : read from file
