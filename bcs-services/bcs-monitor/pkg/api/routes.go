@@ -35,8 +35,8 @@ func (a *APIServer) Run(addr string) error {
 		Handler: a.Engine,
 	}
 
+	a.srv = srv
 	return srv.ListenAndServe()
-
 }
 
 func (a *APIServer) Close(ctx context.Context) error {
