@@ -42,7 +42,7 @@ func AbortWithWithForbiddenError(c *Context, err error) {
 
 // APIResponse 正常返回
 func APIResponse(c *Context, data interface{}) {
-	result := Result{Code: 1403, Message: "", RequestId: c.RequestId, Data: data}
+	result := Result{Code: 0, Message: "OK", RequestId: c.RequestId, Data: data}
 	c.JSON(http.StatusOK, result)
 }
 

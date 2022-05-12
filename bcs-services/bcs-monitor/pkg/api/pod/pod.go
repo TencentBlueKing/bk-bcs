@@ -28,10 +28,20 @@ func GetContainerList(c *rest.Context) (interface{}, error) {
 	return containers, nil
 }
 
-func Ws() error {
-	return nil
+// 获取 容器日志
+func GetContainerLog(c *rest.Context) (interface{}, error) {
+	clusterId := c.Param("clusterId")
+	namespace := c.Param("namespace")
+	pod := c.Param("pod")
+	logQuery := &k8sclient.LogQuery{}
+	if err := c.BindQuery(logQuery); err != nil {
+		return nil, err
+	}
+
+	logs, err := k8sclient.GetContainerLog(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	return logs, err
 }
 
-func DownloadLog() error {
+func Ws() error {
 	return nil
 }
