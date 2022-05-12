@@ -158,7 +158,7 @@ func (e *GCLB) EnsureMultiListeners(region, lbID string, listeners []*networkext
 	close(errCh)
 	close(retCh)
 	for e := range errCh {
-		return nil, e
+		blog.Errorf("ensure listener failed, err %s", e.Error())
 	}
 	for li := range retCh {
 		retMap[li.name] = li.id
@@ -227,7 +227,7 @@ func (e *GCLB) EnsureMultiSegmentListeners(region, lbID string, listeners []*net
 	close(errCh)
 	close(retCh)
 	for e := range errCh {
-		return nil, e
+		blog.Errorf("ensure listener failed, err %s", e.Error())
 	}
 	for li := range retCh {
 		retMap[li.name] = li.id
