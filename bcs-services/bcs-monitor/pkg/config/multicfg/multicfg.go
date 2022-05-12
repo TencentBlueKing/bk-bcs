@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -33,6 +34,15 @@ func makeMicroConf(filePath string) (*viper.Viper, error) {
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
+
+	// 自动 watch 配置
+	v.WatchConfig()
+	v.OnConfigChange(func(e fsnotify.Event) {
+		if err := config.G.ReadCredViper(filePath, v); err != nil {
+			logger.Errorf("reload credential error, %s", err)
+		}
+		logger.Infof("reload credential conf from %s, len=%d", filePath, len(config.G.Credentials[filePath]))
+	})
 
 	return v, nil
 }
