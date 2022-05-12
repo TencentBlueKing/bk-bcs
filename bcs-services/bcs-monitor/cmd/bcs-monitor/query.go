@@ -12,7 +12,10 @@
 package main
 
 import (
+	"context"
+
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
+	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -27,11 +30,8 @@ func QueryCmd() *cobra.Command {
 		Long:  `Query node exposing PromQL enabled Query API with data retrieved from multiple store-gw.`,
 	}
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
-		cmdOpt, _ := getOption(cmd.Context())
-		if err := runQuery(cmdOpt); err != nil {
-			cmdOpt.logger.Fatalf("execute %s command failed: %s", cmd.Use, err)
-		}
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return runQuery(cmdOption(cmd))
 
 	}
 
@@ -46,11 +46,10 @@ func QueryCmd() *cobra.Command {
 	return cmd
 }
 
-func runQuery(opt *option) error {
+func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 	var (
 		reg       = opt.reg
 		kitLogger = gokit.NewLogger(opt.logger)
-		g         = opt.g
 		apiServer *query.API
 		err       error
 	)

@@ -17,14 +17,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config/watch"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/prometheus/common/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	traclient "github.com/thanos-io/thanos/pkg/tracing/client"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config/watch"
 )
 
 var (
@@ -36,8 +36,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:   "bcs-monitor",
-		Short: "a unified metrics server for bcs-monitor",
-		Long:  `A unified metrics server for bcs-monitor`,
+		Short: "A unified metrics and log server for bcs-monitor",
 	}
 )
 
@@ -83,8 +82,7 @@ func init() {
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		defaultHelpFn(cmd, args)
 
-		cmdOpt, _ := getOption(cmd.Context())
-		cmdOpt.cancel()
+		finishCmd(cmd)
 	})
 }
 
@@ -110,33 +108,24 @@ func initConfig(cmd *cobra.Command) {
 		viper.SetConfigType("yml")
 	}
 
-	viper.AutomaticEnv()
-
 	if err := viper.ReadInConfig(); err != nil {
-		logger.Errorf("Parse config file error: %v", err)
-		os.Exit(1)
+		cobra.CheckErr(err)
 	}
-	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
 
 	if err := config.G.ReadFromViper(viper.GetViper()); err != nil {
-		logger.Errorf("unmarshal viper config error :%s", err)
-		os.Exit(1)
+		cobra.CheckErr(err)
 	}
+
+	// 日志配置已经Ready, 后面都需要使用日志
+	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
 
 	// 命令行日志级别
 	config.G.Logging.SetByCmd(logLevel)
 
 	// watch 凭证文件
 	if err := watch.MultiCredWatch(certCfgFiles); err != nil {
-		logger.Errorf(err.Error())
-		os.Exit(1)
+		logger.Fatal(err.Error())
 	}
-
-	// init tracer
-	ctx := cmd.Context()
-	cmdOpt, _ := getOption(ctx)
-
-	cmdOpt.tracer = traclient.NoopTracer()
 }
 
 // VersionCmd 展示版本号
@@ -147,9 +136,7 @@ func VersionCmd() *cobra.Command {
 		Long:  `All software has versions. This is bcs-monitor's`,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(version.Print("bcs-monitor"))
-
-			cmdOpt, _ := getOption(cmd.Context())
-			cmdOpt.cancel()
+			finishCmd(cmd)
 		},
 	}
 	return cmd
