@@ -22,14 +22,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 )
 
+// APIServerCmd
 func APIServerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apiserver",
 		Short: "BCS Monitor api server",
 	}
 
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return runAPIServer(cmdOption(cmd))
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		runCmd(cmd, runAPIServer)
 	}
 
 	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:8089", "API listen http ip")

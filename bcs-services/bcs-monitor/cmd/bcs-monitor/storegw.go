@@ -27,8 +27,8 @@ func StoreGWCmd() *cobra.Command {
 		Short: "Heterogeneous storage gateway",
 	}
 
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return runStoreGW(cmdOption(cmd))
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		runCmd(cmd, runStoreGW)
 	}
 
 	flags := cmd.Flags()

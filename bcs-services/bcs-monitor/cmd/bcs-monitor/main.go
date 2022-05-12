@@ -46,6 +46,14 @@ func finishCmd(cmd *cobra.Command) {
 	opt.cancel()
 }
 
+type CmdFunc func(context.Context, *run.Group, *option) error
+
+func runCmd(cmd *cobra.Command, cmdFunc CmdFunc) {
+	if err := cmdFunc(cmdOption(cmd)); err != nil {
+		logger.Fatalw("start server failed", "server", cmd.Name(), "err", err.Error())
+	}
+}
+
 // 命令基础参数
 type option struct {
 	g      *run.Group

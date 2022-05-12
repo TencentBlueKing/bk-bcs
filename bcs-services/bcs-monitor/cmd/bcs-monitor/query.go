@@ -30,9 +30,8 @@ func QueryCmd() *cobra.Command {
 		Long:  `Query node exposing PromQL enabled Query API with data retrieved from multiple store-gw.`,
 	}
 
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return runQuery(cmdOption(cmd))
-
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		runCmd(cmd, runQuery)
 	}
 
 	cmd.Flags().StringVar(&config.G.API.HTTP.Address, "http-address", config.G.API.HTTP.Address, "API listen http ip")
