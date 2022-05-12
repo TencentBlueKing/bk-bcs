@@ -16,6 +16,7 @@ metadata:
       ui:component:
         name: select
         props:
+          placeholder: " "
           clearable: false
           remoteConfig:
             params:

@@ -11,6 +11,8 @@ containerGroup:
       border: true
       showTitle: true
       type: card
+      defaultActiveName:
+        - containers
   ui:order:
     - initContainers
     - containers
