@@ -42,16 +42,13 @@ var (
 
 // Execute 执行根命令, 公共参数在 context 中传递
 func Execute(ctx context.Context) error {
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		// version 命令不需要初始化配置
 		if cmd.Name() == VersionCmd().Name() {
-			return nil
+			return
 		}
 
-		initConfig(cmd)
-
-		return nil
+		initConfig()
 	}
 	return rootCmd.ExecuteContext(ctx)
 }
@@ -82,11 +79,11 @@ func init() {
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		defaultHelpFn(cmd, args)
 
-		finishCmd(cmd)
+		stopCmd(cmd)
 	})
 }
 
-func initConfig(cmd *cobra.Command) {
+func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -136,7 +133,7 @@ func VersionCmd() *cobra.Command {
 		Long:  `All software has versions. This is bcs-monitor's`,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(version.Print("bcs-monitor"))
-			finishCmd(cmd)
+			stopCmd(cmd)
 		},
 	}
 	return cmd

@@ -41,17 +41,20 @@ func cmdOption(cmd *cobra.Command) (context.Context, *run.Group, *option) {
 	return cmd.Context(), v.g, v
 }
 
-func finishCmd(cmd *cobra.Command) {
-	_, _, opt := cmdOption(cmd)
-	opt.cancel()
-}
-
+// CmdFunc 命令行函数
 type CmdFunc func(context.Context, *run.Group, *option) error
 
+// runCmd 启动命令
 func runCmd(cmd *cobra.Command, cmdFunc CmdFunc) {
 	if err := cmdFunc(cmdOption(cmd)); err != nil {
 		logger.Fatalw("start server failed", "server", cmd.Name(), "err", err.Error())
 	}
+}
+
+// 停止命令
+func stopCmd(cmd *cobra.Command) {
+	_, _, opt := cmdOption(cmd)
+	opt.cancel()
 }
 
 // 命令基础参数
