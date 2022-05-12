@@ -156,10 +156,16 @@ replicas:
 jobManage:
   title: 任务管理
   type: object
+  required:
+    - schedule
   properties:
     schedule:
-      tltle: 调度规则
+      title: 调度规则
       type: string
+      description: "CronTab 表达式，形如：*/10 * * * *"
+      ui:rules:
+        - required
+        - maxLength64
     concurrencyPolicy:
       title: 并发策略
       type: string
@@ -172,7 +178,7 @@ jobManage:
               value: Allow
             - label: 若 Job 未结束，则跳过
               value: Forbid
-            - lable: 若 Job 未结束，则替换
+            - label: 若 Job 未结束，则替换
               value: Replace
     suspend:
       title: 暂停
@@ -181,12 +187,21 @@ jobManage:
     completions:
       title: 需完成数
       type: integer
+      ui:component:
+        props:
+          max: 8192
     parallelism:
-      tltle: 并发数
+      title: 并发数
       type: integer
+      ui:component:
+        props:
+          max: 256
     backoffLimit:
       title: 重试次数
       type: integer
+      ui:component:
+        props:
+          max: 2048
     activeDDLSecs:
       title: 活跃终止时间
       type: integer
@@ -198,9 +213,15 @@ jobManage:
     successfulJobsHistoryLimit:
       title: 历史累计成功数
       type: integer
+      ui:component:
+        props:
+          max: 4096
     failedJobsHistoryLimit:
       title: 历史累计失败数
       type: integer
+      ui:component:
+        props:
+          max: 4096
     startingDDLSecs:
       title: 运行截止时间
       type: integer
@@ -219,12 +240,21 @@ jobManage:
     completions:
       title: 需完成数
       type: integer
+      ui:component:
+        props:
+          max: 2048
     parallelism:
-      tltle: 并发数
+      title: 并发数
       type: integer
+      ui:component:
+        props:
+          max: 256
     backoffLimit:
       title: 重试次数
       type: integer
+      ui:component:
+        props:
+          max: 2048
     activeDDLSecs:
       title: 活跃终止时间
       type: integer
@@ -239,6 +269,9 @@ jobManage:
 nodeSelect:
   title: 节点选择
   type: object
+  required:
+    - nodeName
+    - selector
   properties:
     type:
       title: 节点类型

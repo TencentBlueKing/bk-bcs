@@ -315,18 +315,18 @@ properties:
         if: "{{`{{`}} $self.value === 'httpGet' {{`}}`}}"
         then:
           state:
-            disabled: false
+            visible: true
         else:
           state:
-            disabled: true
+            visible: false
       - target: "{{`{{`}} $widgetNode?.getSibling('command')?.id {{`}}`}}"
         if: "{{`{{`}} $self.value === 'exec' {{`}}`}}"
         then:
           state:
-            disabled: false
+            visible: true
         else:
           state:
-            disabled: true
+            visible: false
   port:
     title: 端口
     type: integer
@@ -365,9 +365,15 @@ properties:
   successThreshold:
     title: 成功阈值
     type: integer
+    ui:component:
+      props:
+        max: 2048
   failureThreshold:
     title: 失败阈值
     type: integer
+    ui:component:
+      props:
+        max: 2048
   command:
     items:
       title: 命令

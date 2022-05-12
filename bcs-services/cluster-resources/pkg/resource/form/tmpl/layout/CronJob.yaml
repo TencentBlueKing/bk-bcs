@@ -1,9 +1,9 @@
 {{ include "common.metadata" . }}
 - - group:
       - - container:
-            grid-template-columns: "1fr auto auto 1fr"
+            grid-template-columns: "1fr 1fr 1fr 1fr"
           group:
-            - [ "schedule", "concurrencyPolicy", ".", "suspend" ]
+            - [ "schedule", "concurrencyPolicy", "concurrencyPolicy", "suspend" ]
             - [ "completions", "parallelism", "backoffLimit", "activeDDLSecs" ]
             - [ "successfulJobsHistoryLimit", "failedJobsHistoryLimit", "startingDDLSecs", "." ]
           prop: jobManage

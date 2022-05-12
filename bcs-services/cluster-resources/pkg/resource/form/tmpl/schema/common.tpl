@@ -69,7 +69,7 @@ metadata:
             ui:rules:
               - required
               - maxLength128
-              - nameRegex
+              - labelKeyRegex
           value:
             title: 值
             type: string

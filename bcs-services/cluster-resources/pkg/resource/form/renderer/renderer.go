@@ -271,8 +271,14 @@ func genSchemaRules() map[string]interface{} {
 			"validator": "{{ $self.value.length < 250 }}",
 			"message":   "超过长度限制（250）",
 		},
+		// 规则：https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+		"labelKeyRegex": map[string]interface{}{
+			"validator": "/^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$/",
+			"message":   "仅支持字母，数字，'-'，'_' 及 '/' 且需以字母数字开头和结尾",
+		},
+		// NOTE 标签值允许为空
 		"labelValRegex": map[string]interface{}{
-			"validator": "/^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?(\\.[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$/",
+			"validator": "/(^$|^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?(\\.[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$)/",
 			"message":   "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字",
 		},
 	}
