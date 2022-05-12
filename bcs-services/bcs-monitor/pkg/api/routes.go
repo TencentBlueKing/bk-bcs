@@ -51,16 +51,18 @@ func registerRoutes(engine *gin.Engine) {
 		}),
 	)
 
-	// route := engine.Group("/projects/{projectId}/clusters/{clusterId}")
 	engine.Use(requestIdMiddleware)
 	engine.Use(middleware.AuthRequired())
 
 	// 日志相关接口
-	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/containers", rest.RestHandlerFunc(pod.GetContainerList))
-	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs", rest.RestHandlerFunc(pod.GetContainerLog))
-	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs/download", rest.StreamHandler(pod.DownloadContainerLog))
+	route := engine.Group("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod")
+	{
+		route.GET("/containers", rest.RestHandlerFunc(pod.GetContainerList))
+		route.GET("/logs", rest.RestHandlerFunc(pod.GetContainerLog))
+		route.GET("/logs/download", rest.StreamHandler(pod.DownloadContainerLog))
 
-	// 实时日志流
-	engine.POST("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs/stream/sessions/", rest.RestHandlerFunc(pod.GetContainerLog))
-	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs/stream/", rest.RestHandlerFunc(pod.GetContainerLog))
+		// 实时日志流
+		route.POST("/logs/stream/sessions/", rest.RestHandlerFunc(pod.GetContainerLog))
+		route.GET("/logs/stream/", rest.RestHandlerFunc(pod.GetContainerLog))
+	}
 }
