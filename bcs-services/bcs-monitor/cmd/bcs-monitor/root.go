@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config/multicfg"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config/watch"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/prometheus/common/version"
@@ -124,7 +124,11 @@ func initConfig(cmd *cobra.Command) {
 	// 命令行日志级别
 	config.G.Logging.SetByCmd(logLevel)
 
-	multicfg.NewMultiCredConf(certCfgFiles)
+	// watch 凭证文件
+	if err := watch.MultiCredWatch(certCfgFiles); err != nil {
+		logger.Errorf(err.Error())
+		os.Exit(1)
+	}
 
 	// init tracer
 	ctx := cmd.Context()

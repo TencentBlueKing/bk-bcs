@@ -91,24 +91,6 @@ func (c *Configuration) IsDevMode() bool {
 	return c.Base.RunEnv == DevEnv
 }
 
-func (c *Configuration) ReadCred(name string, content []byte) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	cred := []*Credential{}
-	err := yaml.Unmarshal(content, &cred)
-	if err != nil {
-		return err
-	}
-	c.Credentials[name] = cred
-	for _, v := range c.Credentials[name] {
-		if err := v.InitCred(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (c *Configuration) ReadCredViper(name string, v *viper.Viper) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
@@ -146,23 +128,10 @@ func (c *Configuration) ReadFrom(content []byte) error {
 
 // ReadFromViper : read from viper
 func (c *Configuration) ReadFromViper(v *viper.Viper) error {
+	// 不支持inline, 需要使用 yaml 库
 	content, err := yaml.Marshal(v.AllSettings())
 	if err != nil {
 		return err
 	}
 	return c.ReadFrom(content)
-
-	// // 使用 yaml tag 反序列化
-	// opt := viper.DecoderConfigOption(func(decoderConfig *mapstructure.DecoderConfig) {
-	// 	decoderConfig.TagName = "yaml"
-	// })
-	// if err := v.Unmarshal(c, opt); err != nil {
-	// 	return err
-	// }
-
-	// if err := c.init(); err != nil {
-	// 	return err
-	// }
-
-	// return nil
 }
