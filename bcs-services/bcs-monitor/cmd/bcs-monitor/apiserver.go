@@ -23,13 +23,9 @@ func APIServerCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&config.G.API.HTTP.Address, "http-address", config.G.API.HTTP.Address, "API listen http ip")
-	cmd.Flags().StringVar(&config.G.API.GRPC.Address, "grpc-address", config.G.API.GRPC.Address, "API listen grpc ip")
-	cmd.Flags().StringArrayVar(&config.G.API.StoreList, "store", config.G.API.StoreList, "the store list that api connect")
 
 	// 设置配置命令行优先级高与配置文件
 	viper.BindPFlag("query.http.address", cmd.Flag("http-address"))
-	viper.BindPFlag("query.grpc.address", cmd.Flag("grpc-address"))
-	viper.BindPFlag("query.store", cmd.Flag("store"))
 	return cmd
 }
 

@@ -28,6 +28,12 @@ func (c *LogConf) init() error {
 	return nil
 }
 
+// SetByCmd 命令配置, 优先级最高
+func (c *LogConf) SetByCmd(level string) error {
+	c.Level = level
+	return c.init()
+}
+
 // defaultLogConf 默认配置
 func defaultLogConf() *LogConf {
 	opt := logger.Options{

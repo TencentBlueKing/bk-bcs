@@ -28,8 +28,9 @@ import (
 
 var (
 	// Used for flags.
-	cfgFile  string
-	logLevel string
+	cfgFile      string
+	logLevel     string
+	certCfgFiles []string
 
 	rootCmd = &cobra.Command{
 		Use:   "bcs-monitor",
@@ -60,8 +61,9 @@ func init() {
 	// 不开启 自动排序
 	cobra.EnableCommandSorting = false
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/bcs-monitor.yml)")
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log.level", "", "Log filtering level. (default info)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file (default is $HOME/bcs-monitor.yml)")
+	rootCmd.PersistentFlags().StringArrayVar(&certCfgFiles, "credential-config", []string{}, "Credential config file path")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log.level", "", "Log filtering level.")
 
 	// 不开启 completion 子命令
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
@@ -117,6 +119,9 @@ func initConfig(cmd *cobra.Command) {
 		logger.Errorf("unmarshal viper config error :%s", err)
 		os.Exit(1)
 	}
+
+	// 命令行日志级别
+	config.G.Logging.SetByCmd(logLevel)
 
 	// init tracer
 	ctx := cmd.Context()
