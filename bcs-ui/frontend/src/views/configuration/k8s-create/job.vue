@@ -529,8 +529,8 @@
                                             </bk-button>
                                             <span class="bcs-icon bcs-icon-close-circle" @click.stop="removeContainer(index)" v-if="curApplication.config.spec.template.spec.allContainers.length > 1"></span>
                                         </div>
-                                        <bcs-popover ref="containerTooltip" :content="curApplication.config.spec.template.spec.allContainers.length >= 5 ? $t('最多添加5个') : $t('添加Container')" placement="top">
-                                            <bk-button type="button" class="bk-button bk-default is-outline is-icon" :disabled="curApplication.config.spec.template.spec.allContainers.length >= 5 " @click.stop.prevent="addLocalContainer">
+                                        <bcs-popover ref="containerTooltip" :content="$t('添加Container')" placement="top">
+                                            <bk-button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalContainer">
                                                 <i class="bcs-icon bcs-icon-plus"></i>
                                             </bk-button>
                                         </bcs-popover>
