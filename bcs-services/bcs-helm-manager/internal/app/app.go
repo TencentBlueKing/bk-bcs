@@ -324,6 +324,7 @@ func (hm *HelmManager) initHTTPService() error {
 		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
 		ggRuntime.WithDisablePathLengthFallback(),
+		ggRuntime.WithProtoErrorHandler(runtimex.CustomHTTPError),
 	)
 
 	grpcDialOpts := make([]grpc.DialOption, 0)
