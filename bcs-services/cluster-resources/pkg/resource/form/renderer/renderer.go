@@ -76,7 +76,7 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 // 获取资源对应 APIVersion 并更新 Renderer 配置
 func (r *ManifestRenderer) setAPIVersion() error {
 	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
-	r.APIVersion = mapx.GetStr(r.FormData, "apiVersion")
+	r.APIVersion = mapx.GetStr(r.FormData, "metadata.apiVersion")
 	if r.APIVersion == "" {
 		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
 		if err != nil {
@@ -86,7 +86,9 @@ func (r *ManifestRenderer) setAPIVersion() error {
 		if resInfo.Group != "" {
 			r.APIVersion = resInfo.Group + "/" + resInfo.Version
 		}
-		r.FormData["apiVersion"] = r.APIVersion
+		if err = mapx.SetItems(r.FormData, "metadata.apiVersion", r.APIVersion); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -252,6 +254,10 @@ func genSchemaRules() map[string]interface{} {
 		"nameRegex": map[string]interface{}{
 			"validator": "/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/",
 			"message":   "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾",
+		},
+		"numberRegex": map[string]interface{}{
+			"validator": "/^[0-9]*$/",
+			"message":   "仅可包含数字字符",
 		},
 		"maxLength64": map[string]interface{}{
 			"validator": "{{ $self.value.length < 64 }}",

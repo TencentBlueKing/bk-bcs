@@ -71,7 +71,7 @@ hostPath:
         ui:component:
           name: select
           props:
-            clearable: true
+            clearable: false
             datasource:
               - label: DirectoryOrCreate
                 value: DirectoryOrCreate
@@ -99,6 +99,9 @@ configMap:
   type: array
   items:
     type: object
+    required:
+      - name
+      - cmName
     properties:
       name:
         title: 名称
@@ -107,9 +110,12 @@ configMap:
           - required
           - maxLength128
       defaultMode:
-        description: 三位数字，如 644
         title: 默认模式
-        type: integer
+        type: string
+        default: 0644
+        description: 八进制数字（0000-0777）或十进制数字（0-511）
+        ui:rules:
+          - numberRegex
       cmName:
         title: ConfigMap
         type: string
@@ -170,6 +176,9 @@ secret:
   type: array
   items:
     type: object
+    required:
+      - name
+      - secretName
     properties:
       name:
         title: 名称
@@ -179,8 +188,11 @@ secret:
           - maxLength128
       defaultMode:
         title: 默认模式
-        type: integer
-        description: 三位数字，如 644
+        type: string
+        default: 0644
+        description: 八进制数字（0000-0777）或十进制数字（0-511）
+        ui:rules:
+          - numberRegex
       secretName:
         title: Secret
         type: string

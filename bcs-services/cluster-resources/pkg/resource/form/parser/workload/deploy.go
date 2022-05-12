@@ -26,7 +26,6 @@ import (
 // ParseDeploy ...
 func ParseDeploy(manifest map[string]interface{}) map[string]interface{} {
 	deploy := model.Deploy{}
-	deploy.APIVersion, deploy.Kind = common.ParseAPIVersionKind(manifest)
 	common.ParseMetadata(manifest, &deploy.Metadata)
 	ParseDeploySpec(manifest, &deploy.Spec)
 	ParseWorkloadVolume(manifest, &deploy.Volume)

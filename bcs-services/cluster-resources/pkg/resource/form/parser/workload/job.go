@@ -25,7 +25,6 @@ import (
 // ParseJob ...
 func ParseJob(manifest map[string]interface{}) map[string]interface{} {
 	job := model.Job{}
-	job.APIVersion, job.Kind = common.ParseAPIVersionKind(manifest)
 	common.ParseMetadata(manifest, &job.Metadata)
 	ParseJobSpec(manifest, &job.Spec)
 	ParseWorkloadVolume(manifest, &job.Volume)

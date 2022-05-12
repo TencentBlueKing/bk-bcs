@@ -1,4 +1,4 @@
-apiVersion: {{ .apiVersion }}
+apiVersion: {{ .metadata.apiVersion }}
 kind: Job
 {{ include "common.metadata" .metadata }}
 spec:

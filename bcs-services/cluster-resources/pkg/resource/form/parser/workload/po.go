@@ -28,7 +28,6 @@ import (
 // ParsePo ...
 func ParsePo(manifest map[string]interface{}) map[string]interface{} {
 	po := model.Po{}
-	po.APIVersion, po.Kind = common.ParseAPIVersionKind(manifest)
 	common.ParseMetadata(manifest, &po.Metadata)
 	ParsePoSpec(manifest, &po.Spec)
 	ParseWorkloadVolume(manifest, &po.Volume)

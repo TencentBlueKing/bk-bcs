@@ -25,7 +25,6 @@ import (
 // ParseCJ ...
 func ParseCJ(manifest map[string]interface{}) map[string]interface{} {
 	cj := model.CJ{}
-	cj.APIVersion, cj.Kind = common.ParseAPIVersionKind(manifest)
 	common.ParseMetadata(manifest, &cj.Metadata)
 	ParseCJSpec(manifest, &cj.Spec)
 	ParseWorkloadVolume(manifest, &cj.Volume)

@@ -72,6 +72,169 @@ replicas:
           unit: s
 {{- end }}
 
+{{- define "workload.dsReplicas" }}
+replicas:
+  title: 副本管理
+  type: object
+  properties:
+    updateStrategy:
+      title: 升级策略
+      type: string
+      default: RollingUpdate
+      ui:component:
+        name: radio
+        props:
+          datasource:
+            - label: 滚动升级
+              value: RollingUpdate
+            - label: 重新创建
+              value: Recreate
+    maxUnavailable:
+      title: 最大不可用数量
+      type: integer
+    muaUnit:
+      default: percent
+      title: 单位
+      type: string
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          datasource:
+            - label: '%'
+              value: percent
+            - label: 个
+              value: cnt
+    minReadySecs:
+      title: 最小就绪时间
+      type: integer
+      ui:component:
+        name: unitInput
+        props:
+          unit: s
+{{- end }}
+
+{{- define "workload.stsReplicas" }}
+replicas:
+  title: 副本管理
+  type: object
+  properties:
+    cnt:
+      title: 副本数量
+      type: integer
+      default: 3
+      ui:component:
+        props:
+          min: 1
+    updateStrategy:
+      title: 升级策略
+      type: string
+      default: RollingUpdate
+      ui:component:
+        name: radio
+        props:
+          datasource:
+            - label: 滚动升级
+              value: RollingUpdate
+            - label: 重新创建
+              value: Recreate
+    podManPolicy:
+      title: Pod 管理策略
+      type: string
+      default: OrderedReady
+      ui:component:
+        name: radio
+        props:
+          datasource:
+            - label: OrderedReady
+              value: OrderedReady
+            - label: Parallel
+              value: Parallel
+{{- end }}
+
+{{- define "workload.cjJobManage" }}
+jobManage:
+  title: 任务管理
+  type: object
+  properties:
+    schedule:
+      tltle: 调度规则
+      type: string
+    concurrencyPolicy:
+      title: 并发策略
+      type: string
+      default: Allow
+      ui:component:
+        name: radio
+        props:
+          datasource:
+            - label: 允许多个 Job 同时运行
+              value: Allow
+            - label: 若 Job 未结束，则跳过
+              value: Forbid
+            - lable: 若 Job 未结束，则替换
+              value: Replace
+    suspend:
+      title: 暂停
+      type: bool
+      default: false
+    completions:
+      title: 需完成数
+      type: integer
+    parallelism:
+      tltle: 并发数
+      type: integer
+    backoffLimit:
+      title: 重试次数
+      type: integer
+    activeDDLSecs:
+      title: 活跃终止时间
+      type: integer
+      ui:component:
+        name: unitInput
+        props:
+          max: 1209600
+          unit: s
+    successfulJobsHistoryLimit:
+      title: 历史累计成功数
+      type: integer
+    failedJobsHistoryLimit:
+      title: 历史累计失败数
+      type: integer
+    startingDDLSecs:
+      title: 运行截止时间
+      type: integer
+      ui:component:
+        name: unitInput
+        props:
+          max: 1209600
+          unit: s
+{{- end }}
+
+{{- define "workload.jobManage" }}
+jobManage:
+  title: 任务管理
+  type: object
+  properties:
+    completions:
+      title: 需完成数
+      type: integer
+    parallelism:
+      tltle: 并发数
+      type: integer
+    backoffLimit:
+      title: 重试次数
+      type: integer
+    activeDDLSecs:
+      title: 活跃终止时间
+      type: integer
+      ui:component:
+        name: unitInput
+        props:
+          max: 1209600
+          unit: s
+{{- end }}
+
 {{- define "workload.nodeSelect" }}
 nodeSelect:
   title: 节点选择
@@ -125,6 +288,9 @@ nodeSelect:
           then:
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
+      ui:rules:
+        - validator: "{{`{{`}} $self.getValue('spec.nodeSelect.type') !== 'specificNode' || ($self.getValue('spec.nodeSelect.type') === 'specificNode' && $self.value !== '') {{`}}`}}"
+          message: "值不能为空"
     selector:
       title: 调度规则
       type: array
@@ -144,6 +310,9 @@ nodeSelect:
         type: object
       ui:component:
         name: noTitleArray
+      ui:rules:
+        - validator: "{{`{{`}} $self.getValue('spec.nodeSelect.type') !== 'schedulingRule' || ($self.getValue('spec.nodeSelect.type') === 'schedulingRule' && $self.value.length > 0) {{`}}`}}"
+          message: "至少包含一条调度规则"
   ui:order:
     - type
     - selector
@@ -400,14 +569,19 @@ other:
     restartPolicy:
       title: 重启策略
       type: string
+      {{- if or (eq .kind "CronJob") (eq .kind "Job") }}
+      default: OnFailure
+      {{- else }}
       default: Always
+      {{- end }}
       ui:component:
         name: radio
         props:
-          # TODO Job，CronJob 不应有 Always，可以用 kind 判断
           datasource:
+            {{- if and (ne .kind "CronJob") (ne .kind "Job") }}
             - label: Always
               value: Always
+            {{- end }}
             - label: OnFailure
               value: OnFailure
             - label: Never

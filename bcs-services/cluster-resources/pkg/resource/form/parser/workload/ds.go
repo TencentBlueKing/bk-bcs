@@ -26,7 +26,6 @@ import (
 // ParseDS ...
 func ParseDS(manifest map[string]interface{}) map[string]interface{} {
 	ds := model.DS{}
-	ds.APIVersion, ds.Kind = common.ParseAPIVersionKind(manifest)
 	common.ParseMetadata(manifest, &ds.Metadata)
 	ParseDSSpec(manifest, &ds.Spec)
 	ParseWorkloadVolume(manifest, &ds.Volume)

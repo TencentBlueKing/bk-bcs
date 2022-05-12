@@ -1,5 +1,6 @@
 {{- define "common.metadata" -}}
 - - group:
+      - [ "apiVersion", "." ]
       - [ "name", "." ]
       - [ "namespace", "." ]
       - [ "labels" ]

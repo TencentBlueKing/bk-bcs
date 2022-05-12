@@ -16,8 +16,6 @@ package model
 
 // Deploy Deployment 表单化建模
 type Deploy struct {
-	APIVersion     string         `structs:"apiVersion"`
-	Kind           string         `structs:"kind"`
 	Metadata       Metadata       `structs:"metadata"`
 	Spec           DeploySpec     `structs:"spec"`
 	Volume         WorkloadVolume `structs:"volume"`
@@ -65,8 +63,6 @@ type ContainerGroup struct {
 
 // DS DaemonSet 表单化建模
 type DS struct {
-	APIVersion     string         `structs:"apiVersion"`
-	Kind           string         `structs:"kind"`
 	Metadata       Metadata       `structs:"metadata"`
 	Spec           DSSpec         `structs:"spec"`
 	Volume         WorkloadVolume `structs:"volume"`
@@ -94,8 +90,6 @@ type DSReplicas struct {
 
 // STS StatefulSet 表单化建模
 type STS struct {
-	APIVersion     string         `structs:"apiVersion"`
-	Kind           string         `structs:"kind"`
 	Metadata       Metadata       `structs:"metadata"`
 	Spec           STSSpec        `structs:"spec"`
 	Volume         WorkloadVolume `structs:"volume"`
@@ -122,8 +116,6 @@ type STSReplicas struct {
 
 // CJ CronJob 表单化建模
 type CJ struct {
-	APIVersion     string         `structs:"apiVersion"`
-	Kind           string         `structs:"kind"`
 	Metadata       Metadata       `structs:"metadata"`
 	Spec           CJSpec         `structs:"spec"`
 	Volume         WorkloadVolume `structs:"volume"`
@@ -157,8 +149,6 @@ type CJJobManage struct {
 
 // Job 表单化建模
 type Job struct {
-	APIVersion     string         `structs:"apiVersion"`
-	Kind           string         `structs:"kind"`
 	Metadata       Metadata       `structs:"metadata"`
 	Spec           JobSpec        `structs:"spec"`
 	Volume         WorkloadVolume `structs:"volume"`
@@ -186,8 +176,6 @@ type JobManage struct {
 
 // Po Pod 表单化建模
 type Po struct {
-	APIVersion     string         `structs:"apiVersion"`
-	Kind           string         `structs:"kind"`
 	Metadata       Metadata       `structs:"metadata"`
 	Spec           PoSpec         `structs:"spec"`
 	Volume         WorkloadVolume `structs:"volume"`

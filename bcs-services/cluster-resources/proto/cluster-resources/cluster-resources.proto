@@ -1157,7 +1157,7 @@ service Resource {
 		};
 	}
 
-	rpc GetFormSupportedAPIVersions(GetFormSupportedApiVersionsReq) returns (CommonListResp) {
+	rpc GetFormSupportedAPIVersions(GetFormSupportedApiVersionsReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"
 		};

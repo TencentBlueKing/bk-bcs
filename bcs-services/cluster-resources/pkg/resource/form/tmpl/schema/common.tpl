@@ -3,10 +3,29 @@ metadata:
   title: 基本信息
   type: object
   required:
+    - apiVersion
     - name
     - namespace
     - labels
   properties:
+    apiVersion:
+      title: apiVersion
+      type: string
+      # 空值表示 Preferred Version
+      default: ""
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          remoteConfig:
+            params:
+              kind: {{ .kind }}
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/form_supported_api_versions` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
     name:
       title: 名称
       type: string

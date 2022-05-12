@@ -1,4 +1,4 @@
-apiVersion: {{ .apiVersion }}
+apiVersion: {{ .metadata.apiVersion }}
 kind: Pod
 {{ include "common.metadata" .metadata }}
 {{ include "workload.podSpec" . }}

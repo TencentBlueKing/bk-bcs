@@ -727,7 +727,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonListResp"
+              "$ref": "#/definitions/clusterresourcesCommonResp"
             }
           },
           "default": {

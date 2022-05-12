@@ -25,7 +25,6 @@ import (
 // ParseSTS ...
 func ParseSTS(manifest map[string]interface{}) map[string]interface{} {
 	sts := model.STS{}
-	sts.APIVersion, sts.Kind = common.ParseAPIVersionKind(manifest)
 	common.ParseMetadata(manifest, &sts.Metadata)
 	ParseSTSSpec(manifest, &sts.Spec)
 	ParseWorkloadVolume(manifest, &sts.Volume)

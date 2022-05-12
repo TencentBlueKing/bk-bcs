@@ -1,4 +1,4 @@
-apiVersion: {{ .apiVersion }}
+apiVersion: {{ .metadata.apiVersion }}
 kind: Deployment
 {{ include "common.metadata" .metadata }}
 spec:
@@ -8,17 +8,15 @@ spec:
   replicas: {{ .spec.replicas.cnt }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}
+    {{- if or .spec.replicas.maxUnavailable .spec.replicas.maxSurge }}
     rollingUpdate:
-      {{- if or .spec.replicas.maxUnavailable .spec.replicas.maxSurge }}
       {{- if .spec.replicas.maxUnavailable }}
       maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}
       {{- end }}
       {{- if .spec.replicas.maxSurge }}
       maxSurge: {{ .spec.replicas.maxSurge }}{{ if eq .spec.replicas.msUnit "cnt" }}% {{ end }}
       {{- end }}
-      {{- else }}
-      {}
-      {{- end }}
+    {{- end }}
   {{- if .spec.replicas.minReadySecs }}
   minReadySeconds: {{ .spec.replicas.minReadySecs }}
   {{- end }}
