@@ -1163,7 +1163,7 @@
                     }
                 })
                 // 设置当前rules
-                params.config.spec.rules = [JSON.parse(JSON.stringify(this.curRule))]
+                params.config.spec.rules = this.curEditedIngress.config.spec.rules.map(item => JSON.parse(JSON.stringify(item)))
                 return params
             },
 

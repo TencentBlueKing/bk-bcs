@@ -1,4 +1,4 @@
 FROM centos:centos7
 
-COPY ./bin/gpa gpa
+COPY ./gpa gpa
 ENTRYPOINT ["/gpa"]

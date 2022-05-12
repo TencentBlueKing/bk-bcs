@@ -342,9 +342,10 @@ func deleteClusterExtraOperation(cluster *proto.Cluster) {
 	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
 	if err != nil {
 		blog.Errorf("deleteClusterExtraOperation DeletePassCCCluster[%s] failed: %v", cluster.ClusterID, err)
-	} else {
-		blog.Infof("deleteClusterExtraOperation DeletePassCCCluster[%s] successful", cluster.ClusterID)
+		return
 	}
+
+	blog.V(4).Infof("deleteClusterExtraOperation DeletePassCCCluster[%s] successful", cluster.ClusterID)
 }
 
 // updatePassCCClusterInfo update cc clusterInfo when update cm cluster
@@ -363,8 +364,9 @@ func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID stri
 	err := store.DeleteClusterCredential(context.Background(), clusterID)
 	if err != nil {
 		blog.Errorf("deleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
-	} else {
-		blog.Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
+		return
 	}
+
+	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
 }
 
