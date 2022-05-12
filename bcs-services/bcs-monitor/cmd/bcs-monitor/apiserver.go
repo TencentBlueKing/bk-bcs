@@ -2,10 +2,8 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 func APIServerCmd() *cobra.Command {
@@ -22,23 +20,19 @@ func APIServerCmd() *cobra.Command {
 		}
 	}
 
-	cmd.Flags().StringVar(&config.G.API.HTTP.Address, "http-address", config.G.API.HTTP.Address, "API listen http ip")
+	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:8089", "API listen http ip")
 
-	// 设置配置命令行优先级高与配置文件
-	viper.BindPFlag("query.http.address", cmd.Flag("http-address"))
 	return cmd
 }
 
 func runAPIServer(opt *option) error {
 	var (
-		// reg       = opt.reg
-		// kitLogger = gokit.NewLogger(opt.logger)
 		g         = opt.g
 		apiServer *api.APIServer
 		err       error
 	)
 
-	opt.logger.Info("starting bcs-monitor api node")
+	opt.logger.Infow("listening for requests and metrics", "address", httpAddress)
 	apiServer, err = api.NewAPIServer(opt.ctx)
 	if err != nil {
 		opt.logger.Errorf("New api error: %s", err)
@@ -47,7 +41,7 @@ func runAPIServer(opt *option) error {
 
 	// 启动apiserver, 且支持
 	g.Add(func() error {
-		return apiServer.Run(":8089")
+		return apiServer.Run(httpAddress)
 	}, func(err error) {
 		apiServer.Close(opt.ctx)
 	})

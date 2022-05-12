@@ -32,6 +32,7 @@ var (
 	cfgFile      string
 	logLevel     string
 	certCfgFiles []string
+	httpAddress  string
 
 	rootCmd = &cobra.Command{
 		Use:   "bcs-monitor",
@@ -115,6 +116,7 @@ func initConfig(cmd *cobra.Command) {
 		logger.Errorf("Parse config file error: %v", err)
 		os.Exit(1)
 	}
+	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
 
 	if err := config.G.ReadFromViper(viper.GetViper()); err != nil {
 		logger.Errorf("unmarshal viper config error :%s", err)
@@ -135,8 +137,6 @@ func initConfig(cmd *cobra.Command) {
 	cmdOpt, _ := getOption(ctx)
 
 	cmdOpt.tracer = traclient.NoopTracer()
-
-	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
 }
 
 // VersionCmd 展示版本号

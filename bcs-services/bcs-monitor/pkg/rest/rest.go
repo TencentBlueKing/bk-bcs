@@ -40,6 +40,12 @@ func AbortWithWithForbiddenError(c *Context, err error) {
 	c.AbortWithStatusJSON(http.StatusForbidden, result)
 }
 
+// APIResponse 正常返回
+func APIResponse(c *Context, data interface{}) {
+	result := Result{Code: 1403, Message: "", RequestId: c.RequestId, Data: data}
+	c.JSON(http.StatusOK, result)
+}
+
 func RequestIdGenerator() string {
 	uid := uuid.New().String()
 	requestId := strings.Replace(uid, "-", "", -1)
@@ -82,6 +88,7 @@ func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 			AbortWithBadRequestError(restContext, err)
 			return
 		}
-		c.JSON(http.StatusOK, result)
+
+		APIResponse(restContext, result)
 	}
 }
