@@ -24,14 +24,15 @@ import (
 
 // Project 项目信息
 type Project struct {
-	Name      string `json:"project_name"`
-	ProjectId string `json:"project_id"`
-	Code      string `json:"english_name"`
-	CcBizID   uint   `json:"cc_app_id"`
+	Name      string `json:"name"`
+	ProjectId string `json:"projectID"`
+	Code      string `json:"projectCode"`
+	CcBizID   string `json:"businessID"`
 	Creator   string `json:"creator"`
-	Kind      uint   `json:"kind"`
+	Kind      string `json:"kind"`
 }
 
+// String
 func (p *Project) String() string {
 	var displayCode string
 	if p.Code == "" {
@@ -39,10 +40,10 @@ func (p *Project) String() string {
 	} else {
 		displayCode = p.Code
 	}
-	return fmt.Sprintf("project<%s, %s|%s|%d>", p.Name, displayCode, p.ProjectId, p.CcBizID)
+	return fmt.Sprintf("project<%s, %s|%s|%s>", p.Name, displayCode, p.ProjectId, p.CcBizID)
 }
 
-// GetProject 通过project_id获取项目信息
+// GetProject 通过 project_id/code 获取项目信息
 func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode string) (*Project, error) {
 	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
@@ -52,6 +53,7 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeader("X-Project-Username", "bcs-monitor").
 		SetAuthToken(bcsConf.BCSProjectToken).
 		Get(url)
 

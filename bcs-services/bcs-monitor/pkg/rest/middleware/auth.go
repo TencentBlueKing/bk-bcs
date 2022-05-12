@@ -57,7 +57,7 @@ func initContextWithDevEnv(c *rest.Context) bool {
 	}
 
 	// 本地用户认证
-	username := os.Getenv("WEBCONSOLE_USERNAME")
+	username := os.Getenv("BCS_MONITOR_USERNAME")
 	if username != "" {
 		c.BindEnv = &rest.EnvToken{Username: username}
 		c.Username = username

@@ -34,9 +34,21 @@ type Configuration struct {
 	BCS        *BCSConf                   `yaml:"bcs_conf"`
 	BCSEnvConf []*BCSConf                 `yaml:"bcs_env_conf"`
 	BCSEnvMap  map[BCSClusterEnv]*BCSConf `yaml:"-"`
+	Web        *WebConf                   `yaml:"web"`
 }
 
-func (c *Configuration) Init() error {
+func (c *Configuration) init() error {
+	if err := c.Web.init(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// newConfigurations 新增配置
+func newConfiguration() (*Configuration, error) {
+	c := &Configuration{}
+
 	c.Base = &BaseConf{}
 	c.Base.Init()
 
@@ -48,15 +60,29 @@ func (c *Configuration) Init() error {
 
 	c.Redis = DefaultRedisConf()
 
-	return nil
+	c.Web = defaultWebConf()
+	return c, nil
 }
 
 // G : Global Configurations
-var G = &Configuration{}
+var G *Configuration
 
 // 初始化
 func init() {
-	G.Init()
+	g, err := newConfiguration()
+	if err != nil {
+		panic(err)
+	}
+	if err := g.init(); err != nil {
+		panic(err)
+	}
+
+	G = g
+}
+
+// IsDevMode 是否本地开发模式
+func (c *Configuration) IsDevMode() bool {
+	return c.Base.RunEnv == DevEnv
 }
 
 // ReadFrom : read from file

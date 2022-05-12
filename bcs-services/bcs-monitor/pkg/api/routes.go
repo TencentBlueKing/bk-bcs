@@ -9,6 +9,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
 )
 
 // APIServer
@@ -52,6 +53,7 @@ func registerRoutes(engine *gin.Engine) {
 
 	// route := engine.Group("/projects/{projectId}/clusters/{clusterId}")
 	engine.Use(requestIdMiddleware)
+	engine.Use(middleware.AuthRequired())
 
 	// 日志相关接口
 	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/containers", rest.RestHandlerFunc(pod.GetContainerList))

@@ -20,12 +20,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 )
 
 const (
-	userAgent = "bcs-webconsole"
+	userAgent = "bcs-monitor"
 	timeout   = time.Second * 30
 )
 
@@ -39,6 +40,9 @@ func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {
 			globalClient = resty.New().SetTimeout(timeout)
+			if config.G.Base.RunEnv == config.DevEnv {
+				globalClient = globalClient.SetDebug(true)
+			}
 		})
 	}
 	return globalClient
