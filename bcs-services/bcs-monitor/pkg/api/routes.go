@@ -58,6 +58,9 @@ func registerRoutes(engine *gin.Engine) {
 	// 日志相关接口
 	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/containers", rest.RestHandlerFunc(pod.GetContainerList))
 	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs", rest.RestHandlerFunc(pod.GetContainerLog))
-	// route.GET("/namespace/{namespace}/pods/{pod}/log/download", pod.GetContainerList)
-	// route.GET("/namespace/{namespace}/pods/{pod}/log", pod.GetContainerList)
+	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs/download", rest.StreamHandler(pod.DownloadContainerLog))
+
+	// 实时日志流
+	engine.POST("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs/stream/sessions/", rest.RestHandlerFunc(pod.GetContainerLog))
+	engine.GET("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod/logs/stream/", rest.RestHandlerFunc(pod.GetContainerLog))
 }

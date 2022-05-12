@@ -50,6 +50,26 @@ type Log struct {
 
 // GetContainerNames 获取 Pod 容器名称列表
 func GetContainerLog(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]*Log, error) {
+	result, err := GetContainerLogByte(ctx, clusterId, namespace, podname, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	logs := strings.Split(string(result), "\n")
+	logResult := make([]*Log, 0, len(logs))
+	for _, logStr := range logs {
+		item := strings.SplitN(logStr, " ", 2)
+		if len(item) != 2 {
+			continue
+		}
+		logResult = append(logResult, &Log{Log: item[0], Time: item[1]})
+	}
+
+	return logResult, nil
+}
+
+// GetContainerNames 获取 Pod 容器名称列表
+func GetContainerLogByte(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]byte, error) {
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
@@ -68,15 +88,5 @@ func GetContainerLog(ctx context.Context, clusterId, namespace, podname string, 
 		return nil, err
 	}
 
-	logs := strings.Split(string(result), "\n")
-	logResult := make([]*Log, 0, len(logs))
-	for _, logStr := range logs {
-		item := strings.SplitN(logStr, " ", 2)
-		if len(item) != 2 {
-			continue
-		}
-		logResult = append(logResult, &Log{Log: item[0], Time: item[1]})
-	}
-
-	return logResult, nil
+	return result, nil
 }

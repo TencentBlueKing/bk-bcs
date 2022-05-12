@@ -41,6 +41,14 @@ type Context struct {
 	BindProject *bcs.Project           `json:"bind_project"`
 }
 
+// WriteAttachment 提供附件下载能力
+func (c *Context) WriteAttachment(data []byte, filename string) {
+	c.Writer.Header().Set("Content-Type", "application/octet-stream")
+	attachment := fmt.Sprintf("attachment; filename=%s", filename)
+	c.Writer.Header().Set("Content-Disposition", attachment)
+	c.Writer.Write(data)
+}
+
 type EnvToken struct {
 	Username string
 }

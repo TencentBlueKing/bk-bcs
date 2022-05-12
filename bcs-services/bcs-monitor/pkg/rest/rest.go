@@ -24,6 +24,7 @@ type Result struct {
 
 // HandlerFunc
 type HandlerFunc func(*Context) (interface{}, error)
+type StreamHandlerFunc func(*Context)
 
 func AbortWithBadRequestError(c *Context, err error) {
 	result := Result{Code: 1400, Message: err.Error(), RequestId: c.RequestId}
@@ -90,5 +91,16 @@ func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 		}
 
 		APIResponse(restContext, result)
+	}
+}
+
+func StreamHandler(handler StreamHandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		restContext, err := GetRestContext(c)
+		if err != nil {
+			AbortWithUnauthorizedError(InitRestContext(c), err)
+			return
+		}
+		handler(restContext)
 	}
 }

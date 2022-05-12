@@ -12,6 +12,9 @@
 package pod
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
@@ -40,6 +43,29 @@ func GetContainerLog(c *rest.Context) (interface{}, error) {
 
 	logs, err := k8sclient.GetContainerLog(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	return logs, err
+}
+
+// 下载日志
+func DownloadContainerLog(c *rest.Context) {
+	clusterId := c.Param("clusterId")
+	namespace := c.Param("namespace")
+	pod := c.Param("pod")
+	logQuery := &k8sclient.LogQuery{}
+	if err := c.BindQuery(logQuery); err != nil {
+		rest.AbortWithBadRequestError(c, err)
+		return
+	}
+
+	logs, err := k8sclient.GetContainerLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	if err != nil {
+		rest.AbortWithBadRequestError(c, err)
+		return
+	}
+
+	ts := time.Now().Format("20060102150405")
+	filename := fmt.Sprintf("%s-%s-%s.log", pod, logQuery.ContainerName, ts)
+
+	c.WriteAttachment(logs, filename)
 }
 
 func Ws() error {
