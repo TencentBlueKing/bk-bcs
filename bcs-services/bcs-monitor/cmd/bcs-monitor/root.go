@@ -113,13 +113,8 @@ func initConfig(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	if err := viper.Unmarshal(config.G); err != nil {
+	if err := config.G.ReadFromViper(viper.GetViper()); err != nil {
 		logger.Errorf("unmarshal viper config error :%s", err)
-		os.Exit(1)
-	}
-
-	if err := initLogger(); err != nil {
-		logger.Errorf("init logger error: %v", err)
 		os.Exit(1)
 	}
 
@@ -130,30 +125,6 @@ func initConfig(cmd *cobra.Command) {
 	cmdOpt.tracer = traclient.NoopTracer()
 
 	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
-}
-
-// 初始化日志库配置选项
-func initLogger() error {
-	// 默认日志等级
-	level := "info"
-
-	opt := logger.Options{}
-	err := config.UnmarshalKey("logging", &opt)
-	if err != nil {
-		return err
-	}
-
-	// 优先使用命令行的配置
-	if logLevel != "" {
-		level = logLevel
-	} else if opt.Level != "" {
-		level = opt.Level
-	}
-
-	opt.Level = level
-
-	logger.SetOptions(opt)
-	return nil
 }
 
 // VersionCmd 展示版本号
