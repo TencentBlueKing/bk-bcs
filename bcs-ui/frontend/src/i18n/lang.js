@@ -88,7 +88,7 @@ export default {
     '“新建集群”，需要选择Master节点主机（主机信息来源于蓝鲸配置平台），创建测试集群或正式集群，确定创建后，系统将进行集群初始化操作': ['"Create Cluster", you need to select the master node host (the host information comes from the CMDB), create a test cluster or a prod cluster. After the creation is complete, the system will perform the cluster initialization operation.'],
     '“新建集群”，需要选择Master节点主机（主机信息来源于蓝鲸配置平台），创建集群，确定创建后，系统将进行集群初始化操作': ['"Create Cluster", you need to select the master node host (the host information comes from the CMDB), create a cluster. After the creation is complete, the system will perform the cluster initialization operation.'],
     '集群分类：': ['Cluster Classification: '],
-    '自建集群': ['Private Cluster'],
+    '自建集群': ['Create'],
     '公共集群': ['Public Cluster'],
     '如需要使用公共集群，请联系': ['If you need to use a public cluster, contact '],
     '集群类型：': ['Cluster Type: '],
@@ -780,7 +780,7 @@ export default {
     '表单根据Chart中questions.yaml生成，表单修改后的数据会自动同步给YAML模式': ['Forms are generated according to questions.yaml in Chart, and the modified data automatically synchronizes to YAML mode.'],
     '您可以参考': ['You can refer to this '],
     '指引': ['guide'],
-    '通过表单模式配置您的Helm Release 参数': ['Configure your Helm Release parameters through form mode'],
+    '通过表单模式配置您的Helm Release 参数': ['Configure your Helm Release parameters through FORM mode'],
     '也可以通过': ['It can also be passed through'],
     'Yaml模式': ['YAML Mode'],
     'YAML模式': ['YAML Mode'],
@@ -828,7 +828,7 @@ export default {
     '复制中...': ['Copy...'],
     '没有命名空间数据': ['No namespace data'],
     '没有命名空间': ['No namespace data'],
-    '提交': ['Submit'],
+    '提交': ['SUBMIT'],
     '有': ['Has'],
     '个实例': ['Instances'],
     '您需要先删除所有实例，再进行模板集删除操作': ['You need to delete all instances before you delete the TemplateSet'],
@@ -1227,7 +1227,7 @@ export default {
     '来引用该变量': ['to import this Variable'],
     '变量KEY': ['Variable Key'],
     '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集或使用Helm部署服务': ['Once the cluster is ready, you can create a namespace, push the project image to the repository, then configure the TemplateSet through the service or deploy the service using Helm'],
-    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ': ['Once the cluster is ready, you can create a namespace, push the project image to the warehouse, and then deploy the service through the service configuration TemplateSet'],
+    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ': ['Once the cluster is ready, you can deploy your applications'],
     '集群IP': ['Cluster IP'],
     '复制': ['Copy'],
     '复制IP': ['Copy IP'],
@@ -1293,7 +1293,7 @@ export default {
     '已选择{remainCount}个节点': ['{remainCount} items'],
     '点击查看原因': ['Click to view the reason'],
     '请注意：命名空间{name}下的同名资源将会被覆盖更新，确认创建？': ['Please note: the resource with the same name under the namespace {name} will be overwritten and updated to confirm the creation?'],
-    '表单模式': ['Form Mode'],
+    '表单模式': ['FORM Mode'],
     '提示：容器端口是容器内部的Port。在配置Service的端口映射时，通过"目标端口"进行关联，从而暴露服务': ['Tip: The container port is the port inside the container. When configuring the port mapping of the Service, the association is made through the "target port" to expose the service'],
     '提示：项目镜像不存在，': ['Tip: The project image does not exist,'],
     '去创建': ['To create'],
@@ -1336,7 +1336,7 @@ export default {
     '更新证书成功': ['Update certificate successfully'],
     '创建证书成功': ['Successful certificate creation'],
     '通过Helm Chart、Client、模板集YAML模式创建的应用，请通过命名空间视图查询详情': ['For applications created by Helm Chart, Client, and YAML mode TemplateSet, please query the details through the namespace view'],
-    '展示通过模板集表单模式实例化的应用详情': ['Show application details instantiated through TemplateSet form mode'],
+    '展示通过模板集表单模式实例化的应用详情': ['Show application details instantiated through TemplateSet FORM mode'],
     '共包含': ['Include'],
     '个应用模板': ['templates'],
     '展示通过命名空间页面创建的命名空间的应用详情': ['Show application details for namespaces created through namespace pages'],
@@ -1535,7 +1535,7 @@ export default {
     '无数据（新建 Metric 需要1~2分钟生效，请刷新），通过计算创建时间和当前时间判断': ['No data (it takes 1 / 2 minutes for the new Metric to take effect, please refresh it), which can be judged by calculating the creation time and the current time.'],
     '集群分类': ['Cluster Category'],
     '新建集群': ['Create Cluster'],
-    '导入集群': ['Import Cluster'],
+    '导入集群': ['Import'],
     '导入已经存在的集群': ['Import an existing cluster'],
     '添加镜像凭证': ['Add mirror credentials'],
     '使用自定义镜像': ['Use custom image'],
@@ -1606,7 +1606,7 @@ export default {
     '输入名称搜索': ['Enter Name to Search'],
     '文件导入': ['File Import'],
     '切换为文本模式': ['Switch to text mode'],
-    '切换为表单模式': ['Switch to form mode'],
+    '切换为表单模式': ['Switch to FORM mode'],
     '按上面的模板创建你的json文件，选择“文件导入”操作': ['Create your JSON file according to the above template and select "file import" operation'],
     'IP数量(个)': ['IPs'],
     '可用IP(个)': ['IPs'],
@@ -2058,10 +2058,10 @@ export default {
         "New cluster template"
     ],
     "可自定义集群基本信息和集群版本": [
-        "Can customize cluster basic information and cluster versions"
+        "Create a cluster in a hosted Kubernetes provider"
     ],
     "支持快速导入已存在的集群": [
-        "Support quickly importing existing clusters"
+        "Import existing Kubernetes cluster"
     ],
     "创建或导入K8S集群": [
         "Create or import K8S cluster"
