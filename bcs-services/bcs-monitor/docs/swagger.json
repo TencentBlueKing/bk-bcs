@@ -1,8 +1,10 @@
 {
     "swagger": "2.0",
     "info": {
+        "title": "BCS-Monitor OpenAPI",
         "contact": {}
     },
+    "basePath": "/bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod",
     "paths": {
         "/containers": {
             "get": {

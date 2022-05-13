@@ -35,6 +35,11 @@ endif
 test:
 	@echo ">> test not support"
 
+.PHONY: openapi
+openapi:
+	@swag init --outputTypes go,json -g pkg/api/routes.go --exclude ./
+	@swag fmt -g pkg/api/routes.go --exclude ./
+
 .PHONY: build_benchmark
 build_benchmark:
 	@echo ">> build benchmark"

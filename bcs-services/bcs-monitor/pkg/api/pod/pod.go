@@ -19,12 +19,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-// @Summary 获取 Pod 容器列表
-// @Tags Pod
-// @Accept x-www-form-urlencoded
-// @Produce json
-// @Success 200 {array} k8sclient.Container
-// @Router /containers [get]
+// @Summary  获取 Pod 容器列表
+// @Tags     Pod
+// @Accept   x-www-form-urlencoded
+// @Produce  json
+// @Success  200  {array}  k8sclient.Container
+// @Router   /containers [get]
 func GetPodContainers(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -37,12 +37,12 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 	return containers, nil
 }
 
-// @Summary 容器日志
-// @Tags Pod
-// @Accept x-www-form-urlencoded
-// @Produce json
-// @Success 200 {array} k8sclient.Log
-// @Router /logs [get]
+// @Summary  容器日志
+// @Tags     Pod
+// @Accept   x-www-form-urlencoded
+// @Produce  json
+// @Success  200  {array}  k8sclient.Log
+// @Router   /logs [get]
 func GetPodLog(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -56,12 +56,12 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 	return logs, err
 }
 
-// @Summary 下载日志
-// @Tags Pod
-// @Accept x-www-form-urlencoded
-// @Produce octet-stream
-// @Success 200 {array} k8sclient.Log
-// @Router /logs/download [get]
+// @Summary  下载日志
+// @Tags     Pod
+// @Accept   x-www-form-urlencoded
+// @Produce  octet-stream
+// @Success  200  {array}  k8sclient.Log
+// @Router   /logs/download [get]
 func DownloadPodLog(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
