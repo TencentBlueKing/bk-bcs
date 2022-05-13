@@ -19,17 +19,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-// 获取 Pod 容器列表
-// @BasePath /api/v1
-
-// 获取 Pod 容器列表 godoc
 // @Summary 获取 Pod 容器列表
-// @Schemes
-// @Description do ping
-// @Tags example
-// @Accept json
+// @Tags Pod
+// @Accept x-www-form-urlencoded
 // @Produce json
-// @Success 200 {[]*k8sclient.Containers}
+// @Success 200 {array} k8sclient.Container
 // @Router /containers [get]
 func GetPodContainers(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
@@ -43,7 +37,12 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 	return containers, nil
 }
 
-// 获取 容器日志
+// @Summary 容器日志
+// @Tags Pod
+// @Accept x-www-form-urlencoded
+// @Produce json
+// @Success 200 {array} k8sclient.Log
+// @Router /logs [get]
 func GetPodLog(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -57,7 +56,12 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 	return logs, err
 }
 
-// 下载日志
+// @Summary 下载日志
+// @Tags Pod
+// @Accept x-www-form-urlencoded
+// @Produce octet-stream
+// @Success 200 {array} k8sclient.Log
+// @Router /logs/download [get]
 func DownloadPodLog(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")

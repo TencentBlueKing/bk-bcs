@@ -19,6 +19,12 @@ import (
 )
 
 // PodLogStream Server Sent Events Handler 连接处理函数
+// @Summary SSE 实时日志流
+// @Tags Pod
+// @Accept x-www-form-urlencoded
+// @Produce octet-stream
+// @Success 200
+// @Router /logs/stream [get]
 func PodLogStream(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")

@@ -1,19 +1,77 @@
+definitions:
+  k8sclient.Container:
+    properties:
+      name:
+        type: string
+    type: object
+  k8sclient.Log:
+    properties:
+      log:
+        type: string
+      time:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
   /containers:
     get:
       consumes:
-      - application/json
-      description: do ping
+      - application/x-www-form-urlencoded
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
+            items:
+              $ref: '#/definitions/k8sclient.Container'
+            type: array
       summary: 获取 Pod 容器列表
       tags:
-      - example
+      - Pod
+  /logs:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/k8sclient.Log'
+            type: array
+      summary: 容器日志
+      tags:
+      - Pod
+  /logs/download:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/k8sclient.Log'
+            type: array
+      summary: 下载日志
+      tags:
+      - Pod
+  /logs/stream:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: ""
+      summary: SSE 实时日志流
+      tags:
+      - Pod
 swagger: "2.0"

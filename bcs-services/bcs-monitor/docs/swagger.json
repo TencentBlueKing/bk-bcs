@@ -6,24 +6,116 @@
     "paths": {
         "/containers": {
             "get": {
-                "description": "do ping",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "example"
+                    "Pod"
                 ],
                 "summary": "获取 Pod 容器列表",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/k8sclient.Container"
+                            }
                         }
                     }
+                }
+            }
+        },
+        "/logs": {
+            "get": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pod"
+                ],
+                "summary": "容器日志",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/k8sclient.Log"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/logs/download": {
+            "get": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Pod"
+                ],
+                "summary": "下载日志",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/k8sclient.Log"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/logs/stream": {
+            "get": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Pod"
+                ],
+                "summary": "SSE 实时日志流",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "k8sclient.Container": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "k8sclient.Log": {
+            "type": "object",
+            "properties": {
+                "log": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
                 }
             }
         }
