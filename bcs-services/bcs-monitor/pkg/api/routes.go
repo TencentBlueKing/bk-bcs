@@ -61,8 +61,7 @@ func registerRoutes(engine *gin.Engine) {
 		route.GET("/logs", rest.RestHandlerFunc(pod.GetContainerLog))
 		route.GET("/logs/download", rest.StreamHandler(pod.DownloadContainerLog))
 
-		// 实时日志流
-		route.POST("/logs/stream/sessions/", rest.RestHandlerFunc(pod.GetContainerLog))
-		route.GET("/logs/stream/", rest.RestHandlerFunc(pod.GetContainerLog))
+		// sse 实时日志流
+		route.GET("/logs/stream", rest.StreamHandler(pod.SSEHandler))
 	}
 }

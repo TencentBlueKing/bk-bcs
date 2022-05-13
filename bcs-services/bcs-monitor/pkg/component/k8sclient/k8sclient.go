@@ -12,6 +12,7 @@
 package k8sclient
 
 import (
+	"bufio"
 	"context"
 	"strings"
 
@@ -89,4 +90,41 @@ func GetContainerLogByte(ctx context.Context, clusterId, namespace, podname stri
 	}
 
 	return result, nil
+}
+
+// GetContainerLogStream 获取日志流
+func GetContainerLogStream(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) (<-chan *Log, error) {
+	client, err := GetK8SClientByClusterId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	limitByte := int64(10 * 1024 * 1024)
+	tailLines := int64(100)
+	opts := &v1.PodLogOptions{
+		Container:  opt.ContainerName,
+		LimitBytes: &limitByte,
+		TailLines:  &tailLines,
+		Timestamps: true,
+		Follow:     true,
+	}
+	reader, err := client.CoreV1().Pods(namespace).GetLogs(podname, opts).Stream(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	logChan := make(chan *Log)
+	go func() {
+		defer reader.Close()
+
+		scanner := bufio.NewScanner(reader)
+		for scanner.Scan() {
+			item := strings.SplitN(scanner.Text(), " ", 2)
+			if len(item) != 2 {
+				continue
+			}
+			logChan <- &Log{Log: item[0], Time: item[1]}
+		}
+	}()
+
+	return logChan, nil
 }

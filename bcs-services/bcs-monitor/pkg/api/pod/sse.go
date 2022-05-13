@@ -12,58 +12,34 @@
 package pod
 
 import (
-	"fmt"
-	"time"
+	"io"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-// 获取 Pod 容器列表
-func GetContainerList(c *rest.Context) (interface{}, error) {
+// Server Sent Events Handler 连接处理函数
+func SSEHandler(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
-	containers, err := k8sclient.GetContainerNames(c.Request.Context(), clusterId, namespace, pod)
-	if err != nil {
-		return nil, err
-	}
-	return containers, nil
-}
 
-// 获取 容器日志
-func GetContainerLog(c *rest.Context) (interface{}, error) {
-	clusterId := c.Param("clusterId")
-	namespace := c.Param("namespace")
-	pod := c.Param("pod")
-	logQuery := &k8sclient.LogQuery{}
-	if err := c.BindQuery(logQuery); err != nil {
-		return nil, err
-	}
-
-	logs, err := k8sclient.GetContainerLog(c.Request.Context(), clusterId, namespace, pod, logQuery)
-	return logs, err
-}
-
-// 下载日志
-func DownloadContainerLog(c *rest.Context) {
-	clusterId := c.Param("clusterId")
-	namespace := c.Param("namespace")
-	pod := c.Param("pod")
 	logQuery := &k8sclient.LogQuery{}
 	if err := c.BindQuery(logQuery); err != nil {
 		rest.AbortWithBadRequestError(c, err)
 		return
 	}
 
-	logs, err := k8sclient.GetContainerLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	logChan, err := k8sclient.GetContainerLogStream(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	if err != nil {
 		rest.AbortWithBadRequestError(c, err)
 		return
 	}
 
-	ts := time.Now().Format("20060102150405")
-	filename := fmt.Sprintf("%s-%s-%s.log", pod, logQuery.ContainerName, ts)
-
-	c.WriteAttachment(logs, filename)
+	c.Stream(func(w io.Writer) bool {
+		for log := range logChan {
+			c.SSEvent("message", log)
+		}
+		return true
+	})
 }
