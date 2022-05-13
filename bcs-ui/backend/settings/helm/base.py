@@ -205,12 +205,14 @@ BK_IAM_HOST = os.environ.get('BKAPP_IAM_URL', 'http://bkiam.example.com')
 BK_IAM_SYSTEM_ID = APP_ID
 BK_IAM_MIGRATION_APP_NAME = 'bcs_iam_migration'
 BK_IAM_INNER_HOST = BK_IAM_HOST
-BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/o/bk_bcs_app/apis/iam')
 # 参数说明 https://github.com/TencentBlueKing/iam-python-sdk/blob/master/docs/usage.md#22-config
 BK_IAM_USE_APIGATEWAY = False
 BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', None)
 # 权限中心前端地址
 BK_IAM_APP_URL = os.environ.get('BKAPP_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
+# 注册到权限中心的资源地址
+BK_IAM_PROVIDER_HOST = os.environ.get('BK_IAM_PROVIDER_HOST', '')
+BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/bcsapi/v4/iam-provider')
 
 # ******************************** Helm 配置 ********************************
 # kubectl 只有1.12版本
