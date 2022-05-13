@@ -49,8 +49,9 @@ import (
 	"k8s.io/utils/integer"
 )
 
-// GameStatefulSetControlInterface implements the control logic for updating StatefulSets and their children Pods. It is implemented
-// as an interface to allow for extensions that provide different semantics. Currently, there is only one implementation.
+// GameStatefulSetControlInterface implements the control logic for updating StatefulSets and their children Pods.
+// It is implemented as an interface to allow for extensions that provide different semantics. Currently, there is
+// only one implementation.
 type GameStatefulSetControlInterface interface {
 	// UpdateGameStatefulSet implements the control logic for Pod creation, update, and deletion, and
 	// persistent volume creation, update, and deletion.
@@ -66,11 +67,11 @@ type GameStatefulSetControlInterface interface {
 	AdoptOrphanRevisions(set *gstsv1alpha1.GameStatefulSet, revisions []*apps.ControllerRevision) error
 }
 
-// NewDefaultGameStatefulSetControl returns a new instance of the default implementation StatefulSetControlInterface that
-// implements the documented semantics for StatefulSets. podControl is the PodControlInterface used to create, update,
-// and delete Pods and to create PersistentVolumeClaims. statusUpdater is the StatefulSetStatusUpdaterInterface used
-// to update the status of StatefulSets. You should use an instance returned from NewRealStatefulPodControl() for any
-// scenario other than testing.
+// NewDefaultGameStatefulSetControl returns a new instance of the default implementation StatefulSetControlInterface
+// that implements the documented semantics for StatefulSets. podControl is the PodControlInterface used to create,
+// update, and delete Pods and to create PersistentVolumeClaims. statusUpdater is the StatefulSetStatusUpdaterInterface
+// used to update the status of StatefulSets. You should use an instance returned from NewRealStatefulPodControl() for
+// any scenario other than testing.
 func NewDefaultGameStatefulSetControl(
 	kubeClient clientset.Interface,
 	hookClient hookclientset.Interface,
@@ -387,13 +388,13 @@ func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
 	return currentRevision, updateRevision, collisionCount, nil
 }
 
-// updateGameStatefulSet performs the update function for a GameStatefulSet. This method creates, updates, and deletes Pods in
-// the set in order to conform the system to the target state for the set. The target state always contains
-// set.Spec.Replicas Pods with a Ready Condition. If the UpdateStrategy.Type for the set is
+// updateGameStatefulSet performs the update function for a GameStatefulSet. This method creates, updates, and
+// deletes Pods in the set in order to conform the system to the target state for the set. The target state
+// always contains set.Spec.Replicas Pods with a Ready Condition. If the UpdateStrategy.Type for the set is
 // RollingUpdateGameStatefulSetStrategyType then all Pods in the set must be at set.Status.CurrentRevision.
 // If the UpdateStrategy.Type for the set is OnDeleteGameStatefulSetStrategyType, the target state implies nothing about
-// the revisions of Pods in the set. If the UpdateStrategy.Type for the set is PartitionGameStatefulSetStrategyType, then
-// all Pods with ordinal less than UpdateStrategy.Partition.Ordinal must be at Status.CurrentRevision and all other
+// the revisions of Pods in the set. If the UpdateStrategy.Type for the set is PartitionGameStatefulSetStrategyType,
+// then all Pods with ordinal less than UpdateStrategy.Partition.Ordinal must be at Status.CurrentRevision and all other
 // Pods must be at Status.UpdateRevision. If the returned error is nil, the returned StatefulSetStatus is valid and the
 // update must be recorded. If the error is not nil, the method should be retried until successful.
 func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
@@ -760,12 +761,11 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	}
 
 	// we compute the minimum ordinal of the target sequence for a destructive update based on the strategy.
-	updateMin := 0
 	currentPartition, err := canaryutil.GetCurrentPartition(set)
 	if err != nil {
 		return status, nil
 	}
-	updateMin = int(currentPartition)
+	updateMin := int(currentPartition)
 
 	replicasCount := int(*set.Spec.Replicas)
 	maxUnavailable, err := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(
@@ -861,7 +861,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 					metav1.GetOptions{})
 				if err != nil {
 					klog.Warningf("Cannot get pod %s/%s", replicas[target].Namespace, replicas[target].Name)
-				} else {
+				} else if set.GetPostInplaceHook() != nil {
 					created, err := ssc.postInplaceControl.CreatePostInplaceHook(set,
 						newPod,
 						status,
@@ -1323,7 +1323,8 @@ func (ssc *defaultGameStatefulSetControl) dealWithMaxSurge(set *gstsv1alpha1.Gam
 	if err != nil {
 		return replicas, condemned, err
 	}
-	partition, err := intstrutil.GetValueFromIntOrPercent(set.Spec.UpdateStrategy.RollingUpdate.Partition, replicaCount, true)
+	partition, err := intstrutil.GetValueFromIntOrPercent(set.Spec.UpdateStrategy.RollingUpdate.Partition,
+		replicaCount, true)
 	if err != nil {
 		return replicas, condemned, err
 	}

@@ -96,8 +96,8 @@
                         </button>
                         <span class="bk-icon icon-close-circle" @click.stop="removeRule(index)" v-if="curIngress.config.spec.rules.length > 1"></span>
                     </div>
-                    <bk-tooltip ref="containerTooltip" :content="curIngress.config.spec.rules.length >= 5 ? $t('最多添加5个') : $t('添加Rule')" placement="top">
-                        <button type="button" class="bk-button bk-default is-outline is-icon" :disabled="curIngress.config.spec.rules.length >= 5 " @click.stop.prevent="addLocalRule">
+                    <bk-tooltip ref="containerTooltip" :content="$t('添加Rule')" placement="top">
+                        <button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalRule">
                             <i class="bk-icon icon-plus"></i>
                         </button>
                     </bk-tooltip>

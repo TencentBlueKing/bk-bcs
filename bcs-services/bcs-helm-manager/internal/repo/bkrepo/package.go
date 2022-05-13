@@ -34,9 +34,15 @@ func (rh *repositoryHandler) listChart(ctx context.Context, option repo.ListOpti
 	switch rh.repoType {
 	case repo.RepositoryTypeHelm:
 		return rh.listHelmChart(ctx, option)
+	case repo.RepositoryTypeOCI:
+		return rh.listOCIChart(ctx, option)
 	default:
 		return nil, fmt.Errorf("unknown repo type %d", rh.repoType)
 	}
+}
+
+func (rh *repositoryHandler) listOCIChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
+	return rh.listHelmChart(ctx, option)
 }
 
 func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {

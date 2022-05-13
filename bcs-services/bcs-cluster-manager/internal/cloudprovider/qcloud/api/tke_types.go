@@ -15,6 +15,33 @@ package api
 
 import "fmt"
 
+// EndpointStatus endpoint status
+type EndpointStatus string
+
+// Created status
+func (es EndpointStatus) Created() bool {
+	return es == Created
+}
+
+// Creating status
+func (es EndpointStatus) Creating() bool {
+	return es == Creating
+}
+
+// NotFound status
+func (es EndpointStatus) NotFound() bool {
+	return es == NotFound
+}
+
+var (
+	// Created status
+	Created EndpointStatus = "Created"
+	// Creating status
+	Creating EndpointStatus = "Creating"
+	// NotFound status
+	NotFound EndpointStatus = "NotFound"
+)
+
 const (
 	// DockerGraphPath default docker graphPath
 	DockerGraphPath = "/data/bcs/service/docker"

@@ -18,17 +18,19 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -78,7 +80,14 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 		Creator:         ia.req.Creator,
 		Updater:         ia.req.Creator,
 		ClusterCategory: ia.req.ClusterCategory,
-		IsShared:        ia.req.IsShared,
+		// import cluster category
+		ImportCategory: func() string {
+			if ia.req.CloudMode.KubeConfig != "" {
+				return KubeConfig
+			}
+			return Cloud
+		}(),
+		IsShared: ia.req.IsShared,
 	}
 
 	return cls
@@ -179,6 +188,12 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	ia.req = req
 	ia.resp = resp
 
+	// parameters check
+	if err := ia.req.Validate(); err != nil {
+		ia.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
 	// get cluster cloud and project info
 	err := ia.getCloudProjectInfo(ctx, req)
 	if err != nil {
@@ -191,7 +206,7 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	defer ia.locker.Unlock(createClusterIDLockKey)
 
 	// import validate cluster
-	if err := ia.validate(); err != nil {
+	if err = ia.validate(); err != nil {
 		ia.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
@@ -353,9 +368,6 @@ func commonValidate(req *cmproto.ImportClusterReq) error {
 }
 
 func (ia *ImportAction) validate() error {
-	if err := ia.req.Validate(); err != nil {
-		return err
-	}
 	// common validate
 	if err := commonValidate(ia.req); err != nil {
 		return err
@@ -378,5 +390,73 @@ func (ia *ImportAction) validate() error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// CheckKubeAction action for check cluster kubeConfig
+type CheckKubeAction struct {
+	ctx  context.Context
+	req  *cmproto.KubeConfigReq
+	resp *cmproto.KubeConfigResp
+}
+
+// NewCheckKubeAction check cluster kubeConfig action
+func NewCheckKubeAction() *CheckKubeAction {
+	return &CheckKubeAction{}
+}
+
+func (ka *CheckKubeAction) setResp(code uint32, msg string) {
+	ka.resp.Code = code
+	ka.resp.Message = msg
+	ka.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+// Handle create cluster request
+func (ka *CheckKubeAction) Handle(ctx context.Context, req *cmproto.KubeConfigReq, resp *cmproto.KubeConfigResp) {
+	if req == nil || resp == nil {
+		blog.Errorf("check cluster kubeConfig failed, req or resp is empty")
+		return
+	}
+	ka.ctx = ctx
+	ka.req = req
+	ka.resp = resp
+
+	// import validate cluster
+	if err := req.Validate(); err != nil {
+		ka.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	err := checkKubeConfig(req.KubeConfig)
+	if err != nil {
+		ka.setResp(common.BcsErrClusterManagerCheckKubeErr, err.Error())
+		return
+	}
+
+	ka.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}
+
+func checkKubeConfig(kubeConfig string) error {
+	_, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
+		FileName:    "",
+		YamlContent: kubeConfig,
+	})
+	if err != nil {
+		return fmt.Errorf("checkKubeConfig validate failed: %v", err)
+	}
+
+	kubeRet := base64.StdEncoding.EncodeToString([]byte(kubeConfig))
+	kubeCli, err := clusterops.NewKubeClient(kubeRet)
+	if err != nil {
+		return fmt.Errorf("checkKubeConfig validate failed: %v", err)
+	}
+
+	_, err = kubeCli.Discovery().ServerVersion()
+	if err != nil {
+		return fmt.Errorf("checkKubeConfig connect cluster failed: %v", err)
+	}
+	blog.Infof("checkKubeConfig YAMLStyle and connectCluster success")
+
 	return nil
 }

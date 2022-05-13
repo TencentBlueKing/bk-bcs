@@ -115,9 +115,9 @@ const (
 	PortPoolPortProtocolTCPUDP = "TCP_UDP"
 
 	//LoadBalanceCheckFormatWithAp regular expression for check lb format "ap-xxxxx:lb-xxxxx"
-	LoadBalanceCheckFormatWithApLbID = "^ap-[A-Za-z0-9]+:lb-[A-Za-z0-9]+"
+	LoadBalanceCheckFormatWithApLbID = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:lb-[A-Za-z0-9]+"
 	//LoadBalanceCheckFormat regular expression for check lb format "lb-xxxxx"
 	LoadBalanceCheckFormat = "^lb-[A-Za-z0-9]+"
 	//LoadBalanceCheckFormatWithApLbName
-	LoadBalanceCheckFormatWithApLbName = "^ap-[A-Za-z0-9]+:[A-Za-z0-9]+"
+	LoadBalanceCheckFormatWithApLbName = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:[A-Za-z0-9]+"
 )

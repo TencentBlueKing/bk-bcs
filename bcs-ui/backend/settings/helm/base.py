@@ -210,7 +210,7 @@ BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/o/
 BK_IAM_USE_APIGATEWAY = False
 BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', None)
 # 权限中心前端地址
-BK_IAM_APP_URL = os.environ.get('BK_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
+BK_IAM_APP_URL = os.environ.get('BKAPP_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
 
 # ******************************** Helm 配置 ********************************
 # kubectl 只有1.12版本

@@ -12,10 +12,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import os
 import time
 from pathlib import Path, PosixPath
-from typing import Dict, List
+from typing import List
 
 from django.conf import settings
 

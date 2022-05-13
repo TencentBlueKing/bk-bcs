@@ -23,10 +23,3 @@ class TestClusterManagerClient:
         client = ClusterManagerClient(request_user.token.access_token)
         data = client.get_nodes(cluster_id)
         assert data == expected_data
-
-    def test_get_shared_clusters(self, cluster_id, requests_mock):
-        requests_mock.get(ANY, json={"code": 0, "data": [{"clusterID": cluster_id}]})
-
-        data = ClusterManagerClient().get_shared_clusters()
-        assert isinstance(data, list)
-        assert cluster_id in [info["clusterID"] for info in data]

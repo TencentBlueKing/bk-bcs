@@ -862,9 +862,6 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		return scaleDownStatus, nil
 	}
 
-	klog.V(4).Infof("Sort candidate nodes by node deletion cost")
-	candidates = sortNodesByDeletionCost(candidates)
-
 	findNodesToRemoveStart := time.Now()
 	// Only scheduled non expendable pods are taken into account and have to be moved.
 	nonExpendablePods := filterOutExpendablePods(pods, sd.context.ExpendablePodsPriorityCutoff)
@@ -883,6 +880,8 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
 		return scaleDownStatus, nil
 	}
+	// TODO: add sort based on NodeDeletionCost
+	nodesToRemove = sortNodesByDeletionCost(nodesToRemove)
 
 	toRemove := nodesToRemove[0]
 	utilization := sd.nodeUtilizationMap[toRemove.Node.Name]
@@ -1394,10 +1393,10 @@ func hasGameServer(pods []*apiv1.Pod) bool {
 	return false
 }
 
-func sortNodesByDeletionCost(nodes []*apiv1.Node) []*apiv1.Node {
+func sortNodesByDeletionCost(nodes []simulator.NodeToBeRemoved) []simulator.NodeToBeRemoved {
 	sort.Slice(nodes, func(i, j int) bool {
-		costi := getCostFromNode(nodes[i])
-		costj := getCostFromNode(nodes[j])
+		costi := getCostFromNode(nodes[i].Node)
+		costj := getCostFromNode(nodes[j].Node)
 		return costi < costj
 	})
 	return nodes

@@ -29,11 +29,9 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Config struct {
 	// Legacy field from pkg/api/types.go TypeMeta.
-	// TODO(jlowdermilk): remove this after eliminating downstream dependencies.
 	// +optional
 	Kind string `json:"kind,omitempty"`
 	// Legacy field from pkg/api/types.go TypeMeta.
-	// TODO(jlowdermilk): remove this after eliminating downstream dependencies.
 	// +optional
 	APIVersion string `json:"apiVersion,omitempty"`
 	// Preferences holds general information to be use for cli interactions
@@ -237,4 +235,3 @@ func GetKubeConfigFromYAMLBody(isFile bool, input YamlInput) (*Config, error) {
 
 	return &c, nil
 }
-
