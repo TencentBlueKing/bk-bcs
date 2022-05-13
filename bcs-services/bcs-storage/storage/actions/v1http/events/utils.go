@@ -298,8 +298,9 @@ func insert(req *restful.Request) error {
 
 func watch(req *restful.Request, resp *restful.Response) {
 	clusterID := req.QueryParameter(clusterIDTag)
+	logTracer := blog.WithID("watchEvent", blog.GetTraceFromRequest(req.Request).ID())
 	if clusterID == "" {
-		blog.Errorf("request clusterID is empty")
+		logTracer.Errorf("request clusterID is empty")
 		resp.WriteError(http.StatusBadRequest, fmt.Errorf("request clusterID is empty"))
 		return
 	}
@@ -313,7 +314,7 @@ func watch(req *restful.Request, resp *restful.Response) {
 	}
 	ws, err := lib.NewWatchServer(newWatchOption)
 	if err != nil {
-		blog.Errorf("event get watch server failed, err %s", err.Error())
+		logTracer.Errorf("event get watch server failed, err %s", err.Error())
 		resp.Write(lib.EventWatchBreakBytes)
 		return
 	}

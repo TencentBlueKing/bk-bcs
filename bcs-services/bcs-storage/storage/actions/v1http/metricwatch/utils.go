@@ -33,6 +33,7 @@ func watch(req *restful.Request, resp *restful.Response) {
 		Req:       req,
 		Resp:      resp,
 	}
+	logTracer := blog.WithID("watchMetric", blog.GetTraceFromRequest(req.Request).ID())
 	ws, err := lib.NewWatchServer(opt)
 	ws.Writer = func(resp *restful.Response, event *lib.Event) bool {
 		if event.Type != lib.Del && event.Value[resourceTypeTag] != req.PathParameter(resourceTypeTag) {
@@ -40,7 +41,7 @@ func watch(req *restful.Request, resp *restful.Response) {
 		}
 
 		if err = codec.EncJsonWriter(event, resp.ResponseWriter); err != nil {
-			blog.Errorf("defaultWriter error: %v", err)
+			logTracer.Errorf("defaultWriter error: %v", err)
 			return false
 		}
 		return true

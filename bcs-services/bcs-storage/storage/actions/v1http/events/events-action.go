@@ -79,12 +79,13 @@ func PutEvent(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutEvent"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
 	if err := insert(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
 			ErrCode: common.BcsErrStoragePutResourceFail,
@@ -99,6 +100,7 @@ func ListEvent(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "ListEvent"
 	)
+	logTracer := blog.WithID(handler, blog.GetTraceFromRequest(req.Request).ID())
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -106,7 +108,7 @@ func ListEvent(req *restful.Request, resp *restful.Response) {
 	extra := map[string]interface{}{"total": total}
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		logTracer.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp: resp, Data: []string{},
 			ErrCode: common.BcsErrStorageListResourceFail,

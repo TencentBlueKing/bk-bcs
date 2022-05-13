@@ -87,7 +87,7 @@ func (ws *WatchServer) Go(ctx context.Context) {
 	if ws.opts == nil {
 		ws.opts = &bcstypes.WatchOptions{}
 	}
-
+	logTracer := blog.WithID("runWatchServer", blog.GetTraceFromRequest(ws.req.Request).ID())
 	// metrics
 	metrics.ReportWatchRequestInc(ws.req.SelectedRoutePath(), ws.tableName)
 
@@ -95,7 +95,7 @@ func (ws *WatchServer) Go(ctx context.Context) {
 	ws.resp.WriteHeader(http.StatusOK)
 	ws.resp.ResponseWriter.(http.Flusher).Flush()
 
-	blog.Infof(ws.sprint("begin to watch"))
+	logTracer.Infof(ws.sprint("begin to watch"))
 
 	watchOption := &StoreWatchOption{
 		Cond:      ws.cond,
@@ -106,28 +106,28 @@ func (ws *WatchServer) Go(ctx context.Context) {
 	}
 
 	defer func() {
-		blog.Infof(ws.sprint("watch end"))
+		logTracer.Infof(ws.sprint("watch end"))
 		metrics.ReportWatchRequestDec(ws.req.SelectedRoutePath(), ws.tableName)
 		ws.Writer(ws.resp, EventWatchBreak)
 		ws.resp.ResponseWriter.(http.Flusher).Flush()
 	}()
 	event, err := ws.store.Watch(ctx, ws.tableName, watchOption)
 	if err != nil {
-		blog.Errorf("watch failed, err %s", err.Error())
+		logTracer.Errorf("watch failed, err %s", err.Error())
 		return
 	}
 
 	for {
 		select {
 		case <-notify:
-			blog.Infof(ws.sprint("stop watch by closing the connection in client side"))
+			logTracer.Infof(ws.sprint("stop watch by closing the connection in client side"))
 			return
 		case <-ctx.Done():
-			blog.Infof(ws.sprint("stop watch by server"))
+			logTracer.Infof(ws.sprint("stop watch by server"))
 			return
 		case e := <-event:
 			if e.Type == Brk {
-				blog.Infof(ws.sprint("stop watch by event break"))
+				logTracer.Infof(ws.sprint("stop watch by event break"))
 				return
 			}
 			if ws.Writer(ws.resp, e) {
