@@ -30,6 +30,10 @@ func (c *LogConf) init() error {
 
 // SetByCmd 命令配置, 优先级最高
 func (c *LogConf) SetByCmd(level string) error {
+	if level == "" {
+		return nil
+	}
+
 	c.Level = level
 	return c.init()
 }
