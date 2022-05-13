@@ -41,16 +41,16 @@ func APIServerCmd() *cobra.Command {
 // runAPIServer apiserver 子服务
 func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	logger.Infow("listening for requests and metrics", "address", httpAddress)
-	server, err := api.NewAPIServer(ctx)
+	server, err := api.NewAPIServer(ctx, httpAddress)
 	if err != nil {
 		return errors.Wrap(err, "apiserver")
 	}
 
-	// 启动apiserver, 且支持
+	// 启动 apiserver
 	g.Add(func() error {
-		return server.Run(httpAddress)
+		return server.Run()
 	}, func(err error) {
-		server.Close(ctx)
+		server.Close()
 	})
 
 	return nil
