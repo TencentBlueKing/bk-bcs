@@ -46,7 +46,7 @@ const docTemplate = `{
                 "tags": [
                     "Pod"
                 ],
-                "summary": "容器日志",
+                "summary": "查询容器日志",
                 "parameters": [
                     {
                         "type": "string",

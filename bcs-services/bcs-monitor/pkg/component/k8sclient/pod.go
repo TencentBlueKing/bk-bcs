@@ -15,22 +15,65 @@ import (
 	"bufio"
 	"context"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// LogQuery 日志查询参数
+// 需要取指针, 不用用常量
+var (
+	// 最多返回 10W 条日志
+	MAX_TAIL_LINES = 100000
+
+	// 默认返回 100 条日志
+	DEFAULT_TAIL_LINES = int64(100)
+)
+
+// LogQuery 日志查询参数， 精简后的 v1.PodLogOptions
 type LogQuery struct {
 	ContainerName string `form:"container_name"`
 	Previous      bool   `form:"previous"`
+	StartedAt     string `form:"started_at"`
+	FinishedAt    string `form:"finished_at"`
+}
+
+func (q *LogQuery) MakeOptions() (*v1.PodLogOptions, error) {
+	opt := &v1.PodLogOptions{
+		Container: q.ContainerName,
+		Previous:  q.Previous,
+	}
+	if q.StartedAt == "" || q.FinishedAt == "" {
+		opt.TailLines = &DEFAULT_TAIL_LINES
+	} else {
+
+		// 开始时间, 只做校验
+		if _, err := time.Parse(time.RFC3339Nano, q.FinishedAt); err != nil {
+			return nil, err
+		}
+
+		// 结束时间, 需要用做查询
+		t, err := time.Parse(time.RFC3339Nano, q.StartedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		opt.SinceTime = &metav1.Time{Time: t}
+	}
+	return opt, nil
 }
 
 // Log 格式化的日志
 type Log struct {
 	Log  string `json:"log"`
 	Time string `json:"time"`
+}
+
+// LogWithPreviousLink
+type LogWithPreviousLink struct {
+	Logs     []*Log `json:"logs"`
+	Previous string `json:"previous"` // 向上翻页链接
 }
 
 // Container 格式化的容器, 精简后的 v1.Container
@@ -71,15 +114,12 @@ func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, op
 	if err != nil {
 		return nil, err
 	}
-	limitByte := int64(10 * 1024 * 1024)
-	tailLines := int64(100)
-	opts := &v1.PodLogOptions{
-		Container:  opt.ContainerName,
-		Previous:   opt.Previous,
-		LimitBytes: &limitByte,
-		TailLines:  &tailLines,
-		Timestamps: true,
+
+	opts, err := opt.MakeOptions()
+	if err != nil {
+		return nil, err
 	}
+
 	result, err := client.CoreV1().Pods(namespace).GetLogs(podname, opts).DoRaw(ctx)
 	if err != nil {
 		return nil, err
@@ -89,22 +129,23 @@ func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, op
 }
 
 // GetPodLog 获取格式的日志列表
-func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]*Log, error) {
+func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) (*LogWithPreviousLink, error) {
 	result, err := GetPodLogByte(ctx, clusterId, namespace, podname, opt)
 	if err != nil {
 		return nil, err
 	}
 
 	logs := strings.Split(string(result), "\n")
-	logResult := make([]*Log, 0, len(logs))
+	logList := make([]*Log, 0, len(logs))
 	for _, logStr := range logs {
 		log, err := parseLog(logStr)
 		if err != nil {
 			continue
 		}
-		logResult = append(logResult, log)
+		logList = append(logList, log)
 	}
 
+	logResult := &LogWithPreviousLink{Logs: logList}
 	return logResult, nil
 }
 
@@ -114,15 +155,13 @@ func GetPodLogStream(ctx context.Context, clusterId, namespace, podname string, 
 	if err != nil {
 		return nil, err
 	}
-	limitByte := int64(10 * 1024 * 1024)
-	tailLines := int64(100)
-	opts := &v1.PodLogOptions{
-		Container:  opt.ContainerName,
-		LimitBytes: &limitByte,
-		TailLines:  &tailLines,
-		Timestamps: true,
-		Follow:     true,
+
+	opts, err := opt.MakeOptions()
+	if err != nil {
+		return nil, err
 	}
+	opts.Follow = true
+
 	reader, err := client.CoreV1().Pods(namespace).GetLogs(podname, opts).Stream(ctx)
 	if err != nil {
 		return nil, err

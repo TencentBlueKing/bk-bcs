@@ -37,8 +37,8 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 	return containers, nil
 }
 
-// GetPodLog 容器日志
-// @Summary  容器日志
+// GetPodLog 查询容器日志
+// @Summary  查询容器日志
 // @Tags     Pod
 // @Param    container_name  query  string  true  "容器名称"
 // @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
