@@ -22,9 +22,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	mconfig "github.com/micro/go-micro/v2/config"
-	mfile "github.com/micro/go-micro/v2/config/source/file"
-	mflag "github.com/micro/go-micro/v2/config/source/flag"
+	mconfig "github.com/asim/go-micro/v3/config"
+	mfile "github.com/asim/go-micro/v3/config/source/file"
+	mflag "github.com/asim/go-micro/v3/config/source/flag"
 )
 
 func main() {

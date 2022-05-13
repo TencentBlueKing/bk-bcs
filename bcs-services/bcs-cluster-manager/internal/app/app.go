@@ -37,7 +37,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -60,13 +59,15 @@ import (
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	grpcclient "github.com/asim/go-micro/plugins/client/grpc/v3"
+	"github.com/asim/go-micro/plugins/registry/etcd/v3"
+	grpcserver "github.com/asim/go-micro/plugins/server/grpc/v3"
+	micro "github.com/asim/go-micro/v3"
+	"github.com/asim/go-micro/v3/registry"
+	"github.com/asim/go-micro/v3/server"
 	restful "github.com/emicklei/go-restful"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
@@ -111,7 +112,7 @@ type ClusterManager struct {
 	microRegistry registry.Registry
 
 	// micro service
-	microService microsvc.Service
+	microService micro.Service
 
 	model store.ClusterManagerModel
 
@@ -652,25 +653,27 @@ func (cm *ClusterManager) initExtraModules() {
 
 func (cm *ClusterManager) initMicro() error {
 	// New Service
-	microService := microgrpcsvc.NewService(
-		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
-		microsvc.Metadata(map[string]string{
+	microService := micro.NewService(
+		micro.Server(grpcserver.NewServer(server.TLSConfig(cm.tlsConfig))),
+		micro.Client(grpcclient.NewClient(grpcclient.AuthTLS(cm.tlsConfig))),
+		micro.Name(cmcommon.ClusterManagerServiceDomain),
+		micro.Metadata(map[string]string{
 			cmcommon.MicroMetaKeyHTTPPort: strconv.Itoa(int(cm.opt.HTTPPort)),
 		}),
-		microgrpcsvc.WithTLS(cm.tlsConfig),
-		microsvc.Address(cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port))),
-		microsvc.Registry(cm.microRegistry),
-		microsvc.Version(version.BcsVersion),
-		microsvc.RegisterTTL(30*time.Second),
-		microsvc.RegisterInterval(25*time.Second),
-		microsvc.Context(cm.ctx),
-		microsvc.BeforeStart(func() error {
+		//micro.WithTLS(cm.tlsConfig),
+		micro.Address(cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port))),
+		micro.Registry(cm.microRegistry),
+		micro.Version(version.BcsVersion),
+		micro.RegisterTTL(30*time.Second),
+		micro.RegisterInterval(25*time.Second),
+		micro.Context(cm.ctx),
+		micro.BeforeStart(func() error {
 			return nil
 		}),
-		microsvc.AfterStart(func() error {
+		micro.AfterStart(func() error {
 			return cm.disc.Start()
 		}),
-		microsvc.BeforeStop(func() error {
+		micro.BeforeStop(func() error {
 			cm.disc.Stop()
 			return nil
 		}),
