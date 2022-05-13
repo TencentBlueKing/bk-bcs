@@ -11,7 +11,7 @@
 
 export default {
     '容器服务': ['BCS'],
-    '蓝鲸容器管理平台': ['Container Management Platform'],
+    '蓝鲸容器管理平台': ["Container Service"],
     '项目信息': ['Project Info'],
     '英文缩写': ['English Name'],
     '编排类型': ['Orchestration Engine'],
@@ -196,7 +196,7 @@ export default {
     '更新时间：': ['Update Time：'],
     '所在命名空间：': ['Namespace：'],
     'Taskgroup管理': ['Taskgroup manage'],
-    'Pod管理': ['Pod manage'],
+    'Pod管理': ['Pods'],
     '状态：': ['Status：'],
     '存活时间：': ['Survival time：'],
     '存活时间': ['Survival time'],
@@ -261,7 +261,7 @@ export default {
     '重建中...': ['Rebuilding'],
     '日志': ['Log'],
     'Metric信息': ['Metric Info'],
-    '注解': ['Annotation'],
+    '注解': ['Annotations'],
     '注解管理': ['Annotation Manage'],
     '事件': ['Events'],
     '暂停升级': ['Pause Rolling'],
@@ -319,7 +319,7 @@ export default {
     '主机名/IP': ['Hostname/IP'],
     '状态': ['Status'],
     '所属集群': ['Cluster'],
-    '标签': ['Label'],
+    '标签': ['Labels'],
     '初始化中': ['initializing'],
     '删除中': ['removing'],
     '展开': ['expand'],
@@ -337,7 +337,7 @@ export default {
     '键值【{key}】重复，请重新填写': ['Key value【{key}】is repeated, please re-fill'],
     '没有数据': ['No Data'],
     '确认': ['Confirm'],
-    'IP地址': ['IP Addr'],
+    'IP地址': ['IP'],
     '请输入要搜索的ip，多个ip以 | 隔开': ['Please enter IP to search, multiple IPs separated by |'],
     '请输入要搜索的key': ['Please enter key to search'],
     '请输入要搜索的value': ['Please enter value to search'],
@@ -438,7 +438,7 @@ export default {
     '集群描述': ['Cluster Desc'],
     '设置变量': ['Set Variable'],
     '配置': ['Configuration'],
-    '集群变量': ['Cluster Variable'],
+    '集群变量': ['Cluster'],
     '变量：': ['Variable: '],
     '请输入集群描述，不超过128个字符': ['Please enter the cluster desc, no more than 120 characters'],
     'Master信息': ['Master Info'],
@@ -1201,8 +1201,8 @@ export default {
     '已经被引用，不能删除': ['Already referenced, cannot be deleted'],
     '所属': ['Belong'],
     '确定要删除以下变量？': ['Sure to delete this Variable?'],
-    '全局变量': ['Global Variable'],
-    '命名空间变量': ['Namespace Variable'],
+    '全局变量': ['Global'],
+    '命名空间变量': ['Namespace'],
     '说明': ['Description'],
     '被引用位置': ['Referenced'],
     '上下文': ['Context'],
@@ -1547,7 +1547,7 @@ export default {
     '剩余': ['Surplus'],
     '容器视图': ['ContainerView'],
     'Taskgroup视图': ['TaskgroupView'],
-    'POD视图': ['PODView'],
+    'POD视图': ['PodView'],
     '请输入64个字符以内': ['Please enter within 64 characters'],
     '只允许导入从已有模板集导出的zip包': ['Only zip packages exported from an existing template set are allowed to be imported'],
     'Values文件包含两类:': ['The values file contains two types:'],
@@ -1769,8 +1769,8 @@ export default {
     '应用': ['Applications'],
     '仓库': ['ImageHub'],
     '监控中心': ['Container Monitoring'],
-    'Release列表': ['Release'],
-    'Chart仓库': ['Chart'],
+    'Release列表': ['Releases'],
+    'Chart仓库': ['Charts'],
     '工作负载': ['Workload'],
     '存储': ['Storage'],
     '仅允许平台部署，如有疑问请联系蓝鲸容器助手': ['Only platform deployment is allowed. If you have any questions, please contact BCS Assistant'],
@@ -1873,7 +1873,7 @@ export default {
     '1、在集群下，添加节点': ['1. Under cluster, add nodes'],
     '2、或者联系【{user}】': ['2. Or Contact【{user}】'],
     '确定要对{len}个节点进行{operate}操作？': ['Confirm to {operate} on {len} nodes?'],
-    '（可通过 {action} 创建更多作用在命名空间的变量）': ['(You can create more variables in the namespace through {action}'],
+    '（可通过 {action} 创建更多作用在命名空间的变量）': ['(You can create more variables in the namespace through {action})'],
     '该项目未设置作用在命名空间范围的环境变量，无法设置变量值，可前往 {action} 设置': ['The project does not set an environment variable that acts on the namespace. You cannot set the variable value. You can go to the {action} to set.'],
     '您确定要删除Namespace: {name}吗？': ['Confirm want to delete the namespace: {name}?'],
     '确定删除Namespace: {name}的配额？': ['Confirm want to delete the namespace\'s quota: {name}?'],
@@ -1968,7 +1968,7 @@ export default {
         "Container arrangement engine based on the MESOS framework"
     ],
     "申请权限": [
-        "Request for access"
+        "Request Permission"
     ],
     "前往iwiki查看": [
         "Go to IWIKI to view"
@@ -2226,7 +2226,7 @@ export default {
         "system"
     ],
     "容器管理平台": [
-        "Container management platform"
+        "Container Service"
     ],
     "需要申请的权限": [
         "Permission required to apply"
