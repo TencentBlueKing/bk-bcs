@@ -19,9 +19,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
+// GetPodContainers 获取 Pod 容器列表
 // @Summary  获取 Pod 容器列表
 // @Tags     Pod
-// @Accept   x-www-form-urlencoded
 // @Produce  json
 // @Success  200  {array}  k8sclient.Container
 // @Router   /containers [get]
@@ -37,9 +37,11 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 	return containers, nil
 }
 
+// GetPodLog 容器日志
 // @Summary  容器日志
 // @Tags     Pod
-// @Accept   x-www-form-urlencoded
+// @Param    container_name  query  string  true  "容器名称"
+// @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
 // @Produce  json
 // @Success  200  {array}  k8sclient.Log
 // @Router   /logs [get]
@@ -56,11 +58,13 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 	return logs, err
 }
 
+// DownloadPodLog 下载日志
 // @Summary  下载日志
 // @Tags     Pod
-// @Accept   x-www-form-urlencoded
+// @Param    container_name  query  string  true  "容器名称"
+// @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
 // @Produce  octet-stream
-// @Success  200  {array}  k8sclient.Log
+// @Success  200  {string}  string
 // @Router   /logs/download [get]
 func DownloadPodLog(c *rest.Context) {
 	clusterId := c.Param("clusterId")

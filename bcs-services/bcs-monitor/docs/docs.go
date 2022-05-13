@@ -18,9 +18,6 @@ const docTemplate = `{
     "paths": {
         "/containers": {
             "get": {
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -43,9 +40,6 @@ const docTemplate = `{
         },
         "/logs": {
             "get": {
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -53,6 +47,22 @@ const docTemplate = `{
                     "Pod"
                 ],
                 "summary": "容器日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "容器名称",
+                        "name": "container_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "是否使用上一次日志, 异常退出使用",
+                        "name": "previous",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -68,9 +78,6 @@ const docTemplate = `{
         },
         "/logs/download": {
             "get": {
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
                     "application/octet-stream"
                 ],
@@ -78,14 +85,27 @@ const docTemplate = `{
                     "Pod"
                 ],
                 "summary": "下载日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "容器名称",
+                        "name": "container_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "是否使用上一次日志, 异常退出使用",
+                        "name": "previous",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/k8sclient.Log"
-                            }
+                            "type": "string"
                         }
                     }
                 }
@@ -93,19 +113,28 @@ const docTemplate = `{
         },
         "/logs/stream": {
             "get": {
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
                 "produces": [
-                    "application/octet-stream"
+                    "text/event-stream"
                 ],
                 "tags": [
                     "Pod"
                 ],
                 "summary": "SSE 实时日志流",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "容器名称",
+                        "name": "container_name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
