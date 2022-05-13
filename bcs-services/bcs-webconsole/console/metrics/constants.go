@@ -21,4 +21,6 @@ const (
 	ErrStatus = "failure"
 	// SucStatus for failure status
 	SucStatus = "success"
+
+	httpRequestDurationIgnoreKey = "http_request_duration_ignore"
 )

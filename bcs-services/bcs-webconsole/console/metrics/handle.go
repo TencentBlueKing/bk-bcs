@@ -14,24 +14,39 @@
 package metrics
 
 import (
-	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
-func APIMetricHandlerFunc(handler string) gin.HandlerFunc {
+// RequestCollect 统计请求耗时
+func RequestCollect(handler string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		start := time.Now()
 		c.Next()
-		ReportAPIRequestMetric(handler, c.Request.Method, respStatusTransform(c.Writer.Status()), start)
-		return
+		code := strconv.FormatInt(int64(c.Writer.Status()), 10)
+		requestDuration := getRequestDuration(c)
+		collectHTTPRequestMetric(handler, c.Request.Method, code, requestDuration)
 	}
 }
 
-func respStatusTransform(status int) string {
-	if status == http.StatusOK {
-		return SucStatus
+// SetRequestIgnoreDuration 忽略 长链接/Pod 拉起等
+func SetRequestIgnoreDuration(c *gin.Context, duration time.Duration) {
+	c.Set(httpRequestDurationIgnoreKey, duration)
+}
+
+// getRequestDuration 获取请求耗时, 可以是统计整个函数时间，或者在函数内计算好(长链接场景)
+func getRequestDuration(c *gin.Context) time.Duration {
+	authCtx := route.MustGetAuthContext(c)
+	duration := time.Since(authCtx.StartTime)
+
+	requestIgnoreDuration := c.Value(httpRequestDurationIgnoreKey)
+	ignoreDuration, ok := requestIgnoreDuration.(time.Duration)
+	if ok {
+		duration = duration - ignoreDuration
 	}
-	return ErrStatus
+
+	return duration
 }

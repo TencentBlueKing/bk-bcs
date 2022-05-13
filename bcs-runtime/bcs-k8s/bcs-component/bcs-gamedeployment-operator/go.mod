@@ -4,8 +4,10 @@ go 1.17
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.4
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common => ../../kubernetes/common
+	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.1
+	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.20.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.20.0
@@ -47,6 +49,7 @@ require (
 	k8s.io/apiserver v0.20.0
 	k8s.io/client-go v0.20.0
 	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.4.0
 	k8s.io/kubernetes v1.20.0
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 )

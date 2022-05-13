@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-data-manager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-data-manager.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - protocol: TCP
+      name: metric
+      port: {{ .Values.env.BK_BCS_bcsDataManagerMetricPort }}
+      targetPort: {{ .Values.env.BK_BCS_bcsDataManagerMetricPort }}
+    - protocol: TCP
+      name: https
+      port: {{ .Values.env.BK_BCS_bcsDataManagerHTTPPort }}
+      targetPort: {{ .Values.env.BK_BCS_bcsDataManagerHTTPPort }}
+    - protocol: TCP
+      name: grpc
+      port: {{ .Values.env.BK_BCS_bcsDataManagerPort }}
+      targetPort: {{ .Values.env.BK_BCS_bcsDataManagerPort }}
+  selector:
+    {{- include "bcs-data-manager.selectorLabels" . | nindent 4 }}
+

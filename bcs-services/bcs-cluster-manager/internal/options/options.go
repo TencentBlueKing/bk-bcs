@@ -126,6 +126,14 @@ type PassConfig struct {
 	Debug  bool   `json:"debug"`
 }
 
+// UserConfig userManager config
+type UserConfig struct {
+	Enable      bool   `json:"enable"`
+	GateWay     string `json:"gateWay"`
+	IsVerifyTLS bool   `json:"isVerifyTLS"`
+	Token       string `json:"token"`
+}
+
 // AlarmConfig for alarm interface
 type AlarmConfig struct {
 	Server     string `json:"server"`
@@ -150,10 +158,26 @@ type ClusterManagerOptions struct {
 	CloudTemplatePath string                `json:"cloudTemplatePath"`
 	Ssm               SsmConfig             `json:"ssm"`
 	Passcc            PassConfig            `json:"passcc"`
+	UserManager       UserConfig            `json:"user"`
 	Alarm             AlarmConfig           `json:"alarm"`
 	Debug             bool                  `json:"debug"`
 	ServerConfig
 	ClientConfig
+}
+
+var globalClusterManagerOption *ClusterManagerOptions
+
+// SetGlobalCMOptions set global CM options
+func SetGlobalCMOptions(opts *ClusterManagerOptions) {
+	if globalClusterManagerOption != nil {
+		return
+	}
+	globalClusterManagerOption = opts
+}
+
+// GetGlobalCMOptions get global CM options
+func GetGlobalCMOptions() *ClusterManagerOptions {
+	return globalClusterManagerOption
 }
 
 // CloudTemplateList cloud template init config

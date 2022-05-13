@@ -21,7 +21,6 @@ class BaseFeatureFlag(FeatureFlag):
     NAMESPACE = FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
     TEMPLATESET = FeatureFlagField(name='TEMPLATESET', label='模板集', default=True)
     VARIABLE = FeatureFlagField(name='VARIABLE', label='变量管理', default=True)
-    METRICS = FeatureFlagField(name='METRICS', label='Metric管理', default=True)
     HELM = FeatureFlagField(name='HELM', label='helm', default=True)
 
 

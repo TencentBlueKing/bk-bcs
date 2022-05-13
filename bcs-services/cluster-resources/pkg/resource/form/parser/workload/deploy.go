@@ -49,7 +49,7 @@ func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
 
 // ParseDeployReplicas ...
 func ParseDeployReplicas(manifest map[string]interface{}, replicas *model.DeployReplicas) {
-	replicas.Cnt = mapx.Get(manifest, "spec.replicas", int64(0)).(int64)
+	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", "RollingUpdate").(string)
 	maxSurge, err := mapx.GetItems(manifest, "spec.strategy.rollingUpdate.maxSurge")
 	if err == nil {
@@ -59,6 +59,6 @@ func ParseDeployReplicas(manifest map[string]interface{}, replicas *model.Deploy
 	if err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
-	replicas.MinReadySecs = mapx.Get(manifest, "spec.minReadySeconds", int64(0)).(int64)
-	replicas.ProgressDeadlineSecs = mapx.Get(manifest, "spec.progressDeadlineSeconds", int64(0)).(int64)
+	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")
+	replicas.ProgressDeadlineSecs = mapx.GetInt64(manifest, "spec.progressDeadlineSeconds")
 }

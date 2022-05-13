@@ -48,12 +48,12 @@ func NewK8SOperator(opt *options.ClusterManagerOptions, model store.ClusterManag
 func NewKubeClient(kubeConfig string) (k8scorecliset.Interface, error) {
 	data, err := base64.StdEncoding.DecodeString(kubeConfig)
 	if err != nil {
-		return nil, fmt.Errorf("decode kube config failed: %w", err)
+		return nil, fmt.Errorf("decode kube config failed: %v", err)
 	}
 
 	config, err := clientcmd.RESTConfigFromKubeConfig(data)
 	if err != nil {
-		return nil, fmt.Errorf("build rest config failed: %w", err)
+		return nil, fmt.Errorf("build rest config failed: %v", err)
 	}
 
 	config.Burst = 200

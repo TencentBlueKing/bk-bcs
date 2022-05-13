@@ -51,7 +51,8 @@ bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
 	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent
+	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent \
+	general-pod-autoscaler
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -131,7 +132,7 @@ dns:
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-storage ${PACKAGEPATH}/bcs-services
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-storage/bcs-storage ./bcs-services/bcs-storage/storage.go
+	cd ./bcs-services/bcs-storage && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-storage/bcs-storage ./storage.go
 
 loadbalance:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
@@ -321,6 +322,11 @@ mcs-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mcs-agent ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-mcs && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mcs-agent/bcs-mcs-agent ./cmd/mcs-agent/main.go
+
+general-pod-autoscaler:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-general-pod-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/gpa ./cmd/gpa/main.go
 
 # network plugins section
 networkpolicy:pre

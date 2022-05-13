@@ -58,6 +58,12 @@
         "enable": ${bcsPassEnable},
         "debug": ${bcsPassDebug}
     },
+    "user": {
+        "enable": ${bcsUserEnable},
+        "gateWay": "${bcsUserGateWay}",
+        "isVerifyTLS": ${bcsUserVerifyTLS},
+        "token": "${bcsUserToken}"
+    },
     "cloudTemplatePath": "${bcsCloudTemplatePath}",
     "debug": ${bcsClusterManagerDebug},
     "address": "${localIp}",

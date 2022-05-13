@@ -98,15 +98,15 @@ func clusterCloudDefaultBasicSetting(cls *proto.Cluster, cloud *proto.Cloud, ver
 	if len(cloud.OsManagement.AvailableVersion) > 0 {
 		defaultOSImage = cloud.OsManagement.AvailableVersion[0]
 	}
-	if version == "" && len(cloud.ClusterManagement.AvailableVersion) > 0{
+	if version == "" && len(cloud.ClusterManagement.AvailableVersion) > 0 {
 		version = cloud.ClusterManagement.AvailableVersion[0]
 	}
 
 	if cls.ClusterBasicSettings == nil {
 		cls.ClusterBasicSettings = &proto.ClusterBasicSetting{
-			OS:                   defaultOSImage,
-			Version:              version,
-			VersionName:          version,
+			OS:          defaultOSImage,
+			Version:     version,
+			VersionName: version,
 		}
 	} else {
 		if cls.ClusterBasicSettings.OS == "" {

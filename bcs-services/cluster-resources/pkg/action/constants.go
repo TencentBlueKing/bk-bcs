@@ -19,4 +19,6 @@ const (
 	ManifestFormat = "manifest"
 	// FormDataFormat 表单数据格式
 	FormDataFormat = "formData"
+	// SelectItemsFormat 下拉框数据格式
+	SelectItemsFormat = "selectItems"
 )
