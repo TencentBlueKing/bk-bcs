@@ -7,7 +7,7 @@
         :loading="loading"
         @value-change="handleChange"
         @confirm="handleConfirm">
-        <bk-form v-model="formData">
+        <bk-form :label-width="labelWidth" v-model="formData" ref="bkFormRef">
             <bk-form-item :label="$t('项目名称')" property="project_name" required>
                 <bk-input class="create-input" :placeholder="$t('请输入4-12字符的项目名称')" v-model="formData.project_name"></bk-input>
             </bk-form-item>
@@ -32,6 +32,7 @@
     /* eslint-disable camelcase */
     import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api'
     import { createProject, editProject } from '@/api/base'
+    import useFormLabel from '@/common/use-form-label'
     export default defineComponent({
         name: "ProjectCreate",
         model: {
@@ -64,6 +65,9 @@
                         english_name: projectData?.value?.english_name,
                         description: projectData?.value?.description
                     }
+                    setTimeout(() => {
+                        initFormLabelWidth(bkFormRef.value)
+                    }, 0)
                 }
             })
             const loading = ref(false)
@@ -121,7 +125,11 @@
                 }
                 return result
             }
+            const { initFormLabelWidth, labelWidth } = useFormLabel()
+            const bkFormRef = ref(null)
             return {
+                labelWidth,
+                bkFormRef,
                 isEdit,
                 loading,
                 formData,
