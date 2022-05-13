@@ -1,9 +1,15 @@
 <template>
     <div class="biz-content form-resource" v-bkloading="{ isLoading }">
-        <SwitchButton
-            class="switch-yaml"
-            :title="$t('切换为 YAML 模式')"
-            @click="handleSwitchMode" />
+        <bcs-popconfirm
+            class="switch-button-pop"
+            :title="$t('确认切换为 YAML 模式？')"
+            :content="$t('切换至 Yaml 模式并提交更改后，将无法再次使用表单模式进行编辑！')"
+            width="280"
+            trigger="click"
+            @confirm="handleSwitchMode">
+            <SwitchButton :title="$t('切换为 YAML 模式')" />
+        </bcs-popconfirm>
+        
         <div class="biz-top-bar">
             <span class="icon-wrapper" @click="handleCancel">
                 <i class="bcs-icon bcs-icon-arrows-left icon-back"></i>
@@ -308,7 +314,7 @@
 .form-resource {
     padding-bottom: 0;
     height: 100%;
-    .switch-yaml {
+    .switch-button-pop {
         position: absolute;
         right: 16px;
         top: 72px;

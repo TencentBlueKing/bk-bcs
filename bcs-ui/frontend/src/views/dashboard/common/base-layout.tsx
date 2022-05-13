@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/composition-api'
 import DashboardTopActions from './dashboard-top-actions'
-import useNamespace from './use-namespace'
+import {useSelectItemsNamespace} from './use-namespace'
 import usePage from './use-page'
 import useSearch from './use-search'
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe'
@@ -152,7 +152,7 @@ export default defineComponent({
             return type.value === 'crd' && scope && scope !== 'Namespaced'
         })
         // 获取命名空间
-        const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useNamespace(ctx)
+        const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace(ctx)
 
         // 排序
         const sortData = ref({
@@ -597,9 +597,9 @@ export default defineComponent({
                                                         {
                                                             this.namespaceList.map(option => (
                                                                 <bcs-option
-                                                                    key={option.metadata.name}
-                                                                    id={option.metadata.name}
-                                                                    name={option.metadata.name}>
+                                                                    key={option.value}
+                                                                    id={option.value}
+                                                                    name={option.label}>
                                                                 </bcs-option>
                                                             ))
                                                         }
