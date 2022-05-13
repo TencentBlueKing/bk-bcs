@@ -823,7 +823,7 @@
                         if (!/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/.test(item.value)) {
                             this.$bkMessage({
                                 theme: 'error',
-                                message: this.$t(`第${index + 1}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$`),
+                                message: this.$t('第{index}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$', { index: index + 1 }),
                                 delay: 5000
                             })
                             result = false

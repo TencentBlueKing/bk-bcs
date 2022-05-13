@@ -14,9 +14,13 @@ specific language governing permissions and limitations under the License.
 """
 from unittest.mock import patch
 
+import pytest
+
 from backend.helm.app import repo
 from backend.tests.bcs_mocks.fake_bk_repo import FakeBkRepoMod
 from backend.utils import FancyDict
+
+pytestmark = pytest.mark.django_db
 
 FAKE_USER = FancyDict(username="admin", token=FancyDict(access_token="access_token"))
 FAKE_PROJECT = FancyDict(

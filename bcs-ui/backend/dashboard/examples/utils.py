@@ -27,20 +27,20 @@ from backend.dashboard.examples.constants import (
 )
 
 
-def load_resource_template(kind: str) -> Dict:
-    """ 获取指定 资源类型模版 信息 """
-    with open(f'{EXAMPLE_CONFIG_DIR}/{kind}.json') as fr:
+def load_resource_template(kind: str, lang: str) -> Dict:
+    """获取指定 资源类型模版 信息"""
+    with open(f'{EXAMPLE_CONFIG_DIR}/{lang}/{kind}.json') as fr:
         return json.loads(fr.read())
 
 
-def load_resource_references(kind: str) -> str:
-    """ 获取指定 资源类型参考资料 """
-    with open(f'{RESOURCE_REFERENCES_DIR}/{kind}.md') as fr:
+def load_resource_references(kind: str, lang: str) -> str:
+    """获取指定 资源类型参考资料"""
+    with open(f'{RESOURCE_REFERENCES_DIR}/{lang}/{kind}.md') as fr:
         return fr.read()
 
 
 def load_demo_manifest(file_path: str) -> Dict:
-    """ 指定资源类型的 Demo 配置信息 """
+    """指定资源类型的 Demo 配置信息"""
     with open(f'{DEMO_RESOURCE_MANIFEST_DIR}/{file_path}.yaml') as fr:
         manifest = yaml.load(fr.read(), yaml.SafeLoader)
 

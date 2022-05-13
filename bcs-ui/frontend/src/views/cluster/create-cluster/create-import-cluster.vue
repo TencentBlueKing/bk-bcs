@@ -1,8 +1,11 @@
 <template>
     <section class="create-import-cluster">
-        <bk-form :label-width="130" :model="importClusterInfo" :rules="formRules" class="import-form" ref="importFormRef">
+        <bk-form :label-width="labelWidth" :model="importClusterInfo" :rules="formRules" class="import-form" ref="importFormRef">
             <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                 <bk-input v-model="importClusterInfo.clusterName"></bk-input>
+            </bk-form-item>
+            <bk-form-item :label="$t('集群描述')">
+                <bk-input v-model="importClusterInfo.description" type="textarea"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('集群环境')" required v-if="$INTERNAL">
                 <bk-radio-group v-model="importClusterInfo.environment">
@@ -14,7 +17,17 @@
                     </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
-            <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
+            <bk-form-item :label="$t('导入方式')">
+                <bk-radio-group v-model="importClusterInfo.importType">
+                    <bk-radio value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
+                    <bk-radio value="provider">{{$t('云服务商')}}</bk-radio>
+                </bk-radio-group>
+            </bk-form-item>
+            <bk-form-item :label="$t('云服务商')"
+                property="provider"
+                error-display-type="normal"
+                required
+                v-if="importClusterInfo.importType === 'provider'">
                 <bcs-select :loading="templateLoading" class="w640"
                     v-model="importClusterInfo.provider"
                     :clearable="false">
@@ -25,10 +38,10 @@
                     </bcs-option>
                 </bcs-select>
             </bk-form-item>
-            <bk-form-item :label="$t('集群描述')">
-                <bk-input v-model="importClusterInfo.description" type="textarea"></bk-input>
-            </bk-form-item>
-            <bk-form-item :label="$t('集群kubeconfig')" property="yaml" error-display-type="normal" required>
+            <bk-form-item :label="$t('集群kubeconfig')"
+                property="yaml"
+                error-display-type="normal"
+                required>
                 <bk-button class="mb10">
                     <input class="file-input"
                         accept=".yaml,yml"
@@ -45,41 +58,30 @@
                 ></Ace>
             </bk-form-item>
             <bk-form-item>
-                <bk-button class="btn" theme="primary" @click="handleImport">{{$t('导入')}}</bk-button>
-                <bk-button class="btn" @click="handleCancel">{{$t('取消')}}</bk-button>
+                <!-- <bk-button theme="primary"
+                    :loading="testLoading"
+                    @click="handleTest"
+                >{{$t('kubeconfig可用性测试')}}</bk-button> -->
+                <bk-button class="btn"
+                    theme="primary"
+                    :loading="loading"
+                    :disabled="!isTestSuccess"
+                    @click="handleImport"
+                >{{$t('导入')}}</bk-button>
+                <bk-button class="btn"
+                    @click="handleCancel"
+                >{{$t('取消')}}</bk-button>
             </bk-form-item>
         </bk-form>
-        <bcs-dialog v-model="showImportDialog"
-            theme="primary"
-            header-position="left"
-            :title="$t('导入集群')"
-            width="640">
-            <div class="import-cluster-dialog">
-                <div class="title">{{$t('导入前提，请确认')}}:</div>
-                <bcs-checkbox-group v-model="importConfirm">
-                    <bcs-checkbox value="1">{{$t('蓝鲸部署服务器到被导入集群APIServer网络连通正常')}}</bcs-checkbox>
-                    <bcs-checkbox value="2" class="mt10">{{$t('kubeconfig用户是cluster-admin角色')}}</bcs-checkbox>
-                </bcs-checkbox-group>
-            </div>
-            <template #footer>
-                <div>
-                    <bcs-button :disabled="importConfirm.length < 2"
-                        theme="primary"
-                        :loading="loading"
-                        @click="confirmDialog"
-                    >{{$t('确定，导入集群')}}</bcs-button>
-                    <bcs-button @click="cancelDialog">{{$t('我再想想')}}</bcs-button>
-                </div>
-            </template>
-        </bcs-dialog>
     </section>
 </template>
 <script lang="ts">
-    import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api'
+    import { defineComponent, ref, computed, onMounted } from '@vue/composition-api'
     import FormGroup from './form-group.vue'
     import Ace from '@/components/ace-editor'
     import useGoHome from '@/common/use-gohome'
     import useConfig from '@/common/use-config'
+    import useFormLabel from '@/common/use-form-label'
 
     export default defineComponent({
         name: 'CreateImportCluster',
@@ -92,15 +94,16 @@
             const { goHome } = useGoHome()
             const { $INTERNAL } = useConfig()
             const importClusterInfo = ref({
+                importType: 'kubeconfig',
                 clusterName: '',
                 environment: 'prod',
                 description: '',
                 yaml: '',
                 provider: ''
             })
+            const isTestSuccess = ref(false)
+            const testLoading = ref(false)
             const loading = ref(false)
-            const showImportDialog = ref(false)
-            const importConfirm = ref([])
             const importFormRef = ref<any>(null)
             const formRules = ref({
                 provider: [
@@ -136,19 +139,9 @@
                 }
             }
 
-            const handleImport = async () => {
-                const result = await importFormRef.value.validate()
-                if (!result) return
-                showImportDialog.value = true
-            }
             const handleCancel = () => {
                 $router.back()
             }
-            watch(showImportDialog, (value) => {
-                if (!value) {
-                    importConfirm.value = []
-                }
-            })
             
             const curProject = computed(() => {
                 return $store.state.curProject
@@ -156,7 +149,19 @@
             const user = computed(() => {
                 return $store.state.user
             })
-            const confirmDialog = async () => {
+            const handleTest = async () => {
+                const validate = await importFormRef.value.validate()
+                if (!validate) return
+                testLoading.value = true
+                setTimeout(() => {
+                    testLoading.value = false
+                    isTestSuccess.value = true
+                }, 2000)
+            }
+            const handleImport = async () => {
+                const validate = await importFormRef.value.validate()
+                if (!validate) return
+
                 loading.value = true
                 const params = {
                     clusterName: importClusterInfo.value.clusterName,
@@ -188,9 +193,6 @@
                     goHome($route)
                 }
             }
-            const cancelDialog = () => {
-                showImportDialog.value = false
-            }
             const templateList = ref<any>([])
             const templateLoading = ref(false)
             const handleGetTemplateList = async () => {
@@ -199,23 +201,25 @@
                 importClusterInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
+            const { labelWidth, initFormLabelWidth } = useFormLabel()
             onMounted(() => {
                 handleGetTemplateList()
+                initFormLabelWidth(importFormRef.value)
             })
             return {
+                isTestSuccess,
+                testLoading,
+                labelWidth,
                 templateList,
                 importClusterInfo,
                 importFormRef,
                 loading,
-                showImportDialog,
-                importConfirm,
                 formRules,
                 handleFileChange,
                 handleImport,
                 handleCancel,
-                confirmDialog,
-                cancelDialog,
-                $INTERNAL
+                $INTERNAL,
+                handleTest
             }
         }
     })

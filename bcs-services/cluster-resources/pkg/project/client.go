@@ -70,14 +70,15 @@ func InitProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
 	}
 	initOnce.Do(func() {
 		var err error
-		if projMgrCli, err = newProjClient(microRtr, cliTLSConf); err != nil {
+		if projMgrCli, err = NewProjClient(microRtr, cliTLSConf); err != nil {
 			projMgrCli = nil
 			panic(err)
 		}
 	})
 }
 
-func newProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*ProjClient, error) {
+// NewProjClient ...
+func NewProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*ProjClient, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cli := ProjClient{
 		ServiceName:  conf.ProjectMgrServiceName,

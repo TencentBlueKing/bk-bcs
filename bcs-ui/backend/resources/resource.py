@@ -177,7 +177,7 @@ class ResourceClient:
         formatter: Optional[ResourceFormatter] = None,
         **kwargs,
     ) -> Union[ResourceObj, Dict]:
-        """ 使用 Replace 模式更新某个资源 """
+        """使用 Replace 模式更新某个资源"""
         obj = self.api.replace(body=body, name=name, namespace=namespace, **kwargs)
         if is_format:
             formatter = formatter or self.formatter

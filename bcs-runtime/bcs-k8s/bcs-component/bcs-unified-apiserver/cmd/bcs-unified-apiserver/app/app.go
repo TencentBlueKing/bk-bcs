@@ -146,7 +146,6 @@ func Run(bindAddress string) error {
 	srv := &http.Server{
 		Handler: r,
 	}
-	sugar.Infof("Using config file:%s", viper.ConfigFileUsed())
 
 	if tlsCertFile != "" && tlsKeyFile != "" {
 		sugar.Infof("start serve https://%s", bindAddress)

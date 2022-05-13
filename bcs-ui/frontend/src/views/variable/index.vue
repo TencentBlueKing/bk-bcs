@@ -51,10 +51,10 @@
                         <bk-table-column :label="$t('默认值')" prop="default_value"></bk-table-column>
                         <bk-table-column :label="$t('类型')" prop="category_name" width="120"></bk-table-column>
                         <bk-table-column :label="$t('作用范围')" prop="scope_name" width="140"></bk-table-column>
-                        <bk-table-column :label="$t('操作')" width="250">
+                        <bk-table-column :label="$t('操作')" width="260">
                             <template slot-scope="{ row }">
                                 <a href="javascript:void(0);" class="bk-text-button" @click="getQuoteDetail(row)">{{$t('查看引用')}}</a>
-                                <a href="javascript:void(0);" class="ml10 bk-text-button" @click="batchUpdate(row)" v-show="row.category !== 'sys' && (row.scope === 'namespace' || row.scope === 'cluster')">{{$t('批量更新')}}</a>
+                                <a href="javascript:void(0);" class="ml10 bk-text-button" @click="batchUpdate(row)" v-show="row.category !== 'sys' && (row.scope === 'namespace' || row.scope === 'cluster')">{{$t('更新')}}</a>
 
                                 <template v-if="row.category === 'sys'">
                                     <a href="javascript:void(0);" class="bk-text-button is-disabled ml10" v-bk-tooltips.left="$t('系统内置变量，不能编辑')">{{$t('编辑')}}</a>
@@ -1153,4 +1153,9 @@
 
 <style scoped>
     @import './index.css';
+    /deep/ .bk-form-radio {
+        & + .bk-form-radio {
+            margin-left: 0px;
+        }
+    }
 </style>

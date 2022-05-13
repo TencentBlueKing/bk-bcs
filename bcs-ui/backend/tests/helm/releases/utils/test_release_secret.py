@@ -99,20 +99,28 @@ class TestRecordReleases:
             "backend.helm.releases.utils.release_secret.list_namespaced_releases",
             return_value=release_list,
         ), patch(
-            "backend.helm.helm.bcs_variable.paas_cc.get_project",
-            return_value={"code": 0, "data": {"cc_app_id": 1, "kind": 1, "english_name": "test"}},
+            "backend.helm.releases.utils.release_secret.collect_system_variable",
+            return_value={
+                "SYS_NAMESPACE": FAKE_NAMESPACE,
+                "SYS_CC_APP_ID": "1",
+                "SYS_PROJECT_KIND": "k8s",
+                "SYS_PROJECT_CODE": "test",
+            },
         ), patch(
             "backend.helm.helm.bcs_variable.get_data_id_by_project_id",
             return_value={"standard_data_id": 1, "non_standard_data_id": 1},
         ), patch(
-            "backend.helm.helm.bcs_variable.paas_cc.get_namespace",
+            "backend.helm.releases.utils.release_secret.PaaSCCClient.get_cluster_namespace_list",
             return_value={
                 "code": 0,
-                "data": {
-                    "name": FAKE_NAMESPACE,
-                    "project_id": client.ctx_cluster.project_id,
-                    "cluster_id": client.ctx_cluster.id,
-                },
+                "results": [
+                    {
+                        "id": 1,
+                        "name": FAKE_NAMESPACE,
+                        "project_id": client.ctx_cluster.project_id,
+                        "cluster_id": client.ctx_cluster.id,
+                    }
+                ],
             },
         ), patch(
             "backend.helm.helm.bcs_variable.paas_cc.get_jfrog_domain", return_value="http://example.test.com"

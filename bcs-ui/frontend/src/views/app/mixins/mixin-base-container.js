@@ -244,8 +244,10 @@ export default {
             try {
                 const params = {
                     projectId: this.projectId,
-                    container_ids: this.containerId.split(','),
-                    namespace: this.containerInfo.namespace,
+                    // container_ids: this.containerId.split(','),
+                    container_name: this.containerInfo.container_name,
+                    namespace: this.instanceNamespace,
+                    pod_name: this.taskgroupName,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                 }
@@ -402,8 +404,10 @@ export default {
             try {
                 const params = {
                     projectId: this.projectId,
-                    container_ids: this.containerId.split(','),
-                    namespace: this.containerInfo.namespace,
+                    // container_ids: this.containerId.split(','),
+                    container_name: this.containerInfo.container_name,
+                    namespace: this.instanceNamespace,
+                    pod_name: this.taskgroupName,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                 }
@@ -559,8 +563,10 @@ export default {
             try {
                 const params = {
                     projectId: this.projectId,
-                    container_ids: this.containerId.split(','),
-                    namespace: this.containerInfo.namespace,
+                    // container_ids: this.containerId.split(','),
+                    container_name: this.containerInfo.container_name,
+                    namespace: this.instanceNamespace,
+                    pod_name: this.taskgroupName,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
                 }

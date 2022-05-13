@@ -84,6 +84,7 @@ type SecretLister struct {
 	secretLister k8slistcorev1.SecretLister
 }
 
+// NewSecretLister create secret lister by kubeconfig, secret name and secret namespace
 func NewSecretLister(kubeconfig, secretName, secretNamespace string) (*SecretLister, error) {
 	var restConfig *rest.Config
 	var err error

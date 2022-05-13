@@ -22,7 +22,7 @@ from .constants import SHARED_CLUSTER_SUBSCRIBEABLE_RESOURCE_KINDS
 
 
 class IsSubscribeable(BasePermission):
-    """ 检查当前指定参数是否支持订阅 """
+    """检查当前指定参数是否支持订阅"""
 
     def has_permission(self, request, view):
         project_id, cluster_id = view.kwargs['project_id'], view.kwargs['cluster_id']

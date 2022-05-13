@@ -36,7 +36,7 @@ class TestBcsApiClient:
 
         req_history = requests_mock.request_history[0]
         # Assert token was in request headers and access_token was in query string
-        assert req_history.headers.get('Authorization') == BCS_APIGW_TOKEN
+        assert req_history.headers.get('Authorization') == f"Bearer {BCS_APIGW_TOKEN}"
         assert 'access_token=fake_token' in req_history.url
 
     def test_get_cluster_credentials(self, requests_mock):

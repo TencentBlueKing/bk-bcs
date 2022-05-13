@@ -66,7 +66,6 @@ func StringContainInSlice(s string, l []string) bool {
 	return false
 }
 
-
 // IntInSlice return true if i in l
 func IntInSlice(i int, l []int) bool {
 	for _, obj := range l {

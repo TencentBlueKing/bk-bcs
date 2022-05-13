@@ -18,6 +18,6 @@ from backend.resources.rbac.service_account import ServiceAccount
 
 
 class ServiceAccountViewSet(AccessClusterPermMixin, NamespaceScopeViewSet):
-    """ ServiceAccount 相关接口 """
+    """ServiceAccount 相关接口"""
 
     resource_client = ServiceAccount

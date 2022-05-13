@@ -65,14 +65,14 @@ func (h *ServiceHandler) Serve(c *rest.RequestContext) error {
 		obj, err = h.handler.GetAsTable(ctx, c.Namespace, c.Name, c.Options.AcceptHeader, *c.Options.GetOptions)
 	case rest.CreateVerb: // kubectl create 操作
 		newObj := v1.Service{}
-		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
-			return err
+		if decodeErr := json.NewDecoder(c.Request.Body).Decode(&newObj); decodeErr != nil {
+			return decodeErr
 		}
 		obj, err = h.handler.Create(ctx, c.Namespace, &newObj, *c.Options.CreateOptions)
 	case rest.UpdateVerb: // kubectl replace 操作
 		newObj := v1.Service{}
-		if err := json.NewDecoder(c.Request.Body).Decode(&newObj); err != nil {
-			return err
+		if decodeErr := json.NewDecoder(c.Request.Body).Decode(&newObj); decodeErr != nil {
+			return decodeErr
 		}
 		obj, err = h.handler.Update(ctx, c.Namespace, &newObj, *c.Options.UpdateOptions)
 	case rest.PatchVerb: // kubectl edit/apply 操作

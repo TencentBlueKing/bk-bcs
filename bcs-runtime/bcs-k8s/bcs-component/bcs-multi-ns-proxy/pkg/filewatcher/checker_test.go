@@ -47,7 +47,7 @@ func TestChecker(t *testing.T) {
 				"file3": "md5-3",
 			},
 			events: []Event{
-				Event{
+				{
 					Type:     EventAdd,
 					Filename: "file3",
 					Content:  "md5-3",
@@ -66,7 +66,7 @@ func TestChecker(t *testing.T) {
 				"file3": "md5-3",
 			},
 			events: []Event{
-				Event{
+				{
 					Type:     EventUpdate,
 					Filename: "file2",
 					Content:  "md5-2",
@@ -84,7 +84,7 @@ func TestChecker(t *testing.T) {
 				"file3": "md5-3",
 			},
 			events: []Event{
-				Event{
+				{
 					Type:     EventDelete,
 					Filename: "file2",
 					Content:  "",

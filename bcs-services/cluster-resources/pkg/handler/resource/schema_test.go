@@ -34,3 +34,14 @@ func TestGetResFormSchema(t *testing.T) {
 		assert.Nil(t, err)
 	}
 }
+
+func TestGetFormSupportedApiVersions(t *testing.T) {
+	hdlr := New()
+	ctx := context.TODO()
+
+	for kind := range renderer.FormRenderSupportedResAPIVersion {
+		req, resp := clusterRes.GetFormSupportedApiVersionsReq{Kind: kind}, clusterRes.CommonListResp{}
+		err := hdlr.GetFormSupportedAPIVersions(ctx, &req, &resp)
+		assert.Nil(t, err)
+	}
+}

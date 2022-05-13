@@ -66,8 +66,12 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('关联资源')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
                             <template slot-scope="{ row }">
-                                <bk-button :disabled="!['Deployment', 'StatefulSet'].includes(row.ref_kind)"
-                                    text @click="handleGotoAppDetail(row)">{{row.ref_name}}</bk-button>
+                                <bk-button
+                                    :disabled="!['Deployment', 'StatefulSet'].includes(row.ref_kind)"
+                                    text
+                                    @click="handleGotoAppDetail(row)">
+                                    <span class="bcs-ellipsis">{{row.ref_name}}</span>
+                                </bk-button>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('来源')" prop="source_type">

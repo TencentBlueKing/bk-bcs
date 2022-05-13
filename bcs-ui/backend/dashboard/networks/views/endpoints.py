@@ -17,6 +17,6 @@ from backend.resources.networks.endpoints import Endpoints
 
 
 class EndPointsViewSet(NamespaceScopeViewSet):
-    """ Endpoints 相关接口 """
+    """Endpoints 相关接口"""
 
     resource_client = Endpoints
