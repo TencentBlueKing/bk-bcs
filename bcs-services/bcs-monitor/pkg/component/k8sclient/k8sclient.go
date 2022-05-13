@@ -14,11 +14,33 @@ package k8sclient
 import (
 	"bufio"
 	"context"
+	"errors"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// LogQuery 日志查询参数
+type LogQuery struct {
+	ContainerName string `form:"container_name"`
+	Previous      bool   `form:"previous"`
+}
+
+// Log 格式化的日志
+type Log struct {
+	Log  string `json:"log"`
+	Time string `json:"time"`
+}
+
+// parseLog 解析Log
+func parseLog(rawLog string) (*Log, error) {
+	item := strings.SplitN(rawLog, " ", 2)
+	if len(item) != 2 {
+		return nil, errors.New("not valid log")
+	}
+	return &Log{Log: item[0], Time: item[1]}, nil
+}
 
 // GetContainerNames 获取 Pod 容器名称列表
 func GetContainerNames(ctx context.Context, clusterId, namespace, podname string) ([]string, error) {
@@ -38,17 +60,6 @@ func GetContainerNames(ctx context.Context, clusterId, namespace, podname string
 	return containers, nil
 }
 
-// LogQuery 日志查询参数
-type LogQuery struct {
-	ContainerName string `form:"container_name"`
-	Previous      bool   `form:"previous"`
-}
-
-type Log struct {
-	Log  string `json:"log"`
-	Time string `json:"time"`
-}
-
 // GetContainerNames 获取 Pod 容器名称列表
 func GetContainerLog(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]*Log, error) {
 	result, err := GetContainerLogByte(ctx, clusterId, namespace, podname, opt)
@@ -59,11 +70,11 @@ func GetContainerLog(ctx context.Context, clusterId, namespace, podname string, 
 	logs := strings.Split(string(result), "\n")
 	logResult := make([]*Log, 0, len(logs))
 	for _, logStr := range logs {
-		item := strings.SplitN(logStr, " ", 2)
-		if len(item) != 2 {
+		log, err := parseLog(logStr)
+		if err != nil {
 			continue
 		}
-		logResult = append(logResult, &Log{Log: item[0], Time: item[1]})
+		logResult = append(logResult, log)
 	}
 
 	return logResult, nil
@@ -118,11 +129,11 @@ func GetContainerLogStream(ctx context.Context, clusterId, namespace, podname st
 
 		scanner := bufio.NewScanner(reader)
 		for scanner.Scan() {
-			item := strings.SplitN(scanner.Text(), " ", 2)
-			if len(item) != 2 {
+			log, err := parseLog(scanner.Text())
+			if err != nil {
 				continue
 			}
-			logChan <- &Log{Log: item[0], Time: item[1]}
+			logChan <- log
 		}
 	}()
 
