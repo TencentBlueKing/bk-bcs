@@ -1,0 +1,19 @@
+info:
+  contact: {}
+paths:
+  /containers:
+    get:
+      consumes:
+      - application/json
+      description: do ping
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 获取 Pod 容器列表
+      tags:
+      - example
+swagger: "2.0"

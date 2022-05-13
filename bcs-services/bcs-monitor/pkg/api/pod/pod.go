@@ -20,6 +20,17 @@ import (
 )
 
 // 获取 Pod 容器列表
+// @BasePath /api/v1
+
+// 获取 Pod 容器列表 godoc
+// @Summary 获取 Pod 容器列表
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {[]*k8sclient.Containers}
+// @Router /containers [get]
 func GetPodContainers(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")

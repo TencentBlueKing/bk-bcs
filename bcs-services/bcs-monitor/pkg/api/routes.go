@@ -17,7 +17,10 @@ import (
 
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
@@ -67,6 +70,9 @@ func registerRoutes(engine *gin.Engine) {
 
 	engine.Use(requestIdMiddleware)
 	engine.Use(middleware.AuthRequired())
+
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// 日志相关接口
 	route := engine.Group("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod")
