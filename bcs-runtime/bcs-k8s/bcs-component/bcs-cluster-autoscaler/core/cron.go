@@ -49,7 +49,12 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	}
 
 	nodegroups := context.CloudProvider.NodeGroups()
-	for _, ng := range nodegroups {
+	for _, group := range nodegroups {
+		ng, ok := group.(*bcs.NodeGroup)
+		if !ok {
+			return errors.NewAutoscalerError(errors.InternalError,
+				"Cannot transform cloudprovider to BCSProvider, should run in BCS environment")
+		}
 		minSize := ng.MinSize()
 		maxSize := ng.MaxSize()
 		targetSize, err := ng.TargetSize()
@@ -57,9 +62,14 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 			return errors.NewAutoscalerError(errors.ApiCallError,
 				"failed to get target size of nodegroup %v: %v", ng.Id(), err)
 		}
+		timeRanges, err := ng.TimeRanges()
+		if err != nil {
+			return errors.NewAutoscalerError(errors.ApiCallError,
+				"failed to get time ranges of nodegroup %v: %v", ng.Id(), err)
+		}
 
 		// get desired num
-		desired, err := getDesiredNumForNodeGroupWithTime(ng, currentTime)
+		desired, err := getDesiredNumForNodeGroupWithTime(ng, currentTime, timeRanges)
 		if err != nil {
 			return errors.NewAutoscalerError(errors.InternalError,
 				"failed to get desiredNum for node group %s in cron mode: %v", ng.Id(), err)
@@ -107,22 +117,10 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	return nil
 }
 
-func getDesiredNumForNodeGroupWithTime(ng cloudprovider.NodeGroup, currentTime time.Time) (int, error) {
+func getDesiredNumForNodeGroupWithTime(ng cloudprovider.NodeGroup,
+	currentTime time.Time, timeRanges []*bcs.TimeRange) (int, error) {
 	max := -1
-	// TODO: get timeranges from nodegroup
-	timeranges := []TimeRange{
-		{
-			Schedule:   "* 14-16 * * *",
-			Zone:       "Asia/Shanghai",
-			DesiredNum: 2,
-		},
-		{
-			Schedule:   "* 7-9 * * *",
-			Zone:       "Asia/Shanghai",
-			DesiredNum: 3,
-		},
-	}
-	for _, t := range timeranges {
+	for _, t := range timeRanges {
 		_, finalMatch, err := getFinalMatchAndMisMatch(t.Schedule, currentTime, t.Zone)
 		if err != nil {
 			klog.Errorf("CronMode: failed to get match for timerange \"%v\": %v", t, err)
