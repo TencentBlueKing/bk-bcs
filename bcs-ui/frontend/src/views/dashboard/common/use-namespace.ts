@@ -1,6 +1,11 @@
 import { ref, SetupContext, Ref, computed } from "@vue/composition-api"
 import { ISubscribeData } from './use-subscribe'
 import { CUR_SELECT_NAMESPACE } from '@/common/constant'
+
+interface ILabel {
+    label: string;
+    value: string;
+}
 export interface IUseNamespace {
     namespaceLoading: Ref<boolean>;
     namespaceData: Ref<ISubscribeData>;
@@ -45,6 +50,37 @@ export default function useNamespace (ctx: SetupContext): IUseNamespace {
     return {
         namespaceLoading,
         namespaceData,
+        namespaceValue,
+        namespaceList,
+        getNamespaceData
+    }
+}
+
+export function useSelectItemsNamespace (ctx: SetupContext) {
+    const { $store } = ctx.root
+
+    const namespaceValue = ref('')
+    const namespaceLoading = ref(false)
+    const namespaceList = ref<ILabel[]>([])
+
+    const getNamespaceData = async (): Promise<ISubscribeData> => {
+        namespaceLoading.value = true
+        const data = await $store.dispatch('dashboard/getNamespaceList', {
+            format: "selectItems"
+        })
+        namespaceList.value = data.selectItems || []
+        // 初始化默认选中命名空间
+        const defaultSelectNamespace = namespaceList.value.find(data => data.value === sessionStorage.getItem(CUR_SELECT_NAMESPACE))
+        namespaceValue.value = defaultSelectNamespace?.value || namespaceList.value[0]?.value
+        sessionStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value)
+        namespaceLoading.value = false
+        return data
+    }
+
+    // onMounted(getNamespaceData)
+
+    return {
+        namespaceLoading,
         namespaceValue,
         namespaceList,
         getNamespaceData
