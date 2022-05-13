@@ -145,7 +145,7 @@ func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanag
 		return nil, nil, fmt.Errorf("Can not build NodePoolClient")
 	}
 
-	return newNodeGroupCache(func(ng string) ([]*clustermanager.Node, error) {
+	return NewNodeGroupCache(func(ng string) ([]*clustermanager.Node, error) {
 		return client.GetNodes(ng)
 	}), client, nil
 }
@@ -210,7 +210,7 @@ func convertResource(lc *clustermanager.LaunchConfiguration) map[apiv1.ResourceN
 	resources := map[apiv1.ResourceName]resource.Quantity{}
 	resources[apiv1.ResourceCPU] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
 	resources[apiv1.ResourceMemory] = resource.MustParse(fmt.Sprintf("%v", lc.Mem) + "Gi")
-	resources["gpu"] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
+	resources["gpu"] = resource.MustParse(fmt.Sprintf("%v", lc.GPU))
 	return resources
 }
 

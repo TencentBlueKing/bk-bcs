@@ -588,7 +588,7 @@ func (p *offerPool) setInnerOffersAttributes(offers []*mesos.Offer) {
 		}
 
 		setting, err := p.scheduler.FetchAgentSetting(ip)
-		if err != nil {
+		if err != nil && !errors.Is(err, store.ErrNoFound) {
 			blog.Errorf("FetchAgentSetting ip %s error %s", ip, err.Error())
 			continue
 		}
@@ -1050,7 +1050,7 @@ func (p *offerPool) validateDisableSlave(offer *mesos.Offer) bool {
 	}
 
 	setting, err := p.scheduler.FetchAgentSetting(ip)
-	if err != nil {
+	if err != nil && !errors.Is(err, store.ErrNoFound) {
 		blog.Errorf("FetchAgentSetting ip %s error %s", ip, err.Error())
 		return true
 	}

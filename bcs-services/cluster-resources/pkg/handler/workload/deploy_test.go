@@ -51,6 +51,15 @@ func TestDeploy(t *testing.T) {
 	respData := listResp.Data.AsMap()
 	assert.Equal(t, "DeploymentList", mapx.Get(respData, "manifest.kind", ""))
 
+	// List SelectItems Format
+	listReq.Format = action.SelectItemsFormat
+	err = h.ListDeploy(ctx, &listReq, &listResp)
+	assert.Nil(t, err)
+
+	respData = listResp.Data.AsMap()
+	selectItems := mapx.GetList(respData, "selectItems")
+	assert.True(t, len(selectItems) > 0)
+
 	// Update
 	_ = mapx.SetItems(manifest, "spec.replicas", 5)
 	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -225,6 +234,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
+		Format:    action.ManifestFormat,
 	}
 	err = h.ListDeploy(ctx, &listReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)

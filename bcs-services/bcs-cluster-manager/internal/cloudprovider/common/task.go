@@ -118,7 +118,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("RunBKsopsJob[%s] CreateBkOpsTask task[%s] step[%s] failed; %v",
 			taskID, task.TaskName, stepName, err)
-		retErr := fmt.Errorf("CreateBkOpsTask err, %s", err.Error())
+		retErr := fmt.Errorf("CreateBkOpsTask err: %v", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -132,7 +132,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	_, err = BKOpsClient.StartBkOpsTask("", startTaskReq, &StartTaskRequest{})
 	if err != nil {
 		blog.Errorf("RunBKsopsJob[%s] StartBkOpsTask task[%s] step[%s] failed; %v", taskID, taskID, stepName, err)
-		retErr := fmt.Errorf("StartBkOpsTask err, %s", err.Error())
+		retErr := fmt.Errorf("StartBkOpsTask err: %s, url: %s", err.Error(), taskRes.Data.TaskURL)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -147,7 +147,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		select {
 		case <-ctx.Done():
 			blog.Errorf("RunBKsopsJob[%s] GetTaskStatus task[%s] step[%s] failed; %v", taskID, taskID, stepName, ctx.Err())
-			retErr := fmt.Errorf("GetTaskStatus %s %s err, %s", startTaskReq.TaskID, "timeOut", ctx.Err())
+			retErr := fmt.Errorf("GetTaskStatus %s %s err: %s, url: %s", startTaskReq.TaskID, "timeOut", ctx.Err(), taskRes.Data.TaskURL)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return nil
 		case <-ticker.C:
@@ -167,7 +167,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		}
 		if data.Data.State == FAILED.String() || data.Data.State == REVOKED.String() || data.Data.State == SUSPENDED.String() {
 			blog.Errorf("RunBKsopsJob[%s] GetTaskStatus task[%s] step[%s] failed: %v", taskID, taskID, stepName, err)
-			retErr := fmt.Errorf("GetTaskStatus %s %s err, %v", startTaskReq.TaskID, data.Data.State, err)
+			retErr := fmt.Errorf("GetTaskStatus %s %s err: %v, url: %s", startTaskReq.TaskID, data.Data.State, err, taskRes.Data.TaskURL)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}

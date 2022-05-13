@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	k8sVersion "k8s.io/apimachinery/pkg/version"
 )
 
 const (
@@ -87,8 +88,26 @@ func (c *WebConsoleConf) InitTagPatterns() error {
 	return nil
 }
 
-func (c *WebConsoleConf) MatchTag(tag string) (string, error) {
-	v, err := version.NewVersion(tag)
+// parseVersion 解析版本, 优先使用gitVersion, 回退到 v{Major}.{Minor}.0
+func parseVersion(versionInfo *k8sVersion.Info) (*version.Version, error) {
+	v, err := version.NewVersion(versionInfo.GitVersion)
+	if err == nil {
+		return v, nil
+	}
+
+	// 回退使用 v{Major}.{Minor}.0
+	majorVersion := fmt.Sprintf("v%s.%s.0", versionInfo.Major, versionInfo.Minor)
+	v, err = version.NewVersion(majorVersion)
+	if err == nil {
+		return v, nil
+	}
+
+	return nil, errors.Errorf("Malformed version: GitVersion %s, MajorVersion %s", versionInfo.GitVersion, majorVersion)
+}
+
+// MatchTag 匹配镜像Tag
+func (c *WebConsoleConf) MatchTag(versionInfo *k8sVersion.Info) (string, error) {
+	v, err := parseVersion(versionInfo)
 	if err != nil {
 		return "", err
 	}

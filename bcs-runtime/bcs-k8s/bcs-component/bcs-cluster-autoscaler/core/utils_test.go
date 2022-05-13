@@ -501,7 +501,7 @@ func TestSanitizeLabels(t *testing.T) {
 	node, err := sanitizeTemplateNode(oldNode, "bzium", nil)
 	assert.NoError(t, err)
 	assert.NotEqual(t, node.Labels[apiv1.LabelHostname], "abc", nil)
-	assert.Equal(t, node.Labels["x"], "")
+	assert.Equal(t, node.Labels["x"], "y")
 	assert.NotEqual(t, node.Name, oldNode.Name)
 	assert.Equal(t, node.Labels[apiv1.LabelHostname], node.Name)
 }

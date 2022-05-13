@@ -219,6 +219,8 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for KubeConfig
 
+	// no validation rules for ImportCategory
+
 	return nil
 }
 
@@ -945,6 +947,10 @@ func (m *ClusterCredential) Validate() error {
 	// no validation rules for CreateTime
 
 	// no validation rules for UpdateTime
+
+	// no validation rules for ClientCert
+
+	// no validation rules for ClientKey
 
 	return nil
 }
@@ -3180,6 +3186,28 @@ func (m *Cloud) Validate() error {
 
 	// no validation rules for Enable
 
+	if v, ok := interface{}(m.GetNetworkInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudValidationError{
+				field:  "NetworkInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetConfInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudValidationError{
+				field:  "ConfInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for PlatformInfo
+
 	return nil
 }
 
@@ -3236,6 +3264,142 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudValidationError{}
+
+// Validate checks the field values on CloudConfigInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *CloudConfigInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CloudInternalEnable
+
+	// no validation rules for CloudDomain
+
+	// no validation rules for MachineDomain
+
+	return nil
+}
+
+// CloudConfigInfoValidationError is the validation error returned by
+// CloudConfigInfo.Validate if the designated constraints aren't met.
+type CloudConfigInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudConfigInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudConfigInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudConfigInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudConfigInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudConfigInfoValidationError) ErrorName() string { return "CloudConfigInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudConfigInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudConfigInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudConfigInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudConfigInfoValidationError{}
+
+// Validate checks the field values on CloudNetworkInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *CloudNetworkInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// CloudNetworkInfoValidationError is the validation error returned by
+// CloudNetworkInfo.Validate if the designated constraints aren't met.
+type CloudNetworkInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudNetworkInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudNetworkInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudNetworkInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudNetworkInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudNetworkInfoValidationError) ErrorName() string { return "CloudNetworkInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudNetworkInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudNetworkInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudNetworkInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudNetworkInfoValidationError{}
 
 // Validate checks the field values on NodeGroup with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -5089,6 +5253,149 @@ var _ interface {
 	ErrorName() string
 } = CreateClusterRespValidationError{}
 
+// Validate checks the field values on KubeConfigReq with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *KubeConfigReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetKubeConfig()) < 1 {
+		return KubeConfigReqValidationError{
+			field:  "KubeConfig",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	return nil
+}
+
+// KubeConfigReqValidationError is the validation error returned by
+// KubeConfigReq.Validate if the designated constraints aren't met.
+type KubeConfigReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e KubeConfigReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e KubeConfigReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e KubeConfigReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e KubeConfigReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e KubeConfigReqValidationError) ErrorName() string { return "KubeConfigReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e KubeConfigReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sKubeConfigReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = KubeConfigReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = KubeConfigReqValidationError{}
+
+// Validate checks the field values on KubeConfigResp with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *KubeConfigResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	return nil
+}
+
+// KubeConfigRespValidationError is the validation error returned by
+// KubeConfigResp.Validate if the designated constraints aren't met.
+type KubeConfigRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e KubeConfigRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e KubeConfigRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e KubeConfigRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e KubeConfigRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e KubeConfigRespValidationError) ErrorName() string { return "KubeConfigRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e KubeConfigRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sKubeConfigResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = KubeConfigRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = KubeConfigRespValidationError{}
+
 // Validate checks the field values on ImportCloudMode with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -5860,6 +6167,8 @@ func (m *UpdateClusterReq) Validate() error {
 			reason: "value length must be at most 1024 runes",
 		}
 	}
+
+	// no validation rules for ImportCategory
 
 	return nil
 }
@@ -7992,6 +8301,20 @@ func (m *UpdateClusterCredentialReq) Validate() error {
 		return UpdateClusterCredentialReqValidationError{
 			field:  "ClusterDomain",
 			reason: "value length must be at most 2048 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetClientCert()) > 4096 {
+		return UpdateClusterCredentialReqValidationError{
+			field:  "ClientCert",
+			reason: "value length must be at most 4096 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetClientKey()) > 4096 {
+		return UpdateClusterCredentialReqValidationError{
+			field:  "ClientKey",
+			reason: "value length must be at most 4096 runes",
 		}
 	}
 
@@ -11682,6 +12005,28 @@ func (m *CreateCloudRequest) Validate() error {
 
 	// no validation rules for Enable
 
+	if v, ok := interface{}(m.GetNetworkInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudRequestValidationError{
+				field:  "NetworkInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetConfInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudRequestValidationError{
+				field:  "ConfInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for PlatformInfo
+
 	return nil
 }
 
@@ -11939,6 +12284,28 @@ func (m *UpdateCloudRequest) Validate() error {
 	// no validation rules for EngineType
 
 	// no validation rules for Enable
+
+	if v, ok := interface{}(m.GetNetworkInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudRequestValidationError{
+				field:  "NetworkInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetConfInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudRequestValidationError{
+				field:  "ConfInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for PlatformInfo
 
 	return nil
 }

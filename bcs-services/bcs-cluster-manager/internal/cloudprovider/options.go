@@ -79,6 +79,19 @@ type CommonOption struct {
 	// region information for cloudprovider
 	// region is unnecessary in some api
 	Region string
+
+	// CommonConf for cloud confInfo
+	CommonConf CloudConf
+}
+
+// CloudConf for cloud other confInfo
+type CloudConf struct {
+	// CloudInternalEnable cloud internal conf
+	CloudInternalEnable bool
+	// CloudDomain for cloud domain
+	CloudDomain string
+	// MachineDomain for instance domain
+	MachineDomain string
 }
 
 // InitClusterConfigOption init cluster default cloud config

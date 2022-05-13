@@ -36,6 +36,7 @@
                                                 active: isSharedCluster,
                                                 disable: !firstShareCluster
                                             }]"
+                                        v-if="$INTERNAL"
                                         @click="handleGotoShareCluster"
                                     >{{$t('共享集群')}}<span class="beta">beta</span>
                                     </li>
@@ -68,6 +69,7 @@
                                 <ul class="bcs-navigation-admin">
                                     <li class="nav-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
                                     <li class="nav-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
+                                    <li class="nav-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
                                 </ul>
                             </template>
                         </bcs-popover>
@@ -91,7 +93,14 @@
                 <slot></slot>
             </template>
         </bcs-navigation>
-        <system-log v-model="showSystemLog"></system-log>
+        <system-log v-model="showSystemLog" @show-feature="handleShowFeatures"></system-log>
+        <bcs-dialog v-model="showFeatures"
+            class="version-feature-dialog"
+            :title="$t('产品功能特性')"
+            :show-footer="false"
+            width="480">
+            <BcsMd :code="featureMd"></BcsMd>
+        </bcs-dialog>
     </div>
 </template>
 <script>
@@ -100,12 +109,14 @@
     import useGoHome from '@/common/use-gohome'
     import { bus } from '@/common/bus'
     import systemLog from '@/components/system-log/index.vue'
-    // import { locale } from 'bk-magic-vue'
+    import BcsMd from '@/components/bcs-md/index.vue'
+    import featureMd from '../../static/features.md'
 
     export default {
         name: "Navigation",
         components: {
-            systemLog
+            systemLog,
+            BcsMd
         },
         data () {
             return {
@@ -122,7 +133,9 @@
                         name: '中文',
                         id: "zh-CN"
                     }
-                ]
+                ],
+                showFeatures: false,
+                featureMd
             }
         },
         computed: {
@@ -259,6 +272,9 @@
                 // this.activeLangId = item.id
                 // this.$i18n.locale = this.activeLangId
                 // locale.getCurLang().bk.lang = this.activeLangId
+            },
+            handleShowFeatures () {
+                this.showFeatures = true
             }
         }
     }
@@ -514,5 +530,8 @@
     height: 200px;
     visibility: initial;
     transition: all .5s;
+}
+/deep/ .bcs-md-preview {
+    padding: 0 24px 24px 24px;
 }
 </style>

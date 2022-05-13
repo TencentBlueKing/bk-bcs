@@ -359,8 +359,8 @@
                     if (value !== old) {
                         this.formdata.vpc_name = ''
                         this.vpcList = []
-                        await this.fetchVPC()
                         await this.fetchZone()
+                        await this.fetchVPC()
                     }
                 }
             },

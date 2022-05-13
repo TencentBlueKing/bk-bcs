@@ -225,6 +225,55 @@ func (cc *ClientConfig) CreatePassCCCluster(cluster *proto.Cluster) error {
 	return nil
 }
 
+// UpdatePassCCCluster update cluster info to pass-cc
+func (cc *ClientConfig) UpdatePassCCCluster(cluster *proto.Cluster) error {
+	if cc == nil {
+		return errServerNotInit
+	}
+	var (
+		_    = "UpdatePassCCCluster"
+		path = fmt.Sprintf("/projects/%s/clusters/%s/", cluster.ProjectID, cluster.ClusterID)
+	)
+
+	// get access_token
+	token, err := cc.getAccessToken(nil)
+	if err != nil {
+		blog.Errorf("UpdatePassCCCluster call getAccessToken failed: %v", err)
+		return err
+	}
+
+	// default field
+	clusterReq := cc.transCMClusterToCC(cluster)
+	var (
+		url  = cc.server + path
+		resp = &CommonResp{}
+	)
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Put(url).
+		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("Content-Type", "application/json").
+		Set("Connection", "close").
+		SetDebug(true).
+		Send(clusterReq).
+		EndStruct(resp)
+
+	if len(errs) > 0 {
+		blog.Errorf("call api UpdatePassCCCluster failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("call UpdatePassCCCluster API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return errMsg
+	}
+
+	blog.Infof("UpdatePassCCCluster[%s] successful", cluster.ClusterID)
+	return nil
+}
+
 func (cc *ClientConfig) getAccessToken(clientSSM *auth.ClientSSM) (string, error) {
 	if cc == nil {
 		return "", errServerNotInit

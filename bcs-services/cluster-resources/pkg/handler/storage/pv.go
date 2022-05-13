@@ -38,7 +38,7 @@ func (h *Handler) ListPV(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.PV).List(
-		ctx, "", metav1.ListOptions{LabelSelector: req.LabelSelector},
+		ctx, "", req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	return err
 }

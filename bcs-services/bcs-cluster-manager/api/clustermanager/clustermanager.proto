@@ -40,6 +40,18 @@ service ClusterManager {
       summary : "重试创建Cluster任务"
     };
   }
+
+  rpc CheckCloudKubeConfig(KubeConfigReq) returns (KubeConfigResp) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/cloud/kubeConfig"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "kubeConfig连接集群可用性检测"
+      summary : "kubeConfig可用性检测"
+    };
+  }
+
   rpc ImportCluster(ImportClusterReq) returns (ImportClusterResp) {
     option (google.api.http) = {
       post : "/clustermanager/v1/cluster/import"
@@ -881,6 +893,10 @@ message Cluster {
     title: "kubeConfig",
     description: "导入集群时若是kubeConfig导入则存储"
   }];
+  string importCategory = 39[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "importCategory",
+    description: "当clusterCategory参数为importer时, 主要用于区分该集群是kubeConfig/cloud导入,默认为空"
+  }];
 }
 
 message Node {
@@ -1110,6 +1126,8 @@ message ClusterCredential {
   string connectMode = 8;
   string createTime = 9;
   string updateTime = 10;
+  string clientCert = 11;
+  string clientKey = 12;
 }
 
 message Namespace {
@@ -1748,6 +1766,60 @@ message Cloud {
     title: "enable",
     description: "云模版是否返回给用户可见(值为true或false)"
   }];
+  CloudNetworkInfo networkInfo = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkInfo",
+    description: "该云下统一定义网络配置信息"
+  }];
+  CloudConfigInfo confInfo = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "confInfo",
+    description: "该云下统一云配置信息"
+  }];
+  map<string, string> platformInfo = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "platformInfo",
+    description: "平台不同云的配置信息"
+  }];
+}
+
+// CloudConfigInfo storage for cloud special conf info
+message CloudConfigInfo {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CloudConfigInfo"
+      description : "用于记录云公共配置信息"
+    }
+  };
+
+  bool cloudInternalEnable = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "cloudInternalEnable",
+      description: "cloud是否开启内部配置"
+    }];
+  string cloudDomain = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "cloudDomain",
+      description: "cloudDomain内部域名配置"
+    }];
+  string machineDomain = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "machineDomain",
+      description: "machineDomain内部域名配置"
+    }];
+}
+
+// CloudNetworkInfo storage for cloud network info
+message CloudNetworkInfo {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CloudNetworkInfo"
+      description : "用于记录公共网络配置信息"
+    }
+  };
+
+  repeated uint32 cidrStep = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "cidrStep",
+      description: "cidr自动扩容步长设置"
+    }];
 }
 
 // NodeGroup pool for kubernetes cluster-autoscaling
@@ -2717,6 +2789,42 @@ message CreateClusterResp {
   }];
 }
 
+message KubeConfigReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "KubeConfigReq"
+      description : "用户输入检测kubeConfig文件"
+      required : [
+        "kubeConfig"
+      ]
+    }
+  };
+  string kubeConfig = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kubeConfig",
+    description: "集群kubeConfig文件"
+  },(validate.rules).string = {min_len :1}];
+}
+
+message KubeConfigResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "KubeConfigResp"
+      description : "检测kubeConfig可用性结果返回"
+      required : [ "code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message", description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+}
+
 message ImportCloudMode {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -3140,6 +3248,10 @@ message UpdateClusterReq {
     },
     (validate.rules).string = {max_len : 1024}
   ];
+  string importCategory = 36[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "importCategory",
+    description: "当clusterCategory参数为importer时, 主要用于区分该集群是kubeConfig/cloud导入,默认为空"
+  }];
 }
 
 message UpdateClusterResp {
@@ -3849,6 +3961,20 @@ message UpdateClusterCredentialReq {
       description : "集群域名"
     },
     (validate.rules).string.max_len = 2048
+  ];
+  string clientCert = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clientCert",
+      description : "集群clientCert证书"
+    },
+    (validate.rules).string.max_len = 4096
+  ];
+  string clientKey = 9 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clientKey",
+      description : "集群clientKey证书"
+    },
+    (validate.rules).string.max_len = 4096
   ];
 }
 
@@ -5201,6 +5327,18 @@ message CreateCloudRequest {
     title: "enable",
     description: "云模版是否返回给用户可见"
   }];
+  CloudNetworkInfo networkInfo = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkInfo",
+    description: "该云下统一定义网络配置信息"
+  }];
+  CloudConfigInfo confInfo = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "confInfo",
+    description: "该云下统一云配置信息"
+  }];
+  map<string, string> platformInfo = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "platformInfo",
+    description: "平台不同云的配置信息"
+  }];
 }
 
 message CreateCloudResponse {
@@ -5290,6 +5428,18 @@ message UpdateCloudRequest {
   string enable = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "enable",
     description: "云模版是否返回给用户可见(值为true或false)"
+  }];
+  CloudNetworkInfo networkInfo = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkInfo",
+    description: "该云下统一定义网络配置信息"
+  }];
+  CloudConfigInfo confInfo = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "confInfo",
+    description: "该云下统一云配置信息"
+  }];
+  map<string, string> platformInfo = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "platformInfo",
+    description: "平台不同云的配置信息"
   }];
 }
 
