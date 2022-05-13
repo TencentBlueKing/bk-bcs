@@ -2890,6 +2890,30 @@
         ]
       }
     },
+    "/clustermanager/v1/sharedclusters": {
+      "get": {
+        "summary": "查询公共Cluster列表",
+        "description": "查询公共集群及公共集群所属权限",
+        "operationId": "ClusterManager_ListCommonCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCommonClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/task": {
       "get": {
         "summary": "查询Task列表",
@@ -6927,23 +6951,10 @@
           "description": "集群信息列表",
           "title": "data"
         },
-        "clusterPerm": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clustermanagerPermission"
-          }
-        },
         "clusterExtraInfo": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerExtraInfo"
-          }
-        },
-        "permissions": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "boolean",
-            "format": "boolean"
           }
         },
         "web_annotations": {
@@ -6954,6 +6965,48 @@
       },
       "description": "查询集群列表返回",
       "title": "ListClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "clustermanagerListCommonClusterResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCluster"
+          },
+          "description": "集群信息列表",
+          "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotations",
+          "description": "用户所属项目的集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询公共集群列表返回",
+      "title": "ListCommonClusterResp",
       "required": [
         "code",
         "message",
@@ -7727,18 +7780,6 @@
       },
       "description": "用于记录一些固定的系统信息，用于帮助OS层面信息展示",
       "title": "OSInfo"
-    },
-    "clustermanagerPermission": {
-      "type": "object",
-      "properties": {
-        "policy": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "boolean",
-            "format": "boolean"
-          }
-        }
-      }
     },
     "clustermanagerProject": {
       "type": "object",
@@ -9593,10 +9634,11 @@
         "perms": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/clustermanagerPermission"
+            "type": "object"
           }
         }
-      }
+      },
+      "title": "https://github.com/golang/protobuf/issues/1118\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
     },
     "protobufAny": {
       "type": "object",
