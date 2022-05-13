@@ -14,11 +14,13 @@ package core
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
 
+	//internal_context "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -31,7 +33,9 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/config"
 	"k8s.io/autoscaler/cluster-autoscaler/context"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/status"
+	"k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
+	//ca_errors "k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
@@ -136,15 +140,15 @@ func TestFindUnneededNodes(t *testing.T) {
 		t.Logf("UpdateNodes failed")
 	}
 
-	assert.Equal(t, 3, len(sd.unneededNodes))
+	assert.Equal(t, 2, len(sd.unneededNodes))
 	_, found := sd.unneededNodes["n2"]
 	assert.True(t, found)
-	_, found = sd.unneededNodes["n7"]
+	addTime, found := sd.unneededNodes["n7"]
 	assert.True(t, found)
-	addTime, found := sd.unneededNodes["n8"]
-	assert.True(t, found)
+	_, found = sd.unneededNodes["n8"]
+	assert.False(t, found)
 	assert.Contains(t, sd.podLocationHints, p2.Namespace+"/"+p2.Name)
-	assert.Equal(t, 6, len(sd.nodeUtilizationMap))
+	assert.Equal(t, 5, len(sd.nodeUtilizationMap))
 
 	sd.unremovableNodes = make(map[string]time.Time)
 	sd.unneededNodes["n1"] = time.Now()
@@ -2058,6 +2062,69 @@ func TestWaitForDelayDeletion(t *testing.T) {
 				err = waitForDelayDeletion(node, allNodeLister, test.timeout)
 			}
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func Test_sortNodesByDeletionCost(t *testing.T) {
+	node1 := simulator.NodeToBeRemoved{
+		Node: &apiv1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					NodeDeletionCost: "100",
+				},
+			},
+		},
+	}
+	node2 := simulator.NodeToBeRemoved{
+		Node: &apiv1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					NodeDeletionCost: "200",
+				},
+			},
+		},
+	}
+	node3 := simulator.NodeToBeRemoved{
+		Node: &apiv1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					"xx": "200",
+				},
+			},
+		},
+	}
+	node4 := simulator.NodeToBeRemoved{
+		Node: &apiv1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					NodeDeletionCost: "150.123",
+				},
+			},
+		},
+	}
+	type args struct {
+		nodes []simulator.NodeToBeRemoved
+	}
+	tests := []struct {
+		name string
+		args args
+		want []simulator.NodeToBeRemoved
+	}{
+		// TODO: Add test cases.
+		{
+			name: "sort nodes with cost",
+			args: args{
+				nodes: []simulator.NodeToBeRemoved{node1, node2, node3, node4},
+			},
+			want: []simulator.NodeToBeRemoved{node3, node1, node4, node2},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := sortNodesByDeletionCost(tt.args.nodes); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("sortNodesByDeletionCost() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
