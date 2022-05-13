@@ -324,8 +324,8 @@
                                         </bk-button>
                                         <span class="bcs-icon bcs-icon-close-circle" @click.stop="removeRule(index)" v-if="curEditedIngress.config.spec.rules.length > 1"></span>
                                     </div>
-                                    <bcs-popover ref="containerTooltip" :content="curEditedIngress.config.spec.rules.length >= 5 ? $t('最多添加5个') : $t('添加Rule')" placement="top">
-                                        <bk-button type="button" class="bk-button bk-default is-outline is-icon" :disabled="curEditedIngress.config.spec.rules.length >= 5 " @click.stop.prevent="addLocalRule">
+                                    <bcs-popover ref="containerTooltip" :content="$t('添加Rule')" placement="top">
+                                        <bk-button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalRule">
                                             <i class="bcs-icon bcs-icon-plus"></i>
                                         </bk-button>
                                     </bcs-popover>
@@ -1163,7 +1163,7 @@
                     }
                 })
                 // 设置当前rules
-                params.config.spec.rules = [JSON.parse(JSON.stringify(this.curRule))]
+                params.config.spec.rules = this.curEditedIngress.config.spec.rules.map(item => JSON.parse(JSON.stringify(item)))
                 return params
             },
 

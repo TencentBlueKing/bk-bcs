@@ -13,12 +13,14 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from typing import Dict, List
 
 from iam.collection import FancyDict
 from iam.resource.provider import ListResult, ResourceProvider
 from iam.resource.utils import Page
 
 from backend.components.base import ComponentAuth
+from backend.components.cluster_manager import get_shared_clusters
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.utils import get_clusters
 
@@ -39,12 +41,8 @@ class ClusterProvider(ResourceProvider):
         :return: ListResult 类型的实例列表
         """
         project_id = filter_obj.parent['id']
-        clusters = get_clusters(get_system_token(), project_id)
-        results = [
-            {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in clusters[page_obj.slice_from : page_obj.slice_to]
-        ]
-        return ListResult(results=results, count=len(clusters))
+        clusters = self._list_clusters_by_project(project_id)
+        return ListResult(results=clusters[page_obj.slice_from : page_obj.slice_to], count=len(clusters))
 
     def fetch_instance_info(self, filter_obj: FancyDict, **options) -> ListResult:
         """
@@ -73,13 +71,21 @@ class ClusterProvider(ResourceProvider):
 
     def search_instance(self, filter_obj: FancyDict, page_obj: Page, **options) -> ListResult:
         """支持模糊搜索集群名"""
-        project_id = filter_obj.parent['id']
-
+        clusters = self._list_clusters_by_project(project_id=filter_obj.parent['id'])
         # 针对搜索关键字过滤集群
-        clusters = [
-            {'id': cluster['cluster_id'], 'display_name': cluster['name']}
-            for cluster in get_clusters(get_system_token(), project_id)
-            if filter_obj.keyword in cluster['name']
-        ]
-
+        clusters = [cluster for cluster in clusters if filter_obj.keyword in cluster['display_name']]
         return ListResult(results=clusters[page_obj.slice_from : page_obj.slice_to], count=len(clusters))
+
+    def _list_clusters_by_project(self, project_id: str) -> List[Dict[str, str]]:
+        """根据项目 ID, 查询项目下的所有集群
+
+        :param project_id: 项目 ID
+        :return 集群信息列表. 单个元素结构 {'id': 集群 ID, 'display_name': 集群名}
+        """
+        cluster_names = {
+            cluster['cluster_id']: cluster['name'] for cluster in get_clusters(get_system_token(), project_id)
+        }
+        shared_cluster_names = {cluster['cluster_id']: cluster['name'] for cluster in get_shared_clusters()}
+        # merge 字典, 目的是去重集群(主要是公共集群)
+        cluster_names = {**cluster_names, **shared_cluster_names}
+        return [{'id': cluster_id, 'display_name': cluster_names[cluster_id]} for cluster_id in cluster_names]

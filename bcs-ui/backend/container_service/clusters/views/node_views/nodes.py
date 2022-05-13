@@ -104,6 +104,13 @@ class NodeViewSets(SystemViewSet):
 
         return Response()
 
+    def detail(self, request, project_id, cluster_id, name):
+        """节点详情"""
+        # 需要集群的查看权限
+        perm_ctx = ClusterPermCtx(username=request.user.username, project_id=project_id, cluster_id=cluster_id)
+        ClusterPermission().can_view(perm_ctx)
+        return Response(node.NodeDetailQuerier(name, request.ctx_cluster).detail())
+
 
 class MasterViewSet(SystemViewSet):
     def list(self, request, project_id, cluster_id):

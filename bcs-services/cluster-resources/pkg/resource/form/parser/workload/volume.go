@@ -27,28 +27,28 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 			if _, ok := v["configMap"]; ok {
 				volume.ConfigMap = append(volume.ConfigMap, model.CMVolume{
 					Name:        v["name"].(string),
-					DefaultMode: mapx.Get(v, "configMap.defaultMode", int64(0)).(int64),
-					CMName:      mapx.Get(v, "configMap.name", "").(string),
+					DefaultMode: mapx.GetInt64(v, "configMap.defaultMode"),
+					CMName:      mapx.GetStr(v, "configMap.name"),
 					Items:       parseVolumeItems(v, "configMap.items"),
 				})
 			} else if _, ok := v["secret"]; ok {
 				volume.Secret = append(volume.Secret, model.SecretVolume{
 					Name:        v["name"].(string),
-					DefaultMode: mapx.Get(v, "secret.defaultMode", int64(0)).(int64),
-					SecretName:  mapx.Get(v, "secret.secretName", "").(string),
+					DefaultMode: mapx.GetInt64(v, "secret.defaultMode"),
+					SecretName:  mapx.GetStr(v, "secret.secretName"),
 					Items:       parseVolumeItems(v, "secret.items"),
 				})
 			} else if _, ok := v["hostPath"]; ok {
 				volume.HostPath = append(volume.HostPath, model.HostPathVolume{
 					Name: v["name"].(string),
-					Path: mapx.Get(v, "hostPath.path", "").(string),
-					Type: mapx.Get(v, "hostPath.type", "").(string),
+					Path: mapx.GetStr(v, "hostPath.path"),
+					Type: mapx.GetStr(v, "hostPath.type"),
 				})
 			} else if _, ok := v["persistentVolumeClaim"]; ok {
 				volume.PVC = append(volume.PVC, model.PVCVolume{
 					Name:     v["name"].(string),
-					PVCName:  mapx.Get(v, "persistentVolumeClaim.claimName", "").(string),
-					ReadOnly: mapx.Get(v, "persistentVolumeClaim.readOnly", false).(bool),
+					PVCName:  mapx.GetStr(v, "persistentVolumeClaim.claimName"),
+					ReadOnly: mapx.GetBool(v, "persistentVolumeClaim.readOnly"),
 				})
 			} else if _, ok := v["emptyDir"]; ok {
 				volume.EmptyDir = append(volume.EmptyDir, model.EmptyDirVolume{
@@ -57,9 +57,9 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 			} else if _, ok := v["nfs"]; ok {
 				volume.NFS = append(volume.NFS, model.NFSVolume{
 					Name:     v["name"].(string),
-					Path:     mapx.Get(v, "nfs.path", "").(string),
-					Server:   mapx.Get(v, "nfs.server", "").(string),
-					ReadOnly: mapx.Get(v, "nfs.readOnly", false).(bool),
+					Path:     mapx.GetStr(v, "nfs.path"),
+					Server:   mapx.GetStr(v, "nfs.server"),
+					ReadOnly: mapx.GetBool(v, "nfs.readOnly"),
 				})
 			}
 		}
@@ -69,7 +69,7 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 // parseVolumeItems 解析 ConfigMap/SecretVolume Key-Path 信息
 func parseVolumeItems(vol map[string]interface{}, paths string) []model.KeyToPath {
 	items := []model.KeyToPath{}
-	for _, item := range mapx.Get(vol, paths, []interface{}{}).([]interface{}) {
+	for _, item := range mapx.GetList(vol, paths) {
 		it, _ := item.(map[string]interface{})
 		items = append(items, model.KeyToPath{Key: it["key"].(string), Path: it["path"].(string)})
 	}

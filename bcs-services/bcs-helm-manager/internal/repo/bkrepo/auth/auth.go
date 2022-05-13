@@ -43,6 +43,7 @@ func New(authType, uid, username, password string) *Auth {
 type Auth struct {
 	authType string
 	uid      string
+	upwd     string
 	username string
 	password string
 

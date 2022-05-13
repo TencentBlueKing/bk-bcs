@@ -46,7 +46,7 @@ func (h *Handler) ListCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	resp.Data, err = respUtil.BuildListAPIResp(
-		ctx, req.ClusterID, kind, apiVersion, req.Namespace, metav1.ListOptions{},
+		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.Format, metav1.ListOptions{},
 	)
 	return err
 }
@@ -90,7 +90,7 @@ func (h *Handler) CreateCObj(
 	if err != nil {
 		return err
 	}
-	namespace := mapx.Get(manifest, "metadata.namespace", "").(string)
+	namespace := mapx.GetStr(manifest, "metadata.namespace")
 
 	if err = validateNSParam(crdInfo, namespace); err != nil {
 		return err

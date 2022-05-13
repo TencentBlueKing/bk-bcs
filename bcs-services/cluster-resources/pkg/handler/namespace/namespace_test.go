@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -50,6 +51,7 @@ func TestNSInSharedCluster(t *testing.T) {
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = h.ListNS(ctx, &listReq, &listResp)

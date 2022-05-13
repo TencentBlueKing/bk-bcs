@@ -70,6 +70,7 @@ func TestCObj(t *testing.T) {
 		ClusterID: envs.TestClusterID,
 		CRDName:   handler.CRDName4Test,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = h.ListCObj(ctx, &listReq, &listResp)
@@ -135,6 +136,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		CRDName:   handler.CRDName4Test,
 		Namespace: envs.TestSharedClusterNS,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = hdlr.ListCObj(ctx, &listReq, &listResp)

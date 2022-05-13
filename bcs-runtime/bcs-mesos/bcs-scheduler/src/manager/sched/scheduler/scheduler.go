@@ -930,7 +930,7 @@ func (s *Scheduler) syncAgentsettingPods() error {
 		}
 
 		setting, err := s.store.FetchAgentSetting(nodeIP)
-		if err != nil {
+		if err != nil && !errors.Is(err, store.ErrNoFound) {
 			blog.Errorf("FetchAgentSetting %s failed: %s", nodeIP, err.Error())
 			return err
 		}

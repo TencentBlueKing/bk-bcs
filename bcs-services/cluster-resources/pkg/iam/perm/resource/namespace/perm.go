@@ -15,8 +15,10 @@
 package namespace
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // Perm ...
@@ -69,12 +71,12 @@ func (p *Perm) CanDelete(ctx perm.Ctx) (bool, error) {
 
 // CanUse ...
 func (p *Perm) CanUse(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
 // CanManage ...
 func (p *Perm) CanManage(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
 // ScopedPerm ...
@@ -144,5 +146,5 @@ func (p *ScopedPerm) CanUse(ctx perm.Ctx) (bool, error) {
 
 // CanManage ...
 func (p *ScopedPerm) CanManage(_ perm.Ctx) (bool, error) {
-	panic("not implement")
+	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }

@@ -57,6 +57,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CheckCloudKubeConfig",
+			Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ImportCluster",
 			Path:    []string{"/clustermanager/v1/cluster/import"},
 			Method:  []string{"POST"},
@@ -503,6 +510,7 @@ type ClusterManagerService interface {
 	//* cluster management
 	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...client.CallOption) (*CreateClusterResp, error)
 	RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...client.CallOption) (*RetryCreateClusterResp, error)
+	CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...client.CallOption) (*KubeConfigResp, error)
 	ImportCluster(ctx context.Context, in *ImportClusterReq, opts ...client.CallOption) (*ImportClusterResp, error)
 	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...client.CallOption) (*UpdateClusterResp, error)
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
@@ -607,6 +615,16 @@ func (c *clusterManagerService) CreateCluster(ctx context.Context, in *CreateClu
 func (c *clusterManagerService) RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...client.CallOption) (*RetryCreateClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.RetryCreateClusterTask", in)
 	out := new(RetryCreateClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...client.CallOption) (*KubeConfigResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CheckCloudKubeConfig", in)
+	out := new(KubeConfigResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1280,6 +1298,7 @@ type ClusterManagerHandler interface {
 	//* cluster management
 	CreateCluster(context.Context, *CreateClusterReq, *CreateClusterResp) error
 	RetryCreateClusterTask(context.Context, *RetryCreateClusterReq, *RetryCreateClusterResp) error
+	CheckCloudKubeConfig(context.Context, *KubeConfigReq, *KubeConfigResp) error
 	ImportCluster(context.Context, *ImportClusterReq, *ImportClusterResp) error
 	UpdateCluster(context.Context, *UpdateClusterReq, *UpdateClusterResp) error
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
@@ -1363,6 +1382,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	type clusterManager interface {
 		CreateCluster(ctx context.Context, in *CreateClusterReq, out *CreateClusterResp) error
 		RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, out *RetryCreateClusterResp) error
+		CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, out *KubeConfigResp) error
 		ImportCluster(ctx context.Context, in *ImportClusterReq, out *ImportClusterResp) error
 		UpdateCluster(ctx context.Context, in *UpdateClusterReq, out *UpdateClusterResp) error
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
@@ -1445,6 +1465,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.RetryCreateClusterTask",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/retry"},
 		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CheckCloudKubeConfig",
+		Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
+		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
@@ -1899,6 +1926,10 @@ func (h *clusterManagerHandler) CreateCluster(ctx context.Context, in *CreateClu
 
 func (h *clusterManagerHandler) RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, out *RetryCreateClusterResp) error {
 	return h.ClusterManagerHandler.RetryCreateClusterTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, out *KubeConfigResp) error {
+	return h.ClusterManagerHandler.CheckCloudKubeConfig(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ImportCluster(ctx context.Context, in *ImportClusterReq, out *ImportClusterResp) error {

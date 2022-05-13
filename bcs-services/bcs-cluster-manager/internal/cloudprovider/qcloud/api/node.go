@@ -49,6 +49,9 @@ func GetCVMClient(opt *cloudprovider.CommonOption) (*cvm.Client, error) {
 	credential := common.NewCredential(opt.Key, opt.Secret)
 
 	cpf := profile.NewClientProfile()
+	if opt.CommonConf.CloudInternalEnable {
+		cpf.HttpProfile.Endpoint = opt.CommonConf.MachineDomain
+	}
 
 	return cvm.NewClient(credential, opt.Region, cpf)
 }
