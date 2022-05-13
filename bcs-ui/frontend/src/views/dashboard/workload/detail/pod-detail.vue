@@ -326,9 +326,10 @@
                     $podId: name.value,
                     $namespaceId: namespace.value
                 })
-                if ($INTERNAL && container.value.length) {
+                const containerIDs = container.value.map(item => item.containerID).filter(id => !!id)
+                if ($INTERNAL && containerIDs.length) {
                     logLinks.value = await $store.dispatch('dashboard/logLinks', {
-                        container_ids: container.value.map(item => item.containerID).join(',')
+                        container_ids: containerIDs.join(',')
                     })
                 }
                 containerLoading.value = false
