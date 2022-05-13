@@ -119,14 +119,10 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
 			preInplaceHook, pod, podTemplate, preInplaceLabels, podNameLabelKey)
 		if err != nil {
-			if objectKind == "GameStatefulSet" {
-				ps.CollectGSSHRCreateDurations(namespace, name, "failure", "preinplace", time.Since(startTime))
-			}
+			ps.CollectHRCreateDurations(namespace, name, "failure", "preinplace", objectKind, time.Since(startTime))
 			return false, err
 		}
-		if objectKind == "GameStatefulSet" {
-			ps.CollectGSSHRCreateDurations(namespace, name, "success", "preinplace", time.Since(startTime))
-		}
+		ps.CollectHRCreateDurations(namespace, name, "success", "preinplace", objectKind, time.Since(startTime))
 
 		updatePreInplaceHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PreInplace HookRun %s for pod %s of %s %s/%s",

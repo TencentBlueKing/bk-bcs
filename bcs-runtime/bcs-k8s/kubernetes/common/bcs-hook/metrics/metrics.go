@@ -22,19 +22,19 @@ import (
 type PromServer struct{}
 
 var (
-	gssHRCreateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	hrCreateDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "bkbcs",
-		Subsystem: "gamestatefulset",
+		Subsystem: "gameworkload",
 		Name:      "hookrun_create_duration_seconds",
 		Help:      "create duration(seconds) of hookrun",
 		Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-	}, []string{"namespace", "name", "status", "action"})
+	}, []string{"namespace", "name", "status", "action", "objectKind"})
 )
 
 func init() {
-	prometheus.MustRegister(gssHRCreateDuration)
+	prometheus.MustRegister(hrCreateDuration)
 }
 
-func (p *PromServer) CollectGSSHRCreateDurations(namespace, name, status, action string, d time.Duration) {
-	gssHRCreateDuration.WithLabelValues(namespace, name, status, action).Observe(d.Seconds())
+func (p *PromServer) CollectHRCreateDurations(namespace, name, status, action, objectKind string, d time.Duration) {
+	hrCreateDuration.WithLabelValues(namespace, name, status, action, objectKind).Observe(d.Seconds())
 }

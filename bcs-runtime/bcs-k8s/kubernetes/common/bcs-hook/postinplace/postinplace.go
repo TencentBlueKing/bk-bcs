@@ -115,14 +115,10 @@ func (p *PostInplaceControl) CreatePostInplaceHook(obj PostInplaceHookObjectInte
 		postInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
 			postInplaceHook, pod, postInplaceLabels, podNameLabelKey)
 		if err != nil {
-			if objectKind == "GameStatefulSet" {
-				ps.CollectGSSHRCreateDurations(namespace, name, "failure", "postinplace", time.Since(startTime))
-			}
+			ps.CollectHRCreateDurations(namespace, name, "failure", "postinplace", objectKind, time.Since(startTime))
 			return false, err
 		}
-		if objectKind == "GameStatefulSet" {
-			ps.CollectGSSHRCreateDurations(namespace, name, "success", "postinplace", time.Since(startTime))
-		}
+		ps.CollectHRCreateDurations(namespace, name, "success", "postinplace", objectKind, time.Since(startTime))
 
 		updatePostInplaceHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PostInplace HookRun %s for pod %s of %s %s/%s",
