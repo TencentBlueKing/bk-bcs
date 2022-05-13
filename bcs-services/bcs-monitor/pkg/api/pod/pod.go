@@ -20,19 +20,20 @@ import (
 )
 
 // 获取 Pod 容器列表
-func GetContainerList(c *rest.Context) (interface{}, error) {
+func GetPodContainers(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
-	containers, err := k8sclient.GetContainerNames(c.Request.Context(), clusterId, namespace, pod)
+	containers, err := k8sclient.GetPodContainers(c.Request.Context(), clusterId, namespace, pod)
 	if err != nil {
 		return nil, err
 	}
+
 	return containers, nil
 }
 
 // 获取 容器日志
-func GetContainerLog(c *rest.Context) (interface{}, error) {
+func GetPodLog(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
@@ -41,12 +42,12 @@ func GetContainerLog(c *rest.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	logs, err := k8sclient.GetContainerLog(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	logs, err := k8sclient.GetPodLog(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	return logs, err
 }
 
 // 下载日志
-func DownloadContainerLog(c *rest.Context) {
+func DownloadPodLog(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
@@ -56,7 +57,7 @@ func DownloadContainerLog(c *rest.Context) {
 		return
 	}
 
-	logs, err := k8sclient.GetContainerLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	logs, err := k8sclient.GetPodLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	if err != nil {
 		rest.AbortWithBadRequestError(c, err)
 		return

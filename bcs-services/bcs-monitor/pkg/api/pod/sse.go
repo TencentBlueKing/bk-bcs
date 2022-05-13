@@ -18,8 +18,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-// Server Sent Events Handler 连接处理函数
-func SSEHandler(c *rest.Context) {
+// PodLogStream Server Sent Events Handler 连接处理函数
+func PodLogStream(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
@@ -30,7 +30,7 @@ func SSEHandler(c *rest.Context) {
 		return
 	}
 
-	logChan, err := k8sclient.GetContainerLogStream(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	logChan, err := k8sclient.GetPodLogStream(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	if err != nil {
 		rest.AbortWithBadRequestError(c, err)
 		return

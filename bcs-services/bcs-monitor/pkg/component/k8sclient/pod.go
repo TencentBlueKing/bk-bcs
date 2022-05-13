@@ -14,9 +14,9 @@ package k8sclient
 import (
 	"bufio"
 	"context"
-	"errors"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -33,17 +33,22 @@ type Log struct {
 	Time string `json:"time"`
 }
 
+// Container 格式化的容器, 精简后的 v1.Container
+type Container struct {
+	Name string `json:"name"`
+}
+
 // parseLog 解析Log
 func parseLog(rawLog string) (*Log, error) {
 	item := strings.SplitN(rawLog, " ", 2)
 	if len(item) != 2 {
-		return nil, errors.New("not valid log")
+		return nil, errors.Errorf("invalid log, %s", rawLog)
 	}
 	return &Log{Log: item[0], Time: item[1]}, nil
 }
 
-// GetContainerNames 获取 Pod 容器名称列表
-func GetContainerNames(ctx context.Context, clusterId, namespace, podname string) ([]string, error) {
+// GetPodContainers 获取 Pod 容器名称列表
+func GetPodContainers(ctx context.Context, clusterId, namespace, podname string) ([]*Container, error) {
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
@@ -53,35 +58,15 @@ func GetContainerNames(ctx context.Context, clusterId, namespace, podname string
 		return nil, err
 	}
 
-	containers := make([]string, 0, len(pod.Status.ContainerStatuses))
-	for _, container := range pod.Status.ContainerStatuses {
-		containers = append(containers, container.Name)
+	containers := make([]*Container, 0, len(pod.Spec.Containers))
+	for _, container := range pod.Spec.Containers {
+		containers = append(containers, &Container{Name: container.Name})
 	}
 	return containers, nil
 }
 
-// GetContainerNames 获取 Pod 容器名称列表
-func GetContainerLog(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]*Log, error) {
-	result, err := GetContainerLogByte(ctx, clusterId, namespace, podname, opt)
-	if err != nil {
-		return nil, err
-	}
-
-	logs := strings.Split(string(result), "\n")
-	logResult := make([]*Log, 0, len(logs))
-	for _, logStr := range logs {
-		log, err := parseLog(logStr)
-		if err != nil {
-			continue
-		}
-		logResult = append(logResult, log)
-	}
-
-	return logResult, nil
-}
-
-// GetContainerNames 获取 Pod 容器名称列表
-func GetContainerLogByte(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]byte, error) {
+// GetPodLogByte 获取日志
+func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]byte, error) {
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
@@ -103,8 +88,28 @@ func GetContainerLogByte(ctx context.Context, clusterId, namespace, podname stri
 	return result, nil
 }
 
-// GetContainerLogStream 获取日志流
-func GetContainerLogStream(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) (<-chan *Log, error) {
+// GetPodLog 获取格式的日志列表
+func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]*Log, error) {
+	result, err := GetPodLogByte(ctx, clusterId, namespace, podname, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	logs := strings.Split(string(result), "\n")
+	logResult := make([]*Log, 0, len(logs))
+	for _, logStr := range logs {
+		log, err := parseLog(logStr)
+		if err != nil {
+			continue
+		}
+		logResult = append(logResult, log)
+	}
+
+	return logResult, nil
+}
+
+// GetPodLogStream 获取日志流
+func GetPodLogStream(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) (<-chan *Log, error) {
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
