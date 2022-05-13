@@ -277,15 +277,15 @@ func (m *Metrics) CollectPodCreateDurations(gdName, status string, d time.Durati
 // 3.the min update duration(seconds) of pods
 func (m *Metrics) CollectPodUpdateDurations(gdName, status, updateType, action, grace string, d time.Duration) {
 	duration := d.Seconds()
-	m.podUpdateDuration.WithLabelValues(gdName, status, updateType, action, grace).Observe(duration)
+	m.podUpdateDuration.WithLabelValues(gdName, status, updateType, grace, action).Observe(duration)
 
 	if duration > m.podUpdateDurationMaxVal {
 		m.podUpdateDurationMaxVal = duration
-		m.podUpdateDurationMax.WithLabelValues(gdName, status, updateType, action, grace).Set(duration)
+		m.podUpdateDurationMax.WithLabelValues(gdName, status, updateType, grace, action).Set(duration)
 	}
 	if duration < m.podUpdateDurationMinVal {
 		m.podUpdateDurationMinVal = duration
-		m.podUpdateDurationMin.WithLabelValues(gdName, status, updateType, action, grace).Set(duration)
+		m.podUpdateDurationMin.WithLabelValues(gdName, status, updateType, grace, action).Set(duration)
 	}
 }
 
@@ -295,14 +295,14 @@ func (m *Metrics) CollectPodUpdateDurations(gdName, status, updateType, action, 
 // 3.the min delete duration(seconds) of pods
 func (m *Metrics) CollectPodDeleteDurations(gdName, status string, action, grace string, d time.Duration) {
 	duration := d.Seconds()
-	m.podDeleteDuration.WithLabelValues(gdName, status, action, grace).Observe(duration)
+	m.podDeleteDuration.WithLabelValues(gdName, status, grace, action).Observe(duration)
 	if duration > m.podDeleteDurationMaxVal {
 		m.podDeleteDurationMaxVal = duration
-		m.podDeleteDurationMax.WithLabelValues(gdName, status, action, grace).Set(duration)
+		m.podDeleteDurationMax.WithLabelValues(gdName, status, grace, action).Set(duration)
 	}
 	if duration < m.podDeleteDurationMinVal {
 		m.podDeleteDurationMinVal = duration
-		m.podDeleteDurationMin.WithLabelValues(gdName, status, action, grace).Set(duration)
+		m.podDeleteDurationMin.WithLabelValues(gdName, status, grace, action).Set(duration)
 	}
 }
 
