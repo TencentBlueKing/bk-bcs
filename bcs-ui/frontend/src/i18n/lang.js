@@ -2201,8 +2201,8 @@ export default {
     "{num}天": [
         "{num} Day"
     ],
-    "当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}": [
-        "The current cluster has added nodes (including MASTER) {nodes}, and the number of nodes can also be added {remainNodes}"
+    "当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点": [
+        "The number of nodes (including Master) {nodes} has been added to the current cluster, and the number of nodes {realRemainNodesCount} can be added. When the container network resources are overused, the container network will be automatically expanded. After the expansion, a maximum of {maxRemainNodesCount} nodes can be added."
     ],
     "更新版本": [
         "updated version"

@@ -9,6 +9,7 @@ RUN mkdir -p /data/bcs/bcs-hook-operator/
 ADD bcs-hook-operator /data/bcs/bcs-hook-operator/
 ADD container-start.sh /data/bcs/bcs-hook-operator/
 
+RUN chmod +x /data/bcs/bcs-hook-operator/bcs-hook-operator
 RUN chmod +x /data/bcs/bcs-hook-operator/container-start.sh
 
 WORKDIR /data/bcs/bcs-hook-operator/
