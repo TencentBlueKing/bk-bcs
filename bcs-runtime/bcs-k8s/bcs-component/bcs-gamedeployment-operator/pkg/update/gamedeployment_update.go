@@ -254,8 +254,9 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			if res.UpdateErr == nil {
 				c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace",
 					"successfully update pod %s in-place", pod.Name)
-				c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "success",
-					string(gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType), time.Since(startTime))
+				c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus,
+					gdmetrics.InplaceUpdateStrategy, "incorrectInplaceUpdateSettings", gdmetrics.IsGrace,
+					time.Since(startTime))
 				c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 
 				// create post inplace hook
@@ -284,8 +285,9 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace",
 				"failed to update pod %s in-place: %v", pod.Name, res.UpdateErr)
-			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "failure",
-				string(gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType), time.Since(startTime))
+			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
+				gdmetrics.InplaceUpdateStrategy, "incorrectInplaceUpdateSettings", gdmetrics.IsGrace,
+				time.Since(startTime))
 			return res.DelayDuration, res.UpdateErr
 
 		}
@@ -320,13 +322,15 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			c.scaleExp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodReCreate",
 				"failed to delete pod %s for update: %v", pod.Name, err)
-			c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
+			c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
+				gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
 			return 0, err
 		}
 
 		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodReCreate",
 			"successfully delete pod %s for update", pod.Name)
-		c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
+		c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus, gdmetrics.DeletePodAction,
+			gdmetrics.IsGrace, time.Since(startTime))
 		return 0, nil
 
 	case gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType:
@@ -335,14 +339,14 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 		if err != nil {
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodHotPatch",
 				"failed to update pod %s hot-patch: %v", pod.Name, err)
-			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "failure",
-				string(gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType), time.Since(startTime))
+			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
+				gdmetrics.HotPatchUpdateStrategy, gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
 			return 0, err
 		}
 		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodHotPatch",
 			"successfully update pod %s hot-patch", pod.Name)
-		c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "success",
-			string(gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType), time.Since(startTime))
+		c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus,
+			gdmetrics.HotPatchUpdateStrategy, gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
 		c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 		return 0, nil
 	}
