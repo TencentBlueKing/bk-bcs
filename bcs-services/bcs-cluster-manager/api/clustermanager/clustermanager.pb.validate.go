@@ -7376,6 +7376,171 @@ var _ interface {
 	ErrorName() string
 } = GetNodeResponseValidationError{}
 
+// Validate checks the field values on ListCommonClusterReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCommonClusterReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// ListCommonClusterReqValidationError is the validation error returned by
+// ListCommonClusterReq.Validate if the designated constraints aren't met.
+type ListCommonClusterReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCommonClusterReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCommonClusterReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCommonClusterReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCommonClusterReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCommonClusterReqValidationError) ErrorName() string {
+	return "ListCommonClusterReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCommonClusterReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCommonClusterReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCommonClusterReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCommonClusterReqValidationError{}
+
+// Validate checks the field values on ListCommonClusterResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCommonClusterResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCommonClusterRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListCommonClusterRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ListCommonClusterRespValidationError is the validation error returned by
+// ListCommonClusterResp.Validate if the designated constraints aren't met.
+type ListCommonClusterRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCommonClusterRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCommonClusterRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCommonClusterRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCommonClusterRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCommonClusterRespValidationError) ErrorName() string {
+	return "ListCommonClusterRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCommonClusterRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCommonClusterResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCommonClusterRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCommonClusterRespValidationError{}
+
 // Validate checks the field values on ListClusterReq with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -7568,23 +7733,6 @@ func (m *ListClusterResp) Validate() error {
 
 	}
 
-	for key, val := range m.GetClusterPerm() {
-		_ = val
-
-		// no validation rules for ClusterPerm[key]
-
-		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ListClusterRespValidationError{
-					field:  fmt.Sprintf("ClusterPerm[%v]", key),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
 	for key, val := range m.GetClusterExtraInfo() {
 		_ = val
 
@@ -7601,8 +7749,6 @@ func (m *ListClusterResp) Validate() error {
 		}
 
 	}
-
-	// no validation rules for Permissions
 
 	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
@@ -7820,72 +7966,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = WebAnnotationsValidationError{}
-
-// Validate checks the field values on Permission with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
-func (m *Permission) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Policy
-
-	return nil
-}
-
-// PermissionValidationError is the validation error returned by
-// Permission.Validate if the designated constraints aren't met.
-type PermissionValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e PermissionValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e PermissionValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e PermissionValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e PermissionValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e PermissionValidationError) ErrorName() string { return "PermissionValidationError" }
-
-// Error satisfies the builtin error interface
-func (e PermissionValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sPermission.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = PermissionValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = PermissionValidationError{}
 
 // Validate checks the field values on ListNodesInClusterRequest with the rules
 // defined in the proto definition for this message. If any rules are

@@ -144,6 +144,19 @@ type AlarmConfig struct {
 	Debug      bool   `json:"debug"`
 }
 
+// IAMConfig for perm interface
+type IAMConfig struct {
+	SystemID      string `json:"systemID"`
+	AppCode       string `json:"appCode"`
+	AppSecret     string `json:"appSecret"`
+	External      bool   `json:"external"`
+	GatewayServer string `json:"gateWayServer"`
+	IAMServer     string `json:"iamServer"`
+	BkiIAMServer  string `json:"bkiIamServer"`
+	Metric        bool   `json:"metric"`
+	Debug         bool   `json:"debug"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd              EtcdOption            `json:"etcd"`
@@ -160,6 +173,7 @@ type ClusterManagerOptions struct {
 	Passcc            PassConfig            `json:"passcc"`
 	UserManager       UserConfig            `json:"user"`
 	Alarm             AlarmConfig           `json:"alarm"`
+	IAM               IAMConfig             `json:"iam_config"`
 	Debug             bool                  `json:"debug"`
 	ServerConfig
 	ClientConfig

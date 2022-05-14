@@ -258,9 +258,10 @@ type UpdateGroupDesiredSizeResponse struct {
 
 // TimeRange 定时规则定义
 type TimeRange struct {
-	Schedule             string   `protobuf:"bytes,1,opt,name=schedule,proto3" json:"schedule,omitempty"`
-	Zone                 string   `protobuf:"bytes,2,opt,name=zone,proto3" json:"zone,omitempty"`
-	DesiredNum           uint32   `protobuf:"varint,3,opt,name=desiredNum,proto3" json:"desiredNum,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Schedule             string   `protobuf:"bytes,2,opt,name=schedule,proto3" json:"schedule,omitempty"`
+	Zone                 string   `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone,omitempty"`
+	DesiredNum           uint32   `protobuf:"varint,4,opt,name=desiredNum,proto3" json:"desiredNum,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`
