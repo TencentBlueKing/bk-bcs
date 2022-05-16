@@ -566,7 +566,8 @@
                 updateLoading.value = false
             }
             const handleCancel = () => { // 取消
-                $router.push({ name: $store.getters.curNavName })
+                $router.back()
+                // $router.push({ name: $store.getters.curNavName })
             }
             // 切换到表单模式
             const handleChangeMode = () => {

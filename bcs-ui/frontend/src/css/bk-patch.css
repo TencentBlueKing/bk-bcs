@@ -508,6 +508,7 @@
 }
 
 .bk-dropdown-menu {
+    height: 32px !important;
     .bk-dropdown-list {
         overflow: auto;
 

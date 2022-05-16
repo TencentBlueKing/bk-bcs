@@ -178,7 +178,8 @@
                 return data?.selectItems || []
             },
             handleCancel () { // 取消
-                this.$router.push({ name: this.$store.getters.curNavName })
+                this.$router.back()
+                // this.$router.push({ name: this.$store.getters.curNavName })
             },
             // 切换Yaml模式
             async handleSwitchMode () {

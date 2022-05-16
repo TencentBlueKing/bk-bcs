@@ -84,19 +84,36 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
     // 更新资源
     const handleUpdateResource = () => {
         const kind = detail.value?.manifest?.kind
+        const editMode = detail.value?.manifestExt?.editMode
         const { namespace, category, name, type } = options
-        $router.push({
-            name: 'dashboardResourceUpdate',
-            params: {
-                namespace,
-                name
-            },
-            query: {
-                type,
-                category,
-                kind
-            }
-        })
+        if (editMode === 'form') {
+            $router.push({
+                name: 'dashboardFormResourceUpdate',
+                params: {
+                    namespace,
+                    name
+                },
+                query: {
+                    type,
+                    category,
+                    kind,
+                    formUpdate: webAnnotations.value?.featureFlag?.FORM_UPDATE
+                }
+            })
+        } else {
+            $router.push({
+                name: 'dashboardResourceUpdate',
+                params: {
+                    namespace,
+                    name
+                },
+                query: {
+                    type,
+                    category,
+                    kind
+                }
+            })
+        }
     }
 
     // 删除资源

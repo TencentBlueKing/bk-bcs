@@ -239,6 +239,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            height: 32px;
             .icon-angle-down {
                 font-size: 20px;
             }
