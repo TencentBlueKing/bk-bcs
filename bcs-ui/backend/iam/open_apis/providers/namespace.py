@@ -120,8 +120,8 @@ class NamespaceProvider(ResourceProvider):
             try:
                 cluster = paas_cc.get_cluster_by_id(cluster_id=cluster_id)
             except CompParseBkCommonResponseError as e:
-                # 记录集群ID不存在的异常日志
                 logger.error('query cluster error: %s', e)
+                return []
             else:
                 data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
                 return data['results'] or []
