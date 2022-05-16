@@ -36,23 +36,10 @@ var (
 	timeout           = 10
 )
 
-const (
-	Create = "create"
-	Update = "update"
-)
-
 type projectResp struct {
 	Code      int    `json:"code"`
 	Message   string `json:"message"`
 	RequestID string `json:"request_id"`
-}
-
-// SyncProject 同步项目到 BCS CC
-func SyncProject(p *pm.Project, op string) error {
-	if op == Create {
-		return CreateProject(p)
-	}
-	return UpdateProject(p)
 }
 
 // CreateProject request bcs cc api, create a project record

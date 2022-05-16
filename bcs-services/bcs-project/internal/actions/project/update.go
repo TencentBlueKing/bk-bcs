@@ -65,7 +65,7 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	}
 
 	// 更新 bcs cc 中的数据
-	go bcscc.SyncProject(p, bcscc.Update)
+	go bcscc.UpdateProject(p)
 
 	return p, nil
 }
@@ -73,7 +73,7 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 func (ua *UpdateAction) validate() error {
 	// 当业务ID不为空时，校验当前用户是否为要绑定业务的业务运维
 	if ua.req.BusinessID != "" {
-		if err := cmdb.CheckMaintainer(
+		if _, err := cmdb.IsMaintainer(
 			auth.GetUserFromCtx(ua.ctx), ua.req.BusinessID,
 		); err != nil {
 			return err

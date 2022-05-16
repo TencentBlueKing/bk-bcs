@@ -38,6 +38,7 @@ func TestCheckMaintainer(t *testing.T) {
 	// 需要加载配置，然后域名调整为mock的url
 	svcConfig.LoadConfig("../../../" + config.DefaultConfigPath)
 	svcConfig.GlobalConf.CMDB.Host = ts.URL
-	err := CheckMaintainer(username, bizID)
+	isMaintainer, err := IsMaintainer(username, bizID)
 	assert.Nil(t, err)
+	assert.True(t, isMaintainer)
 }

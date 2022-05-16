@@ -41,21 +41,21 @@ type cmdbResp struct {
 	Data      map[string]interface{} `json:"data"`
 }
 
-// CheckMaintainer 校验用户是否为指定业务的运维
-func CheckMaintainer(username string, bizID string) error {
+// IsMaintainer 校验用户是否为指定业务的运维
+func IsMaintainer(username string, bizID string) (bool, error) {
 	resp, err := SearchBizByUserAndID(username, bizID)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if resp.Code != errorx.Success {
-		return errorx.NewRequestCMDBErr(resp.Message)
+		return false, errorx.NewRequestCMDBErr(resp.Message)
 	}
 	// 判断是否存在当前用户为业务运维角色的业务
 	// NOTE: count 为float64类型
 	if resp.Data["count"].(float64) > 0 {
-		return nil
+		return true, nil
 	}
-	return errorx.NewNoMaintainerRoleErr()
+	return false, errorx.NewNoMaintainerRoleErr()
 }
 
 // SearchBizByUserAndID 通过用户和业务ID，查询业务

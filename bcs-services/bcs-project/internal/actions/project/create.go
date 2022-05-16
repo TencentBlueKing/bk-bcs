@@ -65,7 +65,7 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 		return nil, errorx.NewDBErr(err)
 	}
 	// 向 bcs cc 写入数据
-	go bcscc.SyncProject(p, bcscc.Create)
+	go bcscc.CreateProject(p)
 	// 返回项目信息
 	return p, nil
 }
