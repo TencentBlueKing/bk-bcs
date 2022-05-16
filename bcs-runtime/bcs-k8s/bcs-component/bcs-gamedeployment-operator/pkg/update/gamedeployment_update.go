@@ -255,8 +255,7 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 				c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace",
 					"successfully update pod %s in-place", pod.Name)
 				c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus,
-					gdmetrics.InplaceUpdateStrategy, "incorrectInplaceUpdateSettings", gdmetrics.IsGrace,
-					time.Since(startTime))
+					gdmetrics.InplaceUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 				c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 
 				// create post inplace hook
@@ -286,8 +285,7 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace",
 				"failed to update pod %s in-place: %v", pod.Name, res.UpdateErr)
 			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
-				gdmetrics.InplaceUpdateStrategy, "incorrectInplaceUpdateSettings", gdmetrics.IsGrace,
-				time.Since(startTime))
+				gdmetrics.InplaceUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 			return res.DelayDuration, res.UpdateErr
 
 		}
@@ -340,13 +338,13 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodHotPatch",
 				"failed to update pod %s hot-patch: %v", pod.Name, err)
 			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
-				gdmetrics.HotPatchUpdateStrategy, gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
+				gdmetrics.HotPatchUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 			return 0, err
 		}
 		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodHotPatch",
 			"successfully update pod %s hot-patch", pod.Name)
 		c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus,
-			gdmetrics.HotPatchUpdateStrategy, gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
+			gdmetrics.HotPatchUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 		c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 		return 0, nil
 	}

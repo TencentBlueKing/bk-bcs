@@ -132,7 +132,7 @@ func NewMetrics() *Metrics {
 			Name:      "pod_update_duration_seconds",
 			Help:      "update duration(seconds) of pod",
 			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-		}, []string{"gd", "status", "updateType", "grace", "action"})
+		}, []string{"gd", "status", "grace", "action"})
 		prometheus.MustRegister(m.podUpdateDuration)
 
 		m.podDeleteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -165,7 +165,7 @@ func NewMetrics() *Metrics {
 			Subsystem: subsystem,
 			Name:      "pod_update_duration_seconds_max",
 			Help:      "the max update duration(seconds) of pod",
-		}, []string{"gd", "status", "updateType", "grace", "action"})
+		}, []string{"gd", "status", "grace", "action"})
 		prometheus.MustRegister(m.podUpdateDurationMax)
 
 		m.podUpdateDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -173,7 +173,7 @@ func NewMetrics() *Metrics {
 			Subsystem: subsystem,
 			Name:      "pod_update_duration_seconds_min",
 			Help:      "the min update duration(seconds) of pod",
-		}, []string{"gd", "status", "updateType", "grace", "action"})
+		}, []string{"gd", "status", "grace", "action"})
 		prometheus.MustRegister(m.podUpdateDurationMin)
 
 		m.podDeleteDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -275,17 +275,17 @@ func (m *Metrics) CollectPodCreateDurations(gdName, status string, d time.Durati
 // 1.the update duration(seconds) of each pod
 // 2.the max update duration(seconds) of pods
 // 3.the min update duration(seconds) of pods
-func (m *Metrics) CollectPodUpdateDurations(gdName, status, updateType, action, grace string, d time.Duration) {
+func (m *Metrics) CollectPodUpdateDurations(gdName, status, action, grace string, d time.Duration) {
 	duration := d.Seconds()
-	m.podUpdateDuration.WithLabelValues(gdName, status, updateType, grace, action).Observe(duration)
+	m.podUpdateDuration.WithLabelValues(gdName, status, grace, action).Observe(duration)
 
 	if duration > m.podUpdateDurationMaxVal {
 		m.podUpdateDurationMaxVal = duration
-		m.podUpdateDurationMax.WithLabelValues(gdName, status, updateType, grace, action).Set(duration)
+		m.podUpdateDurationMax.WithLabelValues(gdName, status, grace, action).Set(duration)
 	}
 	if duration < m.podUpdateDurationMinVal {
 		m.podUpdateDurationMinVal = duration
-		m.podUpdateDurationMin.WithLabelValues(gdName, status, updateType, grace, action).Set(duration)
+		m.podUpdateDurationMin.WithLabelValues(gdName, status, grace, action).Set(duration)
 	}
 }
 
