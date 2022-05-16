@@ -199,6 +199,12 @@ func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *L
 		if err != nil {
 			continue
 		}
+
+		// 只返回当前历史数据
+		if opt.FinishedAt != "" && log.Log == opt.FinishedAt {
+			break
+		}
+
 		logList = append(logList, log)
 	}
 
