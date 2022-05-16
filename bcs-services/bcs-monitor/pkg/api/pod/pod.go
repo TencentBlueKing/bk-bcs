@@ -50,7 +50,7 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
 	logQuery := &k8sclient.LogQuery{}
-	if err := c.BindQuery(logQuery); err != nil {
+	if err := c.ShouldBindQuery(logQuery); err != nil {
 		return nil, err
 	}
 
@@ -71,7 +71,7 @@ func DownloadPodLog(c *rest.Context) {
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
 	logQuery := &k8sclient.LogQuery{}
-	if err := c.BindQuery(logQuery); err != nil {
+	if err := c.ShouldBindQuery(logQuery); err != nil {
 		rest.AbortWithBadRequestError(c, err)
 		return
 	}

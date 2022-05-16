@@ -33,7 +33,7 @@ var (
 
 // LogQuery 日志查询参数， 精简后的 v1.PodLogOptions
 type LogQuery struct {
-	ContainerName string `form:"container_name"`
+	ContainerName string `form:"container_name" binding:"required"` // 必填参数
 	Previous      bool   `form:"previous"`
 	StartedAt     string `form:"started_at"`
 	FinishedAt    string `form:"finished_at"`
@@ -41,9 +41,11 @@ type LogQuery struct {
 
 func (q *LogQuery) MakeOptions() (*v1.PodLogOptions, error) {
 	opt := &v1.PodLogOptions{
-		Container: q.ContainerName,
-		Previous:  q.Previous,
+		Container:  q.ContainerName,
+		Previous:   q.Previous,
+		Timestamps: true,
 	}
+
 	if q.StartedAt == "" || q.FinishedAt == "" {
 		opt.TailLines = &DEFAULT_TAIL_LINES
 	} else {
@@ -120,12 +122,17 @@ func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, op
 		return nil, err
 	}
 
-	result, err := client.CoreV1().Pods(namespace).GetLogs(podname, opts).DoRaw(ctx)
+	result := client.CoreV1().Pods(namespace).GetLogs(podname, opts).Do(ctx)
+	if result.Error() != nil {
+		return nil, result.Error()
+	}
+
+	body, err := result.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return body, nil
 }
 
 // GetPodLog 获取格式的日志列表
