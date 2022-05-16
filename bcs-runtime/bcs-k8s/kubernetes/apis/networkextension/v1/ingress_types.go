@@ -122,6 +122,8 @@ type IngressListenerAttribute struct {
 	LbPolicy    string `json:"lbPolicy,omitempty"`
 	// BackendInsecure specifies whether to enable insecure access to the backend.
 	BackendInsecure bool `json:"backendInsecure,omitempty"`
+	// MaxRate specifies the maximum number of connections per second allowed for every target instance.
+	MaxRate int `json:"maxRate,omitempty"`
 	// aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
 	AWSAttributes []AWSAttribute       `json:"awsAttributes,omitempty"`
 	HealthCheck   *ListenerHealthCheck `json:"healthCheck,omitempty"`
