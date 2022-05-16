@@ -173,8 +173,7 @@ LOGIN_URL = f"{BK_PAAS_HOST}/login/"
 
 # APIGW API 访问地址
 APIGW_HOST = os.environ.get('BK_APIGW_URL', 'http://apigw.example.com')
-# like http://bkapi.example.com/api/{api_name}
-APIGW_URL_TMPL = os.environ.get('bkApiUrlTmpl')
+APIGW_URL_TMPL = os.environ.get('bkApiUrlTmpl', 'http://bkapi.example.com/api/{api_name}')
 
 # paas-cc 服务，后续接入 cmdb
 BK_CC_HOST = os.environ.get('BKAPP_CC_URL', 'http://bcs-cc.example.com')
