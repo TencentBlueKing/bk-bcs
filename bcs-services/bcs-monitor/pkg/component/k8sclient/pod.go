@@ -14,9 +14,14 @@ package k8sclient
 import (
 	"bufio"
 	"context"
+	"fmt"
+	"net/url"
+	"path"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,6 +83,51 @@ type LogWithPreviousLink struct {
 	Previous string `json:"previous"` // 向上翻页链接
 }
 
+// MakePreviousLink 计算向上翻页链接
+func (l *LogWithPreviousLink) MakePreviousLink(projectId, clusterId, namespace, podname string, opt *LogQuery) error {
+	if len(l.Logs) <= 2 {
+		return nil
+	}
+
+	startTime := l.Logs[0].Time
+	endTime := l.Logs[len(l.Logs)-1].Time
+	sinceTime, err := calcSinceTime(startTime, endTime)
+	if err != nil {
+		return err
+	}
+
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, fmt.Sprintf("/projects/%s/clusters/%s/namespaces/%s/pods/%s/logs", projectId, clusterId, namespace, podname))
+
+	query := url.Values{}
+	query.Set("started_at", sinceTime.Format(time.RFC3339Nano))
+	query.Set("finished_at", startTime) // 本次一次的开始时间做上一页的结束时间
+	query.Set("container_name", opt.ContainerName)
+	query.Set("previous", strconv.FormatBool(opt.Previous))
+
+	u.RawQuery = query.Encode()
+
+	l.Previous = u.String()
+
+	return nil
+}
+
+// calcSinceTime 计算下一次的开始时间
+func calcSinceTime(startTime string, endTime string) (*time.Time, error) {
+	// 简单场景, 认为日志打印量是均衡的，通过计算时间差获取
+	start, err := time.Parse(time.RFC3339Nano, startTime)
+	if err != nil {
+		return nil, errors.Wrapf(err, "startTime: %s", startTime)
+	}
+	end, err := time.Parse(time.RFC3339Nano, endTime)
+	if err != nil {
+		return nil, errors.Wrapf(err, "endTime: %s", endTime)
+	}
+	duration := end.Sub(start)
+	sinceTime := start.Add(-duration)
+	return &sinceTime, nil
+}
+
 // Container 格式化的容器, 精简后的 v1.Container
 type Container struct {
 	Name string `json:"name"`
@@ -89,7 +139,7 @@ func parseLog(rawLog string) (*Log, error) {
 	if len(item) != 2 {
 		return nil, errors.Errorf("invalid log, %s", rawLog)
 	}
-	return &Log{Log: item[0], Time: item[1]}, nil
+	return &Log{Time: item[0], Log: item[1]}, nil
 }
 
 // GetPodContainers 获取 Pod 容器名称列表

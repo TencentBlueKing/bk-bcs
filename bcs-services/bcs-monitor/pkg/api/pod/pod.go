@@ -46,6 +46,7 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 // @Success  200  {array}  k8sclient.Log
 // @Router   /namespaces/:namespace/pods/:pod/logs [get]
 func GetPodLog(c *rest.Context) (interface{}, error) {
+	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
 	pod := c.Param("pod")
@@ -55,6 +56,14 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 	}
 
 	logs, err := k8sclient.GetPodLog(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := logs.MakePreviousLink(projectId, clusterId, namespace, pod, logQuery); err != nil {
+		return nil, err
+	}
+
 	return logs, err
 }
 
