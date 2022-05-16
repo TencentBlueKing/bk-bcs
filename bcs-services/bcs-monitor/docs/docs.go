@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/containers": {
+        "/namespaces/:namespace/pods/:pod/containers": {
             "get": {
                 "produces": [
                     "application/json"
@@ -38,7 +38,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/logs": {
+        "/namespaces/:namespace/pods/:pod/logs": {
             "get": {
                 "produces": [
                     "application/json"
@@ -76,7 +76,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/logs/download": {
+        "/namespaces/:namespace/pods/:pod/logs/download": {
             "get": {
                 "produces": [
                     "application/octet-stream"
@@ -111,7 +111,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/logs/stream": {
+        "/namespaces/:namespace/pods/:pod/logs/stream": {
             "get": {
                 "produces": [
                     "text/event-stream"
@@ -167,7 +167,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "",
 	Host:             "",
-	BasePath:         "/bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod",
+	BasePath:         "/bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId",
 	Schemes:          []string{},
 	Title:            "BCS-Monitor OpenAPI",
 	Description:      "",

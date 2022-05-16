@@ -24,7 +24,7 @@ import (
 // @Tags     Pod
 // @Produce  json
 // @Success  200  {array}  k8sclient.Container
-// @Router   /containers [get]
+// @Router   /namespaces/:namespace/pods/:pod/containers [get]
 func GetPodContainers(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -44,7 +44,7 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 // @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
 // @Produce  json
 // @Success  200  {array}  k8sclient.Log
-// @Router   /logs [get]
+// @Router   /namespaces/:namespace/pods/:pod/logs [get]
 func GetPodLog(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -65,7 +65,7 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 // @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
 // @Produce  octet-stream
 // @Success  200  {string}  string
-// @Router   /logs/download [get]
+// @Router   /namespaces/:namespace/pods/:pod/logs/download [get]
 func DownloadPodLog(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")

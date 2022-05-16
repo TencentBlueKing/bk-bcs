@@ -61,7 +61,7 @@ func (a *APIServer) Close() error {
 }
 
 // @Title     BCS-Monitor OpenAPI
-// @BasePath  /bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod
+// @BasePath  /bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId
 func registerRoutes(engine *gin.Engine) {
 	// 添加X-Request-Id 头部
 	requestIdMiddleware := requestid.New(
@@ -77,13 +77,13 @@ func registerRoutes(engine *gin.Engine) {
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// 日志相关接口
-	route := engine.Group("/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod")
+	route := engine.Group("/projects/:projectId/clusters/:clusterId")
 	{
-		route.GET("/containers", rest.RestHandlerFunc(pod.GetPodContainers))
-		route.GET("/logs", rest.RestHandlerFunc(pod.GetPodLog))
-		route.GET("/logs/download", rest.StreamHandler(pod.DownloadPodLog))
+		route.GET("/namespaces/:namespace/pods/:pod/containers", rest.RestHandlerFunc(pod.GetPodContainers))
+		route.GET("/namespaces/:namespace/pods/:pod/logs", rest.RestHandlerFunc(pod.GetPodLog))
+		route.GET("/namespaces/:namespace/pods/:pod/logs/download", rest.StreamHandler(pod.DownloadPodLog))
 
 		// sse 实时日志流
-		route.GET("/logs/stream", rest.StreamHandler(pod.PodLogStream))
+		route.GET("/namespaces/:namespace/pods/:pod/logs/stream", rest.StreamHandler(pod.PodLogStream))
 	}
 }

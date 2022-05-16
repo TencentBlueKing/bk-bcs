@@ -4,9 +4,9 @@
         "title": "BCS-Monitor OpenAPI",
         "contact": {}
     },
-    "basePath": "/bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId/namespaces/:namespace/pods/:pod",
+    "basePath": "/bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId",
     "paths": {
-        "/containers": {
+        "/namespaces/:namespace/pods/:pod/containers": {
             "get": {
                 "produces": [
                     "application/json"
@@ -28,7 +28,7 @@
                 }
             }
         },
-        "/logs": {
+        "/namespaces/:namespace/pods/:pod/logs": {
             "get": {
                 "produces": [
                     "application/json"
@@ -66,7 +66,7 @@
                 }
             }
         },
-        "/logs/download": {
+        "/namespaces/:namespace/pods/:pod/logs/download": {
             "get": {
                 "produces": [
                     "application/octet-stream"
@@ -101,7 +101,7 @@
                 }
             }
         },
-        "/logs/stream": {
+        "/namespaces/:namespace/pods/:pod/logs/stream": {
             "get": {
                 "produces": [
                     "text/event-stream"

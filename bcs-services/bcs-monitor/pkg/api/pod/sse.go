@@ -24,7 +24,7 @@ import (
 // @Param    container_name  query  string  true  "容器名称"
 // @Produce  text/event-stream
 // @Success  200  {string}  string
-// @Router   /logs/stream [get]
+// @Router   /namespaces/:namespace/pods/:pod/logs/stream [get]
 func PodLogStream(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
