@@ -9,7 +9,7 @@ replicas:
       default: 3
       ui:component:
         props:
-          min: 1
+          max: 4096
     updateStrategy:
       title: 升级策略
       type: string
@@ -25,10 +25,13 @@ replicas:
     maxSurge:
       title: 最大调度 Pod 数量
       type: integer
+      ui:component:
+        props:
+          max: 4096
     msUnit:
-      default: cnt
       title: 单位
       type: string
+      default: cnt
       ui:component:
         name: select
         props:
@@ -41,10 +44,13 @@ replicas:
     maxUnavailable:
       title: 最大不可用数量
       type: integer
+      ui:component:
+        props:
+          max: 4096
     muaUnit:
-      default: percent
       title: 单位
       type: string
+      default: cnt
       ui:component:
         name: select
         props:
@@ -60,6 +66,7 @@ replicas:
       ui:component:
         name: unitInput
         props:
+          max: 2147483647
           unit: s
     progressDeadlineSecs:
       default: 0
@@ -68,7 +75,7 @@ replicas:
       ui:component:
         name: unitInput
         props:
-          max: 86400
+          max: 2147483647
           unit: s
 {{- end }}
 
@@ -92,6 +99,9 @@ replicas:
     maxUnavailable:
       title: 最大不可用数量
       type: integer
+      ui:component:
+        props:
+          max: 4096
     muaUnit:
       default: percent
       title: 单位
@@ -111,6 +121,7 @@ replicas:
       ui:component:
         name: unitInput
         props:
+          max: 86400
           unit: s
 {{- end }}
 
@@ -125,7 +136,7 @@ replicas:
       default: 3
       ui:component:
         props:
-          min: 1
+          max: 4096
     updateStrategy:
       title: 升级策略
       type: string
@@ -538,14 +549,23 @@ security:
     runAsUser:
       title: 用户
       type: integer
+      ui:component:
+        props:
+          max: 65535
     runAsNonRoot:
       title: 以非 Root 运行
       type: boolean
     runAsGroup:
       title: 用户组
       type: integer
+      ui:component:
+        props:
+          max: 65535
     fsGroup:
       type: integer
+      ui:component:
+        props:
+          max: 65535
     seLinuxOpt:
       title: SELinux 选项
       type: object

@@ -94,12 +94,14 @@ basic:
     name:
       title: 容器名称
       type: string
+      default: main
       ui:rules:
         - required
         - maxLength64
     image:
       title: 容器镜像
       type: string
+      default: busybox
       ui:rules:
         - required
         - maxLength128
@@ -294,6 +296,9 @@ healthz:
       {{- include "container.probe" . | indent 6 }}
   ui:group:
     name: collapse
+  ui:order:
+    - readinessProbe
+    - livenessProbe
 {{- end }}
 
 {{- define "container.probe" }}
@@ -403,6 +408,7 @@ resource:
           ui:component:
             name: unitInput
             props:
+              max: 256000
               unit: mCPUs
           ui:props:
             labelWidth: 200
@@ -412,6 +418,7 @@ resource:
           ui:component:
             name: unitInput
             props:
+              max: 256000
               unit: Mi
     limits:
       type: object
@@ -422,6 +429,7 @@ resource:
           ui:component:
             name: unitInput
             props:
+              max: 256000
               unit: mCPUs
           ui:props:
             labelWidth: 200
@@ -431,6 +439,7 @@ resource:
           ui:component:
             name: unitInput
             props:
+              max: 256000
               unit: Mi
 {{- end }}
 
@@ -454,9 +463,15 @@ security:
     runAsUser:
       title: 用户
       type: integer
+      ui:component:
+        props:
+          max: 65535
     runAsGroup:
       title: 用户组
       type: integer
+      ui:component:
+        props:
+          max: 65535
     procMount:
       title: 掩码挂载
       type: string

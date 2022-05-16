@@ -5,7 +5,7 @@ spec:
   selector:
     matchLabels:
       {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
-  replicas: {{ .spec.replicas.cnt }}
+  replicas: {{ if .spec.replicas.cnt }}{{ .spec.replicas.cnt }}{{ else }} 0 {{ end }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}
     {{- if or .spec.replicas.maxUnavailable .spec.replicas.maxSurge }}

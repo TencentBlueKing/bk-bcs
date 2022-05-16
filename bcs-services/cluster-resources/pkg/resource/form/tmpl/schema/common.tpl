@@ -13,6 +13,7 @@ metadata:
       type: string
       # 空值表示 Preferred Version
       default: ""
+      description: "不同集群版本，同一资源 Preferred Version 可能不同；如 Deployment 在 1.12 版本集群中 Preferred Version 为 extensions/v1beta1，而在更高版本中则为 apps/v1"
       ui:component:
         name: select
         props:
