@@ -54,16 +54,25 @@ jwt:
   enable: true
   publicKeyFile: "../../test/jwt/app.rsa.pub"
   privateKeyFile: "../../test/jwt/app.rsa"
+app:
+  code: ""
+  secret: ""
 iam:
-  appCode: ""
-  appSecret: ""
   gatewayHost: ""
   useGWHost: true
   iamHost: ""
   bkPaaSHost: ""
   debug: false
-actionExemptPerm:
-  create: false
-  view: false
-  update: false
-  delete: false
+clientActionExemptPerm:
+  clientActions:
+  - clientID: test
+    actions:
+    - create
+cmdb:
+  bkSupplierAccount: "tencent"
+  host: "http://localhost:80"
+  timeout: 10
+  proxy: ""
+  debug: false
+bcscc:
+  host: ""

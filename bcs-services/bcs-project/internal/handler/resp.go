@@ -69,7 +69,6 @@ func getProjectData(d *map[string]interface{}) *proto.ListProjectData {
 		}
 		projectData.Results = projects
 		return &projectData
-	} else {
-		return &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
 	}
+	return &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}
 }

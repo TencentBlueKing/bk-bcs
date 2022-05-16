@@ -22,6 +22,7 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/mitchellh/mapstructure v1.4.3
+	github.com/parnurzeal/gorequest v0.2.16
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
@@ -62,7 +63,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
-	github.com/parnurzeal/gorequest v0.2.16 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect

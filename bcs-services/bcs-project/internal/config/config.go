@@ -90,10 +90,14 @@ type JWTConfig struct {
 	PrivateKeyFile string `yaml:"privateKeyFile" usage:"private key file"`
 }
 
+// AppConfig  app code and secret for requesting third service api
+type AppConfig struct {
+	Code   string `yaml:"code" usage:"app code"`
+	Secret string `yaml:"secret" usage:"app secret"`
+}
+
 // IAMConfig iam操作需要的配置
 type IAMConfig struct {
-	AppCode     string `yaml:"appCode" usage:"app code"`
-	AppSecret   string `yaml:"appSecret" usage:"app secret"`
 	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
 	UseGWHost   bool   `yaml:"useGWHost" usage:"use gatewayHost when true, else use iamHost and bkPaaSHost"`
 	IAMHost     string `yaml:"iamHost" usage:"iam host"`
@@ -101,25 +105,45 @@ type IAMConfig struct {
 	Debug       bool   `yaml:"debug" usage:"debug mode"`
 }
 
-// ActionExemptPermConfig 用于标识操作是否开启权限
-type ActionExemptPermConfig struct {
-	Create bool `yaml:"create" usage:"exempt create action perm"`
-	View   bool `yaml:"view" usage:"exempt view action perm"`
-	Update bool `yaml:"update" usage:"exempt update action perm"`
-	Delete bool `yaml:"delete" usage:"exempt delete action perm"`
+// ClientActionsConfig Client级别的访问
+type ClientActionsConfig struct {
+	ClientID string   `yaml:"clientID" usage:"client id"`
+	Actions  []string `yaml:"actions" usage:"action name"`
+}
+
+// ClientActionExemptPermConfig 非用户态跳过指定动作的权限
+type ClientActionExemptPermConfig struct {
+	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt perm for client id action, example: [{clientID: bcs-inner, actions: [create, view]}]"`
+}
+
+// 请求的 CMDB 服务配置
+type CMDBConfig struct {
+	BKSupplierAccount string `yaml:"bkSupplierAccount" usage:"developer account"`
+	Host              string `yaml:"host" usage:"access cmdb api host"`
+	Timeout           int    `yaml:"timeout" usage:"request cmdb api timeout"`
+	Proxy             string `yaml:"proxy" usage:"proxy"`
+	Debug             bool   `yaml:"debug" usage:"debug"`
+}
+
+// 请求的 bcs cc 服务配置
+type BCSCCConfig struct {
+	Host string `yaml:"host" usage:"access bcs cc api host"`
 }
 
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
-	Etcd             EtcdConfig             `yaml:"etcd"`
-	Mongo            MongoConfig            `yaml:"mongo"`
-	Log              LogConfig              `yaml:"log"`
-	Swagger          SwaggerConfig          `yaml:"swagger"`
-	Server           ServerConfig           `yaml:"server"`
-	Client           ClientConfig           `yaml:"client"`
-	JWT              JWTConfig              `yaml:"jwt"`
-	IAM              IAMConfig              `yaml:"iam"`
-	ActionExemptPerm ActionExemptPermConfig `yaml:"actionExemptPerm"`
+	Etcd                   EtcdConfig                   `yaml:"etcd"`
+	Mongo                  MongoConfig                  `yaml:"mongo"`
+	Log                    LogConfig                    `yaml:"log"`
+	Swagger                SwaggerConfig                `yaml:"swagger"`
+	Server                 ServerConfig                 `yaml:"server"`
+	Client                 ClientConfig                 `yaml:"client"`
+	JWT                    JWTConfig                    `yaml:"jwt"`
+	IAM                    IAMConfig                    `yaml:"iam"`
+	ClientActionExemptPerm ClientActionExemptPermConfig `yaml:"clientActionExemptPerm"`
+	CMDB                   CMDBConfig                   `yaml:"cmdb"`
+	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`
+	App                    AppConfig                    `yaml:"app"`
 }
 
 func (conf *ProjectConfig) initServerAddress() error {
