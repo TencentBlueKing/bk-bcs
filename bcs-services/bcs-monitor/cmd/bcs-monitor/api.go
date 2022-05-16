@@ -25,8 +25,8 @@ import (
 // APIServerCmd
 func APIServerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "apiserver",
-		Short: "BCS Monitor api server",
+		Use:   "api",
+		Short: "Monitor api server",
 	}
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
