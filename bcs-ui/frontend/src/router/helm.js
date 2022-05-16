@@ -3,19 +3,22 @@
  */
 
 // Helm应用列表
-const helms = () => import(/* webpackChunkName: 'helm' */'@/views/helm')
+const helms = () => import(/* webpackChunkName: 'helm' */'@/views/helm/release/')
 
 // Helm模板列表
-const helmTplList = () => import(/* webpackChunkName: 'helm' */'@/views/helm/tpl-list.vue')
+const helmTplList = () => import(/* webpackChunkName: 'helm' */'@/views/helm/charts/index.vue')
 
 // Helm模板详情
-const helmTplDetail = () => import(/* webpackChunkName: 'helm' */'@/views/helm/tpl-detail.vue')
+const helmTplDetail = () => import(/* webpackChunkName: 'helm' */'@/views/helm/charts/tpl-detail.vue')
 
 // Helm实例化
-const helmTplInstance = () => import(/* webpackChunkName: 'helm' */'@/views/helm/tpl-instance.vue')
+const helmTplInstance = () => import(/* webpackChunkName: 'helm' */'@/views/helm/charts/tpl-deploy.vue')
 
 // Helm app详情
-const helmAppDetail = () => import(/* webpackChunkName: 'helm' */'@/views/helm/app-detail.vue')
+const helmUpdateApp = () => import(/* webpackChunkName: 'helm' */'@/views/helm/release/update-app.vue')
+
+// helm status详情
+const helmAppStatus = () => import(/* webpackChunkName: 'helm' */'@/views/helm/release/detail.vue')
 
 const childRoutes = [
     {
@@ -37,7 +40,7 @@ const childRoutes = [
         }
     },
     {
-        path: ':projectCode/helm/instance/:tplId',
+        path: ':projectCode/helm/instance/:chartName',
         name: 'helmTplInstance',
         component: helmTplInstance,
         meta: {
@@ -45,9 +48,17 @@ const childRoutes = [
         }
     },
     {
-        path: ':projectCode/helm/app/:appId',
-        name: 'helmAppDetail',
-        component: helmAppDetail,
+        path: ':projectCode/helm/app/:clusterId/:namespace/:name',
+        name: 'helmUpdateApp',
+        component: helmUpdateApp,
+        meta: {
+            menuId: 'helms'
+        }
+    },
+    {
+        path: ':projectCode/helm/status/:clusterId/:namespace/:name',
+        name: 'helmAppStatus',
+        component: helmAppStatus,
         meta: {
             menuId: 'helms'
         }

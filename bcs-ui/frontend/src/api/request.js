@@ -2,9 +2,11 @@ import http from '@/api'
 import { json2Query } from '@/common/util'
 import router from '@/router'
 import store from '@/store'
+import { helmPrefix } from '@/api/base'
 
 const methodsWithoutData = ['get', 'head', 'options', 'delete']
 const defaultConfig = { needRes: false }
+const prefixData = [helmPrefix]
 
 export const request = (method, url) => (params = {}, config = {}) => {
     const reqMethod = method.toLowerCase()
@@ -22,7 +24,10 @@ export const request = (method, url) => (params = {}, config = {}) => {
             variableData[key] = params[key]
         }
     })
-    let newUrl = `${DEVOPS_BCS_API_URL}${url}`
+
+    let newUrl = `${/(http|https):\/\/([\w.]+\/?)\S*/.test(url) || prefixData.some(prefix => url.indexOf(prefix) === 0)
+        ? url : `${DEVOPS_BCS_API_URL}${url}`}`
+
     Object.keys(variableData).forEach(key => {
         if (!variableData[key]) {
             // console.warn(`路由变量未配置${key}`)

@@ -11,6 +11,15 @@
 
 import http from '@/api'
 import { json2Query } from '@/common/util'
+import {
+    getChartByVersion,
+    getAppList,
+    getTplList,
+    getChartVersions,
+    getReleaseDetail,
+    reback,
+    createApp
+} from '@/api/base'
 
 export default {
     namespaced: true,
@@ -102,12 +111,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getAppList (context, { projectId, params }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs/k8s/configuration/${projectId}/apps/?${json2Query(params)}`
-            return http.get(url, {}, config).then(res => {
-                context.commit('updateAppList', res.data)
-                return res
-            })
+        getAppList (context, params, config = {}) {
+            const data = getAppList(params)
+            return data
         },
 
         /**
@@ -203,9 +209,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getChartByVersion (context, { projectId, chartId, version }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs/k8s/configuration/${projectId}/helm/charts/${chartId}/versions/${version}/`
-            return http.get(url, {}, config)
+        getChartByVersion (context, params, config = {}) {
+            const data = getChartByVersion(params)
+            return data
         },
 
         /**
@@ -273,9 +279,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        reback (context, { projectId, appId, params }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs/k8s/configuration/${projectId}/apps/${appId}/rollback/`
-            return http.put(url, params, config)
+        reback (context, params, config = {}) {
+            const data = reback(params)
+            return data
         },
 
         /**
@@ -287,25 +293,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getTplList (context, projectId, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs/k8s/configuration/${projectId}/helm/charts/`
-            return http.get(url, {}, config).then(res => {
-                const publicRepo = []
-                const privateRepo = []
-
-                // 区分是私有还是公有的模板
-                res.data.forEach(item => {
-                    if (item.repository.name === 'public-repo') {
-                        publicRepo.push(item)
-                    } else {
-                        privateRepo.push(item)
-                    }
-                })
-                context.commit('updateTplList', res.data)
-                context.commit('updatePublicTplList', publicRepo)
-                context.commit('updatePrivateTplList', privateRepo)
-                return res
-            })
+        getTplList (context, params, config = {}) {
+            const data = getTplList(params)
+            return data
         },
 
         /**
@@ -331,9 +321,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getTplVersions (context, { projectId, tplId }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs/k8s/configuration/${projectId}/helm/charts/${tplId}/versions/`
-            return http.get(url, {}, config)
+        getChartVersions (context, params, config = {}) {
+            const data = getChartVersions(params)
+            return data
         },
 
         /**
@@ -373,9 +363,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        createApp (context, { projectId, data }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs/k8s/configuration/${projectId}/apps/`
-            return http.post(url, data, config)
+        createApp (context, params, config = {}) {
+            const data = createApp(params)
+            return data
         },
 
         /**
@@ -536,7 +526,11 @@ export default {
          */
         getNotes (context, { clusterId, projectId, namespaceName, releaseName }, config = {}) {
             return http.get(`${DEVOPS_BCS_API_URL}/api/helm/projects/${projectId}/clusters/${clusterId}/namespaces/${namespaceName}/releases/${releaseName}/notes/`, {}, config)
-        }
+        },
 
+        getReleaseDetail (context, params, config = {}) {
+            const data = getReleaseDetail(params)
+            return data
+        }
     }
 }

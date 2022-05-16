@@ -84,6 +84,16 @@ export const getTokens = request('get', `${prefix}/usermanager/v1/users/$usernam
 export const userPerms = request('post', '/api/iam/user_perms/')
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
 
+// helm
+const helmPrefix = '/bcsapi/v4/helmmanager/v1'
+export const getChartByVersion = request('get', `${helmPrefix}/chart/$projectId/$repository/$name/detail/$version?operator=$operator`)
+export const getAppList = request('get', `${helmPrefix}/release/$clusterId`)
+export const getTplList = request('get', `${helmPrefix}/chart/$projectId/$repository`)
+export const getChartVersions = request('get', `${helmPrefix}/chart/$projectId/$repository/$name/version`)
+export const getReleaseDetail = request('get', `${helmPrefix}/release/$clusterId/$namespace/$name/detail`)
+export const reback = request('post', `${helmPrefix}/release/$clusterId/$namespace/$name/rollback`)
+export const createApp = request('post', `${helmPrefix}/release/$clusterId/$namespace/$name/install`)
+
 export default {
     stdLogs,
     stdLogsDownload,

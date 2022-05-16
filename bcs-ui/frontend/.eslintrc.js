@@ -51,6 +51,7 @@ module.exports = {
         LOGIN_SERVICE_URL: true,
         DEVOPS_HOST: true,
         DEVOPS_BCS_API_URL: true,
+        BCS_API_HOST: true,
         DEVOPS_BCS_HOST: true,
         VERSION: true,
         DEVOPS_ARTIFACTORY_HOST: true,
