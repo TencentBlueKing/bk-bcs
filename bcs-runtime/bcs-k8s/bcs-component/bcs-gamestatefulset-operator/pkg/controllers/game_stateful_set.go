@@ -560,10 +560,10 @@ func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 		reconcileDuration := time.Since(startTime)
 		if retErr == nil {
 			klog.Infof("Finished syncing GameStatefulSet %s, cost time: %v", key, reconcileDuration)
-			ssc.metrics.collectReconcileDuration(namespace, name, "success", reconcileDuration)
+			ssc.metrics.collectReconcileDuration(namespace, name, successStatus, reconcileDuration)
 		} else {
 			klog.Errorf("Failed syncing GameStatefulSet %s, err: %v", key, retErr)
-			ssc.metrics.collectReconcileDuration(namespace, name, "failure", reconcileDuration)
+			ssc.metrics.collectReconcileDuration(namespace, name, failureStatus, reconcileDuration)
 		}
 	}()
 
