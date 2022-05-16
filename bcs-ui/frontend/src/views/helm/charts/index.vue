@@ -162,24 +162,6 @@
                 if (!res) return
 
                 tplList.value = res.data
-                // const publicRepo = []
-                // const privateRepo = []
-
-                // // 进行分类，包括项目仓库和私有仓库
-                // const tplList = res.data.filter(item => {
-                //     return item.defaultChartVersion
-                // })
-
-                // tplList.forEach(item => {
-                //     if (item.repository.name === 'public-repo') {
-                //         publicRepo.push(item)
-                //     } else {
-                //         privateRepo.push(item)
-                //     }
-                // })
-                // publicTplList.value = publicRepo
-                // privateTplList.value = privateRepo
-                // setTplList()
             }
 
             /**
