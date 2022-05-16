@@ -40,32 +40,32 @@ const (
 )
 
 var (
-	mysql_host    string
-	mysql_port    uint
-	mysql_user    string
-	mysql_pwd     string
-	mysql_db_name string
-	mongo_host    string
-	mongo_port    uint
-	mongo_user    string
-	mongo_pwd     string
-	mongo_db_name string
+	mysqlHost   string
+	mysqlPort   uint
+	mysqlUser   string
+	mysqlPwd    string
+	mysqlDBName string
+	mongoHost   string
+	mongoPort   uint
+	mongoUser   string
+	mongoPwd    string
+	mongoDBName string
 )
 
 func parseFlags() {
 	// mysql
-	flag.StringVar(&mysql_host, "mysql_host", "", "mysql host")
-	flag.UintVar(&mysql_port, "mysql_port", 0, "mysql port")
-	flag.StringVar(&mysql_user, "mysql_user", "", "access mysql username")
-	flag.StringVar(&mysql_pwd, "mysql_pwd", "", "access mysql password")
-	flag.StringVar(&mysql_db_name, "mysql_db_name", "", "access mysql db name")
+	flag.StringVar(&mysqlHost, "mysql_host", "", "mysql host")
+	flag.UintVar(&mysqlPort, "mysql_port", 0, "mysql port")
+	flag.StringVar(&mysqlUser, "mysql_user", "", "access mysql username")
+	flag.StringVar(&mysqlPwd, "mysql_pwd", "", "access mysql password")
+	flag.StringVar(&mysqlDBName, "mysql_db_name", "", "access mysql db name")
 
 	// mongo
-	flag.StringVar(&mongo_host, "mongo_host", "", "mongo host")
-	flag.UintVar(&mongo_port, "mongo_port", 0, "mongo port")
-	flag.StringVar(&mongo_user, "mongo_user", "", "access mongo username")
-	flag.StringVar(&mongo_pwd, "mongo_pwd", "", "access mongo password")
-	flag.StringVar(&mongo_db_name, "mongo_db_name", "", "access mongo db name")
+	flag.StringVar(&mongoHost, "mongo_host", "", "mongo host")
+	flag.UintVar(&mongoPort, "mongo_port", 0, "mongo port")
+	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
+	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
+	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
 
 	flag.Parse()
 }
@@ -79,7 +79,7 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
-	// 写入mongo
+	// 写入 mongo
 	if err := insertProject(p); err != nil {
 		fmt.Println(err.Error())
 		return
@@ -113,11 +113,11 @@ type BCSCCProjectData struct {
 	IsSecrecy   bool   `json:"is_secrecy" gorm:"default:false"`
 }
 
-// bcs cc中查询数据
+// bcs cc 中查询数据
 func fetchBCSCCData() ([]BCSCCProjectData, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", mysql_user, mysql_pwd, mysql_host, mysql_port, mysql_db_name)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", mysqlUser, mysqlPwd, mysqlHost, mysqlPort, mysqlDBName)
 
-	// 连接db
+	// 连接 db
 	db, err := gorm.Open("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("access mysql error, %s", err.Error())
@@ -132,7 +132,7 @@ func fetchBCSCCData() ([]BCSCCProjectData, error) {
 	return p, nil
 }
 
-// 插入到mongo
+// 插入到 mongo
 func insertProject(p []BCSCCProjectData) error {
 	var (
 		client     *mongo.Client
@@ -142,14 +142,14 @@ func insertProject(p []BCSCCProjectData) error {
 	upsert := true
 	opts := options.ReplaceOptions{Upsert: &upsert}
 	// 建立连接
-	dsn := fmt.Sprintf("mongodb://%s:%s@%s:%d", mongo_user, mongo_pwd, mongo_host, mongo_port)
+	dsn := fmt.Sprintf("mongodb://%s:%s@%s:%d", mongoUser, mongoPwd, mongoHost, mongoPort)
 	if client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(dsn).SetConnectTimeout(10*time.Second)); err != nil {
 		return fmt.Errorf("access mongo error, %s", err.Error())
 	}
 	if err := client.Ping(context.TODO(), nil); err != nil {
 		return fmt.Errorf("mongo ping error, %s", err.Error())
 	}
-	collection = client.Database(mongo_db_name).Collection(mongoTableName)
+	collection = client.Database(mongoDBName).Collection(mongoTableName)
 	// 组装数据
 	for _, i := range p {
 		data := map[string]interface{}{
@@ -187,7 +187,7 @@ func insertProject(p []BCSCCProjectData) error {
 	return nil
 }
 
-// 获取字符串类型kind，1 => k8s 2 => mesos
+// 获取字符串类型 kind，1 => k8s 2 => mesos
 func getStrKind(kind uint) string {
 	if kind == 1 {
 		return "k8s"
@@ -217,7 +217,7 @@ func constructManagers(creator string, updater string) string {
 	return strings.Join(managers, ";")
 }
 
-// 获取int型deployType
+// 获取 int 型 deployType
 func getDeployType(deployType string) uint32 {
 	if deployType == "null" {
 		return 1
