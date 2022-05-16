@@ -55,14 +55,14 @@ func (q *LogQuery) MakeOptions() (*v1.PodLogOptions, error) {
 		opt.TailLines = &DEFAULT_TAIL_LINES
 	} else {
 
-		// 开始时间, 只做校验
-		if _, err := time.Parse(time.RFC3339Nano, q.FinishedAt); err != nil {
+		// 开始时间, 需要用做查询
+		t, err := time.Parse(time.RFC3339Nano, q.StartedAt)
+		if err != nil {
 			return nil, err
 		}
 
-		// 结束时间, 需要用做查询
-		t, err := time.Parse(time.RFC3339Nano, q.StartedAt)
-		if err != nil {
+		// 结束时间, 只做校验
+		if _, err := time.Parse(time.RFC3339Nano, q.FinishedAt); err != nil {
 			return nil, err
 		}
 
