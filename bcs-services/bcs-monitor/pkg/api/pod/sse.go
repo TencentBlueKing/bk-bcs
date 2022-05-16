@@ -12,7 +12,10 @@
 package pod
 
 import (
+	"encoding/base64"
 	"io"
+
+	"github.com/gin-contrib/sse"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -36,6 +39,15 @@ func PodLogStream(c *rest.Context) {
 		return
 	}
 
+	// 重连时的Id
+	lastEventId := c.Request.Header.Get("Last-Event-ID")
+	if lastEventId != "" {
+		sinceTime, err := base64.StdEncoding.DecodeString(lastEventId)
+		if err == nil {
+			logQuery.StartedAt = string(sinceTime)
+		}
+	}
+
 	logChan, err := k8sclient.GetPodLogStream(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	if err != nil {
 		rest.AbortWithBadRequestError(c, err)
@@ -44,7 +56,13 @@ func PodLogStream(c *rest.Context) {
 
 	c.Stream(func(w io.Writer) bool {
 		for log := range logChan {
-			c.SSEvent("message", log)
+			id := base64.StdEncoding.EncodeToString([]byte(log.Time))
+			c.Render(-1, sse.Event{
+				Event: "message",
+				Data:  log,
+				Id:    id,
+				Retry: 5000, // 5 秒重试
+			})
 		}
 		return true
 	})

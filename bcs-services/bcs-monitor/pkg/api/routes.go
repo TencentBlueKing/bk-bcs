@@ -15,6 +15,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -70,7 +71,7 @@ func registerRoutes(engine *gin.Engine) {
 		}),
 	)
 
-	engine.Use(requestIdMiddleware)
+	engine.Use(requestIdMiddleware, cors.Default())
 	engine.Use(middleware.AuthRequired())
 
 	// openapi 文档
