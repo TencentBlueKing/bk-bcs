@@ -29,7 +29,7 @@ var (
 	bizID    = "1"
 )
 
-func TestCheckUseIsMaintainer(t *testing.T) {
+func TestCheckMaintainer(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"code": 0, "data": {"count": 1, "info": [{"bk_biz_id": 1}]}}`))
 	}))
@@ -37,7 +37,7 @@ func TestCheckUseIsMaintainer(t *testing.T) {
 
 	// 需要加载配置，然后域名调整为mock的url
 	svcConfig.LoadConfig("../../../" + config.DefaultConfigPath)
-	svcConfig.GlobalConf.CMDB.Domain = ts.URL
-	err := CheckUseIsMaintainer(username, bizID)
+	svcConfig.GlobalConf.CMDB.Host = ts.URL
+	err := CheckMaintainer(username, bizID)
 	assert.Nil(t, err)
 }

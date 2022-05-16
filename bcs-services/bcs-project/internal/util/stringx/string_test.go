@@ -15,7 +15,6 @@
 package stringx
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -48,7 +47,7 @@ func TestJoinString(t *testing.T) {
 func TestErrs2String(t *testing.T) {
 	var errs []error
 	for i := range []int{0, 1, 2} {
-		errs = append(errs, errors.New(fmt.Sprintf("error %v", i)))
+		errs = append(errs, fmt.Errorf("error %v", i))
 	}
 	assert.Equal(t, Errs2String(errs), "error 0,error 1,error 2")
 }

@@ -72,7 +72,7 @@ func makeIAMPolicy(iamReq iam.Request) (map[string]interface{}, error) {
 		config.GlobalConf.IAM.GatewayHost,
 		true,
 		bcsIAM.SystemIDBKBCS,
-		config.GlobalConf.AppCodeSecret.AppCode, config.GlobalConf.AppCodeSecret.AppSecret,
+		config.GlobalConf.App.Code, config.GlobalConf.App.Secret,
 	)
 	policy, err := backendClient.PolicyQuery(iamReq)
 	if err != nil {

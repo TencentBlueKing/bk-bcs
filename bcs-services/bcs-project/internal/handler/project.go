@@ -27,6 +27,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
+// ProjectHandler ...
 type ProjectHandler struct {
 	model store.ProjectModel
 }
@@ -41,8 +42,8 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
 	// 判断是否有创建权限
-	username, clientID := auth.GetAuthFromCtx(ctx)
-	if err := perm.CanCreateProject(username, clientID); err != nil {
+	authUser := auth.GetAuthUserFromCtx(ctx)
+	if err := perm.CanCreateProject(authUser); err != nil {
 		return err
 	}
 	// 创建项目
@@ -52,7 +53,7 @@ func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreatePro
 		return e
 	}
 	// 授权创建者项目编辑和查看权限
-	iam.GrantResourceCreatorActions(username, projectInfo.ProjectID, projectInfo.Name)
+	iam.GrantResourceCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name)
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
 	return nil
@@ -67,8 +68,8 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 		return err
 	}
 	// 校验项目的查看权限
-	username, clientID := auth.GetAuthFromCtx(ctx)
-	if err := perm.CanViewProject(username, projectInfo.ProjectID, clientID); err != nil {
+	authUser := auth.GetAuthUserFromCtx(ctx)
+	if err := perm.CanViewProject(authUser, projectInfo.ProjectID); err != nil {
 		return err
 	}
 	// 处理返回数据及权限
@@ -79,8 +80,8 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
 	// 校验项目的删除权限
-	username, clientID := auth.GetAuthFromCtx(ctx)
-	if err := perm.CanDeleteProject(username, req.ProjectID, clientID); err != nil {
+	authUser := auth.GetAuthUserFromCtx(ctx)
+	if err := perm.CanDeleteProject(authUser, req.ProjectID); err != nil {
 		return err
 	}
 	// 删除项目
@@ -95,8 +96,8 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeletePro
 
 func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
 	// 校验项目的删除权限
-	username, clientID := auth.GetAuthFromCtx(ctx)
-	if err := perm.CanEditProject(username, req.ProjectID, clientID); err != nil {
+	authUser := auth.GetAuthUserFromCtx(ctx)
+	if err := perm.CanEditProject(authUser, req.ProjectID); err != nil {
 		return err
 	}
 
@@ -135,6 +136,7 @@ func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjec
 	return nil
 }
 
+// ListAuthorizedProjects query authorized project info list
 func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context, req *proto.ListAuthorizedProjReq, resp *proto.ListAuthorizedProjResp) error {
 	lap := project.NewListAuthorizedProj(p.model)
 	projects, e := lap.Do(ctx, req)

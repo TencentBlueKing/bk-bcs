@@ -36,19 +36,32 @@ var (
 	timeout           = 10
 )
 
+const (
+	Create = "create"
+	Update = "update"
+)
+
 type projectResp struct {
 	Code      int    `json:"code"`
 	Message   string `json:"message"`
 	RequestID string `json:"request_id"`
 }
 
+// SyncProject 同步项目到 BCS CC
+func SyncProject(p *pm.Project, op string) error {
+	if op == Create {
+		return CreateProject(p)
+	}
+	return UpdateProject(p)
+}
+
 // CreateProject request bcs cc api, create a project record
 func CreateProject(p *pm.Project) error {
 	bcsCCConf := config.GlobalConf.BCSCC
-	reqUrl := fmt.Sprintf("%s%s", bcsCCConf.Domain, createProjectPath)
+	reqUrl := fmt.Sprintf("%s%s", bcsCCConf.Host, createProjectPath)
 	data := constructProjectData(p)
-	data["app_code"] = config.GlobalConf.AppCodeSecret.AppCode
-	data["app_secret"] = config.GlobalConf.AppCodeSecret.AppSecret
+	data["app_code"] = config.GlobalConf.App.Code
+	data["app_secret"] = config.GlobalConf.App.Secret
 	req := gorequest.SuperAgent{
 		Url:    reqUrl,
 		Method: "POST",
@@ -62,10 +75,10 @@ func CreateProject(p *pm.Project) error {
 func UpdateProject(p *pm.Project) error {
 	bcsCCConf := config.GlobalConf.BCSCC
 	realPath := fmt.Sprintf(updateProjectPath, p.ProjectID)
-	reqUrl := fmt.Sprintf("%s%s", bcsCCConf.Domain, realPath)
+	reqUrl := fmt.Sprintf("%s%s", bcsCCConf.Host, realPath)
 	data := constructProjectData(p)
-	data["app_code"] = config.GlobalConf.AppCodeSecret.AppCode
-	data["app_secret"] = config.GlobalConf.AppCodeSecret.AppSecret
+	data["app_code"] = config.GlobalConf.App.Code
+	data["app_secret"] = config.GlobalConf.App.Secret
 	req := gorequest.SuperAgent{
 		Url:    reqUrl,
 		Method: "PUT",
@@ -83,7 +96,7 @@ func constructProjectData(p *pm.Project) map[string]interface{} {
 	// 1: k8s, 2: mesos
 	if p.Kind == "k8s" {
 		bcsCCKind = 1
-	} else {
+	} else if p.Kind == "mesos" {
 		bcsCCKind = 2
 	}
 	// bg id

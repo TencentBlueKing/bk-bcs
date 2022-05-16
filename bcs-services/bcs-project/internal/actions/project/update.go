@@ -31,7 +31,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
-// UpdateAction
+// UpdateAction ...
 type UpdateAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -65,7 +65,7 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	}
 
 	// 更新 bcs cc 中的数据
-	go bcscc.UpdateProject(p)
+	go bcscc.SyncProject(p, bcscc.Update)
 
 	return p, nil
 }
@@ -73,7 +73,7 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 func (ua *UpdateAction) validate() error {
 	// 当业务ID不为空时，校验当前用户是否为要绑定业务的业务运维
 	if ua.req.BusinessID != "" {
-		if err := cmdb.CheckUseIsMaintainer(
+		if err := cmdb.CheckMaintainer(
 			auth.GetUserFromCtx(ua.ctx), ua.req.BusinessID,
 		); err != nil {
 			return err

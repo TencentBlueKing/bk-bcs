@@ -11,6 +11,7 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package cmdb
 
 import (
@@ -40,8 +41,8 @@ type cmdbResp struct {
 	Data      map[string]interface{} `json:"data"`
 }
 
-// CheckUseIsMaintainer 校验用户是否为指定业务的运维
-func CheckUseIsMaintainer(username string, bizID string) error {
+// CheckMaintainer 校验用户是否为指定业务的运维
+func CheckMaintainer(username string, bizID string) error {
 	resp, err := SearchBizByUserAndID(username, bizID)
 	if err != nil {
 		return err
@@ -60,7 +61,7 @@ func CheckUseIsMaintainer(username string, bizID string) error {
 // SearchBizByUserAndID 通过用户和业务ID，查询业务
 func SearchBizByUserAndID(username string, bizID string) (*cmdbResp, error) {
 	cmdbConf := config.GlobalConf.CMDB
-	reqUrl := fmt.Sprintf("%s%s", cmdbConf.Domain, searchBizPath)
+	reqUrl := fmt.Sprintf("%s%s", cmdbConf.Host, searchBizPath)
 	// 获取超时时间
 	timeout := getTimeout()
 	headers := map[string]string{"Content-Type": "application/json"}
@@ -90,9 +91,9 @@ func getReq(c config.CMDBConfig, reqUrl string, username string, bizIDInt int) g
 				"bk_biz_id":         bizIDInt,
 				"bk_biz_maintainer": username,
 			},
-			"bk_supplier_account": c.BKSupplierAccount,
-			"bk_app_code":         config.GlobalConf.AppCodeSecret.AppCode,
-			"bk_app_secret":       config.GlobalConf.AppCodeSecret.AppSecret,
+			"bk_supplier_account": getSupplierAccount(),
+			"bk_app_code":         config.GlobalConf.App.Code,
+			"bk_app_secret":       config.GlobalConf.App.Secret,
 			"bk_username":         username,
 		},
 		Debug: c.Debug,
@@ -107,6 +108,7 @@ func getTimeout() int {
 	return timeout
 }
 
+// 获取开发商账号
 func getSupplierAccount() string {
 	supplierAccount := config.GlobalConf.CMDB.BKSupplierAccount
 	if supplierAccount == "" {

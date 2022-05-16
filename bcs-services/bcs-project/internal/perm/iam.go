@@ -18,6 +18,7 @@ import (
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	iamPerm "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
@@ -34,11 +35,12 @@ const (
 	ProjectDelete string = "project_delete"
 )
 
+// NewPermClient new a perm client
 func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 	opts := &bcsIAM.Options{
 		SystemID:    bcsIAM.SystemIDBKBCS,
-		AppCode:     config.GlobalConf.AppCodeSecret.AppCode,
-		AppSecret:   config.GlobalConf.AppCodeSecret.AppSecret,
+		AppCode:     config.GlobalConf.App.Code,
+		AppSecret:   config.GlobalConf.App.Secret,
 		External:    !config.GlobalConf.IAM.UseGWHost,
 		GateWayHost: config.GlobalConf.IAM.GatewayHost,
 		Metric:      false,
@@ -70,9 +72,9 @@ func canExemptClientPerm(clientID string, action string) bool {
 }
 
 // CanCreateProject ...
-func CanCreateProject(username string, clientID string) error {
+func CanCreateProject(authUser auth.AuthUser) error {
 	// 判断是否校验权限
-	if canExemptClientPerm(clientID, CreateAction) {
+	if canExemptClientPerm(authUser.ClientID, CreateAction) {
 		return nil
 	}
 
@@ -82,7 +84,7 @@ func CanCreateProject(username string, clientID string) error {
 		return errorx.NewIAMClientErr(err)
 	}
 
-	canCreate, applyUrl, err := permClient.CanCreateProject(username)
+	canCreate, applyUrl, err := permClient.CanCreateProject(authUser.Username)
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectCreate", canCreate, err)
 	}
@@ -93,9 +95,9 @@ func CanCreateProject(username string, clientID string) error {
 }
 
 // CanViewProject ...
-func CanViewProject(username string, projectID string, clientID string) error {
+func CanViewProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
-	if canExemptClientPerm(clientID, ViewAction) {
+	if canExemptClientPerm(authUser.ClientID, ViewAction) {
 		return nil
 	}
 
@@ -104,7 +106,7 @@ func CanViewProject(username string, projectID string, clientID string) error {
 		return errorx.NewIAMClientErr(err)
 	}
 
-	canView, applyUrl, err := permClient.CanViewProject(username, projectID)
+	canView, applyUrl, err := permClient.CanViewProject(authUser.Username, projectID)
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectView", canView, err)
 	}
@@ -115,9 +117,9 @@ func CanViewProject(username string, projectID string, clientID string) error {
 }
 
 // CanEditProject ...
-func CanEditProject(username, projectID string, clientID string) error {
+func CanEditProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
-	if canExemptClientPerm(clientID, UpdateAction) {
+	if canExemptClientPerm(authUser.ClientID, UpdateAction) {
 		return nil
 	}
 
@@ -126,20 +128,20 @@ func CanEditProject(username, projectID string, clientID string) error {
 		return errorx.NewIAMClientErr(err)
 	}
 	// 校验是否有编辑权限
-	canEdit, applyUrl, err := permClient.CanEditProject(username, projectID)
+	canEdit, applyUrl, err := permClient.CanEditProject(authUser.Username, projectID)
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectEdit", canEdit, err)
 	}
 	if !canEdit {
-		return errorx.NewPermDeniedErr(applyUrl, "projectEdit", canEdit, err)
+		return errorx.NewPermDeniedErr(applyUrl, "projectEdit", canEdit, err.Error())
 	}
 	return nil
 }
 
 // CanEditProject ...
-func CanDeleteProject(username string, projectID string, clientID string) error {
+func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
-	if canExemptClientPerm(clientID, DeleteAction) {
+	if canExemptClientPerm(authUser.ClientID, DeleteAction) {
 		return nil
 	}
 
@@ -148,12 +150,12 @@ func CanDeleteProject(username string, projectID string, clientID string) error 
 		return errorx.NewIAMClientErr(err)
 	}
 	// NOTE: 不校验集群
-	canDelete, applyUrl, err := permClient.CanDeleteProject(username, projectID, "")
+	canDelete, applyUrl, err := permClient.CanDeleteProject(authUser.Username, projectID, "")
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectDelete", canDelete, err)
 	}
 	if !canDelete {
-		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err)
+		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err.Error())
 	}
 	return nil
 }

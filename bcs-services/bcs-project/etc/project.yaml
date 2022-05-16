@@ -55,8 +55,8 @@ jwt:
   publicKeyFile: "../../test/jwt/app.rsa.pub"
   privateKeyFile: "../../test/jwt/app.rsa"
 app:
-  appCode: ""
-  appSecret: ""
+  code: ""
+  secret: ""
 iam:
   gatewayHost: ""
   useGWHost: true
@@ -70,9 +70,9 @@ clientActionExemptPerm:
     - create
 cmdb:
   bkSupplierAccount: "tencent"
-  domain: "http://localhost:80"
+  host: "http://localhost:80"
   timeout: 10
   proxy: ""
   debug: false
 bcscc:
-  domain: ""
+  host: ""

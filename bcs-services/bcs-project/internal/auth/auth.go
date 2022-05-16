@@ -47,10 +47,12 @@ func GetClientIDFromCtx(ctx context.Context) string {
 	return clientID
 }
 
-func GetAuthFromCtx(ctx context.Context) (string, string) {
-	username := GetUserFromCtx(ctx)
-	clientID := GetClientIDFromCtx(ctx)
-	return username, clientID
+// GetAuthUserFromCtx get auth user info, include username client id
+func GetAuthUserFromCtx(ctx context.Context) AuthUser {
+	return AuthUser{
+		Username: GetUserFromCtx(ctx),
+		ClientID: GetClientIDFromCtx(ctx),
+	}
 }
 
 type AuthUser struct {

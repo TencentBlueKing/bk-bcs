@@ -31,6 +31,7 @@ var (
 	timeout         = 10
 )
 
+// GrantResourceCreatorActions grant create action perm for resource
 func GrantResourceCreatorActions(username string, projectID string, projectName string) error {
 	iamConf := config.GlobalConf.IAM
 	// 使用网关访问
@@ -40,8 +41,8 @@ func GrantResourceCreatorActions(username string, projectID string, projectName 
 		Url:    reqUrl,
 		Method: "POST",
 		Data: map[string]interface{}{
-			"bk_app_code":   config.GlobalConf.AppCodeSecret.AppCode,
-			"bk_app_secret": config.GlobalConf.AppCodeSecret.AppSecret,
+			"bk_app_code":   config.GlobalConf.App.Code,
+			"bk_app_secret": config.GlobalConf.App.Secret,
 			"creator":       username,
 			"system":        bcsIAM.SystemIDBKBCS,
 			"type":          "project",

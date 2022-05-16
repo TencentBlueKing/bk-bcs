@@ -165,8 +165,8 @@ svcConf:
     publicKeyFile: "/data/project/cert/jwt/public.key"
     privateKeyFile: "/data/project/cert/jwt/private.key"
   app:
-    appCode: "bk_bcs"
-    appSecret: "" 
+    code: "bk_bcs"
+    secret: "" 
   iam:
     gatewayHost: ""
     useGWHost: true
@@ -177,7 +177,7 @@ svcConf:
   cmdb:
     enable: true
     bkSupplierAccount: ""
-    domain: ""
+    host: ""
   # 针对特定系统权限的忽略
   clientActionExemptPerm:
     clientActions:
@@ -186,4 +186,4 @@ svcConf:
       - create
       - update
   bcscc:
-    domain: ""
+    host: ""

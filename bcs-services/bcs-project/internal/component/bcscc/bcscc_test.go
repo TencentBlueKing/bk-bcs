@@ -91,7 +91,7 @@ func TestCreateProject(t *testing.T) {
 	defer ts.Close()
 
 	svcConfig.LoadConfig("../../../" + config.DefaultConfigPath)
-	svcConfig.GlobalConf.BCSCC.Domain = ts.URL
+	svcConfig.GlobalConf.BCSCC.Host = ts.URL
 	err := CreateProject(project)
 	assert.Nil(t, err)
 }
@@ -112,7 +112,7 @@ func TestUpdateProject(t *testing.T) {
 	defer ts.Close()
 
 	svcConfig.LoadConfig("../../../" + config.DefaultConfigPath)
-	svcConfig.GlobalConf.BCSCC.Domain = ts.URL
+	svcConfig.GlobalConf.BCSCC.Host = ts.URL
 	err := UpdateProject(project)
 	assert.Nil(t, err)
 }
