@@ -4,7 +4,7 @@
         "title": "BCS-Monitor OpenAPI",
         "contact": {}
     },
-    "basePath": "/bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId",
+    "basePath": "/bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId",
     "paths": {
         "/namespaces/:namespace/pods/:pod/containers": {
             "get": {

@@ -14,6 +14,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"path"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
@@ -23,9 +24,13 @@ import (
 
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
 )
+
+// 子模块前缀
+const apiModulePrefix = "/api"
 
 // APIServer
 type APIServer struct {
@@ -46,7 +51,7 @@ func NewAPIServer(ctx context.Context, addr string) (*APIServer, error) {
 		engine: engine,
 		srv:    srv,
 	}
-	registerRoutes(engine)
+	s.newRoutes(engine)
 
 	return s, nil
 }
@@ -62,9 +67,9 @@ func (a *APIServer) Close() error {
 }
 
 // @Title     BCS-Monitor OpenAPI
-// @BasePath  /bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId
-func registerRoutes(engine *gin.Engine) {
-	// 添加X-Request-Id 头部
+// @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
+func (a *APIServer) newRoutes(engine *gin.Engine) {
+	// 添加 X-Request-Id 头部
 	requestIdMiddleware := requestid.New(
 		requestid.WithGenerator(func() string {
 			return rest.RequestIdGenerator()
@@ -77,6 +82,12 @@ func registerRoutes(engine *gin.Engine) {
 	// openapi 文档
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
+	// 注册 HTTP 请求
+	registerRoutes(engine.Group(apiModulePrefix))
+	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, apiModulePrefix)))
+}
+
+func registerRoutes(engine *gin.RouterGroup) {
 	// 日志相关接口
 	route := engine.Group("/projects/:projectId/clusters/:clusterId")
 	{

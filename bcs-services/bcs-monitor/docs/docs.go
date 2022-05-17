@@ -167,7 +167,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "",
 	Host:             "",
-	BasePath:         "/bcsapi/v4/monitor/projects/:projectId/clusters/:clusterId",
+	BasePath:         "/bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId",
 	Schemes:          []string{},
 	Title:            "BCS-Monitor OpenAPI",
 	Description:      "",
