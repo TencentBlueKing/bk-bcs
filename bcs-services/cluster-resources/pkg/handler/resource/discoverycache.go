@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -36,7 +37,7 @@ func (h *Handler) InvalidateDiscoveryCache(
 	if allow, err := iam.NewClusterPerm(req.ProjectID).CanManage(permCtx); err != nil {
 		return err
 	} else if !allow {
-		return errorx.New(errcode.NoIAMPerm, "无指定操作权限")
+		return errorx.New(errcode.NoIAMPerm, i18n.GetMsg(ctx, "无指定操作权限"))
 	}
 
 	cli, err := res.NewRedisCacheClient4Conf(ctx, res.NewClusterConfig(req.ClusterID))

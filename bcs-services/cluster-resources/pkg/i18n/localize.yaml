@@ -1,0 +1,79 @@
+# Golang 错误信息
+- msgID: 该请求资源类型在共享集群中不可用
+  en: 'current resource unavailable in shared cluster'
+- msgID: 命名空间 %s 在该共享集群中不属于指定项目
+  en: 'namespace %s not belong to project in this shared cluster'
+- msgID: 在共享集群中，只有指定的数类资源可以执行订阅功能
+  en: 'only several resources allow subscribe events in shared cluster'
+- msgID: 共享集群暂时只支持查询部分自定义资源
+  en: 'only several custom resources available in shared cluster'
+- msgID: 不受支持的生成器格式：%s
+  en: 'unsupported generator form: %s'
+- msgID: 不受支持的转换器格式：%s
+  en: 'unsupported transformer form: %s'
+- msgID: 查看/操作自定义资源 %s 需要指定命名空间
+  en: 'namespace is required when view or operate custom resource %s'
+- msgID: 共享集群中不支持查看 CRD %s 信息
+  en: 'get crd info is disabled in shared cluster'
+- msgID: 无指定操作权限
+  en: 'no operate permission!'
+- msgID: 资源类型 `%s` 暂无参考示例
+  en: 'no example for resource kind %s'
+- msgID: 资源类型 `%s` 不支持表单化
+  en: 'form edit mode is unsupported for resource kind %s'
+- msgID: 获取项目 %s 信息失败：%v
+  en: 'failed to get project %s info: %v'
+- msgID: 获取集群 %s 信息失败：%v
+  en: 'failed to get cluster %s info: %v'
+- msgID: 集群 %s 不属于指定项目!
+  en: 'cluster %s no belong to project!'
+- msgID: 当资源类型为自定义对象时，需要指定 ApiVersion & CRDName
+  en: 'apiVersion & CRDName are required when resource kind is custom object'
+- msgID: CRD %s 的 kind 与 %s 不匹配
+  en: "CRD %s's kind not match %s"
+- msgID: 查询当前自定义资源事件需要指定 Namespace
+  en: "namespace is required when fetch current custom resource's events"
+- msgID: 查询当前资源事件需要指定 Namespace
+  en: "namespace is required when fetch current resource's events"
+- msgID: Pod %s/%s 不存在父级资源，不允许重新调度
+  en: 'reschedule pod %s/%s is not allowed because has not ownerRef'
+- msgID: Pod %s/%s 父级资源存在 Job，不允许重新调度
+  en: 'reschedule pod %s/%s is not allowed because ownerRef exists Job'
+- msgID: 创建 %s 需要指定 metadata.namespace
+  en: 'metadata.name is required when create %s'
+- msgID: metadata.name 必须指定且与准备编辑的资源名保持一致
+  en: 'metadata.name is required and must as same as resource name to be edited'
+- msgID: 由 Context 获取项目信息失败
+  en: 'failed to get project info from context'
+- msgID: 由 Context 获取集群信息失败
+  en: 'failed to get cluster info from context'
+- msgID: 获取资源 APIVersion 信息失败：%v
+  en: 'failed to get resource apiVersion: %v'
+- msgID: 资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化
+  en: 'resource kind %s apiVersion %s not in the list of supported versions %v, please use yaml rather than form edit mode'
+- msgID: 数据清洗零值结果为空集合
+  en: 'cleaning zero-valued data results in an empty collection'
+- msgID: 渲染模板失败：%v
+  en: 'failed to render template: %v'
+- msgID: 加载模板失败：%v
+  en: 'failed to load template: %v'
+# JsonSchema 校验规则
+- msgID: 值不能为空
+  en: 'value required'
+- msgID: 仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾
+  en: "only lowercase letters, numbers and '-' are supported and must start and end with an alphanumeric"
+- msgID: 仅可包含数字字符
+  en: 'can only contain numeric characters'
+- msgID: 超过长度限制（64）
+  en: 'exceeds length limit (64)'
+- msgID: 超过长度限制（128）
+  en: 'exceeds length limit (128)'
+- msgID: 超过长度限制（250）
+  en: 'exceeds length limit (250)'
+- msgID: 仅支持字母，数字，'-'，'_' 及 '/' 且需以字母数字开头和结尾
+  en: "only letters, numbers, '-', '_' and '/' are supported and must start and end with alphanumeric"
+- msgID: 需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字
+  en: "must start and end with alphanumeric, can contain '-', '_', '.' and alphanumeric"
+# JsonSchema 标题，描述等
+- msgID: 名称
+  en: "Name"

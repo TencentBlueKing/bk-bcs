@@ -26,6 +26,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -37,17 +38,17 @@ import (
 // ManifestRenderer 渲染并加载资源配置模板
 type ManifestRenderer struct {
 	ctx        context.Context
-	FormData   map[string]interface{}
-	ClusterID  string
-	Kind       string
-	APIVersion string
-	Tmpl       *template.Template
-	Manifest   map[string]interface{}
+	formData   map[string]interface{}
+	clusterID  string
+	kind       string
+	apiVersion string
+	tmpl       *template.Template
+	manifest   map[string]interface{}
 }
 
 // NewManifestRenderer ...
 func NewManifestRenderer(ctx context.Context, formData map[string]interface{}, clusterID, kind string) *ManifestRenderer {
-	return &ManifestRenderer{ctx: ctx, FormData: formData, ClusterID: clusterID, Kind: kind, Manifest: map[string]interface{}{}}
+	return &ManifestRenderer{ctx: ctx, formData: formData, clusterID: clusterID, kind: kind, manifest: map[string]interface{}{}}
 }
 
 // Render 渲染表单数据，返回 Manifest
@@ -70,23 +71,23 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 			return nil, err
 		}
 	}
-	return r.Manifest, nil
+	return r.manifest, nil
 }
 
 // 获取资源对应 APIVersion 并更新 Renderer 配置
 func (r *ManifestRenderer) setAPIVersion() error {
 	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
-	r.APIVersion = mapx.GetStr(r.FormData, "metadata.apiVersion")
-	if r.APIVersion == "" {
-		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.ClusterID), r.Kind, "")
+	r.apiVersion = mapx.GetStr(r.formData, "metadata.apiVersion")
+	if r.apiVersion == "" {
+		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.clusterID), r.kind, "")
 		if err != nil {
-			return errorx.New(errcode.General, "获取资源 APIVersion 信息失败：%v", err)
+			return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "获取资源 APIVersion 信息失败：%v"), err)
 		}
-		r.APIVersion = resInfo.Version
+		r.apiVersion = resInfo.Version
 		if resInfo.Group != "" {
-			r.APIVersion = resInfo.Group + "/" + resInfo.Version
+			r.apiVersion = resInfo.Group + "/" + resInfo.Version
 		}
-		if err = mapx.SetItems(r.FormData, "metadata.apiVersion", r.APIVersion); err != nil {
+		if err = mapx.SetItems(r.formData, "metadata.apiVersion", r.apiVersion); err != nil {
 			return err
 		}
 	}
@@ -95,15 +96,15 @@ func (r *ManifestRenderer) setAPIVersion() error {
 
 // 检查指定资源能否渲染为表单
 func (r *ManifestRenderer) checkRenderable() error {
-	supportedAPIVersions, ok := FormRenderSupportedResAPIVersion[r.Kind]
+	supportedAPIVersions, ok := FormRenderSupportedResAPIVersion[r.kind]
 	if !ok {
-		return errorx.New(errcode.Unsupported, "资源类型 %s 不支持表单化", r.Kind)
+		return errorx.New(errcode.Unsupported, i18n.GetMsg(r.ctx, "资源类型 `%s` 不支持表单化"), r.kind)
 	}
-	if !slice.StringInSlice(r.APIVersion, supportedAPIVersions) {
+	if !slice.StringInSlice(r.apiVersion, supportedAPIVersions) {
 		return errorx.New(
 			errcode.Unsupported,
-			"资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化",
-			r.Kind, r.APIVersion, supportedAPIVersions,
+			i18n.GetMsg(r.ctx, "资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化"),
+			r.kind, r.apiVersion, supportedAPIVersions,
 		)
 	}
 	return nil
@@ -112,37 +113,37 @@ func (r *ManifestRenderer) checkRenderable() error {
 // 清理表单数据，如去除默认值等
 func (r *ManifestRenderer) cleanFormData() error {
 	// 默认值清理规则：某子表单中均为初始的零值，则认为未被修改，不应作为配置下发
-	if isEmptyMap := mapx.RemoveZeroSubItem(r.FormData); isEmptyMap {
-		return errorx.New(errcode.General, "数据清洗零值结果为空集合")
+	if isEmptyMap := mapx.RemoveZeroSubItem(r.formData); isEmptyMap {
+		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "数据清洗零值结果为空集合"))
 	}
 	return nil
 }
 
 // 加载模板并初始化
 func (r *ManifestRenderer) initTemplate() (err error) {
-	r.Tmpl, err = initTemplate(envs.FormTmplFileBaseDir+"/manifest/", "*")
+	r.tmpl, err = initTemplate(envs.FormTmplFileBaseDir+"/manifest/", "*")
 	return err
 }
 
 // 渲染模板并转换成 Map 格式
 func (r *ManifestRenderer) render2Map() error {
-	// 渲染，转换并写入数据（模板名称格式：{r.Kind}.yaml）
+	// 渲染，转换并写入数据（模板名称格式：{r.kind}.yaml）
 	var buf bytes.Buffer
-	err := r.Tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.FormData)
+	err := r.tmpl.ExecuteTemplate(&buf, r.kind+".yaml", r.formData)
 	if err != nil {
-		log.Warn(r.ctx, "渲染模板失败：%v", err)
-		return errorx.New(errcode.General, "渲染模板失败：%v", err)
+		log.Warn(r.ctx, "failed to render template：%v", err)
+		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
 	}
-	return yaml.Unmarshal(buf.Bytes(), r.Manifest)
+	return yaml.Unmarshal(buf.Bytes(), r.manifest)
 }
 
 // 添加 EditMode Label 标识
 func (r *ManifestRenderer) setEditMode() error {
 	// 若原始配置中没有 labels，则默认新建
-	if labels, _ := mapx.GetItems(r.Manifest, "metadata.labels"); labels == nil {
-		_ = mapx.SetItems(r.Manifest, "metadata.labels", map[string]interface{}{})
+	if labels, _ := mapx.GetItems(r.manifest, "metadata.labels"); labels == nil {
+		_ = mapx.SetItems(r.manifest, "metadata.labels", map[string]interface{}{})
 	}
-	return mapx.SetItems(r.Manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeForm)
+	return mapx.SetItems(r.manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeForm)
 }
 
 const (
@@ -154,12 +155,13 @@ const (
 
 // SchemaRenderer 渲染并加载表单 Schema 模板
 type SchemaRenderer struct {
-	Kind    string
-	Context map[string]interface{}
+	ctx    context.Context
+	kind   string
+	values map[string]interface{}
 }
 
 // NewSchemaRenderer ...
-func NewSchemaRenderer(kind, namespace string) *SchemaRenderer {
+func NewSchemaRenderer(ctx context.Context, kind, namespace string) *SchemaRenderer {
 	// 若没有指定命名空间，则使用 default
 	if namespace == "" {
 		namespace = "default"
@@ -167,8 +169,9 @@ func NewSchemaRenderer(kind, namespace string) *SchemaRenderer {
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
 	return &SchemaRenderer{
-		Kind: kind,
-		Context: map[string]interface{}{
+		ctx:  ctx,
+		kind: kind,
+		values: map[string]interface{}{
 			"kind":      kind,
 			"namespace": namespace,
 			"resName":   fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix),
@@ -179,8 +182,8 @@ func NewSchemaRenderer(kind, namespace string) *SchemaRenderer {
 // Render ...
 func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 	// 1. 检查指定资源类型是否支持表单化
-	if _, ok := FormRenderSupportedResAPIVersion[r.Kind]; !ok {
-		return nil, errorx.New(errcode.Unsupported, "资源类型 %s 不支持表单化", r.Kind)
+	if _, ok := FormRenderSupportedResAPIVersion[r.kind]; !ok {
+		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(r.ctx, "资源类型 `%s` 不支持表单化"), r.kind)
 	}
 
 	// 表单模板 Schema 包含原始 Schema + Layout 信息，两者格式不同，因此分别加载
@@ -194,21 +197,21 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 		return nil, err
 	}
 
-	return map[string]interface{}{"schema": schema, "layout": layout, "rules": genSchemaRules()}, nil
+	return map[string]interface{}{"schema": schema, "layout": layout, "rules": genSchemaRules(r.ctx)}, nil
 }
 
 func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) error {
 	// 1. 加载模板并初始化
 	tmpl, err := initTemplate(fmt.Sprintf("%s/%s/", envs.FormTmplFileBaseDir, subType), "*")
 	if err != nil {
-		return errorx.New(errcode.General, "加载模板失败：%v", err)
+		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "加载模板失败：%v"), err)
 	}
 
-	// 2. 渲染模板并转换成 Map 格式（模板名称格式：{r.Kind}.yaml）
+	// 2. 渲染模板并转换成 Map 格式（模板名称格式：{r.kind}.yaml）
 	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, r.Kind+".yaml", r.Context)
+	err = tmpl.ExecuteTemplate(&buf, r.kind+".yaml", r.values)
 	if err != nil {
-		return errorx.New(errcode.General, "渲染模板失败：%v", err)
+		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
 	}
 	return yaml.Unmarshal(buf.Bytes(), ret)
 }
@@ -245,41 +248,41 @@ func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 }
 
 // 生成 JsonSchema 校验规则
-func genSchemaRules() map[string]interface{} {
+func genSchemaRules(ctx context.Context) map[string]interface{} {
 	return map[string]interface{}{
 		"required": map[string]interface{}{
 			"validator": "{{ $self.value != '' }}",
-			"message":   "值不能为空",
+			"message":   i18n.GetMsg(ctx, "值不能为空"),
 		},
 		"nameRegex": map[string]interface{}{
 			"validator": "/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/",
-			"message":   "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾",
+			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
 		},
 		"numberRegex": map[string]interface{}{
 			"validator": "/^[0-9]*$/",
-			"message":   "仅可包含数字字符",
+			"message":   i18n.GetMsg(ctx, "仅可包含数字字符"),
 		},
 		"maxLength64": map[string]interface{}{
 			"validator": "{{ $self.value.length < 64 }}",
-			"message":   "超过长度限制（64）",
+			"message":   i18n.GetMsg(ctx, "超过长度限制（64）"),
 		},
 		"maxLength128": map[string]interface{}{
 			"validator": "{{ $self.value.length < 128 }}",
-			"message":   "超过长度限制（128）",
+			"message":   i18n.GetMsg(ctx, "超过长度限制（128）"),
 		},
 		"maxLength250": map[string]interface{}{
 			"validator": "{{ $self.value.length < 250 }}",
-			"message":   "超过长度限制（250）",
+			"message":   i18n.GetMsg(ctx, "超过长度限制（250）"),
 		},
 		// 规则：https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
 		"labelKeyRegex": map[string]interface{}{
 			"validator": "/^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$/",
-			"message":   "仅支持字母，数字，'-'，'_' 及 '/' 且需以字母数字开头和结尾",
+			"message":   i18n.GetMsg(ctx, "仅支持字母，数字，'-'，'_' 及 '/' 且需以字母数字开头和结尾"),
 		},
 		// NOTE 标签值允许为空
 		"labelValRegex": map[string]interface{}{
 			"validator": "/(^$|^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?(\\.[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$)/",
-			"message":   "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字",
+			"message":   i18n.GetMsg(ctx, "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"),
 		},
 	}
 }

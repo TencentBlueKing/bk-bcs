@@ -45,7 +45,7 @@ func (h *Handler) ListNS(
 		return err
 	}
 
-	respDataBuilder, err := respUtil.NewRespDataBuilder(ret, res.NS, req.Format)
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, ret, res.NS, req.Format)
 	if err != nil {
 		return err
 	}

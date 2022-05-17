@@ -33,7 +33,7 @@ type PermCtx struct {
 func (c *PermCtx) Validate(_ []string) error {
 	// 尽管创建项目动作是不需要关联 ProjectID 的，但是 ClusterResources 中不涉及项目管理，因此这里要求 ProjectID 必填
 	if c.Username == "" || c.ProjectID == "" {
-		return errorx.New(errcode.ValidateErr, "Ctx validate failed: Username/ProjectID required")
+		return errorx.New(errcode.ValidateErr, "ctx validate failed: Username/ProjectID required")
 	}
 	return nil
 }

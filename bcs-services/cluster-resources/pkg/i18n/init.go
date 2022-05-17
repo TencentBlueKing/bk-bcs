@@ -12,21 +12,36 @@
  * limitations under the License.
  */
 
-package parser
+package i18n
 
 import (
-	"context"
+	"io/ioutil"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"gopkg.in/yaml.v3"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 )
 
-// GetResParseFunc 获取资源对应 Parser
-func GetResParseFunc(ctx context.Context, kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
-	parseFunc, exists := Kind2ParseFuncMap[kind]
-	if !exists {
-		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), kind)
+// 国际化字典
+var i18nMsgMap map[string]map[string]string
+
+// InitMsgMap 服务启动时初始化 i18n 配置
+func InitMsgMap() error {
+	// 读取国际化配置文件
+	yamlFile, err := ioutil.ReadFile(envs.LocalizeFilePath)
+	if err != nil {
+		return err
 	}
-	return parseFunc, nil
+	rawMsgList := []map[string]string{}
+	if err = yaml.Unmarshal(yamlFile, &rawMsgList); err != nil {
+		return err
+	}
+	// 转换格式，填充中文默认值
+	i18nMsgMap = map[string]map[string]string{}
+	for _, msg := range rawMsgList {
+		i18nMsgMap[msg["msgID"]] = map[string]string{
+			ZH: msg["msgID"], EN: msg["en"],
+		}
+	}
+	return nil
 }

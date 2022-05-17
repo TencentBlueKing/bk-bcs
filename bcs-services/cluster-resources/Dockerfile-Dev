@@ -23,5 +23,7 @@ ENV EXAMPLE_FILE_BASE_DIR=/go/src/pkg/resource/example
 
 ENV FORM_TMPL_FILE_BASE_DIR=/go/src/pkg/resource/form/tmpl
 
+ENV LOCALIZE_FILE_PATH=/go/src/pkg/i18n/localize.yaml
+
 # default log file base dir
 RUN mkdir -p /tmp/logs

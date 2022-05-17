@@ -12,21 +12,24 @@
  * limitations under the License.
  */
 
-package parser
+package i18n
 
-import (
-	"context"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+const (
+	// ZH 中文
+	ZH = "zh"
+	// EN 英文
+	EN = "en"
+	// DefaultLang 默认语言
+	DefaultLang = ZH
 )
 
-// GetResParseFunc 获取资源对应 Parser
-func GetResParseFunc(ctx context.Context, kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
-	parseFunc, exists := Kind2ParseFuncMap[kind]
-	if !exists {
-		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), kind)
-	}
-	return parseFunc, nil
+// 语言版本简写映射表
+var langMap = map[string]string{
+	"zh":      ZH,
+	"zh-cn":   ZH,
+	"zh-hans": ZH,
+	"zh-hant": ZH,
+	"en":      EN,
+	"en-us":   EN,
+	"en-gb":   EN,
 }

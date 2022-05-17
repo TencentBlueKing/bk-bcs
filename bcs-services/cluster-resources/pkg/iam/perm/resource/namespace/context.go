@@ -49,7 +49,7 @@ func NewPermCtx(username, projectID, clusterID, namespace string) *PermCtx {
 // Validate ...
 func (c *PermCtx) Validate(actionIDs []string) error {
 	if c.Username == "" || c.ProjectID == "" || c.ClusterID == "" {
-		return errorx.New(errcode.ValidateErr, "Ctx validate failed: Username/ProjectID/ClusterID required")
+		return errorx.New(errcode.ValidateErr, "ctx validate failed: Username/ProjectID/ClusterID required")
 	}
 	// 如果是 命名空间创建，获取列表 可不需要命名空间
 	for _, actionID := range actionIDs {
@@ -57,7 +57,7 @@ func (c *PermCtx) Validate(actionIDs []string) error {
 			continue
 		}
 		if c.Namespace == "" {
-			return errorx.New(errcode.ValidateErr, "Ctx validate failed: Namespace required")
+			return errorx.New(errcode.ValidateErr, "ctx validate failed: Namespace required")
 		}
 	}
 	return nil

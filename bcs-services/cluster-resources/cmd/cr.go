@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
@@ -67,12 +68,16 @@ func Start() {
 
 	// 初始化 Redis 客户端
 	redis.InitRedisClient(&crConf.Redis)
+	// 初始化 I18N 相关配置
+	if err = i18n.InitMsgMap(); err != nil {
+		panic(errorx.New(errcode.General, "init i18n message map failed: %v", err))
+	}
 
 	crSvc := newClusterResourcesService(crConf)
-	if err := crSvc.Init(); err != nil {
+	if err = crSvc.Init(); err != nil {
 		panic(errorx.New(errcode.General, "init cluster resources svc failed: %v", err))
 	}
-	if err := crSvc.Run(); err != nil {
+	if err = crSvc.Run(); err != nil {
 		panic(errorx.New(errcode.General, "run cluster resources svc failed: %v", err))
 	}
 }

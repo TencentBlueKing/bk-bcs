@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -33,7 +34,7 @@ func New(ctx context.Context, rawData map[string]interface{}, clusterID, kind, f
 	case action.FormDataFormat:
 		return &FormDataTransformer{ctx: ctx, formData: rawData, clusterID: clusterID, kind: kind}, nil
 	default:
-		return nil, errorx.New(errcode.Unsupported, "不受支持的转换器格式：%s", format)
+		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "不受支持的转换器格式：%s"), format)
 	}
 }
 

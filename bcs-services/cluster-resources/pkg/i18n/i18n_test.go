@@ -12,21 +12,30 @@
  * limitations under the License.
  */
 
-package parser
+package i18n
 
 import (
 	"context"
+	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 )
 
-// GetResParseFunc 获取资源对应 Parser
-func GetResParseFunc(ctx context.Context, kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
-	parseFunc, exists := Kind2ParseFuncMap[kind]
-	if !exists {
-		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), kind)
-	}
-	return parseFunc, nil
+func TestGetMsg(t *testing.T) {
+	// 初始化 i18n 字典
+	assert.Nil(t, InitMsgMap())
+
+	// 默认中文
+	ctx := context.TODO()
+	assert.Equal(t, "无指定操作权限", GetMsg(ctx, "无指定操作权限"))
+
+	// 指定为英文
+	ctx = context.WithValue(ctx, ctxkey.LangKey, EN)
+	assert.Equal(t, "no operate permission!", GetMsg(ctx, "无指定操作权限"))
+
+	// 指定为中文
+	ctx = context.WithValue(ctx, ctxkey.LangKey, ZH)
+	assert.Equal(t, "无指定操作权限", GetMsg(ctx, "无指定操作权限"))
 }

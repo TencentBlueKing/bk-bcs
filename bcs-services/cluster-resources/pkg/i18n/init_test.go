@@ -12,21 +12,16 @@
  * limitations under the License.
  */
 
-package parser
+package i18n
 
 import (
-	"context"
+	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/stretchr/testify/assert"
 )
 
-// GetResParseFunc 获取资源对应 Parser
-func GetResParseFunc(ctx context.Context, kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
-	parseFunc, exists := Kind2ParseFuncMap[kind]
-	if !exists {
-		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), kind)
-	}
-	return parseFunc, nil
+func TestInitMsgMap(t *testing.T) {
+	assert.Nil(t, InitMsgMap())
+	assert.Equal(t, i18nMsgMap["无指定操作权限"]["zh"], "无指定操作权限")
+	assert.Equal(t, i18nMsgMap["无指定操作权限"]["en"], "no operate permission!")
 }

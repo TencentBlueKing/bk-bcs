@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -70,6 +71,9 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 				ctx = context.WithValue(ctx, ctxkey.ProjKey, projInfo)
 				ctx = context.WithValue(ctx, ctxkey.ClusterKey, clusterInfo)
 			}
+
+			// 4. 解析语言版本信息
+			ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.GetLangFromCookies(ctx))
 
 			// 实际执行业务逻辑，获取返回结果
 			return fn(ctx, req, rsp)
@@ -170,7 +174,7 @@ func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project
 	}
 	projInfo, err := project.GetProjectInfo(ctx, projectID.(string))
 	if err != nil {
-		return nil, nil, errorx.New(errcode.General, "获取项目 %s 信息失败：%v", projectID, err)
+		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取项目 %s 信息失败：%v"), projectID, err)
 	}
 	clusterID, err := goAttr.GetValue(req.Body(), "ClusterID")
 	if err != nil {
@@ -178,11 +182,11 @@ func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project
 	}
 	clusterInfo, err := cluster.GetClusterInfo(ctx, clusterID.(string))
 	if err != nil {
-		return nil, nil, errorx.New(errcode.General, "获取集群 %s 信息失败：%v", clusterID, err)
+		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取集群 %s 信息失败：%v"), clusterID, err)
 	}
 	// 若集群类型非共享集群，则需确认集群的项目 ID 与请求参数中的一致
 	if !slice.StringInSlice(clusterInfo.Type, cluster.SharedClusterTypes) && clusterInfo.ProjID != projInfo.ID {
-		return nil, nil, errorx.New(errcode.ValidateErr, "集群 %s 不属于指定项目!", clusterID)
+		return nil, nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "集群 %s 不属于指定项目!"), clusterID)
 	}
 	return projInfo, clusterInfo, nil
 }
