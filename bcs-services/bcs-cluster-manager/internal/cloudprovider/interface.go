@@ -182,6 +182,7 @@ func GetCloudValidateMgr(provider string) (CloudValidateManager, error) {
 type CloudInfoManager interface {
 	// InitCloudClusterDefaultInfo init cloud cluster default configInfo
 	InitCloudClusterDefaultInfo(cls *proto.Cluster, opt *InitClusterConfigOption) error
+	// SyncClusterCloudInfo sync cluster metadata
 	SyncClusterCloudInfo(cls *proto.Cluster, opt *SyncClusterCloudInfoOption)  error
 }
 
@@ -191,13 +192,20 @@ type NodeManager interface {
 	GetNodeByIP(ip string, opt *GetNodeOption) (*proto.Node, error)
 	// ListNodesByIP list node by IP set
 	ListNodesByIP(ips []string, opt *ListNodesOption) ([]*proto.Node, error)
-	// GetCVMImageIDByImageName
+	// GetCVMImageIDByImageName get imageID by imageName
 	GetCVMImageIDByImageName(imageName string, opt *CommonOption) (string, error)
+	// GetCloudRegions get cloud regions
+	GetCloudRegions(opt *CommonOption) ([]*proto.RegionInfo, error)
+	// GetZoneList get zoneList by region
+	GetZoneList(opt *CommonOption) ([]*proto.ZoneInfo, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
 type CloudValidateManager interface {
+	// ImportClusterValidate import cluster validate
 	ImportClusterValidate(req *proto.ImportClusterReq, opt *CommonOption) error
+	// ImportCloudAccountValidate import cloud account validate
+	ImportCloudAccountValidate(req *proto.Account) error
 }
 
 // ClusterManager cloud interface for kubernetes cluster management
@@ -210,6 +218,8 @@ type ClusterManager interface {
 	DeleteCluster(cls *proto.Cluster, opt *DeleteClusterOption) (*proto.Task, error)
 	// GetCluster get kubernetes cluster detail information according cloudprovider
 	GetCluster(cloudID string, opt *GetClusterOption) (*proto.Cluster, error)
+	// ListCluster get cloud cluster list by region
+	ListCluster(opt *ListClusterOption) ([]*proto.CloudClusterInfo, error)
 	// CheckClusterCidrAvailable check cluster cidr if meet to add nodes
 	CheckClusterCidrAvailable(cls *proto.Cluster, opt *CheckClusterCIDROption) (bool, error)
 	// GetNodesInCluster get all nodes belong to cluster according cloudprovider

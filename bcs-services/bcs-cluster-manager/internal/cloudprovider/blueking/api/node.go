@@ -41,6 +41,18 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 	return node, nil
 }
 
+// GetRegionsInfo get regionInfo
+func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
+	// blueking cloud not need to implement interface
+	return nil, nil
+}
+
+// GetZoneList get zoneList
+func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
+	// blueking cloud not need to implement interface
+	return nil, nil
+}
+
 // GetCVMImageIDByImageName get imageID by imageName
 func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprovider.CommonOption) (string, error) {
 	// blueking cloud not need to implement interface

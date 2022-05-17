@@ -501,6 +501,51 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterManager.CreateCloudAccount",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateCloudAccount",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteCloudAccount",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudAccount",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetCloudRegions",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetCloudRegionZones",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/zones"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudRegionCluster",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusters"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -588,6 +633,15 @@ type ClusterManagerService interface {
 	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error)
 	GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...client.CallOption) (*GetAutoScalingOptionResponse, error)
 	ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...client.CallOption) (*ListAutoScalingOptionResponse, error)
+	// Cloud Account information management
+	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error)
+	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error)
+	DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error)
+	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error)
+	// Cloud Resource management
+	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
+	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
+	ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...client.CallOption) (*ListCloudRegionClusterResponse, error)
 }
 
 type clusterManagerService struct {
@@ -1292,6 +1346,76 @@ func (c *clusterManagerService) ListAutoScalingOption(ctx context.Context, in *L
 	return out, nil
 }
 
+func (c *clusterManagerService) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloudAccount", in)
+	out := new(CreateCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateCloudAccount", in)
+	out := new(UpdateCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteCloudAccount", in)
+	out := new(DeleteCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudAccount", in)
+	out := new(ListCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudRegions", in)
+	out := new(GetCloudRegionsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudRegionZones", in)
+	out := new(GetCloudRegionZonesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...client.CallOption) (*ListCloudRegionClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudRegionCluster", in)
+	out := new(ListCloudRegionClusterResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
@@ -1376,6 +1500,15 @@ type ClusterManagerHandler interface {
 	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest, *DeleteAutoScalingOptionResponse) error
 	GetAutoScalingOption(context.Context, *GetAutoScalingOptionRequest, *GetAutoScalingOptionResponse) error
 	ListAutoScalingOption(context.Context, *ListAutoScalingOptionRequest, *ListAutoScalingOptionResponse) error
+	// Cloud Account information management
+	CreateCloudAccount(context.Context, *CreateCloudAccountRequest, *CreateCloudAccountResponse) error
+	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest, *UpdateCloudAccountResponse) error
+	DeleteCloudAccount(context.Context, *DeleteCloudAccountRequest, *DeleteCloudAccountResponse) error
+	ListCloudAccount(context.Context, *ListCloudAccountRequest, *ListCloudAccountResponse) error
+	// Cloud Resource management
+	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
+	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
+	ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest, *ListCloudRegionClusterResponse) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -1449,6 +1582,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, out *DeleteAutoScalingOptionResponse) error
 		GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, out *GetAutoScalingOptionResponse) error
 		ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, out *ListAutoScalingOptionResponse) error
+		CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error
+		UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error
+		DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error
+		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
+		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
+		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
+		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -1913,6 +2053,51 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateCloudAccount",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateCloudAccount",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteCloudAccount",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudAccount",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetCloudRegions",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetCloudRegionZones",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/zones"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudRegionCluster",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusters"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
 }
 
@@ -2194,4 +2379,32 @@ func (h *clusterManagerHandler) GetAutoScalingOption(ctx context.Context, in *Ge
 
 func (h *clusterManagerHandler) ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, out *ListAutoScalingOptionResponse) error {
 	return h.ClusterManagerHandler.ListAutoScalingOption(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error {
+	return h.ClusterManagerHandler.CreateCloudAccount(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error {
+	return h.ClusterManagerHandler.UpdateCloudAccount(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error {
+	return h.ClusterManagerHandler.DeleteCloudAccount(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error {
+	return h.ClusterManagerHandler.ListCloudAccount(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error {
+	return h.ClusterManagerHandler.GetCloudRegions(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error {
+	return h.ClusterManagerHandler.GetCloudRegionZones(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error {
+	return h.ClusterManagerHandler.ListCloudRegionCluster(ctx, in, out)
 }

@@ -539,6 +539,326 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/accounts": {
+      "get": {
+        "summary": "查询Cloud 账号列表",
+        "description": "根据查询条件过滤Cloud 账号列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有账号",
+        "operationId": "ClusterManager_ListCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云类型，英文字符串",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 查询具体cloud账号",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "post": {
+        "summary": "创建云账号信息",
+        "description": "创建云账号信息",
+        "operationId": "ClusterManager_CreateCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "cloud云类型",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateCloudAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}": {
+      "delete": {
+        "summary": "删除Cloud 账号信息",
+        "description": "删除特定cloud 账号信息",
+        "operationId": "ClusterManager_DeleteCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云类型，英文字符串",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "cloud账户信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "put": {
+        "summary": "更新云账号",
+        "description": "更新云账号信息",
+        "operationId": "ClusterManager_UpdateCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云类型，英文字符串",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "cloud云账号ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateCloudAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/regions": {
+      "get": {
+        "summary": "查询cloud地域列表",
+        "description": "查询cloud地域列表",
+        "operationId": "ClusterManager_GetCloudRegions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetCloudRegionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "SecretID",
+            "description": "SecretID. 云认证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "SecretKey",
+            "description": "SecretKey. 云认证Key",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusters": {
+      "get": {
+        "summary": "查询cloud地域集群列表",
+        "description": "查询cloud地域集群列表",
+        "operationId": "ClusterManager_ListCloudRegionCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudRegionClusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "地域信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "SecretID",
+            "description": "SecretID. 云认证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "SecretKey",
+            "description": "SecretKey. 云认证Key",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/regions/{region}/zones": {
+      "get": {
+        "summary": "查询cloud地域可用区列表",
+        "description": "查询cloud地域可用区列表",
+        "operationId": "ClusterManager_GetCloudRegionZones",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetCloudRegionZonesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "地域信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "SecretID",
+            "description": "SecretID. 云认证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "SecretKey",
+            "description": "SecretKey. 云认证Key",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cloudvpc": {
       "get": {
         "summary": "查询Cloud VPC列表",
@@ -3204,6 +3524,23 @@
         }
       }
     },
+    "clustermanagerAccount": {
+      "type": "object",
+      "properties": {
+        "secretID": {
+          "type": "string",
+          "description": "腾讯云账号secretID",
+          "title": "secretID"
+        },
+        "secretKey": {
+          "type": "string",
+          "description": "腾讯云账号secretKey",
+          "title": "secretKey"
+        }
+      },
+      "description": "用于存储不同cloud的账号信息，不同cloud格式兼容处理",
+      "title": "Account"
+    },
     "clustermanagerAction": {
       "type": "object",
       "properties": {
@@ -3707,6 +4044,121 @@
       "description": "云信息，多云管理下用于定义共享信息，BCS默认地提供蓝鲸云预定义，腾讯云预定义信息",
       "title": "Cloud"
     },
+    "clustermanagerCloudAccount": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "BCS平台支持的云类型，英文字符串",
+          "title": "cloudID"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "BCS平台生成的账号ID, 格式为(BCS-Cloud-ID)",
+          "title": "accountID"
+        },
+        "accountName": {
+          "type": "string",
+          "description": "cloud账号名称",
+          "title": "accountName"
+        },
+        "desc": {
+          "type": "string",
+          "description": "cloud账号描述信息",
+          "title": "desc"
+        },
+        "account": {
+          "$ref": "#/definitions/clustermanagerAccount",
+          "description": "cloud账号信息",
+          "title": "desc"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud账号是否启用,默认是启用的",
+          "title": "enable"
+        },
+        "creator": {
+          "type": "string",
+          "description": "信息创建者",
+          "title": "creator"
+        },
+        "updater": {
+          "type": "string",
+          "description": "信息更新者",
+          "title": "updater"
+        },
+        "creatTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "creatTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        }
+      },
+      "description": "用于管理不同cloud的账号信息(仅用作管理和使用)",
+      "title": "CloudAccount"
+    },
+    "clustermanagerCloudAccountInfo": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/clustermanagerCloudAccount"
+        },
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "CloudAccountInfo return account relative info"
+    },
+    "clustermanagerCloudClusterInfo": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "云集群ID",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "clusterDescription": {
+          "type": "string",
+          "description": "集群描述信息",
+          "title": "clusterDescription"
+        },
+        "clusterVersion": {
+          "type": "string",
+          "description": "集群版本",
+          "title": "clusterVersion"
+        },
+        "clusterOS": {
+          "type": "string",
+          "description": "集群操作系统",
+          "title": "clusterOS"
+        },
+        "clusterType": {
+          "type": "string",
+          "description": "集群类型",
+          "title": "clusterType"
+        },
+        "clusterStatus": {
+          "type": "string",
+          "description": "集群状态(Running 运行中 Creating 创建中 Idling 闲置中 Abnormal 异常)",
+          "title": "clusterStatus"
+        }
+      },
+      "description": "云集群信息",
+      "title": "CloudClusterInfo"
+    },
     "clustermanagerCloudConfigInfo": {
       "type": "object",
       "properties": {
@@ -4032,6 +4484,11 @@
           "type": "string",
           "description": "当clusterCategory参数为importer时, 主要用于区分该集群是kubeConfig/cloud导入,默认为空",
           "title": "importCategory"
+        },
+        "cloudAccountID": {
+          "type": "string",
+          "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
+          "title": "cloudAccountID"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -4412,6 +4869,72 @@
         },
         "data": {
           "$ref": "#/definitions/clustermanagerClusterAutoScalingOption"
+        }
+      }
+    },
+    "clustermanagerCreateCloudAccountRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "cloud云类型",
+          "title": "cloudID"
+        },
+        "accountName": {
+          "type": "string",
+          "description": "cloud账号名称",
+          "title": "accountName"
+        },
+        "desc": {
+          "type": "string",
+          "description": "cloud账号描述信息",
+          "title": "desc"
+        },
+        "account": {
+          "$ref": "#/definitions/clustermanagerAccount",
+          "description": "cloud云账号信息,不同cloud进行有效性及兼容处理",
+          "title": "account"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud云账号是否开启，默认开启",
+          "title": "enable"
+        },
+        "creator": {
+          "type": "string",
+          "description": "cloud账号创建者",
+          "title": "creator"
+        }
+      },
+      "description": "导入cloud account",
+      "title": "CreateCloudAccountRequest",
+      "required": [
+        "cloudID",
+        "accountName",
+        "account",
+        "creator"
+      ]
+    },
+    "clustermanagerCreateCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       }
     },
@@ -4831,6 +5354,11 @@
           "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
+        },
+        "cloudAccountID": {
+          "type": "string",
+          "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
+          "title": "cloudAccountID"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -5534,6 +6062,33 @@
         }
       }
     },
+    "clustermanagerDeleteCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerCloudAccount",
+          "description": "已删除的云账号信息",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerDeleteCloudResponse": {
       "type": "object",
       "properties": {
@@ -5901,6 +6456,70 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerGetCloudRegionZonesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerZoneInfo"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "获取cloud 地域可用区列表",
+      "title": "GetCloudRegionZonesResponse"
+    },
+    "clustermanagerGetCloudRegionsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerRegionInfo"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "获取cloud 地域列表",
+      "title": "GetCloudRegionsResponse"
     },
     "clustermanagerGetCloudResponse": {
       "type": "object",
@@ -6396,6 +7015,11 @@
           "type": "string",
           "description": "导入集群版本信息",
           "title": "version"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
+          "title": "accountID"
         }
       },
       "description": "用户已存在的集群导入BCS进行纳管",
@@ -6753,6 +7377,74 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerListCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudAccountInfo"
+          },
+          "description": "cloud账号列表",
+          "title": "data"
+        }
+      },
+      "description": "查询云账号返回",
+      "title": "ListCloudAccountResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudRegionClusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudClusterInfo"
+          },
+          "description": "获取到的集群列表信息",
+          "title": "data"
+        }
+      },
+      "description": "获取cloud地域集群列表",
+      "title": "ListCloudRegionClusterResponse"
     },
     "clustermanagerListCloudRegionsResponse": {
       "type": "object",
@@ -7863,6 +8555,28 @@
       "description": "项目信息，整体对齐devops信息。每个业务可以有多个项目进行权限隔离",
       "title": "Project"
     },
+    "clustermanagerRegionInfo": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "地域信息",
+          "title": "region"
+        },
+        "regionName": {
+          "type": "string",
+          "description": "地域信息名称",
+          "title": "regionName"
+        },
+        "regionState": {
+          "type": "string",
+          "description": "地域状态",
+          "title": "regionState"
+        }
+      },
+      "description": "地域信息",
+      "title": "RegionInfo"
+    },
     "clustermanagerRemoveNodesFromGroupRequest": {
       "type": "object",
       "properties": {
@@ -8428,6 +9142,76 @@
         }
       }
     },
+    "clustermanagerUpdateCloudAccountRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云类型，英文字符串",
+          "title": "cloudID"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "cloud云账号ID",
+          "title": "accountID"
+        },
+        "accountName": {
+          "type": "string",
+          "description": "cloud账号名称",
+          "title": "accountName"
+        },
+        "desc": {
+          "type": "string",
+          "description": "cloud账号描述信息",
+          "title": "desc"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud云账号是否开启，默认开启",
+          "title": "enable"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        }
+      },
+      "description": "更新cloud账号请求，不允许更改账号信息，防止对存量集群产生影响",
+      "title": "UpdateCloudAccountRequest",
+      "required": [
+        "cloudID",
+        "accountID",
+        "updater"
+      ]
+    },
+    "clustermanagerUpdateCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerCloudAccount",
+          "description": "更新后的云账号信息",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerUpdateCloudRequest": {
       "type": "object",
       "properties": {
@@ -8915,6 +9699,11 @@
           "type": "string",
           "description": "当clusterCategory参数为importer时, 主要用于区分该集群是kubeConfig/cloud导入,默认为空",
           "title": "importCategory"
+        },
+        "cloudAccountID": {
+          "type": "string",
+          "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
+          "title": "cloudAccountID"
         }
       },
       "description": "更新集群信息请求，该接口仅用于信息更新和修正，不会触发任何行为动作。如果需要执行自动化相关流程，请根据需要使用对应的接口",
@@ -9597,6 +10386,33 @@
           }
         }
       }
+    },
+    "clustermanagerZoneInfo": {
+      "type": "object",
+      "properties": {
+        "zoneID": {
+          "type": "string",
+          "description": "可用区ID",
+          "title": "zoneID"
+        },
+        "zone": {
+          "type": "string",
+          "description": "可用区名称",
+          "title": "regionName"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "地域状态",
+          "title": "regionState"
+        },
+        "zoneState": {
+          "type": "string",
+          "description": "地域状态",
+          "title": "regionState"
+        }
+      },
+      "description": "可用区信息",
+      "title": "ZoneInfo"
     },
     "protobufAny": {
       "type": "object",

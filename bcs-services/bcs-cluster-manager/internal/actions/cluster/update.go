@@ -169,6 +169,9 @@ func (ua *UpdateAction) updateCluster() error {
 	if len(ua.req.ImportCategory) > 0 {
 		ua.cluster.ImportCategory = ua.req.ImportCategory
 	}
+	if len(ua.req.CloudAccountID) > 0 {
+		ua.cluster.CloudAccountID = ua.req.CloudAccountID
+	}
 
 	for _, ip := range ua.req.Master {
 		if ua.cluster.Master == nil {
@@ -336,7 +339,6 @@ type AddNodesAction struct {
 	nodes          []*cmproto.Node
 	cloud          *cmproto.Cloud
 	task           *cmproto.Task
-	project        *cmproto.Project
 	option         *cloudprovider.CommonOption
 	nodeGroup      *cmproto.NodeGroup
 	currentNodeCnt uint64
@@ -483,7 +485,7 @@ func (ua *AddNodesAction) getClusterBasicInfo() error {
 	}
 	ua.cluster = cluster
 
-	cloud, project, err := actions.GetProjectAndCloud(ua.model, ua.cluster.ProjectID, ua.cluster.Provider)
+	cloud, err := actions.GetCloudByCloudID(ua.model, ua.cluster.Provider)
 	if err != nil {
 		blog.Errorf("get Cluster %s provider %s and Project %s failed, %s",
 			ua.cluster.ClusterID, ua.cluster.Provider, ua.cluster.ProjectID, err.Error(),
@@ -491,7 +493,6 @@ func (ua *AddNodesAction) getClusterBasicInfo() error {
 		return err
 	}
 	ua.cloud = cloud
-	ua.project = project
 
 	return nil
 }
@@ -505,7 +506,10 @@ func (ua *AddNodesAction) transCloudNodeToDNodes() error {
 		)
 		return err
 	}
-	cmOption, err := cloudprovider.GetCredential(ua.project, ua.cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ua.cloud,
+		AccountID: ua.cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential for cloudprovider %s/%s when add nodes %s to cluster %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.req.Nodes, ua.req.ClusterID, err.Error(),
