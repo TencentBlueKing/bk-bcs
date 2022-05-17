@@ -3,7 +3,7 @@
       - - container:
             grid-template-columns: "1fr 50px 1fr 50px 1fr"
           group:
-            - [ "cnt", ".", "updateStrategy", "." "podManPolicy" ]
+            - [ "cnt", ".", "updateStrategy", ".", "podManPolicy" ]
           prop: replicas
       {{- include "workload.affinity" . | nindent 6 }}
       {{- include "workload.networking" . | indent 6 }}
