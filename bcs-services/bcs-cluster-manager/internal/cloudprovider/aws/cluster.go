@@ -47,6 +47,11 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// ListCluster get cloud cluster list by region
+func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.CloudClusterInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 //GetNodesInCluster get all nodes belong to cluster according cloudprovider
 func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNodesOption) ([]*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
