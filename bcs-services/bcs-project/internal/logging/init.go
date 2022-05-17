@@ -39,6 +39,7 @@ var levelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
+// InitLogger new a logger
 func InitLogger(logConf *config.LogConfig) {
 	loggerInitOnce.Do(func() {
 		// 使用 zap 记录日志，格式为 json

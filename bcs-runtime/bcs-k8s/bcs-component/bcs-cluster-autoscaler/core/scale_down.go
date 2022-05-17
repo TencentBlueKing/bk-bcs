@@ -513,7 +513,7 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 
 	klog.Infof("Call FindNodesToRemove to look for nodes to remove in the current candidates")
 	// Look for nodes to remove in the current candidates
-	nodesToRemove, unremovable, newHints, simulatorErr := simulator.FindNodesToRemove(
+	nodesToRemove, unremovable, newHints, simulatorErr := simulatorinternal.FindNodesToRemove(
 		currentCandidates, destinationNodes, nonExpendablePods, nil, sd.context.AutoscalingContext.PredicateChecker,
 		len(currentCandidates), true, sd.podLocationHints, sd.usageTracker, timestamp, pdbs)
 	if simulatorErr != nil {
@@ -536,7 +536,7 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 		// Look for additional nodes to remove among the rest of nodes.
 		klog.V(3).Infof("Finding additional %v candidates for scale down.", additionalCandidatesCount)
 		additionalNodesToRemove, additionalUnremovable, additionalNewHints, simulatorErr :=
-			simulator.FindNodesToRemove(currentNonCandidates[:additionalCandidatesPoolSize], destinationNodes,
+			simulatorinternal.FindNodesToRemove(currentNonCandidates[:additionalCandidatesPoolSize], destinationNodes,
 				nonExpendablePods, nil, sd.context.PredicateChecker, additionalCandidatesCount, true,
 				sd.podLocationHints, sd.usageTracker, timestamp, pdbs)
 		if simulatorErr != nil {
@@ -549,16 +549,28 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 		}
 	}
 
-	for _, node := range emptyNodesList {
-		nodesToRemove = append(nodesToRemove, simulator.NodeToBeRemoved{Node: node, PodsToReschedule: []*apiv1.Pod{}})
-	}
 	// Update the timestamp map.
 	result := make(map[string]time.Time)
-	unneededNodesList := make([]*apiv1.Node, 0, len(nodesToRemove))
+	unneededNodesList := make([]*apiv1.Node, 0, len(nodesToRemove)+len(emptyNodesList))
+	for _, node := range emptyNodesList {
+		name := node.Name
+		unneededNodesList = append(unneededNodesList, node)
+		if val, found := sd.unneededNodes[name]; !found {
+			result[name] = timestamp
+		} else {
+			result[name] = val
+		}
+	}
+
+	haveEmpty := len(emptyNodesList) > 0
+
 	for _, node := range nodesToRemove {
 		name := node.Node.Name
 		unneededNodesList = append(unneededNodesList, node.Node)
-		if val, found := sd.unneededNodes[name]; !found {
+		if haveEmpty {
+			// 有空节点情况下，重置非空节点时间，保证优先缩容空节点
+			result[name] = timestamp
+		} else if val, found := sd.unneededNodes[name]; !found {
 			result[name] = timestamp
 		} else {
 			result[name] = val
@@ -855,7 +867,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	nonExpendablePods := filterOutExpendablePods(pods, sd.context.ExpendablePodsPriorityCutoff)
 	klog.Infof("Call FindNodesToRemove to find removable nodes")
 	// We look for only 1 node so new hints may be incomplete.
-	nodesToRemove, _, _, err := simulator.FindNodesToRemove(candidates, nodesWithoutMaster, nonExpendablePods,
+	nodesToRemove, _, _, err := simulatorinternal.FindNodesToRemove(candidates, nodesWithoutMaster, nonExpendablePods,
 		sd.context.ListerRegistry, sd.context.PredicateChecker, 1, false,
 		sd.podLocationHints, sd.usageTracker, time.Now(), pdbs)
 	findNodesToRemoveDuration = time.Since(findNodesToRemoveStart)

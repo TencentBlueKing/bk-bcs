@@ -45,9 +45,12 @@ const (
 )
 
 var (
-	// PolicyList policy list
-	PolicyList              = []string{"create", "delete", "view", "edit", "use", "deploy", "download"}
-	sharedClusterOpenPolicy = []string{"view", "use"}
+	// PolicyList policy list for v0
+	PolicyList = []string{"create", "delete", "view", "edit", "use", "deploy", "download"}
+	// V3PolicyList for v3 cluster policy
+	V3PolicyList = []string{"cluster_create", "cluster_view", "cluster_manage", "cluster_delete", "cluster_use"}
+
+	sharedClusterOpenPolicy = []string{"view", "use", "cluster_view", "cluster_manage", "cluster_use"}
 )
 
 // CommonResp common resp
@@ -127,8 +130,40 @@ type PermList struct {
 	ResourceType     string   `json:"resource_type"`
 }
 
+// GetAllSharedClusterPerm get sharedCluster perm policy for v0/v3
+func GetAllSharedClusterPerm() map[string]bool {
+	var (
+		defaultPerm = make(map[string]bool)
+		policyList = make([]string, 0)
+	)
+	policyList = append(policyList, PolicyList...)
+	policyList = append(policyList, V3PolicyList...)
+
+	for _, p := range policyList {
+		defaultPerm[p] = false
+		if utils.StringInSlice(p, sharedClusterOpenPolicy) {
+			defaultPerm[p] = true
+		}
+	}
+
+	return defaultPerm
+}
+
+// GetV3SharedClusterPerm get sharedCluster perm policy
+func GetV3SharedClusterPerm() map[string]interface{} {
+	defaultPerm := make(map[string]interface{})
+	for _, p := range V3PolicyList {
+		defaultPerm[p] = false
+		if utils.StringInSlice(p, sharedClusterOpenPolicy) {
+			defaultPerm[p] = true
+		}
+	}
+
+	return defaultPerm
+}
+
 // GetSharedClusterPerm get sharedCluster perm policy
-func GetSharedClusterPerm() map[string]bool {
+func GetV0SharedClusterPerm() map[string]bool {
 	defaultPerm := make(map[string]bool)
 	for _, p := range PolicyList {
 		defaultPerm[p] = false
@@ -141,11 +176,48 @@ func GetSharedClusterPerm() map[string]bool {
 }
 
 // GetInitPerm init perm policy
-func GetInitPerm(perm bool) map[string]bool {
+func GetInitPerm() map[string]bool {
 	defaultPerm := make(map[string]bool)
 	for _, p := range PolicyList {
-		defaultPerm[p] = perm
+		defaultPerm[p] = false
 	}
 
 	return defaultPerm
+}
+
+// ExistResourceTypeAndPolicyCode get cluster list in perm list
+func ExistResourceTypeAndPolicyCode(permList []PermList, policyResource PolicyResourceType) []string {
+	for i := range permList {
+		if permList[i].ResourceType == policyResource.ResourceType && permList[i].PolicyCode == policyResource.PolicyCode {
+			return permList[i].ResourceCodeList
+		}
+	}
+
+	return nil
+}
+
+// ClusterPermMatrix get init perm resourceType and policy
+func ClusterPermMatrix() []*PolicyResourceType {
+	permMatrix := make([]*PolicyResourceType, 0)
+	for _, policy := range PolicyList {
+		permMatrix = append(permMatrix, &PolicyResourceType{
+			PolicyCode:   policy,
+			ResourceType: ClusterTest,
+		})
+		permMatrix = append(permMatrix, &PolicyResourceType{
+			PolicyCode:   policy,
+			ResourceType: ClusterProd,
+		})
+	}
+
+	return permMatrix
+}
+
+func GetClusterResType(env string) string {
+	switch env {
+	case "prod":
+		return ClusterProd
+	}
+
+	return ClusterTest
 }

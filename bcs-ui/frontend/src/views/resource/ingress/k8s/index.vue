@@ -2,7 +2,7 @@
     <div class="biz-content">
         <div class="biz-top-bar">
             <div class="biz-topbar-title">
-                Ingress
+                Ingresses
                 <span class="biz-tip ml10">{{$t('请通过模板集或Helm创建Ingress')}}</span>
             </div>
             <bk-guide></bk-guide>

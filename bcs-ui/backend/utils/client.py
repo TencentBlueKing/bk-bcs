@@ -69,10 +69,6 @@ def make_kubectl_client(access_token=None, project_id=None, cluster_id=None):
 
 
 def get_bcs_client(project_id, cluster_id, access_token):
-    target_cluster_id = getattr(settings, "FORCE_APPLY_CLUSTER_ID", None)
-    if not target_cluster_id:
-        target_cluster_id = cluster_id
-
     host = get_bcs_host(access_token, project_id, cluster_id)
     if not host:
         raise ValueError(host)
@@ -81,7 +77,7 @@ def get_bcs_client(project_id, cluster_id, access_token):
         host=host,
         access_token=access_token,
         project_id=project_id,
-        cluster_id=target_cluster_id,
+        cluster_id=cluster_id,
     )
     return bcs_client
 

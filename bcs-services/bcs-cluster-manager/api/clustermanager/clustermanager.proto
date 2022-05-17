@@ -132,6 +132,16 @@ service ClusterManager {
     };
   }
 
+  rpc ListCommonCluster(ListCommonClusterReq) returns (ListCommonClusterResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/sharedclusters"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询公共集群及公共集群所属权限"
+      summary : "查询公共Cluster列表"
+    };
+  }
+
   //* node management
   rpc GetNode(GetNodeRequest) returns (GetNodeResponse) {
     option (google.api.http) = {
@@ -3919,6 +3929,59 @@ message GetNodeResponse {
   }];
 }
 
+message ListCommonClusterReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCommonClusterReq"
+      description : "查询公共集群列表"
+    }
+  };
+}
+
+message ListCommonClusterResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCommonClusterResp"
+      description : "查询公共集群列表返回"
+      required : [ "code", "message", "data" ]
+    }
+  };
+
+  uint32 code = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }
+  ];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }
+  ];
+  bool result = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+    {
+      title : "result",
+      description : "返回结果"
+    }
+  ];
+  repeated Cluster data = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+    {
+      title : "data",
+      description : "集群信息列表"
+    }
+  ];
+  WebAnnotations web_annotations = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+    {
+      title : "web_annotations",
+      description : "用户所属项目的集群权限"
+    }
+  ];
+}
+
 message ListClusterReq {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -4068,17 +4131,9 @@ message ListClusterResp {
         title : "data",
         description : "集群信息列表"
       } ];
-  map<string, Permission> clusterPerm = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "clusterPerm",
-    description : "集群用户权限点(key集群ID,val权限列表)"
-  }];
   map<string, ExtraInfo> clusterExtraInfo = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "clusterExtraInfo",
     description : "集群其他标识信息,cluster结构之外的数据获取"
-  }];
-  map<string, bool> permissions = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "permissions",
-    description : "创建测试/正式集群权限"
   }];
   WebAnnotations web_annotations = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
@@ -4097,12 +4152,10 @@ message ExtraInfo {
   }];
 }
 
+// https://github.com/golang/protobuf/issues/1118
+// https://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct
 message WebAnnotations {
-  map<string, Permission> perms = 1;
-}
-
-message Permission {
-  map<string, bool> policy = 1;
+  map<string, google.protobuf.Struct> perms = 1;
 }
 
 message ListNodesInClusterRequest {

@@ -31,6 +31,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project/proto/bcsproject"
 )
 
+// ListAction ...
 type ListAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -44,6 +45,7 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
+// Do ...
 func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*map[string]interface{}, error) {
 	la.ctx = ctx
 	la.req = req
@@ -97,6 +99,7 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 	return projectList, total, nil
 }
 
+// ListAuthorizedProject ...
 type ListAuthorizedProject struct {
 	model store.ProjectModel
 }
@@ -108,6 +111,7 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 	}
 }
 
+// Do ...
 func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
 	username := auth.GetUserFromCtx(ctx)
 	ids, err := perm.ListAuthorizedProjectIDs(username)

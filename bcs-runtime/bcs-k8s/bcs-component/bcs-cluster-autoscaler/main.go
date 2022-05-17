@@ -340,7 +340,7 @@ func buildAutoscaler() (core.Autoscaler, error) {
 	eventsKubeClient := createKubeClient(getKubeConfig())
 
 	processors := ca_processors.DefaultProcessors()
-	processors.PodListProcessor = core.NewFilterOutSchedulablePodListProcessor()
+	processors.PodListProcessor = coreinternal.NewFilterOutSchedulablePodListProcessor()
 
 	opts := coreinternal.AutoscalerOptions{
 		Options:          autoscalingOptions,
