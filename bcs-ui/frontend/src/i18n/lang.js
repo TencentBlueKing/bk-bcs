@@ -2782,5 +2782,6 @@ export default {
     "导入方式": ['Import Type'],
     'kubeconfig可用性测试': ['kubeconfig usability testing'],
     'IP已被 {name}{id} 占用': ['IP is occupied by {name}{id}'],
-    '功能特性': ['BCS Features']
+    '功能特性': ['BCS Features'],
+    '功能建设中': ['function under construction']
 }
