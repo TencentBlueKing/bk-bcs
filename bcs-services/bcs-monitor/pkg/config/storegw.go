@@ -15,12 +15,14 @@ package config
 
 import "time"
 
+// StoreGWConf
 type StoreGWConf struct {
 	HTTP    *EndpointConfig `yaml:"http" mapstructure:"http"`
 	GRPC    *EndpointConfig `yaml:"grpc" mapstructure:"grpc"`
 	DataDir string          `yaml:"data_dir" mapstructure:"data_dir"`
 }
 
+// Init
 func (s *StoreGWConf) Init() error {
 	s.DataDir = "./data/store"
 

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
+// StoreGWCmd StoreGW 命令
 func StoreGWCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "storegw",

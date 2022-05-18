@@ -66,7 +66,7 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	return logs, err
+	return logs, nil
 }
 
 // DownloadPodLog 下载日志

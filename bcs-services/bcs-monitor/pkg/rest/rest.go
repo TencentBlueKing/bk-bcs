@@ -24,6 +24,7 @@ import (
 )
 
 var (
+	// UnauthorizedError 错误
 	UnauthorizedError = errors.New("用户未登入")
 )
 
@@ -37,18 +38,23 @@ type Result struct {
 
 // HandlerFunc
 type HandlerFunc func(*Context) (interface{}, error)
+
+// StreamHandlerFunc
 type StreamHandlerFunc func(*Context)
 
+// AbortWithBadRequestError 请求失败
 func AbortWithBadRequestError(c *Context, err error) {
 	result := Result{Code: 1400, Message: err.Error(), RequestId: c.RequestId}
 	c.AbortWithStatusJSON(http.StatusBadRequest, result)
 }
 
+// AbortWithUnauthorizedError 未登入
 func AbortWithUnauthorizedError(c *Context, err error) {
 	result := Result{Code: 1401, Message: err.Error(), RequestId: c.RequestId}
 	c.AbortWithStatusJSON(http.StatusUnauthorized, result)
 }
 
+// AbortWithWithForbiddenError 没有权限
 func AbortWithWithForbiddenError(c *Context, err error) {
 	result := Result{Code: 1403, Message: err.Error(), RequestId: c.RequestId}
 	c.AbortWithStatusJSON(http.StatusForbidden, result)
@@ -60,12 +66,14 @@ func APIResponse(c *Context, data interface{}) {
 	c.JSON(http.StatusOK, result)
 }
 
+// RequestIdGenerator
 func RequestIdGenerator() string {
 	uid := uuid.New().String()
 	requestId := strings.Replace(uid, "-", "", -1)
 	return requestId
 }
 
+// InitRestContext
 func InitRestContext(c *gin.Context) *Context {
 	restContext := &Context{
 		Context:   c,
@@ -90,6 +98,7 @@ func GetRestContext(c *gin.Context) (*Context, error) {
 	return restContext, nil
 }
 
+// RestHandlerFunc rest handler
 func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext, err := GetRestContext(c)
@@ -107,6 +116,7 @@ func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 	}
 }
 
+// StreamHandler 流式 Handler
 func StreamHandler(handler StreamHandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext, err := GetRestContext(c)

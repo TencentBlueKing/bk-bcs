@@ -76,6 +76,7 @@ type Credential struct {
 	scopeMatcher   []*LabelMatchers    `yaml:"-"`
 }
 
+// InitCred
 func (c *Credential) InitCred() error {
 	if len(c.Scopes) == 0 {
 		return errors.New("scopes is required")

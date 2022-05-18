@@ -15,12 +15,14 @@ package config
 
 import "time"
 
+// APIConf
 type APIConf struct {
 	HTTP      *EndpointConfig `yaml:"http" mapstructure:"http"`
 	GRPC      *EndpointConfig `yaml:"grpc" mapstructure:"grpc"`
 	StoreList []string        `yaml:"store" mapstructure:"store"`
 }
 
+// Init
 func (c *APIConf) Init() error {
 	c.StoreList = []string{"127.0.0.1:10210"}
 

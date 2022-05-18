@@ -36,6 +36,7 @@ const (
 	GeneralUser BCSTokenUserType = 3
 )
 
+// Cluster 集群信息
 type Cluster struct {
 	ProjectId   string `json:"projectID"`
 	ClusterId   string `json:"clusterID"`
@@ -44,6 +45,7 @@ type Cluster struct {
 	IsShared    bool   `json:"is_shared"`
 }
 
+// String
 func (c *Cluster) String() string {
 	return fmt.Sprintf("cluster<%s, %s>", c.ClusterName, c.ClusterId)
 }
@@ -79,6 +81,7 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 	return clusters, nil
 }
 
+// GetCluster 获取集群详情
 func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, clusterId string) (*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterId)
 
