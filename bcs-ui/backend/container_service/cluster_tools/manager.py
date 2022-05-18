@@ -12,28 +12,42 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from rest_framework.response import Response
-
-from backend.bcs_web.viewsets import SystemViewSet
-
 from .models import Tool
-from .serializers import ClusterToolSZL
 
 
-class ToolsViewSet(SystemViewSet):
-    """组件库"""
+class HelmCmd:
+    def __init__(self, project_id: str, cluster_id: str):
+        self.project_id = project_id
+        self.cluster_id = cluster_id
 
-    def list(self, request, project_id, cluster_id):
-        serializer = ClusterToolSZL(
-            Tool.objects.all(), many=True, context={'project_id': project_id, 'cluster_id': cluster_id}
-        )
-        return Response(serializer.data)
-
-    def install(self, request, project_id, cluster_id, tool_id):
+    def install(self):
         """"""
 
-    def upgrade(self, request, project_id, cluster_id, tool_id):
+    def upgrade(self):
         """"""
 
-    def uninstall(self, request, project_id, cluster_id, tool_id):
+    def uninstall(self):
         """"""
+
+
+class ToolManager:
+    """组件管理器: 管理组件的安装, 更新和卸载"""
+
+    def __init__(self, project_id: str, cluster_id: str, tool_id: int):
+        self.project_id = project_id
+        self.cluster_id = cluster_id
+
+        self.tool = Tool.objects.get(id=tool_id)
+        self.cmd = HelmCmd(project_id=project_id, cluster_id=cluster_id)
+
+    def install(self):
+        """"""
+        self.cmd.install()
+
+    def upgrade(self):
+        """"""
+        self.cmd.upgrade()
+
+    def uninstall(self):
+        """"""
+        self.cmd.uninstall()

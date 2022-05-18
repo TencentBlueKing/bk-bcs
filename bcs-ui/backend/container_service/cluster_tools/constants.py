@@ -12,24 +12,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict
-
-from rest_framework import serializers
-
-from .models import InstalledTool, Tool
+from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnum
 
 
-class ClusterToolSZL(serializers.ModelSerializer):
-    installed_info = serializers.SerializerMethodField()
-
-    class Meta:
-        models = Tool
-
-    def get_installed_info(self, obj: Tool) -> Dict[str, str]:
-        try:
-            t = InstalledTool.objects.get(
-                tool=obj, project_id=self.context['project_id'], cluster_id=self.context['cluster_id']
-            )
-            return {'cluster_id': t.cluster_id, 'values': t.values, 'status': t.status, 'message': t.message}
-        except InstalledTool.DoesNotExist:
-            return {}
+class ToolStatus(str, StructuredEnum):
+    NOT_DEPLOYED = EnumField('not_deployed', label='not_deployed')
+    PENDING = EnumField('pending', label='pending')
+    DEPLOYED = EnumField('deployed', label='deployed')
+    FAILED = EnumField('failed', label='failed')
+    UNKNOWN = EnumField('unknown', label='unknown')

@@ -12,3 +12,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.urls import path
+
+from .views import ToolsViewSet
+
+urlpatterns = [
+    path('tools/', ToolsViewSet.as_view({'get': 'list'})),
+    path('tools/<int:tool_id>/', ToolsViewSet.as_view({'post': 'install', 'put': 'upgrade', 'delete': 'uninstall'})),
+]
