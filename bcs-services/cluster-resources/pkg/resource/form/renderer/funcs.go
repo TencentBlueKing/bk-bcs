@@ -21,6 +21,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
@@ -32,6 +33,7 @@ func newTmplFuncMap() template.FuncMap {
 		"toYaml":                 toYaml,
 		"filterMatchKVFormSlice": slice.FilterMatchKVFromSlice,
 		"matchKVInSlice":         slice.MatchKVInSlice,
+		"i18n":                   i18n.GetMsgWithLang,
 
 		// This is a placeholder for the "include" function, which is late-bound to a template.
 		// By declaring it here, we preserve the integrity of the linter.

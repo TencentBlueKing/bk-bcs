@@ -1,12 +1,12 @@
 {{- define "affinity.podAffinity" }}
 podAffinity:
-  title: Pod 规则
+  title: {{ i18n "Pod 规则" .lang }}
   type: array
   items:
     type: object
     properties:
       namespaces:
-        title: 命名空间
+        title: {{ i18n "命名空间" .lang }}
         type: array
         ui:component:
           name: select
@@ -23,16 +23,16 @@ podAffinity:
               actions:
                 - "{{`{{`}} $loadDataSource {{`}}`}}"
       priority:
-        title: 优先级
+        title: {{ i18n "优先级" .lang }}
         type: string
         default: preferred
         ui:component:
           name: radio
           props:
             datasource:
-              - label: 优先
+              - label: {{ i18n "优先" .lang }}
                 value: preferred
-              - label: 必须
+              - label: {{ i18n "必须" .lang }}
                 value: required
         ui:reactions:
           - target: "{{`{{`}} $widgetNode?.getSibling('weight')?.id {{`}}`}}"
@@ -104,24 +104,24 @@ podAffinity:
             ui:component:
               name: noTitleArray
       topologyKey:
-        title: 拓扑键
+        title: {{ i18n "拓扑键" .lang }}
         type: string
         ui:rules:
           - maxLength250
       type:
-        title: 类型
+        title: {{ i18n "类型" .lang }}
         type: string
         default: affinity
         ui:component:
           name: radio
           props:
             datasource:
-              - label: 亲和性
+              - label: {{ i18n "亲和性" .lang }}
                 value: affinity
-              - label: 反亲和性
+              - label: {{ i18n "反亲和性" .lang }}
                 value: antiAffinity
       weight:
-        title: 权重
+        title: {{ i18n "权重" .lang }}
         type: integer
         default: 10
         ui:component:
@@ -144,22 +144,22 @@ podAffinity:
 
 {{- define "affinity.nodeAffinity" }}
 nodeAffinity:
-  title: Node 规则
+  title: {{ i18n "Node 规则" .lang }}
   type: array
   items:
     type: object
     properties:
       priority:
-        title: 优先级
+        title: {{ i18n "优先级" .lang }}
         type: string
         default: preferred
         ui:component:
           name: radio
           props:
             datasource:
-              - label: 优先
+              - label: {{ i18n "优先" .lang }}
                 value: preferred
-              - label: 必须
+              - label: {{ i18n "必须" .lang }}
                 value: required
         ui:reactions:
           - target: "{{`{{`}} $widgetNode?.getSibling('weight')?.id {{`}}`}}"
@@ -251,7 +251,7 @@ nodeAffinity:
               name: noTitleArray
       weight:
         default: 10
-        title: 权重
+        title: {{ i18n "权重" .lang }}
         type: integer
         ui:component:
           props:

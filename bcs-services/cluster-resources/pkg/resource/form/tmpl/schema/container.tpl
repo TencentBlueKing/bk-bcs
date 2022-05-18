@@ -1,6 +1,6 @@
 {{- define "container.containerGroup" }}
 containerGroup:
-  title: 容器组
+  title: {{ i18n "容器组" .lang }}
   type: object
   properties:
     {{- include "container.initContainers" . | indent 4 }}
@@ -20,7 +20,7 @@ containerGroup:
 
 {{- define "container.initContainers" }}
 initContainers:
-  title: 初始容器
+  title: {{ i18n "初始容器" .lang }}
   type: array
   items:
     type: object
@@ -51,7 +51,7 @@ initContainers:
 
 {{- define "container.containers" }}
 containers:
-  title: 标准容器
+  title: {{ i18n "标准容器" .lang }}
   type: array
   minItems: 1
   items:
@@ -85,28 +85,28 @@ containers:
 
 {{- define "container.basic" }}
 basic:
-  title: 基础信息
+  title: {{ i18n "基础信息" .lang }}
   type: object
   required:
     - name
     - image
   properties:
     name:
-      title: 容器名称
+      title: {{ i18n "容器名称" .lang }}
       type: string
       default: main
       ui:rules:
         - required
         - maxLength64
     image:
-      title: 容器镜像
+      title: {{ i18n "容器镜像" .lang }}
       type: string
       default: busybox
       ui:rules:
         - required
         - maxLength128
     pullPolicy:
-      title: 拉取策略
+      title: {{ i18n "拉取策略" .lang }}
       type: string
       default: IfNotPresent
       ui:component:
@@ -124,25 +124,25 @@ basic:
 
 {{- define "container.command" }}
 command:
-  title: 命令
+  title: {{ i18n "命令" .lang }}
   type: object
   properties:
     workingDir:
-      title: 工作目录
+      title: {{ i18n "工作目录" .lang }}
       type: string
       ui:rules:
         - maxLength128
     stdin:
-      title: 标准输入
+      title: {{ i18n "标准输入" .lang }}
       type: boolean
     stdinOnce:
-      title: 仅一次
+      title: {{ i18n "仅一次" .lang }}
       type: boolean
     tty:
       title: tty
       type: boolean
     command:
-      title: 命令
+      title: {{ i18n "命令" .lang }}
       type: array
       items:
         type: string
@@ -151,7 +151,7 @@ command:
       ui:component:
         name: noTitleArray
     args:
-      title: 参数
+      title: {{ i18n "参数" .lang }}
       type: array
       items:
         type: string
@@ -163,7 +163,7 @@ command:
 
 {{- define "container.service" }}
 service:
-  title: 服务端口
+  title: {{ i18n "服务端口" .lang }}
   type: object
   properties:
     ports:
@@ -172,19 +172,19 @@ service:
         type: object
         properties:
           name:
-            title: 名称
+            title: {{ i18n "名称" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength64
           containerPort:
-            title: 容器端口
+            title: {{ i18n "容器端口" .lang }}
             type: integer
             ui:component:
               props:
                 max: 65535
           protocol:
-            title: 协议
+            title: {{ i18n "协议" .lang }}
             type: string
             default: TCP
             ui:component:
@@ -196,7 +196,7 @@ service:
                   - label: UDP
                     value: UDP
           hostPort:
-            title: 主机端口
+            title: {{ i18n "主机端口" .lang }}
             type: integer
             ui:component:
               props:
@@ -209,7 +209,7 @@ service:
 
 {{- define "container.envs" }}
 envs:
-  title: 环境变量
+  title: {{ i18n "环境变量" .lang }}
   type: object
   properties:
     vars:
@@ -218,7 +218,7 @@ envs:
         type: object
         properties:
           type:
-            title: 类型
+            title: {{ i18n "类型" .lang }}
             type: string
             default: keyValue
             ui:component:
@@ -260,18 +260,18 @@ envs:
             ui:rules:
               - required
           name:
-            title: 内容（Name/Prefix）
+            title: {{ i18n "内容（Name/Prefix）" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength128
           source:
-            title: 来源
+            title: {{ i18n "来源" .lang }}
             type: string
             ui:rules:
               - maxLength128
           value:
-            title: 值
+            title: {{ i18n "值" .lang }}
             type: string
             ui:rules:
               - maxLength128
@@ -283,15 +283,15 @@ envs:
 
 {{- define "container.healthz" }}
 healthz:
-  title: 健康检查
+  title: {{ i18n "健康检查" .lang }}
   type: object
   properties:
     readinessProbe:
-      title: 就绪探针
+      title: {{ i18n "就绪探针" .lang }}
       type: object
       {{- include "container.probe" . | indent 6 }}
     livenessProbe:
-      title: 存活探针
+      title: {{ i18n "存活探针" .lang }}
       type: object
       {{- include "container.probe" . | indent 6 }}
   ui:group:
@@ -304,7 +304,7 @@ healthz:
 {{- define "container.probe" }}
 properties:
   type:
-    title: 检查类型
+    title: {{ i18n "检查类型" .lang }}
     type: string
     ui:component:
       name: select
@@ -335,18 +335,18 @@ properties:
           state:
             visible: false
   port:
-    title: 端口
+    title: {{ i18n "端口" .lang }}
     type: integer
     ui:component:
       props:
         max: 65535
   path:
-    title: 请求路径
+    title: {{ i18n "请求路径" .lang }}
     type: string
     ui:rules:
       - maxLength250
   initialDelaySecs:
-    title: 初始延时
+    title: {{ i18n "初始延时" .lang }}
     type: integer
     ui:component:
       name: unitInput
@@ -354,7 +354,7 @@ properties:
         max: 86400
         unit: s
   periodSecs:
-    title: 检查间隔
+    title: {{ i18n "检查间隔" .lang }}
     type: integer
     ui:component:
       name: unitInput
@@ -362,7 +362,7 @@ properties:
         max: 86400
         unit: s
   timeoutSecs:
-    title: 超时时间
+    title: {{ i18n "超时时间" .lang }}
     type: integer
     ui:component:
       name: unitInput
@@ -370,25 +370,25 @@ properties:
         max: 86400
         unit: s
   successThreshold:
-    title: 成功阈值
+    title: {{ i18n "成功阈值" .lang }}
     type: integer
     ui:component:
       props:
         max: 2048
   failureThreshold:
-    title: 失败阈值
+    title: {{ i18n "失败阈值" .lang }}
     type: integer
     ui:component:
       props:
         max: 2048
   command:
     items:
-      title: 命令
+      title: {{ i18n "命令" .lang }}
       type: string
       ui:rules:
         - required
         - maxLength128
-    title: 命令
+    title: {{ i18n "命令" .lang }}
     type: array
     ui:component:
       name: noTitleArray
@@ -396,14 +396,14 @@ properties:
 
 {{- define "container.resource" }}
 resource:
-  title: 资源
+  title: {{ i18n "资源" .lang }}
   type: object
   properties:
     requests:
       type: object
       properties:
         cpu:
-          title: CPU 预留
+          title: {{ i18n "CPU 预留" .lang }}
           type: integer
           ui:component:
             name: unitInput
@@ -413,7 +413,7 @@ resource:
           ui:props:
             labelWidth: 200
         memory:
-          title: 内存预留
+          title: {{ i18n "内存预留" .lang }}
           type: integer
           ui:component:
             name: unitInput
@@ -424,7 +424,7 @@ resource:
       type: object
       properties:
         cpu:
-          title: CPU 限制
+          title: {{ i18n "CPU 限制" .lang }}
           type: integer
           ui:component:
             name: unitInput
@@ -434,7 +434,7 @@ resource:
           ui:props:
             labelWidth: 200
         memory:
-          title: 内存限制
+          title: {{ i18n "内存限制" .lang }}
           type: integer
           ui:component:
             name: unitInput
@@ -445,35 +445,35 @@ resource:
 
 {{- define "container.security" }}
 security:
-  title: 安全
+  title: {{ i18n "安全" .lang }}
   type: object
   properties:
     privileged:
-      title: 特权模式
+      title: {{ i18n "特权模式" .lang }}
       type: boolean
     allowPrivilegeEscalation:
-      title: 允许提权
+      title: {{ i18n "允许提权" .lang }}
       type: boolean
     runAsNonRoot:
-      title: 以非 Root 运行
+      title: {{ i18n "以非 Root 运行" .lang }}
       type: boolean
     readOnlyRootFilesystem:
-      title: 只读 Root 文件系统
+      title: {{ i18n "只读 Root 文件系统" .lang }}
       type: boolean
     runAsUser:
-      title: 用户
+      title: {{ i18n "用户" .lang }}
       type: integer
       ui:component:
         props:
           max: 65535
     runAsGroup:
-      title: 用户组
+      title: {{ i18n "用户组" .lang }}
       type: integer
       ui:component:
         props:
           max: 65535
     procMount:
-      title: 掩码挂载
+      title: {{ i18n "掩码挂载" .lang }}
       type: string
       ui:rules:
         - maxLength64
@@ -481,7 +481,7 @@ security:
       type: object
       properties:
         add:
-          title: 新增权限
+          title: {{ i18n "新增权限" .lang }}
           type: array
           items:
             enum:
@@ -529,7 +529,7 @@ security:
               multiple: true
           uniqueItems: true
         drop:
-          title: 消减权限
+          title: {{ i18n "消减权限" .lang }}
           type: array
           items:
             enum:
@@ -577,23 +577,27 @@ security:
               multiple: true
           uniqueItems: true
     seLinuxOpt:
-      title: SELinux 选项
+      title: {{ i18n "SELinux 选项" .lang }}
       type: object
       properties:
         level:
           type: string
+          title: Level
           ui:rules:
             - maxLength64
         role:
           type: string
+          title: Role
           ui:rules:
             - maxLength64
         type:
           type: string
+          title: Type
           ui:rules:
             - maxLength64
         user:
           type: string
+          title: User
           ui:rules:
             - maxLength64
       ui:group:
@@ -603,34 +607,34 @@ security:
 
 {{- define "container.mount" }}
 mount:
-  title: 挂载点
+  title: {{ i18n "挂载点" .lang }}
   type: object
   properties:
     volumes:
-      title: 卷
+      title: {{ i18n "卷" .lang }}
       type: array
       items:
         type: object
         properties:
           name:
-            title: 数据卷名称
+            title: {{ i18n "数据卷名称" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength64
           mountPath:
-            title: 挂载路径
+            title: {{ i18n "挂载路径" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength128
           subPath:
-            title: 卷内子路径
+            title: {{ i18n "卷内子路径" .lang }}
             type: string
             ui:rules:
               - maxLength128
           readOnly:
-            title: 只读
+            title: {{ i18n "只读" .lang }}
             type: boolean
             ui:component:
               name: checkbox

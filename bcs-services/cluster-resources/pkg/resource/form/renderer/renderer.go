@@ -175,6 +175,7 @@ func NewSchemaRenderer(ctx context.Context, kind, namespace string) *SchemaRende
 			"kind":      kind,
 			"namespace": namespace,
 			"resName":   fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix),
+			"lang":      i18n.GetLangFromContext(ctx),
 		},
 	}
 }
@@ -192,7 +193,7 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 		return nil, err
 	}
 
-	layout := []interface{}{}
+	var layout []interface{}
 	if err = r.renderSubTypeTmpl2Map("layout", &layout); err != nil {
 		return nil, err
 	}
@@ -239,7 +240,7 @@ func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 		} else {
 			includedNames[name] = 1
 		}
-		err := tmpl.ExecuteTemplate(&buf, name, data)
+		err = tmpl.ExecuteTemplate(&buf, name, data)
 		includedNames[name]--
 		return buf.String(), err
 	}

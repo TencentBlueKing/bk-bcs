@@ -3,7 +3,7 @@ type: object
 properties:
   {{- include "common.metadata" . | indent 2 }}
   spec:
-    title: 配置信息
+    title: {{ i18n "配置信息" .lang }}
     type: object
     properties:
       {{- include "workload.deployReplicas" . | indent 6 }}

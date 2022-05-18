@@ -1,6 +1,6 @@
 {{- define "common.metadata" }}
 metadata:
-  title: 基本信息
+  title: {{ i18n "基本信息" .lang }}
   type: object
   required:
     - apiVersion
@@ -13,7 +13,7 @@ metadata:
       type: string
       # 空值表示 Preferred Version
       default: ""
-      description: "不同集群版本，同一资源 Preferred Version 可能不同；如 Deployment 在 1.12 版本集群中 Preferred Version 为 extensions/v1beta1，而在更高版本中则为 apps/v1"
+      description: {{ i18n "不同集群版本，同一资源 Preferred Version 可能不同；如 Deployment 在 1.12 版本集群中 Preferred Version 为 extensions/v1beta1，而在更高版本中则为 apps/v1" .lang }}
       ui:component:
         name: select
         props:
@@ -29,7 +29,7 @@ metadata:
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
     name:
-      title: 名称
+      title: {{ i18n "名称" .lang }}
       type: string
       default: {{ .resName }}
       ui:rules:
@@ -37,7 +37,7 @@ metadata:
         - maxLength128
         - nameRegex
     namespace:
-      title: 命名空间
+      title: {{ i18n "命名空间" .lang }}
       type: string
       default: {{ .namespace }}
       ui:component:
@@ -59,21 +59,21 @@ metadata:
         - maxLength64
         - nameRegex
     labels:
-      title: 标签
+      title: {{ i18n "标签" .lang }}
       type: array
-      description: 将作为 Pod & Selector 标签
+      description: {{ i18n "将作为 Pod & Selector 标签" .lang }}
       minItems: 1
       items:
         properties:
           key:
-            title: 键
+            title: {{ i18n "键" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength128
               - labelKeyRegex
           value:
-            title: 值
+            title: {{ i18n "值" .lang }}
             type: string
             ui:rules:
               - maxLength64
@@ -82,18 +82,18 @@ metadata:
       ui:component:
         name: noTitleArray
     annotations:
-      title: 注解
+      title: {{ i18n "注解" .lang }}
       type: array
       items:
         properties:
           key:
-            title: 键
+            title: {{ i18n "键" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength128
           value:
-            title: 值
+            title: {{ i18n "值" .lang }}
             type: string
         type: object
       ui:component:

@@ -1,35 +1,35 @@
 {{- define "workload.deployReplicas" }}
 replicas:
-  title: 副本管理
+  title: {{ i18n "副本管理" .lang }}
   type: object
   properties:
     cnt:
-      title: 副本数量
+      title: {{ i18n "副本数量" .lang }}
       type: integer
       default: 3
       ui:component:
         props:
           max: 4096
     updateStrategy:
-      title: 升级策略
+      title: {{ i18n "升级策略" .lang }}
       type: string
       default: RollingUpdate
       ui:component:
         name: radio
         props:
           datasource:
-            - label: 滚动升级
+            - label: {{ i18n "滚动升级" .lang }}
               value: RollingUpdate
-            - label: 重新创建
+            - label: {{ i18n "重新创建" .lang }}
               value: Recreate
     maxSurge:
-      title: 最大调度 Pod 数量
+      title: {{ i18n "最大调度 Pod 数量" .lang }}
       type: integer
       ui:component:
         props:
           max: 4096
     msUnit:
-      title: 单位
+      title: {{ i18n "单位" .lang }}
       type: string
       default: cnt
       ui:component:
@@ -39,16 +39,16 @@ replicas:
           datasource:
             - label: '%'
               value: percent
-            - label: 个
+            - label: {{ i18n "个" .lang }}
               value: cnt
     maxUnavailable:
-      title: 最大不可用数量
+      title: {{ i18n "最大不可用数量" .lang }}
       type: integer
       ui:component:
         props:
           max: 4096
     muaUnit:
-      title: 单位
+      title: {{ i18n "单位" .lang }}
       type: string
       default: cnt
       ui:component:
@@ -58,10 +58,10 @@ replicas:
           datasource:
             - label: '%'
               value: percent
-            - label: 个
+            - label: {{ i18n "个" .lang }}
               value: cnt
     minReadySecs:
-      title: 最小就绪时间
+      title: {{ i18n "最小就绪时间" .lang }}
       type: integer
       ui:component:
         name: unitInput
@@ -70,7 +70,7 @@ replicas:
           unit: s
     progressDeadlineSecs:
       default: 0
-      title: 进程截止时间
+      title: {{ i18n "进程截止时间" .lang }}
       type: integer
       ui:component:
         name: unitInput
@@ -81,30 +81,30 @@ replicas:
 
 {{- define "workload.dsReplicas" }}
 replicas:
-  title: 副本管理
+  title: {{ i18n "副本管理" .lang }}
   type: object
   properties:
     updateStrategy:
-      title: 升级策略
+      title: {{ i18n "升级策略" .lang }}
       type: string
       default: RollingUpdate
       ui:component:
         name: radio
         props:
           datasource:
-            - label: 滚动升级
+            - label: {{ i18n "滚动升级" .lang }}
               value: RollingUpdate
-            - label: 重新创建
+            - label: {{ i18n "重新创建" .lang }}
               value: Recreate
     maxUnavailable:
-      title: 最大不可用数量
+      title: {{ i18n "最大不可用数量" .lang }}
       type: integer
       ui:component:
         props:
           max: 4096
     muaUnit:
       default: percent
-      title: 单位
+      title: {{ i18n "单位" .lang }}
       type: string
       ui:component:
         name: select
@@ -113,10 +113,10 @@ replicas:
           datasource:
             - label: '%'
               value: percent
-            - label: 个
+            - label: {{ i18n "个" .lang }}
               value: cnt
     minReadySecs:
-      title: 最小就绪时间
+      title: {{ i18n "最小就绪时间" .lang }}
       type: integer
       ui:component:
         name: unitInput
@@ -127,30 +127,30 @@ replicas:
 
 {{- define "workload.stsReplicas" }}
 replicas:
-  title: 副本管理
+  title: {{ i18n "副本管理" .lang }}
   type: object
   properties:
     cnt:
-      title: 副本数量
+      title: {{ i18n "副本数量" .lang }}
       type: integer
       default: 3
       ui:component:
         props:
           max: 4096
     updateStrategy:
-      title: 升级策略
+      title: {{ i18n "升级策略" .lang }}
       type: string
       default: RollingUpdate
       ui:component:
         name: radio
         props:
           datasource:
-            - label: 滚动升级
+            - label: {{ i18n "滚动升级" .lang }}
               value: RollingUpdate
-            - label: 重新创建
+            - label: {{ i18n "重新创建" .lang }}
               value: Recreate
     podManPolicy:
-      title: Pod 管理策略
+      title: {{ i18n "Pod 管理策略" .lang }}
       type: string
       default: OrderedReady
       ui:component:
@@ -165,56 +165,56 @@ replicas:
 
 {{- define "workload.cjJobManage" }}
 jobManage:
-  title: 任务管理
+  title: {{ i18n "任务管理" .lang }}
   type: object
   required:
     - schedule
   properties:
     schedule:
-      title: 调度规则
+      title: {{ i18n "调度规则" .lang }}
       type: string
-      description: "CronTab 表达式，形如：*/10 * * * *"
+      description: {{ i18n "CronTab 表达式，形如：*/10 * * * *" .lang }}
       ui:rules:
         - required
         - maxLength64
     concurrencyPolicy:
-      title: 并发策略
+      title: {{ i18n "并发策略" .lang }}
       type: string
       default: Allow
       ui:component:
         name: radio
         props:
           datasource:
-            - label: 允许多个 Job 同时运行
+            - label: {{ i18n "允许多个 Job 同时运行" .lang}}
               value: Allow
-            - label: 若 Job 未结束，则跳过
+            - label: {{ i18n "若 Job 未结束，则跳过" .lang }}
               value: Forbid
-            - label: 若 Job 未结束，则替换
+            - label: {{ i18n "若 Job 未结束，则替换" .lang }}
               value: Replace
     suspend:
-      title: 暂停
+      title: {{ i18n "暂停" .lang }}
       type: bool
       default: false
     completions:
-      title: 需完成数
+      title: {{ i18n "需完成数" .lang }}
       type: integer
       ui:component:
         props:
           max: 8192
     parallelism:
-      title: 并发数
+      title: {{ i18n "并发数" .lang }}
       type: integer
       ui:component:
         props:
           max: 256
     backoffLimit:
-      title: 重试次数
+      title: {{ i18n "重试次数" .lang }}
       type: integer
       ui:component:
         props:
           max: 2048
     activeDDLSecs:
-      title: 活跃终止时间
+      title: {{ i18n "活跃终止时间" .lang }}
       type: integer
       ui:component:
         name: unitInput
@@ -222,19 +222,19 @@ jobManage:
           max: 1209600
           unit: s
     successfulJobsHistoryLimit:
-      title: 历史累计成功数
+      title: {{ i18n "历史累计成功数" .lang }}
       type: integer
       ui:component:
         props:
           max: 4096
     failedJobsHistoryLimit:
-      title: 历史累计失败数
+      title: {{ i18n "历史累计失败数" .lang }}
       type: integer
       ui:component:
         props:
           max: 4096
     startingDDLSecs:
-      title: 运行截止时间
+      title: {{ i18n "运行截止时间" .lang }}
       type: integer
       ui:component:
         name: unitInput
@@ -245,29 +245,29 @@ jobManage:
 
 {{- define "workload.jobManage" }}
 jobManage:
-  title: 任务管理
+  title: {{ i18n "任务管理" .lang }}
   type: object
   properties:
     completions:
-      title: 需完成数
+      title: {{ i18n "需完成数" .lang }}
       type: integer
       ui:component:
         props:
           max: 2048
     parallelism:
-      title: 并发数
+      title: {{ i18n "并发数" .lang }}
       type: integer
       ui:component:
         props:
           max: 256
     backoffLimit:
-      title: 重试次数
+      title: {{ i18n "重试次数" .lang }}
       type: integer
       ui:component:
         props:
           max: 2048
     activeDDLSecs:
-      title: 活跃终止时间
+      title: {{ i18n "活跃终止时间" .lang }}
       type: integer
       ui:component:
         name: unitInput
@@ -278,25 +278,25 @@ jobManage:
 
 {{- define "workload.nodeSelect" }}
 nodeSelect:
-  title: 节点选择
+  title: {{ i18n "节点选择" .lang }}
   type: object
   required:
     - nodeName
     - selector
   properties:
     type:
-      title: 节点类型
+      title: {{ i18n "节点类型" .lang }}
       type: string
       default: anyAvailable
       ui:component:
         name: radio
         props:
           datasource:
-            - label: 任意可用节点
+            - label: {{ i18n "任意可用节点" .lang }}
               value: anyAvailable
-            - label: 指定节点
+            - label: {{ i18n "指定节点" .lang }}
               value: specificNode
-            - label: 调度规则匹配
+            - label: {{ i18n "调度规则匹配" .lang }}
               value: schedulingRule
       ui:reactions:
         - if: "{{`{{`}} $self.value === 'specificNode' {{`}}`}}"
@@ -316,7 +316,7 @@ nodeSelect:
               visible: false
           target: spec.nodeSelect.selector
     nodeName:
-      title: 节点名称
+      title: {{ i18n "节点名称" .lang }}
       type: string
       ui:component:
         name: select
@@ -334,20 +334,20 @@ nodeSelect:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
       ui:rules:
         - validator: "{{`{{`}} $self.getValue('spec.nodeSelect.type') !== 'specificNode' || ($self.getValue('spec.nodeSelect.type') === 'specificNode' && $self.value !== '') {{`}}`}}"
-          message: "值不能为空"
+          message: {{ i18n "值不能为空" .lang }}
     selector:
-      title: 调度规则
+      title: {{ i18n "调度规则" .lang }}
       type: array
       items:
         properties:
           key:
-            title: 键
+            title: {{ i18n "键" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength128
           value:
-            title: 值
+            title: {{ i18n "值" .lang }}
             type: string
             ui:rules:
               - maxLength128
@@ -356,7 +356,7 @@ nodeSelect:
         name: noTitleArray
       ui:rules:
         - validator: "{{`{{`}} $self.getValue('spec.nodeSelect.type') !== 'schedulingRule' || ($self.getValue('spec.nodeSelect.type') === 'schedulingRule' && $self.value.length > 0) {{`}}`}}"
-          message: "至少包含一条调度规则"
+          message: {{ i18n "至少包含一条调度规则" .lang }}
   ui:order:
     - type
     - selector
@@ -365,7 +365,7 @@ nodeSelect:
 
 {{- define "workload.affinity" }}
 affinity:
-  title: 亲和性/反亲和性
+  title: {{ i18n "亲和性/反亲和性" .lang }}
   type: object
   properties:
     {{- include "affinity.nodeAffinity" . | indent 4 }}
@@ -374,7 +374,7 @@ affinity:
 
 {{- define "workload.toleration" }}
 toleration:
-  title: 污点/容忍
+  title: {{ i18n "污点/容忍" .lang }}
   type: object
   properties:
     rules:
@@ -383,13 +383,13 @@ toleration:
         type: object
         properties:
           key:
-            title: 键
+            title: {{ i18n "键" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength128
           op:
-            title: 运算符
+            title: {{ i18n "运算符" .lang }}
             type: string
             ui:component:
               name: select
@@ -401,29 +401,29 @@ toleration:
                   - label: Exists
                     value: Exists
           value:
-            title: 值
+            title: {{ i18n "值" .lang }}
             type: string
             ui:rules:
               - maxLength128
           effect:
-            title: 影响
+            title: {{ i18n "影响" .lang }}
             type: string
             ui:component:
               name: select
               props:
                 clearable: true
                 datasource:
-                  - label: 所有
+                  - label: {{ i18n "所有" .lang }}
                     value: All
-                  - label: 不调度
+                  - label: {{ i18n "不调度" .lang }}
                     value: NoSchedule
-                  - label: 倾向不调度
+                  - label: {{ i18n "倾向不调度" .lang }}
                     value: PreferNoSchedule
-                  - label: 不执行
+                  - label: {{ i18n "不执行" .lang }}
                     value: NoExecute
           tolerationSecs:
             default: 0
-            title: 容忍时间
+            title: {{ i18n "容忍时间" .lang }}
             type: integer
             ui:component:
               name: unitInput
@@ -444,11 +444,11 @@ toleration:
 
 {{- define "workload.networking" }}
 networking:
-  title: 网络
+  title: {{ i18n "网络" .lang }}
   type: object
   properties:
     dnsPolicy:
-      title: DNS 策略
+      title: {{ i18n "DNS 策略" .lang }}
       type: string
       default: ClusterFirst
       ui:component:
@@ -464,29 +464,29 @@ networking:
             - label: None
               value: None
     hostIPC:
-      title: HostIPC
+      title: {{ i18n "主机 IPC" .lang }}
       type: boolean
     hostNetwork:
-      title: HostNetwork
+      title: {{ i18n "主机网络" .lang }}
       type: boolean
     hostPID:
-      title: PostPID
+      title: {{ i18n "主机 PID" .lang }}
       type: boolean
     shareProcessNamespace:
-      title: ShareProcessNamespace
+      title: {{ i18n "共享进程命名空间" .lang }}
       type: boolean
     hostName:
-      title: 主机名称
+      title: {{ i18n "主机名称" .lang }}
       type: string
       ui:rules:
         - maxLength128
     subdomain:
-      title: 域名
+      title: {{ i18n "子域名" .lang }}
       type: string
       ui:rules:
         - maxLength128
     nameServers:
-      title: 服务器地址
+      title: {{ i18n "服务器地址" .lang }}
       type: array
       items:
         type: string
@@ -495,7 +495,7 @@ networking:
       ui:component:
         name: noTitleArray
     searches:
-      title: 搜索域
+      title: {{ i18n "搜索域" .lang }}
       type: array
       items:
         type: string
@@ -504,36 +504,36 @@ networking:
       ui:component:
         name: noTitleArray
     dnsResolverOpts:
-      title: DNS 解析
+      title: {{ i18n "DNS 解析" .lang }}
       type: array
       items:
         type: object
         properties:
           name:
-            title: 键
+            title: {{ i18n "键" .lang }}
             type: string
             ui:rules:
               - maxLength128
           value:
-            title: 值
+            title: {{ i18n "值" .lang }}
             type: string
             ui:rules:
               - maxLength128
       ui:component:
         name: noTitleArray
     hostAliases:
-      title: 主机别名
+      title: {{ i18n "主机别名" .lang }}
       type: array
       items:
         type: object
         properties:
           alias:
-            title: 主机别名
+            title: {{ i18n "别名" .lang }}
             type: string
             ui:rules:
               - maxLength64
           ip:
-            title: IP 地址
+            title: {{ i18n "IP 地址" .lang }}
             type: string
             ui:rules:
               - maxLength64
@@ -543,20 +543,20 @@ networking:
 
 {{- define "workload.security" }}
 security:
-  title: 安全
+  title: {{ i18n "安全" .lang }}
   type: object
   properties:
     runAsUser:
-      title: 用户
+      title: {{ i18n "用户" .lang }}
       type: integer
       ui:component:
         props:
           max: 65535
     runAsNonRoot:
-      title: 以非 Root 运行
+      title: {{ i18n "以非 Root 运行" .lang }}
       type: boolean
     runAsGroup:
-      title: 用户组
+      title: {{ i18n "用户组" .lang }}
       type: integer
       ui:component:
         props:
@@ -567,23 +567,27 @@ security:
         props:
           max: 65535
     seLinuxOpt:
-      title: SELinux 选项
+      title: {{ i18n "SELinux 选项" .lang }}
       type: object
       properties:
         level:
           type: string
+          title: Level
           ui:rules:
             - maxLength64
         role:
           type: string
+          title: Role
           ui:rules:
             - maxLength64
         type:
           type: string
+          title: Type
           ui:rules:
             - maxLength64
         user:
           type: string
+          title: User
           ui:rules:
             - maxLength64
       ui:group:
@@ -593,11 +597,11 @@ security:
 
 {{- define "workload.specOther" }}
 other:
-  title: 其他
+  title: {{ i18n "其他" .lang }}
   type: object
   properties:
     imagePullSecrets:
-      title: 镜像拉取密钥
+      title: {{ i18n "镜像拉取密钥" .lang }}
       type: array
       items:
         type: string
@@ -620,7 +624,7 @@ other:
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
     restartPolicy:
-      title: 重启策略
+      title: {{ i18n "重启策略" .lang }}
       type: string
       {{- if or (eq .kind "CronJob") (eq .kind "Job") }}
       default: OnFailure
@@ -640,7 +644,7 @@ other:
             - label: Never
               value: Never
     saName:
-      title: 服务账号
+      title: {{ i18n "服务账号" .lang }}
       type: string
       ui:component:
         name: select
@@ -661,7 +665,7 @@ other:
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
     terminationGracePeriodSecs:
-      title: 终止容忍期
+      title: {{ i18n "终止容忍期" .lang }}
       type: integer
       ui:component:
         name: unitInput
@@ -672,7 +676,7 @@ other:
 
 {{- define "workload.volume" }}
 volume:
-  title: 数据卷
+  title: {{ i18n "数据卷" .lang }}
   type: object
   properties:
     {{- include "volume.pvc" . | indent 4 }}

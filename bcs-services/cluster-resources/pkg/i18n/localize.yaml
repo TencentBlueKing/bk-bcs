@@ -75,5 +75,285 @@
 - msgID: 需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字
   en: "must start and end with alphanumeric, can contain '-', '_', '.' and alphanumeric"
 # JsonSchema 标题，描述等
+- msgID: Pod 规则
+  en: Pod Rules
+- msgID: 命名空间
+  en: Namespace
+- msgID: 优先级
+  en: Priority
+- msgID: 优先
+  en: Preferred
+- msgID: 必须
+  en: Required
+- msgID: 拓扑键
+  en: TopologyKey
+- msgID: 类型
+  en: Type
+- msgID: 亲和性
+  en: Affinity
+- msgID: 反亲和性
+  en: AntiAffinity
+- msgID: 权重
+  en: Weight
+- msgID: Node 规则
+  en: Node Rules
+- msgID: 基本信息
+  en: Metadata
+- msgID: 不同集群版本，同一资源 Preferred Version 可能不同；如 Deployment 在 1.12 版本集群中 Preferred Version 为 extensions/v1beta1，而在更高版本中则为 apps/v1
+  en: Different cluster versions may have different preferred version for the same resource; for example, in k8s 1.12 cluster, the preferred version of Deployment is extensions/v1beta1, and in later versions it is apps/v1
 - msgID: 名称
-  en: "Name"
+  en: Name
+- msgID: 标签
+  en: Labels
+- msgID: 将作为 Pod & Selector 标签
+  en: Will be used as pod & selector label
+- msgID: 键
+  en: Key
+- msgID: 值
+  en: Value
+- msgID: 注解
+  en: Annotations
+- msgID: 容器组
+  en: ContainerGroup
+- msgID: 初始容器
+  en: InitContainer
+- msgID: 标准容器
+  en: Container
+- msgID: 基础信息
+  en: BasicInfo
+- msgID: 容器名称
+  en: ContainerName
+- msgID: 容器镜像
+  en: Image
+- msgID: 拉取策略
+  en: PullPolicy
+- msgID: 命令
+  en: Command
+- msgID: 工作目录
+  en: WorkingDir
+- msgID: 标准输入
+  en: Stdin
+- msgID: 仅一次
+  en: StdinOnce
+- msgID: 参数
+  en: Args
+- msgID: 服务端口
+  en: Ports
+- msgID: 容器端口
+  en: ContainerPort
+- msgID: 协议
+  en: Protocol
+- msgID: 主机端口
+  en: HostPort
+- msgID: 环境变量
+  en: EnvVars
+- msgID: 内容（Name/Prefix）
+  en: Name/Prefix
+- msgID: 来源
+  en: Source
+- msgID: 健康检查
+  en: Healthz
+- msgID: 就绪探针
+  en: ReadinessProbe
+- msgID: 存活探针
+  en: LivenessProbe
+- msgID: 检查类型
+  en: Type
+- msgID: 端口
+  en: Ports
+- msgID: 请求路径
+  en: RequestPath
+- msgID: 初始延时
+  en: InitialDelaySecs
+- msgID: 检查间隔
+  en: PeriodSecs
+- msgID: 超时时间
+  en: TimeoutSecs
+- msgID: 成功阈值
+  en: SuccessThreshold
+- msgID: 失败阈值
+  en: FailureThreshold
+- msgID: 资源
+  en: Resources
+- msgID: CPU 预留
+  en: CPU Requests
+- msgID: 内存预留
+  en: Memory Requests
+- msgID: CPU 限制
+  en: CPU Limits
+- msgID: 内存限制
+  en: Memory Limits
+- msgID: 安全
+  en: Security
+- msgID: 特权模式
+  en: Privileged
+- msgID: 允许提权
+  en: AllowPrivilegeEscalation
+- msgID: 以非 Root 运行
+  en: RunAsNonRoot
+- msgID: 只读 Root 文件系统
+  en: ReadOnlyRootFilesystem
+- msgID: 用户
+  en: RunAsUser
+- msgID: 用户组
+  en: RunAsGroup
+- msgID: 掩码挂载
+  en: ProcMount
+- msgID: 新增权限
+  en: Added Permissions
+- msgID: 消减权限
+  en: Dropped Permissions
+- msgID: SELinux 选项
+  en: SELinuxOptions
+- msgID: 挂载点
+  en: Mount
+- msgID: 卷
+  en: Volume
+- msgID: 数据卷名称
+  en: VolumeName
+- msgID: 挂载路径
+  en: MountPath
+- msgID: 卷内子路径
+  en: SubPath In Volume
+- msgID: 只读
+  en: ReadOnly
+- msgID: 配置信息
+  en: Spec
+- msgID: 路径或节点
+  en: Path
+- msgID: 默认模式
+  en: DefaultMode
+- msgID: 八进制数字（0000-0777）或十进制数字（0-511）
+  en: Octal numbers (0000-0777) or decimal numbers (0-511)
+- msgID: 映射目标路径
+  en: Path
+- msgID: 副本管理
+  en: Replicas
+- msgID: 副本数量
+  en: Replicas
+- msgID: 升级策略
+  en: UpdateStrategy
+- msgID: 滚动升级
+  en: RollingUpdate
+- msgID: 重新创建
+  en: Recreate
+- msgID: 最大调度 Pod 数量
+  en: MaxSurge
+- msgID: 单位
+  en: Unit
+- msgID: 个
+  en: Cnt
+- msgID: 最大不可用数量
+  en: MaxUnavailable
+- msgID: 最小就绪时间
+  en: MinReadySecs
+- msgID: 进程截止时间
+  en: ProgressDeadlineSecs
+- msgID: Pod 管理策略
+  en: PodManagePolicy
+- msgID: 任务管理
+  en: JobManage
+- msgID: 调度规则
+  en: ScheduleRule
+- msgID: CronTab 表达式，形如：*/10 * * * *
+  en: "CronTab expression like */10 * * * *"
+- msgID: 并发策略
+  en: ConcurrencyPolicy
+- msgID: 允许多个 Job 同时运行
+  en: Allow
+- msgID: 若 Job 未结束，则跳过
+  en: Forbid
+- msgID: 若 Job 未结束，则替换
+  en: Replace
+- msgID: 暂停
+  en: Suspend
+- msgID: 需完成数
+  en: Completions
+- msgID: 并发数
+  en: Parallelism
+- msgID: 重试次数
+  en: BackoffLimit
+- msgID: 活跃终止时间
+  en: ActiveDDLSecs
+- msgID: 历史累计成功数
+  en: SuccessfulJobsHistoryLimit
+- msgID: 历史累计失败数
+  en: FailedJobsHistoryLimit
+- msgID: 运行截止时间
+  en: StartingDDLSecs
+- msgID: 节点选择
+  en: NodeSelect
+- msgID: 节点类型
+  en: NodeType
+- msgID: 任意可用节点
+  en: AnyAvailable
+- msgID: 指定节点
+  en: SpecificNode
+- msgID: 调度规则匹配
+  en: SchedulingRule
+- msgID: 节点名称
+  en: NodeName
+- msgID: 调度规则
+  en: ScheduleRules
+- msgID: 至少包含一条调度规则
+  en: At least contains one scheduling rule
+- msgID: 亲和性/反亲和性
+  en: Affinity / Anit
+- msgID: 污点/容忍
+  en: Tolerations
+- msgID: 运算符
+  en: Operator
+- msgID: 影响
+  en: Effect
+- msgID: 所有
+  en: All
+- msgID: 不调度
+  en: NoSchedule
+- msgID: 倾向不调度
+  en: PreferNoSchedule
+- msgID: 不执行
+  en: NoExecute
+- msgID: 容忍时间
+  en: TolerationSecs
+- msgID: 网络
+  en: Networking
+- msgID: DNS 策略
+  en: DNS Policy
+- msgID: 主机 IPC
+  en: HostIPC
+- msgID: 主机网络
+  en: HostNetwork
+- msgID: 主机 PID
+  en: HostPID
+- msgID: 共享进程命名空间
+  en: ShareProcessNamespace
+- msgID: 主机名称
+  en: HostName
+- msgID: 子域名
+  en: Subdomain
+- msgID: 服务器地址
+  en: NameServers
+- msgID: 搜索域
+  en: Searches
+- msgID: DNS 解析
+  en: DNSResolverOptions
+- msgID: 主机别名
+  en: HostAliases
+- msgID: 别名
+  en: Alias
+- msgID: IP 地址
+  en: IPAddress
+- msgID: 其他
+  en: Other
+- msgID: 镜像拉取密钥
+  en: ImagePullSecrets
+- msgID: 重启策略
+  en: RestartPolicy
+- msgID: 服务账号
+  en: ServiceAccount
+- msgID: 终止容忍期
+  en: TerminationGracePeriodSecs
+- msgID: 数据卷
+  en: Volume
+- msgID: 路径
+  en: Path

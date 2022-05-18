@@ -50,24 +50,28 @@ func GetLangFromCookies(ctx context.Context) string {
 	return DefaultLang
 }
 
-// GetMsg 获取国际化后的文本
+// GetLangFromContext 从 Context 中获取语言版本
+func GetLangFromContext(ctx context.Context) string {
+	if lang := ctx.Value(ctxkey.LangKey); lang != nil {
+		return lang.(string)
+	}
+	return DefaultLang
+}
+
+// GetMsg 获取国际化文本
 func GetMsg(ctx context.Context, msgID string) string {
-	lang := getLangFromContext(ctx)
+	return GetMsgWithLang(msgID, GetLangFromContext(ctx)) // nolint:contextcheck
+}
+
+// GetMsgWithLang 获取国际化文本
+func GetMsgWithLang(msgID, lang string) string {
 	if m, exists := i18nMsgMap[msgID]; exists {
 		if msg, ok := m[lang]; ok {
 			return msg
 		}
 	} else if runtime.RunMode != runmode.UnitTest {
 		// NOTE 单元测试可能未初始化 MsgMap，忽略告警日志
-		log.Warn(ctx, "msgID `%s` not exists", msgID)
+		log.Warn(context.TODO(), "msgID `%s` not exists", msgID)
 	}
 	return msgID
-}
-
-// 从 Context 中获取语言版本
-func getLangFromContext(ctx context.Context) string {
-	if lang := ctx.Value(ctxkey.LangKey); lang != nil {
-		return lang.(string)
-	}
-	return DefaultLang
 }

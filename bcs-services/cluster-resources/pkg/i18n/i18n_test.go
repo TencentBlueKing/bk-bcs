@@ -39,3 +39,14 @@ func TestGetMsg(t *testing.T) {
 	ctx = context.WithValue(ctx, ctxkey.LangKey, ZH)
 	assert.Equal(t, "无指定操作权限", GetMsg(ctx, "无指定操作权限"))
 }
+
+func TestGetMsgWithLang(t *testing.T) {
+	// 初始化 i18n 字典
+	assert.Nil(t, InitMsgMap())
+
+	// 指定为英文
+	assert.Equal(t, "no operate permission!", GetMsgWithLang("无指定操作权限", EN))
+
+	// 指定为中文
+	assert.Equal(t, "无指定操作权限", GetMsgWithLang("无指定操作权限", ZH))
+}
