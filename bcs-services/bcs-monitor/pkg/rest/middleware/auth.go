@@ -78,6 +78,7 @@ func initContextWithDevEnv(c *rest.Context) bool {
 	return false
 }
 
+// BCSJWTDecode BCS JWT 解析
 func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	if config.G.BCS.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
@@ -102,6 +103,7 @@ func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	return claims, nil
 }
 
+// BKAPIGWJWTDecode 蓝鲸APIGW JWT 解析
 func BKAPIGWJWTDecode(jwtToken string) (*rest.APIGWToken, error) {
 	if config.G.BKAPIGW.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
@@ -161,6 +163,7 @@ func initContextWithAPIGW(c *rest.Context) bool {
 	return true
 }
 
+// GetProjectIdOrCode
 func GetProjectIdOrCode(c *gin.Context) string {
 	if c.Param("projectId") != "" {
 		return c.Param("projectId")
@@ -168,6 +171,7 @@ func GetProjectIdOrCode(c *gin.Context) string {
 	return ""
 }
 
+// GetClusterId
 func GetClusterId(c *gin.Context) string {
 	if c.Param("clusterId") != "" {
 		return c.Param("clusterId")
@@ -175,6 +179,7 @@ func GetClusterId(c *gin.Context) string {
 	return ""
 }
 
+// GetSessionId
 func GetSessionId(c *gin.Context) string {
 	if c.Param("sessionId") != "" {
 		return c.Param("sessionId")

@@ -19,6 +19,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+// BCSClusterEnv
 type BCSClusterEnv string
 
 const (

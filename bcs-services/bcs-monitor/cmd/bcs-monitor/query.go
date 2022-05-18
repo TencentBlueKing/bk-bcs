@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/query"
 )
 
+// QueryCmd
 func QueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query",

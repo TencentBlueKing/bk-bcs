@@ -29,20 +29,25 @@ import (
 	替换掉query模块中的各种各个用不到的模块
 */
 
+// NotImplementErr
 var NotImplementErr = errors.New("api not implement")
 
+// NewEmptyMetaDataClient
 func NewEmptyMetaDataClient() *emptyMetadataClient {
 	return &emptyMetadataClient{}
 }
 
+// NewEmptyTargetClient
 func NewEmptyTargetClient() *emptyTargetClient {
 	return &emptyTargetClient{}
 }
 
+// NewEmptyRuleClient
 func NewEmptyRuleClient() *emptyRuleClient {
 	return &emptyRuleClient{}
 }
 
+// NewEmptyExemplarClient
 func NewEmptyExemplarClient() *emptyExemplarClient {
 	return &emptyExemplarClient{}
 }
@@ -63,12 +68,14 @@ func (e *emptyTargetClient) Targets(_ context.Context, _ *targetspb.TargetsReque
 
 type emptyRuleClient struct{}
 
+// Rules
 func (e *emptyRuleClient) Rules(_ context.Context, _ *rulespb.RulesRequest) (*rulespb.RuleGroups, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }
 
 type emptyExemplarClient struct{}
 
+// Exemplars
 func (e *emptyExemplarClient) Exemplars(_ context.Context, _ *exemplarspb.ExemplarsRequest) ([]*exemplarspb.ExemplarData, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }

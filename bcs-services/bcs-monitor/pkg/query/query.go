@@ -50,6 +50,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
+// API
 type API struct {
 	StoresList   []string
 	endpoints    *query.EndpointSet
@@ -310,21 +311,25 @@ func engineFactory(
 	}
 }
 
+// RunHttp
 func (a *API) RunHttp() error {
 	a.statusProber.Ready()
 	return a.srv.ListenAndServe()
 }
 
+// ShutDownHttp
 func (a *API) ShutDownHttp(err error) {
 	a.statusProber.NotReady(err)
 	a.srv.Shutdown(err)
 }
 
+// RunGrpc
 func (a *API) RunGrpc() error {
 	a.statusProber.Ready()
 	return a.grpc.ListenAndServe()
 }
 
+// ShutDownGrpc
 func (a *API) ShutDownGrpc(err error) {
 	a.statusProber.NotReady(err)
 	a.grpc.Shutdown(err)
@@ -343,6 +348,7 @@ func (a *API) RunGetStore() error {
 	})
 }
 
+// ShutDownGetStore
 func (a *API) ShutDownGetStore(_ error) {
 	a.cancel()
 	a.endpoints.Close()

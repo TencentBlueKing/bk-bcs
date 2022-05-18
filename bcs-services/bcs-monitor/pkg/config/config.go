@@ -99,6 +99,7 @@ func (c *Configuration) IsDevMode() bool {
 	return c.Base.RunEnv == DevEnv
 }
 
+// ReadCredViper 使用 viper 读取配置
 func (c *Configuration) ReadCredViper(name string, v *viper.Viper) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()

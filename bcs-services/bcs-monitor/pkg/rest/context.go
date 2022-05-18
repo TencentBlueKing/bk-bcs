@@ -49,15 +49,18 @@ func (c *Context) WriteAttachment(data []byte, filename string) {
 	c.Writer.Write(data)
 }
 
+// EnvToken
 type EnvToken struct {
 	Username string
 }
 
+// APIGWApp
 type APIGWApp struct {
 	AppCode  string `json:"app_code"`
 	Verified bool   `json:"verified"`
 }
 
+// APIGWUser
 type APIGWUser struct {
 	Username string `json:"username"`
 	Verified bool   `json:"verified"`
@@ -70,6 +73,7 @@ type APIGWToken struct {
 	*jwt.StandardClaims
 }
 
+// String
 func (a *APIGWToken) String() string {
 	return fmt.Sprintf("<%s, %v>", a.App.AppCode, a.App.Verified)
 }

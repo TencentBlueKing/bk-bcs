@@ -111,6 +111,7 @@ func (c *Credential) InitCred() error {
 	return nil
 }
 
+// Matches 是否匹配
 func (c *Credential) Matches(credType CredentialType, cred string, scopeType ScopeType, scopeValue string) bool {
 	// 类型必须优先匹配
 	if c.CredentialType != credType {
