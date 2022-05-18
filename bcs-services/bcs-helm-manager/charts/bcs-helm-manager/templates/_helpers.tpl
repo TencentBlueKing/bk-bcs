@@ -80,7 +80,7 @@ Return the Etcd Address
 */}}
 {{- define "bcs-helm-manager.etcd.address" -}}
 {{- if .Values.etcd.enabled }}
-    {{- printf "http://%s:2379" (include "bcs-helm-manager.etcd.fullname" .) -}}
+    {{- printf "%s" .Values.etcd.address -}}
 {{- else -}}
     {{- printf "%s" .Values.externalEtcd.address -}}
 {{- end -}}
@@ -181,9 +181,9 @@ Return the Mongodb Address
 */}}
 {{- define "bcs-helm-manager.mongodb.address" -}}
 {{- if .Values.mongodb.enabled }}
-    {{- printf "%s:27017" (include "bcs-helm-manager.mongodb.host" .) -}}
+    {{- printf "%s" .Values.mongodb.address -}}
 {{- else -}}
-    {{- printf "%s:%s" .Values.externalMongo.host .Values.externalMongo.port -}}
+    {{- printf "%s" .Values.externalMongo.address -}}
 {{- end -}}
 {{- end -}}
 
