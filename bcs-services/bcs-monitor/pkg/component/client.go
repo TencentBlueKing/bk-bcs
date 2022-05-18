@@ -26,8 +26,7 @@ import (
 )
 
 const (
-	userAgent = "bcs-monitor"
-	timeout   = time.Second * 30
+	timeout = time.Second * 30
 )
 
 var (
@@ -44,6 +43,7 @@ func GetClient() *resty.Client {
 				globalClient = globalClient.SetDebug(true)
 			}
 		})
+
 	}
 	return globalClient
 }
@@ -58,7 +58,7 @@ type BKResult struct {
 // UnmarshalBKResult 反序列化为蓝鲸返回规范
 func UnmarshalBKResult(resp *resty.Response, data interface{}) error {
 	if resp.StatusCode() != http.StatusOK {
-		return errors.Errorf("http code %d != 200", resp.StatusCode)
+		return errors.Errorf("http code %d != 200", resp.StatusCode())
 	}
 
 	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal

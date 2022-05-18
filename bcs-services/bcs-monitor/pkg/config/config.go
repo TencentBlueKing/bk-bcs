@@ -55,13 +55,19 @@ func newConfiguration() (*Configuration, error) {
 	c := &Configuration{}
 
 	c.Base = &BaseConf{}
-	c.Base.Init()
+	if err := c.Base.Init(); err != nil {
+		return nil, err
+	}
 
 	c.StoreGW = &StoreGWConf{}
-	c.StoreGW.Init()
+	if err := c.StoreGW.Init(); err != nil {
+		return nil, err
+	}
 
 	c.API = &APIConf{}
-	c.API.Init()
+	if err := c.API.Init(); err != nil {
+		return nil, err
+	}
 
 	c.Redis = DefaultRedisConf()
 

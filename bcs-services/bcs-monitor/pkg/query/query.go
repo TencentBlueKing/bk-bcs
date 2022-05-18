@@ -43,7 +43,6 @@ import (
 	grpcserver "github.com/thanos-io/thanos/pkg/server/grpc"
 	httpserver "github.com/thanos-io/thanos/pkg/server/http"
 	"github.com/thanos-io/thanos/pkg/store"
-	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"github.com/thanos-io/thanos/pkg/tls"
 	"github.com/thanos-io/thanos/pkg/tracing/client"
 	"github.com/thanos-io/thanos/pkg/ui"
@@ -54,8 +53,6 @@ import (
 type API struct {
 	StoresList   []string
 	endpoints    *query.EndpointSet
-	proxy        storepb.StoreServer
-	api          *v1.QueryAPI
 	srv          *httpserver.Server
 	grpc         *grpcserver.Server
 	statusProber prober.Probe

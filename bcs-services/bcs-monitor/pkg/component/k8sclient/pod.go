@@ -46,7 +46,7 @@ type LogQuery struct {
 	FinishedAt    string `form:"finished_at"`
 }
 
-func (q *LogQuery) MakeOptions() (*v1.PodLogOptions, error) {
+func (q *LogQuery) makeOptions() (*v1.PodLogOptions, error) {
 	opt := &v1.PodLogOptions{
 		Container:  q.ContainerName,
 		Previous:   q.Previous,
@@ -169,7 +169,7 @@ func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, op
 		return nil, err
 	}
 
-	opts, err := opt.MakeOptions()
+	opts, err := opt.makeOptions()
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func GetPodLogStream(ctx context.Context, clusterId, namespace, podname string, 
 		return nil, err
 	}
 
-	opts, err := opt.MakeOptions()
+	opts, err := opt.makeOptions()
 	if err != nil {
 		return nil, err
 	}
