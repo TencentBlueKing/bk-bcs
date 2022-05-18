@@ -6,10 +6,7 @@ import store from '@/store'
 const methodsWithoutData = ['get', 'head', 'options', 'delete']
 const defaultConfig = { needRes: false }
 
-export const request = (method, url) => (params = {}, config = {}) => {
-    const reqMethod = method.toLowerCase()
-    const reqConfig = Object.assign({}, defaultConfig, config)
-
+export const parseUrl = (url, params = {}) => {
     // 全局URL变量替换
     const variableData = {
         '$projectId': router.currentRoute.params.projectId,
@@ -33,7 +30,14 @@ export const request = (method, url) => (params = {}, config = {}) => {
         }
         delete params[key]
     })
+    return newUrl
+}
 
+export const request = (method, url) => (params = {}, config = {}) => {
+    const reqMethod = method.toLowerCase()
+    const reqConfig = Object.assign({}, defaultConfig, config)
+
+    let newUrl = parseUrl(url, params)
     let req = null
     if (methodsWithoutData.includes(reqMethod)) {
         const query = json2Query(params, '')
