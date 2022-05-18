@@ -108,6 +108,9 @@ func (l *LogWithPreviousLink) MakePreviousLink(projectId, clusterId, namespace, 
 	query.Set("previous", strconv.FormatBool(opt.Previous))
 
 	u.RawQuery = query.Encode()
+	// 去掉域名, 让前端动态组装
+	u.Scheme = ""
+	u.Host = ""
 
 	l.Previous = u.String()
 
