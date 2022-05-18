@@ -173,6 +173,7 @@ LOGIN_URL = f"{BK_PAAS_HOST}/login/"
 
 # APIGW API 访问地址
 APIGW_HOST = os.environ.get('BK_APIGW_URL', 'http://apigw.example.com')
+APIGW_URL_TMPL = os.environ.get('bkApiUrlTmpl', 'http://bkapi.example.com/api/{api_name}')
 
 # paas-cc 服务，后续接入 cmdb
 BK_CC_HOST = os.environ.get('BKAPP_CC_URL', 'http://bcs-cc.example.com')
@@ -200,14 +201,15 @@ CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 # ******************************** IAM & SSM 配置 ********************************
 BK_SSM_HOST = os.environ.get('BKAPP_SSM_URL')
 
-# BCS IAM MIGRATION相关，用于初始资源数据到权限中心
+# BCS IAM 配置信息
 BK_IAM_HOST = os.environ.get('BKAPP_IAM_URL', 'http://bkiam.example.com')
 BK_IAM_SYSTEM_ID = APP_ID
 BK_IAM_MIGRATION_APP_NAME = 'bcs_iam_migration'
 BK_IAM_INNER_HOST = BK_IAM_HOST
 # 参数说明 https://github.com/TencentBlueKing/iam-python-sdk/blob/master/docs/usage.md#22-config
-BK_IAM_USE_APIGATEWAY = False
-BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', None)
+# 如果通过网关访问, BK_IAM_APIGATEWAY_URL 将替代 BK_IAM_HOST
+BK_IAM_USE_APIGATEWAY = True
+BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', APIGW_URL_TMPL.format(api_name='bk-iam'))
 # 权限中心前端地址
 BK_IAM_APP_URL = os.environ.get('BKAPP_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
 # 注册到权限中心的资源地址

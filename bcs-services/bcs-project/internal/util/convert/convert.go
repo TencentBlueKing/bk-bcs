@@ -37,6 +37,7 @@ func Map2pbStruct(m map[string]interface{}) *spb.Struct {
 	}
 }
 
+// MapBool2pbStruct convert bool type to pbstruct
 func MapBool2pbStruct(m map[string]map[string]bool) *spb.Struct {
 	size := len(m)
 	if size == 0 {
