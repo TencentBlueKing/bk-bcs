@@ -51,6 +51,7 @@ func (ca *CreateAction) createCloudAccount() error {
 
 	cloudAccount := &cmproto.CloudAccount{
 		CloudID:     ca.req.CloudID,
+		ProjectID:   ca.req.ProjectID,
 		AccountID:   accountID,
 		AccountName: ca.req.AccountName,
 		Desc:        ca.req.Desc,

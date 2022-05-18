@@ -51,6 +51,9 @@ func (la *ListAction) listCloudAccount() error {
 	if len(la.req.AccountID) != 0 {
 		condM["accountid"] = la.req.AccountID
 	}
+	if len(la.req.ProjectID) != 0 {
+		condM["projectid"] = la.req.ProjectID
+	}
 
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	cloudAccounts, err := la.model.ListCloudAccount(la.ctx, cond, &storeopt.ListOption{})

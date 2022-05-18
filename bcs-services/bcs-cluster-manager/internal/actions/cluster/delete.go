@@ -194,8 +194,10 @@ func (da *DeleteAction) cleanLocalInformation() error {
 		}
 	}
 	// release cidr
-	if err := da.releaseClusterCIDR(da.cluster); err != nil {
-		return err
+	if !da.isImporterCluster() {
+		if err := da.releaseClusterCIDR(da.cluster); err != nil {
+			return err
+		}
 	}
 
 	// delete cluster dependency info
@@ -460,7 +462,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 }
 
 func (da *DeleteAction) isImporterCluster() bool {
-	return da.cluster.ClusterCategory == Importer && da.cluster.ImportCategory == KubeConfig
+	return da.cluster.ClusterCategory == Importer
 }
 
 func (da *DeleteAction) createDeleteClusterTask(req *cmproto.DeleteClusterReq) error {

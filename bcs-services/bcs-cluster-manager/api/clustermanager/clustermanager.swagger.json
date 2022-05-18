@@ -572,6 +572,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. CloudAccount所属的项目信息，用于查询所属项目的云凭证",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -732,15 +739,8 @@
             "type": "string"
           },
           {
-            "name": "SecretID",
-            "description": "SecretID. 云认证ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "SecretKey",
-            "description": "SecretKey. 云认证Key",
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -786,15 +786,8 @@
             "type": "string"
           },
           {
-            "name": "SecretID",
-            "description": "SecretID. 云认证ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "SecretKey",
-            "description": "SecretKey. 云认证Key",
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -840,15 +833,8 @@
             "type": "string"
           },
           {
-            "name": "SecretID",
-            "description": "SecretID. 云认证ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "SecretKey",
-            "description": "SecretKey. 云认证Key",
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4076,6 +4062,11 @@
           "description": "BCS平台支持的云类型，英文字符串",
           "title": "cloudID"
         },
+        "projectID": {
+          "type": "string",
+          "description": "CloudAccount所属的项目信息，便于查询和过滤",
+          "title": "projectID"
+        },
         "accountID": {
           "type": "string",
           "description": "BCS平台生成的账号ID, 格式为(BCS-Cloud-ID)",
@@ -4929,6 +4920,11 @@
           "type": "string",
           "description": "cloud账号创建者",
           "title": "creator"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "CloudAccount所属的项目信息",
+          "title": "projectID"
         }
       },
       "description": "导入cloud account",
@@ -6105,11 +6101,6 @@
           "format": "boolean",
           "description": "返回结果",
           "title": "result"
-        },
-        "data": {
-          "$ref": "#/definitions/clustermanagerCloudAccount",
-          "description": "已删除的云账号信息",
-          "title": "data"
         }
       }
     },
@@ -9212,6 +9203,11 @@
           "description": "cloud云账号是否开启，默认开启",
           "title": "enable"
         },
+        "projectID": {
+          "type": "string",
+          "description": "CloudAccount所属的项目信息",
+          "title": "projectID"
+        },
         "updater": {
           "type": "string",
           "description": "更新者",
@@ -9245,11 +9241,6 @@
           "format": "boolean",
           "description": "返回结果",
           "title": "result"
-        },
-        "data": {
-          "$ref": "#/definitions/clustermanagerCloudAccount",
-          "description": "更新后的云账号信息",
-          "title": "data"
         }
       }
     },

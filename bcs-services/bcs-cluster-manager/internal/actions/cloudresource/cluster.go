@@ -32,6 +32,7 @@ type ListCloudClusterAction struct {
 	model store.ClusterManagerModel
 
 	cloud       *cmproto.Cloud
+	account     *cmproto.CloudAccount
 	req         *cmproto.ListCloudRegionClusterRequest
 	resp        *cmproto.ListCloudRegionClusterResponse
 	clusterList []*cmproto.CloudClusterInfo
@@ -52,8 +53,8 @@ func (la *ListCloudClusterAction) listCloudRegions() error {
 
 	clusterList, err := clsMgr.ListCluster(&cloudprovider.ListClusterOption{
 		CommonOption: cloudprovider.CommonOption{
-			Key:    la.req.SecretID,
-			Secret: la.req.SecretKey,
+			Key:    la.account.Account.SecretID,
+			Secret: la.account.Account.SecretKey,
 			Region: la.req.Region,
 			CommonConf: cloudprovider.CloudConf{
 				CloudInternalEnable: la.cloud.ConfInfo.CloudInternalEnable,
@@ -92,8 +93,8 @@ func (la *ListCloudClusterAction) validate() error {
 		return err
 	}
 	err = validate.ImportCloudAccountValidate(&cmproto.Account{
-		SecretID:  la.req.SecretID,
-		SecretKey: la.req.SecretKey,
+		SecretID:  la.account.Account.SecretID,
+		SecretKey: la.account.Account.SecretKey,
 	})
 	if err != nil {
 		return err
@@ -107,7 +108,12 @@ func (la *ListCloudClusterAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
+	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+	if err != nil {
+		return err
+	}
 
+	la.account = account
 	la.cloud = cloud
 	return nil
 }

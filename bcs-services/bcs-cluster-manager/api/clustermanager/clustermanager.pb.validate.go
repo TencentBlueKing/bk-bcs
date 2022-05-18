@@ -1784,6 +1784,8 @@ func (m *CloudAccount) Validate() error {
 
 	// no validation rules for CloudID
 
+	// no validation rules for ProjectID
+
 	// no validation rules for AccountID
 
 	// no validation rules for AccountName
@@ -1929,6 +1931,13 @@ func (m *CreateCloudAccountRequest) Validate() error {
 		return CreateCloudAccountRequestValidationError{
 			field:  "Creator",
 			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetProjectID()) < 2 {
+		return CreateCloudAccountRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at least 2 runes",
 		}
 	}
 
@@ -2118,6 +2127,8 @@ func (m *UpdateCloudAccountRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for ProjectID
+
 	if l := utf8.RuneCountInString(m.GetUpdater()); l < 2 || l > 1024 {
 		return UpdateCloudAccountRequestValidationError{
 			field:  "Updater",
@@ -2210,16 +2221,6 @@ func (m *UpdateCloudAccountResponse) Validate() error {
 	// no validation rules for Message
 
 	// no validation rules for Result
-
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return UpdateCloudAccountResponseValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	return nil
 }
@@ -2393,16 +2394,6 @@ func (m *DeleteCloudAccountResponse) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return DeleteCloudAccountResponseValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -2478,6 +2469,8 @@ func (m *ListCloudAccountRequest) Validate() error {
 	}
 
 	// no validation rules for AccountID
+
+	// no validation rules for ProjectID
 
 	return nil
 }
@@ -18729,9 +18722,19 @@ func (m *GetCloudRegionsRequest) Validate() error {
 
 	// no validation rules for CloudID
 
-	// no validation rules for SecretID
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		return GetCloudRegionsRequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
 
-	// no validation rules for SecretKey
+	if !_GetCloudRegionsRequest_AccountID_Pattern.MatchString(m.GetAccountID()) {
+		return GetCloudRegionsRequestValidationError{
+			field:  "AccountID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
 
 	return nil
 }
@@ -18791,6 +18794,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetCloudRegionsRequestValidationError{}
+
+var _GetCloudRegionsRequest_AccountID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on GetCloudRegionsResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -19043,9 +19048,19 @@ func (m *ListCloudRegionClusterRequest) Validate() error {
 
 	// no validation rules for Region
 
-	// no validation rules for SecretID
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		return ListCloudRegionClusterRequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
 
-	// no validation rules for SecretKey
+	if !_ListCloudRegionClusterRequest_AccountID_Pattern.MatchString(m.GetAccountID()) {
+		return ListCloudRegionClusterRequestValidationError{
+			field:  "AccountID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
 
 	return nil
 }
@@ -19106,6 +19121,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListCloudRegionClusterRequestValidationError{}
+
+var _ListCloudRegionClusterRequest_AccountID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on ListCloudRegionClusterResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -19208,9 +19225,19 @@ func (m *GetCloudRegionZonesRequest) Validate() error {
 
 	// no validation rules for Region
 
-	// no validation rules for SecretID
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		return GetCloudRegionZonesRequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
 
-	// no validation rules for SecretKey
+	if !_GetCloudRegionZonesRequest_AccountID_Pattern.MatchString(m.GetAccountID()) {
+		return GetCloudRegionZonesRequestValidationError{
+			field:  "AccountID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
 
 	return nil
 }
@@ -19270,6 +19297,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetCloudRegionZonesRequestValidationError{}
+
+var _GetCloudRegionZonesRequest_AccountID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on GetCloudRegionZonesResponse with the
 // rules defined in the proto definition for this message. If any rules are

@@ -52,6 +52,9 @@ func (ua *UpdateAction) updateCloudAccount(destCloudAccount *cmproto.CloudAccoun
 	if ua.req.Enable != nil {
 		destCloudAccount.Enable = ua.req.Enable.GetValue()
 	}
+	if len(ua.req.ProjectID) != 0 {
+		destCloudAccount.ProjectID = ua.req.ProjectID
+	}
 
 	return ua.model.UpdateCloudAccount(ua.ctx, destCloudAccount)
 }
@@ -89,7 +92,6 @@ func (ua *UpdateAction) Handle(
 		return
 	}
 
-	ua.resp.Data = destCloudAccount
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

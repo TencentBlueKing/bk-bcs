@@ -36,6 +36,7 @@ type GetCloudRegionsAction struct {
 	model store.ClusterManagerModel
 
 	cloud      *cmproto.Cloud
+	account    *cmproto.CloudAccount
 	req        *cmproto.GetCloudRegionsRequest
 	resp       *cmproto.GetCloudRegionsResponse
 	regionList []*cmproto.RegionInfo
@@ -55,8 +56,8 @@ func (ga *GetCloudRegionsAction) listCloudRegions() error {
 	}
 
 	regionList, err := nodeMgr.GetCloudRegions(&cloudprovider.CommonOption{
-		Key:    ga.req.SecretID,
-		Secret: ga.req.SecretKey,
+		Key:    ga.account.Account.SecretID,
+		Secret: ga.account.Account.SecretKey,
 		// Region trick data, cloud need underlying dependence
 		Region: defaultRegion,
 		CommonConf: cloudprovider.CloudConf{
@@ -95,8 +96,8 @@ func (ga *GetCloudRegionsAction) validate() error {
 		return err
 	}
 	err = validate.ImportCloudAccountValidate(&cmproto.Account{
-		SecretID:  ga.req.SecretID,
-		SecretKey: ga.req.SecretKey,
+		SecretID:  ga.account.Account.SecretID,
+		SecretKey: ga.account.Account.SecretKey,
 	})
 	if err != nil {
 		return err
@@ -110,7 +111,12 @@ func (ga *GetCloudRegionsAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
+	account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
+	if err != nil {
+		return err
+	}
 
+	ga.account = account
 	ga.cloud = cloud
 	return nil
 }
@@ -146,6 +152,7 @@ type GetCloudRegionZonesAction struct {
 	model store.ClusterManagerModel
 
 	cloud    *cmproto.Cloud
+	account  *cmproto.CloudAccount
 	req      *cmproto.GetCloudRegionZonesRequest
 	resp     *cmproto.GetCloudRegionZonesResponse
 	zoneList []*cmproto.ZoneInfo
@@ -165,8 +172,8 @@ func (ga *GetCloudRegionZonesAction) listCloudRegionZones() error {
 	}
 
 	zoneList, err := nodeMgr.GetZoneList(&cloudprovider.CommonOption{
-		Key:    ga.req.SecretID,
-		Secret: ga.req.SecretKey,
+		Key:    ga.account.Account.SecretID,
+		Secret: ga.account.Account.SecretKey,
 		Region: ga.req.Region,
 		CommonConf: cloudprovider.CloudConf{
 			CloudInternalEnable: ga.cloud.ConfInfo.CloudInternalEnable,
@@ -204,8 +211,8 @@ func (ga *GetCloudRegionZonesAction) validate() error {
 		return err
 	}
 	err = validate.ImportCloudAccountValidate(&cmproto.Account{
-		SecretID:  ga.req.SecretID,
-		SecretKey: ga.req.SecretKey,
+		SecretID:  ga.account.Account.SecretID,
+		SecretKey: ga.account.Account.SecretKey,
 	})
 	if err != nil {
 		return err
@@ -219,7 +226,12 @@ func (ga *GetCloudRegionZonesAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
+	account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
+	if err != nil {
+		return err
+	}
 
+	ga.account = account
 	ga.cloud = cloud
 	return nil
 }
