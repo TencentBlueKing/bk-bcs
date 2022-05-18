@@ -3,9 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210525083026-bc8c14258b6e // v0.20.16
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220414041703-5710acae4afd
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
@@ -22,7 +21,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.3 // indirect
 	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
@@ -49,8 +48,11 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.7.0
+	go.mongodb.org/mongo-driver v1.5.3
 	google.golang.org/genproto v0.0.0-20220422154200-b37d22cd5731
 	helm.sh/helm/v3 v3.8.2
 	k8s.io/apimachinery v0.23.5
@@ -101,7 +103,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -161,15 +163,15 @@ require (
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
-	github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc // indirect
+	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
+	github.com/xdg-go/scram v1.0.2 // indirect
+	github.com/xdg-go/stringprep v1.0.2 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
-	go.mongodb.org/mongo-driver v1.4.5 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220421235706-1d1ef9303861 // indirect

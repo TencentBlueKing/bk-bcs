@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
@@ -57,13 +58,14 @@ func (u *UpdateRepositoryAction) Handle(ctx context.Context,
 		return nil
 	}
 
+	username := auth.GetUserFromCtx(ctx)
 	return u.update(u.req.GetProjectID(), u.req.GetName(), (&entity.Repository{}).LoadFromProto(&helmmanager.Repository{
 		Type:      u.req.Type,
 		Remote:    u.req.Remote,
 		RemoteURL: u.req.RemoteURL,
 		Username:  u.req.Username,
 		Password:  u.req.Password,
-		UpdateBy:  u.req.Operator,
+		UpdateBy:  &username,
 	}))
 }
 

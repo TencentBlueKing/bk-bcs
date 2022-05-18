@@ -18,4 +18,7 @@ const (
 
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"
+
+	// AnonymousUsername 匿名用户
+	AnonymousUsername = "anonymous"
 )

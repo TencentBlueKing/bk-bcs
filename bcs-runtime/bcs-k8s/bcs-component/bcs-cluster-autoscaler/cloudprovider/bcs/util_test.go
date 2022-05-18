@@ -98,10 +98,82 @@ func TestGrpcTokenAuth_GetRequestMetadata(t *testing.T) {
 }
 
 func TestCreateNodeGroupCache(t *testing.T) {
-	EncryptionKey = "abcdefghijklmnopqrstuvwx"
+	os.Setenv("Encryption", "yes")
 	os.Setenv("Operator", "bcs")
 	os.Setenv("BcsApiAddress", "uGDbP6fO9fFUWldDCHd8wA==")
 	os.Setenv("BcsToken", "uGDbP6fO9fFUWldDCHd8wA==")
+	client, _ := clustermanager.NewNodePoolClient("bcs", "test", "test")
+
+	type args struct {
+		configReader io.Reader
+	}
+	tests := []struct {
+		name    string
+		key     string
+		args    args
+		want    *NodeGroupCache
+		want1   clustermanager.NodePoolClientInterface
+		wantErr bool
+	}{
+		{
+			name: "create cache normal",
+			key:  "abcdefghijklmnopqrstuvwx",
+			args: args{},
+			want: &NodeGroupCache{
+				registeredGroups:       make([]*NodeGroup, 0),
+				instanceToGroup:        make(map[InstanceRef]*NodeGroup),
+				instanceToCreationType: make(map[InstanceRef]CreationType),
+				getNodes: func(ng string) ([]*clustermanager.Node, error) {
+					return client.GetNodes(ng)
+				},
+			},
+			want1:   client,
+			wantErr: false,
+		},
+		{
+			name:    "empty encryption key",
+			key:     "",
+			args:    args{},
+			want:    nil,
+			want1:   nil,
+			wantErr: true,
+		},
+		{
+			name:    "wrong encryption key",
+			key:     "123456789",
+			args:    args{},
+			want:    nil,
+			want1:   nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			EncryptionKey = tt.key
+			got, got1, err := CreateNodeGroupCache(tt.args.configReader)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateNodeGroupCache() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				got.getNodes = nil
+				tt.want.getNodes = nil
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("CreateNodeGroupCache() got = %v, want %v", got.getNodes, tt.want.getNodes)
+				}
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("CreateNodeGroupCache() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestCreateNodeGroupCacheWithoutEncryption(t *testing.T) {
+	os.Setenv("Encryption", "no")
+	os.Setenv("Operator", "bcs")
+	os.Setenv("BcsApiAddress", "test")
+	os.Setenv("BcsToken", "test")
 	client, _ := clustermanager.NewNodePoolClient("bcs", "test", "test")
 
 	type args struct {

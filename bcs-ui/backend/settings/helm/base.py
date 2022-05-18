@@ -209,7 +209,7 @@ BK_IAM_INNER_HOST = BK_IAM_HOST
 # 参数说明 https://github.com/TencentBlueKing/iam-python-sdk/blob/master/docs/usage.md#22-config
 # 如果通过网关访问, BK_IAM_APIGATEWAY_URL 将替代 BK_IAM_HOST
 BK_IAM_USE_APIGATEWAY = True
-BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', APIGW_URL_TMPL.format(api_name='bk-iam'))
+BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', f"{APIGW_URL_TMPL.format(api_name='bk-iam')}/prod")
 # 权限中心前端地址
 BK_IAM_APP_URL = os.environ.get('BKAPP_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
 # 注册到权限中心的资源地址
