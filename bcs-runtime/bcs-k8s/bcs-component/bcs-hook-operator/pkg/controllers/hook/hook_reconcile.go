@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/metrics"
 	hooksutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/hook"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 
@@ -61,6 +62,7 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 
 	if run.Status.MetricResults == nil {
 		run.Status.MetricResults = make([]v1alpha1.MetricResult, 0)
+		startTime := time.Now()
 		err := hooksutil.ValidateMetrics(run.Spec.Metrics)
 		if err != nil {
 			message := fmt.Sprintf("HookRun: %s/%s, hook spec invalid: %v", run.Namespace, run.Name, err)
@@ -69,13 +71,17 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 			run.Status.Message = message
 			hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed, "hook completed %s",
 				run.Status.Phase)
+			hc.metrics.CollectHookrunExecDurations(run.Namespace, string(run.UID), hooksutil.GetOwnerRef(run),
+				"validateMetrics", "failure", time.Since(startTime))
 			return run
 		}
+		hc.metrics.CollectHookrunExecDurations(run.Namespace, string(run.UID), hooksutil.GetOwnerRef(run),
+			"validateMetrics", "success", time.Since(startTime))
 	}
 	tasks := generateMetricTasks(run)
 	klog.Infof("HookRun: %s/%s, taking %d measurements", run.Namespace, run.Name, len(tasks))
 	startime := time.Now()
-	hc.runMeasurements(run, tasks)
+	hc.runMeasurements(run, tasks, hc.metrics)
 
 	newStatus := hc.assessRunStatus(run)
 	if newStatus != run.Status.Phase {
@@ -86,13 +92,13 @@ func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.
 			case v1alpha1.HookPhaseError, v1alpha1.HookPhaseFailed:
 				hc.recorder.Eventf(run, corev1.EventTypeWarning, EventReasonStatusFailed,
 					"hook completed %s", newStatus)
-				hc.metrics.collectHookrunExecDurations(run.Namespace, hooksutil.GetOwnerRef(run), "failure",
-					time.Since(startime))
+				hc.metrics.CollectHookrunExecDurations(run.Namespace, string(run.UID), hooksutil.GetOwnerRef(run),
+					"executeHookRun", "failure", time.Since(startime))
 			default:
 				hc.recorder.Eventf(run, corev1.EventTypeNormal, EventReasonStatusCompleted,
 					"hook completed %s", newStatus)
-				hc.metrics.collectHookrunExecDurations(run.Namespace, hooksutil.GetOwnerRef(run), "success",
-					time.Since(startime))
+				hc.metrics.CollectHookrunExecDurations(run.Namespace, string(run.UID), hooksutil.GetOwnerRef(run),
+					"executeHookRun", "success", time.Since(startime))
 			}
 		}
 		klog.Info(message)
@@ -199,7 +205,7 @@ func generateMetricTasks(run *v1alpha1.HookRun) []metricTask {
 }
 
 // runMeasurements iterates a list of metric tasks, and runs, resumes, or terminates measurements
-func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricTask) {
+func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricTask, metrics *metrics.Metrics) {
 	var wg sync.WaitGroup
 	var resultsLock sync.Mutex
 	terminating := hooksutil.IsTerminating(run)
@@ -222,8 +228,11 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 			}
 
 			var newMeasurement v1alpha1.Measurement
+			startTime := time.Now()
 			provider, err := hc.newProvider(t.metric)
 			if err != nil {
+				metrics.CollectHookrunExecDurations(run.Namespace, string(run.UID), hooksutil.GetOwnerRef(run),
+					"executeHookRun", "error", time.Since(startTime))
 				if t.incompleteMeasurement != nil {
 					newMeasurement = *t.incompleteMeasurement
 				} else {
@@ -236,8 +245,12 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 				if t.incompleteMeasurement == nil {
 					startTime := time.Now()
 					newMeasurement = provider.Run(run, t.metric)
-					hc.metrics.collectMetricExecDurations(run.Namespace, hooksutil.GetOwnerRef(run), t.metric.Name,
+					hc.metrics.CollectMetricExecDurations(run.Namespace, hooksutil.GetOwnerRef(run), t.metric.Name,
 						string(newMeasurement.Phase), time.Since(startTime))
+					if newMeasurement.Phase == v1alpha1.HookPhaseError {
+						metrics.CollectHookrunExecDurations(run.Namespace, string(run.UID), hooksutil.GetOwnerRef(run),
+							"invalidHookConfig", "failure", time.Since(startTime))
+					}
 				} else {
 					if terminating {
 						klog.Infof("HookRun: %s/%s, metric: %s. terminating in-progress measurement",
