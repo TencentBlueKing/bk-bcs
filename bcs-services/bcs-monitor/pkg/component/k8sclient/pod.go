@@ -29,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// 需要取指针, 不用用常量
+// 需要取指针, 不能用常量
 var (
 	// 最多返回 10W 条日志
 	MAX_TAIL_LINES = 100000
