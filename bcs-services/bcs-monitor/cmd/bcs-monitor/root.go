@@ -115,11 +115,13 @@ func initConfig() {
 		cobra.CheckErr(err)
 	}
 
+	// 命令行日志级别
+	if err := config.G.Logging.SetByCmd(logLevel); err != nil {
+		cobra.CheckErr(err)
+	}
+
 	// 日志配置已经Ready, 后面都需要使用日志
 	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
-
-	// 命令行日志级别
-	config.G.Logging.SetByCmd(logLevel)
 
 	// watch 凭证文件
 	if err := watch.MultiCredWatch(certCfgFiles); err != nil {
