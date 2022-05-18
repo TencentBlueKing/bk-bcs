@@ -10,15 +10,27 @@
  * limitations under the License.
  */
 
-package common
+package stringx
 
-const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
+// RemoveDuplicateValues 删除重复的值
+func RemoveDuplicateValues(strSlice []string) []string {
+	keys := make(map[string]bool)
+	result := []string{}
+	for _, s := range strSlice {
+		if _, v := keys[s]; !v {
+			keys[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
+}
 
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
-)
+// StringInSlice 判断字符串是否存在 Slice 中
+func StringInSlice(str string, list []string) bool {
+	for _, item := range list {
+		if item == str {
+			return true
+		}
+	}
+	return false
+}

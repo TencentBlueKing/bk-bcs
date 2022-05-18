@@ -9,16 +9,9 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package envx
 
-package common
-
-const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
-
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+var (
+	// LocalIP ...
+	LocalIP = GetEnv("LOCAL_IP", "")
 )

@@ -249,7 +249,7 @@ message CreateRepositoryReq {
     optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作者"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
     optional bool takeover = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "takeover",
         description: "是否为接管已存在的repo"
@@ -329,7 +329,7 @@ message UpdateRepositoryReq {
     optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作者"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
 }
 
 message UpdateRepositoryResp {
@@ -485,7 +485,7 @@ message DeleteRepositoryReq {
     optional string operator = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作者"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
 }
 
 message DeleteRepositoryResp {
@@ -655,7 +655,7 @@ message ListChartReq {
     optional string operator = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "查询者"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
 }
 
 message ListChartResp {
@@ -785,7 +785,7 @@ message ListChartVersionReq {
     optional string operator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "查询者"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
 }
 
 message ListChartVersionResp {
@@ -895,7 +895,7 @@ message GetChartDetailReq {
     optional string operator = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "查询者"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
 }
 
 message GetChartDetailResp {
@@ -1198,7 +1198,7 @@ message InstallReleaseReq {
     optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作人"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
     repeated string values = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "values",
         description: "values文件, 越靠后优先级越高"
@@ -1262,7 +1262,7 @@ message UninstallReleaseReq {
     optional string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作人"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
 }
 
 message UninstallReleaseResp {
@@ -1326,7 +1326,7 @@ message UpgradeReleaseReq {
     optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作人"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
     repeated string values = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "values",
         description: "values文件, 越靠后优先级越高"
@@ -1394,7 +1394,7 @@ message RollbackReleaseReq {
     optional string operator = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作人"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
 }
 
 message RollbackReleaseResp {

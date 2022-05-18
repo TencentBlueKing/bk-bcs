@@ -10,15 +10,25 @@
  * limitations under the License.
  */
 
-package common
+package stringx
 
-const (
-	// ServiceDomain domain name for service
-	ServiceDomain = "helmmanager.bkbcs.tencent.com"
+import (
+	"testing"
 
-	// MicroMetaKeyHTTPPort http port in micro-service meta
-	MicroMetaKeyHTTPPort = "httpport"
-
-	// AnonymousUsername 匿名用户
-	AnonymousUsername = "anonymous"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestRemoveDuplicateValues(t *testing.T) {
+	// 零元素
+	strSlice := make([]string, 1, 1)
+	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
+
+	// 单个元素
+	strSlice = []string{"test"}
+	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
+
+	// 多元素
+	strSlice = []string{"test1", "test2", "test1", "test3", "test2"}
+	expectedSlice := []string{"test1", "test2", "test3"}
+	assert.Equal(t, RemoveDuplicateValues(strSlice), expectedSlice)
+}
