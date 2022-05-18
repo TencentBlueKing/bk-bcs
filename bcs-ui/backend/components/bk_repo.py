@@ -38,6 +38,15 @@ class BkRepoConfig:
         self.create_project = f"{self.bk_repo_host}/repository/api/project"
         self.create_repo = f"{self.bk_repo_host}/repository/api/repo"
         self.set_user_auth = f"{self.bk_repo_host}/auth/api/user/create/project"
+        self.list_project_repos_url = f"{self.bk_repo_host}/repository/api/repo/list/{{project_code}}"
+        self.update_repo_url = f"{self.bk_repo_host}/repository/api/repo/update/{{project_code}}/{{repo_name}}"
+        self.delete_repo_url = f"{self.bk_repo_host}/repository/api/repo/delete/{{project_code}}/{{repo_name}}"
+
+        # 项目 token 接口
+        self.set_token_url = f"{self.bk_repo_host}/auth/api/user/token/{{username}}/{{token_name}}"
+
+        # 用户接口
+        self.user_detail_url = f"{self.bk_repo_host}/auth/api/user/detail/{{username}}"
 
         # 镜像相关
         self.list_images = f"{self.bk_repo_host}/docker/ext/repo/{{project_name}}/{{repo_name}}"
@@ -99,10 +108,33 @@ class BkRepoDeleteVersionError(BaseRequestBkRepoError):
     """删除版本异常"""
 
 
+class BkRepoTokenError(BaseRequestBkRepoError):
+    """设置 token 异常"""
+
+
+class BkRepoDeleteError(BaseRequestBkRepoError):
+    """删除仓库异常"""
+
+
 @dataclass
 class PageData:
     pageNumber: int = 0
     pageSize: int = 100000  # 沿用先前的默认数量
+
+
+@dataclass
+class RepoConfig:
+    type: str
+    proxy: Dict = None
+
+
+@dataclass
+class RepoData:
+    name: str
+    type: str
+    category: str
+    public: bool
+    configuration: RepoConfig
 
 
 class BkRepoClient(BkApiClient):
@@ -110,6 +142,8 @@ class BkRepoClient(BkApiClient):
 
     PROJECT_EXIST_CODE = 251005  # 项目已经存在
     REPO_EXIST_CODE = 251007  # 仓库已经存在
+    TOKEN_EXIST_CODE = 250219  # TOKEN 已经存在
+    REPO_NOT_FOUND_CODE = 251006  # 仓库不存在
 
     def __init__(
         self, access_token: Optional[str] = None, username: Optional[str] = None, password: Optional[str] = None
@@ -131,26 +165,87 @@ class BkRepoClient(BkApiClient):
             raise BkRepoCreateProjectError(f"create project error, {resp.get('message')}")
         return resp
 
-    def create_repo(self, project_code: str, repo_type: str = "HELM", is_public: bool = False) -> Dict:
+    def create_repo(self, project_code: str, repo_data: RepoData) -> Dict:
         """创建仓库
 
-        :param project_code: BCS项目code
-        :param repo_type: 仓库类型，支持DOCKER, HELM, OCI
-        :param is_public: 是否允许公开
+        :param project_code: BCS 项目 Code
+        :param repo_data: 创建仓库需要的内容
         :return: 返回仓库
         """
-        data = {
-            "projectId": project_code,
-            "name": project_code,
-            "type": repo_type,
-            "category": "LOCAL",
-            "public": is_public,  # 容器服务项目自己的仓库
-            "configuration": {"type": "local"},
-        }
+        data = asdict(repo_data)
+        data["projectId"] = project_code
         resp = self._client.request_json("POST", self._config.create_repo, json=data, raise_for_status=False)
         if resp.get("code") not in [ErrorCode.NoError, self.REPO_EXIST_CODE]:
             raise BkRepoCreateRepoError(f"create repo error, {resp.get('message')}")
         return resp
+
+    @response_handler()
+    def update_repo(self, project_code, repo_data: RepoData) -> Optional[Dict]:
+        """更新仓库
+
+        :param project_code: BCS 项目 Code
+        :param repo_data: 创建仓库需要的内容
+        :return: 返回仓库
+        """
+        data = asdict(repo_data)
+        data["projectId"] = project_code
+        url = self._config.update_repo_url.format(project_code=project_code, repo_name=data["name"])
+        return self._client.request_json("POST", url, json=data)
+
+    def delete_repo(self, project_code: str, repo_name: str) -> None:
+        """删除仓库
+
+        :param project_code: BCS 项目 Code
+        :param repo_name: 仓库名称
+        """
+        url = self._config.delete_repo_url.format(project_code=project_code, repo_name=repo_name)
+        resp = self._client.request_json("DELETE", url)
+        if resp.get("code") in [ErrorCode.NoError, self.REPO_NOT_FOUND_CODE]:
+            return
+        raise BkRepoDeleteError(f"delete repo {repo_name} error, {resp.get('message')}")
+
+    @response_handler()
+    def list_project_repos(self, project_code: str) -> List:
+        """查询项目下面的仓库
+
+        :param project_code: BCS 项目 Code
+        :return: 返回项目列表
+        """
+        url = self._config.list_project_repos_url.format(project_code=project_code)
+        return self._client.request_json("GET", url)
+
+    def set_token(self, project_code: str) -> Dict:
+        """设置用户token，设置用户名和token名为相同值
+
+        NOTE: 根据使用场景，暂不设置过期时间
+
+        :param project_code: BCS 项目 Code
+        :return: 返回对应的token信息, 格式{"name": "token name", "id": "token value", "expiredAt": "expire time"}
+        """
+        url = self._config.set_token_url.format(username=self.username, token_name=self.username)
+        resp = self._client.request_json("POST", url, params={"projectId": project_code}, raise_for_status=False)
+        if resp.get("code") not in [ErrorCode.NoError, self.TOKEN_EXIST_CODE]:
+            raise BkRepoTokenError(f"set {self.username} token error, {resp.get('message')}")
+        return resp.get("data") or {}
+
+    def get_token(self) -> Dict[str, str]:
+        """获取 Token，因为token没有设置过期时间，返回的token的过期时间为None
+
+        :return: 返回用户的token信息，返回对应的token信息, 格式{"name": "token name", "id": "token value", "expiredAt": "expire time"}
+        """
+        url = self._config.user_detail_url.format(username=self.username)
+        resp = self._client.request_json("POST", url, raise_for_status=False)
+        data = resp.get("data")
+        if not data:
+            raise BkRepoTokenError(f"get {self.username} token error, data is null")
+        tokens = data.get("tokens") or []
+        if not tokens:
+            raise BkRepoTokenError(f"get {self.username} token error, token is null")
+        # 因为token可能有很多个，取 expiredAt 存在，并且值为空的作为当前用户的 Token
+        for token in tokens:
+            if ("expiredAt" in token) and token["expiredAt"] is None:
+                return token
+        raise BkRepoTokenError(f"get {self.username} token error, not found token")
 
     @response_handler()
     def set_auth(self, project_code: str, repo_admin_user: str, repo_admin_pwd: str) -> bool:

@@ -71,7 +71,14 @@ class TestBkRepoClient:
         requests_mock.post(ANY, json=raw_resp)
 
         client = bk_repo.BkRepoClient(username=fake_username, access_token=fake_access_token)
-        resp_data = client.create_repo(fake_project_code)
+        repo_data = bk_repo.RepoData(
+            name="test",
+            type="HELM",
+            category="LOCAL",
+            public=False,
+            configuration=bk_repo.RepoConfig(type="local", proxy={}),
+        )
+        resp_data = client.create_repo(fake_project_code, repo_data)
         assert resp_data == raw_resp
         assert requests_mock.request_history[0].method == "POST"
 
@@ -79,8 +86,36 @@ class TestBkRepoClient:
         requests_mock.post(ANY, json={"code": fake_error_code, "messahe": "error message"})
 
         client = bk_repo.BkRepoClient(username=fake_username, access_token=fake_access_token)
+        repo_data = bk_repo.RepoData(
+            name="test",
+            type="HELM",
+            category="LOCAL",
+            public=False,
+            configuration=bk_repo.RepoConfig(type="local", proxy={}),
+        )
         with pytest.raises(bk_repo.BkRepoCreateRepoError):
-            client.create_repo(fake_project_code)
+            client.create_repo(fake_project_code, repo_data)
+
+    def test_update_repo(self, requests_mock):
+        requests_mock.post(ANY, json={"code": 0, "data": {"foo": "bar"}})
+
+        client = bk_repo.BkRepoClient(username=fake_username, access_token=fake_access_token)
+        repo_data = bk_repo.RepoData(
+            name="test",
+            type="HELM",
+            category="LOCAL",
+            public=False,
+            configuration=bk_repo.RepoConfig(type="local", proxy={}),
+        )
+        client.create_repo(fake_project_code, repo_data)
+        assert requests_mock.request_history[0].method == "POST"
+
+    def test_delete_repo(self, requests_mock):
+        requests_mock.delete(ANY, json={"code": 0, "data": None})
+
+        client = bk_repo.BkRepoClient(username=fake_username, access_token=fake_access_token)
+        client.delete_repo(fake_project_code, fake_project_code)
+        assert requests_mock.request_history[0].method == "DELETE"
 
     def test_set_auth(self, requests_mock):
         requests_mock.post(ANY, json={"result": True, "data": {"foo": "bar"}})
