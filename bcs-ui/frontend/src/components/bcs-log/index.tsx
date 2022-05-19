@@ -141,7 +141,8 @@ export default defineComponent({
                     $clusterId: props.clusterId,
                     $namespaceId: props.namespaceId,
                     $podId: props.podId,
-                    $containerName: state.container
+                    $containerName: state.container,
+                    $startedAt: state.log[state.log.length - 1]?.time
                 })
                 state.contentLoading = false
                 logSSR?.addEventListener('open', () => {
