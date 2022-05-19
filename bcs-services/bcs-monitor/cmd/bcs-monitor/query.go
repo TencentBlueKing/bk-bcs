@@ -16,14 +16,16 @@ package main
 import (
 	"context"
 
+	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/query"
 )
+
+var storeList []string
 
 // QueryCmd
 func QueryCmd() *cobra.Command {
@@ -37,35 +39,23 @@ func QueryCmd() *cobra.Command {
 		runCmd(cmd, runQuery)
 	}
 
-	cmd.Flags().StringVar(&config.G.API.HTTP.Address, "http-address", config.G.API.HTTP.Address, "API listen http ip")
-	cmd.Flags().StringVar(&config.G.API.GRPC.Address, "grpc-address", config.G.API.GRPC.Address, "API listen grpc ip")
-	cmd.Flags().StringArrayVar(&config.G.API.StoreList, "store", config.G.API.StoreList, "the store list that api connect")
+	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:10902", "API listen http ip")
+	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "the store list that api connect")
 
-	// 设置配置命令行优先级高与配置文件
-	viper.BindPFlag("query.http.address", cmd.Flag("http-address"))
-	viper.BindPFlag("query.grpc.address", cmd.Flag("grpc-address"))
-	viper.BindPFlag("query.store", cmd.Flag("store"))
 	return cmd
 }
 
 func runQuery(ctx context.Context, g *run.Group, opt *option) error {
-	var (
-		reg       = opt.reg
-		kitLogger = gokit.NewLogger(opt.logger)
-		apiServer *query.API
-		err       error
-	)
+	kitLogger := gokit.NewLogger(logger.StandardLogger())
 
-	opt.logger.Info("starting bcs-monitor api node")
-	apiServer, err = query.NewAPI(reg, opt.tracer, kitLogger, config.G.API, g)
+	logger.Infow("listening for requests and metrics", "service", "query", "address", httpAddress)
+	apiServer, err := query.NewAPI(opt.reg, opt.tracer, kitLogger, httpAddress, storeList, g)
 	if err != nil {
-		opt.logger.Errorf("New api error: %s", err)
-		return err
+		return errors.Wrap(err, "query")
 	}
 
 	g.Add(apiServer.RunGetStore, apiServer.ShutDownGetStore)
 	g.Add(apiServer.RunHttp, apiServer.ShutDownHttp)
-	g.Add(apiServer.RunGrpc, apiServer.ShutDownGrpc)
 
 	return err
 }
