@@ -38,6 +38,9 @@ func (t *tenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Infow("handle request", "handler_name", handlerName, "url", r.URL)
+
+		// ctx := store.WithLabelMatchValue(r.Context(), labelMatches)
+		// r = r.WithContext(ctx)
 		handleFunc(w, r)
 	}
 }

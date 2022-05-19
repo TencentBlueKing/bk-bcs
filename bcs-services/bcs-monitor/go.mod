@@ -86,7 +86,6 @@ require (
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/googleapis/gax-go/v2 v2.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware/providers/kit/v2 v2.0.0-20201002093600-73cf2ae9d891 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.2.0.20201207153454-9f6bf00c00a7 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -176,7 +175,7 @@ require (
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
-	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20220506123820-9ce532727371
+	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20220519131447-14bc6afed435
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )
