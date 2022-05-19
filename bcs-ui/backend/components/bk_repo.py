@@ -180,7 +180,7 @@ class BkRepoClient(BkApiClient):
         return resp
 
     @response_handler()
-    def update_repo(self, project_code, repo_data: RepoData) -> Optional[Dict]:
+    def update_repo(self, project_code: str, repo_data: RepoData) -> Optional[Dict]:
         """更新仓库
 
         :param project_code: BCS 项目 Code

@@ -22,7 +22,7 @@ class RepoParamsSLZ(serializers.Serializer):
     """仓库参数"""
 
     name = serializers.CharField()
-    is_public = serializers.BooleanField(help_text="是否为公有源")
+    is_public = serializers.BooleanField(default=False, help_text="是否为公有源")
     url = serializers.CharField(help_text="访问仓库的地址")
     username = serializers.CharField(required=False, help_text="私有源时需要用户名")
     password = serializers.CharField(required=False, help_text="私有源时需要密码")

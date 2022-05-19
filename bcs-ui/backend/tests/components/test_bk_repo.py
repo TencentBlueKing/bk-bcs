@@ -117,6 +117,9 @@ class TestBkRepoClient:
         client.delete_repo(fake_project_code, fake_project_code)
         assert requests_mock.request_history[0].method == "DELETE"
 
+    def test_list_project_repos(self, requests_mock):
+        requests_mock.get(ANY, json={"code": 0, "data": {}})
+
     def test_set_auth(self, requests_mock):
         requests_mock.post(ANY, json={"result": True, "data": {"foo": "bar"}})
 
