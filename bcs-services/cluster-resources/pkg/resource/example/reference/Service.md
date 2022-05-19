@@ -12,7 +12,7 @@ Service 定义的抽象能够解耦这种关联。
 
 ## 定义 Service
 
-Service 在 Kubernetes 中是一个对象。像所有的 REST 对象一样，可以通过 POST 方法，请求 API Server 来创建新的实例。
+Service 在 Kubernetes 中是一类对象，就像所有的 REST 对象一样，我们可以通过 POST 方法，请求 API Server 来创建新的实例。
 
 例如，假定有一组 Pod，它们对外暴露了 9376 端口，同时还被打上 `app=MyApp` 标签：
 
@@ -29,11 +29,12 @@ spec:
       port: 80
       targetPort: 9376
 ```
+
 上述配置创建一个名称为 `my-service` 的 Service 对象，它会将请求代理到使用 TCP 端口 9376，并且具有标签 `app=MyApp` 的 Pod 上。
 
 Kubernetes 为该服务分配一个 IP 地址（有时称为 `集群 IP`），该 IP 地址由服务代理使用。
 
-服务选择算符的控制器不断扫描与其选择器匹配的 Pod，然后将所有更新发布到也称为 `my-service` 的 Endpoint 对象。
+服务选择算符的控制器不断扫描与其选择器匹配的 Pod，然后将所有更新发布到称为 `my-service` 的 Endpoint 对象。
 
 需要注意的是，Service 能够将一个接收 port 映射到任意的 targetPort。默认情况下，targetPort 将被设置为与 port 字段相同的值。
 
