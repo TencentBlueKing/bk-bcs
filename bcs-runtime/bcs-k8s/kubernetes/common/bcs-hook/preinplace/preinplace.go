@@ -20,10 +20,12 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
 	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 
 	apps "k8s.io/api/apps/v1"
@@ -112,11 +114,15 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 		return false, err
 	}
 	if len(existHookRuns) == 0 {
+		var ps metrics.PromServer
+		startTime := time.Now()
 		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
 			preInplaceHook, pod, podTemplate, preInplaceLabels, podNameLabelKey)
 		if err != nil {
+			ps.CollectHRCreateDurations(namespace, name, "failure", "preinplace", objectKind, time.Since(startTime))
 			return false, err
 		}
+		ps.CollectHRCreateDurations(namespace, name, "success", "preinplace", objectKind, time.Since(startTime))
 
 		updatePreInplaceHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PreInplace HookRun %s for pod %s of %s %s/%s",

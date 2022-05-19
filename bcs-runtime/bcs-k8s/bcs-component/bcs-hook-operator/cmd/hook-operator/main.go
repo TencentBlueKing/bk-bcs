@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/controllers/hook"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/admission"
 	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/metrics/restclient"
@@ -72,6 +73,8 @@ var (
 	metricPort uint
 )
 
+var webhookOptions = admission.NewServerRunOptions()
+
 func main() {
 
 	flag.Parse()
@@ -92,7 +95,8 @@ func main() {
 	}
 	fmt.Println("Operator building kube client for election success...")
 	broadcaster := record.NewBroadcaster()
-	broadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(LockNameSpace)})
+	broadcaster.StartRecordingToSink(
+		&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(LockNameSpace)})
 	recorder := broadcaster.NewRecorder(scheme.Scheme, api.EventSource{Component: LockComponentName})
 
 	rl, err := resourcelock.New(
@@ -137,6 +141,12 @@ func init() {
 	flag.DurationVar(&RetryPeriod, "leader-elect-retry-period", 2*time.Second, "The leader-elect RetryPeriod")
 	flag.StringVar(&address, "address", "0.0.0.0", "http server address")
 	flag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
+
+	flag.StringVar(&webhookOptions.WebhookAddress, "webhook-address", "0.0.0.0", "The address of scheduler manager.")
+	flag.IntVar(&webhookOptions.WebhookPort, "webhook-port", 443, "The port of scheduler manager.")
+	flag.StringVar(&webhookOptions.TLSCert, "tlscert", "", "Path to TLS certificate file")
+	flag.StringVar(&webhookOptions.TLSKey, "tlskey", "", "Path to TLS key file")
+	flag.StringVar(&webhookOptions.TLSCA, "tlsca", "", "Path to certificate file")
 }
 
 func run() {
@@ -192,6 +202,17 @@ func run() {
 	fmt.Println("Operator starting tkex Informer factory success...")
 	runPrometheusMetricsServer()
 	fmt.Println("run prometheus server metrics success...")
+
+	if err = webhookOptions.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	go func() {
+		if runErr := admission.Run(webhookOptions, admission.HookType, tkexClient, stopCh); runErr != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", runErr)
+			os.Exit(1)
+		}
+	}()
 
 	if err = hrController.Run(1, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())

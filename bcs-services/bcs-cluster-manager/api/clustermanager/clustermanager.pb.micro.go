@@ -57,6 +57,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CheckCloudKubeConfig",
+			Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ImportCluster",
 			Path:    []string{"/clustermanager/v1/cluster/import"},
 			Method:  []string{"POST"},
@@ -106,6 +113,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.ListCluster",
 			Path:    []string{"/clustermanager/v1/cluster"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCommonCluster",
+			Path:    []string{"/clustermanager/v1/sharedclusters"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -503,6 +516,7 @@ type ClusterManagerService interface {
 	//* cluster management
 	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...client.CallOption) (*CreateClusterResp, error)
 	RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...client.CallOption) (*RetryCreateClusterResp, error)
+	CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...client.CallOption) (*KubeConfigResp, error)
 	ImportCluster(ctx context.Context, in *ImportClusterReq, opts ...client.CallOption) (*ImportClusterResp, error)
 	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...client.CallOption) (*UpdateClusterResp, error)
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
@@ -511,6 +525,7 @@ type ClusterManagerService interface {
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
 	GetCluster(ctx context.Context, in *GetClusterReq, opts ...client.CallOption) (*GetClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
+	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	//* node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
@@ -614,6 +629,16 @@ func (c *clusterManagerService) RetryCreateClusterTask(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *clusterManagerService) CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...client.CallOption) (*KubeConfigResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CheckCloudKubeConfig", in)
+	out := new(KubeConfigResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ImportCluster(ctx context.Context, in *ImportClusterReq, opts ...client.CallOption) (*ImportClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ImportCluster", in)
 	out := new(ImportClusterResp)
@@ -687,6 +712,16 @@ func (c *clusterManagerService) GetCluster(ctx context.Context, in *GetClusterRe
 func (c *clusterManagerService) ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCluster", in)
 	out := new(ListClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCommonCluster", in)
+	out := new(ListCommonClusterResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1280,6 +1315,7 @@ type ClusterManagerHandler interface {
 	//* cluster management
 	CreateCluster(context.Context, *CreateClusterReq, *CreateClusterResp) error
 	RetryCreateClusterTask(context.Context, *RetryCreateClusterReq, *RetryCreateClusterResp) error
+	CheckCloudKubeConfig(context.Context, *KubeConfigReq, *KubeConfigResp) error
 	ImportCluster(context.Context, *ImportClusterReq, *ImportClusterResp) error
 	UpdateCluster(context.Context, *UpdateClusterReq, *UpdateClusterResp) error
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
@@ -1288,6 +1324,7 @@ type ClusterManagerHandler interface {
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
 	GetCluster(context.Context, *GetClusterReq, *GetClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
+	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	//* node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
@@ -1363,6 +1400,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	type clusterManager interface {
 		CreateCluster(ctx context.Context, in *CreateClusterReq, out *CreateClusterResp) error
 		RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, out *RetryCreateClusterResp) error
+		CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, out *KubeConfigResp) error
 		ImportCluster(ctx context.Context, in *ImportClusterReq, out *ImportClusterResp) error
 		UpdateCluster(ctx context.Context, in *UpdateClusterReq, out *UpdateClusterResp) error
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
@@ -1371,6 +1409,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
 		GetCluster(ctx context.Context, in *GetClusterReq, out *GetClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
+		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
 		CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error
@@ -1449,6 +1488,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CheckCloudKubeConfig",
+		Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ImportCluster",
 		Path:    []string{"/clustermanager/v1/cluster/import"},
 		Method:  []string{"POST"},
@@ -1498,6 +1544,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCluster",
 		Path:    []string{"/clustermanager/v1/cluster"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCommonCluster",
+		Path:    []string{"/clustermanager/v1/sharedclusters"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -1901,6 +1953,10 @@ func (h *clusterManagerHandler) RetryCreateClusterTask(ctx context.Context, in *
 	return h.ClusterManagerHandler.RetryCreateClusterTask(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, out *KubeConfigResp) error {
+	return h.ClusterManagerHandler.CheckCloudKubeConfig(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) ImportCluster(ctx context.Context, in *ImportClusterReq, out *ImportClusterResp) error {
 	return h.ClusterManagerHandler.ImportCluster(ctx, in, out)
 }
@@ -1931,6 +1987,10 @@ func (h *clusterManagerHandler) GetCluster(ctx context.Context, in *GetClusterRe
 
 func (h *clusterManagerHandler) ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error {
 	return h.ClusterManagerHandler.ListCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error {
+	return h.ClusterManagerHandler.ListCommonCluster(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error {

@@ -57,4 +57,16 @@ const (
 	NotFoundHeaderUserErr = commErr.AdditionErrorCode + 406
 	// NotFoundUserFromHeaderMsg
 	NotFoundHeaderUserErrMsg = "not found username from header"
+	// RequestCMDBErr 请求 cmdb api 异常
+	RequestCMDBErr = commErr.AdditionErrorCode + 509
+	// RequestCMDBErrMsg ...
+	RequestCMDBErrMsg = "request iam api error"
+	// NoMaintainerRoleErr 用户不为运维角色
+	NoMaintainerRoleErr = commErr.AdditionErrorCode + 407
+	// NoMaintainerRoleErrMsg ...
+	NoMaintainerRoleErrMsg = "user is not biz maintainer role"
+	// RequestBCSCCErr ...
+	RequestBCSCCErr = commErr.AdditionErrorCode + 510
+	// RequestBCSCCErrMsg ...
+	RequestBCSCCErrMsg = "request bcs cc api error"
 )

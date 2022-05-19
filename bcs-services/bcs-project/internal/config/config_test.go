@@ -49,6 +49,10 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, expectedDefaultUseGWHost, c.IAM.UseGWHost)
 
 	// exempt action perm, default all action need perm
-	expectedActionPerm := true
-	assert.Equal(t, expectedActionPerm, !c.ActionExemptPerm.Create)
+	clientActions := c.ClientActionExemptPerm.ClientActions
+	var expectedClientIDs []string
+	for _, i := range clientActions {
+		expectedClientIDs = append(expectedClientIDs, i.ClientID)
+	}
+	assert.Contains(t, expectedClientIDs, "test")
 }

@@ -2,7 +2,7 @@
   "cloudList": [
     {
       "cloudID": "bluekingCloud",
-      "name": "蓝鲸云",
+      "name": "原生K8S集群",
       "engineType": "k8s",
       "editable": true,
       "enable": "false",
@@ -12,6 +12,10 @@
         "defaultSecurityGroups": [],
         "regions": {}
       },
+      "networkInfo": {
+        "cidrStep": [0, 0]
+      },
+      "confInfo": { "cloudInternalEnable": false},
       "clusterManagement": {
         "availableVersion": ["v1.14.3-tk8s-v1.1-1"],
         "createCluster": {
@@ -26,7 +30,8 @@
                 "template_user": "CM.template.Operator",
                 "ctrl_ip_list": "CM.cluster.ClusterMasterIPs",
                 "cluster_id": "CM.cluster.ClusterID",
-                "extra_env": "CM.cluster.CreateClusterExtraEnv"
+                "extra_env": "CM.cluster.CreateClusterExtraEnv",
+                "bcs_env": "CM.bcs.CommonInfo"
               }
             }
           }
@@ -83,7 +88,13 @@
       "creator": "admin",
       "updater": "admin",
       "cloudProvider": "blueking",
-      "description": ""
+      "description": "",
+      "platformInfo": {
+        "image_register": "",
+        "storage_zookeeper": "",
+        "storage_url": "",
+        "bcs_api_host": ""
+      }
     }
   ]
 }

@@ -16,12 +16,12 @@ package manager
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -30,9 +30,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
@@ -212,15 +210,10 @@ func (r *RemoteStreamConn) Run() error {
 }
 
 // WaitStreamDone: stream 流处理
-func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types.PodContext) error {
+func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	defer r.Close()
 
-	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, podCtx.AdminClusterId)
-	k8sConfig := &rest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
-	}
-	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
+	k8sClient, err := k8sclient.GetK8SClientByClusterId(podCtx.AdminClusterId)
 	if err != nil {
 		return err
 	}
@@ -240,6 +233,7 @@ func (r *RemoteStreamConn) WaitStreamDone(bcsConf *config.BCSConf, podCtx *types
 		TTY:       true,
 	}, scheme.ParameterCodec)
 
+	k8sConfig := k8sclient.GetK8SConfigByClusterId(podCtx.AdminClusterId)
 	executor, err := remotecommand.NewSPDYExecutor(k8sConfig, "POST", req.URL())
 	if err != nil {
 		logger.Warnf("start remote stream error, err: %s", err)

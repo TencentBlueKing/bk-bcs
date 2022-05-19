@@ -24,4 +24,6 @@ const (
 	TraceIDKey ContextKey = "traceID"
 	// UsernameKey 用户名
 	UsernameKey ContextKey = "username"
+	// ClientID 平台级用户名
+	ClientID ContextKey = "clientID"
 )

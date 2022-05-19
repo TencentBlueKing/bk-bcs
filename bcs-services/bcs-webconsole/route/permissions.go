@@ -19,8 +19,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/gin-gonic/gin"
@@ -84,7 +84,7 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 		return errors.Wrap(err, "项目不正确")
 	}
 
-	bcsConf := podmanager.GetBCSConfByClusterId(clusterId)
+	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
 
 	cluster, err := bcs.GetCluster(c.Request.Context(), bcsConf, project.ProjectId, clusterId)
 	if err != nil {

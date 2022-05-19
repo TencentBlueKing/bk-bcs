@@ -56,6 +56,7 @@ var (
 	clusterProjectID      = "CM.cluster.ClusterProjectID"
 	clusterExtraEnv       = "CM.cluster.CreateClusterExtraEnv"
 	addNodesExtraEnv      = "CM.cluster.AddNodesExtraEnv"
+	bcsCommonInfo         = "CM.bcs.CommonInfo"
 
 	nodePasswd           = "CM.node.NodePasswd"
 	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy"
@@ -187,6 +188,12 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return getClusterCreateExtraEnv(cluster), nil
 	case addNodesExtraEnv:
 		return getAddNodesExtraEnv(cluster), nil
+	case bcsCommonInfo:
+		envs, err := getBcsEnvs(cluster)
+		if err != nil {
+			return "", nil
+		}
+		return envs, nil
 	default:
 	}
 

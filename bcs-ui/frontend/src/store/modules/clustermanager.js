@@ -24,7 +24,9 @@ import {
     deleteClusterNode,
     clusterDetail,
     modifyCluster,
-    importCluster
+    importCluster,
+    kubeConfig,
+    nodeAvailable
 } from '@/api/base'
 
 export default {
@@ -103,6 +105,16 @@ export default {
         },
         async importCluster (ctx, params) {
             const data = await importCluster(params).then(() => true).catch(() => false)
+            return data
+        },
+        // 可用性测试
+        async kubeConfig (ctx, params) {
+            const data = await kubeConfig(params).then(() => true).catch(() => false)
+            return data
+        },
+        // 节点是否可用
+        async nodeAvailable (ctx, params) {
+            const data = await nodeAvailable(params).catch(() => ({}))
             return data
         }
     }

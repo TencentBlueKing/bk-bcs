@@ -129,7 +129,7 @@
         align-content: center;
         justify-content: space-between;
         .create-btn {
-            width: 120px;
+            min-width: 120px;
         }
         .search-input {
             width: 500px;

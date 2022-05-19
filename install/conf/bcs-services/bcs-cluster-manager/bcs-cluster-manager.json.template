@@ -58,6 +58,23 @@
         "enable": ${bcsPassEnable},
         "debug": ${bcsPassDebug}
     },
+    "user": {
+        "enable": ${bcsUserEnable},
+        "gateWay": "${bcsUserGateWay}",
+        "isVerifyTLS": ${bcsUserVerifyTLS},
+        "token": "${bcsUserToken}"
+    },
+    "iam_config": {
+        "systemID": "${bcsIAMSystemID}",
+        "appCode": "${bcsIAMAppCode}",
+        "appSecret": "${bcsIAMAppSecret}",
+        "external": ${bcsIAMExternal},
+        "gateWayServer": "${bcsIAMGateWayHost}",
+        "iamServer": "${bcsIAMHost}",
+        "bkiIamServer": "${bcsIAMbkiHost}",
+        "metric": ${bcsIAMMetric},
+        "debug": ${bcsIAMDebug}
+    },
     "cloudTemplatePath": "${bcsCloudTemplatePath}",
     "debug": ${bcsClusterManagerDebug},
     "address": "${localIp}",

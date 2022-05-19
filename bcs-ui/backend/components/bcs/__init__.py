@@ -20,7 +20,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from backend.components import paas_cc
 from backend.components.base import ComponentAuth
-from backend.utils import cache, exceptions
+from backend.utils import cache
 
 BCS_API_PRE_URL = settings.BCS_API_PRE_URL
 
@@ -84,10 +84,8 @@ class BCSClientBase:
 
     @property
     def _bcs_https_server_host(self):
-        """有单独配置 BCS_HTTPS_SERVER_HOST 配置项"""
-        server_host = getattr(settings, 'BCS_HTTPS_SERVER_HOST', None)
-        if server_host:
-            return server_host[self._bcs_server_stag]
+        if not self._bcs_server_host.startswith('https'):
+            raise ValueError('invalid bcs_https_server_host: must be https schema')
         return self._bcs_server_host
 
     @property
