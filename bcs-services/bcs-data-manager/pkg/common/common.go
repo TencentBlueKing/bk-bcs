@@ -87,6 +87,8 @@ func (g *ResourceGetter) GetProjectIDList(ctx context.Context, cmCli cm.ClusterM
 
 // GetClusterIDList get cluster id list
 func (g *ResourceGetter) GetClusterIDList(ctx context.Context, cmCli cm.ClusterManagerClient) ([]*ClusterMeta, error) {
+	// get cluster list from cache first.
+	// If found, return. Otherwise, call cluster manager api to get and set in cache.
 	cacheClusterMetaList, found := g.cache.Get("clusterList")
 	if found {
 		return cacheClusterMetaList.([]*ClusterMeta), nil
@@ -117,47 +119,48 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context, cmCli cm.ClusterM
 // GetNamespaceList get namespace list
 func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterManagerClient,
 	k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error) {
+	// get namespace list from cache first
+	// if found, return. Otherwise, call bcs storage api to get and set in cache.
 	cacheList, found := g.cache.Get("namespaceList")
 	if found {
 		return cacheList.([]*NamespaceMeta), nil
 	}
 	blog.Infof("get namespace list from cache failed.")
 	namespaceMetaList := make([]*NamespaceMeta, 0)
-	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{})
+	clusterList, err := g.GetClusterIDList(ctx, cmCli)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
 	chPool := make(chan struct{}, 30)
 	wg := sync.WaitGroup{}
 	lock := &sync.Mutex{}
-	for _, cluster := range clusterList.Data {
+	for _, cluster := range clusterList {
 		if !g.needFilter || g.clusterIDs[cluster.ClusterID] {
 			wg.Add(1)
 			chPool <- struct{}{}
-			clusterObj := *cluster
-			switch cluster.EngineType {
+			switch cluster.ClusterType {
 			case Kubernetes:
-				go func(cluster cm.Cluster) {
+				go func(cluster *ClusterMeta) {
 					defer wg.Done()
 					namespaces := GetK8sNamespaceList(cluster.ClusterID, cluster.ProjectID, k8sStorageCli)
 					lock.Lock()
 					namespaceMetaList = append(namespaceMetaList, namespaces...)
 					lock.Unlock()
 					<-chPool
-				}(clusterObj)
+				}(cluster)
 			case Mesos:
-				go func(cluster cm.Cluster) {
+				go func(cluster *ClusterMeta) {
 					defer wg.Done()
 					namespaces := GetMesosNamespaceList(cluster.ClusterID, cluster.ProjectID, mesosStorageCli)
 					lock.Lock()
 					namespaceMetaList = append(namespaceMetaList, namespaces...)
 					lock.Unlock()
 					<-chPool
-				}(clusterObj)
+				}(cluster)
 			default:
 				wg.Done()
 				<-chPool
-				return nil, fmt.Errorf("wrong cluster engine type : %s", cluster.EngineType)
+				return nil, fmt.Errorf("wrong cluster engine type : %s", cluster.ClusterType)
 			}
 		}
 	}
@@ -169,6 +172,7 @@ func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterM
 // GetNamespaceListByCluster get namespace list by cluster
 func (g *ResourceGetter) GetNamespaceListByCluster(clusterMeta *ClusterMeta,
 	k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error) {
+	// get from cache first
 	cacheList, found := g.cache.Get(fmt.Sprintf("%s-ns", clusterMeta.ClusterID))
 	if found {
 		return cacheList.([]*NamespaceMeta), nil

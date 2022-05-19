@@ -24,19 +24,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ClusterDayPolicy day policy
+// ClusterDayPolicy cluster day policy
 type ClusterDayPolicy struct {
 	MetricGetter metric.Server
 	store        store.Server
 }
 
-// ClusterHourPolicy hour policy
+// ClusterHourPolicy cluster hour policy
 type ClusterHourPolicy struct {
 	MetricGetter metric.Server
 	store        store.Server
 }
 
-// ClusterMinutePolicy minute policy
+// ClusterMinutePolicy cluster minute policy
 type ClusterMinutePolicy struct {
 	MetricGetter metric.Server
 	store        store.Server
@@ -66,7 +66,7 @@ func NewClusterMinutePolicy(getter metric.Server, store store.Server) *ClusterMi
 	}
 }
 
-// ImplementPolicy day policy implement
+// ImplementPolicy day policy implement, calculate every day
 func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
 	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
@@ -146,7 +146,7 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 	}
 }
 
-// ImplementPolicy hour policy implement
+// ImplementPolicy hour policy implement, calculate every hour
 func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
 	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
@@ -226,7 +226,7 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 	}
 }
 
-// ImplementPolicy minute policy implement
+// ImplementPolicy minute policy implement, calculate every 10 min
 func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts,
 	clients *common.Clients) {
 	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
