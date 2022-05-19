@@ -98,13 +98,14 @@ type STS struct {
 
 // STSSpec ...
 type STSSpec struct {
-	Replicas   STSReplicas    `structs:"replicas"`
-	NodeSelect NodeSelect     `structs:"nodeSelect"`
-	Affinity   Affinity       `structs:"affinity"`
-	Toleration Toleration     `structs:"toleration"`
-	Networking Networking     `structs:"networking"`
-	Security   PodSecurityCtx `structs:"security"`
-	Other      SpecOther      `structs:"other"`
+	Replicas        STSReplicas        `structs:"replicas"`
+	VolumeClaimTmpl STSVolumeClaimTmpl `structs:"volumeClaimTmpl"`
+	NodeSelect      NodeSelect         `structs:"nodeSelect"`
+	Affinity        Affinity           `structs:"affinity"`
+	Toleration      Toleration         `structs:"toleration"`
+	Networking      Networking         `structs:"networking"`
+	Security        PodSecurityCtx     `structs:"security"`
+	Other           SpecOther          `structs:"other"`
 }
 
 // STSReplicas ...
@@ -112,6 +113,21 @@ type STSReplicas struct {
 	Cnt            int64  `structs:"cnt"`
 	UpdateStrategy string `structs:"updateStrategy"`
 	PodManPolicy   string `structs:"podManPolicy"`
+}
+
+// STSVolumeClaimTmpl ...
+type STSVolumeClaimTmpl struct {
+	Claims []VolumeClaim `structs:"claims"`
+}
+
+// VolumeClaim ...
+type VolumeClaim struct {
+	PVCName     string   `structs:"pvcName"`
+	ClaimType   string   `structs:"claimType"`
+	PVName      string   `structs:"pvName"`
+	SCName      string   `structs:"scName"`
+	StorageSize int      `structs:"storageSize"`
+	AccessModes []string `structs:"accessModes"`
 }
 
 // CJ CronJob 表单化建模

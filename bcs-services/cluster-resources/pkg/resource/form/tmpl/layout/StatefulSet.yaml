@@ -5,6 +5,15 @@
           group:
             - [ "cnt", ".", "updateStrategy", ".", "podManPolicy" ]
           prop: replicas
+      - - group:
+            - - group:
+                  - [ "pvcName", "pvcName" ]
+                  - [ "claimType", "." ]
+                  - [ "pvName", "." ]
+                  - [ "scName", "storageSize" ]
+                  - [ "accessModes", "." ]
+                prop: claims
+          prop: volumeClaimTmpl
       {{- include "workload.affinity" . | nindent 6 }}
       {{- include "workload.networking" . | indent 6 }}
       {{- include "workload.security" . | indent 6 }}

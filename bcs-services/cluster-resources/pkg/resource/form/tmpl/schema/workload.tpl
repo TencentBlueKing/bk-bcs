@@ -163,6 +163,147 @@ replicas:
               value: Parallel
 {{- end }}
 
+{{- define "workload.stsVolumeClaimTmpl" }}
+volumeClaimTmpl:
+  title: 存储卷声明模板
+  type: object
+  properties:
+    claims:
+      type: array
+      items:
+        type: object
+        required:
+          - pvcName
+          - claimType
+          - scName
+          - pvName
+          - storageSize
+        properties:
+          pvcName:
+            title: 持久卷声明名称
+            type: string
+            ui:rules:
+              - required
+              - maxLength128
+              - nameRegex
+          claimType:
+            title: 卷声明类型
+            type: radio
+            default:
+            props:
+              clearable: true
+              searchable: true
+              datasource:
+                - label: 使用已存在的持久卷
+                  value: useExistPV
+                - label: 指定存储类以创建持久卷
+                  value: createBySC
+            ui:reactions:
+              - target: "{{`{{`}} $widgetNode?.getSibling('pvName')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'useExistPV' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('scName')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'createBySC' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('storageSize')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'createBySC' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+            ui:rules:
+              - required
+          pvName:
+            title: 持久卷名称
+            type: string
+            ui:component:
+              name: select
+              props:
+                clearable: false
+                searchable: true
+                remoteConfig:
+                  params:
+                    format: selectItems
+                  url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/storages/persistent_volumes` {{`}}`}}"
+            ui:reactions:
+              - lifetime: init
+                then:
+                  actions:
+                    - "{{`{{`}} $loadDataSource {{`}}`}}"
+            ui:rules:
+              # TODO claimType == useExistPV 必填
+              - maxLength64
+          scName:
+            title: 存储类名称
+            type: string
+            ui:component:
+              name: select
+              props:
+                clearable: false
+                searchable: true
+                remoteConfig:
+                  params:
+                    format: selectItems
+                  url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/storages/storage_classes` {{`}}`}}"
+            ui:reactions:
+              - lifetime: init
+                then:
+                  actions:
+                    - "{{`{{`}} $loadDataSource {{`}}`}}"
+            ui:rules:
+              # TODO claimType == createBySC 必填
+              - maxLength64
+          storageSize:
+            title: 容量
+            type: integer
+            ui:component:
+              name: unitInput
+              props:
+                max: 4096
+                unit: Gi
+            ui:rules:
+              # TODO claimType == createBySC 必填
+              - maxLength64
+          accessModes:
+            title: 访问模式
+            type: array
+            items:
+              type: string
+            ui:component:
+              name: select
+              props:
+                clearable: true
+                searchable: true
+                datasource:
+                  - label: ReadWriteOnce
+                    value: RWO
+                  - label: ReadOnlyMany
+                    value: ROX
+                  - label: ReadWriteMany
+                    value: RWX
+        ui:group:
+          props:
+            showTitle: false
+            type: normal
+          style:
+            background: '#fff'
+      ui:group:
+        props:
+          showTitle: false
+{{- end }}
+
 {{- define "workload.cjJobManage" }}
 jobManage:
   title: {{ i18n "任务管理" .lang }}
