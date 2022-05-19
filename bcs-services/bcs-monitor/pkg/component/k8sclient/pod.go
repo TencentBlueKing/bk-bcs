@@ -248,6 +248,7 @@ func GetPodLogStream(ctx context.Context, clusterId, namespace, podname string, 
 
 	logChan := make(chan *Log)
 	go func() {
+		defer close(logChan)
 		defer reader.Close()
 
 		scanner := bufio.NewScanner(reader)
