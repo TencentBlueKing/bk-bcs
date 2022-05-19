@@ -35,7 +35,7 @@ func TestGetNamespaceList(t *testing.T) {
 	cmCli := mock.NewMockCm()
 	storageCli := mock.NewMockStorage()
 	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
-	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli)
+	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli, storageCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 4, len(namespaceList))
 }
@@ -53,8 +53,10 @@ func TestGetWorkloadList(t *testing.T) {
 	ctx := context.Background()
 	storageCli := &mock.MockStorage{}
 	cmCli := mock.NewMockCm()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
-	workloadList, err := getter.GetWorkloadList(ctx, cmCli, storageCli)
+	getter := NewGetter(true, []string{"BCS-K8S-15091"})
+	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli, storageCli)
+	assert.Nil(t, err)
+	workloadList, err := getter.GetK8sWorkloadList(namespaceList, storageCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 6, len(workloadList))
 }
