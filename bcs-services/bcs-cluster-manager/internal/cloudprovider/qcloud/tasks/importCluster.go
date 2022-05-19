@@ -165,6 +165,8 @@ func registerTKEExternalClusterEndpoint(ctx context.Context, data *cloudprovider
 		return fmt.Errorf("taskID[%s] GetClusterEndpointStatus[%s] failed: %v", taskID, data.Cluster.ClusterID, err.Error())
 	}
 
+	blog.Infof("taskID[%s] registerTKEExternalClusterEndpoint endpointStatus[%s]", taskID, endpointStatus.Status())
+
 	switch {
 	case endpointStatus.Created():
 		return importClusterCredential(ctx, data)
@@ -212,6 +214,8 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 				taskID, data.Cluster.SystemID, status)
 			return nil
 		case status.Created():
+			blog.Infof("taskID[%s] GetClusterEndpointStatus[%s] status[%s]",
+				taskID, data.Cluster.SystemID, status)
 			return cloudprovider.EndLoop
 		default:
 			return nil
@@ -282,6 +286,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,
 		ClusterVPCID: data.Cluster.VpcID,
+		ClusterID:    data.Cluster.ClusterID,
 	})
 	if err != nil {
 		return err

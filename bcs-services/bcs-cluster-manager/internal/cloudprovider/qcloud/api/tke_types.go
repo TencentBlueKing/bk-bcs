@@ -38,6 +38,11 @@ func (es EndpointStatus) Deleted() bool {
 	return es == Deleted
 }
 
+// Status return es
+func (es EndpointStatus) Status() string {
+	return string(es)
+}
+
 var (
 	// Created status
 	Created EndpointStatus = "Created"
