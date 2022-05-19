@@ -17,7 +17,7 @@
         "cloudInternalEnable": false
       },
       "osManagement": {
-        "availableVersion": ["IEG-TKE-tlinux26-tkernel4-541191-3"],
+        "availableVersion": ["default"],
         "instanceType": [],
         "defaultSecurityGroups": [],
         "regions": {}

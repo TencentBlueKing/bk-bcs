@@ -15,6 +15,7 @@ package cloudresource
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -86,6 +87,11 @@ func (ga *GetCloudRegionsAction) validate() error {
 	if err != nil {
 		return err
 	}
+
+	if len(ga.req.AccountID) == 0 {
+		return fmt.Errorf("GetCloudRegionsAction query parameter accountID is invalid")
+	}
+
 	err = ga.getRelativeData()
 	if err != nil {
 		return err
@@ -201,6 +207,10 @@ func (ga *GetCloudRegionZonesAction) validate() error {
 	if err != nil {
 		return err
 	}
+	if len(ga.req.AccountID) == 0 {
+		return fmt.Errorf("GetCloudRegionZonesAction query parameter accountID is invalid")
+	}
+
 	err = ga.getRelativeData()
 	if err != nil {
 		return err

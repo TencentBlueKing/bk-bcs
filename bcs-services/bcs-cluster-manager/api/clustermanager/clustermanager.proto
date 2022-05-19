@@ -7473,11 +7473,11 @@ message GetCloudRegionsRequest {
   string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "cloudID",
     description : "云信息"
-  }];
+  },(validate.rules).string = {min_len : 2}];
   string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
-  },(validate.rules).string = {min_len : 2, pattern : "^[0-9a-zA-Z-]+$"}];
+  }];
 }
 
 message GetCloudRegionsResponse {
@@ -7581,15 +7581,15 @@ message ListCloudRegionClusterRequest {
   string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "cloudID",
     description : "云信息"
-  }];
+  },(validate.rules).string = {min_len : 2}];
   string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "region",
     description : "地域信息"
-  }];
+  },(validate.rules).string = {min_len : 2}];
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
-  },(validate.rules).string = {min_len : 2, pattern : "^[0-9a-zA-Z-]+$"}];
+  }];
 }
 
 message ListCloudRegionClusterResponse {
@@ -7629,15 +7629,15 @@ message GetCloudRegionZonesRequest {
   string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "cloudID",
     description : "云信息"
-  }];
+  },(validate.rules).string = {min_len : 2}];
   string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "region",
     description : "地域信息"
-  }];
+  },(validate.rules).string = {min_len : 2}];
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
-  },(validate.rules).string = {min_len : 2, pattern : "^[0-9a-zA-Z-]+$"}];
+  }];
 }
 
 message GetCloudRegionZonesResponse {
