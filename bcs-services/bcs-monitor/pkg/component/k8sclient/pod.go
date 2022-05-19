@@ -23,10 +23,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 // 需要取指针, 不能用常量
@@ -40,10 +41,11 @@ var (
 
 // LogQuery 日志查询参数， 精简后的 v1.PodLogOptions
 type LogQuery struct {
-	ContainerName string `form:"container_name" binding:"required"` // 必填参数
-	Previous      bool   `form:"previous"`
-	StartedAt     string `form:"started_at"`
-	FinishedAt    string `form:"finished_at"`
+	ContainerName string            `form:"container_name" binding:"required"` // 必填参数
+	Previous      bool              `form:"previous"`
+	StartedAt     string            `form:"started_at"`
+	FinishedAt    string            `form:"finished_at"`
+	podLogOptions *v1.PodLogOptions `form:"-"`
 }
 
 func (q *LogQuery) makeOptions() (*v1.PodLogOptions, error) {
@@ -70,6 +72,9 @@ func (q *LogQuery) makeOptions() (*v1.PodLogOptions, error) {
 
 		opt.SinceTime = &metav1.Time{Time: t}
 	}
+
+	q.podLogOptions = opt
+
 	return opt, nil
 }
 
@@ -91,6 +96,12 @@ func (l *LogWithPreviousLink) MakePreviousLink(projectId, clusterId, namespace, 
 		return nil
 	}
 
+	// 按日志行数, 如果返回没有超过需求行数, 说明已经包含全部日志
+	if opt.podLogOptions.TailLines != nil && int64(len(l.Logs)) < *opt.podLogOptions.TailLines {
+		return nil
+	}
+
+	// 计算翻页
 	startTime := l.Logs[0].Time
 	endTime := l.Logs[len(l.Logs)-1].Time
 	sinceTime, err := calcSinceTime(startTime, endTime)
@@ -206,7 +217,7 @@ func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *L
 		}
 
 		// 只返回当前历史数据
-		if opt.FinishedAt != "" && log.Log == opt.FinishedAt {
+		if opt.FinishedAt != "" && log.Time == opt.FinishedAt {
 			break
 		}
 
