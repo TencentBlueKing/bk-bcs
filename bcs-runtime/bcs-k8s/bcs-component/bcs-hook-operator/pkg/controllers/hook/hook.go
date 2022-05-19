@@ -21,6 +21,7 @@ import (
 	"time"
 
 	common "github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/providers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/constants"
 	hooksutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/pkg/util/hook"
@@ -55,7 +56,7 @@ type HookController struct {
 	newProvider func(metric v1alpha1.Metric) (providers.Provider, error)
 	queue       workqueue.RateLimitingInterface
 	// metrics used to collect prom metrics
-	metrics  *metrics
+	metrics  *metrics.Metrics
 	recorder record.EventRecorder
 	hostIP   string
 }
@@ -77,7 +78,7 @@ func NewHookController(
 		hookRunSynced:      hookRunInformer.Informer().HasSynced,
 		recorder:           recorder,
 		queue:              workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
-		metrics:            newMetrics(),
+		metrics:            metrics.NewMetrics(),
 		hostIP:             os.Getenv("HOST_IP"),
 	}
 
@@ -108,7 +109,7 @@ func (hc *HookController) Run(workers int, stopCh <-chan struct{}) error {
 	}
 
 	imageVersion, hookrunVersion, hooktemplateVersion := hc.getVersion()
-	hc.metrics.collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion,
+	hc.metrics.CollectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion,
 		common.BcsVersion, common.BcsGitHash, common.BcsBuildTime)
 
 	for i := 0; i < workers; i++ {
@@ -178,12 +179,12 @@ func (hc *HookController) sync(key string) (retErr error) {
 		if retErr == nil {
 			klog.V(3).Infof("Finished syncing HookRun %s, cost time: (%v)", key, duration)
 			if needReconcile {
-				hc.metrics.collectReconcileDuration(namespace, ownerRef, "success", duration)
+				hc.metrics.CollectReconcileDuration(namespace, ownerRef, "success", duration)
 			}
 		} else {
 			klog.Errorf("Failed syncing HookRun %s, err: %v", key, retErr)
 			if needReconcile {
-				hc.metrics.collectReconcileDuration(namespace, ownerRef, "failure", duration)
+				hc.metrics.CollectReconcileDuration(namespace, ownerRef, "failure", duration)
 			}
 		}
 	}()
@@ -224,7 +225,7 @@ func (hc *HookController) sync(key string) (retErr error) {
 
 	updatedRun := hc.reconcileHookRun(run)
 	if updatedRun.Status.StartedAt != nil {
-		hc.metrics.collectHookrunSurviveTime(namespace, ownerRef, run.Name, string(updatedRun.Status.Phase),
+		hc.metrics.CollectHookrunSurviveTime(namespace, ownerRef, run.Name, string(updatedRun.Status.Phase),
 			time.Since(updatedRun.Status.StartedAt.Time))
 	}
 

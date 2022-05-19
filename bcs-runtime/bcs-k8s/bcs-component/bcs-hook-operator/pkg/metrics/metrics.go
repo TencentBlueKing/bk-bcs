@@ -11,7 +11,7 @@
  *
  */
 
-package hook
+package metrics
 
 import (
 	"sync"
@@ -25,8 +25,8 @@ var subsystem = "hook"
 
 const initialMinVal = 999999
 
-// metrics used to collect prom metrics for hook operator
-type metrics struct {
+// Metrics used to collect prom metrics for hook operator
+type Metrics struct {
 	hookrunExecDurationMaxVal float64 //save the max execution duration(seconds) value of hookrun
 	hookrunExecDurationMinVal float64 //save the min execution duration(seconds) value of hookrun
 	metricExecDurationMaxVal  float64 //save the max execution duration(seconds) value of metric for a hookrun
@@ -61,15 +61,15 @@ type metrics struct {
 }
 
 var (
-	metricsInstance *metrics
+	metricsInstance *Metrics
 	metricsOnce     sync.Once
 )
 
-// newMetrics new a metrics object for hook operator
-func newMetrics() *metrics {
+// NewMetrics new a metrics object for hook operator
+func NewMetrics() *Metrics {
 
 	metricsOnce.Do(func() {
-		m := new(metrics)
+		m := new(Metrics)
 		// it will set to be a real min val once it collects a metric
 		m.hookrunExecDurationMinVal = initialMinVal
 		m.metricExecDurationMinVal = initialMinVal
@@ -97,7 +97,7 @@ func newMetrics() *metrics {
 			Name:      "hookrun_exec_duration_seconds",
 			Help:      "the execution duration(seconds) of every hookrun",
 			Buckets:   []float64{0.001, 0.01, 0.1, 0.5, 1, 5, 10, 20, 30, 60, 120},
-		}, []string{"namespace", "owner", "status"})
+		}, []string{"namespace", "uid", "owner", "action", "status"})
 		prometheus.MustRegister(m.hookrunExecDuration)
 
 		m.hookrunExecDurationMax = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -105,7 +105,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "hookrun_exec_duration_seconds_max",
 			Help:      "the max execution duration(seconds) of hookrun",
-		}, []string{"namespace", "owner", "status"})
+		}, []string{"namespace", "owner", "action", "status"})
 		prometheus.MustRegister(m.hookrunExecDurationMax)
 
 		m.hookrunExecDurationMin = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -113,7 +113,7 @@ func newMetrics() *metrics {
 			Subsystem: subsystem,
 			Name:      "hookrun_exec_duration_seconds_min",
 			Help:      "the min execution duration(seconds) of hookrun",
-		}, []string{"namespace", "owner", "status"})
+		}, []string{"namespace", "owner", "action", "status"})
 		prometheus.MustRegister(m.hookrunExecDurationMin)
 
 		m.metricExecDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -156,37 +156,37 @@ func newMetrics() *metrics {
 	return metricsInstance
 }
 
-// collectReconcileDuration collect the reconcile duration(seconds) for gamedeployment operator
-func (m *metrics) collectReconcileDuration(namespace, ownerRef, status string, d time.Duration) {
+// CollectReconcileDuration collect the reconcile duration(seconds) for gamedeployment operator
+func (m *Metrics) CollectReconcileDuration(namespace, ownerRef, status string, d time.Duration) {
 	m.reconcileDuration.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef,
 		"status": status}).Observe(d.Seconds())
 }
 
-// collectHookrunExecDurations collect these metrics:
+// CollectHookrunExecDurations collect these metrics:
 // 1.the execution duration(seconds) of every hookrun
 // 2.the max execution duration(seconds) of hookrun
 // 3.the min execution duration(seconds) of hookrun
-func (m *metrics) collectHookrunExecDurations(namespace, ownerRef, status string, d time.Duration) {
+func (m *Metrics) CollectHookrunExecDurations(namespace, uid, ownerRef, action, status string, d time.Duration) {
 	duration := d.Seconds()
-	m.hookrunExecDuration.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef,
-		"status": status}).Observe(duration)
+	m.hookrunExecDuration.With(prometheus.Labels{"namespace": namespace, "uid": uid, "owner": ownerRef,
+		"action": action, "status": status}).Observe(duration)
 	if duration > m.hookrunExecDurationMaxVal {
 		m.hookrunExecDurationMaxVal = duration
 		m.hookrunExecDurationMax.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef,
-			"status": status}).Set(duration)
+			"action": action, "status": status}).Set(duration)
 	}
 	if duration < m.hookrunExecDurationMinVal {
 		m.hookrunExecDurationMinVal = duration
 		m.hookrunExecDurationMin.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef,
-			"status": status}).Set(duration)
+			"action": action, "status": status}).Set(duration)
 	}
 }
 
-// collectMetricExecDurations collect these metrics:
+// CollectMetricExecDurations collect these metrics:
 // 1.the execution duration(seconds) of every metric belong to a hookrun
 // 2.the max execution duration(seconds) of metric belong to a hookrun
 // 3.the min execution duration(seconds) of metric belong to a hookrun
-func (m *metrics) collectMetricExecDurations(namespace, ownerRef, metricName, phase string, d time.Duration) {
+func (m *Metrics) CollectMetricExecDurations(namespace, ownerRef, metricName, phase string, d time.Duration) {
 	duration := d.Seconds()
 	m.metricExecDuration.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef,
 		"metric": metricName, "phase": phase}).Observe(duration)
@@ -202,14 +202,14 @@ func (m *metrics) collectMetricExecDurations(namespace, ownerRef, metricName, ph
 	}
 }
 
-// collectHookrunSurviveTime collect survive time of each hookrun:
-func (m *metrics) collectHookrunSurviveTime(namespace, ownerRef, name, phase string, d time.Duration) {
+// CollectHookrunSurviveTime collect survive time of each hookrun:
+func (m *Metrics) CollectHookrunSurviveTime(namespace, ownerRef, name, phase string, d time.Duration) {
 	m.hookrunSurviveTime.With(prometheus.Labels{"namespace": namespace, "owner": ownerRef, "name": name,
 		"phase": phase}).Set(d.Seconds())
 }
 
-// collectOperatorVersion collects the image version of gamestatefulset operator pods
-func (m *metrics) collectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion,
+// CollectOperatorVersion collects the image version of gamestatefulset operator pods
+func (m *Metrics) CollectOperatorVersion(imageVersion, hookrunVersion, hooktemplateVersion,
 	gitVersion, gitCommit, buildDate string) {
 	m.operatorVersion.WithLabelValues("Hook", imageVersion, hookrunVersion, hooktemplateVersion,
 		gitVersion, gitCommit, buildDate).Set(float64(1))
