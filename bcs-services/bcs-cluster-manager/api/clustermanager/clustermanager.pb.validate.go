@@ -18727,7 +18727,12 @@ func (m *GetCloudRegionsRequest) Validate() error {
 		}
 	}
 
-	// no validation rules for AccountID
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		return GetCloudRegionsRequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
 
 	return nil
 }
@@ -19049,7 +19054,12 @@ func (m *ListCloudRegionClusterRequest) Validate() error {
 		}
 	}
 
-	// no validation rules for AccountID
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		return ListCloudRegionClusterRequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
 
 	return nil
 }
@@ -19222,7 +19232,12 @@ func (m *GetCloudRegionZonesRequest) Validate() error {
 		}
 	}
 
-	// no validation rules for AccountID
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		return GetCloudRegionZonesRequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
 
 	return nil
 }

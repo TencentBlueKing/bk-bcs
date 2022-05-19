@@ -7477,7 +7477,7 @@ message GetCloudRegionsRequest {
   string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
-  }];
+  },(validate.rules).string = {min_len : 2}];
 }
 
 message GetCloudRegionsResponse {
@@ -7589,7 +7589,7 @@ message ListCloudRegionClusterRequest {
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
-  }];
+  },(validate.rules).string = {min_len : 2}];
 }
 
 message ListCloudRegionClusterResponse {
@@ -7637,7 +7637,7 @@ message GetCloudRegionZonesRequest {
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
-  }];
+  },(validate.rules).string = {min_len : 2}];
 }
 
 message GetCloudRegionZonesResponse {
