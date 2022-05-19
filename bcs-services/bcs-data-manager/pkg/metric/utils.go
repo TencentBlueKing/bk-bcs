@@ -109,7 +109,6 @@ func getDimensionPromql(dimension string) string {
 		return "1m"
 	default:
 		return ""
-
 	}
 }
 
