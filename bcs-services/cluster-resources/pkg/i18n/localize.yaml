@@ -357,3 +357,23 @@
   en: Volume
 - msgID: 路径
   en: Path
+- msgID: 存储卷声明模板
+  en: VolumeClaimTemplate
+- msgID: 持久卷声明名称
+  en: PersistentVolumeClaim Name
+- msgID: 卷声明类型
+  en: ClaimType
+- msgID: 使用已存在的持久卷
+  en: Use existing persistent volume
+- msgID: 指定存储类以创建持久卷
+  en: Use storage class to create persistent volume
+- msgID: 持久卷名称
+  en: PersistentVolume
+- msgID: 存储类名称
+  en: StorageClass
+- msgID: 容量
+  en: Size
+- msgID: 访问模式
+  en: AccessModes
+- msgID: 服务名称
+  en: ServiceName

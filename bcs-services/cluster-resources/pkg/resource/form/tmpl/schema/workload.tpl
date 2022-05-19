@@ -138,7 +138,7 @@ replicas:
         props:
           max: 4096
     svcName:
-      title: 服务名称
+      title: {{ i18n "服务名称" .lang }}
       type: string
       ui:component:
         name: select
@@ -186,7 +186,7 @@ replicas:
 
 {{- define "workload.stsVolumeClaimTmpl" }}
 volumeClaimTmpl:
-  title: 存储卷声明模板
+  title: {{ i18n "存储卷声明模板" .lang }}
   type: object
   properties:
     claims:
@@ -201,23 +201,23 @@ volumeClaimTmpl:
           - storageSize
         properties:
           pvcName:
-            title: 持久卷声明名称
+            title: {{ i18n "持久卷声明名称" .lang }}
             type: string
             ui:rules:
               - required
               - maxLength128
               - nameRegex
           claimType:
-            title: 卷声明类型
+            title: {{ i18n "卷声明类型" .lang }}
             type: radio
             default:
             props:
               clearable: true
               searchable: true
               datasource:
-                - label: 使用已存在的持久卷
+                - label: {{ i18n "使用已存在的持久卷" .lang }}
                   value: useExistPV
-                - label: 指定存储类以创建持久卷
+                - label: {{ i18n "指定存储类以创建持久卷" .lang }}
                   value: createBySC
             ui:reactions:
               - target: "{{`{{`}} $widgetNode?.getSibling('pvName')?.id {{`}}`}}"
@@ -247,7 +247,7 @@ volumeClaimTmpl:
             ui:rules:
               - required
           pvName:
-            title: 持久卷名称
+            title: {{ i18n "持久卷名称" .lang }}
             type: string
             ui:component:
               name: select
@@ -267,7 +267,7 @@ volumeClaimTmpl:
               # TODO claimType == useExistPV 必填
               - maxLength64
           scName:
-            title: 存储类名称
+            title: {{ i18n "存储类名称" .lang }}
             type: string
             ui:component:
               name: select
@@ -287,7 +287,7 @@ volumeClaimTmpl:
               # TODO claimType == createBySC 必填
               - maxLength64
           storageSize:
-            title: 容量
+            title: {{ i18n "容量" .lang }}
             type: integer
             default: 10
             ui:component:
@@ -299,7 +299,7 @@ volumeClaimTmpl:
               # TODO claimType == createBySC 必填
               - maxLength64
           accessModes:
-            title: 访问模式
+            title: {{ i18n "访问模式" .lang }}
             type: array
             items:
               type: string
