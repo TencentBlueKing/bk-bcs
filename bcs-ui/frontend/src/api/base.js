@@ -74,6 +74,11 @@ export const modifyCluster = request('put', `${prefix}/clustermanager/v1/cluster
 export const importCluster = request('post', `${prefix}/clustermanager/v1/cluster/import`)
 export const kubeConfig = request('put', `${prefix}/clustermanager/v1/cloud/kubeConfig`)
 export const nodeAvailable = request('post', `${prefix}/clustermanager/v1/node/available`)
+export const cloudAccounts = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts`)
+export const createCloudAccounts = request('post', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts`)
+export const deleteCloudAccounts = request('delete', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts/$accountID`)
+export const cloudRegionByAccount = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions`)
+export const cloudClusterList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions/$regionId/clusters`)
 
 // token
 export const createToken = request('post', `${prefix}/usermanager/v1/tokens`)

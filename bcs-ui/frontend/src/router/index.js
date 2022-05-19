@@ -21,6 +21,7 @@ import crdController from './crdcontroller.js'
 import storageRoutes from './storage'
 import dashboardRoutes from './dashboard'
 import menuConfig from '@/store/menu'
+import cloudtokenRoutes from './cloudtoken'
 
 const originalPush = VueRouter.prototype.push
 const originalReplace = VueRouter.prototype.replace
@@ -63,7 +64,8 @@ const router = new VueRouter({
                 ...HPARoutes,
                 ...crdController,
                 ...storageRoutes,
-                ...dashboardRoutes
+                ...dashboardRoutes,
+                ...cloudtokenRoutes
             ]
         },
         {
