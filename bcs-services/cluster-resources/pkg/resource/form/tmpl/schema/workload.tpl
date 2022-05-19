@@ -137,6 +137,27 @@ replicas:
       ui:component:
         props:
           max: 4096
+    svcName:
+      title: 服务名称
+      type: string
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          searchable: true
+          remoteConfig:
+            params:
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/networks/services` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+        - source: "metadata.namespace"
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
     updateStrategy:
       title: 升级策略
       type: string
@@ -268,6 +289,7 @@ volumeClaimTmpl:
           storageSize:
             title: 容量
             type: integer
+            default: 10
             ui:component:
               name: unitInput
               props:

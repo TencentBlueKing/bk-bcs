@@ -1,14 +1,14 @@
 {{ include "common.metadata" . }}
 - - group:
       - - container:
-            grid-template-columns: "1fr 50px 1fr 50px 1fr"
+            grid-template-columns: "1fr 1fr"
           group:
-            - [ "cnt", ".", "updateStrategy", ".", "podManPolicy" ]
+            - [ "cnt", "svcName" ]
+            - [ "updateStrategy",  "podManPolicy" ]
           prop: replicas
       - - group:
             - - group:
-                  - [ "pvcName", "pvcName" ]
-                  - [ "claimType", "." ]
+                  - [ "pvcName", "claimType" ]
                   - [ "pvName", "." ]
                   - [ "scName", "storageSize" ]
                   - [ "accessModes", "." ]
