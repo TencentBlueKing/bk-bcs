@@ -21,6 +21,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// 子模块前缀
+const (
+	APIServicePrefix   = "/api"
+	QueryServicePrefix = "/prom"
+)
+
 // Configuration 配置
 type Configuration struct {
 	mtx         sync.Mutex

@@ -31,9 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
 )
 
-// 子模块前缀
-const apiModulePrefix = "/api"
-
 // APIServer
 type APIServer struct {
 	ctx    context.Context
@@ -85,8 +82,8 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// 注册 HTTP 请求
-	registerRoutes(engine.Group(apiModulePrefix))
-	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, apiModulePrefix)))
+	registerRoutes(engine.Group(config.APIServicePrefix))
+	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
 }
 
 func registerRoutes(engine *gin.RouterGroup) {
