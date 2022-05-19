@@ -49,7 +49,7 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
 
 	logger.Infow("listening for requests and metrics", "service", "query", "address", httpAddress)
-	queryServer, err := query.NewQueryAPI(opt.reg, opt.tracer, kitLogger, httpAddress, storeList, g)
+	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, storeList, g)
 	if err != nil {
 		return errors.Wrap(err, "query")
 	}

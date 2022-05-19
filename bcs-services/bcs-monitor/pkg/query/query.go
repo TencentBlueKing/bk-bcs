@@ -59,6 +59,7 @@ type QueryAPI struct {
 // 启动 query 模块，暴露http
 // query模块对应我们的store
 func NewQueryAPI(
+	ctx context.Context,
 	reg *prometheus.Registry,
 	tracer opentracing.Tracer,
 	kitLogger gokit.Logger,
@@ -79,7 +80,7 @@ func NewQueryAPI(
 		return nil, errors.Wrap(err, "building gRPC client")
 	}
 	var (
-		apiServer = &QueryAPI{}
+		apiServer = &QueryAPI{ctx: ctx}
 		comp      = component.Query
 		endpoints = query.NewEndpointSet(
 			kitLogger,
@@ -170,6 +171,7 @@ func NewQueryAPI(
 		logMiddleware := logging.NewHTTPServerMiddleware(kitLogger)
 
 		ins := extpromhttp.NewInstrumentationMiddleware(reg, nil)
+		tenantAuthMiddleware, _ := NewTenantAuthMiddleware(ctx, ins)
 
 		// 启动一个ui界面
 		ui.NewQueryUI(kitLogger, endpoints, "", "", "").Register(router, ins)
@@ -203,7 +205,7 @@ func NewQueryAPI(
 			reg,
 		)
 
-		api.Register(router.WithPrefix("/api/v1"), tracer, kitLogger, ins, logMiddleware)
+		api.Register(router.WithPrefix("/api/v1"), tracer, kitLogger, tenantAuthMiddleware, logMiddleware)
 
 		srv := httpserver.New(kitLogger, reg, comp, httpProbe,
 			httpserver.WithListen(httpAddr),
