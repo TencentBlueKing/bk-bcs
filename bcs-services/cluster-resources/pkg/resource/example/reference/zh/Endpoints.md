@@ -1,6 +1,6 @@
 # Endpoints
 
-> Service 与 Pod 之间的桥梁
+> Endpoints (EPs) 是 Service 与 Pod 之间的桥梁
 
 ## 什么是 Endpoints ？
 

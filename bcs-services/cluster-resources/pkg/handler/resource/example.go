@@ -34,11 +34,11 @@ func (h *Handler) GetK8SResTemplate(
 	if !slice.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
 		return errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 暂无参考示例"), req.Kind)
 	}
-	conf, err := example.LoadResConf(req.Kind)
+	conf, err := example.LoadResConf(ctx, req.Kind)
 	if err != nil {
 		return err
 	}
-	conf["references"], err = example.LoadResRefs(req.Kind)
+	conf["references"], err = example.LoadResRefs(ctx, req.Kind)
 	if err != nil {
 		return err
 	}
