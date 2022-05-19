@@ -61,6 +61,7 @@ class BkRepoConfig:
         self.delete_chart_version = (
             f"{self.helm_repo_host}/{{project_name}}/{{repo_name}}/api/charts/{{chart_name}}/{{version}}"
         )
+        self.refresh_index_url = f"{self.helm_repo_host}/{{project_code}}/{{repo_name}}/refresh"
 
 
 class BkRepoAuth(AuthBase):
@@ -213,6 +214,16 @@ class BkRepoClient(BkApiClient):
         """
         url = self._config.list_project_repos_url.format(project_code=project_code)
         return self._client.request_json("GET", url)
+
+    @response_handler()
+    def refresh_index(self, project_code: str, repo_name: str) -> None:
+        """刷新仓库 index
+
+        :param project_code: BCS 项目 Code
+        :param repo_name: 仓库名称
+        """
+        url = self._config.refresh_index_url.format(project_code=project_code, repo_name=repo_name)
+        return self._client.request_json("POST", url)
 
     def set_token(self, project_code: str) -> Dict:
         """设置用户token，设置用户名和token名为相同值

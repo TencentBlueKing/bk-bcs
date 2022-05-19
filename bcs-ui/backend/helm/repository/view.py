@@ -106,12 +106,24 @@ class RepositoryViewSet(SystemViewSet):
         if is_imported_repo(
             request.user.token.access_token, request.user.username, request.project.project_code, repo_name
         ):
-            raise ValidationError(_("非纳管仓库，不允许编辑操作"))
+            raise ValidationError(_("非纳管仓库，不允许删除操作"))
 
         client = BkRepoClient(access_token=request.user.token.access_token, username=request.user.username)
         client.delete_repo(request.project.project_code, repo_name)
 
         # 删除记录
         RepoDBActions(project_id, request.project.project_code, repo_name).get_or_create()
+
+        return Response()
+
+    def refresh_index(self, request, project_id, repo_name):
+        """刷新纳管的仓库，完成index等的更新"""
+        if is_imported_repo(
+            request.user.token.access_token, request.user.username, request.project.project_code, repo_name
+        ):
+            raise ValidationError(_("非纳管仓库，不允许刷新操作"))
+
+        client = BkRepoClient(access_token=request.user.token.access_token, username=request.user.username)
+        client.refresh_index(request.project.project_code, repo_name)
 
         return Response()
