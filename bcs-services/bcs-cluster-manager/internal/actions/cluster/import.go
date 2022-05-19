@@ -200,7 +200,7 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	// get cluster cloud and project info
 	err := ia.getCloudInfo(ctx, req)
 	if err != nil {
-		blog.Errorf("get cluster %s relative Cloud %s failed, %s", req.ClusterID, err.Error())
+		blog.Errorf("get cluster %s relative Cloud failed, %s", req.ClusterID, err.Error())
 		ia.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

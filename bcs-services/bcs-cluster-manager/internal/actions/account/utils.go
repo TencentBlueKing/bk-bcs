@@ -25,7 +25,7 @@ import (
 
 // CloudAccount cloudID and accountID
 type CloudAccount struct {
-	CloudID string
+	CloudID   string
 	AccountID string
 }
 
