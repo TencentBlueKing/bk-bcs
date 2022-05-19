@@ -29,11 +29,7 @@ import (
 )
 
 // GetLangFromCookies 从 Cookies 中获取语言版本
-func GetLangFromCookies(ctx context.Context) string {
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		return DefaultLang
-	}
+func GetLangFromCookies(md metadata.Metadata) string {
 	cookies, ok := md.Get("Grpcgateway-Cookie")
 	if !ok {
 		return DefaultLang

@@ -42,21 +42,17 @@ import (
 func NewContextInjectWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-			// 1. 获取或生成 UUID，并作为 requestID 注入到 context
-			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, uuid.New().String())
+			md, ok := metadata.FromContext(ctx)
+			if !ok {
+				return errorx.New(errcode.General, "failed to get micro's metadata")
+			}
+			// 1. 获取或生成 request id 注入到 context
+			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, getOrCreateReqID(md))
 
-			var username string
-			if canExemptAuth(req) {
-				username = envs.AnonymousUsername
-			} else {
-				// 2. 从 GoMicro Metadata（headers）中获取 jwtToken，转换为 username
-				md, ok := metadata.FromContext(ctx)
-				if !ok {
-					return errorx.New(errcode.Unauth, "failed to get micro's metadata")
-				}
-
-				username, err = parseUsername(md)
-				if err != nil {
+			username := envs.AnonymousUsername
+			// 2. 从 Metadata（headers）中获取 jwtToken，转换为 username
+			if !canExemptAuth(req) {
+				if username, err = parseUsername(md); err != nil {
 					return err
 				}
 			}
@@ -73,12 +69,20 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 			}
 
 			// 4. 解析语言版本信息
-			ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.GetLangFromCookies(ctx))
+			ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.GetLangFromCookies(md))
 
 			// 实际执行业务逻辑，获取返回结果
 			return fn(ctx, req, rsp)
 		}
 	}
+}
+
+// 尝试读取 X-Request-Id，若不存在则随机生成
+func getOrCreateReqID(md metadata.Metadata) string {
+	if reqID, ok := md.Get("x-request-id"); ok {
+		return reqID
+	}
+	return uuid.New().String()
 }
 
 // NoAuthEndpoints 不需要用户身份认证的方法
