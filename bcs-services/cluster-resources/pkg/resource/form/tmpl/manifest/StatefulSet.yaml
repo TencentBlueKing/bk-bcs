@@ -6,6 +6,9 @@ spec:
     matchLabels:
       {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
   replicas: {{ if .spec.replicas.cnt }}{{ .spec.replicas.cnt }}{{ else }} 0 {{ end }}
+  {{- if .spec.replicas.svcName }}
+  serviceName: {{ .spec.replicas.svcName }}
+  {{- end }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}
   {{- if .spec.replicas.podManPolicy }}

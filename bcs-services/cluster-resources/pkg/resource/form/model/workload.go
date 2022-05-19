@@ -110,6 +110,7 @@ type STSSpec struct {
 
 // STSReplicas ...
 type STSReplicas struct {
+	SVCName        string `structs:"svcName"`
 	Cnt            int64  `structs:"cnt"`
 	UpdateStrategy string `structs:"updateStrategy"`
 	PodManPolicy   string `structs:"podManPolicy"`
