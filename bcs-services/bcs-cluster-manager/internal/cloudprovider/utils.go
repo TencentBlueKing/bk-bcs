@@ -19,14 +19,32 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
-const (
+var (
 	// BKSOPTask bk-sops common job
 	BKSOPTask = "bksopsjob"
+	// TaskID inject taskID into ctx
+	TaskID    = "taskID"
 )
+
+// GetTaskIDFromContext
+func GetTaskIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(TaskID).(string); ok {
+		return id
+	}
+
+	return ""
+}
+
+// WithTaskIDForContext will return a new context wrapped taskID flag around the original ctx
+func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
+	return context.WithValue(ctx, TaskID, taskID)
+}
 
 // GetCredential get specified credential information according Project configuration, if Project conf is nil, try Cloud.
 // @return CommonOption: option can be nil if no credential conf in project and cloud or when cloudprovider don't support authentication
@@ -49,6 +67,13 @@ func GetCredential(project *proto.Project, cloud *proto.Cloud) (*CommonOption, e
 		option.Key = cloud.CloudCredential.Key
 		option.Secret = cloud.CloudCredential.Secret
 	}
+	// set cloud basic confInfo
+	option.CommonConf = CloudConf{
+		CloudInternalEnable: cloud.ConfInfo.CloudInternalEnable,
+		CloudDomain:         cloud.ConfInfo.CloudDomain,
+		MachineDomain:       cloud.ConfInfo.MachineDomain,
+	}
+
 	return option, nil
 }
 
@@ -196,6 +221,62 @@ func UpdateClusterStatus(clusterID string, status string) error {
 
 	cluster.Status = status
 	err = GetStorageModel().UpdateCluster(context.Background(), cluster)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateClusterStatus set cluster status
+func UpdateCluster(cluster *proto.Cluster) error {
+	err := GetStorageModel().UpdateCluster(context.Background(), cluster)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateClusterCredentialByConfig update clusterCredential by kubeConfig
+func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) error {
+	// first import cluster need to auto generate clusterCredential info, subsequently kube-agent report to update
+	// currently, bcs only support token auth, kubeConfigList length greater 0, get zeroth kubeConfig
+	var (
+		server = ""
+		caCertData = ""
+		token = ""
+		clientCert = ""
+		clientKey = ""
+	)
+	if len(config.Clusters) > 0 {
+		server = config.Clusters[0].Cluster.Server
+		caCertData = string(config.Clusters[0].Cluster.CertificateAuthorityData)
+	}
+	if len(config.AuthInfos) > 0 {
+		token = config.AuthInfos[0].AuthInfo.Token
+		clientCert = string(config.AuthInfos[0].AuthInfo.ClientCertificateData)
+		clientKey = string(config.AuthInfos[0].AuthInfo.ClientKeyData)
+	}
+
+	if server == "" || caCertData == "" || (token == "" && (clientCert == "" || clientKey == "")) {
+		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
+	}
+
+	now := time.Now().Format(time.RFC3339)
+	err := GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
+		ServerKey:            clusterID,
+		ClusterID:            clusterID,
+		ClientModule:         modules.BCSModuleKubeagent,
+		ServerAddress:        server,
+		CaCertData:           caCertData,
+		UserToken:            token,
+		ConnectMode:          modules.BCSConnectModeDirect,
+		CreateTime:           now,
+		UpdateTime:           now,
+		ClientKey:            clientKey,
+		ClientCert:           clientCert,
+	})
 	if err != nil {
 		return err
 	}

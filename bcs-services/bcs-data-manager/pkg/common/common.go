@@ -15,6 +15,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"sync"
 	"time"
 
@@ -91,10 +92,13 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context, cmCli cm.ClusterM
 		return cacheClusterMetaList.([]*ClusterMeta), nil
 	}
 	blog.Infof("get cluster list from cache failed.")
+	start := time.Now()
 	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{})
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListCluster", "GET", err, start)
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListCluster", "GET", err, start)
 	clusterMetaList := make([]*ClusterMeta, 0)
 	for _, cluster := range clusterList.Data {
 		if (!g.needFilter || g.clusterIDs[cluster.ClusterID]) && cluster.Status != "DELETED" {
@@ -224,50 +228,65 @@ func (g *ResourceGetter) GetMesosWorkloadList(cluster *ClusterMeta,
 // GetK8sWorkloadList get k8s workload list
 func GetK8sWorkloadList(clusterID, projectID, namespace string, storageCli bcsapi.Storage) []*WorkloadMeta {
 	workloadList := make([]*WorkloadMeta, 0)
+	start := time.Now()
 	deployments, err := storageCli.QueryK8SDeployment(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDeployment", "GET", err, start)
 		blog.Errorf("get cluster %s deployment list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDeployment", "GET", err, start)
 		for _, deployment := range deployments {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, DeploymentType,
 				deployment.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	statefulSets, err := storageCli.QueryK8SStatefulSet(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetStatefulSet", "GET", err, start)
 		blog.Errorf("get cluster %s statefulSet list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetStatefulSet", "GET", err, start)
 		for _, statefulSet := range statefulSets {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, StatefulSetType,
 				statefulSet.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	daemonSets, err := storageCli.QueryK8SDaemonSet(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDaemonSet", "GET", err, start)
 		blog.Errorf("get cluster %s daemonSet list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDaemonSet", "GET", err, start)
 		for _, daemonSet := range daemonSets {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, DaemonSetType,
 				daemonSet.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	gameDeployments, err := storageCli.QueryK8SGameDeployment(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameDeployment", "GET", err, start)
 		blog.Errorf("get cluster %s game deployment list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameDeployment", "GET", err, start)
 		for _, gameDeployment := range gameDeployments {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, GameDeploymentType,
 				gameDeployment.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	gameStatefulSets, err := storageCli.QueryK8SGameStatefulSet(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameStatefulSet", "GET", err, start)
 		blog.Errorf("get cluster %s game stateful set list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameStatefulSet", "GET", err, start)
 		for _, gameStatefulSet := range gameStatefulSets {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, GameStatefulSetType,
 				gameStatefulSet.CommonDataHeader)
@@ -280,21 +299,27 @@ func GetK8sWorkloadList(clusterID, projectID, namespace string, storageCli bcsap
 // GetMesosWorkloadList get mesos workload list
 func GetMesosWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage) []*WorkloadMeta {
 	workloadList := make([]*WorkloadMeta, 0)
+	start := time.Now()
 	applications, err := storageCli.QueryMesosApplication(clusterID)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosApp", "GET", err, start)
 		blog.Errorf("get cluster %s application list error: %v", clusterID, err)
 		return workloadList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosApp", "GET", err, start)
 	for _, application := range applications {
 		workloadMeta := generateCommonWorkloadList(clusterID, projectID, Mesos, MesosApplicationType,
 			application.CommonDataHeader)
 		workloadList = append(workloadList, workloadMeta)
 	}
+	start = time.Now()
 	deployments, err := storageCli.QueryMesosDeployment(clusterID)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosDeploy", "GET", err, start)
 		blog.Errorf("get cluster %s deployment list error: %v", clusterID, err)
 		return workloadList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosDeploy", "GET", err, start)
 	for _, deployment := range deployments {
 		workloadMeta := generateCommonWorkloadList(clusterID, projectID, Mesos, MesosDeployment,
 			deployment.CommonDataHeader)
@@ -305,12 +330,15 @@ func GetMesosWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage
 
 // GetK8sNamespaceList get k8s namespace list
 func GetK8sNamespaceList(clusterID, projectID string, storageCli bcsapi.Storage) []*NamespaceMeta {
+	start := time.Now()
 	namespaces, err := storageCli.QueryK8SNamespace(clusterID)
 	namespaceList := make([]*NamespaceMeta, 0)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetK8sNamespace", "GET", err, start)
 		blog.Errorf("get cluster %s namespace list error :%v", clusterID, err)
 		return namespaceList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetK8sNamespace", "GET", err, start)
 	for _, namespace := range namespaces {
 		namespaceMeta := &NamespaceMeta{
 			ProjectID:   projectID,
@@ -326,11 +354,14 @@ func GetK8sNamespaceList(clusterID, projectID string, storageCli bcsapi.Storage)
 // GetMesosNamespaceList get mesos namespace list
 func GetMesosNamespaceList(clusterID, projectID string, storageCli bcsapi.Storage) []*NamespaceMeta {
 	namespaceList := make([]*NamespaceMeta, 0)
+	start := time.Now()
 	namespaces, err := storageCli.QueryMesosNamespace(clusterID)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosNamespace", "GET", err, start)
 		blog.Errorf("get cluster %s namespace list error :%v", clusterID, err)
 		return namespaceList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosNamespace", "GET", err, start)
 	for _, namespace := range namespaces {
 		namespaceMeta := &NamespaceMeta{
 			ProjectID:   projectID,

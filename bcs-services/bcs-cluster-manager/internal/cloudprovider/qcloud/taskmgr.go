@@ -42,6 +42,10 @@ func newtask() *Task {
 
 	// init qcloud cluster-manager task, may be call bkops interface to call extra operation
 
+	// import task
+	task.works[importClusterNodesTask] = tasks.ImportClusterNodesTask
+	task.works[registerClusterKubeConfigTask] = tasks.RegisterClusterKubeConfigTask
+
 	// create cluster task
 	task.works[createClusterShieldAlarmTask] = tasks.CreateClusterShieldAlarmTask
 	task.works[createTKEClusterTask] = tasks.CreateTkeClusterTask
@@ -227,7 +231,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	// import cluster currently only has two steps:
 	// 0. import cluster: call TKEInterface import cluster master and node instances from cloud(clusterID or kubeConfig)
-	// 1. TODO: install bcs-k8s-watch & agent service
+	// 1. internal install bcs-k8s-watch & agent service; external import qcloud kubeConfig
 	// may be need to call external previous or behind operation by bkops
 
 	// validate request params
@@ -239,8 +243,6 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	}
 
 	//init task information
-	importClusterNodesTaskName := fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
-
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -263,22 +265,40 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	// preAction bkops
 
 	// setting all steps details
-	// step0: create cluster shield alarm step
+	// step0: import cluster nodes step
 	importNodesStep := &proto.Step{
-		Name:       importClusterNodesTaskName,
+		Name:       importClusterNodesTask,
 		System:     "api",
 		Params:     make(map[string]string),
 		Retry:      0,
 		Start:      nowStr,
 		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: importClusterNodesTaskName,
+		TaskMethod: importClusterNodesTask,
 		TaskName:   "导入集群节点",
 	}
 	importNodesStep.Params["ClusterID"] = cls.ClusterID
 	importNodesStep.Params["CloudID"] = cls.Provider
 
-	task.Steps[importClusterNodesTaskName] = importNodesStep
-	task.StepSequence = append(task.StepSequence, importClusterNodesTaskName)
+	task.Steps[importClusterNodesTask] = importNodesStep
+	task.StepSequence = append(task.StepSequence, importClusterNodesTask)
+
+	// setting all steps details
+	// step1: import cluster registerKubeConfigStep
+	registerKubeConfigStep := &proto.Step{
+		Name:       registerClusterKubeConfigTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: registerClusterKubeConfigTask,
+		TaskName:   "注册集群kubeConfig认证",
+	}
+	registerKubeConfigStep.Params["ClusterID"] = cls.ClusterID
+	registerKubeConfigStep.Params["CloudID"] = cls.Provider
+
+	task.Steps[registerClusterKubeConfigTask] = registerKubeConfigStep
+	task.StepSequence = append(task.StepSequence, registerClusterKubeConfigTask)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

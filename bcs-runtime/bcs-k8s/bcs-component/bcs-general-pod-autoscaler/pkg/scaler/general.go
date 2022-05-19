@@ -1045,9 +1045,9 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			metricDesiredReplicas, metricName, metricStatuses, metricTimestamp = simpleReplicas, simpleName,
 				simpleStatuses, simpleTimestamp
 		}
-		// if all mode can not give a valid replicas, use current replicas
+		// if all mode can not give a valid replicas, use scale spec replicas
 		if metricDesiredReplicas == -1 {
-			metricDesiredReplicas = gpa.Status.CurrentReplicas
+			metricDesiredReplicas = scale.Spec.Replicas
 		}
 		klog.V(4).Infof("All-Mode: the desired replicas is %d", metricDesiredReplicas)
 

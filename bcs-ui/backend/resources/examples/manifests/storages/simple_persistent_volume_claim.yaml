@@ -9,5 +9,5 @@ spec:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi
-  storageClassName: fast-storage
+      storage: 10Gi
+  storageClassName: ""

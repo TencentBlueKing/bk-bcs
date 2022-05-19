@@ -61,6 +61,9 @@ func (ca *CreateAction) createCloud() error {
 		UpdateTime:          timeStr,
 		EngineType:          ca.req.EngineType,
 		Enable:              ca.req.Enable,
+		NetworkInfo:         ca.req.NetworkInfo,
+		ConfInfo:            ca.req.ConfInfo,
+		PlatformInfo:        ca.req.PlatformInfo,
 	}
 	return ca.model.CreateCloud(ca.ctx, cloud)
 }

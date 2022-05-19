@@ -133,8 +133,8 @@ func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
 	waitUpdateIndexes = sortUpdateIndexes(coreControl, pods, waitUpdateIndexes)
 
 	// 3. calculate max count of pods can update
-	needToUpdateCount := calculateUpdateCount(updateDeploy, coreControl, updateDeploy.Spec.UpdateStrategy, updateDeploy.Spec.MinReadySeconds,
-		int(*updateDeploy.Spec.Replicas), waitUpdateIndexes, pods)
+	needToUpdateCount := calculateUpdateCount(updateDeploy, coreControl, updateDeploy.Spec.UpdateStrategy,
+		updateDeploy.Spec.MinReadySeconds, int(*updateDeploy.Spec.Replicas), waitUpdateIndexes, pods)
 	if needToUpdateCount < len(waitUpdateIndexes) {
 		waitUpdateIndexes = waitUpdateIndexes[:needToUpdateCount]
 	}
@@ -158,8 +158,9 @@ func sortUpdateIndexes(coreControl gdcore.Control, pods []*v1.Pod, waitUpdateInd
 	return waitUpdateIndexes
 }
 
-func calculateUpdateCount(deploy *gdv1alpha1.GameDeployment, coreControl gdcore.Control, strategy gdv1alpha1.GameDeploymentUpdateStrategy,
-	minReadySeconds int32, totalReplicas int, waitUpdateIndexes []int, pods []*v1.Pod) int {
+func calculateUpdateCount(deploy *gdv1alpha1.GameDeployment, coreControl gdcore.Control,
+	strategy gdv1alpha1.GameDeploymentUpdateStrategy, minReadySeconds int32, totalReplicas int,
+	waitUpdateIndexes []int, pods []*v1.Pod) int {
 
 	currentPartition := canary.GetCurrentPartition(deploy)
 	if len(waitUpdateIndexes)-int(currentPartition) <= 0 {
@@ -172,8 +173,8 @@ func calculateUpdateCount(deploy *gdv1alpha1.GameDeployment, coreControl gdcore.
 		maxSurge, _ := intstrutil.GetValueFromIntOrPercent(strategy.MaxSurge, totalReplicas, true)
 		roundUp = maxSurge == 0
 	}
-	maxUnavailable, _ := intstrutil.GetValueFromIntOrPercent(
-		intstrutil.ValueOrDefault(strategy.MaxUnavailable, intstrutil.FromString(gdv1alpha1.DefaultGameDeploymentMaxUnavailable)), totalReplicas, roundUp)
+	maxUnavailable, _ := intstrutil.GetValueFromIntOrPercent(intstrutil.ValueOrDefault(strategy.MaxUnavailable,
+		intstrutil.FromString(gdv1alpha1.DefaultGameDeploymentMaxUnavailable)), totalReplicas, roundUp)
 	usedSurge := len(pods) - totalReplicas
 
 	var notReadyCount, updateCount int
@@ -253,14 +254,17 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			if res.UpdateErr == nil {
 				c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace",
 					"successfully update pod %s in-place", pod.Name)
-				c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "success",
-					string(gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType), time.Since(startTime))
+				c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus,
+					gdmetrics.InplaceUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 				c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 
 				// create post inplace hook
 				newPod, err := c.kubeClient.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
 				if err != nil {
 					klog.Warningf("Cannot get pod %s/%s", pod.Namespace, pod.Name)
+					return res.DelayDuration, nil
+				}
+				if deploy.GetPostInplaceHook() == nil {
 					return res.DelayDuration, nil
 				}
 				created, err := c.postInplaceControl.CreatePostInplaceHook(deploy, newPod, newStatus,
@@ -278,16 +282,20 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 				return res.DelayDuration, nil
 			}
 
-			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace", "failed to update pod %s in-place: %v", pod.Name, res.UpdateErr)
-			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "failure",
-				string(gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType), time.Since(startTime))
+			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace",
+				"failed to update pod %s in-place: %v", pod.Name, res.UpdateErr)
+			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
+				gdmetrics.InplaceUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 			return res.DelayDuration, res.UpdateErr
 
 		}
 
-		err := fmt.Errorf("find Pod %s update strategy is InPlace, but the diff not only contains replace operation of spec.containers[x].image", pod)
-		c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace", "find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
-		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: %+v", deploy.Namespace, deploy.Name, pod.Name, err)
+		err := fmt.Errorf("find Pod %s update strategy is InPlace, but the diff not only contains replace operation of "+
+			"spec.containers[x].image", pod)
+		c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace",
+			"find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
+		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: %+v",
+			deploy.Namespace, deploy.Name, pod.Name, err)
 		return res.DelayDuration, err
 	case gdv1alpha1.RollingGameDeploymentUpdateStrategyType:
 		canDelete, err := c.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
@@ -303,34 +311,40 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 			return 0, nil
 		}
 
-		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s", deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
+		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s",
+			deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
 		c.scaleExp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 		startTime := time.Now()
-		if err := c.kubeClient.CoreV1().Pods(deploy.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
+		if err := c.kubeClient.CoreV1().Pods(deploy.Namespace).Delete(context.TODO(),
+			pod.Name, metav1.DeleteOptions{}); err != nil {
 			c.scaleExp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodReCreate",
 				"failed to delete pod %s for update: %v", pod.Name, err)
-			c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
+			c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
+				gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
 			return 0, err
 		}
 
 		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodReCreate",
 			"successfully delete pod %s for update", pod.Name)
-		c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
+		c.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus, gdmetrics.DeletePodAction,
+			gdmetrics.IsGrace, time.Since(startTime))
 		return 0, nil
 
 	case gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType:
 		startTime := time.Now()
 		err := c.hotPatchControl.Update(pod, oldRevision, updateRevision)
 		if err != nil {
-			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodHotPatch", "failed to update pod %s hot-patch: %v", pod.Name, err)
-			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "failure",
-				string(gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType), time.Since(startTime))
+			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodHotPatch",
+				"failed to update pod %s hot-patch: %v", pod.Name, err)
+			c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
+				gdmetrics.HotPatchUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 			return 0, err
 		}
-		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodHotPatch", "successfully update pod %s hot-patch", pod.Name)
-		c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), "success",
-			string(gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType), time.Since(startTime))
+		c.recorder.Eventf(deploy, v1.EventTypeNormal, "SuccessfulUpdatePodHotPatch",
+			"successfully update pod %s hot-patch", pod.Name)
+		c.metrics.CollectPodUpdateDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus,
+			gdmetrics.HotPatchUpdateStrategy, gdmetrics.IsGrace, time.Since(startTime))
 		c.updateExp.ExpectUpdated(util.GetControllerKey(deploy), updateRevision.Name, pod)
 		return 0, nil
 	}

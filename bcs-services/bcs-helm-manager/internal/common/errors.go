@@ -33,6 +33,7 @@ const (
 	ErrHelmManagerUninstallActionFailed
 	ErrHelmManagerUpgradeActionFailed
 	ErrHelmManagerRollbackActionFailed
+	ErrHelmManagerAuthFailed
 )
 
 // Int32 return HelmManagerError's code value
@@ -79,4 +80,5 @@ var errorCodeMapping = map[HelmManagerError]string{
 	ErrHelmManagerUninstallActionFailed: "uninstall action failed",
 	ErrHelmManagerUpgradeActionFailed:   "upgrade action failed",
 	ErrHelmManagerRollbackActionFailed:  "rollback action failed",
+	ErrHelmManagerAuthFailed:            "user auth failed",
 }

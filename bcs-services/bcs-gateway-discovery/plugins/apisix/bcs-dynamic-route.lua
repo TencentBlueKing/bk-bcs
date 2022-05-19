@@ -35,7 +35,12 @@ local clustermanager_tunnel_path = "/clustermanager/clusters/"
 local last_sync_time
 local last_sync_status
 local credential_global_cache = ngx_shared[plugin_name]
-local credential_worker_cache = core.lrucache.new({ttl = 30, count = 5000})
+local credential_worker_cache = core.lrucache.new({
+    ttl = 30,
+    count = 5000,
+    serial_creating = true,
+    invalid_stale = true,
+})
 local attr = {}
 
 local schema = {

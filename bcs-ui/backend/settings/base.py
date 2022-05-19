@@ -341,7 +341,6 @@ KUBECTL_BIN_MAP = {
     "1.20.13": "/bin/kubectl-v1.20.13",
 }
 KUBECFG = "/root/.kube/config"  # kubectl config path, ex: ~/.kube/config
-FORCE_APPLY_CLUSTER_ID = ""  # 强制将资源应用该集群，仅用于开发测试目的, 比如 localkube
 KUBECTL_MAX_VISIBLE_LEVEL = 2
 HELM_INSECURE_SKIP_TLS_VERIFY = False
 
@@ -467,8 +466,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # 访问 bcs-api 服务需要的token
 BCS_APIGW_TOKEN = os.environ.get("BCS_APIGW_TOKEN", "")
-# 直连新版bcs api的地址
-BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
+# 直连新版bcs api的地址, 必须 https 协议
+BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_APIGW_PROD_DOMAIN", "")}
 
 # cluster manager的代理配置
 CLUSTER_MANAGER_PROXY = {

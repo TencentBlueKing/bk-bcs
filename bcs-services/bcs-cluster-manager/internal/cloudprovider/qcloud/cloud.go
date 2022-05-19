@@ -101,17 +101,16 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster, opt *cloud
 	// cluster cloud network setting
 	err = clusterNetworkSettingByQCloud(cls, cluster)
 	if err != nil {
-		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByQCloud failed: %v")
+		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
 	}
 
 	return nil
 }
 
-
 func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*tke.Cluster, error) {
 	var (
 		cloudID = opt.ImportMode.CloudID
-		err error
+		err     error
 	)
 	if cloudID == "" {
 		cloudID, err = getCloudIDByKubeConfig(opt)
@@ -142,17 +141,17 @@ func getCloudIDByKubeConfig(opt *cloudprovider.SyncClusterCloudInfoOption) (stri
 
 func clusterAdvancedSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
 	cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
-		IPVS:                 *cluster.ClusterNetworkSettings.Ipvs,
-		ContainerRuntime:     *cluster.ContainerRuntime,
-		RuntimeVersion:       common.DockerRuntimeVersion,
-		ExtraArgs:            common.DefaultClusterConfig,
+		IPVS:             *cluster.ClusterNetworkSettings.Ipvs,
+		ContainerRuntime: *cluster.ContainerRuntime,
+		RuntimeVersion:   common.DockerRuntimeVersion,
+		ExtraArgs:        common.DefaultClusterConfig,
 	}
 }
 
 func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
-		OS: *cluster.ClusterOs,
-		Version:  *cluster.ClusterVersion,
+		OS:          *cluster.ClusterOs,
+		Version:     *cluster.ClusterVersion,
 		VersionName: *cluster.ClusterVersion,
 	}
 }
@@ -178,11 +177,11 @@ func clusterNetworkSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) e
 	}
 
 	cls.NetworkSettings = &cmproto.NetworkSetting{
-		ClusterIPv4CIDR:      masterCIDR,
-		MaxNodePodNum:        uint32(*cluster.ClusterNetworkSettings.MaxNodePodNum),
-		MaxServiceNum:        uint32(*cluster.ClusterNetworkSettings.MaxClusterServiceNum),
-		MultiClusterCIDR:     multiCIDRList,
-		CidrStep:             step,
+		ClusterIPv4CIDR:  masterCIDR,
+		MaxNodePodNum:    uint32(*cluster.ClusterNetworkSettings.MaxNodePodNum),
+		MaxServiceNum:    uint32(*cluster.ClusterNetworkSettings.MaxClusterServiceNum),
+		MultiClusterCIDR: multiCIDRList,
+		CidrStep:         step,
 	}
 
 	return nil

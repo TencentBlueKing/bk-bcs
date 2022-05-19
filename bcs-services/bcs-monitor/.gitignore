@@ -1,0 +1,27 @@
+# GoLand IDE project tmp file
+.idea
+
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Ignore binary file
+/bin
+
+# Ignore local data dir
+data
+
+
+# Ignore the MacOS Trash (DS-Store)
+.DS_Store
+
+# Ignore dev configs
+etc/dev*
+
+# Ignore main bin
+/main
+/bcs-monitor
+/scripts/*.json
+etc/*dev*

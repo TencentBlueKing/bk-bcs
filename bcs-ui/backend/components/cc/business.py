@@ -97,10 +97,8 @@ class AppQueryService:
 
 def fetch_has_maintain_perm_apps(username: str) -> List[Dict]:
     """获取有运维权限的业务信息"""
-    username_regex_info = '^{username},|,{username},|,{username}$|^{username}$'.format(username=username)
-    regex_map = {'$regex': username_regex_info}
     # NOTE: CMDB 建议查询方式: 以 admin 用户身份跳过资源查询权限，然后CMDB接口根据传递的 condition 中用户，返回过滤的业务
-    maintainers_resp = AppQueryService(settings.ADMIN_USERNAME, condition={'bk_biz_maintainer': regex_map}).fetch_all()
+    maintainers_resp = AppQueryService(settings.ADMIN_USERNAME, condition={'bk_biz_maintainer': username}).fetch_all()
     return [{'id': item['bk_biz_id'], 'name': item['bk_biz_name']} for item in maintainers_resp]
 
 

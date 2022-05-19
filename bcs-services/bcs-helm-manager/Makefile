@@ -35,7 +35,7 @@ proto:
 	$(MAKE) -C proto/bcs-helm-manager clean
 	$(MAKE) -C proto/bcs-helm-manager
 
-build: proto
+build: tidy
 	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger
 	cp -R ./third_party/swagger-ui/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/
 	cp ./proto/bcs-helm-manager/bcs-helm-manager.swagger.json ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/helmmanager.swagger.json
@@ -45,8 +45,14 @@ client: proto
 	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-client internal/client/main.go
 
 test:
-	go test -v ./... -cover
+	go test -v ./internal/... -cover -count=1
 
 docker: build
 	cp helm/images/bcs-helm-manager/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/
 	cd ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/ && docker build . -t bcs-helm-manager:${VERSION}
+
+tidy:
+	go mod tidy
+
+build-mac: tidy
+	go build ${LDFLAG} -o bcs-helm-manager ./main.go

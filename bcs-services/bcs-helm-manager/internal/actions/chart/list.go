@@ -17,6 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
@@ -71,18 +72,21 @@ func (l *ListChartAction) Handle(ctx context.Context,
 func (l *ListChartAction) list() error {
 	projectID := l.req.GetProjectID()
 	repoName := l.req.GetRepository()
-	opName := l.req.GetOperator()
+	username := auth.GetUserFromCtx(l.ctx)
 
 	repository, err := l.model.GetRepository(l.ctx, projectID, repoName)
 	if err != nil {
 		blog.Errorf("list chart failed, %s, projectID: %s, repository: %s, operator: %s",
-			err.Error(), projectID, repoName, opName)
+			err.Error(), projectID, repoName, username)
 		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
 		return nil
 	}
 
 	origin, err := l.platform.
-		User(repository.Username).
+		User(repo.User{
+			Name:     repository.Username,
+			Password: repository.Password,
+		}).
 		Project(repository.ProjectID).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
@@ -91,7 +95,7 @@ func (l *ListChartAction) list() error {
 		ListChart(l.ctx, l.getOption())
 	if err != nil {
 		blog.Errorf("list chart failed, %s, projectID: %s, repository: %s, operator: %s",
-			err.Error(), projectID, repoName, opName)
+			err.Error(), projectID, repoName, username)
 		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
 		return nil
 	}
