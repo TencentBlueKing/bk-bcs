@@ -37,6 +37,31 @@ spec:
   {{- end }}
 {{- end }}
 
+{{- define "workload.stsVolumeClaimTmpl" -}}
+{{- if .spec.volumeClaimTmpl.claims }}
+volumeClaimTemplates:
+  {{- range .spec.volumeClaimTmpl.claims }}
+  - metadata:
+      name: {{ .pvcName }}
+    spec:
+      accessModes:
+        {{- range .accessModes }}
+        - {{ . }}
+        {{- else }}
+        []
+        {{- end }}
+      {{- if eq .claimType "useExistPV" }}
+      volumeName: {{ .pvName }}
+      {{- else if eq .claimType "createBySC" }}
+      storageClassName: {{ .scName }}
+      resources:
+        requests:
+          storage: {{ .storageSize }}Gi
+      {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
 {{- define "workload.affinity" -}}
 {{- $podAffinity := filterMatchKVFormSlice .podAffinity "type" "affinity" }}
 {{- if $podAffinity }}

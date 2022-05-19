@@ -7,6 +7,7 @@ properties:
     type: object
     properties:
       {{- include "workload.stsReplicas" . | indent 6 }}
+      {{- include "workload.stsVolumeClaimTmpl" . | indent 6 }}
       {{- include "workload.nodeSelect" . | indent 6 }}
       {{- include "workload.affinity" . | indent 6 }}
       {{- include "workload.toleration" . | indent 6 }}
@@ -21,6 +22,7 @@ properties:
         type: card
     ui:order:
       - replicas
+      - volumeClaimTmpl
       - nodeSelect
       - affinity
       - toleration

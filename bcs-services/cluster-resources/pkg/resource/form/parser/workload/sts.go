@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
@@ -35,6 +36,7 @@ func ParseSTS(manifest map[string]interface{}) map[string]interface{} {
 // ParseSTSSpec ...
 func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 	ParseSTSReplicas(manifest, &spec.Replicas)
+	ParseSTSVolumeClaimTmpl(manifest, &spec.VolumeClaimTmpl)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
 	podSpec, _ := tmplSpec.(map[string]interface{})
 	ParseNodeSelect(podSpec, &spec.NodeSelect)
@@ -50,4 +52,34 @@ func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplic
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", "RollingUpdate").(string)
 	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
+}
+
+// ParseSTSVolumeClaimTmpl ...
+func ParseSTSVolumeClaimTmpl(manifest map[string]interface{}, claimTmpl *model.STSVolumeClaimTmpl) {
+	if claims, _ := mapx.GetItems(manifest, "spec.volumeClaimTemplates"); claims != nil {
+		for _, c := range claims.([]interface{}) {
+			claimTmpl.Claims = append(claimTmpl.Claims, parseVolumeClaim(c.(map[string]interface{})))
+		}
+	}
+}
+
+// 解析卷声明结构
+func parseVolumeClaim(raw map[string]interface{}) model.VolumeClaim {
+	vc := model.VolumeClaim{
+		PVCName:     mapx.GetStr(raw, "metadata.name"),
+		ClaimType:   PVCTypeUseExistPV,
+		PVName:      mapx.GetStr(raw, "spec.volumeName"),
+		SCName:      mapx.GetStr(raw, "spec.storageClassName"),
+		StorageSize: util.ConvertStorageUnit(mapx.GetStr(raw, "spec.resources.requests.storage")),
+	}
+	// 如果没有指定 PVName，则认为是要根据 StorageClass 创建
+	if vc.PVName == "" {
+		vc.ClaimType = PVCTypeCreateBySC
+	}
+	if accessModes := mapx.GetList(raw, "spec.accessModes"); len(accessModes) != 0 {
+		for _, am := range accessModes {
+			vc.AccessModes = append(vc.AccessModes, am.(string))
+		}
+	}
+	return vc
 }
