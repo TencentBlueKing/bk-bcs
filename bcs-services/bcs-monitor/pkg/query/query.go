@@ -27,7 +27,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/route"
 	"github.com/prometheus/prometheus/promql"
-	"github.com/spf13/viper"
 	v1 "github.com/thanos-io/thanos/pkg/api/query"
 	"github.com/thanos-io/thanos/pkg/compact/downsample"
 	"github.com/thanos-io/thanos/pkg/component"
@@ -46,45 +45,27 @@ import (
 	"github.com/thanos-io/thanos/pkg/ui"
 )
 
-// API
-type API struct {
+// QueryAPI promql api 服务, 封装 thaons 的API使用
+type QueryAPI struct {
 	StoresList   []string
 	endpoints    *query.EndpointSet
 	srv          *httpserver.Server
 	statusProber prober.Probe
 	ctx          context.Context
-	cancel       context.CancelFunc
 }
 
 // 这个包对thanos的query做一些封装，重新调用等
 // 使用配置文件配置
 // 启动 query 模块，暴露http
 // query模块对应我们的store
-func NewAPI(
+func NewQueryAPI(
 	reg *prometheus.Registry,
 	tracer opentracing.Tracer,
 	kitLogger gokit.Logger,
 	httpAddr string,
 	storeList []string,
 	g *run.Group,
-) (*API, error) {
-
-	var (
-		maxConcurrentQueries              = viper.GetInt(QueryMaxConCurrentQueriesConfKey)
-		maxConcurrentSelects              = viper.GetInt(QueryMaxConCurrentSelectsConfKey)
-		defaultRangeQueryStep             = viper.GetDuration(QueryDefaultRangeQueryStepConfKey)
-		queryTimeout                      = viper.GetDuration(QueryStoreTimeoutConfKey)
-		lookbackDelta                     = viper.GetDuration(QueryMaxLookBackDeltaConfKey)
-		dynamicLookbackDelta              = viper.GetBool(QueryDynamicLookbackDeltaConfKey)
-		enableAutodownsampling            = viper.GetBool(QueryEnableAutoDownsamplingConfKey)
-		enableQueryPartialResponse        = viper.GetBool(QueryEnableQueryPartialConfKey)
-		instantDefaultMaxSourceResolution = viper.GetDuration(QueryMaxSourceResolutionConfKey)
-		defaultMetadataTimeRange          = viper.GetDuration(QueryDefaultMetadataTimeRangeConfKey)
-		unhealthyStoreTimeout             = viper.GetDuration(QueryUnhealthyStoreTimeoutKey)
-		//storeList                         = viper.GetStringSlice(QueryStoreListKey)
-		storeResponseTimeout      = viper.GetDuration(QueryStoreRespTimeoutKey)
-		defaultEvaluationInterval = 1 * time.Minute // 自查询的默认处理间隔。这里用不到
-	)
+) (*QueryAPI, error) {
 
 	dnsStoreProvider := dns.NewProvider(
 		kitLogger,
@@ -98,7 +79,7 @@ func NewAPI(
 		return nil, errors.Wrap(err, "building gRPC client")
 	}
 	var (
-		apiServer = &API{}
+		apiServer = &QueryAPI{}
 		comp      = component.Query
 		endpoints = query.NewEndpointSet(
 			kitLogger,
@@ -289,25 +270,19 @@ func engineFactory(
 }
 
 // RunHttp
-func (a *API) RunHttp() error {
+func (a *QueryAPI) RunHttp() error {
 	a.statusProber.Ready()
 	return a.srv.ListenAndServe()
 }
 
 // ShutDownHttp
-func (a *API) ShutDownHttp(err error) {
+func (a *QueryAPI) ShutDownHttp(err error) {
 	a.statusProber.NotReady(err)
 	a.srv.Shutdown(err)
 }
 
 // RunGetStore 周期性对store进行健康检查，剔除不健康的stores
-func (a *API) RunGetStore() error {
-	//Periodically update the store set with the addresses we see in our cluster.
-	if a.ctx == nil {
-		ctx := context.Background()
-		a.ctx, a.cancel = context.WithCancel(ctx)
-	}
-
+func (a *QueryAPI) RunGetStore() error {
 	return runutil.Repeat(5*time.Second, a.ctx.Done(), func() error {
 		a.endpoints.Update(a.ctx)
 		return nil
@@ -315,7 +290,6 @@ func (a *API) RunGetStore() error {
 }
 
 // ShutDownGetStore
-func (a *API) ShutDownGetStore(_ error) {
-	a.cancel()
+func (a *QueryAPI) ShutDownGetStore(_ error) {
 	a.endpoints.Close()
 }

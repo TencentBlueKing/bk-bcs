@@ -24,10 +24,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/targets/targetspb"
 )
 
-/*
-	此包中实现thanos的metadata，target，rule，exemplar 的proxy接口
-	替换掉query模块中的各种各个用不到的模块
-*/
+// 此包中实现thanos的metadata，target，rule，exemplar 的proxy接口 替换掉query模块中的各种各个用不到的模块
 
 // NotImplementErr
 var NotImplementErr = errors.New("api not implement")

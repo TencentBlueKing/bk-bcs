@@ -49,13 +49,13 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
 
 	logger.Infow("listening for requests and metrics", "service", "query", "address", httpAddress)
-	apiServer, err := query.NewAPI(opt.reg, opt.tracer, kitLogger, httpAddress, storeList, g)
+	queryServer, err := query.NewQueryAPI(opt.reg, opt.tracer, kitLogger, httpAddress, storeList, g)
 	if err != nil {
 		return errors.Wrap(err, "query")
 	}
 
-	g.Add(apiServer.RunGetStore, apiServer.ShutDownGetStore)
-	g.Add(apiServer.RunHttp, apiServer.ShutDownHttp)
+	g.Add(queryServer.RunGetStore, queryServer.ShutDownGetStore)
+	g.Add(queryServer.RunHttp, queryServer.ShutDownHttp)
 
 	return err
 }
