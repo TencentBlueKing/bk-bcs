@@ -37,7 +37,7 @@ def list_auth_projects(access_token: str, username: str = '') -> Dict:
 
     # 如果是 any, 表示所有项目
     if ProjectFilter.op_is_any(perm_filter):
-        if settings.REGION != 'ce':
+        if settings.EDITION != settings.COMMUNITY_EDITION:
             # 非 ce 版本可能项目很多, PaaSCCClient 接口拉取超时, 降级处理不返回
             logger.error(f'{username} project filter match any!')
             return {'code': 0, 'data': []}

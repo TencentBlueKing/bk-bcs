@@ -253,7 +253,7 @@ def wait_user_pod_ready(ctx, name):
 
 def get_service_account_token(k8s_client) -> Optional[str]:
     """获取web-console token"""
-    if settings.REGION not in ["ee", "ce"]:
+    if settings.EDITION != settings.COMMUNITY_EDITION:
         return
 
     token_prefix = f"{constants.NAMESPACE}-token"
@@ -266,7 +266,7 @@ def get_service_account_token(k8s_client) -> Optional[str]:
 
 def create_service_account_rbac(k8s_client, ctx):
     """创建serviceAccount, 绑定Role"""
-    if settings.REGION not in ["ee", "ce"]:
+    if settings.EDITION != settings.COMMUNITY_EDITION:
         return
 
     service_account_body = yaml.load(render_to_string("conf_tpl/service_account.yaml", ctx))
