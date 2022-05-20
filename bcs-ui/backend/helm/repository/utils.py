@@ -17,7 +17,7 @@ from django.conf import settings
 from backend.components.bk_repo import BkRepoClient
 from backend.helm.helm.models.repo import Repository
 from backend.helm.repository.constants import RepoCategory
-from backend.util.basic import getitems
+from backend.utils.basic import getitems
 from backend.utils.error_codes import error_codes
 
 
@@ -51,8 +51,9 @@ class RepoDBActions:
         self.repo_name = repo_name
 
     def get_or_create(self) -> Repository:
+        # url 的组装格式: helm-repo-domain/project_code/
         repo_params = {
-            "url": f"{settings.HELM_REPO_DOMAIN}/{self.project_code}/{self.repo_name}/",
+            "url": f"{settings.HELM_REPO_DOMAIN}/{self.project_code}/{self.repo_name}",
             "provider": "bkrepo",
             "storage_info": {},
         }

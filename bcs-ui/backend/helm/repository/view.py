@@ -123,7 +123,10 @@ class RepositoryViewSet(SystemViewSet):
         ):
             raise ValidationError(_("非纳管仓库，不允许刷新操作"))
 
-        client = BkRepoClient(access_token=request.user.token.access_token, username=request.user.username)
+        token = BkRepoClient(access_token=request.user.token.access_token, username=request.user.username).get_token()
+        client = BkRepoClient(
+            access_token=request.user.token.access_token, username=request.user.username, password=token["id"]
+        )
         client.refresh_index(request.project.project_code, repo_name)
 
         return Response()
