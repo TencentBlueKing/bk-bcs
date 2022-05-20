@@ -6,7 +6,7 @@
             </bk-form-item>
             <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
                 <bcs-select :loading="templateLoading" class="w640" v-model="basicInfo.provider" :clearable="false">
-                    <bcs-option v-for="item in templateList"
+                    <bcs-option v-for="item in availableTemplateList"
                         :key="item.cloudID"
                         :id="item.cloudID"
                         :name="item.name">
@@ -119,6 +119,9 @@
                     ipList: []
                 })
             const templateList = ref<any[]>([])
+            const availableTemplateList = computed(() => {
+                return templateList.value.filter(item => !item?.confInfo?.disableCreateCluster)
+            })
             const versionList = computed(() => {
                 const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
                 return cloud?.clusterManagement.availableVersion || []
@@ -271,7 +274,6 @@
             const handleGetTemplateList = async () => {
                 templateLoading.value = true
                 templateList.value = await $store.dispatch('clustermanager/fetchCloudList')
-                basicInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
             const handleRemoveServer = async (row) => {
@@ -292,7 +294,7 @@
                 templateLoading,
                 expanded,
                 loading,
-                templateList,
+                availableTemplateList,
                 versionList,
                 basicFormRef,
                 basicInfo,

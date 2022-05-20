@@ -2793,5 +2793,7 @@ export default {
     ],
     "新建凭证": [
         "New voucher"
-    ]
+    ],
+    "云凭证": ["Cloud Token"],
+    "请先测试kubeconfig可用性": ["please run kubeconfig usability testing"]
 }

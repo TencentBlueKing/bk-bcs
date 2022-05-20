@@ -6,13 +6,13 @@
             </bk-form-item>
             <bk-form-item :label="$t('导入方式')">
                 <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
-                    <bk-radio value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
+                    <bk-radio class="btn-group-first" value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
                     <bk-radio value="provider">{{$t('云服务商')}}</bk-radio>
                 </bk-radio-group>
             </bk-form-item>
             <bk-form-item :label="$t('集群环境')" required v-if="$INTERNAL">
                 <bk-radio-group class="btn-group" v-model="importClusterInfo.environment">
-                    <bk-radio value="debug">
+                    <bk-radio class="btn-group-first" value="debug">
                         {{ $t('测试环境') }}
                     </bk-radio>
                     <bk-radio value="prod">
@@ -32,14 +32,14 @@
                         class="w640"
                         v-model="importClusterInfo.provider"
                         :clearable="false">
-                        <bcs-option v-for="item in templateList"
+                        <bcs-option v-for="item in availableTemplateList"
                             :key="item.cloudID"
                             :id="item.cloudID"
                             :name="item.name">
                         </bcs-option>
                     </bcs-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('云凭证')">
+                <bk-form-item :label="$t('云凭证')" property="accountID" error-display-type="normal" required>
                     <bcs-select :loading="accountsLoading"
                         class="w640"
                         :clearable="false"
@@ -64,7 +64,7 @@
                         </bcs-option>
                     </bcs-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('TKE集群ID')" error-display-type="normal" required>
+                <bk-form-item :label="$t('TKE集群ID')" property="cloudID" error-display-type="normal" required>
                     <bcs-select class="w640" searchable
                         :clearable="false"
                         :loading="clusterLoading"
@@ -97,18 +97,20 @@
                     :show-gutter="false"
                 ></Ace>
             </bk-form-item>
-            <bk-form-item>
+            <bk-form-item class="mt16" v-if="importClusterInfo.importType === 'kubeconfig'">
                 <bk-button theme="primary"
                     :loading="testLoading"
-                    v-if="importClusterInfo.importType === 'kubeconfig'"
-                    @click="handleTest"
-                >{{$t('kubeconfig可用性测试')}}</bk-button>
-                <bk-button class="btn"
-                    theme="primary"
-                    :loading="loading"
-                    :disabled="!isTestSuccess && importClusterInfo.importType === 'kubeconfig'"
-                    @click="handleImport"
-                >{{$t('导入')}}</bk-button>
+                    @click="handleTest">{{$t('kubeconfig可用性测试')}}</bk-button>
+            </bk-form-item>
+            <bk-form-item class="mt32">
+                <span v-bk-tooltips="{ content: $t('请先测试kubeconfig可用性'), disabled: isTestSuccess }">
+                    <bk-button class="btn"
+                        theme="primary"
+                        :loading="loading"
+                        :disabled="!isTestSuccess && importClusterInfo.importType === 'kubeconfig'"
+                        @click="handleImport"
+                    >{{$t('导入')}}</bk-button>
+                </span>
                 <bk-button class="btn"
                     @click="handleCancel"
                 >{{$t('取消')}}</bk-button>
@@ -170,6 +172,27 @@
                         message: $i18n.t('必填项'),
                         trigger: 'blur'
                     }
+                ],
+                region: [
+                    {
+                        required: true,
+                        message: $i18n.t('必填项'),
+                        trigger: 'blur'
+                    }
+                ],
+                accountID: [
+                    {
+                        required: true,
+                        message: $i18n.t('必填项'),
+                        trigger: 'blur'
+                    }
+                ],
+                cloudID: [
+                    {
+                        required: true,
+                        message: $i18n.t('必填项'),
+                        trigger: 'blur'
+                    }
                 ]
             })
 
@@ -196,12 +219,14 @@
             })
 
             // 云服务商
-            const templateList = ref<any>([])
+            const templateList = ref<any[]>([])
+            const availableTemplateList = computed(() => {
+                return templateList.value.filter(item => !item?.confInfo?.disableImportCluster)
+            })
             const templateLoading = ref(false)
             const handleGetCloudList = async () => {
                 templateLoading.value = true
                 templateList.value = await $store.dispatch('clustermanager/fetchCloudList')
-                importClusterInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
 
@@ -260,11 +285,12 @@
             watch(() => importClusterInfo.value.region, () => {
                 handleGetClusterList()
             })
+            watch(() => importClusterInfo.value.yaml, () => {
+                isTestSuccess.value = false
+            })
 
             // 可用性测试
             const handleTest = async () => {
-                const validate = await importFormRef.value.validate()
-                if (!validate) return
                 testLoading.value = true
                 const result = await $store.dispatch('clustermanager/kubeConfig', {
                     kubeConfig: importClusterInfo.value.yaml
@@ -330,7 +356,7 @@
                 isTestSuccess,
                 testLoading,
                 labelWidth,
-                templateList,
+                availableTemplateList,
                 importClusterInfo,
                 importFormRef,
                 loading,
@@ -348,6 +374,12 @@
     })
 </script>
 <style lang="postcss" scoped>
+/deep/ .mt16 {
+    margin-top: 16px;
+}
+/deep/ .mt32 {
+    margin-top: 32px;
+}
 .create-import-cluster {
     padding: 24px;
     /deep/ .w640 {
@@ -375,11 +407,6 @@
         width: 100%;
         height: 100%;
     }
-    /deep/ .btn-group {
-        width: 220px;
-        display: inline-flex;
-        justify-content: space-between;
-    }
 }
 .import-cluster-dialog {
     padding: 0 4px 24px 4px;
@@ -388,5 +415,8 @@
         font-weight: 700;
         margin-bottom: 14px
     }
+}
+/deep/ .btn-group-first {
+    min-width: 100px;
 }
 </style>
