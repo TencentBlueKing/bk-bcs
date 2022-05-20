@@ -15,11 +15,22 @@ package query
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
+	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/model/labels"
+	"github.com/prometheus/prometheus/promql/parser"
+	"github.com/thanos-io/thanos/pkg/api"
 	extpromhttp "github.com/thanos-io/thanos/pkg/extprom/http"
+	"github.com/thanos-io/thanos/pkg/store"
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+)
+
+const (
+	// LabelMatcherParam labelMatch
+	LabelMatcherParam = "labelMatch[]"
 )
 
 type tenantAuthMiddleware struct {
@@ -32,15 +43,38 @@ func NewTenantAuthMiddleware(ctx context.Context, ins extpromhttp.Instrumentatio
 	return &tenantAuthMiddleware{ctx: ctx, ins: ins}, nil
 }
 
+// parseLabelMatchersParam 解析 labelMatch selector
+func parseLabelMatchersParam(r *http.Request) (labelMatchers [][]*labels.Matcher, _ *api.ApiError) {
+	if err := r.ParseForm(); err != nil {
+		return nil, &api.ApiError{Typ: api.ErrorInternal, Err: errors.Wrap(err, "parse form")}
+	}
+
+	for _, s := range r.Form[LabelMatcherParam] {
+		matchers, err := parser.ParseMetricSelector(s)
+		if err != nil {
+			return nil, &api.ApiError{Typ: api.ErrorBadData, Err: err}
+		}
+		labelMatchers = append(labelMatchers, matchers)
+	}
+
+	return labelMatchers, nil
+}
+
 // NewHandler 处理函数
 func (t *tenantAuthMiddleware) NewHandler(handlerName string, handler http.Handler) http.HandlerFunc {
 	handleFunc := t.ins.NewHandler(handlerName, handler)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Infow("handle request", "handler_name", handlerName, "url", r.URL)
+		labelMatchers, err := parseLabelMatchersParam(r)
+		if err != nil {
+			api.RespondError(w, err, nil)
+			return
+		}
 
-		// ctx := store.WithLabelMatchValue(r.Context(), labelMatches)
-		// r = r.WithContext(ctx)
+		logger.Infow("handle request", "handler_name", handlerName, "label_matchers", fmt.Sprintf("%s", labelMatchers), "url", r.URL)
+
+		ctx := store.WithLabelMatchValue(r.Context(), labelMatchers)
+		r = r.WithContext(ctx)
 		handleFunc(w, r)
 	}
 }
