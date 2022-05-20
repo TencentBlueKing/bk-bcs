@@ -413,7 +413,7 @@ const menu: IMenu = {
         { type: 'line' },
         {
             name: cloudToken,
-            icon: 'bcs-icon-bk',
+            icon: 'bcs-icon-yunpingzhengguanli',
             children: [
                 {
                     name: 'Tencent Cloud',
@@ -421,7 +421,7 @@ const menu: IMenu = {
                     id: 'tencentCloud'
                 }
             ],
-            id: 'MONITOR'
+            id: 'CLOUDTOKEN'
         },
         { type: 'line' },
         {
