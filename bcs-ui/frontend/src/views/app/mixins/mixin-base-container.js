@@ -246,7 +246,7 @@ export default {
                     projectId: this.projectId,
                     // container_ids: this.containerId.split(','),
                     container_name: this.containerInfo.container_name,
-                    namespace: this.instanceNamespace,
+                    namespace: this.containerInfo.namespace,
                     pod_name: this.taskgroupName,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
@@ -406,7 +406,7 @@ export default {
                     projectId: this.projectId,
                     // container_ids: this.containerId.split(','),
                     container_name: this.containerInfo.container_name,
-                    namespace: this.instanceNamespace,
+                    namespace: this.containerInfo.namespace,
                     pod_name: this.taskgroupName,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
@@ -565,7 +565,7 @@ export default {
                     projectId: this.projectId,
                     // container_ids: this.containerId.split(','),
                     container_name: this.containerInfo.container_name,
-                    namespace: this.instanceNamespace,
+                    namespace: this.containerInfo.namespace,
                     pod_name: this.taskgroupName,
                     clusterId: this.clusterId,
                     end_at: moment().format('YYYY-MM-DD HH:mm:ss')
