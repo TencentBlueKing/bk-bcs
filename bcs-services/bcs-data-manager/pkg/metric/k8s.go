@@ -16,6 +16,8 @@ import (
 	"fmt"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"time"
 )
 
 func (g *MetricGetter) getK8sClusterCPUMetrics(opts *common.JobCommonOpts,
@@ -88,13 +90,17 @@ func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *common.JobCommonOpts,
 func (g *MetricGetter) getK8sNodeCount(opts *common.JobCommonOpts,
 	clients *common.Clients) (int64, int64, error) {
 	var nodeCount, availableNode int64
-
+	start := time.Now()
 	nodes, err := clients.CmCli.Cli.ListNodesInCluster(clients.CmCli.Ctx, &cm.ListNodesInClusterRequest{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+			"GET", err, start)
 		return nodeCount, availableNode, fmt.Errorf("get cluster metrics error:%v", err)
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+		"GET", err, start)
 	// TODO: k8s cluster use storage get nodes
 	nodeCount = int64(len(nodes.Data))
 	for key := range nodes.Data {

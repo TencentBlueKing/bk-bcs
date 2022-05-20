@@ -33,6 +33,7 @@ func parseFlags() {
 	flag.String("etcd_ca", "", "ca file for etcd")
 
 	// server config
+	flag.Bool("uselocalip", false, "use local ip")
 	flag.String("address", "127.0.0.1", "grpc server address")
 	flag.String("insecureaddress", "127.0.0.1", "insecure server address")
 	flag.Uint("port", 8081, "grpc server port")
@@ -63,6 +64,7 @@ func parseFlags() {
 	flag.Bool("repo_encrypted", false, "repo platform password encrypted")
 
 	// release config
+	flag.Bool("release_encrypted", false, "release password encrypted")
 	flag.String("release_api", "", "api address for release handler")
 	flag.String("release_token", "", "api token for release handler")
 	flag.String("release_template", "", "kube config template file for release handler")
@@ -83,6 +85,16 @@ func parseFlags() {
 	flag.String("bcslog_stderrthreshold", "2", "logs at or above this threshold go to stderr")
 	flag.String("bcslog_vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
 	flag.String("bcslog_backtraceat", "", "when logging hits line file:N, emit a stack trace")
+
+	// jwt config
+	flag.Bool("jwt_enable", true, "enable jwt authentication")
+	flag.String("jwt_publickey", "", "public key")
+	flag.String("jwt_publickeyfile", "", "the file of public key")
+	flag.String("jwt_privatekey", "", "private key")
+	flag.String("jwt_privatekeyfile", "", "the file of private key")
+
+	// exempt clients
+	flag.String("exemptclients_clientids", "", "exempt client ids")
 
 	// config file path
 	flag.String("conf", "", "config file path")

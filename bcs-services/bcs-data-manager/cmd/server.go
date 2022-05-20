@@ -70,7 +70,6 @@ type Server struct {
 	store         store.Server
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
-	stopCtx       context.Context
 	// extra module server, [pprof, metrics, swagger]
 	extraServer *http.Server
 }
@@ -209,6 +208,7 @@ func (s *Server) initModel() error {
 	return nil
 }
 
+//initRegistry init registry
 func (s *Server) initRegistry() error {
 	endpoints := strings.Replace(s.opt.Etcd.EtcdEndpoints, ";", ",", -1)
 	etcdEndpoints := strings.Split(endpoints, ",")
@@ -261,6 +261,7 @@ func (s *Server) initHTTPGateway(router *mux.Router) error {
 	return nil
 }
 
+// init http service
 func (s *Server) initHTTPService() error {
 	router := mux.NewRouter()
 	// init micro http gateway
@@ -294,6 +295,7 @@ func (s *Server) initHTTPService() error {
 	return nil
 }
 
+// init micro service
 func (s *Server) initMicro() error {
 	// New Service
 	microService := microgrpcsvc.NewService(
@@ -323,6 +325,7 @@ func (s *Server) initMicro() error {
 	return nil
 }
 
+// init signal handler
 func (s *Server) initSignalHandler() {
 	// listen system signal
 	// to run in the container, should not trap SIGTERM
@@ -348,6 +351,7 @@ func (s *Server) close() {
 	s.ctxCancelFunc()
 }
 
+// init producer and worker
 func (s *Server) initWorker() error {
 	bcsMonitorCli := s.initBcsMonitorCli()
 	msgQueue, err := initQueue(s.opt.QueueConfig)
@@ -390,6 +394,7 @@ func (s *Server) initWorker() error {
 	return nil
 }
 
+// init message queue
 func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	address := opts.QueueAddress
 	schemas := strings.Split(address, "//")
@@ -458,9 +463,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 			EnableAckWait:     true,
 			AckWaitDuration:   time.Duration(30) * time.Second,
 			MaxInFlight:       0,
-			QueueArguments: map[string]interface{}{
-				"x-message-ttl": 1800000,
-			},
+			QueueArguments:    map[string]interface{}{"x-message-ttl": 1800000},
 		})
 	msgQueue, err := msgqueue.NewMsgQueue(commonOption, exchangeOption, natStreamingOption, publishOption, subscribeOption)
 	if err != nil {
@@ -472,6 +475,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	return msgQueue, nil
 }
 
+// init cluster manager cli
 func (s *Server) initClusterManager() (*cmanager.ClusterManagerClient, error) {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	opts := &cmanager.Options{
@@ -499,6 +503,7 @@ func (s *Server) initClusterManager() (*cmanager.ClusterManagerClient, error) {
 	return cli, nil
 }
 
+// init bcs monitor cli
 func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
 	realPassword, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsMonitorConf.Password))
 	realAppSecret, _ := encrypt.DesDecryptFromBase([]byte(s.opt.AppSecret))
@@ -518,6 +523,7 @@ func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
 	return bcsMonitorCli
 }
 
+// init bcs storage cli
 func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	k8sStorageConfig := &bcsapi.Config{
@@ -563,6 +569,7 @@ func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 	return k8sStorageCli, mesosStorageCli, nil
 }
 
+// init pprof and metric
 func (s *Server) initExtraModules() {
 	extraMux := http.NewServeMux()
 	s.initPProf(extraMux)
@@ -584,6 +591,7 @@ func (s *Server) initExtraModules() {
 	}()
 }
 
+// init pprof
 func (s *Server) initPProf(mux *http.ServeMux) {
 	if !s.opt.Debug {
 		blog.Infof("pprof is disabled")
@@ -597,6 +605,7 @@ func (s *Server) initPProf(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
+// init metric
 func (s *Server) initMetric(mux *http.ServeMux) {
 	blog.Infof("init metric handler")
 	mux.Handle("/metrics", promhttp.Handler())

@@ -82,7 +82,10 @@ def get_cluster_nodes(access_token, project_id, cluster_id):
     except Exception as e:
         logger.error("查询集群内节点数据异常, %s", e)
         return []
-    return [{"inner_ip": node.inner_ip, "status": node.node_status} for node in cluster_nodes.items]
+
+    if cluster_nodes:
+        return [{"inner_ip": node.inner_ip, "status": node.node_status} for node in cluster_nodes.items]
+    return []
 
 
 def get_cluster_snapshot(access_token, project_id, cluster_id):

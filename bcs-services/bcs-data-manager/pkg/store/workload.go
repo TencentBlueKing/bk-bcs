@@ -192,7 +192,7 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *common.
 		Update(ctx, cond, operator.M{"$set": retWorkload})
 }
 
-// GetWorkloadInfoList get workload list data
+// GetWorkloadInfoList get workload list data by cluster id, namespace and workload type
 func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoListRequest) ([]*bcsdatamanager.Workload, int64, error) {
 	var total int64
@@ -261,7 +261,7 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	return response, total, nil
 }
 
-// GetWorkloadInfo get workload data
+// GetWorkloadInfo get workload data with default time range by cluster id, namespace, workload type and name
 func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoRequest) (*bcsdatamanager.Workload, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -404,6 +404,7 @@ func (m *ModelWorkload) generateWorkloadResponse(public common.WorkloadPublicMet
 	return response
 }
 
+// pre aggregate max value before update
 func (m *ModelWorkload) preAggregateMax(data *common.WorkloadData, newMetric *common.WorkloadMetrics) {
 	if data.MaxInstanceTime != nil && newMetric.MaxInstanceTime != nil {
 		data.MaxInstanceTime = getMax(data.MaxInstanceTime, newMetric.MaxInstanceTime)
@@ -436,6 +437,7 @@ func (m *ModelWorkload) preAggregateMax(data *common.WorkloadData, newMetric *co
 	}
 }
 
+// pre aggragate min value before update
 func (m *ModelWorkload) preAggregateMin(data *common.WorkloadData, newMetric *common.WorkloadMetrics) {
 	if data.MinInstanceTime != nil && newMetric.MinInstanceTime != nil {
 		data.MinInstanceTime = getMin(data.MinInstanceTime, newMetric.MinInstanceTime)
@@ -482,6 +484,7 @@ func getMin(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumReco
 	return new
 }
 
+// generate cond according to job options
 func (m *ModelWorkload) generateCond(opts *common.JobCommonOpts, bucket string) []*operator.Condition {
 	cond := make([]*operator.Condition, 0)
 	if opts.ProjectID != "" {

@@ -15,6 +15,7 @@ package bcsmonitor
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"net/http"
 	"time"
 
@@ -106,6 +107,7 @@ func (c *BcsMonitorClient) SetCompleteEndpoint() {
 func (c *BcsMonitorClient) LabelValues(labelName string, selectors []string,
 	startTime, endTime time.Time) (*LabelResponse, error) {
 	var queryString string
+	var err error
 	if len(selectors) != 0 {
 		queryString = c.setSelectors(queryString, selectors)
 	}
@@ -120,6 +122,10 @@ func (c *BcsMonitorClient) LabelValues(labelName string, selectors []string,
 		url = fmt.Sprintf("%s?%s", url, queryString)
 	}
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "LabelValues", "GET", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -137,6 +143,7 @@ func (c *BcsMonitorClient) LabelValues(labelName string, selectors []string,
 // selectors, startTime, endTime optional
 func (c *BcsMonitorClient) Labels(selectors []string, startTime, endTime time.Time) (*LabelResponse, error) {
 	var queryString string
+	var err error
 	if len(selectors) != 0 {
 		queryString = c.setSelectors(queryString, selectors)
 	}
@@ -151,6 +158,10 @@ func (c *BcsMonitorClient) Labels(selectors []string, startTime, endTime time.Ti
 		url = fmt.Sprintf("%s?%s", url, queryString)
 	}
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "Labels", "GET", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -166,14 +177,19 @@ func (c *BcsMonitorClient) Labels(selectors []string, startTime, endTime time.Ti
 
 // Query get instant vectors
 // promql essential, time optional
-func (c *BcsMonitorClient) Query(promql string, time time.Time) (*QueryResponse, error) {
+func (c *BcsMonitorClient) Query(promql string, requestTime time.Time) (*QueryResponse, error) {
 	var queryString string
+	var err error
 	queryString = c.setQuery(queryString, "query", promql)
-	if !time.IsZero() {
-		queryString = c.setQuery(queryString, "time", fmt.Sprintf("%d", time.Unix()))
+	if !requestTime.IsZero() {
+		queryString = c.setQuery(queryString, "time", fmt.Sprintf("%d", requestTime.Unix()))
 	}
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, QueryPath, queryString)
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "Query", "GET", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -190,16 +206,21 @@ func (c *BcsMonitorClient) Query(promql string, time time.Time) (*QueryResponse,
 // QueryByPost get instant vectors
 // promql essential, time optional
 // You can use QueryByPost when the promql is very long that may breach server-side URL character limits.
-func (c *BcsMonitorClient) QueryByPost(promql string, time time.Time) (*QueryResponse, error) {
+func (c *BcsMonitorClient) QueryByPost(promql string, requestTime time.Time) (*QueryResponse, error) {
 	var queryString string
+	var err error
 	queryString = c.setQuery(queryString, "query", promql)
-	if !time.IsZero() {
-		queryString = c.setQuery(queryString, "time", fmt.Sprintf("%d", time.Unix()))
+	if !requestTime.IsZero() {
+		queryString = c.setQuery(queryString, "time", fmt.Sprintf("%d", requestTime.Unix()))
 	}
 	url := fmt.Sprintf("%s%s", c.completeEndpoint, QueryPath)
 	header := c.defaultHeader.Clone()
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "QueryByPost", "POST", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "POST", header, []byte(queryString))
 	if err != nil {
 		return nil, err
@@ -218,12 +239,17 @@ func (c *BcsMonitorClient) QueryByPost(promql string, time time.Time) (*QueryRes
 func (c *BcsMonitorClient) QueryRange(promql string, startTime, endTime time.Time,
 	step time.Duration) (*QueryRangeResponse, error) {
 	var queryString string
+	var err error
 	queryString = c.setQuery(queryString, "query", promql)
 	queryString = c.setQuery(queryString, "start", fmt.Sprintf("%d", startTime.Unix()))
 	queryString = c.setQuery(queryString, "end", fmt.Sprintf("%d", endTime.Unix()))
 	queryString = c.setQuery(queryString, "step", step.String())
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, QueryRangePath, queryString)
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "QueryRange", "GET", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -243,6 +269,7 @@ func (c *BcsMonitorClient) QueryRange(promql string, startTime, endTime time.Tim
 func (c *BcsMonitorClient) QueryRangeByPost(promql string, startTime, endTime time.Time,
 	step time.Duration) (*QueryRangeResponse, error) {
 	var queryString string
+	var err error
 	queryString = c.setQuery(queryString, "query", promql)
 	queryString = c.setQuery(queryString, "start", fmt.Sprintf("%d", startTime.Unix()))
 	queryString = c.setQuery(queryString, "end", fmt.Sprintf("%d", endTime.Unix()))
@@ -251,6 +278,10 @@ func (c *BcsMonitorClient) QueryRangeByPost(promql string, startTime, endTime ti
 	header := c.defaultHeader
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "QueryRangeByPost", "POST", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "POST", c.defaultHeader, []byte(queryString))
 	if err != nil {
 		return nil, err
@@ -269,6 +300,7 @@ func (c *BcsMonitorClient) QueryRangeByPost(promql string, startTime, endTime ti
 // startTime, endTime optional
 func (c *BcsMonitorClient) Series(selectors []string, startTime, endTime time.Time) (*SeriesResponse, error) {
 	var queryString string
+	var err error
 	queryString = c.setSelectors(queryString, selectors)
 	if !startTime.IsZero() {
 		queryString = c.setQuery(queryString, "start", fmt.Sprintf("%d", startTime.Unix()))
@@ -278,6 +310,10 @@ func (c *BcsMonitorClient) Series(selectors []string, startTime, endTime time.Ti
 	}
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, SeriesPath, queryString)
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "Series", "GET", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
 	if err != nil {
 		return nil, err
@@ -297,6 +333,7 @@ func (c *BcsMonitorClient) Series(selectors []string, startTime, endTime time.Ti
 // You can use SeriesByPost when the selectors is very large that may breach server-side URL character limits.
 func (c *BcsMonitorClient) SeriesByPost(selectors []string, startTime, endTime time.Time) (*SeriesResponse, error) {
 	var queryString string
+	var err error
 	queryString = c.setSelectors(queryString, selectors)
 	if !startTime.IsZero() {
 		queryString = c.setQuery(queryString, "start", fmt.Sprintf("%d", startTime.Unix()))
@@ -308,6 +345,10 @@ func (c *BcsMonitorClient) SeriesByPost(selectors []string, startTime, endTime t
 	header := c.defaultHeader
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
 	url = c.addAppMessage(url)
+	start := time.Now()
+	defer func() {
+		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "SeriesByPost", "POST", err, start)
+	}()
 	rsp, err := c.requestClient.DoRequest(url, "POST", header, []byte(queryString))
 	if err != nil {
 		return nil, err

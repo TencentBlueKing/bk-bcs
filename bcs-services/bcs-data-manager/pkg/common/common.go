@@ -15,6 +15,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"sync"
 	"time"
 
@@ -60,19 +61,20 @@ func NewGetter(needFilter bool, clusterIds []string) GetterInterface {
 	return &ResourceGetter{
 		needFilter: needFilter,
 		clusterIDs: clusterMap,
-		cache:      cache.New(time.Minute*5, time.Minute*60),
+		cache:      cache.New(time.Minute*10, time.Minute*60),
 	}
 }
 
 // GetProjectIDList get project id list
 func (g *ResourceGetter) GetProjectIDList(ctx context.Context, cmCli cm.ClusterManagerClient) ([]string, error) {
 	projectList := make([]string, 0)
-	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{})
+	projectMap := make(map[string]bool)
+	clusterList, err := g.GetClusterIDList(ctx, cmCli)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
-	projectMap := make(map[string]bool)
-	for _, cluster := range clusterList.Data {
+
+	for _, cluster := range clusterList {
 		if !g.needFilter || g.clusterIDs[cluster.ClusterID] {
 			projectMap[cluster.ProjectID] = true
 		}
@@ -85,11 +87,21 @@ func (g *ResourceGetter) GetProjectIDList(ctx context.Context, cmCli cm.ClusterM
 
 // GetClusterIDList get cluster id list
 func (g *ResourceGetter) GetClusterIDList(ctx context.Context, cmCli cm.ClusterManagerClient) ([]*ClusterMeta, error) {
-	clusterMetaList := make([]*ClusterMeta, 0)
+	// get cluster list from cache first.
+	// If found, return. Otherwise, call cluster manager api to get and set in cache.
+	cacheClusterMetaList, found := g.cache.Get("clusterList")
+	if found {
+		return cacheClusterMetaList.([]*ClusterMeta), nil
+	}
+	blog.Infof("get cluster list from cache failed.")
+	start := time.Now()
 	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{})
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListCluster", "GET", err, start)
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListCluster", "GET", err, start)
+	clusterMetaList := make([]*ClusterMeta, 0)
 	for _, cluster := range clusterList.Data {
 		if (!g.needFilter || g.clusterIDs[cluster.ClusterID]) && cluster.Status != "DELETED" {
 			clusterMeta := &ClusterMeta{
@@ -100,63 +112,81 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context, cmCli cm.ClusterM
 			clusterMetaList = append(clusterMetaList, clusterMeta)
 		}
 	}
+	g.cache.Set("clusterList", clusterMetaList, 15*time.Minute)
 	return clusterMetaList, nil
 }
 
 // GetNamespaceList get namespace list
 func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterManagerClient,
 	k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error) {
+	// get namespace list from cache first
+	// if found, return. Otherwise, call bcs storage api to get and set in cache.
+	cacheList, found := g.cache.Get("namespaceList")
+	if found {
+		return cacheList.([]*NamespaceMeta), nil
+	}
+	blog.Infof("get namespace list from cache failed.")
 	namespaceMetaList := make([]*NamespaceMeta, 0)
-	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{})
+	clusterList, err := g.GetClusterIDList(ctx, cmCli)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
 	chPool := make(chan struct{}, 30)
 	wg := sync.WaitGroup{}
 	lock := &sync.Mutex{}
-	for _, cluster := range clusterList.Data {
+	for _, cluster := range clusterList {
 		if !g.needFilter || g.clusterIDs[cluster.ClusterID] {
 			wg.Add(1)
 			chPool <- struct{}{}
-			clusterObj := *cluster
-			switch cluster.EngineType {
+			switch cluster.ClusterType {
 			case Kubernetes:
-				go func(cluster cm.Cluster) {
+				go func(cluster *ClusterMeta) {
 					defer wg.Done()
 					namespaces := GetK8sNamespaceList(cluster.ClusterID, cluster.ProjectID, k8sStorageCli)
 					lock.Lock()
 					namespaceMetaList = append(namespaceMetaList, namespaces...)
 					lock.Unlock()
 					<-chPool
-				}(clusterObj)
+				}(cluster)
 			case Mesos:
-				go func(cluster cm.Cluster) {
+				go func(cluster *ClusterMeta) {
 					defer wg.Done()
 					namespaces := GetMesosNamespaceList(cluster.ClusterID, cluster.ProjectID, mesosStorageCli)
 					lock.Lock()
 					namespaceMetaList = append(namespaceMetaList, namespaces...)
 					lock.Unlock()
 					<-chPool
-				}(clusterObj)
+				}(cluster)
 			default:
 				wg.Done()
 				<-chPool
-				return nil, fmt.Errorf("wrong cluster engine type : %s", cluster.EngineType)
+				return nil, fmt.Errorf("wrong cluster engine type : %s", cluster.ClusterType)
 			}
 		}
 	}
 	wg.Wait()
+	g.cache.Set("namespaceList", namespaceMetaList, 15*time.Minute)
 	return namespaceMetaList, err
 }
 
 // GetNamespaceListByCluster get namespace list by cluster
 func (g *ResourceGetter) GetNamespaceListByCluster(clusterMeta *ClusterMeta,
 	k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*NamespaceMeta, error) {
+	// get from cache first
+	cacheList, found := g.cache.Get(fmt.Sprintf("%s-ns", clusterMeta.ClusterID))
+	if found {
+		return cacheList.([]*NamespaceMeta), nil
+	}
+	blog.Infof("get namespace list by cluster id from cache failed.")
 	switch clusterMeta.ClusterType {
 	case Kubernetes:
-		return GetK8sNamespaceList(clusterMeta.ClusterID, clusterMeta.ProjectID, k8sStorageCli), nil
+		namespaceList := GetK8sNamespaceList(clusterMeta.ClusterID, clusterMeta.ProjectID, k8sStorageCli)
+		g.cache.Set(fmt.Sprintf("%s-ns", clusterMeta.ClusterID), namespaceList, 15*time.Minute)
+		return namespaceList, nil
 	case Mesos:
-		return GetMesosNamespaceList(clusterMeta.ClusterID, clusterMeta.ProjectID, mesosStorageCli), nil
+		namespaceList := GetMesosNamespaceList(clusterMeta.ClusterID, clusterMeta.ProjectID, mesosStorageCli)
+		g.cache.Set(fmt.Sprintf("%s-ns", clusterMeta.ClusterID), namespaceList, 15*time.Minute)
+		return namespaceList, nil
 	default:
 		return nil, fmt.Errorf("wrong cluster engine type : %s", clusterMeta.ClusterType)
 	}
@@ -202,50 +232,65 @@ func (g *ResourceGetter) GetMesosWorkloadList(cluster *ClusterMeta,
 // GetK8sWorkloadList get k8s workload list
 func GetK8sWorkloadList(clusterID, projectID, namespace string, storageCli bcsapi.Storage) []*WorkloadMeta {
 	workloadList := make([]*WorkloadMeta, 0)
+	start := time.Now()
 	deployments, err := storageCli.QueryK8SDeployment(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDeployment", "GET", err, start)
 		blog.Errorf("get cluster %s deployment list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDeployment", "GET", err, start)
 		for _, deployment := range deployments {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, DeploymentType,
 				deployment.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	statefulSets, err := storageCli.QueryK8SStatefulSet(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetStatefulSet", "GET", err, start)
 		blog.Errorf("get cluster %s statefulSet list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetStatefulSet", "GET", err, start)
 		for _, statefulSet := range statefulSets {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, StatefulSetType,
 				statefulSet.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	daemonSets, err := storageCli.QueryK8SDaemonSet(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDaemonSet", "GET", err, start)
 		blog.Errorf("get cluster %s daemonSet list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetDaemonSet", "GET", err, start)
 		for _, daemonSet := range daemonSets {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, DaemonSetType,
 				daemonSet.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	gameDeployments, err := storageCli.QueryK8SGameDeployment(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameDeployment", "GET", err, start)
 		blog.Errorf("get cluster %s game deployment list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameDeployment", "GET", err, start)
 		for _, gameDeployment := range gameDeployments {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, GameDeploymentType,
 				gameDeployment.CommonDataHeader)
 			workloadList = append(workloadList, workloadMeta)
 		}
 	}
+	start = time.Now()
 	gameStatefulSets, err := storageCli.QueryK8SGameStatefulSet(clusterID, namespace)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameStatefulSet", "GET", err, start)
 		blog.Errorf("get cluster %s game stateful set list error: %v", clusterID, err)
 	} else {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetGameStatefulSet", "GET", err, start)
 		for _, gameStatefulSet := range gameStatefulSets {
 			workloadMeta := generateCommonWorkloadList(clusterID, projectID, Kubernetes, GameStatefulSetType,
 				gameStatefulSet.CommonDataHeader)
@@ -258,21 +303,27 @@ func GetK8sWorkloadList(clusterID, projectID, namespace string, storageCli bcsap
 // GetMesosWorkloadList get mesos workload list
 func GetMesosWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage) []*WorkloadMeta {
 	workloadList := make([]*WorkloadMeta, 0)
+	start := time.Now()
 	applications, err := storageCli.QueryMesosApplication(clusterID)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosApp", "GET", err, start)
 		blog.Errorf("get cluster %s application list error: %v", clusterID, err)
 		return workloadList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosApp", "GET", err, start)
 	for _, application := range applications {
 		workloadMeta := generateCommonWorkloadList(clusterID, projectID, Mesos, MesosApplicationType,
 			application.CommonDataHeader)
 		workloadList = append(workloadList, workloadMeta)
 	}
+	start = time.Now()
 	deployments, err := storageCli.QueryMesosDeployment(clusterID)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosDeploy", "GET", err, start)
 		blog.Errorf("get cluster %s deployment list error: %v", clusterID, err)
 		return workloadList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosDeploy", "GET", err, start)
 	for _, deployment := range deployments {
 		workloadMeta := generateCommonWorkloadList(clusterID, projectID, Mesos, MesosDeployment,
 			deployment.CommonDataHeader)
@@ -283,12 +334,15 @@ func GetMesosWorkloadList(clusterID, projectID string, storageCli bcsapi.Storage
 
 // GetK8sNamespaceList get k8s namespace list
 func GetK8sNamespaceList(clusterID, projectID string, storageCli bcsapi.Storage) []*NamespaceMeta {
+	start := time.Now()
 	namespaces, err := storageCli.QueryK8SNamespace(clusterID)
 	namespaceList := make([]*NamespaceMeta, 0)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetK8sNamespace", "GET", err, start)
 		blog.Errorf("get cluster %s namespace list error :%v", clusterID, err)
 		return namespaceList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetK8sNamespace", "GET", err, start)
 	for _, namespace := range namespaces {
 		namespaceMeta := &NamespaceMeta{
 			ProjectID:   projectID,
@@ -304,11 +358,14 @@ func GetK8sNamespaceList(clusterID, projectID string, storageCli bcsapi.Storage)
 // GetMesosNamespaceList get mesos namespace list
 func GetMesosNamespaceList(clusterID, projectID string, storageCli bcsapi.Storage) []*NamespaceMeta {
 	namespaceList := make([]*NamespaceMeta, 0)
+	start := time.Now()
 	namespaces, err := storageCli.QueryMesosNamespace(clusterID)
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosNamespace", "GET", err, start)
 		blog.Errorf("get cluster %s namespace list error :%v", clusterID, err)
 		return namespaceList
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosNamespace", "GET", err, start)
 	for _, namespace := range namespaces {
 		namespaceMeta := &NamespaceMeta{
 			ProjectID:   projectID,

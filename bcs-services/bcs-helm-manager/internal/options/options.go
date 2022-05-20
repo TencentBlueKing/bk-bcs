@@ -40,6 +40,7 @@ type SwaggerConfig struct {
 
 // ServerConfig option for server
 type ServerConfig struct {
+	UseLocalIP      bool   `json:"uselocalip"`
 	Address         string `json:"address"`
 	InsecureAddress string `json:"insecureaddress"`
 	Port            uint   `json:"port"`
@@ -87,17 +88,32 @@ type ReleaseConfig struct {
 	Binary             string `json:"binary"`
 	PatchDir           string `json:"patchdir"`
 	VarDir             string `json:"vardir"`
+	Encrypted          bool   `json:"encrypted"`
+}
+
+type JWTConfig struct {
+	Enable         bool   `json:"enable"`
+	PublicKey      string `json:"publickey"`
+	PublicKeyFile  string `json:"publickeyfile"`
+	PrivateKey     string `json:"privatekey"`
+	PrivateKeyFile string `json:"privatekeyfile"`
+}
+
+type ExemptClientsConfig struct {
+	ClientIDs string `json:"clientids"`
 }
 
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd    EtcdOption    `json:"etcd"`
-	BcsLog  LogConfig     `json:"bcslog"`
-	Swagger SwaggerConfig `json:"swagger"`
-	Mongo   MongoConfig   `json:"mongo"`
-	Repo    RepoConfig    `json:"repo"`
-	Release ReleaseConfig `json:"release"`
-	Debug   bool          `json:"debug"`
+	Etcd          EtcdOption          `json:"etcd"`
+	BcsLog        LogConfig           `json:"bcslog"`
+	Swagger       SwaggerConfig       `json:"swagger"`
+	Mongo         MongoConfig         `json:"mongo"`
+	Repo          RepoConfig          `json:"repo"`
+	Release       ReleaseConfig       `json:"release"`
+	JWT           JWTConfig           `json:"jwt"`
+	ExemptClients ExemptClientsConfig `json:"exemptclients"`
+	Debug         bool                `json:"debug"`
 	ServerConfig
 	ClientConfig
 }
