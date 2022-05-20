@@ -2160,6 +2160,16 @@ message CloudConfigInfo {
       title: "machineDomain",
       description: "machineDomain内部域名配置"
     }];
+  bool disableCreateCluster = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "disableCreateCluster",
+      description: "cloud是否关闭创建集群特性"
+    }];
+  bool disableImportCluster = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "disableImportCluster",
+      description: "cloud是否关闭导入集群特性"
+    }];
 }
 
 // CloudNetworkInfo storage for cloud network info

@@ -4192,6 +4192,18 @@
           "type": "string",
           "description": "machineDomain内部域名配置",
           "title": "machineDomain"
+        },
+        "disableCreateCluster": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud是否关闭创建集群特性",
+          "title": "disableCreateCluster"
+        },
+        "disableImportCluster": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud是否关闭导入集群特性",
+          "title": "disableImportCluster"
         }
       },
       "description": "用于记录云公共配置信息",

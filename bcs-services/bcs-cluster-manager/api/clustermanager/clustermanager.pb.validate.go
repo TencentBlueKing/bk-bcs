@@ -4269,6 +4269,10 @@ func (m *CloudConfigInfo) Validate() error {
 
 	// no validation rules for MachineDomain
 
+	// no validation rules for DisableCreateCluster
+
+	// no validation rules for DisableImportCluster
+
 	return nil
 }
 

@@ -14,7 +14,9 @@
         "cidrStep": [2048, 4096]
       },
       "confInfo": {
-        "cloudInternalEnable": false
+        "cloudInternalEnable": false,
+        "disableCreateCluster": true,
+        "disableImportCluster": false
       },
       "osManagement": {
         "availableVersion": ["default"],
@@ -55,7 +57,11 @@
       "networkInfo": {
         "cidrStep": [0, 0]
       },
-      "confInfo": { "cloudInternalEnable": false},
+      "confInfo": {
+        "cloudInternalEnable": false,
+        "disableCreateCluster": false,
+        "disableImportCluster": true
+      },
       "clusterManagement": {
         "availableVersion": ["v1.14.3-tk8s-v1.1-1"],
         "createCluster": {
