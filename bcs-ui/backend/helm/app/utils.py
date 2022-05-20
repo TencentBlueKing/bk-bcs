@@ -72,10 +72,17 @@ def yaml_load(content):
 
 
 def yaml_dump(obj):
+    # 添加 presenter, 避免 json 转换 yaml 时，丢掉双引号
+    def literal_presenter(dumper, data):
+        if isinstance(data, str) and "\n" in data:
+            return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+
     noalias_dumper = yaml.dumper.SafeDumper
     noalias_dumper.ignore_aliases = lambda self, data: True
-    # 添加 default_style='""', 避免 json 转换 yaml 时，丢掉双引号
-    return yaml.dump(obj, default_style='"', default_flow_style=False, Dumper=noalias_dumper)
+    noalias_dumper.add_representer(str, literal_presenter)
+
+    return yaml.dump(obj, default_flow_style=False, Dumper=noalias_dumper)
 
 
 def sync_dict2yaml(obj_list, yaml_content):
