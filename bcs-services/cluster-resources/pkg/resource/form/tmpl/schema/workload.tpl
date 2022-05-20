@@ -263,9 +263,8 @@ volumeClaimTmpl:
                 then:
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
-            ui:rules:
-              # TODO claimType == useExistPV 必填
-              - maxLength64
+            # ui:rules:
+            # TODO claimType == useExistPV 必填
           scName:
             title: {{ i18n "存储类名称" .lang }}
             type: string
@@ -283,9 +282,8 @@ volumeClaimTmpl:
                 then:
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
-            ui:rules:
-              # TODO claimType == createBySC 必填
-              - maxLength64
+            # ui:rules:
+            # TODO claimType == createBySC 必填
           storageSize:
             title: {{ i18n "容量" .lang }}
             type: integer
@@ -295,9 +293,8 @@ volumeClaimTmpl:
               props:
                 max: 4096
                 unit: Gi
-            ui:rules:
-              # TODO claimType == createBySC 必填
-              - maxLength64
+            # ui:rules:
+            # TODO claimType == createBySC 必填
           accessModes:
             title: {{ i18n "访问模式" .lang }}
             type: array

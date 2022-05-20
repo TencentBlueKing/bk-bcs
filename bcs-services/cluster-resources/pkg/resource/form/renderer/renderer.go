@@ -58,14 +58,14 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 		r.setAPIVersion,
 		// 2. 检查是否支持指定版本表单化
 		r.checkRenderable,
-		// 3. 数据清洗，去除表单默认值等
-		r.cleanFormData,
-		// 4. 加载模板并初始化
-		r.initTemplate,
-		// 5. 渲染模板并转换格式
-		r.render2Map,
-		// 6. 添加 EditMode Label 标识
+		// 3. 添加 EditMode Label 标识
 		r.setEditMode,
+		// 4. 数据清洗，去除表单默认值等
+		r.cleanFormData,
+		// 5. 加载模板并初始化
+		r.initTemplate,
+		// 6. 渲染模板并转换格式
+		r.render2Map,
 	} {
 		if err := f(); err != nil {
 			return nil, err
@@ -110,6 +110,21 @@ func (r *ManifestRenderer) checkRenderable() error {
 	return nil
 }
 
+// 添加 EditMode Label 标识
+func (r *ManifestRenderer) setEditMode() error {
+	// 若 labels 中有 editMode key，则刷新为 FormMode
+	labels := mapx.GetList(r.formData, "metadata.labels")
+	for _, label := range labels {
+		if label.(map[string]interface{})["key"] == res.EditModeLabelKey {
+			label.(map[string]interface{})["value"] = res.EditModeForm
+			return nil
+		}
+	}
+	// 如果没有对应的 key，则新增
+	labels = append(labels, map[string]interface{}{"key": res.EditModeLabelKey, "value": res.EditModeForm})
+	return mapx.SetItems(r.formData, "metadata.labels", labels)
+}
+
 // 清理表单数据，如去除默认值等
 func (r *ManifestRenderer) cleanFormData() error {
 	// 默认值清理规则：某子表单中均为初始的零值，则认为未被修改，不应作为配置下发
@@ -135,15 +150,6 @@ func (r *ManifestRenderer) render2Map() error {
 		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
 	}
 	return yaml.Unmarshal(buf.Bytes(), r.manifest)
-}
-
-// 添加 EditMode Label 标识
-func (r *ManifestRenderer) setEditMode() error {
-	// 若原始配置中没有 labels，则默认新建
-	if labels, _ := mapx.GetItems(r.manifest, "metadata.labels"); labels == nil {
-		_ = mapx.SetItems(r.manifest, "metadata.labels", map[string]interface{}{})
-	}
-	return mapx.SetItems(r.manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeForm)
 }
 
 const (

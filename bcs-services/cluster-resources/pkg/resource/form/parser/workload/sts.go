@@ -72,6 +72,7 @@ func parseVolumeClaim(raw map[string]interface{}) model.VolumeClaim {
 		PVName:      mapx.GetStr(raw, "spec.volumeName"),
 		SCName:      mapx.GetStr(raw, "spec.storageClassName"),
 		StorageSize: util.ConvertStorageUnit(mapx.GetStr(raw, "spec.resources.requests.storage")),
+		AccessModes: []string{},
 	}
 	// 如果没有指定 PVName，则认为是要根据 StorageClass 创建
 	if vc.PVName == "" {

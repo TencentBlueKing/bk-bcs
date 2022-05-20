@@ -31,7 +31,7 @@ func TestSTS(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_statefulset", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,26 +45,26 @@ func TestSTS(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "StatefulSetList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "StatefulSetList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.replicas", 3)
 	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
-	updateReq := handler.GenResUpdateReq(updateManifest, resName.(string))
+	updateReq := handler.GenResUpdateReq(updateManifest, resName)
 	err = h.UpdateSTS(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetSTS(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "StatefulSet", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "StatefulSet", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, float64(3), mapx.Get(respData, "manifest.spec.replicas", 0))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteSTS(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

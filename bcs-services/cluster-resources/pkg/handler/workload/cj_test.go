@@ -31,7 +31,7 @@ func TestCJ(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_cronjob", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,26 +45,26 @@ func TestCJ(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CronJobList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "CronJobList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.schedule", "*/5 * * * *")
 	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
-	updateReq := handler.GenResUpdateReq(updateManifest, resName.(string))
+	updateReq := handler.GenResUpdateReq(updateManifest, resName)
 	err = h.UpdateCJ(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetCJ(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CronJob", mapx.Get(respData, "manifest.kind", ""))
-	assert.Equal(t, "*/5 * * * *", mapx.Get(respData, "manifest.spec.schedule", ""))
+	assert.Equal(t, "CronJob", mapx.GetStr(respData, "manifest.kind"))
+	assert.Equal(t, "*/5 * * * *", mapx.GetStr(respData, "manifest.spec.schedule"))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteCJ(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
