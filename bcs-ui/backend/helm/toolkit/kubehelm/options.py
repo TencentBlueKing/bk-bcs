@@ -14,12 +14,43 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, Dict, List, NewType, Optional, Union
 
-RawFlag = NewType('RawFlag', Union[Dict[str, Any], str])
+RawFlag = NewType('RawFlag', Union[Dict[str, Union[bool, str]], str])
 
 
-class Flag:
+class Options:
     """
-    支持的raw_flag类型示例
+    支持 Helm Options 命令行组装
+    """
+
+    def __init__(self, init_options: Optional[List[RawFlag]] = None):
+        self._options = []
+
+        if not init_options:
+            return
+
+        for raw_flag in init_options:
+            self._options.append(_Flag(raw_flag))
+
+    def add(self, raw_flag: RawFlag):
+        self._options.append(_Flag(raw_flag))
+
+    def options(self) -> List[str]:
+        """
+        example init_options: [{"--set": "a=1,b=2"}, {"--values": "data.yaml"}, "--debug", {"--force": True}]
+        return options: ["--set", "a=1,b=2", "--values", "data.yaml", "--debug", "--force"]
+        """
+        options = []
+
+        for flag in self._options:
+            options.extend(flag.to_cmd_options())
+
+        return options
+
+
+class _Flag:
+    """提供将 RawFlag 转换成 Helm Options 的功能
+
+    转换 RawFlag 的示例:
     dict: {"--set": "a=1"}  to_cmd_options=> ["--set", "a=1"]
     dict: {"--reuse-db": True} to_cmd_options=> ["--reuse-db"]
     dict: {"--reuse-db": False} to_cmd_options=> []
@@ -43,34 +74,4 @@ class Flag:
                 return [k, str(v)]
             return []
 
-        raise NotImplementedError(f"unsupported type {type(raw_flag)}")
-
-
-class Options:
-    """
-    支持Helm Options命令行组装
-    """
-
-    def __init__(self, init_options: Optional[List[RawFlag]] = None):
-        self._options = []
-
-        if not init_options:
-            return
-
-        for raw_flag in init_options:
-            self._options.append(Flag(raw_flag))
-
-    def add(self, raw_flag: RawFlag):
-        self._options.append(Flag(raw_flag))
-
-    def options(self) -> List[str]:
-        """
-        example init_options: [{"--set": "a=1,b=2"}, {"--values": "data.yaml"}, "--debug", {"--force": True}]
-        return options: ["--set", "a=1,b=2", "--values", "data.yaml", "--debug", "--force"]
-        """
-        options = []
-
-        for flag in self._options:
-            options.extend(flag.to_cmd_options())
-
-        return options
+        raise NotImplementedError(f'unsupported type {type(raw_flag)}')

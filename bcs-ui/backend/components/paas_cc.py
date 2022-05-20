@@ -554,7 +554,7 @@ class PaaSCCClient(BkApiClient):
         url = self._config.get_cluster_by_id_url.format(cluster_id=cluster_id)
         return self._client.request_json('GET', url)
 
-    @response_handler(default=[])
+    @response_handler(default=list)
     def list_clusters(self, cluster_ids: List[str]) -> Dict:
         """根据集群ID列表批量获取集群信息"""
         url = self._config.list_clusters_url
@@ -651,7 +651,7 @@ class PaaSCCClient(BkApiClient):
         req_params.setdefault("desire_all_data", 1)
         return self._client.request_json("GET", url, params=req_params)
 
-    @response_handler()
+    @response_handler(default=list)
     def list_projects_by_ids(self, project_ids: List[str]) -> Dict:
         """获取项目列表
         :param project_ids: 查询项目的 project_id 列表
@@ -664,6 +664,6 @@ class PaaSCCClient(BkApiClient):
         # TODO 支持分页查询
         return self._client.request_json("GET", url, params={'offset': 0, 'limit': 1000})
 
-    @response_handler(default=[])
+    @response_handler(default=list)
     def list_all_projects(self) -> Dict:
         return self._client.request_json('GET', url=self._config.list_projects, params={'desire_all_data': 1})

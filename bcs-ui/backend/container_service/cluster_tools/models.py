@@ -12,26 +12,37 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import re
+from typing import Optional
+
 from django.db import models
 
+from backend.helm.helm.providers.constants import PUBLIC_REPO_URL
 from backend.utils.models import BaseModel
 
 from .constants import ToolStatus
 
 
 class Tool(models.Model):
-    """组件库中的可用组件. 由于通过 Helm Chart 管理, 因此存储了 Chart 信息"""
+    """组件库中的组件信息(通过 Helm Chart 管理)."""
 
     chart_name = models.CharField(max_length=128, unique=True)
     name = models.CharField('组件名', max_length=64)
-    default_version = models.CharField(max_length=64)
+    default_version = models.CharField('单个组件的默认版本', max_length=64)
     default_values = models.TextField(null=True, blank=True, help_text='组件启用时需要额外设置的变量值，文本内容格式为 yaml')
     # 记录一些额外的启动命令如 --disable-openapi-validation 等
     extra_options = models.TextField(default='')
     namespace = models.CharField(max_length=64, default='bcs-system')
-    description = models.TextField(help_text="组件功能介绍", null=True, blank=True)
+    description = models.TextField(help_text='组件功能介绍', null=True, blank=True)
     help_link = models.CharField(max_length=255, null=True, blank=True)
     logo = models.TextField('图片 logo', null=True, blank=True)
+    version = models.CharField('组件库的版本', max_length=64)
+
+    @property
+    def default_chart_url(self) -> str:
+        if self.default_version:
+            return f'{PUBLIC_REPO_URL}charts/{self.chart_name}-{self.default_version}'
+        return ''
 
 
 class InstalledTool(BaseModel):
@@ -42,10 +53,58 @@ class InstalledTool(BaseModel):
     project_id = models.CharField(max_length=32)
     cluster_id = models.CharField(max_length=32)
     chart_url = models.CharField(max_length=255)
-    values = models.TextField(null=True, blank=True, help_text="组件启用或更新时设置的变量值，文本内容格式为 yaml")
+    values = models.TextField(null=True, blank=True, help_text='组件启用或更新时设置的变量值，文本内容格式为 yaml')
+    extra_options = models.TextField(default='')
     namespace = models.CharField(max_length=64)
-    status = models.CharField(choices=ToolStatus.get_choices(), default=ToolStatus.NOT_DEPLOYED, max_length=32)
+    status = models.CharField(choices=ToolStatus.get_choices(), default=ToolStatus.PENDING, max_length=32)
     message = models.TextField('记录错误信息', default='')
 
     class Meta:
         unique_together = ('tool', 'project_id', 'cluster_id')
+
+    @classmethod
+    def create_by_tool(
+        cls, username: str, tool: Tool, project_id: str, cluster_id: str, values: Optional[str] = None
+    ) -> 'InstalledTool':
+        obj, _ = cls.objects.get_or_create(
+            tool=tool,
+            project_id=project_id,
+            cluster_id=cluster_id,
+            defaults={
+                'release_name': tool.name.lower(),
+                'chart_url': tool.default_chart_url,
+                'values': values or tool.default_values,
+                'extra_options': tool.extra_options,
+                'namespace': tool.namespace,
+                'creator': username,
+                'updator': username,
+            },
+        )
+        return obj
+
+    @property
+    def chart_version(self):
+        """从 chart url 计算出 chart version"""
+        chart_pkg = self.chart_url.rpartition('/')[-1]
+        chart_name = self.tool.chart_name
+        return re.sub(r'{}-(.*).tgz'.format(chart_name), r'\1', chart_pkg)
+
+    def success(self):
+        self._update_status(ToolStatus.DEPLOYED, 'success')
+
+    def fail(self, err_msg: str):
+        self._update_status(ToolStatus.FAILED, err_msg)
+
+    def on_upgrade(self, operator: str, chart_url: str, values: Optional[str] = None):
+        self.updator = operator
+        self.chart_url = chart_url
+        self.status = ToolStatus.PENDING
+        self.message = 'start to upgrade'
+        if values:
+            self.values = values
+        self.save()
+
+    def _update_status(self, status: str, message: str):
+        self.status = status
+        self.message = message
+        self.save(update_fields=['status', 'message'])

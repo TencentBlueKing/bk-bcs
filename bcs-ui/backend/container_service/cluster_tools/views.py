@@ -16,24 +16,46 @@ from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
 
-from .models import Tool
-from .serializers import ClusterToolSZL
+from .manager import ToolManager
+from .models import InstalledTool, Tool
+from .serializers import ClusterToolSZL, InstalledToolSLZ, UpgradeToolSLZ
 
 
 class ToolsViewSet(SystemViewSet):
     """组件库"""
 
     def list(self, request, project_id, cluster_id):
+        """查询集群中可用的组件"""
         serializer = ClusterToolSZL(
             Tool.objects.all(), many=True, context={'project_id': project_id, 'cluster_id': cluster_id}
         )
         return Response(serializer.data)
 
+    def retrieve(self, request, project_id, cluster_id, tool_id):
+        """获取组件安装详情"""
+        try:
+            itool = InstalledTool.objects.get(tool__id=tool_id, project_id=project_id, cluster_id=cluster_id)
+        except InstalledTool.DoesNotExist:
+            return Response({})
+
+        serializer = InstalledToolSLZ(itool)
+        return Response(serializer.data)
+
     def install(self, request, project_id, cluster_id, tool_id):
-        """"""
+        """安装组件"""
+        manager = ToolManager(project_id, cluster_id, tool_id)
+        manager.install(request.user, values=request.data.get('values'))
+        return Response()
 
     def upgrade(self, request, project_id, cluster_id, tool_id):
-        """"""
+        """更新组件"""
+        params = self.params_validate(UpgradeToolSLZ)
+        manager = ToolManager(project_id, cluster_id, tool_id)
+        manager.upgrade(request.user, params['chart_url'], params['values'])
+        return Response()
 
     def uninstall(self, request, project_id, cluster_id, tool_id):
-        """"""
+        """卸载组件"""
+        manager = ToolManager(project_id, cluster_id, tool_id)
+        manager.uninstall(request.user)
+        return Response()

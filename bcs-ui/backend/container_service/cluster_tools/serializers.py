@@ -33,3 +33,16 @@ class ClusterToolSZL(serializers.ModelSerializer):
             return {'cluster_id': t.cluster_id, 'values': t.values, 'status': t.status, 'message': t.message}
         except InstalledTool.DoesNotExist:
             return {}
+
+
+class UpgradeToolSLZ(serializers.Serializer):
+    chart_url = serializers.CharField()
+    values = serializers.CharField(default="", allow_blank=True)
+
+
+class InstalledToolSLZ(serializers.ModelSerializer):
+    chart_version = serializers.ReadOnlyField()
+
+    class Meta:
+        model = InstalledTool
+        fields = '__all__'

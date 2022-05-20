@@ -19,4 +19,5 @@ from .views import ToolsViewSet
 urlpatterns = [
     path('tools/', ToolsViewSet.as_view({'get': 'list'})),
     path('tools/<int:tool_id>/', ToolsViewSet.as_view({'post': 'install', 'put': 'upgrade', 'delete': 'uninstall'})),
+    path('tools/<int:tool_id>/installed_detail/', ToolsViewSet.as_view({'get': 'retrieve'})),
 ]

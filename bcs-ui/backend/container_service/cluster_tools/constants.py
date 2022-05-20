@@ -16,7 +16,6 @@ from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnu
 
 
 class ToolStatus(str, StructuredEnum):
-    NOT_DEPLOYED = EnumField('not_deployed', label='not_deployed')
     PENDING = EnumField('pending', label='pending')
     DEPLOYED = EnumField('deployed', label='deployed')
     FAILED = EnumField('failed', label='failed')
