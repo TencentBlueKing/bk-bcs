@@ -55,22 +55,24 @@ func (q *LogQuery) makeOptions() (*v1.PodLogOptions, error) {
 		Timestamps: true,
 	}
 
-	if q.StartedAt == "" || q.FinishedAt == "" {
+	// 开始时间, 需要用做查询
+	if q.StartedAt != "" {
 		opt.TailLines = &DEFAULT_TAIL_LINES
-	} else {
 
-		// 开始时间, 需要用做查询
 		t, err := time.Parse(time.RFC3339Nano, q.StartedAt)
 		if err != nil {
 			return nil, err
 		}
+		opt.SinceTime = &metav1.Time{Time: t}
+	} else {
+		opt.TailLines = &DEFAULT_TAIL_LINES
+	}
 
-		// 结束时间, 只做校验
+	// 结束时间, 只做校验
+	if q.FinishedAt != "" {
 		if _, err := time.Parse(time.RFC3339Nano, q.FinishedAt); err != nil {
 			return nil, err
 		}
-
-		opt.SinceTime = &metav1.Time{Time: t}
 	}
 
 	q.podLogOptions = opt
