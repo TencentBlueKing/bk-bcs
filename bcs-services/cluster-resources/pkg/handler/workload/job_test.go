@@ -31,7 +31,7 @@ func TestJob(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_job", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,19 +45,19 @@ func TestJob(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "JobList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "JobList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetJob(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Job", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "Job", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, float64(4), mapx.Get(respData, "manifest.spec.backoffLimit", 0))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteJob(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
