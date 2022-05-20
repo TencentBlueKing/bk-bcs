@@ -31,6 +31,37 @@ var lightSTSManifest = map[string]interface{}{
 		"strategy": map[string]interface{}{
 			"type": "RollingUpdate",
 		},
+		"volumeClaimTemplates": []interface{}{
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name": "pvc-123",
+				},
+				"spec": map[string]interface{}{
+					"volumeName": "pv-123",
+					"accessModes": []interface{}{
+						"ROX",
+						"RWX",
+					},
+				},
+			},
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name": "pvc-456",
+				},
+				"spec": map[string]interface{}{
+					"resources": map[string]interface{}{
+						"requests": map[string]interface{}{
+							"storage": "10Gi",
+						},
+					},
+					"storageClassName": "sc-123",
+				},
+			},
+		},
 	},
 }
 
@@ -44,4 +75,31 @@ func TestParseSTSReplicas(t *testing.T) {
 	replicas := model.STSReplicas{}
 	ParseSTSReplicas(lightSTSManifest, &replicas)
 	assert.Equal(t, exceptedSTSReplicas, replicas)
+}
+
+var exceptedSTSVolumeClaimTmpl = model.STSVolumeClaimTmpl{
+	Claims: []model.VolumeClaim{
+		{
+			PVCName:     "pvc-123",
+			ClaimType:   PVCTypeUseExistPV,
+			PVName:      "pv-123",
+			SCName:      "",
+			StorageSize: 0,
+			AccessModes: []string{"ROX", "RWX"},
+		},
+		{
+			PVCName:     "pvc-456",
+			ClaimType:   PVCTypeCreateBySC,
+			PVName:      "",
+			SCName:      "sc-123",
+			StorageSize: 10,
+			AccessModes: []string{},
+		},
+	},
+}
+
+func TestParseSTSVolumeClaimTmpl(t *testing.T) {
+	claimTmpl := model.STSVolumeClaimTmpl{}
+	ParseSTSVolumeClaimTmpl(lightSTSManifest, &claimTmpl)
+	assert.Equal(t, exceptedSTSVolumeClaimTmpl, claimTmpl)
 }
