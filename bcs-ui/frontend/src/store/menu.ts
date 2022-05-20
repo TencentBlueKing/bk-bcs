@@ -22,6 +22,7 @@ const overview = window.i18n.t('概览')
 const workload = window.i18n.t('工作负载')
 const dashboardNamespace = window.i18n.t('命名空间')
 const customResource = window.i18n.t('自定义资源')
+const cloudToken = window.i18n.t('云凭证管理')
 
 export interface IMenuItem {
     name: string; // 菜单中文名称
@@ -408,6 +409,19 @@ const menu: IMenu = {
             icon: 'bcs-icon-event-query',
             id: 'EVENT',
             routeName: 'eventQuery'
+        },
+        { type: 'line' },
+        {
+            name: cloudToken,
+            icon: 'bcs-icon-yunpingzhengguanli',
+            children: [
+                {
+                    name: 'Tencent Cloud',
+                    routeName: 'tencentCloud',
+                    id: 'tencentCloud'
+                }
+            ],
+            id: 'CLOUDTOKEN'
         },
         { type: 'line' },
         {

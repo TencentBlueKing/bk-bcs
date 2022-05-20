@@ -845,3 +845,6 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-lang-ch:before {
 	content: "\e219";
 }
+.bcs-icon-yunpingzhengguanli:before {
+	content: "\e21e";
+}

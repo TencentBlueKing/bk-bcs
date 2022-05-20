@@ -26,7 +26,12 @@ import {
     modifyCluster,
     importCluster,
     kubeConfig,
-    nodeAvailable
+    nodeAvailable,
+    cloudAccounts,
+    createCloudAccounts,
+    deleteCloudAccounts,
+    cloudRegionByAccount,
+    cloudClusterList
 } from '@/api/base'
 
 export default {
@@ -115,6 +120,27 @@ export default {
         // 节点是否可用
         async nodeAvailable (ctx, params) {
             const data = await nodeAvailable(params).catch(() => ({}))
+            return data
+        },
+        // 云账户信息
+        async cloudAccounts (ctx, params) {
+            const data = await cloudAccounts(params).catch(() => [])
+            return data
+        },
+        async createCloudAccounts (ctx, params) {
+            const result = await createCloudAccounts(params).then(() => true).catch(() => false)
+            return result
+        },
+        async deleteCloudAccounts (ctx, params) {
+            const result = await deleteCloudAccounts(params).then(() => true).catch(() => false)
+            return result
+        },
+        async cloudRegionByAccount (ctx, params) {
+            const data = await cloudRegionByAccount(params).catch(() => [])
+            return data
+        },
+        async cloudClusterList (ctx, params) {
+            const data = await cloudClusterList(params).catch(() => [])
             return data
         }
     }
