@@ -1,0 +1,34 @@
+logging:
+  stdout: true
+  format: logfmt
+  filename: ""
+  max_size: 1024 # 单位 Mb
+  max_age: 1 # 单位天
+  max_backups: 7
+
+
+redis:
+  type: standalone
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0
+  master_name: ""
+  sentinel_addrs: []
+  sentinel_password: ""
+
+store:
+  http: # http 服务相关
+    address: 127.0.0.1:10212
+  grpc: # grpc 服务相关
+    address: 127.0.0.1:10213
+
+query:
+  http: # http 服务相关
+    address: 0.0.0.0:10214
+  grpc: # grpc 服务相关
+    address: 127.0.0.1:10215
+  store: # store 列表
+    - 127.0.0.1:10218
+
+

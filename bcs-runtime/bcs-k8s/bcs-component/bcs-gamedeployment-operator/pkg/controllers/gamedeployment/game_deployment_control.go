@@ -34,7 +34,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/expectations"
 	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
-	corelisters "k8s.io/client-go/listers/core/v1"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -43,6 +42,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	clientset "k8s.io/client-go/kubernetes"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller/history"
@@ -156,6 +156,12 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 		return 0, nil, err
 	}
 
+	if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil || deploy.Spec.PreInplaceUpdateStrategy.Hook != nil {
+		gdmetrics.IsGrace = "true"
+	} else {
+		gdmetrics.IsGrace = "false"
+	}
+
 	canaryCtx := newCanaryCtx(deploy, hrList, updateRevision, collisionCount, selector)
 
 	if canaryutil.CheckRevisionChange(deploy, updateRevision.Name) {
@@ -180,7 +186,7 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 	var delayDuration time.Duration
 	var updateErr error
 	// If scale up expectations have not satisfied yet, just skip manage pods.
-	scaleDirtyPods := scaleExpectations.GetExpectations(key)
+	scaleDirtyPods := scaleExpectations.GetExpectations(key) // 去除脏pod
 	if len(scaleDirtyPods[expectations.Create]) > 0 {
 		klog.V(4).Infof("Not satisfied scale up for %v, scaleDirtyPods=%v", key, scaleDirtyPods[expectations.Create])
 	} else {
@@ -520,6 +526,10 @@ func (gdc *defaultGameDeploymentControl) deletePod(deploy *gdv1alpha1.GameDeploy
 		return err
 	}
 
+	if pod.DeletionTimestamp != nil {
+		return nil
+	}
+
 	canDelete, err := gdc.predeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 	if err != nil {
 		klog.V(2).Infof("CheckDelete failed for pod %s/%s: %v", pod.Namespace, pod.Name, err)
@@ -539,10 +549,12 @@ func (gdc *defaultGameDeploymentControl) deletePod(deploy *gdv1alpha1.GameDeploy
 		scaleExpectations.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 		gdc.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete",
 			"failed to delete pod %s/%s: %v", deploy.Namespace, podName, err)
-		gdc.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "failure", time.Since(startTime))
+		gdc.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus,
+			gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
 		return err
 	}
-	gdc.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), "success", time.Since(startTime))
+	gdc.metrics.CollectPodDeleteDurations(util.GetControllerKey(deploy), gdmetrics.SuccessStatus,
+		gdmetrics.DeletePodAction, gdmetrics.IsGrace, time.Since(startTime))
 	return nil
 }
 

@@ -12,18 +12,21 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from typing import Dict, List
 
 from iam.collection import FancyDict
 from iam.resource.provider import ListResult, ResourceProvider
 from iam.resource.utils import Page
 
-from backend.components.base import ComponentAuth
+from backend.components.base import ComponentAuth, CompParseBkCommonResponseError
 from backend.components.cluster_manager import get_shared_clusters
 from backend.components.paas_cc import PaaSCCClient
 from backend.iam.permissions.resources.namespace import calc_iam_ns_id
 
 from .utils import get_system_token
+
+logger = logging.getLogger(__name__)
 
 
 class NamespaceProvider(ResourceProvider):
@@ -114,9 +117,14 @@ class NamespaceProvider(ResourceProvider):
         paas_cc = PaaSCCClient(auth=ComponentAuth(get_system_token()))
 
         if cluster_id not in shared_cluster_ids:
-            cluster = paas_cc.get_cluster_by_id(cluster_id=cluster_id)
-            data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
-            return data['results'] or []
+            try:
+                cluster = paas_cc.get_cluster_by_id(cluster_id=cluster_id)
+            except CompParseBkCommonResponseError as e:
+                logger.error('query cluster error: %s', e)
+                return []
+            else:
+                data = paas_cc.get_cluster_namespace_list(project_id=cluster['project_id'], cluster_id=cluster_id)
+                return data['results'] or []
 
         # 共享集群获取
         data = paas_cc.list_namespaces_in_shared_cluster(cluster_id)

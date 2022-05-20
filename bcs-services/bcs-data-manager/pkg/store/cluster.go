@@ -159,7 +159,7 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *common.Cl
 		Update(ctx, cond, operator.M{"$set": retCluster})
 }
 
-// GetClusterInfoList get cluster list
+// GetClusterInfoList get cluster list by project id
 func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	request *bcsdatamanager.GetClusterInfoListRequest) ([]*bcsdatamanager.Cluster, int64, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -223,7 +223,7 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	return response, total, nil
 }
 
-// GetClusterInfo get cluster data
+// GetClusterInfo get cluster data for api, return metrics with default time range
 func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	request *bcsdatamanager.GetClusterInfoRequest) (*bcsdatamanager.Cluster, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -266,7 +266,7 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	return m.generateClusterResponse(clusterMetrics, request.ClusterID, dimension, startTime, endTime), nil
 }
 
-// GetRawClusterInfo get raw cluster data
+// GetRawClusterInfo get raw cluster data without time range
 func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *common.JobCommonOpts,
 	bucket string) ([]*common.ClusterData, error) {
 	err := ensureTable(ctx, &m.Public)

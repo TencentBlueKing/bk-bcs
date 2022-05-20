@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/errorx"
@@ -63,6 +64,8 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 	if err != nil {
 		return nil, errorx.NewDBErr(err)
 	}
+	// 向 bcs cc 写入数据
+	go bcscc.CreateProject(p)
 	// 返回项目信息
 	return p, nil
 }

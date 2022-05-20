@@ -17,6 +17,7 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -76,7 +77,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	repoName := u.req.GetRepository()
 	chartName := u.req.GetChart()
 	chartVersion := u.req.GetVersion()
-	opName := u.req.GetOperator()
+	username := auth.GetUserFromCtx(u.ctx)
 	values := u.req.GetValues()
 
 	// 获取对应的仓库信息
@@ -84,7 +85,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	if err != nil {
 		blog.Errorf("upgrade release get repository failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -105,7 +106,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	if err != nil {
 		blog.Errorf("upgrade release get chart detail failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -134,7 +135,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 				common.PTKProjectID: "",
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
-				common.PTKUpdator:   opName,
+				common.PTKUpdator:   username,
 				common.PTKVersion:   "",
 				common.PTKName:      "",
 			},
@@ -143,7 +144,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	if err != nil {
 		blog.Errorf("upgrade release failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -152,7 +153,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	if err = u.model.DeleteRelease(u.ctx, clusterID, releaseNamespace, releaseNamespace, result.Revision); err != nil {
 		blog.Errorf("upgrade release, delete release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -167,14 +168,14 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	}); err != nil {
 		blog.Errorf("upgrade release, create release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
 
 	blog.Infof("upgrade release successfully, with revision %d, "+
 		"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-		result.Revision, projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, opName)
+		result.Revision, projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 	u.setResp(common.ErrHelmManagerSuccess, "ok", (&release.Release{
 		Name:         releaseName,
 		Namespace:    releaseNamespace,

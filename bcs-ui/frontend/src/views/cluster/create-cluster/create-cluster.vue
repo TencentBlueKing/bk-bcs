@@ -8,7 +8,9 @@
                 <span class="mode-panel-desc">{{ $t('可自定义集群基本信息和集群版本') }}</span>
             </div>
             <!-- 导入集群 -->
-            <div class="mode-panel" @click="handleImportCluster">
+            <div :class="['mode-panel', { disabled: $INTERNAL }]"
+                v-bk-tooltips="{ disabled: !$INTERNAL, content: $t('功能建设中') }"
+                @click="handleImportCluster">
                 <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-upload"></i></span>
                 <span class="mode-panel-title">{{ $t('导入集群') }}</span>
                 <span class="mode-panel-desc">{{ $t('支持快速导入已存在的集群') }}</span>
@@ -81,6 +83,7 @@
             }
             // 导入集群
             const handleImportCluster = () => {
+                if ($INTERNAL.value) return
                 $router.push({ name: 'createImportCluster' })
             }
 
@@ -136,7 +139,8 @@
                 pageChange,
                 pageSizeChange,
                 handleShowDetail,
-                handleImportCluster
+                handleImportCluster,
+                $INTERNAL
             }
         }
     })

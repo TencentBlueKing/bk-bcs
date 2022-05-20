@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -32,6 +33,8 @@ import (
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+
+	spb "google.golang.org/protobuf/types/known/structpb"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -199,46 +202,49 @@ func getAllIPList(provider string, model store.ClusterManagerModel) map[string]s
 	return ipList
 }
 
-// UserInfo for perm request
-type UserInfo struct {
+// PermInfo for perm request
+type PermInfo struct {
 	ProjectID string
 	UserID    string
 }
 
 // GetUserClusterPermList get user cluster permission
-func GetUserClusterPermList(user UserInfo, clusterList []string) (map[string]*proto.Permission, error) {
-	permissions := make(map[string]*proto.Permission)
-	cli := &cluster.BCSClusterPerm{}
+func GetUserClusterPermList(iam iam.PermClient, user PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
+	permissions := make(map[string]map[string]interface{})
+	clusterPerm := cluster.NewBCSClusterPermClient(iam)
 
 	actionIDs := []string{cluster.ClusterView.String(), cluster.ClusterManage.String(), cluster.ClusterDelete.String()}
-	perms, err := cli.GetMultiClusterMultiActionPermission(user.UserID, user.ProjectID, clusterList, actionIDs)
+	perms, err := clusterPerm.GetMultiClusterMultiActionPermission(user.UserID, user.ProjectID, clusterList, actionIDs)
 	if err != nil {
 		return nil, err
 	}
 
 	for clusterID, perm := range perms {
-		permissions[clusterID] = &proto.Permission{
-			Policy: perm,
+		if permissions[clusterID] == nil {
+			permissions[clusterID] = make(map[string]interface{})
+		}
+		for action, res := range perm {
+			permissions[clusterID][action] = res
 		}
 	}
 
 	return permissions, nil
 }
 
-// GetUserPermListByProjectAndCluster get user cluster permissions
-func GetUserPermListByProjectAndCluster(user UserInfo, clusterList []string, filterUse bool) (map[string]*proto.Permission, error) {
-	permissions := make(map[string]*proto.Permission)
-
-	// policyCode resourceType  clusterList
-	for _, clusterID := range clusterList {
-		defaultPerm := auth.GetInitPerm(true)
-
-		permissions[clusterID] = &proto.Permission{
-			Policy: defaultPerm,
+// GetProjectCommonClustersPerm get userPerm for cluster
+func GetProjectCommonClustersPerm(clusterList []string) (map[string]*spb.Struct, error) {
+	// trans result for adapt front
+	v3ResultPerm := make(map[string]*spb.Struct)
+	for _, clsID := range clusterList {
+		actionPerm, err := spb.NewStruct(auth.GetV3SharedClusterPerm())
+		if err != nil {
+			return nil, err
 		}
+
+		v3ResultPerm[clsID] = actionPerm
 	}
 
-	return permissions, nil
+	return v3ResultPerm, nil
 }
 
 // PermRequest for perm request
@@ -249,18 +255,6 @@ type PermRequest struct {
 	ResourceType string
 	// PolicyCode (create/view/delete/use)
 	PolicyCode string
-}
-
-// GetClusterCreatePerm get cluster create permission by user
-func GetClusterCreatePerm(user UserInfo) map[string]bool {
-	permissions := make(map[string]bool)
-
-	// attention: v0 permission only support project
-	permissions["test"] = true
-	permissions["prod"] = true
-	permissions["create"] = true
-
-	return permissions
 }
 
 // CheckUseNodesPermForUser check user use nodes permission
@@ -342,9 +336,21 @@ func deleteClusterExtraOperation(cluster *proto.Cluster) {
 	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
 	if err != nil {
 		blog.Errorf("deleteClusterExtraOperation DeletePassCCCluster[%s] failed: %v", cluster.ClusterID, err)
-	} else {
-		blog.Infof("deleteClusterExtraOperation DeletePassCCCluster[%s] successful", cluster.ClusterID)
+		return
 	}
+
+	blog.V(4).Infof("deleteClusterExtraOperation DeletePassCCCluster[%s] successful", cluster.ClusterID)
+}
+
+// updatePassCCClusterInfo update cc clusterInfo when update cm cluster
+func updatePassCCClusterInfo(cluster *proto.Cluster) {
+	err := passcc.GetCCClient().UpdatePassCCCluster(cluster)
+	if err != nil {
+		blog.Errorf("updatePassCCClusterInfo[%s] failed: %v", cluster.ClusterID, err)
+		return
+	}
+
+	blog.V(4).Infof("updatePassCCClusterInfo[%s] successful", cluster.ClusterID)
 }
 
 // deleteClusterCredentialInfo sync delete cluster credential
@@ -352,8 +358,9 @@ func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID stri
 	err := store.DeleteClusterCredential(context.Background(), clusterID)
 	if err != nil {
 		blog.Errorf("deleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
-	} else {
-		blog.Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
+		return
 	}
+
+	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
 }
 

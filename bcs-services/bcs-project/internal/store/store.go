@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/store/project"
 )
 
+// ProjectModel project interface
 type ProjectModel interface {
 	CreateProject(ctx context.Context, project *project.Project) error
 	GetProject(ctx context.Context, projectID string) (*project.Project, error)
@@ -38,6 +39,7 @@ type modelSet struct {
 	*project.ModelProject
 }
 
+// New new project model
 func New(db drivers.DB) ProjectModel {
 	return &modelSet{
 		ModelProject: project.New(db),

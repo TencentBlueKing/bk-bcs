@@ -131,7 +131,7 @@ func (m *MockStorage) QueryMesosNamespace(cluster string) ([]*storage.MesosNames
 	rawMesosNs := []byte("{\"result\":true,\"code\":0,\"message\":\"success\",\"data\":[\"marstest\",\"bcs-system\"]}")
 	basicRsp := &bcsapi.BasicResponse{}
 	json.Unmarshal(rawMesosNs, basicRsp)
-	var mesosNsRsp []*storage.Namespace
+	var mesosNsRsp []*storage.MesosNamespace
 	json.Unmarshal(basicRsp.Data, &mesosNsRsp)
 	m.On("QueryMesosNamespace", "BCS-MESOS-10039").Return(mesosNsRsp, nil)
 	args := m.Called(cluster)

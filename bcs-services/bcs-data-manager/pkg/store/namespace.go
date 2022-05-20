@@ -169,7 +169,7 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *commo
 		Update(ctx, cond, operator.M{"$set": retNamespace})
 }
 
-// GetNamespaceInfoList get namespace list
+// GetNamespaceInfoList get namespace list by cluster id
 func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 	request *bcsdatamanager.GetNamespaceInfoListRequest) ([]*bcsdatamanager.Namespace, int64, error) {
 	var total int64
@@ -235,7 +235,7 @@ func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 	return response, total, nil
 }
 
-// GetNamespaceInfo get namespace data
+// GetNamespaceInfo get namespace data with default time range
 func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	request *bcsdatamanager.GetNamespaceInfoRequest) (*bcsdatamanager.Namespace, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -299,7 +299,7 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 		dimension, startTime, endTime), nil
 }
 
-// GetRawNamespaceInfo get raw namespace data
+// GetRawNamespaceInfo get raw namespace data without time range
 func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *common.JobCommonOpts,
 	bucket string) ([]*common.NamespaceData, error) {
 	err := ensureTable(ctx, &m.Public)

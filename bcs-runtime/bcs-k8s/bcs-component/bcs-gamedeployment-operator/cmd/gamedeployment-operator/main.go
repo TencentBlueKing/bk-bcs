@@ -17,7 +17,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"k8s.io/kubernetes/pkg/controller/history"
 	"net/http"
 	"os"
 	"strconv"
@@ -27,6 +26,7 @@ import (
 	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/client/informers/externalversions"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/controllers/gamedeployment"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/admission"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/metrics/restclient"
@@ -45,6 +45,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
+	"k8s.io/kubernetes/pkg/controller/history"
 )
 
 const (
@@ -75,6 +76,8 @@ var (
 	metricPort uint
 )
 
+var webhookOptions = admission.NewServerRunOptions()
+
 func main() {
 
 	flag.Parse()
@@ -95,7 +98,8 @@ func main() {
 	}
 	fmt.Println("Operator building kube client for election success...")
 	broadcaster := record.NewBroadcaster()
-	broadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(lockNameSpace)})
+	broadcaster.StartRecordingToSink(
+		&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(lockNameSpace)})
 	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: lockComponentName})
 
 	rl, err := resourcelock.New(
@@ -142,6 +146,12 @@ func init() {
 	flag.IntVar(&concurrentGameDeploymentSyncs, "concurrent-gamedeployment-syncs", 1,
 		"The number of gamedeployment objects that are allowed to sync concurrently."+
 			" Larger number = more responsive gamedeployments, but more CPU (and network) load")
+
+	flag.StringVar(&webhookOptions.WebhookAddress, "webhook-address", "0.0.0.0", "The address of scheduler manager.")
+	flag.IntVar(&webhookOptions.WebhookPort, "webhook-port", 443, "The port of scheduler manager.")
+	flag.StringVar(&webhookOptions.TLSCert, "tlscert", "", "Path to TLS certificate file")
+	flag.StringVar(&webhookOptions.TLSKey, "tlskey", "", "Path to TLS key file")
+	flag.StringVar(&webhookOptions.TLSCA, "tlsca", "", "Path to certificate file")
 }
 
 func run() {
@@ -212,6 +222,17 @@ func run() {
 	fmt.Println("Operator starting bcs-hook Informer factory success...")
 	runPrometheusMetricsServer()
 	fmt.Println("run prometheus server metrics success...")
+
+	if err = webhookOptions.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	go func() {
+		if runErr := admission.Run(webhookOptions, admission.GameDeploymentType, gdClient, stopCh); runErr != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", runErr)
+			os.Exit(1)
+		}
+	}()
 
 	if err = gdController.Run(concurrentGameDeploymentSyncs, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())

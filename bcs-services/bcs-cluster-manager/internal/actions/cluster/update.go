@@ -181,7 +181,14 @@ func (ua *UpdateAction) updateCluster() error {
 		}
 	}
 	ua.cluster.UpdateTime = time.Now().Format(time.RFC3339)
-	return ua.model.UpdateCluster(ua.ctx, ua.cluster)
+
+	// update DB clusterInfo & passcc cluster
+	err := ua.model.UpdateCluster(ua.ctx, ua.cluster)
+	if err != nil {
+		return err
+	}
+	updatePassCCClusterInfo(ua.cluster)
+	return nil
 }
 
 func (ua *UpdateAction) setResp(code uint32, msg string) {

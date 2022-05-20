@@ -23,6 +23,7 @@ import (
 )
 
 const (
+	// DataJobQueue queue name
 	DataJobQueue = "dataJob"
 )
 
@@ -58,6 +59,7 @@ const (
 	Mesos      = "mesos"
 )
 
+// workload type
 const (
 	DeploymentType       = "deployment"
 	StatefulSetType      = "statefulSet"
@@ -68,6 +70,7 @@ const (
 	MesosDeployment      = "deployment"
 )
 
+// service
 const (
 	// ServiceDomain domain name for service
 	ServiceDomain = "datamanager.bkbcs.tencent.com"
@@ -75,6 +78,7 @@ const (
 	MicroMetaKeyHTTPPort = "httpport"
 )
 
+// time format
 const (
 	MonthTimeFormat  = "2006-01"
 	DayTimeFormat    = "2006-01-02"

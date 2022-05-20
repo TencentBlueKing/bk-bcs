@@ -14,7 +14,11 @@
 
 package errorx
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project/internal/util/stringx"
+)
 
 // PermissionDeniedError 权限异常内容
 type PermissionDeniedError struct {
@@ -45,15 +49,16 @@ func (e *PermissionDeniedError) ActionID() string {
 	return e.actionID
 }
 
+// HasPerm ...
 func (e *PermissionDeniedError) HasPerm() bool {
 	return e.hasPerm
 }
 
 // NewPermDeniedErr ...
-func NewPermDeniedErr(applyUrl string, actionID string, hasPerm bool, msg ...interface{}) *PermissionDeniedError {
+func NewPermDeniedErr(applyUrl string, actionID string, hasPerm bool, msg ...string) *PermissionDeniedError {
 	return &PermissionDeniedError{
 		code:     PermDeniedErr,
-		msg:      fmt.Sprintf(PermDeniedErrMsg, msg...),
+		msg:      fmt.Sprintf("%s,%s", PermDeniedErrMsg, stringx.JoinString(msg...)),
 		applyUrl: applyUrl,
 		actionID: actionID,
 		hasPerm:  hasPerm,

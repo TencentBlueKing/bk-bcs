@@ -11,7 +11,7 @@
 
 export default {
     '容器服务': ['BCS'],
-    '蓝鲸容器管理平台': ['Container Management Platform'],
+    '蓝鲸容器管理平台': ["Container Service"],
     '项目信息': ['Project Info'],
     '英文缩写': ['English Name'],
     '编排类型': ['Orchestration Engine'],
@@ -88,7 +88,7 @@ export default {
     '“新建集群”，需要选择Master节点主机（主机信息来源于蓝鲸配置平台），创建测试集群或正式集群，确定创建后，系统将进行集群初始化操作': ['"Create Cluster", you need to select the master node host (the host information comes from the CMDB), create a test cluster or a prod cluster. After the creation is complete, the system will perform the cluster initialization operation.'],
     '“新建集群”，需要选择Master节点主机（主机信息来源于蓝鲸配置平台），创建集群，确定创建后，系统将进行集群初始化操作': ['"Create Cluster", you need to select the master node host (the host information comes from the CMDB), create a cluster. After the creation is complete, the system will perform the cluster initialization operation.'],
     '集群分类：': ['Cluster Classification: '],
-    '自建集群': ['Private Cluster'],
+    '自建集群': ['Create'],
     '公共集群': ['Public Cluster'],
     '如需要使用公共集群，请联系': ['If you need to use a public cluster, contact '],
     '集群类型：': ['Cluster Type: '],
@@ -196,7 +196,7 @@ export default {
     '更新时间：': ['Update Time：'],
     '所在命名空间：': ['Namespace：'],
     'Taskgroup管理': ['Taskgroup manage'],
-    'Pod管理': ['Pod manage'],
+    'Pod管理': ['Pods'],
     '状态：': ['Status：'],
     '存活时间：': ['Survival time：'],
     '存活时间': ['Survival time'],
@@ -261,7 +261,7 @@ export default {
     '重建中...': ['Rebuilding'],
     '日志': ['Log'],
     'Metric信息': ['Metric Info'],
-    '注解': ['Annotation'],
+    '注解': ['Annotations'],
     '注解管理': ['Annotation Manage'],
     '事件': ['Events'],
     '暂停升级': ['Pause Rolling'],
@@ -319,7 +319,7 @@ export default {
     '主机名/IP': ['Hostname/IP'],
     '状态': ['Status'],
     '所属集群': ['Cluster'],
-    '标签': ['Label'],
+    '标签': ['Labels'],
     '初始化中': ['initializing'],
     '删除中': ['removing'],
     '展开': ['expand'],
@@ -337,7 +337,7 @@ export default {
     '键值【{key}】重复，请重新填写': ['Key value【{key}】is repeated, please re-fill'],
     '没有数据': ['No Data'],
     '确认': ['Confirm'],
-    'IP地址': ['IP Addr'],
+    'IP地址': ['IP'],
     '请输入要搜索的ip，多个ip以 | 隔开': ['Please enter IP to search, multiple IPs separated by |'],
     '请输入要搜索的key': ['Please enter key to search'],
     '请输入要搜索的value': ['Please enter value to search'],
@@ -438,7 +438,7 @@ export default {
     '集群描述': ['Cluster Desc'],
     '设置变量': ['Set Variable'],
     '配置': ['Configuration'],
-    '集群变量': ['Cluster Variable'],
+    '集群变量': ['Cluster'],
     '变量：': ['Variable: '],
     '请输入集群描述，不超过128个字符': ['Please enter the cluster desc, no more than 120 characters'],
     'Master信息': ['Master Info'],
@@ -780,7 +780,7 @@ export default {
     '表单根据Chart中questions.yaml生成，表单修改后的数据会自动同步给YAML模式': ['Forms are generated according to questions.yaml in Chart, and the modified data automatically synchronizes to YAML mode.'],
     '您可以参考': ['You can refer to this '],
     '指引': ['guide'],
-    '通过表单模式配置您的Helm Release 参数': ['Configure your Helm Release parameters through form mode'],
+    '通过表单模式配置您的Helm Release 参数': ['Configure your Helm Release parameters through FORM mode'],
     '也可以通过': ['It can also be passed through'],
     'Yaml模式': ['YAML Mode'],
     'YAML模式': ['YAML Mode'],
@@ -828,7 +828,7 @@ export default {
     '复制中...': ['Copy...'],
     '没有命名空间数据': ['No namespace data'],
     '没有命名空间': ['No namespace data'],
-    '提交': ['Submit'],
+    '提交': ['SUBMIT'],
     '有': ['Has'],
     '个实例': ['Instances'],
     '您需要先删除所有实例，再进行模板集删除操作': ['You need to delete all instances before you delete the TemplateSet'],
@@ -1201,8 +1201,8 @@ export default {
     '已经被引用，不能删除': ['Already referenced, cannot be deleted'],
     '所属': ['Belong'],
     '确定要删除以下变量？': ['Sure to delete this Variable?'],
-    '全局变量': ['Global Variable'],
-    '命名空间变量': ['Namespace Variable'],
+    '全局变量': ['Global'],
+    '命名空间变量': ['Namespace'],
     '说明': ['Description'],
     '被引用位置': ['Referenced'],
     '上下文': ['Context'],
@@ -1227,7 +1227,7 @@ export default {
     '来引用该变量': ['to import this Variable'],
     '变量KEY': ['Variable Key'],
     '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集或使用Helm部署服务': ['Once the cluster is ready, you can create a namespace, push the project image to the repository, then configure the TemplateSet through the service or deploy the service using Helm'],
-    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ': ['Once the cluster is ready, you can create a namespace, push the project image to the warehouse, and then deploy the service through the service configuration TemplateSet'],
+    '集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ': ['Once the cluster is ready, you can deploy your applications'],
     '集群IP': ['Cluster IP'],
     '复制': ['Copy'],
     '复制IP': ['Copy IP'],
@@ -1293,7 +1293,7 @@ export default {
     '已选择{remainCount}个节点': ['{remainCount} items'],
     '点击查看原因': ['Click to view the reason'],
     '请注意：命名空间{name}下的同名资源将会被覆盖更新，确认创建？': ['Please note: the resource with the same name under the namespace {name} will be overwritten and updated to confirm the creation?'],
-    '表单模式': ['Form Mode'],
+    '表单模式': ['FORM Mode'],
     '提示：容器端口是容器内部的Port。在配置Service的端口映射时，通过"目标端口"进行关联，从而暴露服务': ['Tip: The container port is the port inside the container. When configuring the port mapping of the Service, the association is made through the "target port" to expose the service'],
     '提示：项目镜像不存在，': ['Tip: The project image does not exist,'],
     '去创建': ['To create'],
@@ -1336,7 +1336,7 @@ export default {
     '更新证书成功': ['Update certificate successfully'],
     '创建证书成功': ['Successful certificate creation'],
     '通过Helm Chart、Client、模板集YAML模式创建的应用，请通过命名空间视图查询详情': ['For applications created by Helm Chart, Client, and YAML mode TemplateSet, please query the details through the namespace view'],
-    '展示通过模板集表单模式实例化的应用详情': ['Show application details instantiated through TemplateSet form mode'],
+    '展示通过模板集表单模式实例化的应用详情': ['Show application details instantiated through TemplateSet FORM mode'],
     '共包含': ['Include'],
     '个应用模板': ['templates'],
     '展示通过命名空间页面创建的命名空间的应用详情': ['Show application details for namespaces created through namespace pages'],
@@ -1535,7 +1535,7 @@ export default {
     '无数据（新建 Metric 需要1~2分钟生效，请刷新），通过计算创建时间和当前时间判断': ['No data (it takes 1 / 2 minutes for the new Metric to take effect, please refresh it), which can be judged by calculating the creation time and the current time.'],
     '集群分类': ['Cluster Category'],
     '新建集群': ['Create Cluster'],
-    '导入集群': ['Import Cluster'],
+    '导入集群': ['Import'],
     '导入已经存在的集群': ['Import an existing cluster'],
     '添加镜像凭证': ['Add mirror credentials'],
     '使用自定义镜像': ['Use custom image'],
@@ -1547,7 +1547,7 @@ export default {
     '剩余': ['Surplus'],
     '容器视图': ['ContainerView'],
     'Taskgroup视图': ['TaskgroupView'],
-    'POD视图': ['PODView'],
+    'POD视图': ['PodView'],
     '请输入64个字符以内': ['Please enter within 64 characters'],
     '只允许导入从已有模板集导出的zip包': ['Only zip packages exported from an existing template set are allowed to be imported'],
     'Values文件包含两类:': ['The values file contains two types:'],
@@ -1606,7 +1606,7 @@ export default {
     '输入名称搜索': ['Enter Name to Search'],
     '文件导入': ['File Import'],
     '切换为文本模式': ['Switch to text mode'],
-    '切换为表单模式': ['Switch to form mode'],
+    '切换为表单模式': ['Switch to FORM mode'],
     '按上面的模板创建你的json文件，选择“文件导入”操作': ['Create your JSON file according to the above template and select "file import" operation'],
     'IP数量(个)': ['IPs'],
     '可用IP(个)': ['IPs'],
@@ -1769,8 +1769,8 @@ export default {
     '应用': ['Applications'],
     '仓库': ['ImageHub'],
     '监控中心': ['Container Monitoring'],
-    'Release列表': ['Release'],
-    'Chart仓库': ['Chart'],
+    'Release列表': ['Releases'],
+    'Chart仓库': ['Charts'],
     '工作负载': ['Workload'],
     '存储': ['Storage'],
     '仅允许平台部署，如有疑问请联系蓝鲸容器助手': ['Only platform deployment is allowed. If you have any questions, please contact BCS Assistant'],
@@ -1873,7 +1873,7 @@ export default {
     '1、在集群下，添加节点': ['1. Under cluster, add nodes'],
     '2、或者联系【{user}】': ['2. Or Contact【{user}】'],
     '确定要对{len}个节点进行{operate}操作？': ['Confirm to {operate} on {len} nodes?'],
-    '（可通过 {action} 创建更多作用在命名空间的变量）': ['(You can create more variables in the namespace through {action}'],
+    '（可通过 {action} 创建更多作用在命名空间的变量）': ['(You can create more variables in the namespace through {action})'],
     '该项目未设置作用在命名空间范围的环境变量，无法设置变量值，可前往 {action} 设置': ['The project does not set an environment variable that acts on the namespace. You cannot set the variable value. You can go to the {action} to set.'],
     '您确定要删除Namespace: {name}吗？': ['Confirm want to delete the namespace: {name}?'],
     '确定删除Namespace: {name}的配额？': ['Confirm want to delete the namespace\'s quota: {name}?'],
@@ -1968,7 +1968,7 @@ export default {
         "Container arrangement engine based on the MESOS framework"
     ],
     "申请权限": [
-        "Request for access"
+        "Request Permission"
     ],
     "前往iwiki查看": [
         "Go to IWIKI to view"
@@ -2058,10 +2058,10 @@ export default {
         "New cluster template"
     ],
     "可自定义集群基本信息和集群版本": [
-        "Can customize cluster basic information and cluster versions"
+        "Create a cluster in a hosted Kubernetes provider"
     ],
     "支持快速导入已存在的集群": [
-        "Support quickly importing existing clusters"
+        "Import existing Kubernetes cluster"
     ],
     "创建或导入K8S集群": [
         "Create or import K8S cluster"
@@ -2201,8 +2201,8 @@ export default {
     "{num}天": [
         "{num} Day"
     ],
-    "当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {remainNodes}": [
-        "The current cluster has added nodes (including MASTER) {nodes}, and the number of nodes can also be added {remainNodes}"
+    "当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点": [
+        "The number of nodes (including Master) {nodes} has been added to the current cluster, and the number of nodes {realRemainNodesCount} can be added. When the container network resources are overused, the container network will be automatically expanded. After the expansion, a maximum of {maxRemainNodesCount} nodes can be added."
     ],
     "更新版本": [
         "updated version"
@@ -2226,7 +2226,7 @@ export default {
         "system"
     ],
     "容器管理平台": [
-        "Container management platform"
+        "Container Service"
     ],
     "需要申请的权限": [
         "Permission required to apply"
@@ -2781,7 +2781,6 @@ export default {
     ],
     "导入方式": ['Import Type'],
     'kubeconfig可用性测试': ['kubeconfig usability testing'],
-    'IP已被 {name}{id} 占用': [''],
     "云凭证管理": [
         "Cloud voucher management"
     ],
@@ -2795,5 +2794,8 @@ export default {
         "New voucher"
     ],
     "云凭证": ["Cloud Token"],
-    "请先测试kubeconfig可用性": ["please run kubeconfig usability testing"]
+    "请先测试kubeconfig可用性": ["please run kubeconfig usability testing"],
+    'IP已被 {name}{id} 占用': ['IP is occupied by {name}{id}'],
+    '功能特性': ['BCS Features'],
+    '功能建设中': ['function under construction']
 }

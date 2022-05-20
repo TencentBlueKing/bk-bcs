@@ -304,17 +304,17 @@ const menu: IMenu = {
             icon: 'bcs-icon-wl-network',
             children: [
                 {
-                    name: 'Service',
+                    name: 'Services',
                     routeName: 'service',
                     id: 'service'
                 },
                 {
-                    name: 'Ingress',
+                    name: 'Ingresses',
                     routeName: 'resourceIngress',
                     id: 'resourceIngress'
                 },
                 {
-                    name: 'LoadBalancer',
+                    name: 'LoadBalancers',
                     routeName: 'loadBalance',
                     id: 'loadBalance'
                 }

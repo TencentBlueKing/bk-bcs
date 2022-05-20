@@ -28,6 +28,6 @@ def get_api_public_key(api_name, app_code=None, app_secret=None):
         params = {"api_name": api_name}
         data = requests.bk_get(url, params=params, headers=headers)
         return data.get("public_key")
-    except Exception as e:
-        logger.exception("get api public key failed: %s", e)
+    except Exception:
+        logger.error("get api(%s) public key failed", api_name)
         return None

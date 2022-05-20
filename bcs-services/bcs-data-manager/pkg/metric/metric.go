@@ -14,7 +14,9 @@ package metric
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"strconv"
+	"time"
 
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
@@ -71,20 +73,24 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts,
 	clients *common.Clients) (string, []*bcsdatamanager.NodeQuantile, error) {
 	var minUsageNode string
 	nodeQuantie := make([]*bcsdatamanager.NodeQuantile, 0)
-
+	start := time.Now()
 	cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "GetCluster",
+			"GET", err, start)
 		return minUsageNode, nodeQuantie, err
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+		"GET", err, start)
 	queryCond := fmt.Sprintf(ClusterCondition, opts.ClusterID)
 
 	for key := range cluster.Data.Master {
 		queryCond = fmt.Sprintf("%s,instance!=\"%s:9100\"", queryCond, cluster.Data.Master[key].InnerIP)
 	}
-	nodeCpuQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
-	nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCpuQuery, opts.CurrentTime)
+	nodeCPUQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
+	nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCPUQuery, opts.CurrentTime)
 	if err != nil {
 		return minUsageNode, nodeQuantie, err
 	}
@@ -104,16 +110,16 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *common.JobCommonOpts,
 	}
 
 	nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
-		"0.5", nodeCpuQuery), opts.CurrentTime)
+		"0.5", nodeCPUQuery), opts.CurrentTime)
 	if err != nil {
 		return minUsageNode, nodeQuantie, err
 	}
 	if len(nodeQuantieResponse.Data.Result) != 0 {
-		nodeQuantileCpu, ok := nodeQuantieResponse.Data.Result[0].Value[1].(string)
+		nodeQuantileCPU, ok := nodeQuantieResponse.Data.Result[0].Value[1].(string)
 		if ok {
 			quantile := &bcsdatamanager.NodeQuantile{
 				Percentage:   "50",
-				NodeCPUUsage: nodeQuantileCpu,
+				NodeCPUUsage: nodeQuantileCPU,
 			}
 			nodeQuantie = append(nodeQuantie, quantile)
 		}
