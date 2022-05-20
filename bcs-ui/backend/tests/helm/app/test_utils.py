@@ -54,6 +54,7 @@ def test_ruamel_yaml_dump(json_src, expected_yaml):
         ({"a": "1"}, '"a": "1"\n'),
         ({"a": 1}, '"a": 1\n'),
         ({"a": "Y"}, '"a": "Y"\n'),
+        ({"a": "foo\nbar"}, '"a": |-\n  foo\n  bar\n'),
         ({"a": {"a1": "1"}}, '"a":\n  "a1": "1"\n'),
         ({"a": {"a1": 1}}, '"a":\n  "a1": 1\n'),
     ],
