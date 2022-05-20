@@ -47,6 +47,9 @@ SECRET_KEY = "jllc(^rzpe8_udv)oadny2j3ym#qd^x^3ns11_8kq(1rf8qpd2"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# 社区版本
+COMMUNITY_EDITION = 'ce'
+
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [

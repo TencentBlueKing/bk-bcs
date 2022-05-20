@@ -14,7 +14,7 @@ import sys
 
 from ..base import *  # noqa
 
-REGION = 'ce'
+EDITION = COMMUNITY_EDITION
 
 # ******************************** Django 原始配置 ********************************
 APP_ID = os.environ.get('BKPAAS_APP_ID')

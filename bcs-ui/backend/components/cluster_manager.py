@@ -70,7 +70,7 @@ class ClusterManagerClient(BkApiClient):
         :return: 返回共享集群列表
         """
         # TODO 功能同步后去除
-        if settings.REGION == 'ce':
+        if settings.EDITION == settings.COMMUNITY_EDITION:
             return {'code': 0, 'data': []}
 
         url = self._config.get_shared_clusters_url

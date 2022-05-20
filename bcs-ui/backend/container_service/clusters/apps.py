@@ -13,6 +13,19 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.apps import AppConfig
+from django.conf import settings
+
+from backend.packages.blue_krill.data_types import enum
+
+from .featureflag.featflags import cluster_mgr
+
+
+def register_to_app():
+    """注册额外的功能"""
+    ext_feature_flags = [enum.FeatureFlagField(name='CLOUDTOKEN', label='云凭证', default=True)]
+    for ext_feat_flag in ext_feature_flags:
+        cluster_mgr.GlobalClusterFeatureFlag.register_feature_flag(ext_feat_flag)
+        cluster_mgr.SingleClusterFeatureFlag.register_feature_flag(ext_feat_flag)
 
 
 class ClusterConfig(AppConfig):
@@ -22,6 +35,9 @@ class ClusterConfig(AppConfig):
 
     def ready(self):
         # Multi-editions specific start
+        if settings.EDITION == settings.COMMUNITY_EDITION:
+            register_to_app()
+            return
 
         try:
             from .apps_ext import contribute_to_app

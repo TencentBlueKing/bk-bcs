@@ -313,7 +313,7 @@ class VueTemplateView(APIView):
     # TODO 重构优化逻辑
     """
 
-    template_name = f"{settings.REGION}/index.html"
+    template_name = f"{settings.EDITION}/index.html"
 
     container_orchestration = ""
     request_url_suffix = ""
@@ -423,7 +423,7 @@ class VueTemplateView(APIView):
             "STATIC_URL": settings.SITE_STATIC_URL,
             # 去除开头的 . document.domain需要
             "SESSION_COOKIE_DOMAIN": session_cookie_domain.lstrip("."),
-            "REGION": settings.REGION,
+            "REGION": settings.EDITION,
             "BK_CC_HOST": settings.BK_CC_HOST,
             "SITE_URL": settings.SITE_URL[:-1],
             "BK_IAM_APP_URL": settings.BK_IAM_APP_URL,
@@ -462,7 +462,7 @@ class VueTemplateView(APIView):
 
 
 class LoginSuccessView(APIView):
-    template_name = f"{settings.REGION}/login_success.html"
+    template_name = f"{settings.EDITION}/login_success.html"
     renderer_classes = [TemplateHTMLRenderer]
     # 去掉权限控制
     permission_classes = ()
