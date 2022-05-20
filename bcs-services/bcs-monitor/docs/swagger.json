@@ -1,0 +1,154 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "BCS-Monitor OpenAPI",
+        "contact": {}
+    },
+    "basePath": "/bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId",
+    "paths": {
+        "/namespaces/:namespace/pods/:pod/containers": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pod"
+                ],
+                "summary": "获取 Pod 容器列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/k8sclient.Container"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/:namespace/pods/:pod/logs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pod"
+                ],
+                "summary": "查询容器日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "容器名称",
+                        "name": "container_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "是否使用上一次日志, 异常退出使用",
+                        "name": "previous",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/k8sclient.Log"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/:namespace/pods/:pod/logs/download": {
+            "get": {
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Pod"
+                ],
+                "summary": "下载日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "容器名称",
+                        "name": "container_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "是否使用上一次日志, 异常退出使用",
+                        "name": "previous",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/:namespace/pods/:pod/logs/stream": {
+            "get": {
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "Pod"
+                ],
+                "summary": "SSE 实时日志流",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "容器名称",
+                        "name": "container_name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "k8sclient.Container": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "k8sclient.Log": {
+            "type": "object",
+            "properties": {
+                "log": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

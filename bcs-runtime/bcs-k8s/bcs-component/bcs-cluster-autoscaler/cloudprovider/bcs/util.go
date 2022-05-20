@@ -115,9 +115,6 @@ func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanag
 		}
 	}
 
-	if len(EncryptionKey) == 0 {
-		return nil, nil, fmt.Errorf("Can not get EncryptionKey")
-	}
 	operator := os.Getenv("Operator")
 	if len(operator) == 0 {
 		return nil, nil, fmt.Errorf("Can not get Operator")
@@ -126,17 +123,25 @@ func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanag
 	if len(url) == 0 {
 		return nil, nil, fmt.Errorf("Can not get BcsApiAddress")
 	}
-	url, err := AesDecrypt(url, EncryptionKey)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Can not decrypt BcsApiAddress: %s", err.Error())
-	}
 	token := os.Getenv("BcsToken")
 	if len(token) == 0 {
 		return nil, nil, fmt.Errorf("Can not get BcsToken")
 	}
-	token, err = AesDecrypt(token, EncryptionKey)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Can not decrypt BcsToken: %s", err.Error())
+
+	var err error
+	encryption := os.Getenv("Encryption")
+	if encryption == "yes" {
+		if len(EncryptionKey) == 0 {
+			return nil, nil, fmt.Errorf("Can not get EncryptionKey")
+		}
+		url, err = AesDecrypt(url, EncryptionKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Can not decrypt BcsApiAddress: %s", err.Error())
+		}
+		token, err = AesDecrypt(token, EncryptionKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Can not decrypt BcsToken: %s", err.Error())
+		}
 	}
 
 	var client clustermanager.NodePoolClientInterface
@@ -145,7 +150,7 @@ func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanag
 		return nil, nil, fmt.Errorf("Can not build NodePoolClient")
 	}
 
-	return newNodeGroupCache(func(ng string) ([]*clustermanager.Node, error) {
+	return NewNodeGroupCache(func(ng string) ([]*clustermanager.Node, error) {
 		return client.GetNodes(ng)
 	}), client, nil
 }
@@ -210,7 +215,7 @@ func convertResource(lc *clustermanager.LaunchConfiguration) map[apiv1.ResourceN
 	resources := map[apiv1.ResourceName]resource.Quantity{}
 	resources[apiv1.ResourceCPU] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
 	resources[apiv1.ResourceMemory] = resource.MustParse(fmt.Sprintf("%v", lc.Mem) + "Gi")
-	resources["gpu"] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
+	resources["gpu"] = resource.MustParse(fmt.Sprintf("%v", lc.GPU))
 	return resources
 }
 

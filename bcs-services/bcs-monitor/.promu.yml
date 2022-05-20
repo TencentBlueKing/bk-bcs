@@ -1,0 +1,21 @@
+go:
+  version: 1.17
+  cgo: false
+repository:
+  path: github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
+build:
+  binaries:
+    - name: bcs-monitor
+      path: cmd/bcs-monitor
+  flags: -tags netgo -trimpath
+  ldflags: |
+    -X github.com/prometheus/common/version.Version={{.Version}}
+    -X github.com/prometheus/common/version.Revision={{.Revision}}
+    -X github.com/prometheus/common/version.Branch={{.Branch}}
+    -X github.com/prometheus/common/version.BuildUser={{user}}@{{host}}
+    -X github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
+crossbuild:
+  platforms:
+    - linux/amd64
+    - darwin/amd64
+    - windows/amd64

@@ -69,6 +69,8 @@ func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 					return errorx.NewAuthErr("not found username from header")
 				}
 			}
+			// 注入client ID
+			ctx = context.WithValue(ctx, ctxkey.ClientID, authUser.ClientID)
 		}
 		ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 		return fn(ctx, req, rsp)

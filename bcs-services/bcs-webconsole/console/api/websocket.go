@@ -87,10 +87,6 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		return
 	}
 
-	start := time.Now()
-	metrics.CollectWsConnection(podCtx.Namespace, podCtx.PodName, start)
-	defer metrics.CollectCloseWs(podCtx.Namespace, podCtx.PodName)
-
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, initTerminalSize)
 	connected = true
@@ -119,11 +115,27 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		defer stop()
 
 		// 关闭需要主动发送 Ctrl-D 命令
-		bcsConf := podmanager.GetBCSConfByClusterId(podCtx.AdminClusterId)
-		return remoteStreamConn.WaitStreamDone(bcsConf, podCtx)
+		return remoteStreamConn.WaitStreamDone(podCtx)
 	})
 
-	if err := eg.Wait(); err != nil {
+	// 封装一个独立函数, 统计耗时
+	if err := func() error {
+		start := time.Now()
+
+		// 单独统计 ws metrics
+		metrics.CollectWsConnection(podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName, podCtx.ContainerName)
+		metrics.CollectWsConnectionOnline(1)
+
+		defer func() {
+			// 过滤掉 ws 长链接时间
+			wsConnDuration := time.Since(start)
+			metrics.SetRequestIgnoreDuration(c, wsConnDuration)
+
+			metrics.CollectWsConnectionOnline(-1)
+		}()
+
+		return eg.Wait()
+	}(); err != nil {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, err)
 		return
 	}

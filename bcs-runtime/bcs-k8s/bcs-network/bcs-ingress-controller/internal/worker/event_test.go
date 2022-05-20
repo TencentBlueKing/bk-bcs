@@ -27,6 +27,7 @@ import (
 func TestListenerEvent(t *testing.T) {
 	var arr []ListenerEvent
 	var wg sync.WaitGroup
+	lock := &sync.Mutex{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
@@ -41,7 +42,9 @@ func TestListenerEvent(t *testing.T) {
 				t.Errorf("failed")
 			}
 			time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
+			lock.Lock()
 			arr = append(arr, *newEvent)
+			lock.Unlock()
 			wg.Done()
 		}()
 	}

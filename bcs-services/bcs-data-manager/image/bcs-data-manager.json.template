@@ -1,0 +1,61 @@
+{
+  "log_dir": "${log_dir}",
+  "v": "${bcsDataManagerVerbosity}",
+  "alsologtostderr": true,
+  "appCode":"${bcsDataManagerAppCode}",
+  "appSecret":"${bcsDataManagerAppSecret}",
+  "bcsApiConf":{
+    "bcsApiGatewayUrl": "${bcsApiGatewayUrl}",
+    "oldBcsApiGwUrl":"${oldBcsApiGwUrl}",
+    "adminToken": "${bcsAdminToken}",
+    "grpcGwAddress":"${grpcGwAddress}"
+  },
+  "filterRules":{
+    "needFilter": ${needFilter},
+    "clusterIDs":"${selectClusterID}"
+  },
+  "queueConfig":{
+    "queue_flag": true,
+    "queue_address":"${dataManagerQueueAddress}",
+    "exchange_name":"${dataManagerExchange}",
+    "clusterID":"${queueClusterId}",
+    "connectTimeout":"${queueConnectTimeout}",
+    "connectRetry": true,
+    "publishDelivery":"${publishDelivery}",
+    "queueArguments":"${queueArguments}"
+  },
+  "handleConfig":{
+    "concurrency": ${concurrency},
+    "chanQueueLen": ${chanQueueLen}
+  },
+  "mongoConf": {
+      "endpoints": "${bcsDataManagerMongoAddress}",
+      "connecttimeout": ${bcsDataManagerMongoConnectTimeout},
+      "database": "${bcsDataManagerMongoDatabase}",
+      "username": "${bcsDataManagerMongoUsername}",
+      "password": "${bcsDataManagerMongoPassword}"
+  },
+  "bcsMonitorConf":{
+      "schema":"${bcsMonitorSchema}",
+      "endpoints":"${bcsMonitorEndpoints}",
+      "user":"${bcsMonitorUser}",
+      "password":"${bcsMonitorPassword}"
+  },
+  "etcd": {
+      "endpoints": "${bcsEtcdHost}",
+      "cert": "${bcsEtcdCertFile}",
+      "key": "${bcsEtcdKeyFile}",
+      "ca": "${bcsEtcdCAFile}"
+  },
+  "address": "${localIp}",
+  "port": ${bcsDataManagerPort},
+  "httpport": ${bcsDataManagerHTTPPort},
+  "metricport": ${bcsDataManagerMetricPort},
+  "serverca": "${caFile}",
+  "servercert": "${serverCertFile}",
+  "serverkey": "${serverKeyFile}",
+  "clientca": "${caFile}",
+  "clientcert": "${clientCertFile}",
+  "clientkey": "${clientKeyFile}",
+  "debug": ${bcsDataManagerDebug}
+}

@@ -38,11 +38,11 @@ type NamespacedLB struct {
 	nsClientSet map[string]cloud.LoadBalance
 
 	// func for create cloud.LoadBalance
-	newLBFunc func(*k8scorev1.Secret) (cloud.LoadBalance, error)
+	newLBFunc func(*k8scorev1.Secret, client.Client) (cloud.LoadBalance, error)
 }
 
 // NewNamespacedLB create namespaced lb client
-func NewNamespacedLB(k8sClient client.Client, newLBFunc func(*k8scorev1.Secret) (cloud.LoadBalance, error)) *NamespacedLB {
+func NewNamespacedLB(k8sClient client.Client, newLBFunc func(secret *k8scorev1.Secret, cli client.Client) (cloud.LoadBalance, error)) *NamespacedLB {
 	return &NamespacedLB{
 		k8sClient:   k8sClient,
 		nsClientSet: make(map[string]cloud.LoadBalance),
@@ -61,7 +61,7 @@ func (nc *NamespacedLB) initNsClient(ns string) (cloud.LoadBalance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
 	}
-	newClient, err := nc.newLBFunc(tmpSecret)
+	newClient, err := nc.newLBFunc(tmpSecret, nc.k8sClient)
 	if err != nil {
 		return nil, fmt.Errorf("create client for ns %s failed, err %s", ns, err.Error())
 	}

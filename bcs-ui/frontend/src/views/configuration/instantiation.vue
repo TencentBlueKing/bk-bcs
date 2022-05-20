@@ -254,7 +254,7 @@
                         <div class="content-trigger" @click="triggerHandler(item, index)">
                             <div class="left-area" style="border-right: none;">
                                 <div class="label">
-                                    <span :class="['biz-env-label mr5', { 'stag': item.environment !== 'prod', 'prod': item.environment === 'prod' }]">{{item.environment_name}}</span>
+                                    <span :class="['biz-env-label mr5', { 'stag': item.environment !== 'prod', 'prod': item.environment === 'prod' }]">{{item.environment === 'prod' ? $t('正式') : $t('测试')}}</span>
                                     <span class="biz-text-wrapper" style="max-width: 300px;">{{item.name}}</span>
                                     <span class="choose-num">{{$t('已经选择')}} {{item.results.filter(ns => ns.isChoose).length}} {{$t('个1')}}</span>
                                 </div>

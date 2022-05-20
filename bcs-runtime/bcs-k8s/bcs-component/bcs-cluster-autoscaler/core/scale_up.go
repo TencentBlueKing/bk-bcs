@@ -262,15 +262,27 @@ func maxResourceLimitReached(resources []string) *skippedReasons {
 // false if it didn't and error if an error occurred. Assumes that all nodes in the cluster are
 // ready and in sync with instance groups.
 func ScaleUp(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
-	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
+	clusterStateRegistry *clusterstate.ClusterStateRegistry, originUnschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	ignoredTaints taintKeySet, existingNodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	bufferNotEnough bool) (*status.ScaleUpStatus, errors.AutoscalerError) {
 	// From now on we only care about unschedulable pods that were marked after the newest
 	// node became available for the scheduler.
-	if len(unschedulablePods) == 0 && !bufferNotEnough {
+	if len(originUnschedulablePods) == 0 && !bufferNotEnough {
 		klog.V(1).Info("No unschedulable pods")
 		return &status.ScaleUpStatus{Result: status.ScaleUpNotNeeded}, nil
+	}
+
+	// 去除 eip 资源
+	unschedulablePods := make([]*apiv1.Pod, 0)
+	for i := range originUnschedulablePods {
+		pod := originUnschedulablePods[i].DeepCopy()
+		for j := range pod.Spec.Containers {
+			delete(pod.Spec.Containers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+		}
+		unschedulablePods = append(unschedulablePods, pod)
 	}
 
 	now := time.Now()

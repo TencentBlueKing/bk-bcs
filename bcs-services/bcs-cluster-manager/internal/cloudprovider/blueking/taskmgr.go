@@ -164,7 +164,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	// import cluster currently only has two steps:
 	// 0. import cluster: call blueking import cluster master and node instances from kubeconfig
-	// 1. TODO: install bcs-k8s-watch & agent service
+	// 1. install bcs-k8s-watch & agent service
 	// may be need to call external previous or behind operation by bkops
 
 	// validate request params

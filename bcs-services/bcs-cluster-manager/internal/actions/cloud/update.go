@@ -80,6 +80,15 @@ func (ua *UpdateAction) updateCloud(destCloud *cmproto.Cloud) error {
 	if len(ua.req.Enable) > 0 {
 		destCloud.Enable = ua.req.Enable
 	}
+	if ua.req.NetworkInfo != nil {
+		destCloud.NetworkInfo = ua.req.NetworkInfo
+	}
+	if ua.req.ConfInfo != nil {
+		destCloud.ConfInfo = ua.req.ConfInfo
+	}
+	if ua.req.PlatformInfo != nil {
+		destCloud.PlatformInfo = ua.req.PlatformInfo
+	}
 
 	return ua.model.UpdateCloud(ua.ctx, destCloud)
 }

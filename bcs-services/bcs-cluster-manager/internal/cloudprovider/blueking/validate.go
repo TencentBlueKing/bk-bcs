@@ -64,7 +64,7 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 	kubeRet := base64.StdEncoding.EncodeToString([]byte(req.CloudMode.KubeConfig))
 	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
-		return fmt.Errorf("%s ImportClusterValidate NewKubeClient failed: %v", err)
+		return fmt.Errorf("%s ImportClusterValidate NewKubeClient failed: %v", cloudName, err)
 	}
 
 	version, err := kubeCli.Discovery().ServerVersion()

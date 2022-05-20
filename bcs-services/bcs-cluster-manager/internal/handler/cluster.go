@@ -38,6 +38,22 @@ func (cm *ClusterManager) CreateCluster(ctx context.Context,
 	return nil
 }
 
+// CheckCloudKubeConfig implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CheckCloudKubeConfig(ctx context.Context,
+	req *cmproto.KubeConfigReq, resp *cmproto.KubeConfigResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := clusterac.NewCheckKubeAction()
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("CheckCloudKubeConfig", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CheckCloudKubeConfig, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ImportCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ImportCluster(ctx context.Context,
 	req *cmproto.ImportClusterReq, resp *cmproto.ImportClusterResp) error {
@@ -154,12 +170,29 @@ func (cm *ClusterManager) ListCluster(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := clusterac.NewListAction(cm.model)
+	ca := clusterac.NewListAction(cm.model, cm.iam)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListCommonCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCommonCluster(ctx context.Context,
+	req *cmproto.ListCommonClusterReq, resp *cmproto.ListCommonClusterResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewListCommonClusterAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCommonCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCommonCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCommonCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

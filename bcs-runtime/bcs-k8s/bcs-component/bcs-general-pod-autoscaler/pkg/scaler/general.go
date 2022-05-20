@@ -43,6 +43,7 @@ import (
 	"k8s.io/klog"
 
 	autoscaling "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	autoscalingscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/clientset/versioned/scheme"
 	autoscalingclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
 	autoscalinginformers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/informers/externalversions/autoscaling/v1alpha1"
 	autoscalinglisters "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/listers/autoscaling/v1alpha1"
@@ -121,12 +122,11 @@ func NewGeneralController(
 	delayOfInitialReadinessStatus time.Duration,
 
 ) *GeneralController {
-	s := scheme.Scheme
-	s.AddKnownTypes(autoscaling.SchemeGroupVersion, &autoscaling.GeneralPodAutoscaler{})
+	_ = autoscalingscheme.AddToScheme(scheme.Scheme)
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartLogging(klog.Infof)
 	broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: evtNamespacer.Events(v1.NamespaceAll)})
-	recorder := broadcaster.NewRecorder(s, v1.EventSource{Component: "pod-autoscaler"})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "pod-autoscaler"})
 
 	gpaController := &GeneralController{
 		eventRecorder:                recorder,
@@ -566,7 +566,8 @@ func (a *GeneralController) reconcileKey(key string) (deleted bool, err error) {
 	return false, a.reconcileAutoscaler(gpa, key)
 }
 
-// computeStatusForObjectMetric computes the desired number of replicas for the specified metric of type ObjectMetricSourceType.
+// computeStatusForObjectMetric computes the desired number of replicas for
+// the specified metric of type ObjectMetricSourceType.
 func (a *GeneralController) computeStatusForObjectMetric(
 	specReplicas,
 	statusReplicas int32,
@@ -656,7 +657,8 @@ func (a *GeneralController) computeStatusForObjectMetric(
 	return 0, time.Time{}, "", condition, err
 }
 
-// computeStatusForPodsMetric computes the desired number of replicas for the specified metric of type PodsMetricSourceType.
+// computeStatusForPodsMetric computes the desired number of replicas for the specified metric of
+// type PodsMetricSourceType.
 func (a *GeneralController) computeStatusForPodsMetric(
 	currentReplicas int32,
 	metricSpec autoscaling.MetricSpec,
@@ -699,7 +701,8 @@ func (a *GeneralController) computeStatusForPodsMetric(
 		autoscaling.GeneralPodAutoscalerCondition{}, nil
 }
 
-// computeStatusForResourceMetric computes the desired number of replicas for the specified metric of type ResourceMetricSourceType.
+// computeStatusForResourceMetric computes the desired number of replicas for the specified metric of
+// type ResourceMetricSourceType.
 func (a *GeneralController) computeStatusForResourceMetric(
 	currentReplicas int32,
 	metricSpec autoscaling.MetricSpec,
@@ -819,7 +822,8 @@ func (a *GeneralController) computeForContainerResourceMetric(
 	return replicaCountProposal, timestampProposal, metricNameProposal, condition, nil
 }
 
-// computeStatusForExternalMetric computes the desired number of replicas for the specified metric of type ExternalMetricSourceType.
+// computeStatusForExternalMetric computes the desired number of replicas for the specified metric of
+// type ExternalMetricSourceType.
 func (a *GeneralController) computeStatusForExternalMetric(
 	specReplicas,
 	statusReplicas int32,
@@ -904,6 +908,9 @@ func (a *GeneralController) recordInitialRecommendation(currentReplicas int32, k
 }
 
 func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutoscaler, key string) error {
+	// set default value, call Default() function will invoke scheme's defaulterFuncs
+	scheme.Scheme.Default(gpa)
+
 	// make a copy so that we never mutate the shared informer cache (conversion can mutate the object)
 	gpaStatusOriginal := gpa.Status.DeepCopy()
 
@@ -1018,7 +1025,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 				metricDesiredReplicas, metricName, metricTimestamp, reference)
 		}
 
-		// get replicas from time/webhook/cron/event mode
+		// get replicas from time/webhook mode
 		simpleReplicas, simpleName, simpleStatuses, simpleTimestamp, simpleErr := a.computeReplicasForSimple(gpa,
 			scale)
 		if simpleErr != nil {
@@ -1038,11 +1045,11 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			metricDesiredReplicas, metricName, metricStatuses, metricTimestamp = simpleReplicas, simpleName,
 				simpleStatuses, simpleTimestamp
 		}
-		// if all mode can not give a valid replicas, use previous desired replicas
+		// if all mode can not give a valid replicas, use scale spec replicas
 		if metricDesiredReplicas == -1 {
-			metricDesiredReplicas = gpa.Status.DesiredReplicas
+			metricDesiredReplicas = scale.Spec.Replicas
 		}
-		klog.Infof("All-Mode: the desired replicas is %d", metricDesiredReplicas)
+		klog.V(4).Infof("All-Mode: the desired replicas is %d", metricDesiredReplicas)
 
 		//Record event when the metricDesiredReplicas is greater than gpa.Spec.MaxReplicas
 		if metricDesiredReplicas > gpa.Spec.MaxReplicas {
@@ -1168,8 +1175,8 @@ func (a *GeneralController) stabilizeRecommendation(key string, prenormalizedDes
 	return maxRecommendation
 }
 
-// normalizeDesiredReplicas takes the metrics desired replicas value and normalizes it based on the appropriate conditions (i.e. < maxReplicas, >
-// minReplicas, etc...)
+// normalizeDesiredReplicas takes the metrics desired replicas value and normalizes it based on
+// the appropriate conditions (i.e. < maxReplicas, > minReplicas, etc...)
 func (a *GeneralController) normalizeDesiredReplicas(gpa *autoscaling.GeneralPodAutoscaler,
 	key string, currentReplicas int32, prenormalizedDesiredReplicas int32, minReplicas int32) int32 {
 	stabilizedRecommendation := a.stabilizeRecommendation(key, prenormalizedDesiredReplicas)
@@ -1669,9 +1676,9 @@ func (a *GeneralController) updateStatus(gpa *autoscaling.GeneralPodAutoscaler) 
 	return nil
 }
 
-// pathStatus actually does the patch request for the status of the given GPA
+// patchStatus actually does the patch request for the status of the given GPA
 // do this because updateStatus is not supported by crd
-func (a *GeneralController) pathStatus(gpa *autoscaling.GeneralPodAutoscaler, patch []byte) error {
+func (a *GeneralController) patchStatus(gpa *autoscaling.GeneralPodAutoscaler, patch []byte) error {
 	_, err := a.gpaNamespacer.GeneralPodAutoscalers(gpa.Namespace).Patch(gpa.Name, types.MergePatchType, patch)
 	if err != nil {
 		a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedUpdateStatus", err.Error())

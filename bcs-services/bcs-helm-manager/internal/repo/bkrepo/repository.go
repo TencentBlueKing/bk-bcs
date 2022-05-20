@@ -110,6 +110,10 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 }
 
 func (rh *repositoryHandler) getRepoURL() string {
+	if rh.repoType == repo.RepositoryTypeOCI {
+		return rh.getOciUrl("/" + rh.projectID + "/" + rh.repository)
+	}
+
 	return rh.getUri("/helm/" + rh.projectID + "/" + rh.repository)
 }
 

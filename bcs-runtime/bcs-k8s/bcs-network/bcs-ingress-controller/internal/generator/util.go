@@ -203,6 +203,11 @@ func MatchLbStrWithID(lbID string) bool {
 		return true
 	}
 
+	// match gcp region:addressName
+	if len(strings.Split(lbID, ":")) == 2 {
+		return true
+	}
+
 	// match aws arn
 	return arn.IsARN(lbID)
 }
