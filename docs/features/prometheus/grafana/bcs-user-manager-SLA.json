@@ -1,0 +1,391 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 42,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2|GetRegisterToken|CreateToken| GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\",status=\"success\"})/sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2|GetRegisterToken|CreateToken|GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\"})",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "权限和token管理成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2\",status=\"success\"})/sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2\"})",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "权限管理成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GetRegisterToken|CreateToken|GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\",status=\"success\"})/sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GetRegisterToken|CreateToken|GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\"})",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "token管理成功率",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_usermanager_api_request_latency_time_bucket{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2|GetRegisterToken|CreateToken| GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\",le=\"0.256\",status=\"success\"})/sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2|GetRegisterToken|CreateToken|GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\",status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "权限和token管理延迟<256ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_usermanager_api_request_latency_time_bucket{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2\",le=\"0.256\",status=\"success\"})/sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GrantPermission|GetPermission|RevokePermission|VerifyPermission|VerifyPermissionV2\",status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "权限管理延迟<256ms",
+      "type": "stat"
+    },
+    {
+      "datasource": "prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "sum(bkbcs_usermanager_api_request_latency_time_bucket{handler=~\"GetRegisterToken|CreateToken|GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\",le=\"0.256\",status=\"success\"})/sum(bkbcs_usermanager_api_request_latency_time_count{handler=~\"GetRegisterToken|CreateToken|GetToken|DeleteToken|UpdateToken|CreateTempToken|CreateClientToken|RefreshPlainToken|RefreshSaasToken\",status=\"success\"})",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "token管理延迟<256ms",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "user-manager SLA",
+  "uid": "0qxsx_u7k",
+  "version": 2
+}
