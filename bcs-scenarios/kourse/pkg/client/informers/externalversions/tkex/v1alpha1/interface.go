@@ -16,7 +16,7 @@
 package v1alpha1
 
 import (
-	internalinterfaces "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

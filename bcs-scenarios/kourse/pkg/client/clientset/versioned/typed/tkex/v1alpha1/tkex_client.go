@@ -16,8 +16,8 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
-	"github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/scheme"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

@@ -18,7 +18,7 @@ package versioned
 import (
 	"fmt"
 
-	tkexv1alpha1 "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

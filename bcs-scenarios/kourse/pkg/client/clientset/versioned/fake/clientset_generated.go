@@ -16,9 +16,9 @@
 package fake
 
 import (
-	clientset "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
-	tkexv1alpha1 "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
-	faketkexv1alpha1 "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1/fake"
+	clientset "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
+	faketkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

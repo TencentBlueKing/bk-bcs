@@ -16,8 +16,8 @@
 package tkex
 
 import (
-	internalinterfaces "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/tkex/v1alpha1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/tkex/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

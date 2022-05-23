@@ -16,7 +16,7 @@
 package fake
 
 import (
-	tkexv1alpha1 "github.com/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
