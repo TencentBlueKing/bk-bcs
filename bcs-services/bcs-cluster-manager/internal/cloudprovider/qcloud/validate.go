@@ -69,8 +69,9 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 			return fmt.Errorf("%s ImportClusterValidate GetTKECluster[%s] failed: %v", cloudName,
 				req.CloudMode.CloudID, err)
 		}
-
 		blog.Infof("%s ImportClusterValidate CloudMode CloudID[%s] success", cloudName, req.CloudMode.CloudID)
+
+		return nil
 	}
 
 	if req.CloudMode.KubeConfig != "" {
@@ -94,6 +95,20 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		}
 
 		blog.Infof("%s ImportClusterValidate CloudMode connect cluster ByKubeConfig success", cloudName)
+	}
+
+	return nil
+}
+
+// ImportCloudAccountValidate create cloudAccount account validation
+func (c *CloudValidate) ImportCloudAccountValidate(req *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ImportCloudAccountValidate request is empty", cloudName)
+	}
+
+	if len(req.SecretID) == 0 || len(req.SecretKey) == 0 {
+		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
 	}
 
 	return nil

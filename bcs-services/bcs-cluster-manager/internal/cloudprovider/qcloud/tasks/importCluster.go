@@ -82,7 +82,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
 	return nil
@@ -94,27 +94,27 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s get detail task information from storage failed, %s. "+
+		blog.Errorf("RegisterClusterKubeConfigTask[%s]: task %s get detail task information from storage failed, %s. "+
 			"task retry", taskID, taskID, err.Error())
 		return err
 	}
 
 	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
 	if state.IsTerminated() {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
+		blog.Errorf("RegisterClusterKubeConfigTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
 		return fmt.Errorf("task %s terminated", taskID)
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("RegisterClusterKubeConfigTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
 		return err
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("ImportClusterNodesTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("RegisterClusterKubeConfigTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("ImportClusterNodesTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+	blog.Infof("RegisterClusterKubeConfigTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
@@ -123,7 +123,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
+		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -134,7 +134,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	// 社区版本 TKE共有云导入获取集群kubeConfig并进行配置
 	err = registerTKEExternalClusterEndpoint(ctx, basicInfo)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: getTKEExternalClusterEndpoint failed: %v", taskID, err)
+		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getTKEExternalClusterEndpoint failed: %v", taskID, err)
 		retErr := fmt.Errorf("getTKEExternalClusterEndpoint failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -142,7 +142,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("RegisterClusterKubeConfigTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
 	return nil
@@ -165,10 +165,12 @@ func registerTKEExternalClusterEndpoint(ctx context.Context, data *cloudprovider
 		return fmt.Errorf("taskID[%s] GetClusterEndpointStatus[%s] failed: %v", taskID, data.Cluster.ClusterID, err.Error())
 	}
 
+	blog.Infof("taskID[%s] registerTKEExternalClusterEndpoint endpointStatus[%s]", taskID, endpointStatus.Status())
+
 	switch {
 	case endpointStatus.Created():
 		return importClusterCredential(ctx, data)
-	case endpointStatus.NotFound():
+	case endpointStatus.NotFound(), endpointStatus.Deleted():
 		err = tkeCli.CreateClusterEndpoint(data.Cluster.SystemID)
 		if err != nil {
 			return err
@@ -212,6 +214,8 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 				taskID, data.Cluster.SystemID, status)
 			return nil
 		case status.Created():
+			blog.Infof("taskID[%s] GetClusterEndpointStatus[%s] status[%s]",
+				taskID, data.Cluster.SystemID, status)
 			return cloudprovider.EndLoop
 		default:
 			return nil
@@ -282,6 +286,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,
 		ClusterVPCID: data.Cluster.VpcID,
+		ClusterID:    data.Cluster.ClusterID,
 	})
 	if err != nil {
 		return err

@@ -37,7 +37,6 @@ type CreateAction struct {
 
 	cluster *cmproto.Cluster
 	cloud   *cmproto.Cloud
-	project *cmproto.Project
 }
 
 // NewCreateAction create namespace action
@@ -62,15 +61,15 @@ func (ca *CreateAction) getRelativeResource() error {
 		ca.req.Provider = cluster.Provider
 	}
 
-	cloud, project, err := actions.GetProjectAndCloud(ca.model, cluster.ProjectID, ca.req.Provider)
+	cloud, err := actions.GetCloudByCloudID(ca.model, ca.req.Provider)
 	if err != nil {
-		blog.Errorf("can not get relative Cloud %s or Project %s when create NodeGroup for Cluster %s, %s",
-			ca.req.Provider, ca.req.Provider, ca.req.ClusterID, err.Error(),
+		blog.Errorf("can not get relative Cloud %s when create NodeGroup for Cluster %s, %s",
+			ca.req.Provider, ca.req.ClusterID, err.Error(),
 		)
 		return err
 	}
 	ca.cloud = cloud
-	ca.project = project
+
 	return nil
 }
 
@@ -134,7 +133,10 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	cmOption, err := cloudprovider.GetCredential(ca.project, ca.cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get Credential for Cloud %s/%s when create NodeGroup for cluster %s failed, %s",
 			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),

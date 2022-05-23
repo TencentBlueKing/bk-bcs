@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/google/uuid"
 )
@@ -125,7 +126,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	taskName := fmt.Sprintf(createClusterTaskTemplate, cls.ClusterID)
 	task.CommonParams["taskName"] = taskName
 
-	passwd := cloudprovider.BuildInstancePwd()
+	passwd := utils.BuildInstancePwd()
 	task.CommonParams["Password"] = passwd
 	// preAction bkops
 
@@ -306,7 +307,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams["operator"] = opt.Operator
-	task.CommonParams["JobType"] = cloudprovider.ImportCluster.String()
+	task.CommonParams["JobType"] = cloudprovider.ImportClusterJob.String()
 
 	return task, nil
 }
@@ -464,7 +465,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	taskName := fmt.Sprintf(tkeAddNodeTaskTemplate, cls.ClusterID)
 	task.CommonParams["taskName"] = taskName
 
-	passwd := cloudprovider.BuildInstancePwd()
+	passwd := utils.BuildInstancePwd()
 	task.CommonParams["Password"] = passwd
 
 	// setting all steps details

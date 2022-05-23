@@ -21,17 +21,47 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
-// GetProjectAndCloud get relative cloud & project information
-func GetProjectAndCloud(model store.ClusterManagerModel,
-	projectID, cloudID string) (*proto.Cloud, *proto.Project, error) {
-	//get relative Project for information injection
-	project, err := model.GetProject(context.Background(), projectID)
+// GetCloudAndCluster get relative cloud & cluster information
+func GetCloudAndCluster(model store.ClusterManagerModel,
+	cloudID string, clusterID string) (*proto.Cloud, *proto.Cluster, error) {
+	//get relative Cluster for information injection
+	cluster, err := model.GetCluster(context.Background(), clusterID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("project %s err, %s", projectID, err.Error())
+		return nil, nil, fmt.Errorf("cluster %s err, %s", clusterID, err.Error())
 	}
 	cloud, err := model.GetCloud(context.Background(), cloudID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cloud %s err, %s", cloudID, err.Error())
 	}
-	return cloud, project, nil
+	return cloud, cluster, nil
+}
+
+// GetCloudByCloudID get cloud info
+func GetCloudByCloudID(model store.ClusterManagerModel, cloudID string) (*proto.Cloud, error) {
+	cloud, err := model.GetCloud(context.Background(), cloudID)
+	if err != nil {
+		return nil, fmt.Errorf("cloud %s err, %s", cloudID, err.Error())
+	}
+
+	return cloud, nil
+}
+
+// GetProjectByProjectID get project info
+func GetProjectByProjectID(model store.ClusterManagerModel, projectID string) (*proto.Project, error) {
+	project, err := model.GetProject(context.Background(), projectID)
+	if err != nil {
+		return nil, fmt.Errorf("project %s err, %s", projectID, err.Error())
+	}
+
+	return project, nil
+}
+
+// GetClusterInfoByClusterID get cluster info
+func GetClusterInfoByClusterID(model store.ClusterManagerModel, clusterID string) (*proto.Cluster, error) {
+	cluster, err := model.GetCluster(context.Background(), clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("project %s err, %s", clusterID, err.Error())
+	}
+
+	return cluster, nil
 }

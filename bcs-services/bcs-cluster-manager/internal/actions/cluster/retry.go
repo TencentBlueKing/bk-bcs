@@ -88,13 +88,6 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 		ra.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	// get project in order to get credential information
-	project, err := ra.model.GetProject(ctx, cls.ProjectID)
-	if err != nil {
-		blog.Errorf("get cluster %s relative Project %s failed, %s", req.ClusterID, cls.ProjectID, err.Error())
-		ra.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
 
 	// Create Cluster by CloudProvider, underlay cloud cluster manager interface
 	provider, err := cloudprovider.GetClusterMgr(cloud.CloudProvider)
@@ -117,9 +110,12 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 
 	// project save cloud credential info
 	// first, get cloud credentialInfo from project; second, get from cloud provider when failed to obtain
-	coption, err := cloudprovider.GetCredential(project, cloud)
+	coption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
 	if err != nil {
-		blog.Errorf("Get Credential failed from Project %s and Cloud %s: %s", project.ProjectID, cloud.CloudID, err.Error())
+		blog.Errorf("Get Credential failed from Cloud %s: %s", cloud.CloudID, err.Error())
 		ra.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}

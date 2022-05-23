@@ -22,6 +22,11 @@ import (
 
 var nodeManager = &NodeManager{}
 
+var defaultCommonOption = &cloudprovider.CommonOption{
+	Key:    "xxx",
+	Secret: "xxx",
+}
+
 func TestNodeManager_GetCVMImageIDByImageName(t *testing.T) {
 	imageName1 := "Tencent tlinux release 2.2 (Final)"
 	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName1, &cloudprovider.CommonOption{
@@ -37,11 +42,9 @@ func TestNodeManager_GetCVMImageIDByImageName(t *testing.T) {
 }
 
 func TestNodeManager_GetRegionsInfo(t *testing.T) {
-	regions, err := nodeManager.GetRegionsInfo(&cloudprovider.CommonOption{
-		Secret: "xxx",
-		Key:    "xxx",
-		Region: regions.Nanjing,
-	})
+	defaultCommonOption.Region = regions.Nanjing
+
+	regions, err := nodeManager.GetCloudRegions(defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,11 +53,9 @@ func TestNodeManager_GetRegionsInfo(t *testing.T) {
 }
 
 func TestNodeManager_GetZoneList(t *testing.T) {
-	zones, err := nodeManager.GetZoneList(&cloudprovider.CommonOption{
-		Secret: "xxx",
-		Key:    "xxx",
-		Region: regions.Nanjing,
-	})
+	defaultCommonOption.Region = regions.Nanjing
+
+	zones, err := nodeManager.GetZoneList(defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
 	}

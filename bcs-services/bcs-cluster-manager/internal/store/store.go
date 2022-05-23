@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/account"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cloud"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cluster"
@@ -102,6 +103,13 @@ type ClusterManagerModel interface {
 	ListCloudVPC(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudVPC, error)
 	GetCloudVPC(ctx context.Context, cloudID, vpcID string) (*types.CloudVPC, error)
 
+	//cloud account info storage manager
+	CreateCloudAccount(ctx context.Context, account *types.CloudAccount) error
+	UpdateCloudAccount(ctx context.Context, account *types.CloudAccount) error
+	DeleteCloudAccount(ctx context.Context, cloudID string, accountID string) error
+	ListCloudAccount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudAccount, error)
+	GetCloudAccount(ctx context.Context, cloudID, accountID string) (*types.CloudAccount, error)
+
 	//nodegroup information storage management
 	CreateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	UpdateNodeGroup(ctx context.Context, group *types.NodeGroup) error
@@ -147,6 +155,7 @@ type ModelSet struct {
 	*scalingoption.ModelAutoScalingOption
 	*cloudvpc.ModelCloudVPC
 	*operationlog.ModelOperationLog
+	*account.ModelCloudAccount
 }
 
 // NewModelSet create model set
@@ -165,5 +174,6 @@ func NewModelSet(db drivers.DB) ClusterManagerModel {
 		ModelAutoScalingOption: scalingoption.New(db),
 		ModelCloudVPC:          cloudvpc.New(db),
 		ModelOperationLog:      operationlog.New(db),
+		ModelCloudAccount:      account.New(db),
 	}
 }

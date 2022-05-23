@@ -33,6 +33,16 @@ func (es EndpointStatus) NotFound() bool {
 	return es == NotFound
 }
 
+// Deleted status
+func (es EndpointStatus) Deleted() bool {
+	return es == Deleted
+}
+
+// Status return es
+func (es EndpointStatus) Status() string {
+	return string(es)
+}
+
 var (
 	// Created status
 	Created EndpointStatus = "Created"
@@ -40,6 +50,8 @@ var (
 	Creating EndpointStatus = "Creating"
 	// NotFound status
 	NotFound EndpointStatus = "NotFound"
+	// Deleted status
+	Deleted EndpointStatus = "Deleted"
 )
 
 const (

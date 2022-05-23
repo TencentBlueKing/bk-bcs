@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
@@ -35,14 +36,13 @@ const (
 
 // CreateAction action for create cluster
 type CreateAction struct {
-	ctx     context.Context
-	locker  lock.DistributedLock
-	model   store.ClusterManagerModel
-	project *cmproto.Project
-	cloud   *cmproto.Cloud
-	task    *cmproto.Task
-	req     *cmproto.CreateClusterReq
-	resp    *cmproto.CreateClusterResp
+	ctx    context.Context
+	locker lock.DistributedLock
+	model  store.ClusterManagerModel
+	cloud  *cmproto.Cloud
+	task   *cmproto.Task
+	req    *cmproto.CreateClusterReq
+	resp   *cmproto.CreateClusterResp
 }
 
 // NewCreateAction create cluster action
@@ -116,6 +116,7 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		ClusterCategory:         ca.req.ClusterCategory,
 		IsShared:                ca.req.IsShared,
 		Creator:                 ca.req.Creator,
+		CloudAccountID:          ca.req.CloudAccountID,
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 	}
@@ -207,7 +208,10 @@ func (ca *CreateAction) transNodeIPToCloudNode(ip string) (*cmproto.Node, error)
 			ca.cloud.CloudProvider, ca.req.ClusterID, err.Error())
 		return nil, err
 	}
-	cmOption, err := cloudprovider.GetCredential(ca.project, ca.cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.req.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential for cloudprovider %s/%s cluster %s failed, %s",
 			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.req.ClusterID, err.Error())
@@ -320,45 +324,14 @@ func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (ca *CreateAction) getCloudProjectInfo(ctx context.Context, req *cmproto.CreateClusterReq) error {
-	cloud, err := ca.model.GetCloud(ctx, req.Provider)
+func (ca *CreateAction) getCloudInfo(ctx context.Context, req *cmproto.CreateClusterReq) error {
+	cloud, err := actions.GetCloudByCloudID(ca.model, req.Provider)
 	if err != nil {
 		blog.Errorf("get cluster %s relative Cloud %s failed, %s", req.ClusterID, req.CloudID, err.Error())
 		return err
 	}
 	ca.cloud = cloud
 
-	project, err := ca.model.GetProject(ctx, req.ProjectID)
-	if err != nil {
-		blog.Errorf("get cluster %s relative Project %s failed, %s", req.ClusterID, req.ProjectID, err.Error())
-		return err
-	}
-	ca.project = project
-
-	return nil
-}
-
-func (ca *CreateAction) getCloudInfo(ctx context.Context, req *cmproto.CreateClusterReq) error {
-	cloud, err := ca.model.GetCloud(ctx, req.Provider)
-	if err != nil {
-		blog.Errorf("get cluster %s relative Cloud %s failed, %s",
-			req.ClusterID, req.CloudID, err.Error(),
-		)
-		return err
-	}
-
-	ca.cloud = cloud
-	return nil
-}
-
-func (ca *CreateAction) getProjectInfo(ctx context.Context, cls *cmproto.Cluster) error {
-	project, err := ca.model.GetProject(ctx, cls.ProjectID)
-	if err != nil {
-		blog.Errorf("get cluster %s relative Project %s failed, %s", cls.ClusterID, cls.ProjectID, err.Error())
-		return err
-	}
-
-	ca.project = project
 	return nil
 }
 
@@ -430,7 +403,7 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	}
 
 	// get cluster cloud Info
-	err := ca.getCloudProjectInfo(ctx, req)
+	err := ca.getCloudInfo(ctx, req)
 	if err != nil {
 		blog.Errorf("get cluster %s relative Cloud/Project %s failed, %s", req.ClusterID, req.ProjectID, err.Error())
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -529,11 +502,14 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		return err
 	}
 
-	// first, get cloud credentialInfo from project; second, get from cloud provider when failed to obtain
-	coption, err := cloudprovider.GetCredential(ca.project, ca.cloud)
+	// first, get cloud credentialInfo from cloud; second, get cloud credentialInfo from cluster
+	coption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.req.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("Get Credential failed from Project %s and Cloud %s: %s",
-			ca.project.ProjectID, ca.cloud.CloudID, err.Error())
+			ca.req.ProjectID, ca.cloud.CloudID, err.Error())
 		ca.resp.Data = cls
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		// if clean stored cluster information

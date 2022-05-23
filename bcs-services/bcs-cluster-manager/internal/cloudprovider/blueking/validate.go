@@ -77,3 +77,9 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 
 	return nil
 }
+
+// ImportCloudAccountValidate create cloudAccount account validation
+func (c *CloudValidate) ImportCloudAccountValidate(req *proto.Account) error {
+	// blueking cloud not cloud Account
+	return nil
+}

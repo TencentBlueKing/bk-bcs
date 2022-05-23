@@ -145,18 +145,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 		return fmt.Errorf("task %s parameter err", taskID)
 	}
 
-	// clusterInfo
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("AddNodesToClusterTask[%s] get cluster %s for NodeGroup %s to clean Node in task %s step %s failed, %s",
-			taskID, clusterID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cluster %s err, %s", clusterID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
 	// get cloudInfo bu cloudID & get projectInfo by ProjectID
-	cloud, project, err := actions.GetProjectAndCloud(cloudprovider.GetStorageModel(), cluster.ProjectID, cloudID)
+	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
 	if err != nil {
 		blog.Errorf("AddNodesToClusterTask[%s] get cloud/project for NodeGroup %s to clean Node in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -166,7 +156,10 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	}
 
 	// get cloud api_interface dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("AddNodesToClusterTask[%s] get credential for NodeGroup %s to clean Node in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -330,17 +323,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	}
 
 	// handler logic
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("CheckAddNodesStatusTask[%s] get cluster %s for NodeGroup %s to clean Node in task %s step %s failed, %s",
-			taskID, clusterID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cluster %s err, %s", clusterID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// get cloudInfo bu cloudID & get projectInfo by ProjectID
-	cloud, project, err := actions.GetProjectAndCloud(cloudprovider.GetStorageModel(), cluster.ProjectID, cloudID)
+	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
 	if err != nil {
 		blog.Errorf("CheckAddNodesStatusTask[%s] get cloud/project for NodeGroup %s to clean Node in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -350,7 +333,10 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	}
 
 	// get cloud api_interface dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("CheckAddNodesStatusTask[%s] get credential for NodeGroup %s to clean Node in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())

@@ -45,7 +45,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 }
 
 func (ua *UpdateAction) updateCloudNodeGroup(group *cmproto.NodeGroup) error {
-	cloud, project, err := actions.GetProjectAndCloud(ua.model, group.ProjectID, group.Provider)
+	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, group.Provider, group.ClusterID)
 	if err != nil {
 		blog.Errorf("get Cloud %s and Project %s failed when update NodeGroup %s, %s",
 			group.Provider, group.ProjectID, group.NodeGroupID, err.Error(),
@@ -53,7 +53,10 @@ func (ua *UpdateAction) updateCloudNodeGroup(group *cmproto.NodeGroup) error {
 		return err
 	}
 	//get credential for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get Credential for Cloud %s/%s when update NodeGroup %s in Cluster %s failed, %s",
 			cloud.CloudID, cloud.CloudProvider, group.NodeGroupID, group.ClusterID, err.Error(),
@@ -277,7 +280,7 @@ func (ua *MoveNodeAction) Handle(
 		return
 	}
 	//try to move node in cloudprovider
-	cloud, project, err := actions.GetProjectAndCloud(ua.model, ua.group.ProjectID, ua.group.Provider)
+	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, ua.group.Provider, ua.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get cloud %s and project %s when move nodes %v to NodeGroup %s failed, %s",
 			ua.group.Provider, ua.group.ProjectID, ua.req.Nodes, ua.group.NodeGroupID, err.Error(),
@@ -285,20 +288,15 @@ func (ua *MoveNodeAction) Handle(
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential from cloud %s and project %s when move nodes %v to NodeGroup %s failed, %s",
 			ua.group.Provider, ua.group.ProjectID, ua.req.Nodes, ua.group.NodeGroupID, err.Error(),
 		)
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	cluster, err := ua.model.GetCluster(ua.ctx, ua.group.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cluster %s for NodeGroup %s to move node %s failed, %s",
-			ua.group.ClusterID, ua.group.NodeGroupID, req.Nodes, err.Error(),
-		)
-		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	mgr, err := cloudprovider.GetNodeGroupMgr(cloud.CloudProvider)
@@ -459,7 +457,7 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		return
 	}
 	// update DesiredNode with cloud provider
-	cloud, project, err := actions.GetProjectAndCloud(ua.model, ua.group.ProjectID, ua.group.Provider)
+	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, ua.group.Provider, ua.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get cloud %s and project %s when updateDesiredNode %d in NodeGroup %s failed, %s",
 			ua.group.Provider, ua.group.ProjectID, ua.req.DesiredNode, ua.group.NodeGroupID, err.Error(),
@@ -468,7 +466,12 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		return
 	}
 	ua.cloud = cloud
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	ua.cluster = cluster
+
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential from cloud %s and project %s when updateDesiredNode %d in NodeGroup %s failed, %s",
 			ua.group.Provider, ua.group.ProjectID, ua.req.DesiredNode, ua.group.NodeGroupID, err.Error(),
@@ -476,15 +479,6 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	cluster, err := ua.model.GetCluster(ua.ctx, ua.group.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cluster %s for NodeGroup %s updateDesiredNode %d failed, %s",
-			ua.group.ClusterID, ua.group.NodeGroupID, req.DesiredNode, err.Error(),
-		)
-		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	ua.cluster = cluster
 	mgr, err := cloudprovider.GetNodeGroupMgr(cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s NodeGroupMgr when updateDesiredNode %d in NodeGroup %s failed, %s",
