@@ -15,11 +15,42 @@ package mock
 import (
 	"context"
 	"encoding/json"
-
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
 )
+
+type MockCmClient struct {
+	mock.Mock
+}
+
+func NewMockCmClient() cmanager.ClusterManagerClient {
+	return &MockCmClient{}
+}
+
+func (m *MockCmClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) {
+	return nil, nil
+}
+
+func (m *MockCmClient) GetClusterManagerClient() (cm.ClusterManagerClient, error) {
+	return NewMockCm(), nil
+}
+
+func (m *MockCmClient) GetClusterManagerConn() (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithInsecure())
+	var conn *grpc.ClientConn
+	conn, _ = grpc.Dial("127.0.0.1", opts...)
+	return conn, nil
+}
+
+func (m *MockCmClient) NewGrpcClientWithHeader(ctx context.Context, conn *grpc.ClientConn) *cmanager.ClusterManagerClientWithHeader {
+	return &cmanager.ClusterManagerClientWithHeader{
+		Cli: NewMockCm(),
+		Ctx: ctx,
+	}
+}
 
 // MockCm mock cm
 type MockCm struct {

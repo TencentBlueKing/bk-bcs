@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/cmd"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/sync"
 	"github.com/micro/go-micro/v2/sync/etcd"
@@ -55,7 +55,7 @@ func becomeLeader(ctx context.Context, opt *cmd.DataManagerOptions) sync.Leader 
 		sync.WithTLS(etcdTLS),
 		sync.WithContext(ctx),
 		sync.Nodes(strings.Split(opt.Etcd.EtcdEndpoints, ",")...),
-		sync.Prefix(common.ServiceDomain),
+		sync.Prefix(types.ServiceDomain),
 	)
 	id := uuid.New().String()
 	blog.Infof("Node %s waiting to become a leader...", id)

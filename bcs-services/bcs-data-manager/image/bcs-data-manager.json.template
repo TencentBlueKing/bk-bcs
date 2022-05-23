@@ -12,7 +12,8 @@
   },
   "filterRules":{
     "needFilter": ${needFilter},
-    "clusterIDs":"${selectClusterID}"
+    "clusterIDs":"${selectClusterID}",
+    "env": "${clusterEnv}"
   },
   "queueConfig":{
     "queue_flag": true,

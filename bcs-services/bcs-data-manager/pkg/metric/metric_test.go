@@ -14,13 +14,13 @@ package metric
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"net/http"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,15 +43,15 @@ func newMonitor() bcsmonitor.ClientInterface {
 
 func Test_GetClusterCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.ClusterType,
+	opts := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
 		ClusterID:   "BCS-MESOS-10039",
-		ClusterType: common.Mesos,
-		Dimension:   common.DimensionMinute,
+		ClusterType: types.Mesos,
+		Dimension:   types.DimensionMinute,
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, _, _, _, err := getter.GetClusterCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetClusterCPUMetrics(opts, clients))
@@ -59,15 +59,15 @@ func Test_GetClusterCPUMetrics(t *testing.T) {
 
 func Test_GetClusterMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.ClusterType,
+	opts := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
 		ClusterID:   "BCS-K8S-15202",
-		ClusterType: common.Kubernetes,
-		Dimension:   common.DimensionMinute,
+		ClusterType: types.Kubernetes,
+		Dimension:   types.DimensionMinute,
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, _, _, _, err := getter.GetClusterMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetClusterMemoryMetrics(opts, clients))
@@ -83,37 +83,37 @@ func Test_GetClusterNodeMetrics(t *testing.T) {
 
 func Test_GetInstanceCount(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.ClusterType,
+	opts := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
 		ClusterID:   "BCS-MESOS-20042",
-		ClusterType: common.Mesos,
-		Dimension:   common.DimensionMinute,
+		ClusterType: types.Mesos,
+		Dimension:   types.DimensionMinute,
 		Namespace:   "bcs-system",
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, err := getter.GetInstanceCount(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetInstanceCount(opts, clients))
-	opts2 := &common.JobCommonOpts{
-		ObjectType:  common.ClusterType,
+	opts2 := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
 		ClusterID:   "BCS-K8S-15171",
-		ClusterType: common.Kubernetes,
-		Dimension:   common.DimensionMinute,
+		ClusterType: types.Kubernetes,
+		Dimension:   types.DimensionMinute,
 		Namespace:   "thanos",
 		CurrentTime: time.Time{},
 	}
 	_, err = getter.GetInstanceCount(opts2, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetInstanceCount(opts2, clients))
-	opts3 := &common.JobCommonOpts{
-		ObjectType:   common.WorkloadType,
+	opts3 := &types.JobCommonOpts{
+		ObjectType:   types.WorkloadType,
 		ClusterID:    "BCS-K8S-15171",
-		ClusterType:  common.Kubernetes,
-		Dimension:    common.DimensionMinute,
+		ClusterType:  types.Kubernetes,
+		Dimension:    types.DimensionMinute,
 		Namespace:    "thanos",
-		WorkloadType: common.DeploymentType,
+		WorkloadType: types.DeploymentType,
 		Name:         "testdeploy",
 		CurrentTime:  time.Time{},
 	}
@@ -124,16 +124,16 @@ func Test_GetInstanceCount(t *testing.T) {
 
 func Test_GetNamespaceCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.NamespaceType,
+	opts := &types.JobCommonOpts{
+		ObjectType:  types.NamespaceType,
 		ClusterID:   "BCS-MESOS-20042",
-		ClusterType: common.Mesos,
-		Dimension:   common.DimensionMinute,
+		ClusterType: types.Mesos,
+		Dimension:   types.DimensionMinute,
 		Namespace:   "cq-loadtest",
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, _, _, err := getter.GetNamespaceCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetNamespaceCPUMetrics(opts, clients))
@@ -141,16 +141,16 @@ func Test_GetNamespaceCPUMetrics(t *testing.T) {
 
 func Test_GetNamespaceInstanceCount(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.NamespaceType,
+	opts := &types.JobCommonOpts{
+		ObjectType:  types.NamespaceType,
 		ClusterID:   "BCS-MESOS-20042",
-		ClusterType: common.Mesos,
-		Dimension:   common.DimensionMinute,
+		ClusterType: types.Mesos,
+		Dimension:   types.DimensionMinute,
 		Namespace:   "cq-loadtest",
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, err := getter.GetInstanceCount(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetInstanceCount(opts, clients))
@@ -158,16 +158,16 @@ func Test_GetNamespaceInstanceCount(t *testing.T) {
 
 func Test_GetNamespaceMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.NamespaceType,
+	opts := &types.JobCommonOpts{
+		ObjectType:  types.NamespaceType,
 		ClusterID:   "BCS-MESOS-20042",
-		ClusterType: common.Mesos,
-		Dimension:   common.DimensionHour,
+		ClusterType: types.Mesos,
+		Dimension:   types.DimensionHour,
 		Namespace:   "cq-loadtest",
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, _, _, err := getter.GetNamespaceMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetNamespaceMemoryMetrics(opts, clients))
@@ -179,18 +179,18 @@ func Test_GetNamespaceResourceLimit(t *testing.T) {
 
 func Test_GetWorkloadCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:   common.WorkloadType,
+	opts := &types.JobCommonOpts{
+		ObjectType:   types.WorkloadType,
 		ClusterID:    "BCS-K8S-15171",
-		ClusterType:  common.Kubernetes,
-		Dimension:    common.DimensionMinute,
+		ClusterType:  types.Kubernetes,
+		Dimension:    types.DimensionMinute,
 		Namespace:    "bcs-system",
-		WorkloadType: common.DeploymentType,
+		WorkloadType: types.DeploymentType,
 		Name:         "event-exporter",
 		CurrentTime:  time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, _, _, err := getter.GetWorkloadCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetWorkloadCPUMetrics(opts, clients))
@@ -198,18 +198,18 @@ func Test_GetWorkloadCPUMetrics(t *testing.T) {
 
 func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
-	opts := &common.JobCommonOpts{
-		ObjectType:   common.WorkloadType,
+	opts := &types.JobCommonOpts{
+		ObjectType:   types.WorkloadType,
 		ClusterID:    "BCS-K8S-15091",
-		ClusterType:  common.Kubernetes,
-		Dimension:    common.DimensionMinute,
+		ClusterType:  types.Kubernetes,
+		Dimension:    types.DimensionMinute,
 		Namespace:    "mars-test",
-		WorkloadType: common.DeploymentType,
+		WorkloadType: types.DeploymentType,
 		Name:         "mars-test-test1-micro-gateway-operator",
 		CurrentTime:  time.Now(),
 	}
 	getter := &MetricGetter{}
-	clients := common.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil, nil)
 	_, _, _, err := getter.GetWorkloadMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetWorkloadMemoryMetrics(opts, clients))

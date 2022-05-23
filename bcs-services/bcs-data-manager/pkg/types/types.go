@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package common
+package types
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"

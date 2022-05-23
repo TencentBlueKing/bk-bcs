@@ -15,13 +15,14 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,7 +37,7 @@ var (
 			Name: CreateTimeKey + "_1",
 		},
 		{
-			Name: common.NamespaceTableName + "_idx",
+			Name: types.NamespaceTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
@@ -47,7 +48,7 @@ var (
 			Unique: true,
 		},
 		{
-			Name: common.NamespaceTableName + "_list_idx",
+			Name: types.NamespaceTableName + "_list_idx",
 			Key: bson.D{
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
@@ -55,7 +56,7 @@ var (
 			},
 		},
 		{
-			Name: common.NamespaceTableName + "_get_idx",
+			Name: types.NamespaceTableName + "_get_idx",
 			Key: bson.D{
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
@@ -111,20 +112,20 @@ type ModelNamespace struct {
 func NewModelNamespace(db drivers.DB) *ModelNamespace {
 	return &ModelNamespace{
 		Public: Public{
-			TableName: common.DataTableNamePrefix + common.NamespaceTableName,
+			TableName: types.DataTableNamePrefix + types.NamespaceTableName,
 			Indexes:   modelNamespaceIndexes,
 			DB:        db,
 		}}
 }
 
 // InsertNamespaceInfo insert namespace data
-func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *common.NamespaceMetrics,
-	opts *common.JobCommonOpts) error {
+func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types.NamespaceMetrics,
+	opts *types.JobCommonOpts) error {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
 	}
-	bucketTime, err := common.GetBucketTime(opts.CurrentTime, opts.Dimension)
+	bucketTime, err := utils.GetBucketTime(opts.CurrentTime, opts.Dimension)
 	if err != nil {
 		return err
 	}
@@ -135,14 +136,14 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *commo
 		DimensionKey:  opts.Dimension,
 		BucketTimeKey: bucketTime,
 	})
-	retNamespace := &common.NamespaceData{}
+	retNamespace := &types.NamespaceData{}
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retNamespace)
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Infof(" namespace info not found, create a new bucket")
-			newMetrics := make([]*common.NamespaceMetrics, 0)
+			newMetrics := make([]*types.NamespaceMetrics, 0)
 			newMetrics = append(newMetrics, metrics)
-			newNamespaceBucket := &common.NamespaceData{
+			newNamespaceBucket := &types.NamespaceData{
 				CreateTime:  primitive.NewDateTimeFromTime(time.Now()),
 				UpdateTime:  primitive.NewDateTimeFromTime(time.Now()),
 				BucketTime:  bucketTime,
@@ -179,7 +180,7 @@ func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 	}
 	dimension := request.Dimension
 	if dimension == "" {
-		dimension = common.DimensionMinute
+		dimension = types.DimensionMinute
 	}
 	cond := make([]*operator.Condition, 0)
 	cond = append(cond,
@@ -242,20 +243,20 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	namespaceMetricsMap := make([]map[string]*common.NamespaceMetrics, 0)
+	namespaceMetricsMap := make([]map[string]*types.NamespaceMetrics, 0)
 	publicCond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ClusterIDKey:  request.ClusterID,
-		ObjectTypeKey: common.NamespaceType,
+		ObjectTypeKey: types.NamespaceType,
 		NamespaceKey:  request.Namespace,
 	})
-	namespacePublic := common.NamespacePublicMetrics{
+	namespacePublic := types.NamespacePublicMetrics{
 		ResourceLimit: nil,
 		SuggestCPU:    0,
 		SuggestMemory: 0,
 	}
 	publicData := getPublicData(ctx, m.DB, publicCond)
 	if publicData != nil && publicData.Metrics != nil {
-		public, ok := publicData.Metrics.(common.NamespacePublicMetrics)
+		public, ok := publicData.Metrics.(types.NamespacePublicMetrics)
 		if !ok {
 			blog.Errorf("assert public data to namespace public failed")
 		} else {
@@ -265,7 +266,7 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 
 	dimension := request.Dimension
 	if dimension == "" {
-		dimension = common.DimensionMinute
+		dimension = types.DimensionMinute
 	}
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
@@ -289,7 +290,7 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	if len(namespaceMetricsMap) == 0 {
 		return &bcsdatamanager.Namespace{}, nil
 	}
-	namespaceMetrics := make([]*common.NamespaceMetrics, 0)
+	namespaceMetrics := make([]*types.NamespaceMetrics, 0)
 	for _, metrics := range namespaceMetricsMap {
 		namespaceMetrics = append(namespaceMetrics, metrics["metrics"])
 	}
@@ -300,8 +301,8 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 }
 
 // GetRawNamespaceInfo get raw namespace data without time range
-func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *common.JobCommonOpts,
-	bucket string) ([]*common.NamespaceData, error) {
+func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *types.JobCommonOpts,
+	bucket string) ([]*types.NamespaceData, error) {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
@@ -324,7 +325,7 @@ func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *common.J
 		}))
 	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
-	retNamespace := make([]*common.NamespaceData, 0)
+	retNamespace := make([]*types.NamespaceData, 0)
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retNamespace)
 	if err != nil {
 		return nil, err
@@ -332,8 +333,8 @@ func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *common.J
 	return retNamespace, nil
 }
 
-func (m *ModelNamespace) generateNamespaceResponse(public common.NamespacePublicMetrics,
-	metricSlice []*common.NamespaceMetrics, clusterId, namespace, dimension, startTime,
+func (m *ModelNamespace) generateNamespaceResponse(public types.NamespacePublicMetrics,
+	metricSlice []*types.NamespaceMetrics, clusterId, namespace, dimension, startTime,
 	endTime string) *bcsdatamanager.Namespace {
 	response := &bcsdatamanager.Namespace{
 		ClusterID:     clusterId,
@@ -373,7 +374,7 @@ func (m *ModelNamespace) generateNamespaceResponse(public common.NamespacePublic
 	return response
 }
 
-func (m *ModelNamespace) preAggregate(data *common.NamespaceData, newMetric *common.NamespaceMetrics) {
+func (m *ModelNamespace) preAggregate(data *types.NamespaceData, newMetric *types.NamespaceMetrics) {
 	if data.MaxInstanceTime == nil {
 		data.MaxInstanceTime = newMetric.MaxInstanceTime
 	} else if newMetric.MaxInstanceTime.Value > data.MaxInstanceTime.Value {
