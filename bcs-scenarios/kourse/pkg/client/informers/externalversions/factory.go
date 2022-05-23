@@ -20,9 +20,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/internalinterfaces"
-	tkex "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/tkex"
+	versioned "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/internalinterfaces"
+	tkex "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions/tkex"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

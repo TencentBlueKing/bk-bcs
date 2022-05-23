@@ -14,7 +14,7 @@
 package apis
 
 import (
-	"github.com/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 

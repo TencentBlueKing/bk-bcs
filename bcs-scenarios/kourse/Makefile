@@ -1,6 +1,6 @@
 
 DIRECTORY := $(PWD)
-PROJECT_PACKAGE := github.com/bk-bcs/bcs-scenarios/kourse
+PROJECT_PACKAGE := github.com/Tencent/bk-bcs/bcs-scenarios/kourse
 
 pre:
 	go mod tidy

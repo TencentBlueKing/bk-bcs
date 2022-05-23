@@ -19,8 +19,8 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
-	scheme "github.com/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/scheme"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
+	scheme "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
