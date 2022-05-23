@@ -119,3 +119,37 @@ func (cm *ClusterManager) GetVPCCidr(ctx context.Context,
 	blog.V(5).Infof("reqID: %s, action: ListCloudRegions, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// ListSubnets implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListSubnets(ctx context.Context,
+	req *cmproto.ListSubnetsRequest, resp *cmproto.ListSubnetsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudvpc.NewListSubnetsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListSubnets", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListSubnets, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListSubnets, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListSecurityGroups implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListSecurityGroups(ctx context.Context,
+	req *cmproto.ListSecurityGroupsRequest, resp *cmproto.ListSecurityGroupsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudvpc.NewListSecurityGroupsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListSecurityGroups", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListSecurityGroups, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListSecurityGroups, req %v, resp %v", reqID, req, resp)
+	return nil
+}

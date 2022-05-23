@@ -16,6 +16,7 @@ package tasks
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -201,4 +202,86 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 	}
 
 	return nil
+}
+
+// updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
+func updateNodeGroupCloudNodeGroupID(nodeGroupID string, cloudNodeGroupID string) error {
+	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.CloudNodeGroupID = cloudNodeGroupID
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateNodeGroupASGID set nodegroup asgID
+func updateNodeGroupASGID(nodeGroupID string, asgID string) error {
+	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	if group.AutoScaling == nil {
+		group.AutoScaling = &cmproto.AutoScalingGroup{}
+	}
+	group.AutoScaling.AutoScalingID = asgID
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateNodeGroupDesiredSize set nodegroup desired size
+func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
+	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	if group.AutoScaling == nil {
+		group.AutoScaling = &cmproto.AutoScalingGroup{}
+	}
+	group.AutoScaling.DesiredSize = desiredSize
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getStateAndStep(taskID, taskName, stepName string) (*cloudprovider.TaskState, *cmproto.Step, error) {
+	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
+	if err != nil {
+		blog.Errorf("%s[%s]: task %s get detail task information from storage failed, %s. task retry",
+			taskName, taskID, taskID, err.Error())
+		return nil, nil, err
+	}
+
+	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
+	if state.IsTerminated() {
+		blog.Errorf("%s[%s]: task %s is terminated, step %s skip", taskName, taskID, taskID, stepName)
+		return nil, nil, fmt.Errorf("task %s terminated", taskID)
+	}
+	step, err := state.IsReadyToStep(stepName)
+	if err != nil {
+		blog.Errorf("%s[%s]: task %s not turn to run step %s, err %s", taskName, taskID, taskID, stepName, err.Error())
+		return nil, nil, err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("%s[%s]: current step[%s] successful and skip", taskName, taskID, stepName)
+		return state, nil, nil
+	}
+	blog.Infof("%s[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+		taskName, taskID, taskID, stepName, step.System, step.Status, step.Params)
+	return state, step, nil
 }

@@ -16,8 +16,11 @@ package api
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
 
 const (
@@ -353,5 +356,138 @@ func generateLoginSet(settings *LoginSettings) *tke.LoginSettings {
 
 	return &tke.LoginSettings{
 		Password: common.StringPtr(settings.Password),
+	}
+}
+
+func generateClusterNodePool(nodePool *CreateNodePoolInput) *tke.CreateClusterNodePoolRequest {
+	if nodePool == nil {
+		return nil
+	}
+	req := tke.NewCreateClusterNodePoolRequest()
+	req.ClusterId = nodePool.ClusterID
+	asg := utils.ToJSONString(nodePool.AutoScalingGroupPara)
+	req.AutoScalingGroupPara = &asg
+	lunchConf := utils.ToJSONString(nodePool.LaunchConfigurePara)
+	req.LaunchConfigurePara = &lunchConf
+	req.InstanceAdvancedSettings = generateInstanceAdvancedSet(nodePool.InstanceAdvancedSettings)
+	req.EnableAutoscale = nodePool.EnableAutoscale
+	req.Name = nodePool.Name
+	req.Labels = generateLabel(nodePool.Labels)
+	req.Taints = generateTaint(nodePool.Taints)
+	req.NodePoolOs = nodePool.NodePoolOs
+	req.OsCustomizeType = nodePool.OsCustomizeType
+	req.Tags = generateTag(nodePool.Tags)
+	return req
+}
+
+func generateLabel(labels []*Label) []*tke.Label {
+	result := make([]*tke.Label, 0)
+	for _, v := range labels {
+		result = append(result, &tke.Label{Name: v.Name, Value: v.Value})
+	}
+	return result
+}
+
+func generateTaint(taints []*Taint) []*tke.Taint {
+	result := make([]*tke.Taint, 0)
+	for _, v := range taints {
+		result = append(result, &tke.Taint{Key: v.Key, Value: v.Value, Effect: v.Effect})
+	}
+	return result
+}
+
+func generateTag(tags []*Tag) []*tke.Tag {
+	result := make([]*tke.Tag, 0)
+	for _, v := range tags {
+		result = append(result, &tke.Tag{Key: v.Key, Value: v.Value})
+	}
+	return result
+}
+
+func convertSubnet(subnet []*vpc.Subnet) []*Subnet {
+	result := make([]*Subnet, 0)
+	for _, v := range subnet {
+		result = append(result, &Subnet{
+			VpcID:                   v.VpcId,
+			SubnetID:                v.SubnetId,
+			SubnetName:              v.SubnetName,
+			CidrBlock:               v.CidrBlock,
+			IsDefault:               v.IsDefault,
+			EnableBroadcast:         v.EnableBroadcast,
+			Zone:                    v.Zone,
+			RouteTableID:            v.RouteTableId,
+			CreatedTime:             v.CreatedTime,
+			AvailableIPAddressCount: v.AvailableIpAddressCount,
+			Ipv6CidrBlock:           v.Ipv6CidrBlock,
+			NetworkACLID:            v.NetworkAclId,
+			IsRemoteVpcSnat:         v.IsRemoteVpcSnat,
+			TotalIPAddressCount:     v.TotalIpAddressCount,
+			CdcID:                   v.CdcId,
+			IsCdcSubnet:             v.IsCdcSubnet,
+		})
+	}
+	return result
+}
+
+func convertModifyNodePool(nodePool *ModifyClusterNodePoolInput) *tke.ModifyClusterNodePoolRequest {
+	req := tke.NewModifyClusterNodePoolRequest()
+	req.ClusterId = nodePool.ClusterID
+	req.NodePoolId = nodePool.NodePoolID
+	req.Name = nodePool.Name
+	req.MaxNodesNum = nodePool.MaxNodesNum
+	req.MinNodesNum = nodePool.MinNodesNum
+	req.Labels = generateLabel(nodePool.Labels)
+	req.Taints = generateTaint(nodePool.Taints)
+	req.EnableAutoscale = nodePool.EnableAutoscale
+	req.OsName = nodePool.OsName
+	req.OsCustomizeType = nodePool.OsCustomizeType
+	req.ExtraArgs = func(args *InstanceExtraArgs) *tke.InstanceExtraArgs {
+		if args == nil {
+			return nil
+		}
+		return &tke.InstanceExtraArgs{Kubelet: common.StringPtrs(args.Kubelet)}
+	}(nodePool.ExtraArgs)
+	req.Tags = generateTag(nodePool.Tags)
+	req.Unschedulable = nodePool.Unschedulable
+	return req
+}
+
+// MapToLabels converts a map of string-string to a slice of Label
+func MapToLabels(labels map[string]string) []*Label {
+	result := make([]*Label, 0)
+	for k, v := range labels {
+		name := k
+		value := v
+		result = append(result, &Label{Name: &name, Value: &value})
+	}
+	return result
+}
+
+// MapToTaints converts a map of string-string to a slice of Taint
+func MapToTaints(taints map[string]string) []*Taint {
+	result := make([]*Taint, 0)
+	for k, v := range taints {
+		key := k
+		value := v
+		result = append(result, &Taint{Key: &key, Value: &value})
+	}
+	return result
+}
+
+func convertASGInstance(ins *as.Instance) *AutoScalingInstances {
+	return &AutoScalingInstances{
+		InstanceID:              ins.InstanceId,
+		AutoScalingGroupID:      ins.AutoScalingGroupId,
+		LaunchConfigurationID:   ins.LaunchConfigurationId,
+		LaunchConfigurationName: ins.LaunchConfigurationName,
+		LifeCycleState:          ins.LifeCycleState,
+		HealthStatus:            ins.HealthStatus,
+		ProtectedFromScaleIn:    ins.ProtectedFromScaleIn,
+		Zone:                    ins.Zone,
+		CreationType:            ins.CreationType,
+		AddTime:                 ins.AddTime,
+		InstanceType:            ins.InstanceType,
+		VersionNumber:           ins.VersionNumber,
+		AutoScalingGroupName:    ins.AutoScalingGroupName,
 	}
 }

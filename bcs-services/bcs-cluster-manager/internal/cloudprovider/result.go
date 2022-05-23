@@ -44,12 +44,18 @@ var (
 	// DeleteNodeJob for deleteNodes job
 	DeleteNodeJob JobType = "delete-node"
 
-	// CAAddNodeJob for CAAddNodes job
-	CAAddNodeJob JobType = "ca-add-node"
-	// CADeleteNodeJob for CADeleteNodes job
-	CADeleteNodeJob JobType = "ca-delete-node"
-	// CADeleteNodeGroup for CADeleteNodeGroup job
-	CADeleteNodeGroup JobType = "ca-delete-nodegroup"
+	// CreateNodeGroupJob for createNodeGroup job
+	CreateNodeGroupJob JobType = "create-nodegroup"
+	// UpdateNodeGroupJob for updateNodeGroup job
+	UpdateNodeGroupJob JobType = "update-nodegroup"
+	// DeleteNodeGroupJob for deleteNodeGroup job
+	DeleteNodeGroupJob JobType = "delete-nodegroup"
+	// UpdateNodeGroupDisiredNodeJob for updateNodeGroupDisiredNode job
+	UpdateNodeGroupDisiredNodeJob JobType = "update-nodegroup-disired-node"
+	// CleanNodeGroupNodesJob for cleanNodeGroupNodes job
+	CleanNodeGroupNodesJob JobType = "clean-nodegroup-nodes"
+	// MoveNodesToNodeGroupJob for moveNodesToNodeGroup job
+	MoveNodesToNodeGroupJob JobType = "move-nodes-to-nodegroup"
 )
 
 // String to string
@@ -96,12 +102,6 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	case DeleteNodeJob:
 		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
 		return sjr.deleteNodesResultStatus(isSuccess)
-	case CAAddNodeJob:
-		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusAddNodesFailed)
-		return sjr.updateCANodesResultStatus(isSuccess)
-	case CADeleteNodeJob:
-		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
-		return sjr.deleteCANodesResultStatus(isSuccess)
 	case ImportClusterJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusImportClusterFailed)
 		return sjr.updateClusterResultStatus(isSuccess)

@@ -527,7 +527,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 //BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 // including remove nodes from NodeGroup, clean data in nodes
 func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
-	opt *cloudprovider.TaskOptions) (*proto.Task, error) {
+	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 	//build task step1: move nodes out of nodegroup
 	//step2: delete nodes in cluster
 	//step3: delete nodes record in local storage
@@ -548,4 +548,26 @@ func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	return nil, nil
+}
+
+// BuildCreateNodeGroupTask when create nodegroup, we need to create background task,
+// task will create nodegroup in cloud, and install clusterautoscaler on cluster,
+// then wait for nodepool ready.
+func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildUpdateNodeGroupTask when update nodegroup, we need to create background task,
+func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildMoveNodesToGroupTask when create cluster, we need to create background task,
+func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildUpdateDesiredNodesTask when update cluster, we need to create background task,
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

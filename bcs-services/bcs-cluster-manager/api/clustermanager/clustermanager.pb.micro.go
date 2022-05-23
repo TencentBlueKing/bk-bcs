@@ -143,6 +143,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.ListNodeType",
+			Path:    []string{"/clustermanager/v1/node/types"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.GetClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"GET"},
@@ -361,6 +367,18 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.ListSubnets",
+			Path:    []string{"/clustermanager/v1/vpcsubnets/{vpcID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListSecurityGroups",
+			Path:    []string{"/clustermanager/v1/securitygroups"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.CreateNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup"},
 			Method:  []string{"POST"},
@@ -575,6 +593,7 @@ type ClusterManagerService interface {
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
 	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error)
+	ListNodeType(ctx context.Context, in *ListNodeTypeRequest, opts ...client.CallOption) (*ListNodeTypeResponse, error)
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
@@ -615,6 +634,8 @@ type ClusterManagerService interface {
 	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error)
 	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...client.CallOption) (*GetVPCCidrResponse, error)
+	ListSubnets(ctx context.Context, in *ListSubnetsRequest, opts ...client.CallOption) (*ListSubnetsResponse, error)
+	ListSecurityGroups(ctx context.Context, in *ListSecurityGroupsRequest, opts ...client.CallOption) (*ListSecurityGroupsResponse, error)
 	//* NodeGroup information management *
 	CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...client.CallOption) (*CreateNodeGroupResponse, error)
 	UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...client.CallOption) (*UpdateNodeGroupResponse, error)
@@ -806,6 +827,16 @@ func (c *clusterManagerService) UpdateNode(ctx context.Context, in *UpdateNodeRe
 func (c *clusterManagerService) CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CheckNodeInCluster", in)
 	out := new(CheckNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodeType(ctx context.Context, in *ListNodeTypeRequest, opts ...client.CallOption) (*ListNodeTypeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeType", in)
+	out := new(ListNodeTypeResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1143,6 +1174,26 @@ func (c *clusterManagerService) GetVPCCidr(ctx context.Context, in *GetVPCCidrRe
 	return out, nil
 }
 
+func (c *clusterManagerService) ListSubnets(ctx context.Context, in *ListSubnetsRequest, opts ...client.CallOption) (*ListSubnetsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListSubnets", in)
+	out := new(ListSubnetsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListSecurityGroups(ctx context.Context, in *ListSecurityGroupsRequest, opts ...client.CallOption) (*ListSecurityGroupsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListSecurityGroups", in)
+	out := new(ListSecurityGroupsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...client.CallOption) (*CreateNodeGroupResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateNodeGroup", in)
 	out := new(CreateNodeGroupResponse)
@@ -1453,6 +1504,7 @@ type ClusterManagerHandler interface {
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
 	CheckNodeInCluster(context.Context, *CheckNodesRequest, *CheckNodesResponse) error
+	ListNodeType(context.Context, *ListNodeTypeRequest, *ListNodeTypeResponse) error
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
@@ -1493,6 +1545,8 @@ type ClusterManagerHandler interface {
 	ListCloudVPC(context.Context, *ListCloudVPCRequest, *ListCloudVPCResponse) error
 	ListCloudRegions(context.Context, *ListCloudRegionsRequest, *ListCloudRegionsResponse) error
 	GetVPCCidr(context.Context, *GetVPCCidrRequest, *GetVPCCidrResponse) error
+	ListSubnets(context.Context, *ListSubnetsRequest, *ListSubnetsResponse) error
+	ListSecurityGroups(context.Context, *ListSecurityGroupsRequest, *ListSecurityGroupsResponse) error
 	//* NodeGroup information management *
 	CreateNodeGroup(context.Context, *CreateNodeGroupRequest, *CreateNodeGroupResponse) error
 	UpdateNodeGroup(context.Context, *UpdateNodeGroupRequest, *UpdateNodeGroupResponse) error
@@ -1546,6 +1600,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
 		CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error
+		ListNodeType(ctx context.Context, in *ListNodeTypeRequest, out *ListNodeTypeResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
@@ -1579,6 +1634,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, out *ListCloudVPCResponse) error
 		ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, out *ListCloudRegionsResponse) error
 		GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, out *GetVPCCidrResponse) error
+		ListSubnets(ctx context.Context, in *ListSubnetsRequest, out *ListSubnetsResponse) error
+		ListSecurityGroups(ctx context.Context, in *ListSecurityGroupsRequest, out *ListSecurityGroupsResponse) error
 		CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, out *CreateNodeGroupResponse) error
 		UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, out *UpdateNodeGroupResponse) error
 		DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, out *DeleteNodeGroupResponse) error
@@ -1711,6 +1768,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Path:    []string{"/clustermanager/v1/node/available"},
 		Method:  []string{"POST"},
 		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNodeType",
+		Path:    []string{"/clustermanager/v1/node/types"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1928,6 +1991,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetVPCCidr",
 		Path:    []string{"/clustermanager/v1/vpccidr/{vpcID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListSubnets",
+		Path:    []string{"/clustermanager/v1/vpcsubnets/{vpcID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListSecurityGroups",
+		Path:    []string{"/clustermanager/v1/securitygroups"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -2190,6 +2265,10 @@ func (h *clusterManagerHandler) CheckNodeInCluster(ctx context.Context, in *Chec
 	return h.ClusterManagerHandler.CheckNodeInCluster(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) ListNodeType(ctx context.Context, in *ListNodeTypeRequest, out *ListNodeTypeResponse) error {
+	return h.ClusterManagerHandler.ListNodeType(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {
 	return h.ClusterManagerHandler.GetClusterCredential(ctx, in, out)
 }
@@ -2320,6 +2399,14 @@ func (h *clusterManagerHandler) ListCloudRegions(ctx context.Context, in *ListCl
 
 func (h *clusterManagerHandler) GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, out *GetVPCCidrResponse) error {
 	return h.ClusterManagerHandler.GetVPCCidr(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListSubnets(ctx context.Context, in *ListSubnetsRequest, out *ListSubnetsResponse) error {
+	return h.ClusterManagerHandler.ListSubnets(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListSecurityGroups(ctx context.Context, in *ListSecurityGroupsRequest, out *ListSecurityGroupsResponse) error {
+	return h.ClusterManagerHandler.ListSecurityGroups(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, out *CreateNodeGroupResponse) error {

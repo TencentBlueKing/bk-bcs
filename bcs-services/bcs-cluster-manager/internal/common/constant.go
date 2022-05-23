@@ -149,6 +149,8 @@ const (
 	StatusFailed = "FAILURE"
 	//StatusCreating node status creating for scaling up
 	StatusCreating = "CREATING"
+	//StatusUpdating nodegroup updating status
+	StatusUpdating = "UPDATING"
 )
 
 const (

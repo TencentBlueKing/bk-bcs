@@ -144,6 +144,19 @@ var (
 	AddNodesToCluster TaskType = "AddNodesToCluster"
 	// RemoveNodesFromCluster task
 	RemoveNodesFromCluster TaskType = "RemoveNodesFromCluster"
+
+	// CreateNodeGroup task
+	CreateNodeGroup TaskType = "CreateNodeGroup"
+	// UpdateNodeGroup task
+	UpdateNodeGroup TaskType = "UpdateNodeGroup"
+	// DeleteNodeGroup task
+	DeleteNodeGroup TaskType = "DeleteNodeGroup"
+	// UpdateNodeGroupDisiredNode task
+	UpdateNodeGroupDisiredNode TaskType = "UpdateNodeGroupDisiredNode"
+	// CleanNodeGroupNodes task
+	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
+	// MoveNodesToNodeGroup task
+	MoveNodesToNodeGroup TaskType = "MoveNodesToNodeGroup"
 )
 
 // GetTaskType getTaskType by cloud

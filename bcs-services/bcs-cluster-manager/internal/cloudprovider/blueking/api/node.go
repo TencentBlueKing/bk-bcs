@@ -70,3 +70,9 @@ func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesO
 	}
 	return nodes, nil
 }
+
+// ListNodeType list node type by zone and node family
+func (nm *NodeManager) ListNodeType(zone, nodeFamily string, opt *cloudprovider.CommonOption) (
+	[]*proto.NodeType, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

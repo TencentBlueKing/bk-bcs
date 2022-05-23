@@ -215,7 +215,7 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 		}
 		req := cvm.NewDescribeImagesRequest()
 		req.Filters = []*cvm.Filter{
-			&cvm.Filter{
+			{
 				Name:   common.StringPtr("image-type"),
 				Values: common.StringPtrs([]string{"PRIVATE_IMAGE"}),
 			},
@@ -414,4 +414,142 @@ func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, 
 	}
 
 	return zoneIDMap, nil
+}
+
+// ListNodeType list node type by zone and node family
+func (nm *NodeManager) ListNodeType(zone, nodeFamily string, opt *cloudprovider.CommonOption) (
+	[]*proto.NodeType, error) {
+	blog.Infof("ListNodeType input: zone/%s, nodeFamily/%s", zone, nodeFamily)
+	filter := make([]*Filter, 0)
+	filter = append(filter, &Filter{Name: "zone", Values: []string{zone}})
+	filter = append(filter, &Filter{Name: "instance-family", Values: []string{nodeFamily}})
+	list, err := nm.DescribeInstanceTypeConfigs(filter, opt)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*proto.NodeType, 0)
+	for _, v := range list {
+		result = append(result, &proto.NodeType{
+			Zone:       *v.Zone,
+			NodeType:   *v.InstanceType,
+			NodeFamily: *v.InstanceFamily,
+			Cpu:        uint32(*v.CPU),
+			Memory:     uint32(*v.Memory),
+			Gpu:        uint32(*v.GPU),
+		})
+	}
+	return result, nil
+}
+
+// DescribeInstanceTypeConfigs describe instance type configs
+// https://cloud.tencent.com/document/api/213/17378
+func (nm *NodeManager) DescribeInstanceTypeConfigs(filters []*Filter, opt *cloudprovider.CommonOption) (
+	[]*InstanceTypeConfig, error) {
+	blog.Infof("DescribeInstanceTypeConfigs input: %s", utils.ToJSONString(filters))
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when DescribeInstanceTypeConfigs failed: %v", err)
+		return nil, err
+	}
+	req := cvm.NewDescribeInstanceTypeConfigsRequest()
+	for _, v := range filters {
+		req.Filters = append(req.Filters, &cvm.Filter{
+			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	}
+	resp, err := client.DescribeInstanceTypeConfigs(req)
+	if err != nil {
+		blog.Errorf("cvm client DescribeInstanceTypeConfigs failed: %v", err)
+		return nil, err
+	}
+
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("cvm client DescribeInstanceTypeConfigs lost response information")
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+	result := make([]*InstanceTypeConfig, 0)
+	for _, v := range resp.Response.InstanceTypeConfigSet {
+		result = append(result, &InstanceTypeConfig{
+			Zone:           v.Zone,
+			InstanceType:   v.InstanceType,
+			InstanceFamily: v.InstanceFamily,
+			CPU:            v.CPU,
+			GPU:            v.GPU,
+			Memory:         v.Memory,
+			FPGA:           v.FPGA,
+		})
+	}
+	blog.Infof("DescribeInstanceTypeConfigs success, result: %s", utils.ToJSONString(result))
+	return result, nil
+}
+
+// DescribeInstances describe instances
+// https://cloud.tencent.com/document/api/213/15728
+func (nm *NodeManager) DescribeInstances(ins []string, filters []*Filter, opt *cloudprovider.CommonOption) (
+	[]*proto.Node, error) {
+	blog.Infof("DescribeInstances input: %s, %s", utils.ToJSONString(ins),
+		utils.ToJSONString(filters))
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when DescribeInstances failed: %v", err)
+		return nil, err
+	}
+	req := cvm.NewDescribeInstancesRequest()
+	req.InstanceIds = common.StringPtrs(ins)
+	req.Limit = common.Int64Ptr(limit)
+	req.Filters = make([]*cvm.Filter, 0)
+	for _, v := range filters {
+		req.Filters = append(req.Filters, &cvm.Filter{
+			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	}
+	got, total := 0, 0
+	first := true
+	nodes := make([]*proto.Node, 0)
+	zoneInfo, err := GetZoneInfoByRegion(client, opt.Region)
+	if err != nil {
+		blog.Errorf("cvm client GetZoneInfoByRegion failed: %v", err)
+		return nil, err
+	}
+	for got < total || first {
+		first = false
+		req.Offset = common.Int64Ptr(int64(got))
+		resp, err := client.DescribeInstances(req)
+		if err != nil {
+			blog.Errorf("DescribeInstances failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeInstances resp is nil")
+			return nil, fmt.Errorf("DescribeInstances resp is nil")
+		}
+		blog.Infof("DescribeInstances success, requestID: %s", resp.Response.RequestId)
+		for _, v := range resp.Response.InstanceSet {
+			node := &proto.Node{
+				NodeID:       *v.InstanceId,
+				InstanceType: *v.InstanceType,
+				CPU:          uint32(*v.CPU),
+				Mem:          uint32(*v.Memory),
+				Status:       *v.InstanceState,
+			}
+			if len(v.PrivateIpAddresses) > 0 {
+				node.InnerIP = *v.PrivateIpAddresses[0]
+			}
+			if v.GPUInfo != nil {
+				node.GPU = uint32(*v.GPUInfo.GPUCount)
+			}
+			if v.Placement != nil {
+				node.ZoneID = *v.Placement.Zone
+				node.Zone = zoneInfo[*v.Placement.Zone]
+			}
+			if v.VirtualPrivateCloud != nil {
+				node.VPC = *v.VirtualPrivateCloud.VpcId
+			}
+			if v.LoginSettings != nil {
+				node.Passwd = *v.LoginSettings.Password
+			}
+			nodes = append(nodes, node)
+		}
+		got += len(resp.Response.InstanceSet)
+		total = int(*resp.Response.TotalCount)
+	}
+	return nodes, nil
 }

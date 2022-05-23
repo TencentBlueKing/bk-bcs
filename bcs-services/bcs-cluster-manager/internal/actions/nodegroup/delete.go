@@ -492,6 +492,15 @@ func (da *CleanNodesAction) Handle(
 	//get dependency resource
 	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
+		blog.Errorf("get Cloud %s Project %s for NodeGroup %s to clean Node failed, %s",
+			da.group.Provider, da.group.ProjectID, da.group.NodeGroupID, err.Error(),
+		)
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	//get dependency resource
+	cluster, err = da.model.GetCluster(ctx, da.req.ClusterID)
+	if err != nil {
 		blog.Errorf("get Cloud %s for NodeGroup %s to clean Node failed, %s",
 			da.group.Provider, da.group.NodeGroupID, err.Error(),
 		)
@@ -524,7 +533,7 @@ func (da *CleanNodesAction) Handle(
 		)
 	}
 	// build clean task and dispatch to run
-	task, err := taskMgr.BuildCleanNodesInGroupTask(da.cleanNodes, da.group, &cloudprovider.TaskOptions{
+	task, err := taskMgr.BuildCleanNodesInGroupTask(da.cleanNodes, da.group, &cloudprovider.CleanNodesOption{
 		Cloud:    cloud,
 		Cluster:  cluster,
 		Operator: req.Operator,

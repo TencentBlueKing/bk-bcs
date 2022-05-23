@@ -1,0 +1,142 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package api
+
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+)
+
+// NewASClient init as client
+func NewASClient(opt *cloudprovider.CommonOption) (*ASClient, error) {
+	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 {
+		return nil, cloudprovider.ErrCloudCredentialLost
+	}
+	if len(opt.Region) == 0 {
+		return nil, cloudprovider.ErrCloudRegionLost
+	}
+	credential := common.NewCredential(opt.Key, opt.Secret)
+	cpf := profile.NewClientProfile()
+
+	cli, err := as.NewClient(credential, opt.Region, cpf)
+	if err != nil {
+		return nil, cloudprovider.ErrCloudInitFailed
+	}
+
+	return &ASClient{as: cli}, nil
+}
+
+// ASClient is the client for as
+type ASClient struct {
+	as *as.Client
+}
+
+// DescribeAutoScalingInstances describe auto scaling instances
+// https://cloud.tencent.com/document/api/377/20437
+func (c *ASClient) DescribeAutoScalingInstances(asgID string) ([]*AutoScalingInstances, error) {
+	blog.Infof("DescribeAutoScalingInstances input: %s", asgID)
+	req := as.NewDescribeAutoScalingInstancesRequest()
+	req.Limit = common.Int64Ptr(limit)
+	req.Filters = make([]*as.Filter, 0)
+	req.Filters = append(req.Filters, &as.Filter{
+		Name: common.StringPtr("auto-scaling-group-id"), Values: common.StringPtrs([]string{asgID})})
+	got, total := 0, 0
+	first := true
+	ins := make([]*AutoScalingInstances, 0)
+	for got < total || first {
+		first = false
+		req.Offset = common.Int64Ptr(int64(got))
+		resp, err := c.as.DescribeAutoScalingInstances(req)
+		if err != nil {
+			blog.Errorf("DescribeAutoScalingInstances failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeAutoScalingInstances resp is nil")
+			return nil, fmt.Errorf("DescribeAutoScalingInstances resp is nil")
+		}
+		blog.Infof("DescribeAutoScalingInstances success, requestID: %s", resp.Response.RequestId)
+		for i := range resp.Response.AutoScalingInstanceSet {
+			ins = append(ins, convertASGInstance(resp.Response.AutoScalingInstanceSet[i]))
+		}
+		got += len(resp.Response.AutoScalingInstanceSet)
+		total = int(*resp.Response.TotalCount)
+	}
+	return ins, nil
+}
+
+// RemoveInstances 从 asg 中删除 CVM 实例，如果实例由弹性伸缩自动创建，则实例会被销毁；如果实例系创建后加入伸缩组的，则会从伸缩组中移除，保留实例。
+// https://cloud.tencent.com/document/api/377/20431
+func (c *ASClient) RemoveInstances(asgID string, nodeIDs []string) error {
+	blog.Infof("RemoveInstances input: %s, %v", asgID, nodeIDs)
+	req := as.NewRemoveInstancesRequest()
+	req.AutoScalingGroupId = &asgID
+	req.InstanceIds = common.StringPtrs(nodeIDs)
+	resp, err := c.as.RemoveInstances(req)
+	if err != nil {
+		blog.Errorf("RemoveInstances failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DescribeAutoScalingInstances resp is nil")
+		return fmt.Errorf("DescribeAutoScalingInstances resp is nil")
+	}
+	blog.Infof("RemoveInstances success, requestID: %s", resp.Response.RequestId)
+	return nil
+}
+
+// DetachInstances 从伸缩组移出 CVM 实例，本接口不会销毁实例。
+// https://cloud.tencent.com/document/api/377/20436
+func (c *ASClient) DetachInstances(asgID string, nodeIDs []string) error {
+	blog.Infof("DetachInstances input: %s, %v", asgID, nodeIDs)
+	req := as.NewDetachInstancesRequest()
+	req.AutoScalingGroupId = &asgID
+	req.InstanceIds = common.StringPtrs(nodeIDs)
+	resp, err := c.as.DetachInstances(req)
+	if err != nil {
+		blog.Errorf("DetachInstances failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DetachInstances resp is nil")
+		return fmt.Errorf("DetachInstances resp is nil")
+	}
+	blog.Infof("DetachInstances success, requestID: %s", resp.Response.RequestId)
+	return nil
+}
+
+// ModifyDesiredCapacity 修改指定伸缩组的期望实例数
+// https://cloud.tencent.com/document/api/377/20432
+func (c *ASClient) ModifyDesiredCapacity(asgID string, capacity uint64) error {
+	blog.Infof("ModifyDesiredCapacity input: %s, %d", asgID, capacity)
+	req := as.NewModifyDesiredCapacityRequest()
+	req.AutoScalingGroupId = &asgID
+	req.DesiredCapacity = common.Uint64Ptr(capacity)
+	resp, err := c.as.ModifyDesiredCapacity(req)
+	if err != nil {
+		blog.Errorf("ModifyDesiredCapacity failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("ModifyDesiredCapacity resp is nil")
+		return fmt.Errorf("ModifyDesiredCapacity resp is nil")
+	}
+	blog.Infof("ModifyDesiredCapacity success, requestID: %s", resp.Response.RequestId)
+	return nil
+}

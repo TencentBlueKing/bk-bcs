@@ -30,6 +30,7 @@ var (
 	nodeGroupMgrs     map[string]NodeGroupManager
 	nodeMgrs          map[string]NodeManager
 	taskMgrs          map[string]TaskManager
+	vpcMgrs           map[string]VPCManager
 	storage           store.ClusterManagerModel
 )
 
@@ -42,6 +43,7 @@ func init() {
 
 		cloudInfoMgrs = make(map[string]CloudInfoManager)
 		cloudValidateMgrs = make(map[string]CloudValidateManager)
+		vpcMgrs = make(map[string]VPCManager)
 	})
 }
 
@@ -121,6 +123,13 @@ func InitCloudValidateManager(provider string, cloudValidateMgr CloudValidateMan
 	cloudValidateMgrs[provider] = cloudValidateMgr
 }
 
+// InitVPCManager for vpc manager check
+func InitVPCManager(provider string, vpcMgr VPCManager) {
+	lock.Lock()
+	defer lock.Unlock()
+	vpcMgrs[provider] = vpcMgr
+}
+
 // GetClusterMgr get cluster manager implementation according cloud provider
 func GetClusterMgr(provider string) (ClusterManager, error) {
 	lock.RLock()
@@ -178,12 +187,25 @@ func GetCloudValidateMgr(provider string) (CloudValidateManager, error) {
 	return cloudValidate, nil
 }
 
+// GetVPCMgr get vpc according cloud provider
+func GetVPCMgr(provider string) (VPCManager, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	vpcmgr, ok := vpcMgrs[provider]
+	if !ok {
+		return nil, ErrCloudNoProvider
+	}
+
+	return vpcmgr, nil
+}
+
 // CloudInfoManager cloud interface for basic config info(region or no region)
 type CloudInfoManager interface {
 	// InitCloudClusterDefaultInfo init cloud cluster default configInfo
 	InitCloudClusterDefaultInfo(cls *proto.Cluster, opt *InitClusterConfigOption) error
 	// SyncClusterCloudInfo sync cluster metadata
-	SyncClusterCloudInfo(cls *proto.Cluster, opt *SyncClusterCloudInfoOption)  error
+	SyncClusterCloudInfo(cls *proto.Cluster, opt *SyncClusterCloudInfoOption) error
 }
 
 // NodeManager cloud interface for cvm management
@@ -198,6 +220,8 @@ type NodeManager interface {
 	GetCloudRegions(opt *CommonOption) ([]*proto.RegionInfo, error)
 	// GetZoneList get zoneList by region
 	GetZoneList(opt *CommonOption) ([]*proto.ZoneInfo, error)
+	// ListNodeType
+	ListNodeType(zone, nodeFamily string, opt *CommonOption) ([]*proto.NodeType, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
@@ -233,7 +257,7 @@ type ClusterManager interface {
 // NodeGroupManager cloud interface for nodegroup management
 type NodeGroupManager interface {
 	// CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
-	CreateNodeGroup(group *proto.NodeGroup, opt *CreateNodeGroupOption) error
+	CreateNodeGroup(group *proto.NodeGroup, opt *CreateNodeGroupOption) (*proto.Task, error)
 	// DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
 	// will be released. Task is backgroup automatic task
 	DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
@@ -242,14 +266,14 @@ type NodeGroupManager interface {
 	// GetNodesInGroup get all nodes belong to NodeGroup
 	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.Node, error)
 	// MoveNodesToGroup add cluster nodes to NodeGroup
-	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) error
+	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error
 	// CleanNodesInGroup clean specified nodes in NodeGroup,
-	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*CleanNodesResponse, error)
+	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
 	// UpdateDesiredNodes update nodegroup desired node
-	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*ScalingResponse, error)
+	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
 
 	// CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 	// deploy cluster-autoscaler in backgroup according cloudprovider implementation
@@ -263,6 +287,14 @@ type NodeGroupManager interface {
 	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *DeleteScalingOption) (*proto.Task, error)
 }
 
+// VPCManager cloud interface for vpc management
+type VPCManager interface {
+	// ListSubnets list vpc's subnets
+	ListSubnets(vpcID string, opt *CommonOption) ([]*proto.Subnet, error)
+	// ListSecurityGroups list security groups
+	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
+}
+
 // TaskManager backgroup back management
 type TaskManager interface {
 	Name() string
@@ -272,15 +304,18 @@ type TaskManager interface {
 	// specific cloud different implement
 
 	// NodeGroup taskList
-
-	// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
-	BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *TaskOptions) (*proto.Task, error)
-	// BuildScalingNodesTask when scaling nodes, we need to create background task to verify scaling status and update new nodes to local storage.
-	BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt *TaskOptions) (*proto.Task, error)
+	// BuildCreateNodeGroupTask build create nodegroup task
+	BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *CreateNodeGroupOption) (*proto.Task, error)
 	// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
 	// task to clean all nodes in nodegroup, release all resource in cloudprovider,
 	// finally delete nodes information in local storage.
 	BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
+	// BuildMoveNodesToGroupTask when move nodes to nodegroup, we need to create background task
+	BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
+	// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
+	BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
+	// BuildUpdateDesiredNodesTask update nodegroup desired node
+	BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
 
 	// ClusterManager taskList
 

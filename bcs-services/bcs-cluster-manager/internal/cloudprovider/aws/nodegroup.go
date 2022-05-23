@@ -27,8 +27,8 @@ type NodeGroup struct {
 }
 
 // CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
-func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
@@ -48,8 +48,8 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 }
 
 // MoveNodesToGroup add cluster nodes to NodeGroup
-func (ng *NodeGroup) MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+func (ng *NodeGroup) MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
@@ -59,13 +59,13 @@ func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.Node
 
 // CleanNodesInGroup clean specified nodes in NodeGroup,
 func (ng *NodeGroup) CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup,
-	opt *cloudprovider.CleanNodesOption) (*cloudprovider.CleanNodesResponse, error) {
+	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // UpdateDesiredNodes update nodegroup desired node
 func (ng *NodeGroup) UpdateDesiredNodes(desiredNode uint32, group *proto.NodeGroup,
-	opt *cloudprovider.UpdateDesiredNodeOption) (*cloudprovider.ScalingResponse, error) {
+	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

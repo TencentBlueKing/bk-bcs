@@ -68,6 +68,31 @@ func newtask() *Task {
 	task.works[removeNodesFromClusterTask] = tasks.RemoveNodesFromClusterTask
 	task.works[updateRemoveNodeDBInfoTask] = tasks.UpdateRemoveNodeDBInfoTask
 
+	// init qcloud node-group task
+
+	// create nodeGroup task
+	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
+	task.works[checkCloudNodeGroupStatusTask] = tasks.CheckCloudNodeGroupStatusTask
+	task.works[installAutoScalerTask] = tasks.InstallAutoScalerTask
+	task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
+
+	// delete nodeGroup task
+	task.works[deleteNodeGroupTask] = tasks.DeleteCloudNodeGroupTask
+	task.works[uninstallAutoScalerTask] = tasks.UnInstallAutoScalerTask
+	task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
+
+	// clean node in nodeGroup task
+	task.works[cleanNodeGroupNodesTask] = tasks.CleanNodeGroupNodesTask
+	task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
+	task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
+
+	// update desired nodes task
+	task.works[updateDesiredNodesTask] = tasks.UpdateDesiredNodesTask
+	task.works[checkUpdateDesiredNodesStatusTask] = tasks.CheckUpdateDesiredNodesStatusTask
+	task.works[updateDesiredNodesDBInfoTask] = tasks.UpdateDesiredNodesDBInfoTask
+
+	// move nodes to nodeGroup task
+
 	return task
 }
 
@@ -683,21 +708,223 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	return task, nil
 }
 
-//BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
-// including remove nodes from NodeGroup, clean data in nodes
-func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
-	opt *cloudprovider.TaskOptions) (*proto.Task, error) {
-	//build task step1: move nodes out of nodegroup
-	//step2: delete nodes in cluster
-	//step3: delete nodes record in local storage
-	return nil, cloudprovider.ErrCloudNotImplemented
+// BuildCreateNodeGroupTask build create node group task
+func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
+	*proto.Task, error) {
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CreateNodeGroup),
+		TaskName:       "创建 NodeGroup",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(createNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. call qcloud create node group
+	createStep := &proto.Step{
+		Name:       createCloudNodeGroupTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: createCloudNodeGroupTask,
+		TaskName:   "创建 NodeGroup",
+	}
+	createStep.Params["ClusterID"] = group.ClusterID
+	createStep.Params["NodeGroupID"] = group.NodeGroupID
+	createStep.Params["CloudID"] = group.Provider
+
+	task.Steps[createCloudNodeGroupTask] = createStep
+	task.StepSequence = append(task.StepSequence, createCloudNodeGroupTask)
+
+	// step2. wait qcloud create node group complete
+	checkStep := &proto.Step{
+		Name:       checkCloudNodeGroupStatusTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: checkCloudNodeGroupStatusTask,
+		TaskName:   "检测 NodeGroup 状态",
+	}
+	checkStep.Params["ClusterID"] = group.ClusterID
+	checkStep.Params["NodeGroupID"] = group.NodeGroupID
+	checkStep.Params["CloudID"] = group.Provider
+
+	task.Steps[checkCloudNodeGroupStatusTask] = checkStep
+	task.StepSequence = append(task.StepSequence, checkCloudNodeGroupStatusTask)
+
+	// step3. ensure autoscaler in cluster
+	if group.EnableAutoscale {
+		installCAStep := &proto.Step{
+			Name:       installAutoScalerTask,
+			System:     "api",
+			Params:     make(map[string]string),
+			Retry:      3,
+			Status:     cloudprovider.TaskStatusNotStarted,
+			TaskMethod: installAutoScalerTask,
+			TaskName:   "开启自动伸缩组件",
+		}
+		installCAStep.Params["ClusterID"] = group.ClusterID
+		installCAStep.Params["NodeGroupID"] = group.NodeGroupID
+		installCAStep.Params["CloudID"] = group.Provider
+
+		task.Steps[installAutoScalerTask] = installCAStep
+		task.StepSequence = append(task.StepSequence, installAutoScalerTask)
+	}
+
+	// step4. update node group info in DB
+	updateDBStep := &proto.Step{
+		Name:       updateCreateNodeGroupDBInfoTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: updateCreateNodeGroupDBInfoTask,
+		TaskName:   "更新任务状态",
+	}
+	updateDBStep.Params["ClusterID"] = group.ClusterID
+	updateDBStep.Params["NodeGroupID"] = group.NodeGroupID
+	updateDBStep.Params["CloudID"] = group.Provider
+
+	task.Steps[updateCreateNodeGroupDBInfoTask] = updateDBStep
+	task.StepSequence = append(task.StepSequence, updateCreateNodeGroupDBInfoTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams["JobType"] = cloudprovider.CreateNodeGroup.String()
+
+	return task, nil
 }
 
-//BuildScalingNodesTask when scaling nodes, we need to create background
-// task to verify scaling status and update new nodes to local storage
-func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt *cloudprovider.TaskOptions) (*proto.Task, error) {
-	//validate request params
-	return nil, nil
+// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
+// including remove nodes from NodeGroup, clean data in nodes
+func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
+	// validate request params
+	if nodes == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask nodes info empty")
+	}
+	if group == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CleanNodeGroupNodes),
+		TaskName:       "移除 NodeGroup 节点",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(cleanNodeGroupNodesTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1: move nodes out of nodegroup
+	createStep := &proto.Step{
+		Name:       cleanNodeGroupNodesTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: cleanNodeGroupNodesTask,
+		TaskName:   "移除云 NodeGroup 节点",
+	}
+	createStep.Params["ClusterID"] = group.ClusterID
+	createStep.Params["NodeGroupID"] = group.NodeGroupID
+	createStep.Params["CloudID"] = group.Provider
+	nodeIDs := make([]string, 0)
+	for _, v := range nodes {
+		nodeIDs = append(nodeIDs, v.NodeID)
+	}
+	createStep.Params["NodesIDs"] = strings.Join(nodeIDs, ",")
+
+	task.Steps[cleanNodeGroupNodesTask] = createStep
+	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesTask)
+
+	// step2: check node group status
+	checkStep := &proto.Step{
+		Name:       checkCleanNodeGroupNodesStatusTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: checkCleanNodeGroupNodesStatusTask,
+		TaskName:   "检测 NodeGroup 节点移除状态",
+	}
+	checkStep.Params["ClusterID"] = group.ClusterID
+	checkStep.Params["NodeGroupID"] = group.NodeGroupID
+	checkStep.Params["CloudID"] = group.Provider
+
+	task.Steps[checkCleanNodeGroupNodesStatusTask] = checkStep
+	task.StepSequence = append(task.StepSequence, checkCleanNodeGroupNodesStatusTask)
+
+	// step3: delete nodes record in local storage
+	dbStep := &proto.Step{
+		Name:       updateCleanNodeGroupNodesDBInfoTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: updateCleanNodeGroupNodesDBInfoTask,
+		TaskName:   "更新任务状态",
+	}
+	dbStep.Params["ClusterID"] = group.ClusterID
+	dbStep.Params["NodeGroupID"] = group.NodeGroupID
+	dbStep.Params["CloudID"] = group.Provider
+
+	task.Steps[updateCleanNodeGroupNodesDBInfoTask] = dbStep
+	task.StepSequence = append(task.StepSequence, updateCleanNodeGroupNodesDBInfoTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams["JobType"] = cloudprovider.CleanNodeGroupNodesJob.String()
+	return task, nil
 }
 
 //BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
@@ -706,5 +933,195 @@ func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt
 //@param group: need to delete
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
-	return nil, nil
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroupDisiredNode),
+		TaskName:       "删除 NodeGroup",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(deleteNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. call qcloud delete node group
+	deleteStep := &proto.Step{
+		Name:       deleteNodeGroupTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: deleteNodeGroupTask,
+		TaskName:   "删除云 NodeGroup",
+	}
+	deleteStep.Params["ClusterID"] = group.ClusterID
+	deleteStep.Params["NodeGroupID"] = group.NodeGroupID
+	deleteStep.Params["CloudID"] = group.Provider
+
+	task.Steps[deleteNodeGroupTask] = deleteStep
+	task.StepSequence = append(task.StepSequence, deleteNodeGroupTask)
+
+	// step2. uninstall autoscaler
+	uninstallStep := &proto.Step{
+		Name:       uninstallAutoScalerTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: uninstallAutoScalerTask,
+		TaskName:   "删除自动伸缩组件",
+	}
+	uninstallStep.Params["ClusterID"] = group.ClusterID
+	uninstallStep.Params["NodeGroupID"] = group.NodeGroupID
+	uninstallStep.Params["CloudID"] = group.Provider
+
+	task.Steps[uninstallAutoScalerTask] = uninstallStep
+	task.StepSequence = append(task.StepSequence, uninstallAutoScalerTask)
+
+	// step3. update node group info in DB
+	dbStep := &proto.Step{
+		Name:       updateDeleteNodeGroupDBInfoTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: updateDeleteNodeGroupDBInfoTask,
+		TaskName:   "更新任务状态",
+	}
+	dbStep.Params["ClusterID"] = group.ClusterID
+	dbStep.Params["NodeGroupID"] = group.NodeGroupID
+	dbStep.Params["CloudID"] = group.Provider
+
+	task.Steps[updateDeleteNodeGroupDBInfoTask] = dbStep
+	task.StepSequence = append(task.StepSequence, updateDeleteNodeGroupDBInfoTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams["JobType"] = cloudprovider.DeleteNodeGroup.String()
+	return task, nil
+}
+
+// BuildMoveNodesToGroupTask build move nodes to group task
+func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildUpdateDesiredNodesTask build update desired nodes task
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
+	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroupDisiredNode),
+		TaskName:       "更新 NodeGroup 期望实例数",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateNodeGroupDisiredNodeTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. call qcloud update node group desired nodes
+	desiredStep := &proto.Step{
+		Name:       updateDesiredNodesTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: updateDesiredNodesTask,
+		TaskName:   "修改云 NodeGroup 期望实例数",
+	}
+	desiredStep.Params["ClusterID"] = group.ClusterID
+	desiredStep.Params["NodeGroupID"] = group.NodeGroupID
+	desiredStep.Params["CloudID"] = group.Provider
+
+	task.Steps[updateDesiredNodesTask] = desiredStep
+	task.StepSequence = append(task.StepSequence, updateDesiredNodesTask)
+
+	// step2. wait nodegroup node count is equal to desired nodes and all nodes status is running
+	checkStep := &proto.Step{
+		Name:       checkUpdateDesiredNodesStatusTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: checkUpdateDesiredNodesStatusTask,
+		TaskName:   "检测 NodeGroup 节点数修改状态",
+	}
+	checkStep.Params["ClusterID"] = group.ClusterID
+	checkStep.Params["NodeGroupID"] = group.NodeGroupID
+	checkStep.Params["CloudID"] = group.Provider
+
+	task.Steps[checkUpdateDesiredNodesStatusTask] = checkStep
+	task.StepSequence = append(task.StepSequence, checkUpdateDesiredNodesStatusTask)
+
+	// step3. update node group info in DB
+	dbStep := &proto.Step{
+		Name:       updateDesiredNodesDBInfoTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: updateDesiredNodesDBInfoTask,
+		TaskName:   "更新任务状态",
+	}
+	dbStep.Params["ClusterID"] = group.ClusterID
+	dbStep.Params["NodeGroupID"] = group.NodeGroupID
+	dbStep.Params["CloudID"] = group.Provider
+
+	task.Steps[updateDesiredNodesDBInfoTask] = dbStep
+	task.StepSequence = append(task.StepSequence, updateDesiredNodesDBInfoTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams["JobType"] = cloudprovider.UpdateNodeGroupDisiredNode.String()
+	return task, nil
 }

@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 )
 
@@ -106,4 +107,20 @@ func TestGetZoneInfoByRegion(t *testing.T) {
 	}
 
 	t.Log(zoneInfo)
+}
+
+func TestDescribeInstanceTypeConfigs(t *testing.T) {
+	filters := []*Filter{
+		{Name: "zone", Values: []string{"ap-guangzhou-3"}},
+	}
+	instanceTypeConfigs, err := nodeManager.DescribeInstanceTypeConfigs(filters, &cloudprovider.CommonOption{
+		Key:    "xxx",
+		Secret: "xxx",
+		Region: regions.Guangzhou,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(utils.ToJSONString(instanceTypeConfigs))
 }

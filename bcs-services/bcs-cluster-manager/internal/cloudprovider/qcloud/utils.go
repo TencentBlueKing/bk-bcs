@@ -31,11 +31,21 @@ const (
 	tkeAddNodeTaskTemplate = "tke-add node: %s"
 	// tkeCleanNodeTaskTemplate bk-sops add task template
 	tkeCleanNodeTaskTemplate = "tke-remove node: %s"
+	// createNodeGroupTaskTemplate bk-sops add task template
+	createNodeGroupTaskTemplate = "tke-create node group: %s/%s"
+	// deleteNodeGroupTaskTemplate bk-sops add task template
+	deleteNodeGroupTaskTemplate = "tke-delete node group: %s/%s"
+	// updateNodeGroupDisiredNode bk-sops add task template
+	updateNodeGroupDisiredNodeTemplate = "tke-update node group disired node: %s/%s"
+	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
+	cleanNodeGroupNodesTaskTemplate = "tke-remove node group nodes: %s/%s"
+	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
+	moveNodesToNodeGroupTaskTemplate = "tke-move nodes to node group: %s/%s"
 )
 
 var (
 	// import cluster task
-	importClusterNodesTask = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
+	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
 	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
 
 	// create cluster task
@@ -58,4 +68,27 @@ var (
 	// remove node from cluster
 	removeNodesFromClusterTask = fmt.Sprintf("%s-RemoveNodesFromClusterTask", cloudName)
 	updateRemoveNodeDBInfoTask = fmt.Sprintf("%s-UpdateRemoveNodeDBInfoTask", cloudName)
+
+	// create nodeGroup task
+	createCloudNodeGroupTask        = fmt.Sprintf("%s-CreateCloudNodeGroupTask", cloudName)
+	checkCloudNodeGroupStatusTask   = fmt.Sprintf("%s-CheckCloudNodeGroupStatusTask", cloudName)
+	installAutoScalerTask           = fmt.Sprintf("%s-InstallAutoScalerTask", cloudName)
+	updateCreateNodeGroupDBInfoTask = fmt.Sprintf("%s-UpdateCreateNodeGroupDBInfoTask", cloudName)
+
+	// delete nodeGroup task
+	deleteNodeGroupTask             = fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName)
+	uninstallAutoScalerTask         = fmt.Sprintf("%s-UninstallAutoScalerTask", cloudName)
+	updateDeleteNodeGroupDBInfoTask = fmt.Sprintf("%s-UpdateDeleteNodeGroupDBInfoTask", cloudName)
+
+	// clean node in nodeGroup task
+	cleanNodeGroupNodesTask             = fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName)
+	checkCleanNodeGroupNodesStatusTask  = fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName)
+	updateCleanNodeGroupNodesDBInfoTask = fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName)
+
+	// update desired nodes task
+	updateDesiredNodesTask            = fmt.Sprintf("%s-UpdateDesiredNodesTask", cloudName)
+	checkUpdateDesiredNodesStatusTask = fmt.Sprintf("%s-CheckUpdateDesiredNodesStatusTask", cloudName)
+	updateDesiredNodesDBInfoTask      = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
+
+	// move nodes to nodeGroup task
 )
