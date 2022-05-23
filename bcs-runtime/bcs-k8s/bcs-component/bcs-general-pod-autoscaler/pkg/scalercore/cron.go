@@ -42,6 +42,7 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 	var max int32 = -1
 	var metricsServer metrics.PrometheusMetricServer
 	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
+	startTime := time.Now()
 	for _, t := range s.ranges {
 		timeMetric := t.Schedule
 		_, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
@@ -61,6 +62,10 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 	}
 	if max == -1 {
 		klog.V(4).Infof("Now is not in any time range")
+	} else {
+		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), recordScheduleName,
+			"success", time.Since(startTime))
+		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), recordScheduleName)
 	}
 	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "time", recordScheduleName,
 		int64(max), int64(currentReplicas))

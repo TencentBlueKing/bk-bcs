@@ -15,6 +15,7 @@ package metrics
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -66,6 +67,33 @@ var (
 			Help:      "Number of scaler errors",
 		},
 		metricLabels,
+	)
+	scalerExecCounts = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "scaler",
+			Name:      "exec_counts",
+			Help:      "Counts of executing scaler",
+		},
+		metricLabels,
+	)
+	scalerExecDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "scaler",
+			Name:      "exec_duration",
+			Help:      "Duration(seconds) of executing scaler",
+		},
+		[]string{"namespace", "name", "metric", "scaledObject", "scaler", "status"},
+	)
+	scaleUpdateDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "update_duration",
+			Help:      "Duration(seconds) of updating scale",
+		},
+		[]string{"namespace", "name", "scaledObject", "status"},
 	)
 	scaledObjectErrors = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -121,6 +149,9 @@ func init() {
 	registry.MustRegister(gpaDesiredReplicasValue)
 	registry.MustRegister(gpaMinReplicasValue)
 	registry.MustRegister(gpaMaxReplicasValue)
+	registry.MustRegister(scalerExecCounts)
+	registry.MustRegister(scalerExecDuration)
+	registry.MustRegister(scaleUpdateDuration)
 }
 
 // NewServer creates a new http serving instance of prometheus metrics
@@ -152,10 +183,13 @@ func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(namespace stri
 }
 
 // RecordGPAScalerDesiredReplicas record desired replicas value computed by a scaling mode for GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, name string, scaledObject string, scaler string, replicas int32) {
-	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
+func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, name string,
+	scaledObject string, scaler string, replicas int32) {
+	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name,
+		"scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
 }
 
+// RecordGPAReplicas record final replicas value for GPA
 func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, name string, scaledObject string,
 	minReplicas int32, maxReplicas int32, desiredReplicas int32) {
 	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(minReplicas))
@@ -163,8 +197,27 @@ func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, 
 	gpaDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(desiredReplicas))
 }
 
+// RecordScalerExecCounts records counts of executing scaler. In metric mode, it records counts of every metric.
+func (metricsServer PrometheusMetricServer) RecordScalerExecCounts(namespace, name, scaledObject, scaler, metric string) {
+	scalerExecCounts.With(getLabels(namespace, name, scaledObject, scaler, metric)).Inc()
+}
+
+// RecordScalerExecDuration records duration by seconds when executing scaler.
+// In metric mode, it records duration of executing every metric.
+func (metricsServer PrometheusMetricServer) RecordScalerExecDuration(namespace, name, scaledObject,
+	scaler, metric, status string, duration time.Duration) {
+	scalerExecDuration.WithLabelValues(namespace, name, scaledObject, scaler, metric, status).Observe(duration.Seconds())
+}
+
+// RecordScalerUpdateDuration records duration by seconds when updating a scale.
+func (metricsServer PrometheusMetricServer) RecordScalerUpdateDuration(namespace, name, scaledObject,
+	status string, duration time.Duration) {
+	scaleUpdateDuration.WithLabelValues(namespace, name, scaledObject, status).Observe(duration.Seconds())
+}
+
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, name string, scaledObject string, scaler string, metric string, err error) {
+func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, name string, scaledObject string,
+	scaler string, metric string, err error) {
 	if err != nil {
 		scalerErrors.With(getLabels(namespace, name, scaledObject, scaler, metric)).Inc()
 		// scaledObjectErrors.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject}).Inc()
@@ -180,7 +233,8 @@ func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace strin
 }
 
 // RecordScalerObjectError counts the number of errors with the scaled object
-func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, name string, scaledObject string, err error) {
+func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, name string,
+	scaledObject string, err error) {
 	labels := prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}
 	if err != nil {
 		scaledObjectErrors.With(labels).Inc()

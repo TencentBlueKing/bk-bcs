@@ -298,17 +298,24 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 	var invalidMetricCondition autoscaling.GeneralPodAutoscalerCondition
 
 	for i, metricSpec := range metricSpecs {
+		startTime := time.Now()
 		replicaCountProposal, metricNameProposal, timestampProposal, condition, err := a.computeReplicasForMetric(gpa,
 			metricSpec, specReplicas, statusReplicas, selector, &statuses[i])
 		metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
 			getMetricName(metricSpec), err)
+		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
+			getMetricName(metricSpec))
 		if err != nil {
+			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
+				getMetricName(metricSpec), "failure", time.Since(startTime))
 			if invalidMetricsCount <= 0 {
 				invalidMetricCondition = condition
 				invalidMetricError = err
 			}
 			invalidMetricsCount++
 		}
+		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
+			getMetricName(metricSpec), "success", time.Since(startTime))
 		if err == nil && (replicas == -1 || replicaCountProposal > replicas) {
 			timestamp = timestampProposal
 			replicas = replicaCountProposal
@@ -1089,8 +1096,10 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 
 	if rescale {
 		scale.Spec.Replicas = desiredReplicas
+		startTime := time.Now()
 		_, err = a.scaleNamespacer.Scales(gpa.Namespace).Update(targetGR, scale)
 		if err != nil {
+			metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "failure", time.Since(startTime))
 			a.eventRecorder.Eventf(gpa, v1.EventTypeWarning, "FailedRescale",
 				"New size: %d; reason: %s; error: %v", desiredReplicas, rescaleReason, err.Error())
 			setCondition(gpa, autoscaling.AbleToScale, v1.ConditionFalse, "FailedUpdateScale",
@@ -1101,6 +1110,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			}
 			return fmt.Errorf("failed to rescale %s: %v", reference, err)
 		}
+		metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "success", time.Since(startTime))
 		setCondition(gpa, autoscaling.AbleToScale, v1.ConditionTrue, "SucceededRescale",
 			"the GPA controller was able to update the target scale to %d", desiredReplicas)
 		a.eventRecorder.Eventf(gpa, v1.EventTypeNormal, "SuccessfulRescale", "New size: %d; reason: %s",
@@ -1439,24 +1449,32 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 	replicas = -1
 	klog.V(4).Infof("Scaler number of %v: %v", gpa.Name, len(scalers))
 	key := getTargetRefKey(gpa)
+	var metricName string
 	for _, s := range scalers {
+		startTime := time.Now()
 		chainReplicas, err := s.GetReplicas(gpa, currentReplicas)
 		if err != nil {
 			if s.ScalerName() == "webhook" {
-				var webhookMetric string
 				if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
-					webhookMetric = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
-					metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "webhook", webhookMetric, err)
-				} else {
-					webhookMetric = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
+					metricName = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
+				} else if gpa.Spec.WebhookMode.WebhookClientConfig.Service != nil {
+					metricName = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
 						gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
-					metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "webhook", webhookMetric, err)
 				}
+				metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName,
+					"error", time.Since(startTime))
+				metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName, err)
+				metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName)
 			}
 			klog.Error(err)
 			errs = pkgerrors.Wrap(err,
 				fmt.Sprintf("GPA: %v get replicas error when call %v", gpa.Name, s.ScalerName()))
 			continue
+		}
+		if s.ScalerName() == "webhook" {
+			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName,
+				"success", time.Since(startTime))
+			metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName)
 		}
 		klog.V(4).Infof("GPA: %v scaler: %v, suggested replicas: %v",
 			gpa.Name, s.ScalerName(), chainReplicas)

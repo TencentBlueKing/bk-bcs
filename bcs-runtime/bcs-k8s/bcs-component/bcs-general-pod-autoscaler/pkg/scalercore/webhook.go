@@ -76,6 +76,17 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 		return -1, err
 	}
 
+	var metricsServer metrics.PrometheusMetricServer
+	var metricName string
+	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
+	if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
+		metricName = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
+	} else {
+		metricName = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
+			gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
+	}
+	startTime := time.Now()
+
 	res, err := client.Post(
 		u.String(),
 		"application/json",
@@ -101,15 +112,9 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	if err != nil {
 		return -1, err
 	}
+	metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName,
+		"success", time.Since(startTime))
 
-	var metricsServer metrics.PrometheusMetricServer
-	var webhookMetric string
-	if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
-		webhookMetric = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
-	} else {
-		webhookMetric = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
-			gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
-	}
 	var faResp requests.AutoscaleReview
 	err = json.Unmarshal(result, &faResp)
 	if err != nil {
@@ -120,16 +125,15 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	}
 	klog.Infof("Webhook Response: Scale: %v, Replicas: %v, CurrentReplicas: %v",
 		faResp.Response.Scale, faResp.Response.Replicas, currentReplicas)
-	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
 	if faResp.Response.Scale {
 		metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook",
-			webhookMetric, int64(faResp.Response.Replicas), int64(currentReplicas))
+			metricName, int64(faResp.Response.Replicas), int64(currentReplicas))
 		metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook",
 			faResp.Response.Replicas)
 		return faResp.Response.Replicas, nil
 	}
 	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook",
-		webhookMetric, int64(currentReplicas), int64(currentReplicas))
+		metricName, int64(currentReplicas), int64(currentReplicas))
 	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook",
 		currentReplicas)
 	return -1, nil
