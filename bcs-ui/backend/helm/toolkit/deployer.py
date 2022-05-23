@@ -221,7 +221,9 @@ def helm_uninstall(access_token: str, release_args: ArgsDict) -> Optional[str]:
 
 
 def _generate_err_msg(op: str, release_args: ArgsDict, e: Exception) -> str:
-    return (
-        f"helm {op} {release_args['name']} -n {release_args['namespace']} "
-        f"failed in cluster({release_args['cluster_id']}): {e}"
+    err_msg = (
+        f"helm {op} {release_args['name']} -n {release_args['namespace']} failed "
+        f"in cluster({release_args['cluster_id']}): {e}"
     )
+    logger.error(err_msg)
+    return err_msg

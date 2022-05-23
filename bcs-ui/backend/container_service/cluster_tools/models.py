@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 import re
 from typing import Optional
 
+from django.conf import settings
 from django.db import models
 
 from backend.helm.helm.providers.constants import PUBLIC_REPO_URL
@@ -40,9 +41,14 @@ class Tool(models.Model):
 
     @property
     def default_chart_url(self) -> str:
-        if self.default_version:
-            return f'{PUBLIC_REPO_URL}charts/{self.chart_name}-{self.default_version}'
-        return ''
+        if not self.default_version:
+            return ''
+
+        chart_tgz = f'{self.chart_name}-{self.default_version}.tgz'
+        if settings.CLUSTER_TOOLS_REPO_PREFIX:
+            return f'{settings.CLUSTER_TOOLS_REPO_PREFIX}/{chart_tgz}'
+        else:
+            return f'{PUBLIC_REPO_URL}charts/{chart_tgz}'
 
 
 class InstalledTool(BaseModel):
@@ -90,18 +96,28 @@ class InstalledTool(BaseModel):
         return re.sub(r'{}-(.*).tgz'.format(chart_name), r'\1', chart_pkg)
 
     def success(self):
+        """安装或更新成功"""
         self._update_status(ToolStatus.DEPLOYED, 'success')
 
     def fail(self, err_msg: str):
+        """变更失败. 变更包括安装, 更新和卸载"""
         self._update_status(ToolStatus.FAILED, err_msg)
 
     def on_upgrade(self, operator: str, chart_url: str, values: Optional[str] = None):
+        """更新中的状态流转"""
         self.updator = operator
         self.chart_url = chart_url
         self.status = ToolStatus.PENDING
         self.message = 'start to upgrade'
         if values:
             self.values = values
+        self.save()
+
+    def on_delete(self, operator: str):
+        """删除中的状态流转"""
+        self.updator = operator
+        self.status = ToolStatus.PENDING
+        self.message = 'start to uninstall'
         self.save()
 
     def _update_status(self, status: str, message: str):

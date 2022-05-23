@@ -152,8 +152,12 @@ class ToolManager:
         """卸载组件
 
         :param request_user: 操作者信息(request.user)
+
+        TODO 增加删除审计
         """
-        self.cmd.uninstall(request_user, self.tool)
+        itool = InstalledTool.objects.get(tool=self.tool, project_id=self.project_id, cluster_id=self.cluster_id)
+        itool.on_delete(request_user.username)
+        self.cmd.uninstall(request_user, itool)
 
 
 @shared_task

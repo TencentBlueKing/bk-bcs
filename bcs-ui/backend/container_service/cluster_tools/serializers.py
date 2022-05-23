@@ -24,6 +24,7 @@ class ClusterToolSZL(serializers.ModelSerializer):
 
     class Meta:
         models = Tool
+        fields = '__all__'
 
     def get_installed_info(self, obj: Tool) -> Dict[str, str]:
         try:

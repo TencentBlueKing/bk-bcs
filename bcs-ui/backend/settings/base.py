@@ -497,6 +497,9 @@ BK_MONITOR_QUERY_HOST = os.environ.get(
     'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
 )
 
+# 组件库的 Chart 仓库前缀
+CLUSTER_TOOLS_REPO_PREFIX = os.environ.get('CLUSTER_TOOLS_REPO_PREFIX')
+
 # 是否支持使用 Mesos 服务
 SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
 
