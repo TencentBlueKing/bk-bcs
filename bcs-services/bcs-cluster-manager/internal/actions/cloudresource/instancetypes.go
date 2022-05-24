@@ -11,7 +11,7 @@
  *
  */
 
-package cloudvpc
+package cloudresource
 
 import (
 	"context"
@@ -24,30 +24,28 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
-// ListSecurityGroupsAction action for list security groups
-type ListSecurityGroupsAction struct {
-	ctx            context.Context
-	cloud          *cmproto.Cloud
-	account        *cmproto.CloudAccount
-	model          store.ClusterManagerModel
-	req            *cmproto.ListCloudSecurityGroupsRequest
-	resp           *cmproto.ListCloudSecurityGroupsResponse
-	securityGroups []*cmproto.SecurityGroup
+// ListNodeTypeAction list action for node type
+type ListNodeTypeAction struct {
+	ctx          context.Context
+	cloud        *cmproto.Cloud
+	account      *cmproto.CloudAccount
+	model        store.ClusterManagerModel
+	req          *cmproto.ListCloudInstanceTypeRequest
+	resp         *cmproto.ListCloudInstanceTypeResponse
+	nodeTypeList []*cmproto.InstanceType
 }
 
-// NewListSecurityGroupsAction create list action for security groups
-func NewListSecurityGroupsAction(model store.ClusterManagerModel) *ListSecurityGroupsAction {
-	return &ListSecurityGroupsAction{
+// NewListNodeTypeAction create list action for node type
+func NewListNodeTypeAction(model store.ClusterManagerModel) *ListNodeTypeAction {
+	return &ListNodeTypeAction{
 		model: model,
 	}
 }
 
-func (la *ListSecurityGroupsAction) validate() error {
+func (la *ListNodeTypeAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
 	}
-
-	// get cloud/account info
 	err := la.getRelativeData()
 	if err != nil {
 		return err
@@ -58,7 +56,7 @@ func (la *ListSecurityGroupsAction) validate() error {
 		return err
 	}
 
-	err = validate.ListSecurityGroupsValidate(la.req, &cmproto.Account{
+	err = validate.ListInstanceTypeValidate(la.req, &cmproto.Account{
 		SecretID:  la.account.Account.SecretID,
 		SecretKey: la.account.Account.SecretKey,
 	})
@@ -69,7 +67,7 @@ func (la *ListSecurityGroupsAction) validate() error {
 	return nil
 }
 
-func (la *ListSecurityGroupsAction) getRelativeData() error {
+func (la *ListNodeTypeAction) getRelativeData() error {
 	cloud, err := actions.GetCloudByCloudID(la.model, la.req.CloudID)
 	if err != nil {
 		return err
@@ -84,18 +82,18 @@ func (la *ListSecurityGroupsAction) getRelativeData() error {
 	return nil
 }
 
-func (la *ListSecurityGroupsAction) setResp(code uint32, msg string) {
+func (la *ListNodeTypeAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.securityGroups
+	la.resp.Data = la.nodeTypeList
 }
 
-func (la *ListSecurityGroupsAction) listCloudSecurityGroups() error {
+func (la *ListNodeTypeAction) ListCloudInstancetypes() error {
 	// create vpc client with cloudProvider
-	vpcMgr, err := cloudprovider.GetVPCMgr(la.cloud.CloudProvider)
+	nodeMgr, err := cloudprovider.GetNodeMgr(la.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get cloudprovider %s VPCManager for list SecurityGroups failed, %s", la.cloud.CloudProvider, err.Error())
+		blog.Errorf("get cloudprovider %s VPCManager for list subnets failed, %s", la.cloud.CloudProvider, err.Error())
 		return err
 	}
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
@@ -103,27 +101,27 @@ func (la *ListSecurityGroupsAction) listCloudSecurityGroups() error {
 		AccountID: la.req.AccountID,
 	})
 	if err != nil {
-		blog.Errorf("get credential for cloudprovider %s/%s list SecurityGroups failed, %s",
+		blog.Errorf("get credential for cloudprovider %s/%s list subnets failed, %s",
 			la.cloud.CloudID, la.cloud.CloudProvider, err.Error())
 		return err
 	}
 	cmOption.Region = la.req.Region
 
-	// get sgs list
-	sgs, err := vpcMgr.ListSecurityGroups(cmOption)
+	// get instance types list
+	insTypes, err := nodeMgr.ListNodeInstance(la.req.Zone, la.req.NodeFamily, cmOption)
 	if err != nil {
 		return err
 	}
-	la.securityGroups = sgs
+	la.nodeTypeList = insTypes
 
 	return nil
 }
 
-// Handle handle list security groups
-func (la *ListSecurityGroupsAction) Handle(
-	ctx context.Context, req *cmproto.ListCloudSecurityGroupsRequest, resp *cmproto.ListCloudSecurityGroupsResponse) {
+// Handle handle list node type request
+func (la *ListNodeTypeAction) Handle(ctx context.Context,
+	req *cmproto.ListCloudInstanceTypeRequest, resp *cmproto.ListCloudInstanceTypeResponse) {
 	if req == nil || resp == nil {
-		blog.Errorf("list security groups failed, req or resp is empty")
+		blog.Errorf("list node type failed, req or resp is empty")
 		return
 	}
 	la.ctx = ctx
@@ -135,7 +133,7 @@ func (la *ListSecurityGroupsAction) Handle(
 		return
 	}
 
-	if err := la.listCloudSecurityGroups(); err != nil {
+	if err := la.ListCloudInstancetypes(); err != nil {
 		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}

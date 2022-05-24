@@ -416,20 +416,26 @@ func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, 
 	return zoneIDMap, nil
 }
 
-// ListNodeType list node type by zone and node family
-func (nm *NodeManager) ListNodeType(zone, nodeFamily string, opt *cloudprovider.CommonOption) (
-	[]*proto.NodeType, error) {
+// ListNodeInstance list node type by zone and node family
+func (nm *NodeManager) ListNodeInstance(zone, nodeFamily string, opt *cloudprovider.CommonOption) (
+	[]*proto.InstanceType, error) {
 	blog.Infof("ListNodeType input: zone/%s, nodeFamily/%s", zone, nodeFamily)
+
 	filter := make([]*Filter, 0)
-	filter = append(filter, &Filter{Name: "zone", Values: []string{zone}})
-	filter = append(filter, &Filter{Name: "instance-family", Values: []string{nodeFamily}})
+	if len(zone) > 0 {
+		filter = append(filter, &Filter{Name: Zone.String(), Values: []string{zone}})
+	}
+	if len(nodeFamily) > 0 {
+		filter = append(filter, &Filter{Name: InstanceFamily.String(), Values: []string{nodeFamily}})
+	}
+
 	list, err := nm.DescribeInstanceTypeConfigs(filter, opt)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*proto.NodeType, 0)
+	result := make([]*proto.InstanceType, 0)
 	for _, v := range list {
-		result = append(result, &proto.NodeType{
+		result = append(result, &proto.InstanceType{
 			Zone:       *v.Zone,
 			NodeType:   *v.InstanceType,
 			NodeFamily: *v.InstanceFamily,

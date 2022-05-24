@@ -220,8 +220,8 @@ type NodeManager interface {
 	GetCloudRegions(opt *CommonOption) ([]*proto.RegionInfo, error)
 	// GetZoneList get zoneList by region
 	GetZoneList(opt *CommonOption) ([]*proto.ZoneInfo, error)
-	// ListNodeType
-	ListNodeType(zone, nodeFamily string, opt *CommonOption) ([]*proto.NodeType, error)
+	// ListNodeInstance xxx
+	ListNodeInstance(zone, nodeFamily string, opt *CommonOption) ([]*proto.InstanceType, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
@@ -229,7 +229,17 @@ type CloudValidateManager interface {
 	// ImportClusterValidate import cluster validate
 	ImportClusterValidate(req *proto.ImportClusterReq, opt *CommonOption) error
 	// ImportCloudAccountValidate import cloud account validate
-	ImportCloudAccountValidate(req *proto.Account) error
+	ImportCloudAccountValidate(account *proto.Account) error
+	// GetCloudRegionZonesValidate get cloud region zones validate
+	GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error
+	// GetCloudRegionZonesValidate get cloud region zones validate
+	ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error
+	// ListCloudSubnetsValidate list subnets validate
+	ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error
+	// ListSecurityGroupsValidate list SecurityGroups validate
+	ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error
+	// ListInstanceTypeValidate list instance type validate
+	ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error
 }
 
 // ClusterManager cloud interface for kubernetes cluster management

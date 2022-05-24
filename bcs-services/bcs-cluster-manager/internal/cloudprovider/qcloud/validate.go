@@ -101,14 +101,107 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 }
 
 // ImportCloudAccountValidate create cloudAccount account validation
-func (c *CloudValidate) ImportCloudAccountValidate(req *proto.Account) error {
+func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error {
 	// call qcloud interface to check account
-	if c == nil || req == nil {
+	if c == nil || account == nil {
 		return fmt.Errorf("%s ImportCloudAccountValidate request is empty", cloudName)
 	}
 
-	if len(req.SecretID) == 0 || len(req.SecretKey) == 0 {
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
 		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
+	}
+
+	return nil
+}
+
+// GetCloudRegionZonesValidate xxx
+func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// ListCloudRegionClusterValidate xxx
+func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudRegionClusterValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// ListCloudSubnetsValidate xxx
+func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid region info", cloudName)
+	}
+	if len(req.VpcID) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid vpcID info", cloudName)
+	}
+
+	return nil
+}
+
+// ListSecurityGroupsValidate xxx
+func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// ListInstanceTypeValidate xxx
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid region info", cloudName)
 	}
 
 	return nil

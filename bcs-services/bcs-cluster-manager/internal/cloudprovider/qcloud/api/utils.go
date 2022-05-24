@@ -27,6 +27,21 @@ const (
 	limit = 100
 )
 
+// FilterKey tke interface filterKey
+type FilterKey string
+
+// String xxx
+func (f FilterKey) String() string {
+	return string(f)
+}
+
+var (
+	// Zone zone
+	Zone FilterKey = "zone"
+	// InstanceFamily instance-family
+	InstanceFamily FilterKey = "instance-family"
+)
+
 func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) *tke.InstanceAdvancedSettings {
 	if advancedSetting != nil {
 		advancedSet := &tke.InstanceAdvancedSettings{

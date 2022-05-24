@@ -175,16 +175,6 @@ service ClusterManager {
     };
   }
 
-  rpc ListNodeType(ListNodeTypeRequest) returns (ListNodeTypeResponse) {
-    option (google.api.http) = {
-      get : "/clustermanager/v1/node/types"
-    };
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "根据筛选条件查询Node机型列表"
-      summary : "查询Node机型"
-    };
-  }
-
   //* cluster credential management
   rpc GetClusterCredential(GetClusterCredentialReq)
       returns (GetClusterCredentialResp) {
@@ -533,24 +523,6 @@ service ClusterManager {
       summary : "查询vpc cidr列表"
     };
   }
-  rpc ListSubnets(ListSubnetsRequest) returns (ListSubnetsResponse) {
-    option (google.api.http) = {
-      get : "/clustermanager/v1/vpcsubnets/{vpcID}"
-    };
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "根据vpcID获取所属vpc的子网信息"
-      summary : "查询vpc 子网列表"
-    };
-  }
-  rpc ListSecurityGroups(ListSecurityGroupsRequest) returns (ListSecurityGroupsResponse) {
-    option (google.api.http) = {
-      get : "/clustermanager/v1/securitygroups"
-    };
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "查询安全组列表"
-      summary : "查询安全组列表"
-    };
-  }
 
   //* NodeGroup information management *
   rpc CreateNodeGroup(CreateNodeGroupRequest) returns (CreateNodeGroupResponse) {
@@ -825,9 +797,9 @@ service ClusterManager {
       summary : "查询cloud地域列表"
     };
   }
-  rpc GetCloudRegionZones(GetCloudRegionZonesRequest) returns (GetCloudRegionZonesResponse) {
+  rpc GetCloudZones(GetCloudRegionZonesRequest) returns (GetCloudRegionZonesResponse) {
     option (google.api.http) = {
-      get : "/clustermanager/v1/clouds/{cloudID}/regions/{region}/zones"
+      get : "/clustermanager/v1/clouds/{cloudID}/zones"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询cloud地域可用区列表"
@@ -836,11 +808,38 @@ service ClusterManager {
   }
   rpc ListCloudRegionCluster(ListCloudRegionClusterRequest) returns (ListCloudRegionClusterResponse) {
     option (google.api.http) = {
-      get : "/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusters"
+      get : "/clustermanager/v1/clouds/{cloudID}/clusters"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询cloud地域集群列表"
       summary : "查询cloud地域集群列表"
+    };
+  }
+  rpc ListCloudSubnets(ListCloudSubnetsRequest) returns (ListCloudSubnetsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/subnets"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据vpcID获取所属vpc的子网信息"
+      summary : "查询vpc子网列表"
+    };
+  }
+  rpc ListCloudSecurityGroups(ListCloudSecurityGroupsRequest) returns (ListCloudSecurityGroupsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/securitygroups"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询安全组列表"
+      summary : "查询安全组列表"
+    };
+  }
+  rpc ListCloudInstanceTypes(ListCloudInstanceTypeRequest) returns (ListCloudInstanceTypeResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/instancetypes"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据筛选条件查询Node机型列表"
+      summary : "查询Node机型"
     };
   }
 }
@@ -7856,37 +7855,39 @@ message OperationLog {
   }];
 }
 
-message ListNodeTypeRequest {
+message ListCloudInstanceTypeRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "ListNodeTypeRequest"
+      title : "ListInstanceTypeRequest"
       description : "查询机型列表，如果填写了目标字段，则组合目标信息查询，如果全为空则为查询全量信息"
     }
   };
 
-  string zone = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  },(validate.rules).string = {min_len : 2}];
+  string zone = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "zone", 
     description: "可用区，如 ap-guangzhou-1, us-west1-a"
   },
-  (validate.rules).string = {max_len : 32}
-  ];
-  string nodeFamily = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  (validate.rules).string = {max_len : 32}];
+  string nodeFamily = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "nodeFamily", 
     description: "机型系列"
   },
-  (validate.rules).string = {max_len : 32}
-  ];
-  string clusterID = 3 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "clusterID",
-      description : "集群ID"
-    },
-    (validate.rules).string =
-      {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
-  ];
+  (validate.rules).string = {max_len : 32}];
 }
 
-message ListNodeTypeResponse {
+message ListCloudInstanceTypeResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListNodeTypeResponse"
@@ -7907,13 +7908,13 @@ message ListNodeTypeResponse {
     title : "result", 
     description : "返回结果"
   }];
-  repeated NodeType data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated InstanceType data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data", 
     description : "获取到的信息"
   }];
 }
 
-message NodeType {
+message InstanceType {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "NodeType"
@@ -7947,31 +7948,41 @@ message NodeType {
   }];
 }
 
-message ListSubnetsRequest {
+message ListCloudSubnetsRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListSubnetsRequest"
-      description : "查询vpc下子网列表"
+      description : "查询云子网列表,适配不同云"
     }
   };
 
-  string vpcID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  },(validate.rules).string = {min_len : 2}];
+  string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "vpcID", 
-    description: "vpcID"
-  },
-  (validate.rules).string = {max_len : 32}
-  ];
-  string clusterID = 2 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "clusterID",
-      description : "集群ID"
-    },
-    (validate.rules).string =
-      {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
-  ];
+    description: "过滤查询指定vpc的子网列表"
+  }];
+  string zone = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zone",
+    description: "过滤查询指定vpc的可用区子网列表"
+  }];
+  string subnetID = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subnetID",
+    description: "查询指定subnet的子网"
+  }];
 }
 
-message ListSubnetsResponse {
+message ListCloudSubnetsResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListSubnetsResponse"
@@ -7994,7 +8005,7 @@ message ListSubnetsResponse {
   }];
   repeated Subnet data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data", 
-    description : "获取到的信息"
+    description : "获取到的子网列表信息"
   }];
 }
 
@@ -8028,7 +8039,7 @@ message Subnet {
   }];
 }
 
-message ListSecurityGroupsRequest {
+message ListCloudSecurityGroupsRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListSecurityGroupsRequest"
@@ -8036,17 +8047,21 @@ message ListSecurityGroupsRequest {
     }
   };
 
-  string clusterID = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "clusterID",
-      description : "集群ID"
-    },
-    (validate.rules).string =
-      {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
-  ];
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  },(validate.rules).string = {min_len : 2}];
 }
 
-message ListSecurityGroupsResponse {
+message ListCloudSecurityGroupsResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListSecurityGroupsResponse"

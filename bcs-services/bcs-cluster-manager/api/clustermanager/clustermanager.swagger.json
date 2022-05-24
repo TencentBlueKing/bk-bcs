@@ -711,6 +711,114 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/clusters": {
+      "get": {
+        "summary": "查询cloud地域集群列表",
+        "description": "查询cloud地域集群列表",
+        "operationId": "ClusterManager_ListCloudRegionCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudRegionClusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/instancetypes": {
+      "get": {
+        "summary": "查询Node机型",
+        "description": "根据筛选条件查询Node机型列表",
+        "operationId": "ClusterManager_ListCloudInstanceTypes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudInstanceTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "zone",
+            "description": "zone. 可用区，如 ap-guangzhou-1, us-west1-a",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nodeFamily",
+            "description": "nodeFamily. 机型系列",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/regions": {
       "get": {
         "summary": "查询cloud地域列表",
@@ -751,16 +859,16 @@
         ]
       }
     },
-    "/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusters": {
+    "/clustermanager/v1/clouds/{cloudID}/securitygroups": {
       "get": {
-        "summary": "查询cloud地域集群列表",
-        "description": "查询cloud地域集群列表",
-        "operationId": "ClusterManager_ListCloudRegionCluster",
+        "summary": "查询安全组列表",
+        "description": "查询安全组列表",
+        "operationId": "ClusterManager_ListCloudSecurityGroups",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clustermanagerListCloudRegionClusterResponse"
+              "$ref": "#/definitions/clustermanagerListCloudSecurityGroupsResponse"
             }
           },
           "default": {
@@ -780,9 +888,9 @@
           },
           {
             "name": "region",
-            "description": "地域信息",
-            "in": "path",
-            "required": true,
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -798,11 +906,79 @@
         ]
       }
     },
-    "/clustermanager/v1/clouds/{cloudID}/regions/{region}/zones": {
+    "/clustermanager/v1/clouds/{cloudID}/subnets": {
+      "get": {
+        "summary": "查询vpc子网列表",
+        "description": "根据vpcID获取所属vpc的子网信息",
+        "operationId": "ClusterManager_ListCloudSubnets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudSubnetsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 过滤查询指定vpc的子网列表",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "zone",
+            "description": "zone. 过滤查询指定vpc的可用区子网列表",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subnetID",
+            "description": "subnetID. 查询指定subnet的子网",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/zones": {
       "get": {
         "summary": "查询cloud地域可用区列表",
         "description": "查询cloud地域可用区列表",
-        "operationId": "ClusterManager_GetCloudRegionZones",
+        "operationId": "ClusterManager_GetCloudZones",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -827,9 +1003,9 @@
           },
           {
             "name": "region",
-            "description": "地域信息",
-            "in": "path",
-            "required": true,
+            "description": "region. 地域信息",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -2425,53 +2601,6 @@
         ]
       }
     },
-    "/clustermanager/v1/node/types": {
-      "get": {
-        "summary": "查询Node机型",
-        "description": "根据筛选条件查询Node机型列表",
-        "operationId": "ClusterManager_ListNodeType",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerListNodeTypeResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "zone",
-            "description": "zone. 可用区，如 ap-guangzhou-1, us-west1-a",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "nodeFamily",
-            "description": "nodeFamily. 机型系列",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "description": "clusterID. 集群ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
     "/clustermanager/v1/node/{innerIP}": {
       "get": {
         "summary": "查询Node",
@@ -3243,39 +3372,6 @@
         ]
       }
     },
-    "/clustermanager/v1/securitygroups": {
-      "get": {
-        "summary": "查询安全组列表",
-        "description": "查询安全组列表",
-        "operationId": "ClusterManager_ListSecurityGroups",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerListSecurityGroupsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "clusterID",
-            "description": "clusterID. 集群ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
     "/clustermanager/v1/sharedclusters": {
       "get": {
         "summary": "查询公共Cluster列表",
@@ -3584,46 +3680,6 @@
             "description": "所属region的vpc cidr列表获取",
             "in": "path",
             "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
-    "/clustermanager/v1/vpcsubnets/{vpcID}": {
-      "get": {
-        "summary": "查询vpc 子网列表",
-        "description": "根据vpcID获取所属vpc的子网信息",
-        "operationId": "ClusterManager_ListSubnets",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerListSubnetsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "vpcID",
-            "description": "vpcID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "description": "clusterID. 集群ID",
-            "in": "query",
-            "required": false,
             "type": "string"
           }
         ],
@@ -7353,6 +7409,46 @@
       },
       "title": "InstanceTemplateConfig instance config info"
     },
+    "clustermanagerInstanceType": {
+      "type": "object",
+      "properties": {
+        "zone": {
+          "type": "string",
+          "description": "可用区",
+          "title": "zone"
+        },
+        "nodeType": {
+          "type": "string",
+          "description": "机器类型",
+          "title": "nodeType"
+        },
+        "nodeFamily": {
+          "type": "string",
+          "description": "机型系列",
+          "title": "nodeFamily"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "cpu核数",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "integer",
+          "format": "int64",
+          "description": "内存容量，单位 GB",
+          "title": "memory"
+        },
+        "gpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "gpu核数",
+          "title": "gpu"
+        }
+      },
+      "description": "机器类型",
+      "title": "NodeType"
+    },
     "clustermanagerInternetAccessible": {
       "type": "object",
       "properties": {
@@ -7588,6 +7684,42 @@
         "message"
       ]
     },
+    "clustermanagerListCloudInstanceTypeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerInstanceType"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询机型列表返回",
+      "title": "ListNodeTypeResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudRegionClusterResponse": {
       "type": "object",
       "properties": {
@@ -7687,6 +7819,78 @@
       },
       "description": "查询云模板返回",
       "title": "ListCloudResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudSecurityGroupsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerSecurityGroup"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询安全组列表返回",
+      "title": "ListSecurityGroupsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudSubnetsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerSubnet"
+          },
+          "description": "获取到的子网列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询子网列表返回",
+      "title": "ListSubnetsResponse",
       "required": [
         "code",
         "message"
@@ -7965,42 +8169,6 @@
         "message"
       ]
     },
-    "clustermanagerListNodeTypeResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "result": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "返回结果",
-          "title": "result"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerNodeType"
-          },
-          "description": "获取到的信息",
-          "title": "data"
-        }
-      },
-      "description": "查询机型列表返回",
-      "title": "ListNodeTypeResponse",
-      "required": [
-        "code",
-        "message"
-      ]
-    },
     "clustermanagerListNodesInClusterResponse": {
       "type": "object",
       "properties": {
@@ -8105,78 +8273,6 @@
       },
       "description": "查询项目返回",
       "title": "GetProjectResponse",
-      "required": [
-        "code",
-        "message"
-      ]
-    },
-    "clustermanagerListSecurityGroupsResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "result": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "返回结果",
-          "title": "result"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerSecurityGroup"
-          },
-          "description": "获取到的信息",
-          "title": "data"
-        }
-      },
-      "description": "查询安全组列表返回",
-      "title": "ListSecurityGroupsResponse",
-      "required": [
-        "code",
-        "message"
-      ]
-    },
-    "clustermanagerListSubnetsResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "result": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "返回结果",
-          "title": "result"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerSubnet"
-          },
-          "description": "获取到的信息",
-          "title": "data"
-        }
-      },
-      "description": "查询子网列表返回",
-      "title": "ListSubnetsResponse",
       "required": [
         "code",
         "message"
@@ -8808,46 +8904,6 @@
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",
       "title": "NodeTemplate"
-    },
-    "clustermanagerNodeType": {
-      "type": "object",
-      "properties": {
-        "zone": {
-          "type": "string",
-          "description": "可用区",
-          "title": "zone"
-        },
-        "nodeType": {
-          "type": "string",
-          "description": "机器类型",
-          "title": "nodeType"
-        },
-        "nodeFamily": {
-          "type": "string",
-          "description": "机型系列",
-          "title": "nodeFamily"
-        },
-        "cpu": {
-          "type": "integer",
-          "format": "int64",
-          "description": "cpu核数",
-          "title": "cpu"
-        },
-        "memory": {
-          "type": "integer",
-          "format": "int64",
-          "description": "内存容量，单位 GB",
-          "title": "memory"
-        },
-        "gpu": {
-          "type": "integer",
-          "format": "int64",
-          "description": "gpu核数",
-          "title": "gpu"
-        }
-      },
-      "description": "机器类型",
-      "title": "NodeType"
     },
     "clustermanagerOSInfo": {
       "type": "object",

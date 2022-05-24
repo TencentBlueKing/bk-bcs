@@ -92,7 +92,8 @@ func (la *ListCloudClusterAction) validate() error {
 	if err != nil {
 		return err
 	}
-	err = validate.ImportCloudAccountValidate(&cmproto.Account{
+
+	err = validate.ListCloudRegionClusterValidate(la.req, &cmproto.Account{
 		SecretID:  la.account.Account.SecretID,
 		SecretKey: la.account.Account.SecretKey,
 	})

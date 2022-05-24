@@ -28,10 +28,10 @@ import (
 type ListSubnetsAction struct {
 	ctx     context.Context
 	cloud   *cmproto.Cloud
-	cluster *cmproto.Cluster
+	account *cmproto.CloudAccount
 	model   store.ClusterManagerModel
-	req     *cmproto.ListSubnetsRequest
-	resp    *cmproto.ListSubnetsResponse
+	req     *cmproto.ListCloudSubnetsRequest
+	resp    *cmproto.ListCloudSubnetsResponse
 	subnets []*cmproto.Subnet
 }
 
@@ -46,32 +46,41 @@ func (la *ListSubnetsAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
 	}
-	// get cluster basic info(project/cluster/cloud)
-	err := la.getClusterBasicInfo()
+
+	// get cloud/account info
+	err := la.getRelativeData()
 	if err != nil {
 		return err
 	}
+
+	validate, err := cloudprovider.GetCloudValidateMgr(la.cloud.CloudProvider)
+	if err != nil {
+		return err
+	}
+
+	err = validate.ListCloudSubnetsValidate(la.req, &cmproto.Account{
+		SecretID:  la.account.Account.SecretID,
+		SecretKey: la.account.Account.SecretKey,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// getCloudProjectInfo get cluster/cloud/project info
-func (la *ListSubnetsAction) getClusterBasicInfo() error {
-	cluster, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
+func (la *ListSubnetsAction) getRelativeData() error {
+	cloud, err := actions.GetCloudByCloudID(la.model, la.req.CloudID)
 	if err != nil {
-		blog.Errorf("get Cluster %s failed when ListNodeType, %s", la.req.ClusterID, err.Error())
 		return err
 	}
-	la.cluster = cluster
+	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+	if err != nil {
+		return err
+	}
 
-	cloud, err := actions.GetCloudByCloudID(la.model, la.cluster.Provider)
-	if err != nil {
-		blog.Errorf("get Cluster %s provider %s failed, %s",
-			la.cluster.ClusterID, la.cluster.Provider, err.Error(),
-		)
-		return err
-	}
+	la.account = account
 	la.cloud = cloud
-
 	return nil
 }
 
@@ -82,9 +91,37 @@ func (la *ListSubnetsAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.subnets
 }
 
+func (la *ListSubnetsAction) ListCloudSubnets() error {
+	// create vpc client with cloudProvider
+	vpcMgr, err := cloudprovider.GetVPCMgr(la.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s VPCManager for list subnets failed, %s", la.cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     la.cloud,
+		AccountID: la.req.AccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s list subnets failed, %s",
+			la.cloud.CloudID, la.cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption.Region = la.req.Region
+
+	// get subnet list
+	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, cmOption)
+	if err != nil {
+		return err
+	}
+	la.subnets = subnets
+
+	return nil
+}
+
 // Handle handle list vpc subnets
 func (la *ListSubnetsAction) Handle(
-	ctx context.Context, req *cmproto.ListSubnetsRequest, resp *cmproto.ListSubnetsResponse) {
+	ctx context.Context, req *cmproto.ListCloudSubnetsRequest, resp *cmproto.ListCloudSubnetsResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("list subnets failed, req or resp is empty")
 		return
@@ -93,40 +130,16 @@ func (la *ListSubnetsAction) Handle(
 	la.req = req
 	la.resp = resp
 
-	if err := req.Validate(); err != nil {
+	if err := la.validate(); err != nil {
 		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 
-	// create vpc client with cloudProvider
-	vpcMgr, err := cloudprovider.GetVPCMgr(la.cloud.CloudProvider)
-	if err != nil {
-		blog.Errorf("get cloudprovider %s VPCManager for list subnets in cluster %s failed, %s",
-			la.cloud.CloudProvider, la.req.ClusterID, err.Error(),
-		)
+	if err := la.ListCloudSubnets(); err != nil {
 		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     la.cloud,
-		AccountID: la.cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("get credential for cloudprovider %s/%s list subnets in cluster %s failed, %s",
-			la.cloud.CloudID, la.cloud.CloudProvider, la.req.ClusterID, err.Error(),
-		)
-		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	cmOption.Region = la.cluster.Region
 
-	// get subnet list
-	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, cmOption)
-	if err != nil {
-		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	la.subnets = subnets
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

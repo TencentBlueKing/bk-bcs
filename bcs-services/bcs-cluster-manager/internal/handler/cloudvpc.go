@@ -120,9 +120,9 @@ func (cm *ClusterManager) GetVPCCidr(ctx context.Context,
 	return nil
 }
 
-// ListSubnets implements interface cmproto.ClusterManagerServer
-func (cm *ClusterManager) ListSubnets(ctx context.Context,
-	req *cmproto.ListSubnetsRequest, resp *cmproto.ListSubnetsResponse) error {
+// ListCloudSubnets implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudSubnets(ctx context.Context,
+	req *cmproto.ListCloudSubnetsRequest, resp *cmproto.ListCloudSubnetsResponse) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {
 		return err
@@ -130,16 +130,16 @@ func (cm *ClusterManager) ListSubnets(ctx context.Context,
 	start := time.Now()
 	ca := cloudvpc.NewListSubnetsAction(cm.model)
 	ca.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("ListSubnets", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListSubnets, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	metrics.ReportAPIRequestMetric("ListCloudSubnets", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudSubnets, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
-	blog.V(5).Infof("reqID: %s, action: ListSubnets, req %v, resp %v", reqID, req, resp)
+	blog.V(5).Infof("reqID: %s, action: ListCloudSubnets, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 
-// ListSecurityGroups implements interface cmproto.ClusterManagerServer
-func (cm *ClusterManager) ListSecurityGroups(ctx context.Context,
-	req *cmproto.ListSecurityGroupsRequest, resp *cmproto.ListSecurityGroupsResponse) error {
+// ListCloudSecurityGroups implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudSecurityGroups(ctx context.Context,
+	req *cmproto.ListCloudSecurityGroupsRequest, resp *cmproto.ListCloudSecurityGroupsResponse) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {
 		return err
@@ -147,9 +147,9 @@ func (cm *ClusterManager) ListSecurityGroups(ctx context.Context,
 	start := time.Now()
 	ca := cloudvpc.NewListSecurityGroupsAction(cm.model)
 	ca.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("ListSecurityGroups", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListSecurityGroups, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	metrics.ReportAPIRequestMetric("ListCloudSecurityGroups", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudSecurityGroups, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
-	blog.V(5).Infof("reqID: %s, action: ListSecurityGroups, req %v, resp %v", reqID, req, resp)
+	blog.V(5).Infof("reqID: %s, action: ListCloudSecurityGroups, req %v, resp %v", reqID, req, resp)
 	return nil
 }

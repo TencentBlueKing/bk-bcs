@@ -24,8 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -483,114 +481,6 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
-}
-
-// ListNodeTypeAction list action for node type
-type ListNodeTypeAction struct {
-	ctx          context.Context
-	cloud        *cmproto.Cloud
-	cluster      *cmproto.Cluster
-	project      *cmproto.Project
-	model        store.ClusterManagerModel
-	req          *cmproto.ListNodeTypeRequest
-	resp         *cmproto.ListNodeTypeResponse
-	nodeTypeList []*cmproto.NodeType
-}
-
-// NewListNodeTypeAction create list action for node type
-func NewListNodeTypeAction(model store.ClusterManagerModel) *ListNodeTypeAction {
-	return &ListNodeTypeAction{
-		model: model,
-	}
-}
-
-func (la *ListNodeTypeAction) validate() error {
-	if err := la.req.Validate(); err != nil {
-		return err
-	}
-	// get cluster basic info(project/cluster/cloud)
-	err := la.getClusterBasicInfo()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// getCloudProjectInfo get cluster/cloud/project info
-func (la *ListNodeTypeAction) getClusterBasicInfo() error {
-	cluster, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cluster %s failed when ListNodeType, %s", la.req.ClusterID, err.Error())
-		return err
-	}
-	la.cluster = cluster
-
-	cloud, cluster, err := actions.GetCloudAndCluster(la.model, la.cluster.Provider, la.cluster.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cluster %s provider %s and cluster %s failed, %s",
-			la.cluster.ClusterID, la.cluster.Provider, la.cluster.ClusterID, err.Error(),
-		)
-		return err
-	}
-	la.cloud = cloud
-
-	return nil
-}
-
-func (la *ListNodeTypeAction) setResp(code uint32, msg string) {
-	la.resp.Code = code
-	la.resp.Message = msg
-	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.nodeTypeList
-}
-
-// Handle handle list node type request
-func (la *ListNodeTypeAction) Handle(ctx context.Context,
-	req *cmproto.ListNodeTypeRequest, resp *cmproto.ListNodeTypeResponse) {
-	if req == nil || resp == nil {
-		blog.Errorf("list node type failed, req or resp is empty")
-		return
-	}
-	la.ctx = ctx
-	la.req = req
-	la.resp = resp
-
-	if err := la.validate(); err != nil {
-		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
-		return
-	}
-
-	// create node client with cloudProvider
-	nodeMgr, err := cloudprovider.GetNodeMgr(la.cloud.CloudProvider)
-	if err != nil {
-		blog.Errorf("get cloudprovider %s NodeManager for list node type in cluster %s failed, %s",
-			la.cloud.CloudProvider, la.req.ClusterID, err.Error(),
-		)
-		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     la.cloud,
-		AccountID: la.cluster.ClusterID,
-	})
-	if err != nil {
-		blog.Errorf("get credential for cloudprovider %s/%s list node type in cluster %s failed, %s",
-			la.cloud.CloudID, la.cloud.CloudProvider, la.req.ClusterID, err.Error(),
-		)
-		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	cmOption.Region = la.cluster.Region
-
-	// get node type list
-	nodeTypeList, err := nodeMgr.ListNodeType(la.req.Zone, la.req.NodeFamily, cmOption)
-	if err != nil {
-		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	la.nodeTypeList = nodeTypeList
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }
