@@ -15,8 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 25,
-  "iteration": 1645673958757,
+  "id": 27,
+  "iteration": 1653371634961,
   "links": [],
   "panels": [
     {
@@ -28,9 +28,9 @@
         "x": 0,
         "y": 0
       },
-      "id": 19,
+      "id": 21,
       "panels": [],
-      "title": "报错相关",
+      "title": "错误",
       "type": "row"
     },
     {
@@ -74,7 +74,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "textMode": "value"
       },
       "pluginVersion": "7.3.4",
       "targets": [
@@ -132,7 +132,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "textMode": "value"
       },
       "pluginVersion": "7.3.4",
       "targets": [
@@ -150,12 +150,7 @@
       "type": "stat"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": "prometheus",
-      "decimals": null,
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -176,22 +171,86 @@
         },
         "overrides": []
       },
-      "fill": 1,
-      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
         "y": 9
       },
-      "hiddenSeries": false,
       "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.4",
+      "targets": [
+        {
+          "expr": "keda_metrics_adapter_scaled_object_errors{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
+          "interval": "",
+          "legendFormat": "{{namespace}}/{{name}} - {{scaledObject}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "被缩放对象的报错数量",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 19,
+      "panels": [],
+      "repeat": null,
+      "title": "延迟",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "prometheus",
+      "decimals": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "hiddenSeries": false,
+      "id": 23,
       "legend": {
         "alignAsTable": true,
         "avg": false,
         "current": true,
-        "max": false,
-        "min": false,
+        "max": true,
+        "min": true,
         "rightSide": true,
         "show": true,
         "sort": "current",
@@ -216,9 +275,10 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "keda_metrics_adapter_scaled_object_errors{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
+          "expr": "sum(keda_metrics_adapter_scaler_exec_duration_sum{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}) by (namespace,name,scaledObject)/sum(keda_metrics_adapter_scaler_exec_duration_count{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}) by (namespace,name,scaledObject)",
+          "hide": false,
           "interval": "",
-          "legendFormat": "{{scaledObject}}",
+          "legendFormat": "{{namespace}}/{{name}} - {{scaledObject}} - {{le}}",
           "queryType": "randomWalk",
           "refId": "A"
         }
@@ -227,7 +287,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "被缩放对象的报错数量",
+      "title": "scaler执行平均延迟",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -243,7 +303,111 @@
       },
       "yaxes": [
         {
+          "decimals": null,
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
           "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "prometheus",
+      "decimals": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(keda_metrics_adapter_gpa_update_duration_sum{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\",status=\"success\"}) by (namespace,name,scaledObject)/sum(keda_metrics_adapter_gpa_update_duration_count{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\",status=\"success\"}) by (namespace,name,scaledObject)",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{namespace}}/{{name}} - {{scaledObject}} - {{le}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "副本更新平均延迟",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "s",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -271,7 +435,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 26
       },
       "id": 17,
       "panels": [],
@@ -310,9 +474,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 18
+        "y": 27
       },
       "hiddenSeries": false,
       "id": 2,
@@ -372,6 +536,12 @@
           "interval": "",
           "legendFormat": "gpaDesired - {{namespace}}/{{name}}",
           "refId": "D"
+        },
+        {
+          "expr": "keda_metrics_adapter_gpa_current_replicas_value{namespace=~\"$namespace\",name=~\"$name\",scaledObject=~\"$scaledObject\"}",
+          "interval": "",
+          "legendFormat": "gpaCurrent  - {{namespace}}/{{name}}",
+          "refId": "E"
         }
       ],
       "thresholds": [],
@@ -421,112 +591,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "prometheus",
-      "decimals": 2,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 18
-      },
-      "hiddenSeries": false,
-      "id": 13,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": -2,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "keda_metrics_adapter_scaler_current_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"memory\",instance=~\"$instance\"}",
-          "interval": "",
-          "legendFormat": "Current - {{namespace}}/{{name}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        },
-        {
-          "expr": "keda_metrics_adapter_scaler_target_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"memory\",instance=~\"$instance\"}",
-          "interval": "",
-          "legendFormat": "Target - {{namespace}}/{{name}}",
-          "refId": "B"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "memory指标",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "decbytes",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "prometheus",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -539,7 +603,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 35
       },
       "hiddenSeries": false,
       "id": 12,
@@ -571,14 +635,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "keda_metrics_adapter_scaler_current_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"cpu\",instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_scaler_current_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"cpu\"}",
           "interval": "",
           "legendFormat": "current - {{namespace}}/{{name}}",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
-          "expr": "keda_metrics_adapter_scaler_target_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"cpu\",instance=~\"$instance\"}",
+          "expr": "keda_metrics_adapter_scaler_target_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"cpu\"}",
           "interval": "",
           "legendFormat": "target - {{namespace}}/{{name}}",
           "refId": "B"
@@ -624,6 +688,112 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "prometheus",
+      "decimals": 2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "hiddenSeries": false,
+      "id": 13,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sideWidth": -2,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "keda_metrics_adapter_scaler_current_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"memory\"}",
+          "interval": "",
+          "legendFormat": "Current - {{namespace}}/{{name}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        },
+        {
+          "expr": "keda_metrics_adapter_scaler_target_metrics_value{namespace=~\"$namespace\",name=~\"$name\",metric=\"memory\"}",
+          "interval": "",
+          "legendFormat": "Target - {{namespace}}/{{name}}",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "memory指标",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "decbytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
   "schemaVersion": 26,
@@ -635,9 +805,12 @@
         "allValue": null,
         "current": {
           "selected": true,
-          "tags": [],
-          "text": [],
-          "value": []
+          "text": [
+            "default"
+          ],
+          "value": [
+            "default"
+          ]
         },
         "datasource": "prometheus",
         "definition": "label_values(keda_metrics_adapter_scaler_target_metrics_value{namespace=~\".*\"},namespace)",
@@ -663,9 +836,12 @@
         "allValue": null,
         "current": {
           "selected": true,
-          "tags": [],
-          "text": [],
-          "value": []
+          "text": [
+            "pa-test1"
+          ],
+          "value": [
+            "pa-test1"
+          ]
         },
         "datasource": "prometheus",
         "definition": "label_values({__name__ =~ \"keda_metrics_adapter_scaler_target_metrics_value|keda_metrics_adapter_scaler_errors\", namespace=~\"$namespace\"},name)\n",
@@ -692,8 +868,12 @@
         "current": {
           "selected": true,
           "tags": [],
-          "text": [],
-          "value": []
+          "text": [
+            "Deployment/nginx-for-gpatest"
+          ],
+          "value": [
+            "Deployment/nginx-for-gpatest"
+          ]
         },
         "datasource": "prometheus",
         "definition": "label_values({__name__ =~ \"keda_metrics_adapter_scaler_target_metrics_value|keda_metrics_adapter_scaler_errors\", namespace=~\"$namespace\",name=~\"$name\"},scaledObject)",
@@ -714,78 +894,16 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
-      },
-      {
-        "allValue": null,
-        "current": {
-          "selected": true,
-          "text": [
-            "10.244.2.67:10251"
-          ],
-          "value": [
-            "10.244.2.67:10251"
-          ]
-        },
-        "datasource": "prometheus",
-        "definition": "label_values(keda_metrics_adapter_scaler_errors_total,instance)",
-        "error": null,
-        "hide": 2,
-        "includeAll": true,
-        "label": null,
-        "multi": true,
-        "name": "instance",
-        "options": [],
-        "query": "label_values(keda_metrics_adapter_scaler_errors_total,instance)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allValue": null,
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": "prometheus",
-        "definition": "label_values(keda_metrics_adapter_scaler_errors_total{endpoint=~\".*\"},endpoint)",
-        "error": null,
-        "hide": 2,
-        "includeAll": true,
-        "label": null,
-        "multi": true,
-        "name": "endpoint",
-        "options": [],
-        "query": "label_values(keda_metrics_adapter_scaler_errors_total{endpoint=~\".*\"},endpoint)",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
       }
     ]
   },
   "time": {
-    "from": "now-2m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "GPA Dashboard",
   "uid": "D1ibIqank",
-  "version": 41
+  "version": 5
 }

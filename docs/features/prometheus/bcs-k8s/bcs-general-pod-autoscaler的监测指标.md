@@ -75,3 +75,23 @@ bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics/
 
 - gpa设置的最大副本数
 - labels: namespace,name, scaledObject
+
+## 指标聚合
+
+### 错误
+
+```
+# 3分钟报错率
+rate(keda_metrics_adapter_scaler_errors_total{}[3m]) 
+```
+
+### 延迟
+
+```
+# scaler执行平均延迟
+sum(keda_metrics_adapter_scaler_exec_duration_sum{namespace=~"$namespace",name=~"$name",scaledObject=~"$scaledObject"}) by (namespace,name,scaledObject)/sum(keda_metrics_adapter_scaler_exec_duration_count{namespace=~"$namespace",name=~"$name",scaledObject=~"$scaledObject"}) by (namespace,name,scaledObject)
+
+# 副本更新平均延迟
+sum(keda_metrics_adapter_gpa_update_duration_sum{namespace=~"$namespace",name=~"$name",scaledObject=~"$scaledObject",status="success"}) by (namespace,name,scaledObject)/sum(keda_metrics_adapter_gpa_update_duration_count{namespace=~"$namespace",name=~"$name",scaledObject=~"$scaledObject",status="success"}) by (namespace,name,scaledObject)
+```
+
