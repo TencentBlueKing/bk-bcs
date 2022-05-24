@@ -368,13 +368,13 @@ BCS_CC_OPER_PROJECT_NAMESPACES = "/projects/{project_id}/clusters/null/namespace
 BCS_CC_OPER_PROJECT_NAMESPACE = "/projects/{project_id}/clusters/null/namespaces/{namespace_id}/"
 
 # 容器化部署版本，暂不需要提供 APIGW API，默认 PUBLIC KEY 设置为空值
-BCS_APP_APIGW_PUBLIC_KEY = None
+BCS_APP_APIGW_PUBLIC_KEY = os.environ.get("BCS_APP_APIGW_PUBLIC_KEY", "")
 
 # 蓝鲸制品库域名，支持镜像仓库和chart仓库
 BK_REPO_DOMAIN = os.environ.get("BK_REPO_DOMAIN", "")
 DOCKER_REPO_DOMAIN = os.environ.get("DOCKER_REPO_DOMAIN", "")
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-BK_REPO_AUTHORIZATION = os.environ.get("BK_REPO_AUTHORIZATION", "")
+BK_REPO_AUTHORIZATION = f"Platform {os.environ.get('BK_REPO_TOKEN', '')}"
 # 设置蓝鲸制品库的公共项目和仓库名称，默认为bcs-shared
 BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs-shared-project")
 BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "image-repo")
