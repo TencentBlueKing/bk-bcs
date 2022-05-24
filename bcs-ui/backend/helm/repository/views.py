@@ -38,7 +38,7 @@ class RepositoryViewSet(SystemViewSet):
         helm_repos = []
         for repo in repos:
             # 排除Docker仓库
-            if repo["type"] == RepoType.DOCKER:
+            if repo["type"] != RepoType.HELM:
                 continue
             repo["is_imported"] = bkrepo_utils.is_imported(repo)
             repo["addr"] = bkrepo_utils.get_repo_addr(project_code, repo["name"])

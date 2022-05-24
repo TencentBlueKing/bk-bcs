@@ -28,8 +28,8 @@ from backend.helm.app.models import App
 from backend.helm.helm import views as chart_views
 from backend.helm.helm.constants import PUBLIC_REPO_NAME
 from backend.helm.helm.models.chart import Chart, ChartVersion
-from backend.helm.helm.models.repo import Repository, RepositoryAuth
-from backend.helm.helm.utils.util import get_compatible_repo_auth
+from backend.helm.helm.models.repo import Repository
+from backend.helm.repository.auth import get_compatible_repo_auth
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.utils.error_codes import error_codes
 

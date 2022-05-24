@@ -13,12 +13,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import Dict, Tuple
+from typing import Dict
 
 from django.conf import settings
 
-from backend.components.bk_repo import BkRepoClient, BkRepoTokenError
+from backend.components.bk_repo import BkRepoClient
 from backend.helm.helm.models.repo import Repository
+from backend.helm.repository.auth import get_repo_auth
 from backend.helm.repository.constants import RepoCategory
 from backend.utils.basic import getitems
 from backend.utils.error_codes import error_codes
@@ -30,23 +31,6 @@ def get_repo_addr(project_code: str, repo_name: str) -> str:
     """获取仓库地址"""
     # 仓库地址: helm-repo-domain/project_code/repo_name
     return f"{settings.HELM_REPO_DOMAIN}/{project_code}/{repo_name}"
-
-
-def get_repo_auth(username: str, project_code: str) -> Tuple[str, str]:
-    """获取仓库的授权信息，包含 username 和 password"""
-    client = BkRepoClient(username=username)
-    # 获取用户对应的 token
-    token = {}
-    try:
-        token = client.get_token()
-    except BkRepoTokenError as e:
-        logger.exception("获取token失败, %s", e)
-    # 如果可以获取到token，则直接返回
-    if token:
-        return (username, token["id"])
-    # 生成token
-    token = client.set_token(project_code)
-    return (username, token["id"])
 
 
 def get_repo(access_token: str, username: str, project_code: str, repo_name: str) -> Dict:

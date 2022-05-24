@@ -13,7 +13,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-import datetime
 import logging
 from typing import Dict, Optional
 
@@ -22,7 +21,7 @@ from django.utils import timezone
 
 from backend.apps.whitelist import enable_incremental_sync_chart_repo
 from backend.helm.helm.utils.repo_bk import get_incremental_charts_and_hash_value
-from backend.helm.helm.utils.util import get_compatible_repo_auth
+from backend.helm.repository.auth import get_compatible_repo_auth
 from backend.utils.basic import normalize_time
 
 from .models.chart import Chart, ChartVersion
@@ -92,7 +91,7 @@ def sync_helm_repo(repo_id, force=False, username: Optional[str] = None, project
                 username=username, project_code=project_code, auth_conf=plain_auths
             )
             # 组装后面功能需要的auths，减少变动
-            auths = [{"credentials": {"username": username, "password": password}}]
+            auths = [{"type": "basic", "credentials": {"username": username, "password": password}}]
             charts_info, charts_info_hash = prepareRepoCharts(repo_url, repo_name, auths)
     except Exception as e:
         logger.exception("prepareRepoCharts fail: repo_url=%s, repo_name=%s, error: %s", repo_url, repo_name, e)

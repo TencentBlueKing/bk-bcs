@@ -26,7 +26,7 @@ from backend.apps.whitelist import enabled_force_sync_chart_repo
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components import bk_repo
 from backend.helm.app.models import App
-from backend.helm.helm.utils.util import get_compatible_repo_auth
+from backend.helm.repository.auth import get_compatible_repo_auth
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.views import ActionSerializerMixin, FilterByProjectMixin, with_code_wrapper
@@ -347,11 +347,12 @@ class HelmChartVersionsViewSet(SystemViewSet):
         如果需要删除chart，则删除chart下的所有版本即可
         """
         project_code = request.project.project_code
+        repo_name = request.query_params.get("repo_name")
         repo_project_name = self._get_repo_project_name(project_code)
         username, password = self._get_repo_auth(project_code, project_id, request.user.username)
         # 组装数据
         chart_data = chart_versions.ChartData(
-            project_name=repo_project_name, repo_name=project_code, chart_name=chart_name
+            project_name=repo_project_name, repo_name=repo_name or project_code, chart_name=chart_name
         )
         repo_auth = chart_versions.RepoAuth(username=username, password=password)
         version_list = self._get_version_list(request, chart_data, repo_auth)

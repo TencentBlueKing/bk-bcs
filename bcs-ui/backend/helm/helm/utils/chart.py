@@ -12,8 +12,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from dataclasses import dataclass
-from typing import Dict, List, Set, Tuple
+from typing import Set, Tuple
 
 from django.conf import settings
 from django.db.models.query import QuerySet
@@ -23,6 +24,8 @@ from ..models.chart import Chart, ChartVersion
 from ..models.repo import Repository
 from ..serializers import ChartSLZ
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ChartList:
@@ -31,8 +34,12 @@ class ChartList:
 
     def get_chart_data(self) -> ReturnList:
         repo_id = None
-        if self.repo_name:
-            repo_id = Repository.objects.get(project_id=self.project_id, name=self.repo_name).id
+        try:
+            if self.repo_name:
+                repo_id = Repository.objects.get(project_id=self.project_id, name=self.repo_name).id
+        except Exception as e:
+            logger.error("query repo record error, %s", e)
+            return []
         charts = Chart.objects.get_charts(self.project_id, repo_id)
         slz = ChartSLZ(charts, many=True)
         charts_data = slz.data

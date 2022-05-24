@@ -15,13 +15,10 @@ specific language governing permissions and limitations under the License.
 import datetime
 import logging
 import urllib
-from typing import List, Optional, Tuple
 
 import pytz
 from dateutil import parser
 from furl import furl
-
-from backend.helm.repositories.repo import get_repo_auth
 
 logger = logging.getLogger(__name__)
 
@@ -131,13 +128,3 @@ def fix_chart_url(url, repo_url):
     f = furl(integrated_url)
     f.path.segments = [x for x in f.path.segments if x]
     return f.url
-
-
-def get_compatible_repo_auth(
-    username: Optional[str] = None, project_code: Optional[str] = None, auth_conf: Optional[List] = None
-) -> Tuple[str, str]:
-    """获取仓库 auth，兼容先前生成的admin token"""
-    if username and project_code:
-        return get_repo_auth(username, project_code)
-    credentials = auth_conf[0]["credentials"]
-    return (credentials["username"], credentials["password"])
