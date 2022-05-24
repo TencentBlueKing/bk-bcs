@@ -295,7 +295,7 @@ user-manager:pre
 
 webconsole:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webconsole
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webconsole ${PACKAGEPATH}/bcs-servicesf
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webconsole ${PACKAGEPATH}/bcs-services
 	cd bcs-services/bcs-webconsole/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webconsole/bcs-webconsole ./main.go
 
 k8s-watch:pre
