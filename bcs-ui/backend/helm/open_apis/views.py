@@ -29,6 +29,7 @@ from backend.helm.helm import views as chart_views
 from backend.helm.helm.constants import PUBLIC_REPO_NAME
 from backend.helm.helm.models.chart import Chart, ChartVersion
 from backend.helm.helm.models.repo import Repository, RepositoryAuth
+from backend.helm.helm.utils.util import get_compatible_repo_auth
 from backend.resources.namespace.constants import K8S_PLAT_NAMESPACE
 from backend.utils.error_codes import error_codes
 
@@ -242,14 +243,14 @@ class ChartRepoViewSet(UserViewSet):
     def retrieve(self, request, project_id_or_code):
         """获取项目下chart仓库的信息"""
         # project code 为仓库的名称
-        repo_name = request.project.project_code
+        repo_name = request.query_params.get("repo_name") or request.project.project_code
         # NOTE: 现在一个项目仅有一个私有仓库
         try:
             repo = Repository.objects.get(name=repo_name, project_id=request.project.project_id)
         except Repository.DoesNotExist:
             raise error_codes.ResNotFoundError(_("仓库: {}不存在").format(repo_name))
         # 获取仓库的用户名和密码
-        username, password = repo.username_password
+        username, password = get_compatible_repo_auth(request.user.username, request.project.project_code)
         return Response({"url": repo.url, "username": username, "password": password})
 
 

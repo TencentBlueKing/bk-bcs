@@ -26,6 +26,7 @@ from backend.apps.whitelist import enabled_force_sync_chart_repo
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components import bk_repo
 from backend.helm.app.models import App
+from backend.helm.helm.utils.util import get_compatible_repo_auth
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.views import ActionSerializerMixin, FilterByProjectMixin, with_code_wrapper
@@ -79,11 +80,12 @@ class ChartViewSet(SystemViewSet):
         # NOTE: 因为传递的project id可能是project code的值，而容器服务内部是通过project id流转，
         # 因此，需要通过request的project中获取project id
         project_id = request.project.project_id
-        data = chart_utils.ChartList(project_id).get_chart_data()
+        repo_name = request.query_params.get("repo_name", "")
+        data = chart_utils.ChartList(project_id, repo_name).get_chart_data()
+
         return Response(data)
 
     def retrieve(self, request, project_id, chart_id):
-        project_id = request.project.project_id
         try:
             chart = Chart.objects.get(id=chart_id)
         except Chart.DoesNotExist:
@@ -188,7 +190,12 @@ class RepositorySyncView(FilterByProjectMixin, viewsets.ViewSet):
     def create(self, request, project_id, repo_id, *args, **kwargs):
         """Sync Chart Repository"""
         # 默认不需要设置为强制同步
-        sync_helm_repo(repo_id, request.data.get("force_sync") or False)
+        sync_helm_repo(
+            repo_id,
+            force=request.data.get("force_sync") or False,
+            username=request.user.username,
+            project_code=request.project.project_code,
+        )
 
         data = {"code": 0, "message": "repo sync success"}
 
@@ -214,7 +221,12 @@ class RepositorySyncByProjectView(FilterByProjectMixin, viewsets.ViewSet):
             if repo_name == 'public-repo':
                 sync_helm_repo(repo_id, False)
             else:
-                sync_helm_repo(repo_id, force_sync_repo)
+                sync_helm_repo(
+                    repo_id,
+                    force=force_sync_repo,
+                    username=request.user.username,
+                    project_code=request.project.project_code,
+                )
 
         data = {"code": 0, "message": "success sync %s repositories" % len(id_name_list)}
 
@@ -262,18 +274,19 @@ class ChartVersionViewSet(viewsets.ViewSet):
 
         return Response(data)
 
-    def _delete_version(self, username: str, pwd: str, project_code: str, name: str, version: str):
+    def _delete_version(self, username: str, pwd: str, project_code: str, name: str, version: str, repo_name: str):
         # 兼容harbor中chart仓库项目名称
         project_name = DEFAULT_CHART_REPO_PROJECT_NAME or project_code
         try:
             client = bk_repo.BkRepoClient(username=username, password=pwd)
-            client.delete_chart_version(project_name, project_code, name, version)
+            client.delete_chart_version(project_name, repo_name, name, version)
         except bk_repo.BkRepoDeleteVersionError as e:
             raise error_codes.APIError(f"delete chart: {name} version: {version} failed, {e}")
 
     def delete(self, request, project_id, chart_id):
         """删除chart或指定的chart版本"""
         version_id = request.query_params.get("version_id")
+        repo_name = request.query_params.get("repo_name")
         release_qs = self.get_release_queryset(chart_id, version_id)
         # 如果release不为空，则不能进行删除
         if release_qs.exists():
@@ -288,11 +301,9 @@ class ChartVersionViewSet(viewsets.ViewSet):
             if not auth:
                 username = pwd = ""
             else:
-                credentials = auth[0]["credentials"]
-                username = credentials["username"]
-                pwd = credentials["password"]
+                username, pwd = get_compatible_repo_auth(username=username, project_code=project_code, auth_conf=auth)
             # 删除repo中chart版本记录
-            self._delete_version(username, pwd, project_code, info.chart.name, info.version)
+            self._delete_version(username, pwd, project_code, info.chart.name, info.version, repo_name)
             # 处理digest不变动的情况
             ChartVersionSnapshot.objects.filter(digest=info.digest).delete()
             # 删除db中记录
@@ -317,9 +328,11 @@ class HelmChartVersionsViewSet(SystemViewSet):
         """查询chart版本对应的release列表"""
         project_code = request.project.project_code
         repo_project_name = self._get_repo_project_name(project_code)
-        username, password = self._get_repo_auth(project_code, project_id)
+        username, password = self._get_repo_auth(project_code, project_id, request.user.username)
+        # 兼容处理，如果没有传递仓库名称，则使用project code
+        repo_name = request.query_params.get("repo_name")
         chart_data = chart_versions.ChartData(
-            project_name=repo_project_name, repo_name=project_code, chart_name=chart_name
+            project_name=repo_project_name, repo_name=repo_name or project_code, chart_name=chart_name
         )
         repo_auth = chart_versions.RepoAuth(username=username, password=password)
         version_list = self._get_version_list(request, chart_data, repo_auth)
@@ -335,7 +348,7 @@ class HelmChartVersionsViewSet(SystemViewSet):
         """
         project_code = request.project.project_code
         repo_project_name = self._get_repo_project_name(project_code)
-        username, password = self._get_repo_auth(project_code, project_id)
+        username, password = self._get_repo_auth(project_code, project_id, request.user.username)
         # 组装数据
         chart_data = chart_versions.ChartData(
             project_name=repo_project_name, repo_name=project_code, chart_name=chart_name
@@ -372,14 +385,14 @@ class HelmChartVersionsViewSet(SystemViewSet):
         except Chart.DoesNotExist:
             raise ValidationError(_("chart:{}不存在").format(chart_name))
 
-    def _get_repo_auth(self, project_code: str, project_id: str) -> Tuple[str, str]:
+    def _get_repo_auth(self, project_code: str, project_id: str, username: str) -> Tuple[str, str]:
         try:
             repo = Repository.objects.get(name=project_code, project_id=project_id)
         except Repository.DoesNotExist:
             raise ValidationError(
                 _("项目【project_id:{}, project_code: {}】没有查询到Chart仓库信息").format(project_id, project_code)
             )
-        return repo.username_password
+        return get_compatible_repo_auth(username=username, project_code=project_code, auth_conf=repo.plain_auths)
 
     def _get_repo_project_name(self, project_code: str) -> str:
         """获取仓库的项目名称"""

@@ -19,4 +19,5 @@ urlpatterns = [
     re_path(
         r"^clusters/(?P<cluster_id>[\w\-]+)/namespaces/(?P<namespace>[\w\-]+)/", include("backend.helm.releases.urls")
     ),
+    re_path(r"^repos/", include("backend.helm.repository.urls")),
 ]

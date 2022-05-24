@@ -15,14 +15,14 @@ specific language governing permissions and limitations under the License.
 
 import datetime
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 from celery import shared_task
 from django.utils import timezone
-from natsort import natsorted
 
 from backend.apps.whitelist import enable_incremental_sync_chart_repo
 from backend.helm.helm.utils.repo_bk import get_incremental_charts_and_hash_value
+from backend.helm.helm.utils.util import get_compatible_repo_auth
 from backend.utils.basic import normalize_time
 
 from .models.chart import Chart, ChartVersion
@@ -33,10 +33,10 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def sync_all_repo():
+def sync_all_repo(username: Optional[str] = None, project_code: Optional[str] = None):
     for repo in Repository.objects.all():
         try:
-            sync_helm_repo(repo.id, False)
+            sync_helm_repo(repo.id, False, username=username, project_code=project_code)
         except Exception as e:
             logger.exception("sync_helm_repo %s failed %s" % (repo.id, e))
 
@@ -61,7 +61,7 @@ def enable_increment(force, project_id):
 
 
 @shared_task
-def sync_helm_repo(repo_id, force=False):
+def sync_helm_repo(repo_id, force=False, username: Optional[str] = None, project_code: Optional[str] = None):
     # if in processing, then do nothing
     sign = InProcessSign(repo_id)
     # TODO: FIXME: uncomment
@@ -80,14 +80,20 @@ def sync_helm_repo(repo_id, force=False):
             if not plain_auths:
                 username, password = None, None
             else:
-                credentials = plain_auths[0]["credentials"]
-                username, password = credentials["username"], credentials["password"]
+                username, password = get_compatible_repo_auth(
+                    username=username, project_code=project_code, auth_conf=plain_auths
+                )
             start_time = normalize_time(repo.refreshed_at)
             charts_info, charts_info_hash = get_incremental_charts_and_hash_value(
                 repo_name, username, password, start_time
             )
         else:
-            charts_info, charts_info_hash = prepareRepoCharts(repo_url, repo_name, plain_auths)
+            username, password = get_compatible_repo_auth(
+                username=username, project_code=project_code, auth_conf=plain_auths
+            )
+            # 组装后面功能需要的auths，减少变动
+            auths = [{"credentials": {"username": username, "password": password}}]
+            charts_info, charts_info_hash = prepareRepoCharts(repo_url, repo_name, auths)
     except Exception as e:
         logger.exception("prepareRepoCharts fail: repo_url=%s, repo_name=%s, error: %s", repo_url, repo_name, e)
         return

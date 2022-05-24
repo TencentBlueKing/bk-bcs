@@ -5,9 +5,7 @@ Edition) available.
 Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://opensource.org/licenses/MIT
-
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
@@ -15,7 +13,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import Dict, List, Optional
 
-from attr import asdict, dataclass
+from attr import asdict, dataclass, fields
 from django.conf import settings
 from requests import PreparedRequest
 from requests.auth import AuthBase
@@ -132,10 +130,16 @@ class RepoConfig:
 @dataclass
 class RepoData:
     name: str
+    description: str
     type: str
     category: str
     public: bool
     configuration: RepoConfig
+
+    @classmethod
+    def from_dict(cls, init_data: Dict) -> "RepoData":
+        fs = [f.name for f in fields(cls)]
+        return cls(**{k: v for k, v in init_data.items() if k in fs})
 
 
 class BkRepoClient(BkApiClient):
@@ -149,12 +153,13 @@ class BkRepoClient(BkApiClient):
     def __init__(
         self, access_token: Optional[str] = None, username: Optional[str] = None, password: Optional[str] = None
     ):
+        self.username = username
+        self.password = password
         self._config = BkRepoConfig()
         self._client = BaseHttpClient(BkRepoAuth(access_token, username, password))
 
     def create_project(self, project_code: str, project_name: str, description: str) -> Dict:
         """创建仓库所属项目
-
         :param project_code: BCS项目code
         :param project_name: BCS项目名称
         :param description: BCS项目描述
@@ -168,7 +173,6 @@ class BkRepoClient(BkApiClient):
 
     def create_repo(self, project_code: str, repo_data: RepoData) -> Dict:
         """创建仓库
-
         :param project_code: BCS 项目 Code
         :param repo_data: 创建仓库需要的内容
         :return: 返回仓库
@@ -183,7 +187,6 @@ class BkRepoClient(BkApiClient):
     @response_handler()
     def update_repo(self, project_code: str, repo_data: RepoData) -> Optional[Dict]:
         """更新仓库
-
         :param project_code: BCS 项目 Code
         :param repo_data: 创建仓库需要的内容
         :return: 返回仓库
@@ -193,14 +196,13 @@ class BkRepoClient(BkApiClient):
         url = self._config.update_repo_url.format(project_code=project_code, repo_name=data["name"])
         return self._client.request_json("POST", url, json=data)
 
-    def delete_repo(self, project_code: str, repo_name: str) -> None:
+    def delete_repo(self, project_code: str, repo_name: str, forced: bool = True) -> None:
         """删除仓库
-
         :param project_code: BCS 项目 Code
         :param repo_name: 仓库名称
         """
         url = self._config.delete_repo_url.format(project_code=project_code, repo_name=repo_name)
-        resp = self._client.request_json("DELETE", url)
+        resp = self._client.request_json("DELETE", url, params={"forced": forced})
         if resp.get("code") in [ErrorCode.NoError, self.REPO_NOT_FOUND_CODE]:
             return
         raise BkRepoDeleteError(f"delete repo {repo_name} error, {resp.get('message')}")
@@ -208,28 +210,15 @@ class BkRepoClient(BkApiClient):
     @response_handler()
     def list_project_repos(self, project_code: str) -> List:
         """查询项目下面的仓库
-
         :param project_code: BCS 项目 Code
         :return: 返回项目列表
         """
         url = self._config.list_project_repos_url.format(project_code=project_code)
         return self._client.request_json("GET", url)
 
-    @response_handler()
-    def refresh_index(self, project_code: str, repo_name: str) -> None:
-        """刷新仓库 index
-
-        :param project_code: BCS 项目 Code
-        :param repo_name: 仓库名称
-        """
-        url = self._config.refresh_index_url.format(project_code=project_code, repo_name=repo_name)
-        return self._client.request_json("POST", url)
-
     def set_token(self, project_code: str) -> Dict:
         """设置用户token，设置用户名和token名为相同值
-
         NOTE: 根据使用场景，暂不设置过期时间
-
         :param project_code: BCS 项目 Code
         :return: 返回对应的token信息, 格式{"name": "token name", "id": "token value", "expiredAt": "expire time"}
         """
@@ -241,11 +230,10 @@ class BkRepoClient(BkApiClient):
 
     def get_token(self) -> Dict[str, str]:
         """获取 Token，因为token没有设置过期时间，返回的token的过期时间为None
-
         :return: 返回用户的token信息，返回对应的token信息, 格式{"name": "token name", "id": "token value", "expiredAt": "expire time"}
         """
         url = self._config.user_detail_url.format(username=self.username)
-        resp = self._client.request_json("POST", url, raise_for_status=False)
+        resp = self._client.request_json("GET", url, raise_for_status=False)
         data = resp.get("data")
         if not data:
             raise BkRepoTokenError(f"get {self.username} token error, data is null")
@@ -261,7 +249,6 @@ class BkRepoClient(BkApiClient):
     @response_handler()
     def set_auth(self, project_code: str, repo_admin_user: str, repo_admin_pwd: str) -> bool:
         """设置权限
-
         :param project_code: BCS项目code
         :param repo_admin_user: 仓库admin用户
         :param repo_admin_pwd: 仓库admin密码
@@ -278,9 +265,14 @@ class BkRepoClient(BkApiClient):
         }
         return self._client.request_json("POST", self._config.set_user_auth, json=data, raise_for_status=False)
 
+    @response_handler()
+    def refresh_index(self, project_code: str, repo_name: str) -> None:
+        """刷新仓库的 index，目的是从远程仓库拉取 index，同步到制品库"""
+        url = self._config.refresh_index_url.format(project_code=project_code, repo_name=repo_name)
+        return self._client.request_json("POST", url)
+
     def list_images(self, project_name: str, repo_name: str, page: PageData, name: Optional[str] = None) -> Dict:
         """获取镜像列表
-
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param page: 分页信息
@@ -299,7 +291,6 @@ class BkRepoClient(BkApiClient):
         self, project_name: str, repo_name: str, image_name: str, page: PageData, tag: Optional[str] = None
     ) -> Dict:
         """获取镜像tag
-
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param image_name: 镜像名称
@@ -317,7 +308,6 @@ class BkRepoClient(BkApiClient):
 
     def list_charts(self, project_name: str, repo_name: str, start_time: str = None) -> Dict:
         """获取项目下的chart
-
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param start_time: 增量查询的起始时间
@@ -328,7 +318,6 @@ class BkRepoClient(BkApiClient):
 
     def get_chart_versions(self, project_name: str, repo_name: str, chart_name: str) -> List:
         """获取项目下指定chart的版本列表
-
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param chart_name: chart 名称
@@ -341,7 +330,6 @@ class BkRepoClient(BkApiClient):
 
     def get_chart_version_detail(self, project_name: str, repo_name: str, chart_name: str, version: str) -> Dict:
         """获取指定chart版本的详情
-
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param chart_name: chart 名称
@@ -355,7 +343,6 @@ class BkRepoClient(BkApiClient):
 
     def delete_chart_version(self, project_name: str, repo_name: str, chart_name: str, version: str) -> Dict:
         """删除chart版本
-
         :param project_name: 项目名称
         :param repo_name: 仓库名称
         :param chart_name: chart 名称

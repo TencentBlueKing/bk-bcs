@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
 
+from django.conf import settings
 from django.db.models.query import QuerySet
 from rest_framework.utils.serializer_helpers import ReturnList
 
@@ -26,17 +27,29 @@ from ..serializers import ChartSLZ
 @dataclass
 class ChartList:
     project_id: str
+    repo_name: str
 
     def get_chart_data(self) -> ReturnList:
-        charts = Chart.objects.get_charts(self.project_id)
+        repo_id = None
+        if self.repo_name:
+            repo_id = Repository.objects.get(project_id=self.project_id, name=self.repo_name).id
+        charts = Chart.objects.get_charts(self.project_id, repo_id)
         slz = ChartSLZ(charts, many=True)
         charts_data = slz.data
+        # 减少前端调整，添加public仓库信息
+        charts_data.extend(self._get_public_repo_chart())
         # 获取版本ID及仓库ID
         version_ids, repo_ids = self._get_version_and_repo_ids(charts_data)
         # 获取对应的版本及仓库信息
         versions = ChartVersion.objects.get_versions(version_ids)
         repos = Repository.objects.get_repos(repo_ids)
         return self._compose_data(charts_data, versions, repos)
+
+    def _get_public_repo_chart(self) -> ReturnList:
+        repo_id = Repository.objects.get(project_id=self.project_id, name=settings.BK_REPO_SHARED_CHART_DEPOT_NAME).id
+        charts = Chart.objects.get_charts(self.project_id, repo_id)
+        slz = ChartSLZ(charts, many=True)
+        return slz.data
 
     def _get_version_and_repo_ids(self, charts_data: ReturnList) -> Tuple[Set[int], Set[int]]:
         """获取版本和仓库的ID"""
@@ -53,5 +66,9 @@ class ChartList:
         for chart in charts_data:
             chart["defaultChartVersion"] = version_id_map.get(chart["defaultChartVersion"]) or {}
             chart["repository"] = repo_id_map.get(chart["repository"]) or {}
+            # 添加仓库是否为公共仓库
+            chart["is_public"] = False
+            if chart["repository"]["name"] == settings.BK_REPO_SHARED_CHART_DEPOT_NAME:
+                chart["is_public"] = True
 
         return charts_data

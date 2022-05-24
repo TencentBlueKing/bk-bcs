@@ -23,7 +23,6 @@ from backend.utils import FancyDict
 from backend.utils.error_codes import error_codes
 
 from ..helm.models.repo import Repository, RepositoryAuth
-from ..helm.providers.repo_provider import add_plain_repo
 
 logger = logging.getLogger(__name__)
 
