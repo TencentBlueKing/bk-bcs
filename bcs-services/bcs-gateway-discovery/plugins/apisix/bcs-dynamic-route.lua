@@ -209,6 +209,7 @@ local function periodly_sync_cluster_credentials_in_master()
                 client_cert = cluster_credential["clientCert"], 
                 client_key = cluster_credential["clientKey"],
             }
+            upstream["pass_host"] = "node"
         end
         local upstream_nodes = {}
         local addresses = stringx.split(cluster_credential["serverAddress"], ",")
