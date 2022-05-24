@@ -247,11 +247,13 @@ func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
 
 // checkVersion refer to https://github.com/urfave/cli/blob/main/help.go#L318 but use os.args check
 func checkVersion() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+	arg := os.Args[1]
 	for _, name := range cli.VersionFlag.Names() {
-		for _, arg := range os.Args {
-			if strings.Contains(arg, name) {
-				return true
-			}
+		if arg == "-"+name || arg == "--"+name {
+			return true
 		}
 	}
 	return false
