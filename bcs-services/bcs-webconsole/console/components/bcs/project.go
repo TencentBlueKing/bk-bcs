@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 )
@@ -49,11 +50,17 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 		return cacheResult.(*Project), nil
 	}
 
+	accessToken, err := iam.GetAccessToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	url := fmt.Sprintf("%s/%s/projects/%s/", config.G.BCSCC.Host, config.G.BCSCC.Stage, projectIDOrCode)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetQueryParam("app_code", config.G.Base.AppCode).
 		SetQueryParam("app_secret", config.G.Base.AppSecret).
+		SetQueryParam("access_token", accessToken).
 		Get(url)
 
 	if err != nil {

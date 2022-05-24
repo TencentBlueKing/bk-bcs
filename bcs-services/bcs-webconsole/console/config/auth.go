@@ -2,18 +2,15 @@ package config
 
 // AuthConf :
 type AuthConf struct {
-	Host       string `yaml:"host"`
-	Env        string `yaml:"env"`
-	IAMVersion string `yaml:"iam_version"` // 权限中心版本 v2 or v3
-	SSMHost    string `yaml:"ssm_host"`    // v3时 ssmHOST地址
+	Host       string `yaml:"host"`       // api 地址 可以内部地址或者网关地址
+	IsGatewWay bool   `yaml:"is_gateway"` // 是否是网关地址
+	SSMHost    string `yaml:"ssm_host"`   // 获取 access_token 的地址
 }
 
 // Init : init default redis config
 func (c *AuthConf) Init() error {
 	// only for development
 	c.Host = ""
-	c.Env = ""
-	c.IAMVersion = "v2"
 	c.SSMHost = ""
 	return nil
 }
