@@ -1484,7 +1484,6 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 			name = s.ScalerName()
 		}
 	}
-	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, name, "", 0, 0)
 
 	return replicas, name, errs
 }
