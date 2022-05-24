@@ -85,7 +85,6 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 		metricName = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
 			gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
 	}
-	startTime := time.Now()
 
 	res, err := client.Post(
 		u.String(),
@@ -112,8 +111,6 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	if err != nil {
 		return -1, err
 	}
-	metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName,
-		"success", time.Since(startTime))
 
 	var faResp requests.AutoscaleReview
 	err = json.Unmarshal(result, &faResp)

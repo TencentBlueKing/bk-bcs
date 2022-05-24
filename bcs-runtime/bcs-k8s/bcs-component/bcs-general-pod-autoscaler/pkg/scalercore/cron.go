@@ -63,7 +63,7 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 	if max == -1 {
 		klog.V(4).Infof("Now is not in any time range")
 	} else {
-		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), recordScheduleName,
+		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, recordScheduleName, s.ScalerName(),
 			"success", time.Since(startTime))
 		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), recordScheduleName)
 	}

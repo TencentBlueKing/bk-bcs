@@ -306,16 +306,16 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
 			getMetricName(metricSpec))
 		if err != nil {
-			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
-				getMetricName(metricSpec), "failure", time.Since(startTime))
+			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), getMetricName(metricSpec),
+				"metric", "failure", time.Since(startTime))
 			if invalidMetricsCount <= 0 {
 				invalidMetricCondition = condition
 				invalidMetricError = err
 			}
 			invalidMetricsCount++
 		}
-		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
-			getMetricName(metricSpec), "success", time.Since(startTime))
+		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), getMetricName(metricSpec),
+			"metric", "success", time.Since(startTime))
 		if err == nil && (replicas == -1 || replicaCountProposal > replicas) {
 			timestamp = timestampProposal
 			replicas = replicaCountProposal
@@ -1092,7 +1092,8 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			desiredReplicas, currentReplicas, minReplicas, gpa.Spec.MaxReplicas)
 		rescale = desiredReplicas != currentReplicas
 	}
-	metricsServer.RecordGPAReplicas(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), minReplicas, gpa.Spec.MaxReplicas, desiredReplicas)
+	metricsServer.RecordGPAReplicas(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), minReplicas, gpa.Spec.MaxReplicas,
+		desiredReplicas, gpa.Status.CurrentReplicas)
 
 	if rescale {
 		scale.Spec.Replicas = desiredReplicas
@@ -1461,8 +1462,8 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 					metricName = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
 						gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
 				}
-				metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName,
-					"error", time.Since(startTime))
+				metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, s.ScalerName(),
+					"failure", time.Since(startTime))
 				metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName, err)
 				metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName)
 			}
@@ -1472,7 +1473,7 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 			continue
 		}
 		if s.ScalerName() == "webhook" {
-			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName,
+			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, s.ScalerName(),
 				"success", time.Since(startTime))
 			metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName)
 		}
