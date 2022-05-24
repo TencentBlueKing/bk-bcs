@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import base64
 import os
 
 from django.conf import settings
@@ -24,6 +25,9 @@ USERNAME_KEY_NAME = 'HTTP_X_BKAPI_USERNAME'
 
 try:
     BCS_APP_APIGW_PUBLIC_KEY = getattr(settings, 'BCS_APP_APIGW_PUBLIC_KEY')
+    # 获取到的为 base64 编码后的内容，先进行 base64 解码
+    if BCS_APP_APIGW_PUBLIC_KEY:
+        BCS_APP_APIGW_PUBLIC_KEY = base64.b64decode(BCS_APP_APIGW_PUBLIC_KEY).decode("utf-8")
 except AttributeError:
     BCS_APP_APIGW_PUBLIC_KEY = get_api_public_key('bcs-app', 'bk_bcs', os.environ.get('BKAPP_BK_BCS_TOKEN'))
 
