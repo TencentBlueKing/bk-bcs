@@ -2,9 +2,13 @@ package iam
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
@@ -121,4 +125,44 @@ func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, username st
 
 	applyUrl, err := iamClient.GetApplyURL(req, apps, user)
 	return applyUrl, err
+}
+
+// accessToken 返回
+type accessToken struct {
+	AccessToken string `json:"access_token"`
+}
+
+// GetAccessToken 获取 accessToken
+func GetAccessToken(ctx context.Context) (string, error) {
+	cacheKey := fmt.Sprintf("iam.GetAccessToken:%s", config.G.BCSCC.Stage)
+	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		return cacheResult.(*accessToken).AccessToken, nil
+	}
+
+	url := fmt.Sprintf("%s/api/v1/auth/access-tokens", config.G.Auth.SSMHost)
+
+	jsonData := map[string]string{
+		"grant_type":  "client_credentials",
+		"id_provider": "client",
+	}
+
+	resp, err := components.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-BK-APP-CODE", config.G.Base.AppCode).
+		SetHeader("X-BK-APP-SECRET", config.G.Base.AppSecret).
+		SetBodyJsonMarshal(jsonData).
+		Post(url)
+
+	if err != nil {
+		return "", err
+	}
+
+	var token *accessToken
+	if err := components.UnmarshalBKResult(resp, &token); err != nil {
+		return "", err
+	}
+
+	storage.LocalCache.Slot.Set(cacheKey, token, time.Minute*5)
+
+	return token.AccessToken, nil
 }
