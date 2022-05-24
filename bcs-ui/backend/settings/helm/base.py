@@ -374,7 +374,7 @@ BCS_APP_APIGW_PUBLIC_KEY = os.environ.get("BCS_APP_APIGW_PUBLIC_KEY", "")
 BK_REPO_DOMAIN = os.environ.get("BK_REPO_DOMAIN", "")
 DOCKER_REPO_DOMAIN = os.environ.get("DOCKER_REPO_DOMAIN", "")
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-BK_REPO_AUTHORIZATION = os.environ.get("BK_REPO_AUTHORIZATION", "")
+BK_REPO_AUTHORIZATION = f"Platform {os.environ.get('BK_REPO_TOKEN', '')}"
 # 设置蓝鲸制品库的公共项目和仓库名称，默认为bcs-shared
 BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs-shared-project")
 BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "image-repo")
