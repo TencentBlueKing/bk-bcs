@@ -138,33 +138,30 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
     if decode_res ~= nil then
         key = decode_res
     end
-    local verified = resty_jwt:verify_jwt_obj(key, jwt_obj)
-    if not verified then
+    local jwt_obj = resty_jwt:verify_jwt_obj(key, jwt_obj)
+    if not jwt_obj or not jwt_obj.verified or not jwt_obj.valid then
         core.log.error("verify apigw jwt token failed, jwt token:"..jwt_str)
+        if jwt_obj then
+            core.log.error("verify apigw jwt token failed, reason:"..jwt_obj.reason)
+        end
         core.response.exit(401, "Bad Bkapi JWT token")
     end
-    if not jwt_obj.payload.user then
-        core.log.error("app is not yet allowed")
-        core.log.error("apigw jwt:"..jwt_str)
-        core.log.error("app_code:"..jwt_obj.payload.app.app_code)
-        core.response.exit(401, "User identify required")
+    local redis_key = jwt_obj.payload.app.app_code
+    local credential = {token_type = TOKEN_TYPE_APIGW}
+    credential["user_token"] = {
+        bk_app_code = jwt_obj.payload.app.app_code
+    }
+    if jwt_obj.payload.user and jwt_obj.payload.user.verified then
+        credential["user_token"]["username"] = jwt_obj.payload.user.username
+        redis_key = redis_key .. "," .. jwt_obj.payload.user.username
     end
+    credential["redis_key"] = redis_key
 
-    return {user_token = jwt_obj.payload.app.app_code..","..jwt_obj.payload.user.username, token_type = TOKEN_TYPE_APIGW}
+    return credential
 end
 
-function APIGWAuthentication.get_username(credential, useless)
-    local appcode_and_username = credential.user_token
-    if not appcode_and_username then
-        core.log.error("No token for APIGWAuthentication.get_username func, credential is: "..core.json.encode(credential, true))
-        core.response(500, "BCS Auth Plugin Error")
-    end
-    local splited = stringx.split(appcode_and_username, ",")
-    if #splited ~= 2 then
-        core.log.error("appcode username token length is incorrect, raw string: "..appcode_and_username)
-        core.response(500, "BCS Auth Plugin Error")
-    end
-    return splited[2]
+function APIGWAuthentication.get_userinfo(credential, useless)
+    return credential.user_token
 end
 
 
@@ -175,7 +172,7 @@ function APIGWAuthentication:get_jwt(credential, conf)
     if credential.token_type == TOKEN_TYPE_BCS then
         return TokenAuthentication:get_jwt(credential, conf)
     end
-    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:apigw:", true, APIGWAuthentication.get_username)
+    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:apigw:", true, APIGWAuthentication.get_userinfo)
 end
 ------------ APIGWAuthentication end ------------
 
