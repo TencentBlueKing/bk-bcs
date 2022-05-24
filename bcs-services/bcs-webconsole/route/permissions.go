@@ -134,7 +134,9 @@ func CredentialRequired() gin.HandlerFunc {
 
 		c.Set("auth_context", authCtx)
 
-		if authCtx.BindAPIGW == nil || !authCtx.BindAPIGW.App.Verified {
+		bkAppCode := authCtx.BKAppCode()
+
+		if bkAppCode == "" {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
 				Message:   "not valid bk apigw request",
@@ -143,10 +145,10 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
-		if !config.G.ValidateCred(config.CredentialAppCode, authCtx.BindAPIGW.App.AppCode, config.ScopeProjectCode, authCtx.ProjectCode) {
+		if !config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeProjectCode, authCtx.ProjectCode) {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
-				Message:   fmt.Sprintf("app %s have no permission, %s, %s", authCtx.BindAPIGW.App.AppCode, authCtx.BindProject, authCtx.BindCluster),
+				Message:   fmt.Sprintf("app %s have no permission, %s, %s", bkAppCode, authCtx.BindProject, authCtx.BindCluster),
 				RequestID: authCtx.RequestId,
 			})
 			return
