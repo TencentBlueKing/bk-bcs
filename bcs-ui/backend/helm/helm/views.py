@@ -301,7 +301,7 @@ class ChartVersionViewSet(viewsets.ViewSet):
             if not auth:
                 username = pwd = ""
             else:
-                username, pwd = get_compatible_repo_auth(username=username, project_code=project_code, auth_conf=auth)
+                username, pwd = get_compatible_repo_auth(username=username, project_code=project_code)
             # 删除repo中chart版本记录
             self._delete_version(username, pwd, project_code, info.chart.name, info.version, repo_name)
             # 处理digest不变动的情况
