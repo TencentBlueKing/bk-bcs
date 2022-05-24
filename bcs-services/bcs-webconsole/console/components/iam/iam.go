@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -16,13 +17,22 @@ import (
 
 func newIAMClient() (iam.PermClient, error) {
 	var opts = &iam.Options{
-		SystemID:    iam.SystemIDBKBCS,
-		AppCode:     config.G.Base.AppCode,
-		AppSecret:   config.G.Base.AppSecret,
-		External:    false,
-		GateWayHost: config.G.Auth.Host,
-		Metric:      false,
-		Debug:       config.G.IsDevMode(),
+		SystemID:  iam.SystemIDBKBCS,
+		AppCode:   config.G.Base.AppCode,
+		AppSecret: config.G.Base.AppSecret,
+		Metric:    false,
+		Debug:     config.G.IsDevMode(),
+	}
+
+	// 使用网关地址
+	if config.G.Auth.IsGatewWay {
+		opts.GateWayHost = config.G.Auth.Host
+		opts.External = false
+	} else {
+		// 使用"外部" ingress 地址
+		opts.IAMHost = config.G.Auth.Host
+		opts.BkiIAMHost = config.G.Base.BKPaaSHost
+		opts.External = true
 	}
 
 	client, err := iam.NewIamClient(opts)
@@ -31,6 +41,8 @@ func newIAMClient() (iam.PermClient, error) {
 
 // IsAllowedWithResource 校验项目, 集群是否有权限
 func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username string) (bool, error) {
+	logger.Infof("auth with iam, projectId=%s, clusterId=%s, username=%s", projectId, clusterId, username)
+
 	iamClient, err := newIAMClient()
 	if err != nil {
 		return false, err
@@ -134,6 +146,11 @@ type accessToken struct {
 
 // GetAccessToken 获取 accessToken
 func GetAccessToken(ctx context.Context) (string, error) {
+	// 兼容逻辑, 如果不配置SSMHost, 不使用 access_token 鉴权
+	if config.G.Auth.SSMHost == "" {
+		return "", nil
+	}
+
 	cacheKey := fmt.Sprintf("iam.GetAccessToken:%s", config.G.BCSCC.Stage)
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
 		return cacheResult.(*accessToken).AccessToken, nil
