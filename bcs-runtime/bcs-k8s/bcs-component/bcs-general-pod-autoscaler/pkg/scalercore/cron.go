@@ -47,7 +47,7 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 		timeMetric := t.Schedule
 		_, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
 		if err != nil {
-			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "time", timeMetric, err)
+			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "time", timeMetric, true)
 			klog.Error(err)
 			return currentReplicas, nil
 		}
@@ -63,9 +63,9 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 	if max == -1 {
 		klog.V(4).Infof("Now is not in any time range")
 	} else {
-		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, recordScheduleName, s.ScalerName(),
+		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, recordScheduleName, "time",
 			"success", time.Since(startTime))
-		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), recordScheduleName)
+		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, "time", recordScheduleName)
 	}
 	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "time", recordScheduleName,
 		int64(max), int64(currentReplicas))

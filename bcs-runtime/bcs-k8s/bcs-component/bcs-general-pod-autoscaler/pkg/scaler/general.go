@@ -246,7 +246,7 @@ func (a *GeneralController) processNextWorkItem() bool {
 }
 
 func getTargetRefKey(gpa *autoscaling.GeneralPodAutoscaler) string {
-	return gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
+	return fmt.Sprintf("%s/%s", gpa.Spec.ScaleTargetRef.Kind, gpa.Spec.ScaleTargetRef.Name)
 }
 
 func getMetricName(metricSpec autoscaling.MetricSpec) string {
@@ -301,13 +301,13 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 		startTime := time.Now()
 		replicaCountProposal, metricNameProposal, timestampProposal, condition, err := a.computeReplicasForMetric(gpa,
 			metricSpec, specReplicas, statusReplicas, selector, &statuses[i])
-		metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
-			getMetricName(metricSpec), err)
 		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
 			getMetricName(metricSpec))
 		if err != nil {
 			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), getMetricName(metricSpec),
 				"metric", "failure", time.Since(startTime))
+			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
+				getMetricName(metricSpec), true)
 			if invalidMetricsCount <= 0 {
 				invalidMetricCondition = condition
 				invalidMetricError = err
@@ -1449,33 +1449,13 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 	)
 	replicas = -1
 	klog.V(4).Infof("Scaler number of %v: %v", gpa.Name, len(scalers))
-	key := getTargetRefKey(gpa)
-	var metricName string
 	for _, s := range scalers {
-		startTime := time.Now()
 		chainReplicas, err := s.GetReplicas(gpa, currentReplicas)
 		if err != nil {
-			if s.ScalerName() == "webhook" {
-				if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
-					metricName = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
-				} else if gpa.Spec.WebhookMode.WebhookClientConfig.Service != nil {
-					metricName = gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace + "/" +
-						gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name
-				}
-				metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, s.ScalerName(),
-					"failure", time.Since(startTime))
-				metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName, err)
-				metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName)
-			}
 			klog.Error(err)
 			errs = pkgerrors.Wrap(err,
 				fmt.Sprintf("GPA: %v get replicas error when call %v", gpa.Name, s.ScalerName()))
 			continue
-		}
-		if s.ScalerName() == "webhook" {
-			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, s.ScalerName(),
-				"success", time.Since(startTime))
-			metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, s.ScalerName(), metricName)
 		}
 		klog.V(4).Infof("GPA: %v scaler: %v, suggested replicas: %v",
 			gpa.Name, s.ScalerName(), chainReplicas)

@@ -228,11 +228,11 @@ func (metricsServer PrometheusMetricServer) RecordScalerUpdateDuration(namespace
 
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
 func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, name string, scaledObject string,
-	scaler string, metric string, err error) {
-	if err != nil {
+	scaler string, metric string, isErr bool) {
+	if isErr {
 		scalerErrors.With(getLabels(namespace, name, scaledObject, scaler, metric)).Inc()
 		// scaledObjectErrors.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject}).Inc()
-		metricsServer.RecordScalerObjectError(namespace, name, scaledObject, err)
+		metricsServer.RecordScalerObjectError(namespace, name, scaledObject, isErr)
 		scalerErrorsTotal.With(prometheus.Labels{}).Inc()
 		return
 	}
@@ -252,9 +252,9 @@ func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace strin
 
 // RecordScalerObjectError counts the number of errors with the scaled object
 func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, name string,
-	scaledObject string, err error) {
+	scaledObject string, isErr bool) {
 	labels := prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}
-	if err != nil {
+	if isErr {
 		scaledObjectErrors.With(labels).Inc()
 		return
 	}
