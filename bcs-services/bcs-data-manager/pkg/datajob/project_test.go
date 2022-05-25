@@ -14,160 +14,157 @@ package datajob
 
 import (
 	"context"
-	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/mock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 )
 
-func TestNewProjectDayPolicy(t *testing.T) {
-	db := newTestMongo()
-	projectPolicy := NewProjectDayPolicy(&metric.MetricGetter{}, db)
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.ProjectType,
-		ProjectID:   "test",
-		Dimension:   common.DimensionDay,
-		CurrentTime: time.Time{},
-	}
-	ctx := context.Background()
-	projectPolicy.ImplementPolicy(ctx, opts, nil)
-}
-
 func TestProjectDayPolicy_CalculateCpu(t *testing.T) {
-	type fields struct {
-		MetricGetter metric.Server
-		store        store.Server
+	storeServer := mock.NewMockStore()
+	metricGetter := mock.NewMockMetric()
+	projectDayPolicy := NewProjectDayPolicy(metricGetter, storeServer)
+	clusters := []*types.ClusterData{
+		{
+			Metrics: []*types.ClusterMetrics{{
+				TotalCPU:        20,
+				TotalLoadCPU:    10,
+				TotalMemory:     50000,
+				TotalLoadMemory: 5000,
+			}},
+		}, {
+			Metrics: []*types.ClusterMetrics{{
+				TotalCPU:        20,
+				TotalLoadCPU:    10,
+				TotalMemory:     50000,
+				TotalLoadMemory: 5000,
+			}, {
+				TotalCPU:        30,
+				TotalLoadCPU:    15,
+				TotalMemory:     60000,
+				TotalLoadMemory: 6000,
+			}},
+		},
 	}
-	type args struct {
-		clusters []*common.ClusterData
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   float64
-		want1  float64
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := &ProjectDayPolicy{
-				MetricGetter: tt.fields.MetricGetter,
-				store:        tt.fields.store,
-			}
-			got, got1 := p.CalculateCpu(tt.args.clusters)
-			if got != tt.want {
-				t.Errorf("CalculateCpu() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("CalculateCpu() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
+	total, load := projectDayPolicy.calculateCpu(clusters)
+	assert.Equal(t, float64(50), total)
+	assert.Equal(t, float64(25), load)
 }
 
 func Test_ProjectDayPolicy(t *testing.T) {
-	db := newTestMongo()
-	projectPolicy := NewProjectDayPolicy(&metric.MetricGetter{}, db)
-	opts := &common.JobCommonOpts{
-		ObjectType:  common.ProjectType,
-		ProjectID:   "test",
-		Dimension:   common.DimensionDay,
-		CurrentTime: time.Now(),
-	}
+	storeServer := mock.NewMockStore()
+	metricGetter := mock.NewMockMetric()
+	minutePolicy := NewClusterMinutePolicy(metricGetter, storeServer)
+	hourPolicy := NewClusterHourPolicy(metricGetter, storeServer)
+	dayPolicy := NewClusterDayPolicy(metricGetter, storeServer)
+	projectDayPolicy := NewProjectDayPolicy(metricGetter, storeServer)
 	ctx := context.Background()
-	projectPolicy.ImplementPolicy(ctx, opts, nil)
+	minuteOpts := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
+		ProjectID:   "testProject",
+		ClusterID:   "testCluster",
+		ClusterType: types.Kubernetes,
+		Dimension:   types.DimensionMinute,
+		CurrentTime: utils.FormatTime(time.Now(), types.DimensionMinute),
+	}
+	hourOpts := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
+		ProjectID:   "testProject",
+		ClusterID:   "testCluster",
+		ClusterType: types.Kubernetes,
+		Dimension:   types.DimensionHour,
+		CurrentTime: utils.FormatTime(time.Now(), types.DimensionHour),
+	}
+	dayOpts := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
+		ProjectID:   "testProject",
+		ClusterID:   "testCluster",
+		ClusterType: types.Kubernetes,
+		Dimension:   types.DimensionDay,
+		CurrentTime: utils.FormatTime(time.Now(), types.DimensionDay),
+	}
+	projectOpts := &types.JobCommonOpts{
+		ObjectType:  types.ProjectType,
+		ProjectID:   "testProject",
+		Dimension:   types.DimensionDay,
+		CurrentTime: utils.FormatTime(time.Now(), types.DimensionDay),
+	}
+	cmCli := &cmanager.ClusterManagerClientWithHeader{
+		Cli: mock.NewMockCm(),
+		Ctx: ctx,
+	}
+	client := &types.Clients{
+		MonitorClient:   nil,
+		K8sStorageCli:   mock.NewMockStorage(),
+		MesosStorageCli: mock.NewMockStorage(),
+		CmCli:           cmCli,
+	}
+	minutePolicy.ImplementPolicy(ctx, minuteOpts, client)
+	hourPolicy.ImplementPolicy(ctx, hourOpts, client)
+	dayPolicy.ImplementPolicy(ctx, dayOpts, client)
+	projectDayPolicy.ImplementPolicy(ctx, projectOpts, client)
+	bucket, err := utils.GetBucketTime(projectOpts.CurrentTime, types.DimensionDay)
+	assert.Nil(t, err)
+	project, err := storeServer.GetRawProjectInfo(ctx, dayOpts, bucket)
+	assert.Nil(t, err)
+	assert.NotNil(t, project)
 }
 
 func Test_calculateMemory(t *testing.T) {
-	type fields struct {
-		MetricGetter metric.Server
-		store        store.Server
+	storeServer := mock.NewMockStore()
+	metricGetter := mock.NewMockMetric()
+	projectDayPolicy := NewProjectDayPolicy(metricGetter, storeServer)
+	clusters := []*types.ClusterData{
+		{
+			Metrics: []*types.ClusterMetrics{{
+				TotalCPU:        20,
+				TotalLoadCPU:    10,
+				TotalMemory:     50000,
+				TotalLoadMemory: 5000,
+			}},
+		}, {
+			Metrics: []*types.ClusterMetrics{{
+				TotalCPU:        20,
+				TotalLoadCPU:    10,
+				TotalMemory:     50000,
+				TotalLoadMemory: 5000,
+			}, {
+				TotalCPU:        30,
+				TotalLoadCPU:    15,
+				TotalMemory:     60000,
+				TotalLoadMemory: 6000,
+			}},
+		},
 	}
-	type args struct {
-		clusters []*common.ClusterData
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   int64
-		want1  int64
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := &ProjectDayPolicy{
-				MetricGetter: tt.fields.MetricGetter,
-				store:        tt.fields.store,
-			}
-			got, got1 := p.calculateMemory(tt.args.clusters)
-			if got != tt.want {
-				t.Errorf("calculateMemory() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("calculateMemory() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
+	total, load := projectDayPolicy.calculateMemory(clusters)
+	assert.Equal(t, int64(110000), total)
+	assert.Equal(t, int64(11000), load)
 }
 
 func Test_calculateProjectNodeCount(t *testing.T) {
-	type fields struct {
-		MetricGetter metric.Server
-		store        store.Server
+	storeServer := mock.NewMockStore()
+	metricGetter := mock.NewMockMetric()
+	projectDayPolicy := NewProjectDayPolicy(metricGetter, storeServer)
+	clusters := []*types.ClusterData{
+		{
+			Metrics: []*types.ClusterMetrics{{
+				NodeCount:          20,
+				AvailableNodeCount: 19,
+			}},
+		}, {
+			Metrics: []*types.ClusterMetrics{{
+				NodeCount:          20,
+				AvailableNodeCount: 19,
+			}, {
+				NodeCount:          20,
+				AvailableNodeCount: 20,
+			}},
+		},
 	}
-	type args struct {
-		clusters []*common.ClusterData
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   int64
-		want1  int64
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := &ProjectDayPolicy{
-				MetricGetter: tt.fields.MetricGetter,
-				store:        tt.fields.store,
-			}
-			got, got1 := p.calculateProjectNodeCount(tt.args.clusters)
-			if got != tt.want {
-				t.Errorf("calculateProjectNodeCount() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("calculateProjectNodeCount() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
-}
-
-func newTestMongo() store.Server {
-	mongoOptions := &mongo.Options{
-		Hosts:                 []string{"127.0.0.1:27017"},
-		ConnectTimeoutSeconds: 3,
-		Database:              "datamanager_test",
-		Username:              "data",
-		Password:              "test1234",
-	}
-	mongoDB, err := mongo.NewDB(mongoOptions)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = mongoDB.Ping()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("init mongo db successfully")
-	return store.NewServer(mongoDB)
+	total, load := projectDayPolicy.calculateProjectNodeCount(clusters)
+	assert.Equal(t, int64(40), total)
+	assert.Equal(t, int64(39), load)
 }

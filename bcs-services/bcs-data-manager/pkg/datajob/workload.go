@@ -14,10 +14,11 @@ package datajob
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
@@ -67,7 +68,7 @@ func NewWorkloadMinutePolicy(getter metric.Server, store store.Server) *Workload
 }
 
 // ImplementPolicy day policy implement
-func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
 	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
@@ -80,16 +81,16 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
 	}
-	hourOpts := &common.JobCommonOpts{
-		ObjectType:   common.WorkloadType,
+	hourOpts := &types.JobCommonOpts{
+		ObjectType:   types.WorkloadType,
 		ProjectID:    opts.ProjectID,
 		ClusterID:    opts.ClusterID,
 		Namespace:    opts.Namespace,
-		Dimension:    common.DimensionHour,
+		Dimension:    types.DimensionHour,
 		WorkloadType: opts.WorkloadType,
 		Name:         opts.Name,
 	}
-	bucket, _ := common.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), common.DimensionHour)
+	bucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
 	hourMetrics, err := p.store.GetRawWorkloadInfo(ctx, hourOpts, bucket)
 	if err != nil {
 		blog.Errorf("do workload day policy failed, get workload metrics err:%v", err)
@@ -99,8 +100,8 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		return
 	}
 	hourMetric := hourMetrics[0]
-	workloadMetric := &common.WorkloadMetrics{
-		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
+	workloadMetric := &types.WorkloadMetrics{
+		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
 		CPURequest:         cpuRequest,
 		CPUUsage:           cpuUsage,
@@ -127,7 +128,7 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 }
 
 // ImplementPolicy hour policy implement
-func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
 	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload hour policy error, opts: %v, err: %v", opts, err)
@@ -141,16 +142,16 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 		blog.Errorf("do workload hour policy error, opts: %v, err: %v", opts, err)
 	}
 
-	minuteOpts := &common.JobCommonOpts{
-		ObjectType:   common.WorkloadType,
+	minuteOpts := &types.JobCommonOpts{
+		ObjectType:   types.WorkloadType,
 		ProjectID:    opts.ProjectID,
 		ClusterID:    opts.ClusterID,
 		Namespace:    opts.Namespace,
-		Dimension:    common.DimensionMinute,
+		Dimension:    types.DimensionMinute,
 		WorkloadType: opts.WorkloadType,
 		Name:         opts.Name,
 	}
-	bucket, _ := common.GetBucketTime(opts.CurrentTime.Add((-1)*time.Hour), common.DimensionMinute)
+	bucket, _ := utils.GetBucketTime(opts.CurrentTime.Add((-1)*time.Hour), types.DimensionMinute)
 	minuteMetrics, err := p.store.GetRawWorkloadInfo(ctx, minuteOpts, bucket)
 	if err != nil {
 		blog.Errorf("do workload hour policy failed, get workload metrics err:%v", err)
@@ -160,8 +161,8 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 		return
 	}
 	minuteMetric := minuteMetrics[0]
-	workloadMetric := &common.WorkloadMetrics{
-		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
+	workloadMetric := &types.WorkloadMetrics{
+		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
 		CPURequest:         cpuRequest,
 		CPUUsage:           cpuUsage,
@@ -188,8 +189,8 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *common.J
 }
 
 // ImplementPolicy minute policy implement
-func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts,
-	clients *common.Clients) {
+func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
+	clients *types.Clients) {
 	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload minute policy error, opts: %v, err: %v", opts, err)
@@ -202,8 +203,8 @@ func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *common
 	if err != nil {
 		blog.Errorf("do workload minute policy error, opts: %v, err: %v", opts, err)
 	}
-	workloadMetric := &common.WorkloadMetrics{
-		Index:             common.GetIndex(opts.CurrentTime, opts.Dimension),
+	workloadMetric := &types.WorkloadMetrics{
+		Index:             utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:              primitive.NewDateTimeFromTime(opts.CurrentTime),
 		CPURequest:        cpuRequest,
 		CPUUsage:          cpuUsage,

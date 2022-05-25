@@ -14,11 +14,11 @@ package cmd
 
 import (
 	"crypto/tls"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 )
 
 // MongoOption option for mongo db
@@ -122,6 +122,7 @@ type DataManagerOptions struct {
 type ClusterFilterRules struct {
 	NeedFilter bool   `json:"needFilter"`
 	ClusterIDs string `json:"clusterIDs"`
+	Env        string `json:"env"`
 }
 
 // NewDataManagerOptions new dataManagerOptions
@@ -143,7 +144,7 @@ func NewDataManagerOptions() *DataManagerOptions {
 			MongoConnectTimeout: 3,
 		},
 		QueueConfig: QueueConfig{
-			Resource:        common.DataJobQueue,
+			Resource:        types.DataJobQueue,
 			QueueFlag:       true,
 			ExchangeName:    "bcs-data-manager",
 			ConnectTimeout:  300,

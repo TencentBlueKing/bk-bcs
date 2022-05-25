@@ -14,9 +14,10 @@ package datajob
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -37,16 +38,16 @@ func NewProjectDayPolicy(getter metric.Server, store store.Server) *ProjectDayPo
 }
 
 // ImplementPolicy project day implement
-func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
-	bucketTime, err := common.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), common.DimensionHour)
+func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
+	bucketTime, err := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
 	if err != nil {
 		blog.Errorf("do day project policy error, get bucket err:%v", err)
 		return
 	}
-	hourOpts := &common.JobCommonOpts{
-		ObjectType: common.ClusterType,
+	hourOpts := &types.JobCommonOpts{
+		ObjectType: types.ClusterType,
 		ProjectID:  opts.ProjectID,
-		Dimension:  common.DimensionHour,
+		Dimension:  types.DimensionHour,
 	}
 	clusters, err := p.store.GetRawClusterInfo(ctx, hourOpts, bucketTime)
 	if err != nil {
@@ -58,10 +59,10 @@ func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		return
 	}
 	nodeCount, availableNode := p.calculateProjectNodeCount(clusters)
-	totalCPU, loadCPU := p.CalculateCpu(clusters)
+	totalCPU, loadCPU := p.calculateCpu(clusters)
 	totalMemory, loadMemory := p.calculateMemory(clusters)
-	projectMetric := &common.ProjectMetrics{
-		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
+	projectMetric := &types.ProjectMetrics{
+		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
 		ClustersCount:      int64(len(clusters)),
 		TotalCPU:           totalCPU,
@@ -84,7 +85,7 @@ func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 }
 
 // CalculateCpu calculate cpu
-func (p *ProjectDayPolicy) CalculateCpu(clusters []*common.ClusterData) (float64, float64) {
+func (p *ProjectDayPolicy) calculateCpu(clusters []*types.ClusterData) (float64, float64) {
 	var total, load float64
 	for key := range clusters {
 		if len(clusters[key].Metrics) != 0 {
@@ -96,7 +97,7 @@ func (p *ProjectDayPolicy) CalculateCpu(clusters []*common.ClusterData) (float64
 	return total, load
 }
 
-func (p *ProjectDayPolicy) calculateMemory(clusters []*common.ClusterData) (int64, int64) {
+func (p *ProjectDayPolicy) calculateMemory(clusters []*types.ClusterData) (int64, int64) {
 	var total, load int64
 	for key := range clusters {
 		if len(clusters[key].Metrics) != 0 {
@@ -108,7 +109,7 @@ func (p *ProjectDayPolicy) calculateMemory(clusters []*common.ClusterData) (int6
 	return total, load
 }
 
-func (p *ProjectDayPolicy) calculateProjectNodeCount(clusters []*common.ClusterData) (int64, int64) {
+func (p *ProjectDayPolicy) calculateProjectNodeCount(clusters []*types.ClusterData) (int64, int64) {
 	var nodeCount, availableNode int64
 	for key := range clusters {
 		if len(clusters[key].Metrics) != 0 {

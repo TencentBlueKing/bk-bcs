@@ -11,33 +11,3 @@
  */
 
 package cmd
-
-import (
-	"testing"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/pkg"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-	"github.com/stretchr/testify/assert"
-)
-
-func TestListCluster(t *testing.T) {
-
-}
-
-func TestListNamespace(t *testing.T) {
-	client := pkg.NewDataManagerCli(&pkg.Config{
-		APIServer: "",
-		AuthToken: "",
-	})
-	rsp, err := client.GetNamespaceInfoList(&bcsdatamanager.GetNamespaceInfoListRequest{
-		ClusterID: "BCS-K8S-15091",
-		Dimension: "hour",
-		Page:      1,
-	})
-	assert.Nil(t, err)
-	assert.NotNil(t, rsp)
-}
-
-func TestListWorkload(t *testing.T) {
-
-}

@@ -14,19 +14,20 @@ package datajob
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
-func getClusterWorkloadCount(opts *common.JobCommonOpts, clients *common.Clients) int64 {
-	workloadList := make([]*common.WorkloadMeta, 0)
+func getClusterWorkloadCount(opts *types.JobCommonOpts, clients *types.Clients) int64 {
+	workloadList := make([]*types.WorkloadMeta, 0)
 	switch opts.ClusterType {
-	case common.Kubernetes:
+	case types.Kubernetes:
 		namespaceList := common.GetK8sNamespaceList(opts.ClusterID, opts.ProjectID, clients.K8sStorageCli)
 		for _, namespace := range namespaceList {
 			workloads := common.GetK8sWorkloadList(opts.ClusterID, opts.ProjectID, namespace.Name,
 				clients.K8sStorageCli)
 			workloadList = append(workloadList, workloads...)
 		}
-	case common.Mesos:
+	case types.Mesos:
 		workloads := common.GetMesosWorkloadList(opts.ClusterID, opts.ProjectID,
 			clients.K8sStorageCli)
 		workloadList = append(workloadList, workloads...)

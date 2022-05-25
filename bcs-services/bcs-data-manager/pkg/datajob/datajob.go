@@ -14,7 +14,7 @@ package datajob
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 // IDataJob dataJob interface
@@ -25,14 +25,14 @@ type IDataJob interface {
 
 // Policy interface
 type Policy interface {
-	ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients)
+	ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients)
 }
 
 // DataJob dataJob struct
 type DataJob struct {
-	Opts      common.JobCommonOpts
+	Opts      types.JobCommonOpts
 	jobPolicy Policy
-	clients   *common.Clients
+	clients   *types.Clients
 }
 
 // DoPolicy do dataJob policy
@@ -46,6 +46,6 @@ func (j *DataJob) SetPolicy(policy Policy) {
 }
 
 // SetClient set dataJob clients
-func (j *DataJob) SetClient(clients *common.Clients) {
+func (j *DataJob) SetClient(clients *types.Clients) {
 	j.clients = clients
 }
