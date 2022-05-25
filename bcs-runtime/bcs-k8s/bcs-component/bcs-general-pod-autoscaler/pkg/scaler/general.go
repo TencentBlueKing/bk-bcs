@@ -301,8 +301,6 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 		startTime := time.Now()
 		replicaCountProposal, metricNameProposal, timestampProposal, condition, err := a.computeReplicasForMetric(gpa,
 			metricSpec, specReplicas, statusReplicas, selector, &statuses[i])
-		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
-			getMetricName(metricSpec))
 		if err != nil {
 			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), getMetricName(metricSpec),
 				"metric", "failure", time.Since(startTime))

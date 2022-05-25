@@ -219,7 +219,6 @@ func setCABundle(caBundle []byte) error {
 
 func recordWebhookPromMetrics(gpa *autoscalingv1.GeneralPodAutoscaler, ms metrics.PrometheusMetricServer,
 	key, metricName string, t time.Time, targetReplicas, currentReplicas int32, isErr bool) {
-	ms.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, "webhook", metricName)
 	ms.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "webhook", metricName, isErr)
 	ms.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook", metricName, int64(targetReplicas), int64(currentReplicas))
 	ms.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook", targetReplicas)

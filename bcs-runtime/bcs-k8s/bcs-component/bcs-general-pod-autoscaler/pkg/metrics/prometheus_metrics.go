@@ -68,15 +68,6 @@ var (
 		},
 		metricLabels,
 	)
-	scalerExecCounts = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "keda_metrics_adapter",
-			Subsystem: "scaler",
-			Name:      "exec_counts",
-			Help:      "Counts of executing scaler",
-		},
-		metricLabels,
-	)
 	scalerExecDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "keda_metrics_adapter",
@@ -159,7 +150,6 @@ func init() {
 	registry.MustRegister(gpaCurrentReplicasValue)
 	registry.MustRegister(gpaMinReplicasValue)
 	registry.MustRegister(gpaMaxReplicasValue)
-	registry.MustRegister(scalerExecCounts)
 	registry.MustRegister(scalerExecDuration)
 	registry.MustRegister(scaleUpdateDuration)
 }
@@ -206,11 +196,6 @@ func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, 
 	gpaMaxReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(maxReplicas))
 	gpaDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(desiredReplicas))
 	gpaCurrentReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(currentReplicas))
-}
-
-// RecordScalerExecCounts records counts of executing scaler. In metric mode, it records counts of every metric.
-func (metricsServer PrometheusMetricServer) RecordScalerExecCounts(namespace, name, scaledObject, scaler, metric string) {
-	scalerExecCounts.With(getLabels(namespace, name, scaledObject, scaler, metric)).Inc()
 }
 
 // RecordScalerExecDuration records duration by seconds when executing scaler.

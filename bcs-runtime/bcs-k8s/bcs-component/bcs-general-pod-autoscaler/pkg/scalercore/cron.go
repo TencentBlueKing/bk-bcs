@@ -65,7 +65,6 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 	} else {
 		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, recordScheduleName, "time",
 			"success", time.Since(startTime))
-		metricsServer.RecordScalerExecCounts(gpa.Namespace, gpa.Name, key, "time", recordScheduleName)
 	}
 	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "time", recordScheduleName,
 		int64(max), int64(currentReplicas))
