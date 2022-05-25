@@ -2797,5 +2797,14 @@ export default {
     "请先测试kubeconfig可用性": ["please run kubeconfig usability testing"],
     'IP已被 {name}{id} 占用': ['IP is occupied by {name}{id}'],
     '功能特性': ['BCS Features'],
-    '功能建设中': ['function under construction']
+    '功能建设中': ['function under construction'],
+    "产品功能特性": [
+        "Product features"
+    ],
+    "功能特性指引": [
+        "Functional Characteristic Guidelines"
+    ],
+    "如需vpc-cni网络，请联系蓝鲸容器助手": [
+        "If you need a VPC-CNI network, please contact the blue whale container assistant"
+    ]
 }

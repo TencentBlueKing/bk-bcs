@@ -130,7 +130,7 @@
                                     >
                                         {{$t('配额管理')}}
                                     </a>
-                                    <a href="javascript:void(0)" class="bk-text-button"
+                                    <a href="javascript:void(0)" class="bk-text-button ml10"
                                         @click="showDelNamespace(row, index)"
                                         v-authority="{
                                             clickable: web_annotations.perms[row.iam_ns_id]
@@ -385,15 +385,16 @@
                             </div>
                         </div>
                         <div class="bk-form-item flex-item" style="margin-top: 30px;">
-                            <div class="left">
+                            <div class="form-item-quota">
                                 <label class="bk-label label">
                                     {{$t('配额')}}
                                     <span class="quota-tip">{{$t('分配命名空间下容器可用的内存和 CPU 总量')}}</span>
                                 </label>
+                                <bcs-switcher v-model="enableQuota"></bcs-switcher>
                             </div>
                         </div>
 
-                        <div class="quota-config mt10">
+                        <div class="quota-config mt10" v-if="enableQuota">
                             <div class="bk-form-item mr10">
                                 <div class="label">
                                     MEM
@@ -424,14 +425,11 @@
                             </div>
                         </div>
                         <div class="action-inner">
-                            <bk-button type="primary" :loading="editQuotaConf.loading" @click="confirmEditQuota">
+                            <bk-button type="primary" :loading="editQuotaConf.loading" @click="handleSaveQuota">
                                 {{$t('保存')}}
                             </bk-button>
                             <bk-button @click="hideEditQuota" :disabled="editQuotaConf.loading">
                                 {{$t('取消')}}
-                            </bk-button>
-                            <bk-button type="danger" @click="showDelQuota">
-                                {{$t('删除')}}
                             </bk-button>
                         </div>
                     </div>
@@ -602,7 +600,8 @@
                     ns: {}
                 },
                 areaIndex: -1,
-                web_annotations: { perms: {} }
+                web_annotations: { perms: {} },
+                enableQuota: true
             }
         },
         computed: {
@@ -1207,6 +1206,7 @@
                         limitsMem: '400',
                         requestsMem: hard['requests.memory'] ? Number(hard['requests.memory'].split('Gi')[0]) : 0
                     })
+                    this.enableQuota = !!Object.keys(res.data.quota).length
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -1403,6 +1403,16 @@
             filterNamespace (name) {
                 const filterRule = this.projectCode + '-'
                 return name.split(filterRule)[1]
+            },
+            async handleSaveQuota () {
+                if (this.enableQuota) {
+                    this.confirmEditQuota()
+                } else {
+                    this.editQuotaConf.loading = true
+                    this.delQuotaDialogConf.ns = Object.assign({}, this.showQuotaData)
+                    await this.delQuotaConfirm()
+                    this.editQuotaConf.loading = false
+                }
             }
         }
     }
@@ -1410,4 +1420,10 @@
 
 <style scoped>
     @import './namespace.css';
+    .form-item-quota {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
 </style>
