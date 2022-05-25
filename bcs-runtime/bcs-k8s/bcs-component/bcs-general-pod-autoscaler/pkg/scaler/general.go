@@ -1548,8 +1548,10 @@ func calculateScaleUpLimitWithSR(currentReplicas int32, scaleEvents []timestampe
 		return currentReplicas // Scaling is disabled
 	} else if *scalingRules.SelectPolicy == autoscaling.MinPolicySelect {
 		selectPolicyFn = min // For scaling up, the lowest change ('min' policy) produces a minimum value
+		result = math.MaxInt32
 	} else {
 		selectPolicyFn = max // Use the default policy otherwise to produce a highest possible change
+		result = -math.MaxInt32
 	}
 	for _, policy := range scalingRules.Policies {
 		replicasAddedInCurrentPeriod := getReplicasChangePerPeriod(policy.PeriodSeconds, scaleEvents)
@@ -1572,15 +1574,17 @@ func calculateScaleUpLimitWithSR(currentReplicas int32, scaleEvents []timestampe
 // that could be deleted for the given GPAScalingRules
 func calculateScaleDownLimitWithB(currentReplicas int32, scaleEvents []timestampedScaleEvent,
 	scalingRules *autoscaling.GPAScalingRules) int32 {
-	var result int32 = math.MaxInt32
+	var result int32
 	var proposed int32
 	var selectPolicyFn func(int32, int32) int32
 	if *scalingRules.SelectPolicy == autoscaling.DisabledPolicySelect {
 		return currentReplicas // Scaling is disabled
 	} else if *scalingRules.SelectPolicy == autoscaling.MinPolicySelect {
 		selectPolicyFn = max // For scaling down, the lowest change ('min' policy) produces a maximum value
+		result = -math.MaxInt32
 	} else {
 		selectPolicyFn = min // Use the default policy otherwise to produce a highest possible change
+		result = math.MaxInt32
 	}
 	for _, policy := range scalingRules.Policies {
 		replicasDeletedInCurrentPeriod := getReplicasChangePerPeriod(policy.PeriodSeconds, scaleEvents)
