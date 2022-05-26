@@ -43,12 +43,19 @@
                     <bcs-select :loading="accountsLoading"
                         class="w640"
                         :clearable="false"
+                        searchable
                         v-model="importClusterInfo.accountID">
                         <bcs-option v-for="item in accountsList"
                             :key="item.account.accountID"
                             :id="item.account.accountID"
                             :name="item.account.accountName">
                         </bcs-option>
+                        <template #extension>
+                            <div class="extension-item" style="cursor: pointer" @click="handleGotoCloudToken">
+                                <i class="bk-icon icon-plus-circle"></i>
+                                <span>{{ $t('新增凭证') }}</span>
+                            </div>
+                        </template>
                     </bcs-select>
                 </bk-form-item>
                 <bk-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
@@ -344,6 +351,10 @@
                     goHome($route)
                 }
             }
+            const handleGotoCloudToken = () => {
+                const data = $router.resolve({ name: 'tencentCloud' })
+                window.open(data.href, '_blank')
+            }
 
             const { labelWidth, initFormLabelWidth } = useFormLabel()
             onMounted(() => {
@@ -368,7 +379,8 @@
                 regionList,
                 getRegionList,
                 clusterList,
-                handleTest
+                handleTest,
+                handleGotoCloudToken
             }
         }
     })
