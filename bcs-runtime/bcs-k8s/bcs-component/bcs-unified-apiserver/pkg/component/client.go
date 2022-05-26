@@ -55,6 +55,19 @@ type BKResult struct {
 	Data    interface{} `json:"data"`
 }
 
+// 分页配置
+type Pagination struct {
+	Total    int64 `json:"total"`
+	PageSize int64 `json:"pageSize"`
+	Offset   int64 `json:"offset"`
+}
+
+// BCSStorResult BCS storage 返回, 添加了分页字段
+type BCSStorResult struct {
+	BKResult   `json:",inline"`
+	Pagination `json:",inline"`
+}
+
 // UnmarshalBKResult 反序列化为蓝鲸返回规范
 func UnmarshalBKResult(resp *resty.Response, data interface{}) error {
 	if resp.StatusCode() != http.StatusOK {
@@ -72,6 +85,26 @@ func UnmarshalBKResult(resp *resty.Response, data interface{}) error {
 	}
 
 	return nil
+}
+
+// UnmarshalBCSStorResult 反序列化为BCS Stor返回规范
+func UnmarshalBCSStorResult(resp *resty.Response, data interface{}) (*Pagination, error) {
+	if resp.StatusCode() != http.StatusOK {
+		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+	}
+
+	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
+	bkResult := BKResult{Data: data}
+	bcsResult := &BCSStorResult{BKResult: bkResult}
+	if err := json.Unmarshal(resp.Body(), bcsResult); err != nil {
+		return nil, err
+	}
+
+	if err := bcsResult.ValidateCode(); err != nil {
+		return nil, err
+	}
+
+	return &bcsResult.Pagination, nil
 }
 
 // ValidateCode 返回结果是否OK

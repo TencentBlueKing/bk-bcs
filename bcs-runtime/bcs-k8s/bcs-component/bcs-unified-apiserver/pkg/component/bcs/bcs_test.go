@@ -15,7 +15,6 @@ package bcs
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -53,7 +52,8 @@ func TestListResources(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	resources, err := ListPodResources(ctx, []string{"BCS-K8S-00000"}, "kube-system", 5, 0)
+	resources, pag, err := ListPodResources(ctx, []string{"BCS-K8S-00000"}, "kube-system", 5, 0)
 	assert.NoError(t, err)
-	fmt.Println("lei", resources[0].Data.Labels)
+	assert.Equal(t, len(resources), 0)
+	assert.Equal(t, pag.Total, 0)
 }
