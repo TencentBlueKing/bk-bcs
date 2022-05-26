@@ -4,6 +4,8 @@ podAffinity:
   type: array
   items:
     type: object
+    required:
+      - topologyKey
     properties:
       namespaces:
         title: {{ i18n "命名空间" .lang }}
@@ -39,10 +41,10 @@ podAffinity:
             if: "{{`{{`}} $self.value === 'required' {{`}}`}}"
             then:
               state:
-                disabled: true
+                visible: false
             else:
               state:
-                disabled: false
+                visible: true
       selector:
         type: object
         properties:
@@ -64,10 +66,6 @@ podAffinity:
                     name: select
                     props:
                       datasource:
-                        - label: Lt
-                          value: Lt
-                        - label: Gt
-                          value: Gt
                         - label: Exists
                           value: Exists
                         - label: DoesNotExist
@@ -76,6 +74,16 @@ podAffinity:
                           value: In
                         - label: NotIn
                           value: NotIn
+                  ui:reactions:
+                    - target: "{{`{{`}} $widgetNode?.getSibling('values')?.id {{`}}`}}"
+                      if: "{{`{{`}} $self.value === 'Exists' || $self.value === 'DoesNotExist' {{`}}`}}"
+                      then:
+                        state:
+                          disabled: true
+                          value: ""
+                      else:
+                        state:
+                          disabled: false
                 values:
                   title: values
                   type: string
@@ -107,6 +115,7 @@ podAffinity:
         title: {{ i18n "拓扑键" .lang }}
         type: string
         ui:rules:
+          - required
           - maxLength250
       type:
         title: {{ i18n "类型" .lang }}
@@ -166,10 +175,10 @@ nodeAffinity:
             if: "{{`{{`}} $self.value === 'required' {{`}}`}}"
             then:
               state:
-                disabled: true
+                visible: false
             else:
               state:
-                disabled: false
+                visible: true
       selector:
         type: object
         properties:
@@ -201,6 +210,16 @@ nodeAffinity:
                           value: In
                         - label: NotIn
                           value: NotIn
+                  ui:reactions:
+                    - target: "{{`{{`}} $widgetNode?.getSibling('values')?.id {{`}}`}}"
+                      if: "{{`{{`}} $self.value === 'Exists' || $self.value === 'DoesNotExist' {{`}}`}}"
+                      then:
+                        state:
+                          disabled: true
+                          value: ""
+                      else:
+                        state:
+                          disabled: false
                 values:
                   title: values
                   type: string
@@ -239,6 +258,16 @@ nodeAffinity:
                           value: In
                         - label: NotIn
                           value: NotIn
+                  ui:reactions:
+                    - target: "{{`{{`}} $widgetNode?.getSibling('values')?.id {{`}}`}}"
+                      if: "{{`{{`}} $self.value === 'Exists' || $self.value === 'DoesNotExist' {{`}}`}}"
+                      then:
+                        state:
+                          disabled: true
+                          value: ""
+                      else:
+                        state:
+                          disabled: false
                 values:
                   title: values
                   type: string

@@ -190,6 +190,7 @@ volumeClaimTmpl:
   type: object
   properties:
     claims:
+      title: {{ i18n "卷声明" .lang }}
       type: array
       items:
         type: object
@@ -322,7 +323,10 @@ volumeClaimTmpl:
             background: '#fff'
       ui:group:
         props:
-          showTitle: false
+          showTitle: true
+          type: card
+        style:
+          background: '#F5F7FA'
 {{- end }}
 
 {{- define "workload.cjJobManage" }}
@@ -562,6 +566,16 @@ toleration:
                     value: Equal
                   - label: Exists
                     value: Exists
+            ui:reactions:
+              - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'Exists' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                    value: ""
+                else:
+                  state:
+                    disabled: false
           value:
             title: {{ i18n "值" .lang }}
             type: string

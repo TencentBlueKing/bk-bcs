@@ -377,3 +377,5 @@
   en: AccessModes
 - msgID: 服务名称
   en: ServiceName
+- msgID: 卷声明
+  en: Claims
