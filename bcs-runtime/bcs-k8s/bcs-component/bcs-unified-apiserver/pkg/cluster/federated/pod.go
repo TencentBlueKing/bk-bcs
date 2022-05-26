@@ -117,7 +117,12 @@ func (p *PodStor) ListByStor(ctx context.Context, namespace string, opts metav1.
 		Items:    []v1.Pod{},
 	}
 
-	offset := bcs.ContinueToOffset(opts.Continue)
+	// 默认Limit, 参考的kubectl
+	if opts.Limit == 0 {
+		opts.Limit = 500
+	}
+
+	offset := bcs.ContinueToOffset(opts.Continue, opts.Limit)
 	resources, pag, err := bcs.ListPodResources(ctx, p.members, namespace, opts.Limit, offset)
 	if err != nil {
 		return nil, err

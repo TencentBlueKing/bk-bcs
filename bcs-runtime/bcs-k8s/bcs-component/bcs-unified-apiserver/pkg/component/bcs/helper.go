@@ -30,7 +30,7 @@ func PaginationToContinue(pag *component.Pagination) (string, error) {
 }
 
 // ContinueToOffset K8S Continue 转换为分页参数
-func ContinueToOffset(continueStr string) int64 {
+func ContinueToOffset(continueStr string, limit int64) int64 {
 	if continueStr == "" {
 		return 0
 	}
@@ -39,9 +39,12 @@ func ContinueToOffset(continueStr string) int64 {
 	if err != nil {
 		return 0
 	}
-	var pag *component.Pagination
+
+	pag := &component.Pagination{}
 	if err := json.Unmarshal(body, pag); err != nil {
 		return 0
 	}
-	return pag.Offset
+
+	// 当前offset计算规则: 上一个合法的offset + limit
+	return pag.Offset + limit
 }
