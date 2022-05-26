@@ -107,9 +107,23 @@ func (h *Handler) Register(clusterId string, members []string) error {
 	return nil
 }
 
+// isAllowedNamespaceOp 命名空间允许的操作
+func (h *Handler) isAllowedNamespaceOp(c *rest.RequestContext) bool {
+	if c.Resource == "namespaces" && (c.Verb != "list" && c.Verb != "get") {
+		return false
+	}
+
+	return true
+}
+
 // ServeHTTP serves http request
 func (h *Handler) Serve(c *rest.RequestContext) {
 	err := rest.ErrInit
+
+	if !h.isAllowedNamespaceOp(c) {
+		c.AbortWithError(rest.ErrNotImplemented)
+		return
+	}
 
 	switch c.Resource {
 	case string(v1.ResourcePods):
