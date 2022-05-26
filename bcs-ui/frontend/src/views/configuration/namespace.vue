@@ -387,10 +387,10 @@
                         <div class="bk-form-item flex-item" style="margin-top: 30px;">
                             <div class="form-item-quota">
                                 <label class="bk-label label">
-                                    {{$t('配额')}}
-                                    <span class="quota-tip">{{$t('分配命名空间下容器可用的内存和 CPU 总量')}}</span>
+                                    {{$t('命名空间配额')}}
                                 </label>
                                 <bcs-switcher v-model="enableQuota"></bcs-switcher>
+                                <span class="ml5">{{ enableQuota ? $t('已开启') : $t('未开启') }}</span>
                             </div>
                         </div>
 
@@ -1300,7 +1300,7 @@
                     this.bkMessageInstance && this.bkMessageInstance.close()
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('删除Namespace成功')
+                        message: this.$t('保存成功')
                     })
                     this.editQuotaConf.isShow = false
                 } catch (e) {
@@ -1423,7 +1423,7 @@
     .form-item-quota {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         width: 100%;
+        font-size: 14px;
     }
 </style>
