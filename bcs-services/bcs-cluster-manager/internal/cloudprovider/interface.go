@@ -284,6 +284,8 @@ type NodeGroupManager interface {
 	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
 	// UpdateDesiredNodes update nodegroup desired node
 	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
+	// SwitchNodeGroupAutoScale switch nodegroup auto scale
+	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
 
 	// CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 	// deploy cluster-autoscaler in backgroup according cloudprovider implementation
@@ -326,6 +328,8 @@ type TaskManager interface {
 	BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
 	// BuildUpdateDesiredNodesTask update nodegroup desired node
 	BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
+	// BuildSwitchNodeGroupAutoScalingTask switch nodegroup autoscaling
+	BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
 
 	// ClusterManager taskList
 

@@ -73,7 +73,6 @@ func newtask() *Task {
 	// create nodeGroup task
 	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
 	task.works[checkCloudNodeGroupStatusTask] = tasks.CheckCloudNodeGroupStatusTask
-	task.works[installAutoScalerTask] = tasks.InstallAutoScalerTask
 	task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
 
 	// delete nodeGroup task
@@ -92,6 +91,11 @@ func newtask() *Task {
 	task.works[updateDesiredNodesDBInfoTask] = tasks.UpdateDesiredNodesDBInfoTask
 
 	// move nodes to nodeGroup task
+
+	// autoScaler task
+	task.works[ensureAutoScalerTask] = tasks.EnsureAutoScalerTask
+	task.works[deleteAutoScalerTask] = tasks.DeleteAutoScalerTask
+	task.works[updateNodeGroupAutoScalingDBTask] = tasks.UpdateNodeGroupAutoScalingDBTask
 
 	return task
 }
@@ -780,20 +784,20 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	// step3. ensure autoscaler in cluster
 	if group.EnableAutoscale {
 		installCAStep := &proto.Step{
-			Name:       installAutoScalerTask,
+			Name:       ensureAutoScalerTask,
 			System:     "api",
 			Params:     make(map[string]string),
 			Retry:      3,
 			Status:     cloudprovider.TaskStatusNotStarted,
-			TaskMethod: installAutoScalerTask,
+			TaskMethod: ensureAutoScalerTask,
 			TaskName:   "开启自动伸缩组件",
 		}
 		installCAStep.Params["ClusterID"] = group.ClusterID
 		installCAStep.Params["NodeGroupID"] = group.NodeGroupID
 		installCAStep.Params["CloudID"] = group.Provider
 
-		task.Steps[installAutoScalerTask] = installCAStep
-		task.StepSequence = append(task.StepSequence, installAutoScalerTask)
+		task.Steps[ensureAutoScalerTask] = installCAStep
+		task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
 	}
 
 	// step4. update node group info in DB
@@ -1123,5 +1127,82 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams["JobType"] = cloudprovider.UpdateNodeGroupDisiredNode.String()
+	return task, nil
+}
+
+// BuildSwitchNodeGroupAutoScalingTask ensure auto scaler status and update nodegroup status to normal
+func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask nodegroup info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.SwitchNodeGroupAutoScaling),
+		TaskName:       "开启/关闭 NodeGroup 自动伸缩",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(switchNodeGroupAutoScalingTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	ensureStep := &proto.Step{
+		Name:       ensureAutoScalerTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: ensureAutoScalerTask,
+		TaskName:   "安装/更新 AutoScaler",
+	}
+	ensureStep.Params["ClusterID"] = group.ClusterID
+	ensureStep.Params["NodeGroupID"] = group.NodeGroupID
+	ensureStep.Params["CloudID"] = group.Provider
+
+	task.Steps[ensureAutoScalerTask] = ensureStep
+	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+
+	// step2. update node group info in DB
+	dbStep := &proto.Step{
+		Name:       updateNodeGroupAutoScalingDBTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: updateNodeGroupAutoScalingDBTask,
+		TaskName:   "更新任务状态",
+	}
+	dbStep.Params["ClusterID"] = group.ClusterID
+	dbStep.Params["NodeGroupID"] = group.NodeGroupID
+	dbStep.Params["CloudID"] = group.Provider
+
+	task.Steps[updateNodeGroupAutoScalingDBTask] = dbStep
+	task.StepSequence = append(task.StepSequence, updateNodeGroupAutoScalingDBTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams["JobType"] = cloudprovider.SwitchNodeGroupAutoScaling.String()
 	return task, nil
 }

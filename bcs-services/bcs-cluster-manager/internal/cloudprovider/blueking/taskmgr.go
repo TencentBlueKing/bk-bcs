@@ -571,3 +571,8 @@ func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeG
 func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// BuildSwitchNodeGroupAutoScalingTask switch nodegroup auto scaling
+func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

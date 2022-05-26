@@ -250,11 +250,6 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-// InstallAutoScalerTask install auto scaler task
-func InstallAutoScalerTask(taskID string, stepName string) error {
-	return nil
-}
-
 // UpdateCreateNodeGroupDBInfoTask update create node group db info task
 func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()

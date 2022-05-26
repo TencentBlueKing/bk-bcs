@@ -157,6 +157,8 @@ var (
 	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
 	// MoveNodesToNodeGroup task
 	MoveNodesToNodeGroup TaskType = "MoveNodesToNodeGroup"
+	// SwitchNodeGroupAutoScaling task
+	SwitchNodeGroupAutoScaling TaskType = "SwitchNodeGroupAutoScaling"
 )
 
 // GetTaskType getTaskType by cloud

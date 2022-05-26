@@ -15,6 +15,7 @@ package cloudprovider
 
 import (
 	"errors"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
@@ -291,6 +292,13 @@ type CleanNodesResponse struct {
 
 // UpdateDesiredNodeOption update desired node
 type UpdateDesiredNodeOption struct {
+	CommonOption
+	Cluster *proto.Cluster
+	Cloud   *proto.Cloud
+}
+
+// SwitchNodeGroupAutoScalingOption switch nodegroup auto scaling
+type SwitchNodeGroupAutoScalingOption struct {
 	CommonOption
 	Cluster *proto.Cluster
 	Cloud   *proto.Cloud

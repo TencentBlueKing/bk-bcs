@@ -635,6 +635,26 @@ service ClusterManager {
       summary : "更新DesiredSize信息"
     };
   }
+  rpc EnableNodeGroupAutoScale(EnableNodeGroupAutoScaleRequest) returns (EnableNodeGroupAutoScaleResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "开启节点组的自动伸缩功能"
+      summary : "开启节点池节点自动扩缩容"
+    };
+  }
+  rpc DisableNodeGroupAutoScale(DisableNodeGroupAutoScaleRequest) returns (DisableNodeGroupAutoScaleResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "关闭节点组的自动伸缩功能"
+      summary : "关闭节点池节点自动扩缩容"
+    };
+  }
 
   //* Task information management *
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse) {
@@ -797,7 +817,7 @@ service ClusterManager {
       summary : "查询cloud地域列表"
     };
   }
-  rpc GetCloudZones(GetCloudRegionZonesRequest) returns (GetCloudRegionZonesResponse) {
+  rpc GetCloudRegionZones(GetCloudRegionZonesRequest) returns (GetCloudRegionZonesResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/zones"
     };
@@ -6253,9 +6273,18 @@ message CreateNodeGroupResponse {
     title: "result", 
     description : "返回结果"
   }];
-  NodeGroup data = 4;
-  Task task = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "tasks", description : "创建节点池后台任务"
+  CreateNodeGroupResponseData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description : "返回数据"
+  }];
+}
+
+message CreateNodeGroupResponseData {
+  NodeGroup nodeGroup = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodeGroup", description : "节点池信息"
+  }];
+  Task task = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "task", description : "创建节点池后台任务"
   }];
 }
 
@@ -6390,11 +6419,18 @@ message DeleteNodeGroupResponse {
     title: "result", 
     description : "返回结果"
   }];
-  NodeGroup data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  DeleteNodeGroupResponseData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data", 
+    description : "返回数据"
+  }];
+}
+
+message DeleteNodeGroupResponseData {
+  NodeGroup nodeGroup = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroup", 
     description : "已删除的NodeGroup信息"
   }];
-  Task task = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  Task task = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "task", 
     description : "删除NodeGroup的后台任务信息。例如当强制删除所有节点时会产生任务信息。"
   }];
@@ -6905,6 +6941,82 @@ message UpdateGroupDesiredNodeResponse {
   Task data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "返回的扩容节点任务"
+  }];
+}
+
+message EnableNodeGroupAutoScaleRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "EnableNodeGroupAutoScaleRequest"
+      description : "开启NodeGroup自动扩缩容"
+      required : [ "nodeGroupID" ]
+    }
+  };
+
+  string nodeGroupID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodeGroupID", 
+    description : "NodeGroupID"
+  }, (validate.rules).string = {min_len : 5, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+}
+
+message EnableNodeGroupAutoScaleResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "EnableNodeGroupAutoScaleResponse"
+      description : "开启NodeGroup自动扩缩容返回结果"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", 
+    description : "返回结果"
+  }];
+}
+
+message DisableNodeGroupAutoScaleRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DisableNodeGroupAutoScaleRequest"
+      description : "关闭NodeGroup自动扩缩容"
+      required : [ "nodeGroupID" ]
+    }
+  };
+
+  string nodeGroupID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodeGroupID", 
+    description : "NodeGroupID"
+  }, (validate.rules).string = {min_len : 5, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+}
+
+message DisableNodeGroupAutoScaleResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DisableNodeGroupAutoScaleResponse"
+      description : "关闭NodeGroup自动扩缩容返回结果"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", 
+    description : "返回结果"
   }];
 }
 

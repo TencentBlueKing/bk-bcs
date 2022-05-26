@@ -240,6 +240,26 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	return task, nil
 }
 
+// SwitchNodeGroupAutoScaling switch nodegroup auto scaling
+func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
+	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when SwitchNodeGroupAutoScaling %s failed, %s",
+			cloudName, group.NodeGroupID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildSwitchNodeGroupAutoScalingTask(group, enable, opt)
+	if err != nil {
+		blog.Errorf("build SwitchNodeGroupAutoScaling task for nodeGroup %s with cloudprovider %s failed, %s",
+			group.NodeGroupID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
+}
+
 // CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 // deploy cluster-autoscaler in backgroup according cloudprovider implementation
 func (ng *NodeGroup) CreateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,

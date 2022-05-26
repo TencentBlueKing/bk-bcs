@@ -978,7 +978,7 @@
       "get": {
         "summary": "查询cloud地域可用区列表",
         "description": "查询cloud地域可用区列表",
-        "operationId": "ClusterManager_GetCloudZones",
+        "operationId": "ClusterManager_GetCloudRegionZones",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2854,6 +2854,88 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateNodeGroupRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable": {
+      "post": {
+        "summary": "关闭节点池节点自动扩缩容",
+        "description": "关闭节点组的自动伸缩功能",
+        "operationId": "ClusterManager_DisableNodeGroupAutoScale",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDisableNodeGroupAutoScaleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "nodeGroupID",
+            "description": "NodeGroupID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDisableNodeGroupAutoScaleRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable": {
+      "post": {
+        "summary": "开启节点池节点自动扩缩容",
+        "description": "开启节点组的自动伸缩功能",
+        "operationId": "ClusterManager_EnableNodeGroupAutoScale",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerEnableNodeGroupAutoScaleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "nodeGroupID",
+            "description": "NodeGroupID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerEnableNodeGroupAutoScaleRequest"
             }
           }
         ],
@@ -5966,12 +6048,24 @@
           "title": "result"
         },
         "data": {
-          "$ref": "#/definitions/clustermanagerNodeGroup"
+          "$ref": "#/definitions/clustermanagerCreateNodeGroupResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerCreateNodeGroupResponseData": {
+      "type": "object",
+      "properties": {
+        "nodeGroup": {
+          "$ref": "#/definitions/clustermanagerNodeGroup",
+          "description": "节点池信息",
+          "title": "nodeGroup"
         },
         "task": {
           "$ref": "#/definitions/clustermanagerTask",
           "description": "创建节点池后台任务",
-          "title": "tasks"
+          "title": "task"
         }
       }
     },
@@ -6517,9 +6611,19 @@
           "title": "result"
         },
         "data": {
+          "$ref": "#/definitions/clustermanagerDeleteNodeGroupResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerDeleteNodeGroupResponseData": {
+      "type": "object",
+      "properties": {
+        "nodeGroup": {
           "$ref": "#/definitions/clustermanagerNodeGroup",
           "description": "已删除的NodeGroup信息",
-          "title": "data"
+          "title": "nodeGroup"
         },
         "task": {
           "$ref": "#/definitions/clustermanagerTask",
@@ -6614,6 +6718,84 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerDisableNodeGroupAutoScaleRequest": {
+      "type": "object",
+      "properties": {
+        "nodeGroupID": {
+          "type": "string",
+          "description": "NodeGroupID",
+          "title": "nodeGroupID"
+        }
+      },
+      "description": "关闭NodeGroup自动扩缩容",
+      "title": "DisableNodeGroupAutoScaleRequest",
+      "required": [
+        "nodeGroupID"
+      ]
+    },
+    "clustermanagerDisableNodeGroupAutoScaleResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "关闭NodeGroup自动扩缩容返回结果",
+      "title": "DisableNodeGroupAutoScaleResponse"
+    },
+    "clustermanagerEnableNodeGroupAutoScaleRequest": {
+      "type": "object",
+      "properties": {
+        "nodeGroupID": {
+          "type": "string",
+          "description": "NodeGroupID",
+          "title": "nodeGroupID"
+        }
+      },
+      "description": "开启NodeGroup自动扩缩容",
+      "title": "EnableNodeGroupAutoScaleRequest",
+      "required": [
+        "nodeGroupID"
+      ]
+    },
+    "clustermanagerEnableNodeGroupAutoScaleResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "开启NodeGroup自动扩缩容返回结果",
+      "title": "EnableNodeGroupAutoScaleResponse"
     },
     "clustermanagerExistedSubnetIDs": {
       "type": "object",

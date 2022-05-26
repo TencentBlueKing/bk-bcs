@@ -114,6 +114,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	ca.ctx = ctx
 	ca.req = req
 	ca.resp = resp
+	ca.resp.Data = &cmproto.CreateNodeGroupResponseData{}
 
 	if err := req.Validate(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
@@ -174,8 +175,8 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	// 3. create task and dispatch task
-	ca.resp.Task = task
-	ca.resp.Data = group
+	ca.resp.Data.Task = task
+	ca.resp.Data.NodeGroup = group
 	if err := ca.model.CreateTask(ca.ctx, task); err != nil {
 		blog.Errorf("save create node group task for cluster %s failed, %s",
 			group.ClusterID, err.Error(),
@@ -202,7 +203,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	if err != nil {
 		blog.Errorf("CreateNodeGroup[%s] CreateOperationLog failed: %v", ca.cluster.ClusterID, err)
 	}
-	ca.resp.Data = group
+	ca.resp.Data.NodeGroup = group
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

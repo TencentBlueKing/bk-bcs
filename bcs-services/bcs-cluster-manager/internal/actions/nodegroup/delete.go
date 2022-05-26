@@ -108,6 +108,7 @@ func (da *DeleteAction) Handle(
 	da.ctx = ctx
 	da.req = req
 	da.resp = resp
+	da.resp.Data = &cmproto.DeleteNodeGroupResponseData{}
 
 	// get nodeGroup and all nodes under group
 	// IsForce = false, not allow delete directly
@@ -194,8 +195,8 @@ func (da *DeleteAction) Handle(
 			//! no return here, task already started, try another deletion in final task step
 		}
 	}
-	resp.Data = da.group
-	resp.Task = task
+	resp.Data.NodeGroup = da.group
+	resp.Data.Task = task
 
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),

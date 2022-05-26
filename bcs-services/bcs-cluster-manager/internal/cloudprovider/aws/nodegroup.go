@@ -69,6 +69,12 @@ func (ng *NodeGroup) UpdateDesiredNodes(desiredNode uint32, group *proto.NodeGro
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// SwitchNodeGroupAutoScaling switch nodegroup autoscaling
+func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
+	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 // deploy cluster-autoscaler in backgroup according cloudprovider implementation
 func (ng *NodeGroup) CreateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.CreateScalingOption) (*proto.Task, error) {

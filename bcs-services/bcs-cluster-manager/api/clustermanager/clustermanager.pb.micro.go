@@ -435,6 +435,20 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.EnableNodeGroupAutoScale",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DisableNodeGroupAutoScale",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.CreateTask",
 			Path:    []string{"/clustermanager/v1/task"},
 			Method:  []string{"POST"},
@@ -541,7 +555,7 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.GetCloudZones",
+			Name:    "ClusterManager.GetCloudRegionZones",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/zones"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
@@ -645,6 +659,8 @@ type ClusterManagerService interface {
 	ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error)
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
+	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
+	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
 	//* Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
@@ -665,7 +681,7 @@ type ClusterManagerService interface {
 	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error)
 	// Cloud Resource management
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
-	GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
+	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
 	ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...client.CallOption) (*ListCloudRegionClusterResponse, error)
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
@@ -1274,6 +1290,26 @@ func (c *clusterManagerService) UpdateGroupDesiredSize(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *clusterManagerService) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.EnableNodeGroupAutoScale", in)
+	out := new(EnableNodeGroupAutoScaleResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DisableNodeGroupAutoScale", in)
+	out := new(DisableNodeGroupAutoScaleResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateTask", in)
 	out := new(CreateTaskResponse)
@@ -1434,8 +1470,8 @@ func (c *clusterManagerService) GetCloudRegions(ctx context.Context, in *GetClou
 	return out, nil
 }
 
-func (c *clusterManagerService) GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudZones", in)
+func (c *clusterManagerService) GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudRegionZones", in)
 	out := new(GetCloudRegionZonesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -1556,6 +1592,8 @@ type ClusterManagerHandler interface {
 	ListNodesInGroup(context.Context, *GetNodeGroupRequest, *ListNodesInGroupResponse) error
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
+	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
+	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
 	//* Task information management *
 	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
 	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
@@ -1576,7 +1614,7 @@ type ClusterManagerHandler interface {
 	ListCloudAccount(context.Context, *ListCloudAccountRequest, *ListCloudAccountResponse) error
 	// Cloud Resource management
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
-	GetCloudZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
+	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
 	ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest, *ListCloudRegionClusterResponse) error
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest, *ListCloudSubnetsResponse) error
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
@@ -1644,6 +1682,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, out *ListNodesInGroupResponse) error
 		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
 		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
+		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
+		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
 		RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error
 		UpdateTask(ctx context.Context, in *UpdateTaskRequest, out *UpdateTaskResponse) error
@@ -1660,7 +1700,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error
 		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
 		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
-		GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
+		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
 		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
 		ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
@@ -2063,6 +2103,20 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.EnableNodeGroupAutoScale",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DisableNodeGroupAutoScale",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateTask",
 		Path:    []string{"/clustermanager/v1/task"},
 		Method:  []string{"POST"},
@@ -2169,7 +2223,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetCloudZones",
+		Name:    "ClusterManager.GetCloudRegionZones",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/zones"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
@@ -2441,6 +2495,14 @@ func (h *clusterManagerHandler) UpdateGroupDesiredSize(ctx context.Context, in *
 	return h.ClusterManagerHandler.UpdateGroupDesiredSize(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error {
+	return h.ClusterManagerHandler.EnableNodeGroupAutoScale(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error {
+	return h.ClusterManagerHandler.DisableNodeGroupAutoScale(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error {
 	return h.ClusterManagerHandler.CreateTask(ctx, in, out)
 }
@@ -2505,8 +2567,8 @@ func (h *clusterManagerHandler) GetCloudRegions(ctx context.Context, in *GetClou
 	return h.ClusterManagerHandler.GetCloudRegions(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error {
-	return h.ClusterManagerHandler.GetCloudZones(ctx, in, out)
+func (h *clusterManagerHandler) GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error {
+	return h.ClusterManagerHandler.GetCloudRegionZones(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error {
