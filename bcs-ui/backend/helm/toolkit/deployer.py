@@ -136,7 +136,7 @@ class HelmDeployer:
         # chart_url 如 'http://repo.example.com/bcs-public-project/helm-public-repo/charts/xxx-operator-0.5.0.tgz'
         chart_url = self.helm_args.chart_url
         repo_url = chart_url.partition('/charts/')[0]
-        if f'{repo_url}/' == PUBLIC_REPO_URL:  # 平台公共仓库不需要auth信息
+        if repo_url == PUBLIC_REPO_URL:  # 平台公共仓库不需要auth信息
             return
 
         repository = models.Repository.objects.filter(url__startswith=repo_url).first()

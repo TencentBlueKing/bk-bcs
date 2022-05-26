@@ -555,7 +555,7 @@ class PaaSCCClient(BkApiClient):
         return self._client.request_json('GET', url)
 
     @response_handler(default=list)
-    def list_clusters(self, cluster_ids: List[str]) -> Dict:
+    def list_clusters(self, cluster_ids: List[str]) -> List[dict]:
         """根据集群ID列表批量获取集群信息"""
         url = self._config.list_clusters_url
         data = {"cluster_ids": cluster_ids}
@@ -636,7 +636,7 @@ class PaaSCCClient(BkApiClient):
         return self._client.request_json("GET", url, params=req_params)
 
     @response_handler()
-    def get_node_list(self, project_id: str, cluster_id: str, params: Dict = None) -> Dict:
+    def get_node_list(self, project_id: str, cluster_id: str, params: Dict = None) -> List[dict]:
         """获取节点列表
         :param project_id: 项目ID
         :param cluster_id: 集群ID
@@ -652,18 +652,18 @@ class PaaSCCClient(BkApiClient):
         return self._client.request_json("GET", url, params=req_params)
 
     @response_handler(default=list)
-    def list_projects_by_ids(self, project_ids: List[str]) -> Dict:
+    def list_projects_by_ids(self, project_ids: List[str]) -> List[dict]:
         """获取项目列表
         :param project_ids: 查询项目的 project_id 列表
         """
         return self._client.request_json("POST", self._config.list_projects_by_ids, json={'project_ids': project_ids})
 
     @response_handler()
-    def list_namespaces_in_shared_cluster(self, cluster_id: str) -> Dict:
+    def list_namespaces_in_shared_cluster(self, cluster_id: str) -> List[dict]:
         url = self._config.list_namespaces_in_shared_cluster.format(cluster_id=cluster_id)
         # TODO 支持分页查询
         return self._client.request_json("GET", url, params={'offset': 0, 'limit': 1000})
 
     @response_handler(default=list)
-    def list_all_projects(self) -> Dict:
+    def list_all_projects(self) -> List[dict]:
         return self._client.request_json('GET', url=self._config.list_projects, params={'desire_all_data': 1})

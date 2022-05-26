@@ -18,7 +18,7 @@ from backend.bcs_web.viewsets import SystemViewSet
 
 from .manager import ToolManager
 from .models import InstalledTool, Tool
-from .serializers import ClusterToolSZL, InstalledToolSLZ, UpgradeToolSLZ
+from .serializers import ClusterToolSLZ, InstalledToolSLZ, UpgradeToolSLZ
 
 
 class ToolsViewSet(SystemViewSet):
@@ -26,7 +26,7 @@ class ToolsViewSet(SystemViewSet):
 
     def list(self, request, project_id, cluster_id):
         """查询集群中可用的组件"""
-        serializer = ClusterToolSZL(
+        serializer = ClusterToolSLZ(
             Tool.objects.all(), many=True, context={'project_id': project_id, 'cluster_id': cluster_id}
         )
         return Response(serializer.data)

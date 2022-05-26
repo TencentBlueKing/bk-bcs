@@ -19,7 +19,7 @@ from rest_framework import serializers
 from .models import InstalledTool, Tool
 
 
-class ClusterToolSZL(serializers.ModelSerializer):
+class ClusterToolSLZ(serializers.ModelSerializer):
     installed_info = serializers.SerializerMethodField()
 
     class Meta:
@@ -42,8 +42,6 @@ class UpgradeToolSLZ(serializers.Serializer):
 
 
 class InstalledToolSLZ(serializers.ModelSerializer):
-    chart_version = serializers.ReadOnlyField()
-
     class Meta:
         model = InstalledTool
         fields = '__all__'

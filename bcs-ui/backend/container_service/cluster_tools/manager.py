@@ -12,6 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from typing import List, Optional
 
 import attr
@@ -25,6 +26,8 @@ from backend.resources.namespace import Namespace
 from backend.resources.namespace.constants import K8S_SYS_NAMESPACE
 
 from .models import InstalledTool, Tool
+
+logger = logging.getLogger(__name__)
 
 
 class ToolArgs(ReleaseArgs):
@@ -126,9 +129,7 @@ class ToolManager:
         :param request_user: 操作者信息(request.user)
         :param values: 安装组件时的初始配置
         """
-        itool = InstalledTool.create_by_tool(
-            request_user.username, self.tool, self.project_id, self.cluster_id, values
-        )
+        itool = InstalledTool.create(request_user.username, self.tool, self.project_id, self.cluster_id, values)
 
         # chart_url 为空字符串表示该组件未使用 Helm 部署，设置成部署状态后返回
         if not itool.chart_url:
@@ -152,9 +153,10 @@ class ToolManager:
         """卸载组件
 
         :param request_user: 操作者信息(request.user)
-
-        TODO 增加删除审计
         """
+        # TODO 增加删除审计, 先记录日志
+        logger.error('%s uninstall tool %s from %s', request_user.username, self.tool.chart_name, self.cluster_id)
+
         itool = InstalledTool.objects.get(tool=self.tool, project_id=self.project_id, cluster_id=self.cluster_id)
         itool.on_delete(request_user.username)
         self.cmd.uninstall(request_user, itool)

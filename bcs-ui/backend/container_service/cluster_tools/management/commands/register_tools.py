@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+import time
 from pathlib import Path
 
 from django.conf import settings
@@ -47,18 +48,32 @@ class Command(BaseCommand):
         except exceptions.ValidationError as e:
             raise CommandError(f'Register {latest_file.name} failed: {e}')
 
+        tool_version = tools_data['version']
         for tool in serializer.validated_data:
             chart_name = tool.pop('chart_name')
-            tool['version'] = tools_data['version']
+            tool['version'] = tool_version
             Tool.objects.update_or_create(chart_name=chart_name, defaults=tool)
 
         self.stdout.write(self.style.SUCCESS(f'Register {latest_file.name} successfully'))
 
     def _get_latest_file(self) -> Path:
         """获取最新的版本文件"""
-        latest_file_name = ''
         file_path = Path(settings.BASE_DIR) / 'support-files' / 'cluster_tools'
+        # 设定一个较早时间的文件
+        latest_file_name = 'tools-190001010000.json'
+        latest_time = self._str_to_time(latest_file_name)
         for f in file_path.iterdir():
-            if f.name > latest_file_name:
+            f_time = self._str_to_time(f.name)
+            if f_time > latest_time:
                 latest_file_name = f.name
+                latest_time = f_time
+
         return file_path / latest_file_name
+
+    def _str_to_time(self, file_name: str) -> time.struct_time:
+        """转换文件名中的时间字符串"""
+        try:
+            time_str = file_name.split('.json')[0].split('tools-')[1]
+            return time.strptime(time_str, '%Y%m%d%H%M')
+        except Exception as e:
+            raise CommandError(f'Register failed: {e}')
