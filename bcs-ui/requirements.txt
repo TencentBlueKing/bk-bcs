@@ -93,7 +93,7 @@ service-identity==21.1.0
 six==1.16.0
 sqlparse==0.4.1
 tornado==5.1.1
-twisted==21.2.0
+twisted==22.4.0
 txaio==21.2.1
 typing-extensions==3.10.0.0
 urllib3==1.24.3
