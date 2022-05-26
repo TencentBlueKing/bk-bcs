@@ -203,22 +203,24 @@ volumeClaimTmpl:
           pvcName:
             title: {{ i18n "持久卷声明名称" .lang }}
             type: string
+            ui:props:
+              labelWidth: 350
             ui:rules:
               - required
               - maxLength128
               - nameRegex
           claimType:
             title: {{ i18n "卷声明类型" .lang }}
-            type: radio
-            default:
-            props:
-              clearable: true
-              searchable: true
-              datasource:
-                - label: {{ i18n "使用已存在的持久卷" .lang }}
-                  value: useExistPV
-                - label: {{ i18n "指定存储类以创建持久卷" .lang }}
-                  value: createBySC
+            type: string
+            default: useExistPV
+            ui:component:
+              name: radio
+              props:
+                datasource:
+                  - label: {{ i18n "使用已存在的持久卷" .lang }}
+                    value: useExistPV
+                  - label: {{ i18n "指定存储类以创建持久卷" .lang }}
+                    value: createBySC
             ui:reactions:
               - target: "{{`{{`}} $widgetNode?.getSibling('pvName')?.id {{`}}`}}"
                 if: "{{`{{`}} $self.value === 'useExistPV' {{`}}`}}"
