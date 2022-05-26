@@ -87,6 +87,9 @@ podAffinity:
                 values:
                   title: values
                   type: string
+                  ui:component:
+                    props:
+                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
@@ -223,6 +226,9 @@ nodeAffinity:
                 values:
                   title: values
                   type: string
+                  ui:component:
+                    props:
+                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
@@ -230,7 +236,7 @@ nodeAffinity:
             type: array
             ui:component:
               name: noTitleArray
-          labels:
+          fields:
             items:
               properties:
                 key:
@@ -271,6 +277,9 @@ nodeAffinity:
                 values:
                   title: values
                   type: string
+                  ui:component:
+                    props:
+                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object

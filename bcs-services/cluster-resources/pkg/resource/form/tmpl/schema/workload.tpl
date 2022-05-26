@@ -706,8 +706,11 @@ networking:
           alias:
             title: {{ i18n "别名" .lang }}
             type: string
+            ui:component:
+              props:
+                placeholder: {{ i18n "别名（多个值请以英文逗号分隔）" .lang }}
             ui:rules:
-              - maxLength64
+              - maxLength250
           ip:
             title: {{ i18n "IP 地址" .lang }}
             type: string

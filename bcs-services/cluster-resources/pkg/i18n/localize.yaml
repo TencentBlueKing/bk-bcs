@@ -340,7 +340,7 @@
 - msgID: 主机别名
   en: HostAliases
 - msgID: 别名
-  en: Alias
+  en: Aliases
 - msgID: IP 地址
   en: IPAddress
 - msgID: 其他
@@ -379,3 +379,7 @@
   en: ServiceName
 - msgID: 卷声明
   en: Claims
+- msgID: 值（多个值请以英文逗号分隔）
+  en: values (Multiple values should be separated by commas)
+- msgID: 别名（多个值请以英文逗号分隔）
+  en: aliases (Multiple values should be separated by commas)
