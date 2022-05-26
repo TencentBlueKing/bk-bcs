@@ -351,8 +351,5 @@
 /deep/ .item-network {
     display: flex;
     align-items: center;
-    i {
-        font-size: 16px;
-    }
 }
 </style>
