@@ -28,6 +28,7 @@ import (
 // PodInterface Pod Handler 需要实现的方法
 type PodInterface interface {
 	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
+	ListByStor(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
@@ -57,7 +58,7 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 
 	switch c.Options.Verb {
 	case rest.ListVerb:
-		obj, err = h.handler.List(ctx, c.Namespace, *c.Options.ListOptions)
+		obj, err = h.handler.ListByStor(ctx, c.Namespace, *c.Options.ListOptions)
 	case rest.ListAsTableVerb:
 		obj, err = h.handler.ListAsTable(ctx, c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
 	case rest.GetVerb:

@@ -27,6 +27,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 )
 
@@ -91,6 +92,39 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts metav1.ListOp
 			}
 			podList.Items = append(podList.Items, item)
 		}
+	}
+	return podList, nil
+}
+
+// ListByStor 从 BCS Storage 中获取, 提高聚合查询效率, 支持分页
+func (p *PodStor) ListByStor(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
+	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "PodList"}
+	listMeta := metav1.ListMeta{
+		SelfLink:        p.selfLink(namespace, ""),
+		ResourceVersion: "0",
+	}
+
+	podList := &v1.PodList{
+		TypeMeta: typeMata,
+		ListMeta: listMeta,
+		Items:    []v1.Pod{},
+	}
+
+	var limit, offset int64
+
+	if opts.Continue == "" {
+		limit = 500
+		offset = 0
+	} else {
+		//
+	}
+
+	resources, err := bcs.ListPodResources(ctx, p.members, namespace, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for _, res := range resources {
+		podList.Items = append(podList.Items, *res.Data)
 	}
 	return podList, nil
 }
