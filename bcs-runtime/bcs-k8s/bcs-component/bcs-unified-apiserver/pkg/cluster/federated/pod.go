@@ -128,7 +128,7 @@ func (p *PodStor) ListByStor(ctx context.Context, namespace string, opts metav1.
 		return nil, err
 	}
 
-	continueStr, err := bcs.PaginationToContinue(pag)
+	continueStr, err := bcs.PaginationToContinue(pag, int64(len(resources)))
 	if err != nil {
 		return nil, err
 	}

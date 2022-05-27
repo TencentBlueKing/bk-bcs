@@ -21,7 +21,20 @@ import (
 )
 
 // PaginationToContinue BCS 分页转换为 K8S Continue 参数
-func PaginationToContinue(pag *component.Pagination) (string, error) {
+func PaginationToContinue(pag *component.Pagination, resCount int64) (string, error) {
+	// limit 已经大于 total, 没有更多数据
+	if pag.PageSize >= pag.Total {
+		return "", nil
+	}
+
+	// 已经返回全部数据
+	if pag.Offset+resCount >= pag.Total {
+		return "", nil
+	}
+
+	// 当前offset计算规则: 上一个合法的offset + 当前返回值
+	pag.Offset = resCount + pag.Offset
+
 	body, err := json.Marshal(pag)
 	if err != nil {
 		return "", err
@@ -45,6 +58,5 @@ func ContinueToOffset(continueStr string, limit int64) int64 {
 		return 0
 	}
 
-	// 当前offset计算规则: 上一个合法的offset + limit
-	return pag.Offset + limit
+	return pag.Offset
 }
