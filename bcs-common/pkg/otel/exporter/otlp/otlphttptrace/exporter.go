@@ -22,10 +22,10 @@ import (
 
 // HTTPConfig sets the OTLP collector HTTP endpoint
 type HTTPConfig struct {
-	HTTPEndpoint string                 `json:"httpEndpoint,omitempty" usage:"httpEndpoint sets HTTP client endpoint"`
-	HTTPURLPath  string                 `json:"httpURLPath,omitempty" usage:"httpURLPath sets HTTP client endpoint"`
-	HTTPInsecure bool                   `json:"httpInsecure,omitempty" usage:"httpInsecure disables HTTP client transport security"`
-	HTTPOptions  []otlptracehttp.Option `json:"-"`
+	Endpoint string                 `json:"httpEndpoint,omitempty" usage:"httpEndpoint sets HTTP client endpoint"`
+	URLPath  string                 `json:"httpURLPath,omitempty" usage:"httpURLPath sets HTTP client endpoint"`
+	Insecure bool                   `json:"httpInsecure,omitempty" usage:"httpInsecure disables HTTP client transport security"`
+	Options  []otlptracehttp.Option `json:"-"`
 }
 
 // New constructs a new Exporter and starts it.

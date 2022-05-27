@@ -142,7 +142,6 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 		defaultOptions.JaegerConfig.AgentEndpoint.Port = DefaultJaegerAgentEndpointPort
 		agentOpts := initAgentEndpointOptions(defaultOptions)
 		jaegerExporter, err := jaeger.NewAgentExporter(agentOpts...)
-
 		if err != nil {
 			blog.Info("failed to connect default jaeger agent, trying default jaeger collector endpoint %s...",
 				DefaultJaegerCollectorEndpoint)
@@ -158,11 +157,11 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 		return newTracerProvider(ctx, processors, resource, sampler, defaultOptions.IDGenerator)
 	case string(OTLP_GRPC):
 		blog.Info("Using otlpgrpc exporter...")
-		if defaultOptions.OTLPConfig.GRPCConfig.GRPCEndpoint != "" {
-			if defaultOptions.OTLPConfig.GRPCConfig.GRPCURLPath == "" {
-				defaultOptions.OTLPConfig.GRPCConfig.GRPCURLPath = DefaultOTLPColTracesPath
+		if defaultOptions.OTLPConfig.GRPCConfig.Endpoint != "" {
+			if defaultOptions.OTLPConfig.GRPCConfig.URLPath == "" {
+				defaultOptions.OTLPConfig.GRPCConfig.URLPath = DefaultOTLPColTracesPath
 			}
-			opts := append(initGRPCConfigOptions(defaultOptions), defaultOptions.OTLPConfig.GRPCConfig.GRPCOptions...)
+			opts := append(initGRPCConfigOptions(defaultOptions), defaultOptions.OTLPConfig.GRPCConfig.Options...)
 			traceClient := otlpgrpctrace.NewClient(opts...)
 			grpcExporter, err := otlpgrpctrace.New(ctx, traceClient)
 			if err != nil {
@@ -174,8 +173,8 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 		}
 
 		blog.Info("Using default OTLPGrpc endpoint: %s:%v", DefaultOTLPCollectorHost, DefaultOTLPCollectorPort)
-		if defaultOptions.OTLPConfig.GRPCConfig.GRPCURLPath == "" {
-			defaultOptions.OTLPConfig.GRPCConfig.GRPCURLPath = DefaultOTLPColTracesPath
+		if defaultOptions.OTLPConfig.GRPCConfig.URLPath == "" {
+			defaultOptions.OTLPConfig.GRPCConfig.URLPath = DefaultOTLPColTracesPath
 		}
 		opts := initGRPCConfigOptions(defaultOptions)
 		traceClient := otlpgrpctrace.NewClient(opts...)
@@ -188,11 +187,11 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 		return newTracerProvider(ctx, processors, resource, sampler, defaultOptions.IDGenerator)
 	case string(OTLP_HTTP):
 		blog.Info("Using otlphttp exporter...")
-		if defaultOptions.OTLPConfig.HTTPConfig.HTTPEndpoint != "" {
-			if defaultOptions.OTLPConfig.HTTPConfig.HTTPURLPath == "" {
-				defaultOptions.OTLPConfig.HTTPConfig.HTTPURLPath = DefaultOTLPColTracesPath
+		if defaultOptions.OTLPConfig.HTTPConfig.Endpoint != "" {
+			if defaultOptions.OTLPConfig.HTTPConfig.URLPath == "" {
+				defaultOptions.OTLPConfig.HTTPConfig.URLPath = DefaultOTLPColTracesPath
 			}
-			opts := append(initHTTPConfigOptions(defaultOptions), defaultOptions.OTLPConfig.HTTPConfig.HTTPOptions...)
+			opts := append(initHTTPConfigOptions(defaultOptions), defaultOptions.OTLPConfig.HTTPConfig.Options...)
 			httpExporter, err := otlphttptrace.New(ctx, opts...)
 			if err != nil {
 				blog.Errorf("%s: %v", "failed to create otlphttp exporter", err)
@@ -203,10 +202,10 @@ func InitTracerProvider(serviceName string, options ...TracerProviderOption) (co
 		}
 
 		blog.Info("Using default OTLPHttp endpoint: %s:%v", DefaultOTLPCollectorHost, DefaultOTLPCollectorPort)
-		defaultOptions.OTLPConfig.HTTPConfig.HTTPEndpoint =
+		defaultOptions.OTLPConfig.HTTPConfig.Endpoint =
 			fmt.Sprintf("%s:%d", DefaultOTLPCollectorHost, DefaultOTLPCollectorPort)
-		if defaultOptions.OTLPConfig.HTTPConfig.HTTPURLPath == "" {
-			defaultOptions.OTLPConfig.HTTPConfig.HTTPURLPath = DefaultOTLPColTracesPath
+		if defaultOptions.OTLPConfig.HTTPConfig.URLPath == "" {
+			defaultOptions.OTLPConfig.HTTPConfig.URLPath = DefaultOTLPColTracesPath
 		}
 		opts := initHTTPConfigOptions(defaultOptions)
 		grpcExporter, err := otlphttptrace.New(ctx, opts...)
@@ -264,22 +263,22 @@ func ValidateTracerProviderOption(config *TracerProviderConfig) []TracerProvider
 	if config.JaegerConfig.AgentEndpoint.Port != "" {
 		tpos = append(tpos, JaegerAgentPort(config.JaegerConfig.AgentEndpoint.Port))
 	}
-	if config.OTLPConfig.GRPCConfig.GRPCEndpoint != "" {
-		tpos = append(tpos, WithOTLPGRPCEndpoint(config.OTLPConfig.GRPCConfig.GRPCEndpoint))
+	if config.OTLPConfig.GRPCConfig.Endpoint != "" {
+		tpos = append(tpos, WithOTLPGRPCEndpoint(config.OTLPConfig.GRPCConfig.Endpoint))
 	}
-	if config.OTLPConfig.GRPCConfig.GRPCURLPath != "" {
-		tpos = append(tpos, WithOTLPGRPCURLPath(config.OTLPConfig.GRPCConfig.GRPCURLPath))
+	if config.OTLPConfig.GRPCConfig.URLPath != "" {
+		tpos = append(tpos, WithOTLPGRPCURLPath(config.OTLPConfig.GRPCConfig.URLPath))
 	}
-	if config.OTLPConfig.GRPCConfig.GRPCInsecure {
+	if config.OTLPConfig.GRPCConfig.Insecure {
 		tpos = append(tpos, WithOTLPGRPCInsecure())
 	}
-	if config.OTLPConfig.HTTPConfig.HTTPEndpoint != "" {
-		tpos = append(tpos, WithOTLPHTTPEndpoint(config.OTLPConfig.HTTPConfig.HTTPEndpoint))
+	if config.OTLPConfig.HTTPConfig.Endpoint != "" {
+		tpos = append(tpos, WithOTLPHTTPEndpoint(config.OTLPConfig.HTTPConfig.Endpoint))
 	}
-	if config.OTLPConfig.HTTPConfig.HTTPURLPath != "" {
-		tpos = append(tpos, WithOTLPHTTPURLPath(config.OTLPConfig.HTTPConfig.HTTPURLPath))
+	if config.OTLPConfig.HTTPConfig.URLPath != "" {
+		tpos = append(tpos, WithOTLPHTTPURLPath(config.OTLPConfig.HTTPConfig.URLPath))
 	}
-	if config.OTLPConfig.HTTPConfig.HTTPInsecure {
+	if config.OTLPConfig.HTTPConfig.Insecure {
 		tpos = append(tpos, WithOTLPHTTPInsecure())
 	}
 	if config.ResourceAttrs != nil {
@@ -368,10 +367,10 @@ func initAgentEndpointOptions(config *TracerProviderConfig) []oteljaeger.AgentEn
 
 func initGRPCConfigOptions(config *TracerProviderConfig) []otlptracegrpc.Option {
 	var op []otlptracegrpc.Option
-	if config.OTLPConfig.GRPCConfig.GRPCEndpoint != "" {
-		op = append(op, otlptracegrpc.WithEndpoint(config.OTLPConfig.GRPCConfig.GRPCEndpoint))
+	if config.OTLPConfig.GRPCConfig.Endpoint != "" {
+		op = append(op, otlptracegrpc.WithEndpoint(config.OTLPConfig.GRPCConfig.Endpoint))
 	}
-	if config.OTLPConfig.GRPCConfig.GRPCInsecure {
+	if config.OTLPConfig.GRPCConfig.Insecure {
 		op = append(op, otlptracegrpc.WithInsecure())
 	}
 	return op
@@ -379,13 +378,13 @@ func initGRPCConfigOptions(config *TracerProviderConfig) []otlptracegrpc.Option 
 
 func initHTTPConfigOptions(config *TracerProviderConfig) []otlptracehttp.Option {
 	var op []otlptracehttp.Option
-	if config.OTLPConfig.HTTPConfig.HTTPEndpoint != "" {
-		op = append(op, otlptracehttp.WithEndpoint(config.OTLPConfig.HTTPConfig.HTTPEndpoint))
+	if config.OTLPConfig.HTTPConfig.Endpoint != "" {
+		op = append(op, otlptracehttp.WithEndpoint(config.OTLPConfig.HTTPConfig.Endpoint))
 	}
-	if config.OTLPConfig.HTTPConfig.HTTPURLPath != "" {
-		op = append(op, otlptracehttp.WithURLPath(config.OTLPConfig.HTTPConfig.HTTPURLPath))
+	if config.OTLPConfig.HTTPConfig.URLPath != "" {
+		op = append(op, otlptracehttp.WithURLPath(config.OTLPConfig.HTTPConfig.URLPath))
 	}
-	if config.OTLPConfig.HTTPConfig.HTTPInsecure {
+	if config.OTLPConfig.HTTPConfig.Insecure {
 		op = append(op, otlptracehttp.WithInsecure())
 	}
 	return op

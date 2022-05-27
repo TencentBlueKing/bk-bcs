@@ -22,10 +22,10 @@ import (
 
 // GRPCConfig sets the OTLP collector GRPC endpoint
 type GRPCConfig struct {
-	GRPCEndpoint string                 `json:"grpcEndpoint,omitempty" usage:"grpcEndpoint sets GRPC client endpoint"`
-	GRPCURLPath  string                 `json:"grpcURLPath,omitempty" usage:"grpcURLPath sets GRPC client endpoint"`
-	GRPCInsecure bool                   `json:"grpcInsecure,omitempty" usage:"grpcInsecure disables GRPC client transport security"`
-	GRPCOptions  []otlptracegrpc.Option `json:"-"`
+	Endpoint string                 `json:"grpcEndpoint,omitempty" usage:"grpcEndpoint sets GRPC client endpoint"`
+	URLPath  string                 `json:"grpcURLPath,omitempty" usage:"grpcURLPath sets GRPC client endpoint"`
+	Insecure bool                   `json:"grpcInsecure,omitempty" usage:"grpcInsecure disables GRPC client transport security"`
+	Options  []otlptracegrpc.Option `json:"-"`
 }
 
 // New constructs a new Exporter and starts it.

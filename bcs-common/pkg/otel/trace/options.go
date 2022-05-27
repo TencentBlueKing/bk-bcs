@@ -131,56 +131,56 @@ func JaegerCollectorOptions(option oteljaeger.CollectorEndpointOption) TracerPro
 // WithOTLPGRPCEndpoint sets OTLP GRPC endpoint
 func WithOTLPGRPCEndpoint(endpoint string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.GRPCConfig.GRPCEndpoint = endpoint
+		o.OTLPConfig.GRPCConfig.Endpoint = endpoint
 	}
 }
 
 // WithOTLPGRPCURLPath sets OTLP GRPC endpoint
 func WithOTLPGRPCURLPath(url string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.GRPCConfig.GRPCURLPath = url
+		o.OTLPConfig.GRPCConfig.URLPath = url
 	}
 }
 
 // WithOTLPGRPCInsecure sets OTLP GRPC endpoint
 func WithOTLPGRPCInsecure() TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.GRPCConfig.GRPCInsecure = true
+		o.OTLPConfig.GRPCConfig.Insecure = true
 	}
 }
 
 // WithGRPCOption imports otlptracegrpc.Option
 func WithGRPCOption(option otlptracegrpc.Option) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.GRPCConfig.GRPCOptions = append(o.OTLPConfig.GRPCConfig.GRPCOptions, option)
+		o.OTLPConfig.GRPCConfig.Options = append(o.OTLPConfig.GRPCConfig.Options, option)
 	}
 }
 
 // WithOTLPHTTPEndpoint sets OTLP HTTP endpoint
 func WithOTLPHTTPEndpoint(endpoint string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.HTTPConfig.HTTPEndpoint = endpoint
+		o.OTLPConfig.HTTPConfig.Endpoint = endpoint
 	}
 }
 
 // WithOTLPHTTPURLPath sets OTLP GRPC endpoint
 func WithOTLPHTTPURLPath(url string) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.HTTPConfig.HTTPURLPath = url
+		o.OTLPConfig.HTTPConfig.URLPath = url
 	}
 }
 
 // WithOTLPHTTPInsecure sets OTLP HTTP endpoint
 func WithOTLPHTTPInsecure() TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.HTTPConfig.HTTPInsecure = true
+		o.OTLPConfig.HTTPConfig.Insecure = true
 	}
 }
 
 // WithHTTPOption imports otlptracegrpc.Option
 func WithHTTPOption(option otlptracehttp.Option) TracerProviderOption {
 	return func(o *TracerProviderConfig) {
-		o.OTLPConfig.HTTPConfig.HTTPOptions = append(o.OTLPConfig.HTTPConfig.HTTPOptions, option)
+		o.OTLPConfig.HTTPConfig.Options = append(o.OTLPConfig.HTTPConfig.Options, option)
 	}
 }
 
