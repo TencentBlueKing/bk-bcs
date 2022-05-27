@@ -30,6 +30,9 @@ IGNORE_DEVICE_TYPE = "iso9660|tmpfs|udf"
 # 磁盘统计 允许的挂载目录
 DISK_MOUNTPOINT = "/data"
 
+# IP来源
+PROVIDER = "BK-Monitor"
+
 
 def query_range(query, start, end, step, project_id=None, milliseconds=True):
     """范围请求API"""
@@ -228,7 +231,8 @@ def get_cluster_disk_usage_range(cluster_id, node_ip_list, bk_biz_id=None):
 
     prom_query = f"""
         sum(bkmonitor:system:disk:used{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip=~"{node_ip_list}"}}) /
-        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip=~"{node_ip_list}"}})
+        sum(bkmonitor:system:disk:total{{bk_biz_id="{bk_biz_id}", device_type!~"{ IGNORE_DEVICE_TYPE }", ip=~"{node_ip_list}"}}) *
+        100
     """  # noqa
 
     resp = query_range(prom_query, start, end, step)
