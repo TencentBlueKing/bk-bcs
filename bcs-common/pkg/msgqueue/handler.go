@@ -17,9 +17,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/micro/go-micro/v2/broker"
 	"time"
+
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/asim/go-micro/v3/broker"
 )
 
 // consumer subscribe resource type

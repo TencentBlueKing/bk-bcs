@@ -25,10 +25,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
 	proto "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/micro/proto"
 
-	client "github.com/micro/go-micro/v2/client"
-	"github.com/micro/go-micro/v2/registry/memory"
-	microsvc "github.com/micro/go-micro/v2/service"
-	grpcsvc "github.com/micro/go-micro/v2/service/grpc"
+	micro "github.com/asim/go-micro/v3"
+	client "github.com/asim/go-micro/v3/client"
+	"github.com/asim/go-micro/v3/registry"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -95,11 +94,11 @@ func runClient(cli client.Client) {
 }
 
 func runMicroServer() {
-	service := grpcsvc.NewService(
-		microsvc.Name("greeter"),
-		microsvc.Registry(memory.NewRegistry()),
-		microsvc.WrapHandler(NewHandlerWrapper(opentracing.GlobalTracer())),
-		microsvc.WrapClient(NewClientWrapper(opentracing.GlobalTracer())),
+	service := micro.NewService(
+		micro.Name("greeter"),
+		micro.Registry(registry.NewRegistry()),
+		micro.WrapHandler(NewHandlerWrapper(opentracing.GlobalTracer())),
+		micro.WrapClient(NewClientWrapper(opentracing.GlobalTracer())),
 	)
 
 	service.Init()

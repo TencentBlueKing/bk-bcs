@@ -17,10 +17,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/micro/go-micro/v2/broker"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/asim/go-micro/v3/broker"
 )
 
 // MockPod data

@@ -16,10 +16,11 @@ package msgqueue
 import (
 	"errors"
 	"fmt"
-	"github.com/micro/go-micro/v2/broker"
-	"github.com/micro/go-plugins/broker/rabbitmq/v2"
-	"github.com/micro/go-plugins/broker/stan/v2"
 	"time"
+
+	"github.com/asim/go-micro/plugins/broker/rabbitmq/v3"
+	"github.com/asim/go-micro/plugins/broker/stan/v3"
+	"github.com/asim/go-micro/v3/broker"
 )
 
 // rabbitmq broker init: brokerOptions/init/connect
