@@ -1,0 +1,27 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: bcs-public-cluster-webhook-cfg
+  labels:
+    app: bcs-public-cluster-webhook
+webhooks:
+  - name: bcs-public-cluster-webhook.blueking.io
+    namespaceSelector:
+      matchExpressions:
+        - key: bcs-webhook
+          operator: NotIn
+          values: [ "false" ]
+    rules:
+      - operations: [ "CREATE", "UPDATE" ]
+        apiGroups: ["*"]
+        apiVersions: ["*"]
+        resources: ["pods", "deployments", "statefulsets", "gamedeployments", "gamestatefulsets", "cronjobs", "jobs"]
+    clientConfig:
+      service:
+        name: bcs-public-cluster-webhook
+        namespace: {{ .Release.Namespace }}
+        path: "/bcs/webhook/validate/v1/k8s"
+      caBundle: {{ .Values.caBundle }}
+    admissionReviewVersions: ["v1beta1"]
+    failurePolicy: Fail
+    sideEffects: None

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-public-cluster-webhook-blacklist
+  namespace: {{ .Release.Namespace }}
+data:
+  blacklist.yaml: |
+    {{.Values.blackListContent | nindent 4}}

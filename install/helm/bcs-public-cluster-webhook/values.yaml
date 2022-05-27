@@ -1,0 +1,62 @@
+# Default values for bcs-webhook-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+logLevel: 3
+
+replicaCount: 1
+
+image:
+  registry: ""
+  repository: /bcs/bcs-public-cluster-webhook
+  pullPolicy: Always
+  tag: "v0.0.1"
+
+imagePullSecrets: []
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+resource: {}
+# webhook server certification
+serverCert: ""
+serverKey: ""
+caBundle: ""
+# 需要匹配的黑名单列表信息，如果匹配则不允许资源创建
+# 以下仅仅作为参考，根据情况更新！
+blackListContent: |
+  # 不校验的 namespace 列表
+  excludeNamespace:
+    - kube-system
+    - bcs-system
+  list:
+    # 限制Deployment/Statefulset/GameStatefulSet/GameDeployment使用hostNetwork资源,但是foo ns除外
+    - resourceType:
+        - Deployment
+        - Statefulset
+        - GameStatefulSet
+        - GameDeployment
+      # matchQuery 是与的关系
+      matchQuery:
+        - jsonPath: spec.template.spec.hostNetwork
+          operation: in
+          value:
+            - true
+      message: "不允许使用hostNetwork资源"
+      excludeNamespace:
+        - foo
+
+    # 限制Pod使用hostNetwork资源
+    - resourceType:
+        - Pod
+      # matchQuery 是与的关系
+      matchQuery:
+        - jsonPath: spec.hostNetwork
+          operation: in
+          value:
+            - true
+      message: "不允许使用hostNetwork资源"

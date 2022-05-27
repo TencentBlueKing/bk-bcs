@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bcs-public-cluster-webhook
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bcs-public-cluster-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bcs-public-cluster-webhook
+  template:
+    metadata:
+      labels:
+        app: bcs-public-cluster-webhook
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: bcs-public-cluster-webhook
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /data/bcs/bcs-public-cluster-webhook/container-start.sh
+          args:
+            - --address=0.0.0.0
+            - --port=443
+            - --alsologtostderr
+            - --v={{ .Values.logLevel }}
+            - --server_cert_file=/data/bcs/cert/cert.pem
+            - --server_key_file=/data/bcs/cert/key.pem
+            - --blacklist-config=/data/bcs/config/blacklist.yaml
+          ports:
+          - name: http
+            containerPort: 443
+            protocol: TCP
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+          - name: webhook-certs
+            mountPath: /data/bcs/cert
+            readOnly: true
+          - name: webhook-config
+            mountPath: /data/bcs/config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: webhook-certs
+        secret:
+          secretName: bcs-public-cluster-webhook-certs
+      - name: webhook-config
+        configMap:
+          name: bcs-public-cluster-webhook-blacklist
+
