@@ -42,6 +42,13 @@ func SetTracerProvider(tp trace.TracerProvider) {
 	otel.SetTracerProvider(tp)
 }
 
+// NewNoopTracerProvider returns an implementation of TracerProvider that
+// performs no operations. The Tracer and Spans created from the returned
+// TracerProvider also perform no operations.
+func NewNoopTracerProvider() trace.TracerProvider {
+	return trace.NewNoopTracerProvider()
+}
+
 // NewTracerProvider returns a new and configured TracerProvider.
 //
 // By default the returned TracerProvider is configured with:
@@ -54,6 +61,14 @@ func SetTracerProvider(tp trace.TracerProvider) {
 // returned TracerProvider appropriately.
 func NewTracerProvider(opts ...sdktrace.TracerProviderOption) *sdktrace.TracerProvider {
 	return sdktrace.NewTracerProvider(opts...)
+}
+
+// NewBatchSpanProcessor creates a new SpanProcessor that will send completed
+// span batches to the exporter with the supplied options.
+//
+// If the exporter is nil, the span processor will preform no action.
+func NewBatchSpanProcessor(exporter sdktrace.SpanExporter, options ...sdktrace.BatchSpanProcessorOption) sdktrace.SpanProcessor {
+	return sdktrace.NewBatchSpanProcessor(exporter, options...)
 }
 
 // WithSyncer registers the exporter with the TracerProvider using a

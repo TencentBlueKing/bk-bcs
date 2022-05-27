@@ -13,26 +13,16 @@
 
 package jaeger
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/resource"
+import "go.opentelemetry.io/otel/exporters/jaeger"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/jaeger"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-)
+// NewCollectorExporter returns an OTel Exporter implementation that exports the collected
+// spans to Jaeger collector.
+func NewCollectorExporter(option ...jaeger.CollectorEndpointOption) (*jaeger.Exporter, error) {
+	return jaeger.New(jaeger.WithCollectorEndpoint(option...))
+}
 
-func NewTracerProvider(exporterURL, serviceName string) (*sdktrace.TracerProvider, error) {
-	// Create the Jaeger exporter
-	traceExp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(exporterURL)))
-	if err != nil {
-		return nil, err
-	}
-	tp := sdktrace.NewTracerProvider(
-		// Always be sure to batch in production.
-		sdktrace.WithBatcher(traceExp),
-		// Record information about this application in an Resource.
-		sdktrace.WithResource(resource.New(serviceName)),
-	)
-	otel.SetTracerProvider(tp)
-	return tp, nil
+// NewAgentExporter returns an OTel Exporter implementation that exports the collected
+// spans to Jaeger agent.
+func NewAgentExporter(option ...jaeger.AgentEndpointOption) (*jaeger.Exporter, error) {
+	return jaeger.New(jaeger.WithAgentEndpoint(option...))
 }
