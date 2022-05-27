@@ -12,18 +12,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
+from django.apps import AppConfig
 
-from django.conf import settings
 
-logger = logging.getLogger(__name__)
-
-CURATOR_VALUES_TEMPLATE = ""
-
-# public repo url
-PUBLIC_REPO_URL = f'{settings.HELM_REPO_DOMAIN}/chartrepo/public'
-
-try:
-    from .constants_ext import *  # type: ignore  # noqa
-except ImportError:
-    logger.debug('Load extension for constants failed')
+# 组件库
+class ClusterToolsConfig(AppConfig):
+    name = 'backend.container_service.cluster_tools'

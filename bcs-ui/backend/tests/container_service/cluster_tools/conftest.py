@@ -12,18 +12,20 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
+import mock
+import pytest
 
-from django.conf import settings
+from backend.container_service.cluster_tools import models
 
-logger = logging.getLogger(__name__)
 
-CURATOR_VALUES_TEMPLATE = ""
+@pytest.fixture
+def tool(db):
+    return models.Tool.objects.create(
+        name="GameStatefulSet", chart_name='bcs-gamestatefulset-operator', default_version='0.6.0-beta3'
+    )
 
-# public repo url
-PUBLIC_REPO_URL = f'{settings.HELM_REPO_DOMAIN}/chartrepo/public'
 
-try:
-    from .constants_ext import *  # type: ignore  # noqa
-except ImportError:
-    logger.debug('Load extension for constants failed')
+@pytest.fixture(autouse=True)
+def patch_get_random_string():
+    with mock.patch('backend.helm.toolkit.deployer.get_random_string', new=lambda *args, **kwargs: '12345678'):
+        yield

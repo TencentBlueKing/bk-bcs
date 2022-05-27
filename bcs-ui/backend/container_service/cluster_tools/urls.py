@@ -12,18 +12,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import logging
+from django.urls import path
 
-from django.conf import settings
+from .views import ToolsViewSet
 
-logger = logging.getLogger(__name__)
-
-CURATOR_VALUES_TEMPLATE = ""
-
-# public repo url
-PUBLIC_REPO_URL = f'{settings.HELM_REPO_DOMAIN}/chartrepo/public'
-
-try:
-    from .constants_ext import *  # type: ignore  # noqa
-except ImportError:
-    logger.debug('Load extension for constants failed')
+urlpatterns = [
+    path('tools/', ToolsViewSet.as_view({'get': 'list'})),
+    path('tools/<int:tool_id>/', ToolsViewSet.as_view({'post': 'install', 'put': 'upgrade', 'delete': 'uninstall'})),
+    path('tools/<int:tool_id>/installed_detail/', ToolsViewSet.as_view({'get': 'retrieve'})),
+]
