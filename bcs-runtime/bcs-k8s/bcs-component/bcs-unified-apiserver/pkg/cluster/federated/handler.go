@@ -121,7 +121,7 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 	err := rest.ErrInit
 
 	if !h.isAllowedNamespaceOp(c) {
-		c.AbortWithError(rest.ErrNotImplemented)
+		c.AbortWithError(rest.ErrRequestDenied)
 		return
 	}
 
