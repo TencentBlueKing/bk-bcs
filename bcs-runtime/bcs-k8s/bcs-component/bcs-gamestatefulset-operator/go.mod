@@ -38,7 +38,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20211220083546-9911225681e0
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220514022619-1a8b3e5d3a9a
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220526115342-b9488a73a222
 	github.com/prometheus/client_golang v1.9.0
 	github.com/stretchr/testify v1.7.0
 	k8s.io/api v0.20.0
