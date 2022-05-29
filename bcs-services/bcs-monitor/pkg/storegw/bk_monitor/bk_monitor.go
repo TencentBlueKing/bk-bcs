@@ -15,9 +15,13 @@ package bk_monitor
 
 import (
 	"context"
+	"math"
 	"net/url"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/model/labels"
+	"github.com/thanos-io/thanos/pkg/component"
+	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
 )
@@ -33,6 +37,7 @@ type BKMonitorStore struct {
 	Base   *url.URL
 }
 
+// NewBKMonitorStore
 func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
 	var config Config
 	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
@@ -48,18 +53,37 @@ func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
 	return store, nil
 }
 
+// Info 返回元数据信息
 func (s *BKMonitorStore) Info(context.Context, *storepb.InfoRequest) (*storepb.InfoResponse, error) {
-	return nil, nil
+	labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR"})
+
+	zset := labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)}
+
+	res := &storepb.InfoResponse{
+		StoreType: component.Store.ToProto(),
+		MinTime:   math.MinInt64,
+		MaxTime:   math.MaxInt64,
+		LabelSets: []labelpb.ZLabelSet{zset},
+	}
+	return res, nil
 }
 
+// LabelNames 返回 labels 列表
 func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse, error) {
-	return nil, nil
+	names := []string{"__name__"}
+	return &storepb.LabelNamesResponse{Names: names}, nil
 }
 
+// LabelValues 返回 label values 列表
 func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse, error) {
-	return nil, nil
+	values := []string{}
+	if r.Label == "__name__" {
+		values = []string{"container_network_receive_bytes_total"}
+	}
+	return &storepb.LabelValuesResponse{Values: values}, nil
 }
 
+// Series 返回时序数据
 func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
 	return nil
 }
