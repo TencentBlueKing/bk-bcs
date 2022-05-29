@@ -17,13 +17,18 @@ import (
 	"context"
 	"math"
 	"net/url"
+	"time"
 
+	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
+
+	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
 // Config 配置
@@ -85,5 +90,37 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 
 // Series 返回时序数据
 func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
+	logger.Infow(clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime", r.MaxTime)
+
+	if r.Step < 60 {
+		r.Step = 60
+	}
+
+	// 毫秒转换为秒
+	start := time.UnixMilli(r.MinTime).Unix()
+	end := time.UnixMilli(r.MaxTime).Unix()
+
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.Host, 2, start, end, r.Step, r.Matchers)
+	if err != nil {
+		return err
+	}
+
+	metricName, err := clientutil.GetLabelMatchValue("__name__", r.Matchers)
+	if err != nil {
+		return err
+	}
+
+	for _, promSeries := range promSeriesSet {
+		series := &clientutil.TimeSeries{TimeSeries: promSeries}
+		series = series.AddLabel("__name__", metricName)
+		s, err := series.ToThanosSeries()
+		if err != nil {
+			return err
+		}
+		if err := srv.Send(storepb.NewSeriesResponse(s)); err != nil {
+			return err
+		}
+
+	}
 	return nil
 }

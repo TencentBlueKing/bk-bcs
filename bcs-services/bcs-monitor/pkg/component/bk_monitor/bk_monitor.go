@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/prompb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
@@ -73,13 +74,57 @@ type Series struct {
 	Values      []*Sample `json:"values"`
 }
 
+// ToPromSeries 转换为 prom 时序
+func (s *Series) ToPromSeries() (*prompb.TimeSeries, error) {
+	if len(s.GroupValues) < len(s.GroupKeys) {
+		return nil, errors.Errorf("len GroupValues(%s) < GroupKeys(%s)", len(s.GroupValues), len(s.GroupKeys))
+	}
+
+	labels := make([]prompb.Label, 0, len(s.GroupKeys))
+	for idx, key := range s.GroupKeys {
+		labels = append(labels, prompb.Label{
+			Name:  key,
+			Value: s.GroupValues[idx],
+		})
+	}
+
+	samples := make([]prompb.Sample, 0, len(s.Values))
+
+	for _, value := range s.Values {
+		samples = append(samples, prompb.Sample{
+			Timestamp: value.Timestamp,
+			Value:     value.Value,
+		})
+	}
+
+	promSeries := &prompb.TimeSeries{
+		Labels:  labels,
+		Samples: samples,
+	}
+	return promSeries, nil
+}
+
 // BKMonitorResult 蓝鲸监控返回结果
 type BKMonitorResult struct {
 	Series []*Series `json:"series"`
 }
 
+// ToPromSeriesSet 转换为 prom 时序
+func (r *BKMonitorResult) ToPromSeriesSet() ([]*prompb.TimeSeries, error) {
+	promSeriesSet := make([]*prompb.TimeSeries, 0, len(r.Series))
+	for _, series := range r.Series {
+		promSeries, err := series.ToPromSeries()
+		if err != nil {
+			return nil, err
+		}
+		promSeriesSet = append(promSeriesSet, promSeries)
+	}
+	return promSeriesSet, nil
+}
+
 // QueryByPromQL unifyquery 查询, promql 语法
-func QueryByPromQL(ctx context.Context, host string, bkBizId uint64, start, end, step int64, labelMatchers []storepb.LabelMatcher) ([]*Series, error) {
+// start, end, step 单位秒
+func QueryByPromQL(ctx context.Context, host string, bkBizId uint64, start, end, step int64, labelMatchers []storepb.LabelMatcher) ([]*prompb.TimeSeries, error) {
 	url := fmt.Sprintf("%s/query/ts/promql", host)
 
 	// 必须的参数 bk_biz_id, 单独拎出来处理
@@ -118,6 +163,5 @@ func QueryByPromQL(ctx context.Context, host string, bkBizId uint64, start, end,
 		return nil, err
 	}
 
-	return result.Series, nil
-
+	return result.ToPromSeriesSet()
 }
