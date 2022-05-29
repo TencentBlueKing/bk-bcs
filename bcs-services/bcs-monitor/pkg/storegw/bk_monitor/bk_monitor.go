@@ -12,3 +12,54 @@
  */
 
 package bk_monitor
+
+import (
+	"context"
+	"net/url"
+
+	"github.com/pkg/errors"
+	"github.com/thanos-io/thanos/pkg/store/storepb"
+	"gopkg.in/yaml.v2"
+)
+
+// Config 配置
+type Config struct {
+	Host string `yaml:"host"`
+}
+
+// BKMonitorStore implements the store node API on top of the Prometheus remote read API.
+type BKMonitorStore struct {
+	config *Config
+	Base   *url.URL
+}
+
+func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
+	var config Config
+	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
+		return nil, errors.Wrap(err, "parsing bkmonitor stor config")
+	}
+
+	baseURL, err := url.Parse(config.Host)
+	if err != nil {
+		return nil, err
+	}
+
+	store := &BKMonitorStore{config: &config, Base: baseURL}
+	return store, nil
+}
+
+func (s *BKMonitorStore) Info(context.Context, *storepb.InfoRequest) (*storepb.InfoResponse, error) {
+	return nil, nil
+}
+
+func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse, error) {
+	return nil, nil
+}
+
+func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse, error) {
+	return nil, nil
+}
+
+func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
+	return nil
+}

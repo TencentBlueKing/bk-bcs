@@ -33,6 +33,7 @@ type Configuration struct {
 	Base        *BaseConf                  `yaml:"base_conf"`
 	Redis       *RedisConf                 `yaml:"redis"`
 	StoreGW     *StoreGWConf               `yaml:"store"`
+	StoreGWList []*StoreConf               `yaml:"storegw"`
 	API         *APIConf                   `yaml:"query"`
 	Logging     *LogConf                   `yaml:"logging"`
 	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`

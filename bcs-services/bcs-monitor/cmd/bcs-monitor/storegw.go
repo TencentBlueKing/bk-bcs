@@ -16,11 +16,14 @@ package main
 import (
 	"context"
 
+	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 )
 
 // StoreGWCmd StoreGW 命令
@@ -35,8 +38,8 @@ func StoreGWCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address, "store gateway listen http ip, default localhost:10210")
-	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-address", config.G.StoreGW.GRPC.Address, "store gateway listen grpc ip, default localhost:10211")
+	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address, "Listen host:port for HTTP endpoints.")
+	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-advertise-ip", "127.0.0.1", "grpc advertise ip")
 
 	// 设置配置命令行优先级高与配置文件
 	viper.BindPFlag("store.http.address", cmd.Flag("http-address"))
@@ -46,9 +49,17 @@ func StoreGWCmd() *cobra.Command {
 }
 
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
-	var (
-		err error
-	)
+	kitLogger := gokit.NewLogger(logger.StandardLogger())
+	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, "127.0.0.1", config.G.StoreGWList)
+	if err != nil {
+		return err
+	}
+
+	g.Add(func() error {
+		return gw.Run()
+	}, func(err error) {
+		gw.Shutdown(err)
+	})
 
 	return err
 }
