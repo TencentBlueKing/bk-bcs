@@ -14,7 +14,8 @@ function prometheus() {
 
 function api() {
     ./bin/bcs-monitor api \
-        --config ./etc/config_dev.yaml
+        --config ./etc/config_dev.yaml \
+        --http-address 0.0.0.0:11902
 }
 
 function query {

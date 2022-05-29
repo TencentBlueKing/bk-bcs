@@ -273,12 +273,14 @@ func engineFactory(
 
 // RunHttp
 func (a *QueryAPI) RunHttp() error {
+	a.statusProber.Healthy()
 	a.statusProber.Ready()
 	return a.srv.ListenAndServe()
 }
 
 // ShutDownHttp
 func (a *QueryAPI) ShutDownHttp(err error) {
+	a.statusProber.NotHealthy(err)
 	a.statusProber.NotReady(err)
 	a.srv.Shutdown(err)
 }

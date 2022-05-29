@@ -15,12 +15,17 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/thanos-io/thanos/pkg/component"
+	"github.com/thanos-io/thanos/pkg/extprom"
+	"github.com/thanos-io/thanos/pkg/prober"
+	httpserver "github.com/thanos-io/thanos/pkg/server/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
@@ -50,10 +55,33 @@ func StoreGWCmd() *cobra.Command {
 
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
-	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, "127.0.0.1", config.G.StoreGWList)
+	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, config.G.StoreGW.GRPC.Address, config.G.StoreGWList)
 	if err != nil {
 		return err
 	}
+
+	httpProbe := prober.NewHTTP()
+	statusProber := prober.Combine(
+		httpProbe,
+		prober.NewInstrumentation(component.Store, kitLogger, extprom.WrapRegistererWithPrefix("bcsmonitor_", opt.reg)),
+	)
+
+	srv := httpserver.New(kitLogger, opt.reg, component.Store, httpProbe,
+		httpserver.WithListen(config.G.StoreGW.HTTP.Address),
+		httpserver.WithGracePeriod(time.Duration(config.G.StoreGW.HTTP.GracePeriod)),
+	)
+
+	g.Add(func() error {
+		statusProber.Healthy()
+		statusProber.Ready()
+
+		return srv.ListenAndServe()
+	}, func(err error) {
+		defer statusProber.NotHealthy(err)
+		defer statusProber.NotReady(err)
+
+		srv.Shutdown(err)
+	})
 
 	g.Add(func() error {
 		return gw.Run()
