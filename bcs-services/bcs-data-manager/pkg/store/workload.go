@@ -346,7 +346,7 @@ func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *types.JobC
 	return retWorkload, nil
 }
 
-// GetWorkloadCount get raw workload data
+// GetWorkloadCount get workload count
 func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string, after time.Time) (int64, error) {
 	err := ensureTable(ctx, &m.Public)
