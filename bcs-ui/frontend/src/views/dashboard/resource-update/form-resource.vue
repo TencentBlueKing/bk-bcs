@@ -315,6 +315,9 @@
 .form-resource {
     padding-bottom: 0;
     height: 100%;
+    /deep/ .bk-form-radio {
+        padding-left: 2px;
+    }
     .switch-button-pop {
         position: absolute;
         right: 16px;
