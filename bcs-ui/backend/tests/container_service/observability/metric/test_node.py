@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 import pytest
 
 from backend.tests.conftest import TEST_CLUSTER_ID, TEST_PROJECT_ID
+from backend.components import bcs_monitor
 
 pytestmark = pytest.mark.django_db
 
@@ -33,6 +34,7 @@ class TestNodeMetric:
         )
         assert response.json()['code'] == 0
         assert response.json()['data'] == {
+            'provider': bcs_monitor.PROVIDER,
             'container_count': '0',
             'pod_count': '8',
             'cpu_usage': None,
@@ -44,7 +46,6 @@ class TestNodeMetric:
         response = api_client.get(f'{self.common_prefix}/info/')
         assert response.json()['code'] == 0
         assert response.json()['data'] == {
-            'provider': 'Prometheus',
             'dockerVersion': 'v1',
             'osVersion': 'v2',
             'cpu_count': '8',
