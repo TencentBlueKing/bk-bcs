@@ -489,6 +489,50 @@ func MapToTaints(taints map[string]string) []*Taint {
 	return result
 }
 
+// MapToTags converts a map of string-string to a slice of Tag
+func MapToTags(tags map[string]string) []*Tag {
+	result := make([]*Tag, 0)
+	for k, v := range tags {
+		key := k
+		value := v
+		result = append(result, &Tag{Key: &key, Value: &value})
+	}
+	return result
+}
+
+// MapToCloudLabels converts a map of string-string to a slice of Label
+func MapToCloudLabels(labels map[string]string) []*tke.Label {
+	result := make([]*tke.Label, 0)
+	for k, v := range labels {
+		name := k
+		value := v
+		result = append(result, &tke.Label{Name: &name, Value: &value})
+	}
+	return result
+}
+
+// MapToCloudTaints converts a map of string-string to a slice of Taint
+func MapToCloudTaints(taints map[string]string) []*tke.Taint {
+	result := make([]*tke.Taint, 0)
+	for k, v := range taints {
+		key := k
+		value := v
+		result = append(result, &tke.Taint{Key: &key, Value: &value})
+	}
+	return result
+}
+
+// MapToCloudTags converts a map of string-string to a slice of Tag
+func MapToCloudTags(tags map[string]string) []*tke.Tag {
+	result := make([]*tke.Tag, 0)
+	for k, v := range tags {
+		key := k
+		value := v
+		result = append(result, &tke.Tag{Key: &key, Value: &value})
+	}
+	return result
+}
+
 func convertASGInstance(ins *as.Instance) *AutoScalingInstances {
 	return &AutoScalingInstances{
 		InstanceID:              ins.InstanceId,

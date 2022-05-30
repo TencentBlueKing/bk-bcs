@@ -220,8 +220,10 @@ type NodeManager interface {
 	GetCloudRegions(opt *CommonOption) ([]*proto.RegionInfo, error)
 	// GetZoneList get zoneList by region
 	GetZoneList(opt *CommonOption) ([]*proto.ZoneInfo, error)
-	// ListNodeInstance xxx
-	ListNodeInstance(zone, nodeFamily string, opt *CommonOption) ([]*proto.InstanceType, error)
+	// ListNodeInstanceType get node instance type list
+	ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32, opt *CommonOption) ([]*proto.InstanceType, error)
+	// ListImageOs get image os list
+	ListImageOs(provider string, opt *CommonOption) ([]*proto.ImageOs, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
@@ -240,6 +242,8 @@ type CloudValidateManager interface {
 	ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error
 	// ListInstanceTypeValidate list instance type validate
 	ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error
+	// ListCloudImageOsValidate list tke image os validate
+	ListCloudImageOsValidate(req *proto.ListCloudImageOsRequest, account *proto.Account) error
 }
 
 // ClusterManager cloud interface for kubernetes cluster management

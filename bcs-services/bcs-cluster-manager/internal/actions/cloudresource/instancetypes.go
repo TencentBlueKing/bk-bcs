@@ -89,7 +89,7 @@ func (la *ListNodeTypeAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.nodeTypeList
 }
 
-func (la *ListNodeTypeAction) ListCloudInstancetypes() error {
+func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 	// create vpc client with cloudProvider
 	nodeMgr, err := cloudprovider.GetNodeMgr(la.cloud.CloudProvider)
 	if err != nil {
@@ -108,7 +108,8 @@ func (la *ListNodeTypeAction) ListCloudInstancetypes() error {
 	cmOption.Region = la.req.Region
 
 	// get instance types list
-	insTypes, err := nodeMgr.ListNodeInstance(la.req.Zone, la.req.NodeFamily, cmOption)
+	insTypes, err := nodeMgr.ListNodeInstanceType(la.req.Zone, la.req.NodeFamily,
+		la.req.Cpu, la.req.Memory, cmOption)
 	if err != nil {
 		return err
 	}
@@ -133,7 +134,7 @@ func (la *ListNodeTypeAction) Handle(ctx context.Context,
 		return
 	}
 
-	if err := la.ListCloudInstancetypes(); err != nil {
+	if err := la.listCloudInstancetypes(); err != nil {
 		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}

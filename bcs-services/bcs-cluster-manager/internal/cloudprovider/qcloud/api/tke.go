@@ -136,8 +136,8 @@ func (cli *TkeClient) ListTKECluster() ([]*tke.Cluster, error) {
 	}
 
 	var (
-		initOffset      int64
-		clusterList  = make([]*tke.Cluster, 0)
+		initOffset     int64
+		clusterList    = make([]*tke.Cluster, 0)
 		clusterListLen = 100
 	)
 
@@ -738,9 +738,8 @@ func (cli *TkeClient) DescribeClusterNodePoolDetail(clusterID string, nodePoolID
 }
 
 // ModifyClusterNodePool modify cluster node pool
-func (cli *TkeClient) ModifyClusterNodePool(nodePool *ModifyClusterNodePoolInput) error {
-	blog.Infof("ModifyClusterNodePool request: %s", utils.ToJSONString(nodePool))
-	req := convertModifyNodePool(nodePool)
+func (cli *TkeClient) ModifyClusterNodePool(req *tke.ModifyClusterNodePoolRequest) error {
+	blog.Infof("ModifyClusterNodePool request: %s", utils.ToJSONString(req))
 	resp, err := cli.tke.ModifyClusterNodePool(req)
 	if err != nil {
 		blog.Errorf("ModifyClusterNodePool failed: %v", err)

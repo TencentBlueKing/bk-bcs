@@ -26,6 +26,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 )
 
@@ -88,13 +90,18 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	nodePool := api.CreateNodePoolInput{
 		ClusterID:                &group.ClusterID,
 		AutoScalingGroupPara:     generateAutoScalingGroupPara(group.AutoScaling),
-		LaunchConfigurePara:      generateLaunchConfigurePara(group.LaunchTemplate),
+		LaunchConfigurePara:      generateLaunchConfigurePara(group.LaunchTemplate, group.NodeTemplate),
 		InstanceAdvancedSettings: generateInstanceAdvanceSettings(group.NodeTemplate),
 		// 不开启腾讯云 CA 组件，因为需要部署 BCS 自己的 CA 组件
 		EnableAutoscale: common.BoolPtr(false),
 		Name:            &group.Name,
+		NodePoolOs:      &group.NodeOS,
 		Labels:          api.MapToLabels(group.Labels),
 		Taints:          api.MapToTaints(group.Taints),
+		Tags:            api.MapToTags(group.Tags),
+	}
+	if *nodePool.AutoScalingGroupPara.VpcID == "" {
+		nodePool.AutoScalingGroupPara.VpcID = &cluster.VpcID
 	}
 	npID, err := tkeCli.CreateClusterNodePool(&nodePool)
 	if err != nil {
@@ -180,11 +187,19 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	cmOption.Region = group.Region
 
 	// get qcloud client
-	cli, err := api.NewTkeClient(cmOption)
+	tkeCli, err := api.NewTkeClient(cmOption)
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get tke client for nodegroup[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	asCli, err := api.NewASClient(cmOption)
+	if err != nil {
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get as client for nodegroup[%s] in task %s step %s failed, %s",
+			taskID, nodeGroupID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("get cloud as client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -193,8 +208,9 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Minute)
 	defer cancel()
 	asgID := ""
+	ascID := ""
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, err := cli.DescribeClusterNodePoolDetail(group.ClusterID, group.CloudNodeGroupID)
+		np, err := tkeCli.DescribeClusterNodePoolDetail(group.ClusterID, group.CloudNodeGroupID)
 		if err != nil {
 			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, group.ClusterID,
 				group.CloudNodeGroupID, err)
@@ -204,6 +220,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 			return nil
 		}
 		asgID = *np.AutoscalingGroupId
+		ascID = *np.LaunchConfigurationId
 		switch {
 		case *np.LifeState == api.NodeGroupLifeStateCreating:
 			blog.Infof("taskID[%s] DescribeClusterNodePoolDetail[%s] still creating, status[%s]",
@@ -219,35 +236,142 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail failed: %v", taskID, err)
 		return err
 	}
-	updateNodeGroupASGID(nodeGroupID, asgID)
 
-	// wait all nodes to be ready
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, err := cli.DescribeClusterNodePoolDetail(group.ClusterID, group.CloudNodeGroupID)
-		if err != nil {
-			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, group.ClusterID,
-				group.CloudNodeGroupID, err)
-			return nil
-		}
-		if np == nil || np.NodeCountSummary == nil {
-			return nil
-		}
-		if np.NodeCountSummary.ManuallyAdded == nil || np.NodeCountSummary.AutoscalingAdded == nil {
-			return nil
-		}
-		allNormalNodesCount := *np.NodeCountSummary.ManuallyAdded.Normal + *np.NodeCountSummary.AutoscalingAdded.Normal
-		switch {
-		case *np.DesiredNodesNum == allNormalNodesCount:
-			return cloudprovider.EndLoop
-		default:
-			return nil
-		}
-	}, cloudprovider.LoopInterval(10*time.Second))
+	// get asg info
+	asgArr, err := asCli.DescribeAutoScalingGroups([]string{asgID})
 	if err != nil {
-		blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] DescribeAutoScalingGroups[%s] failed: %v", taskID, asgID, err)
 		return err
 	}
+
+	// get launchConfiguration
+	ascArr, err := asCli.DescribeLaunchConfigurations([]string{ascID})
+	if err != nil {
+		blog.Errorf("taskID[%s] DescribeLaunchConfigurations[%s] failed: %v", taskID, ascID, err)
+		return err
+	}
+
+	// update image id
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
+		ascReq := as.NewModifyLaunchConfigurationAttributesRequest()
+		ascReq.LaunchConfigurationId = &ascID
+		ascReq.ImageId = &group.LaunchTemplate.ImageInfo.ImageID
+		if err := asCli.ModifyLaunchConfigurationAttributes(ascReq); err != nil {
+			blog.Errorf("taskID[%s] ModifyLaunchConfigurationAttributes[%s] failed: %v", taskID, ascID, err)
+			return err
+		}
+	}
+
+	// update node group status
+	if len(asgArr) != 1 || len(ascArr) != 1 {
+		err := fmt.Errorf("get asg/asc info failed, asgArr: %v, ascArr: %v", utils.ToJSONString(asgArr), utils.ToJSONString(ascArr))
+		blog.Errorf("taskID[%s] err:%s", taskID, err.Error())
+		return err
+	}
+
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group, asgArr[0], ascArr[0]))
+	if err != nil {
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
+			taskID, nodeGroupID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID, err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
 	return nil
+}
+
+func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingGroup, asc *as.LaunchConfiguration) *proto.NodeGroup {
+	// asg
+	if asg.AutoScalingGroupId != nil {
+		group.AutoScaling.AutoScalingID = *asg.AutoScalingGroupId
+	}
+	if asg.AutoScalingGroupName != nil {
+		group.AutoScaling.AutoScalingName = *asg.AutoScalingGroupName
+	}
+	if asg.MaxSize != nil {
+		group.AutoScaling.MinSize = uint32(*asg.MaxSize)
+	}
+	if asg.MinSize != nil {
+		group.AutoScaling.MinSize = uint32(*asg.MinSize)
+	}
+	if asg.DesiredCapacity != nil {
+		group.AutoScaling.DesiredSize = uint32(*asg.DesiredCapacity)
+	}
+	if asg.VpcId != nil {
+		group.AutoScaling.VpcID = *asg.VpcId
+	}
+	if asg.DefaultCooldown != nil {
+		group.AutoScaling.DefaultCooldown = uint32(*asg.DefaultCooldown)
+	}
+	if asg.SubnetIdSet != nil {
+		subnetIDs := make([]string, 0)
+		for _, v := range asg.SubnetIdSet {
+			subnetIDs = append(subnetIDs, *v)
+		}
+		group.AutoScaling.SubnetIDs = subnetIDs
+	}
+	if asg.RetryPolicy != nil {
+		group.AutoScaling.RetryPolicy = *asg.RetryPolicy
+	}
+	if asg.MultiZoneSubnetPolicy != nil {
+		group.AutoScaling.MultiZoneSubnetPolicy = *asg.MultiZoneSubnetPolicy
+	}
+	if asg.ServiceSettings != nil && asg.ServiceSettings.ReplaceMonitorUnhealthy != nil {
+		group.AutoScaling.ReplaceUnhealthy = *asg.ServiceSettings.ReplaceMonitorUnhealthy
+	}
+	if asg.ServiceSettings != nil && asg.ServiceSettings.ScalingMode != nil {
+		group.AutoScaling.ScalingMode = *asg.ServiceSettings.ScalingMode
+	}
+
+	// asc
+	if asc.LaunchConfigurationId != nil {
+		group.LaunchTemplate.LaunchConfigurationID = *asc.LaunchConfigurationId
+	}
+	if asc.LaunchConfigurationName != nil {
+		group.LaunchTemplate.LaunchConfigureName = *asc.LaunchConfigurationName
+	}
+	if asc.ProjectId != nil {
+		group.LaunchTemplate.ProjectID = uint32(*asc.ProjectId)
+	}
+	if asc.InstanceType != nil {
+		group.LaunchTemplate.InstanceType = *asc.InstanceType
+	}
+	if asc.InstanceChargeType != nil {
+		group.LaunchTemplate.InstanceChargeType = *asc.InstanceChargeType
+	}
+	if asc.InternetAccessible != nil {
+		group.LaunchTemplate.InternetAccess = &proto.InternetAccessible{}
+		if asc.InternetAccessible.InternetChargeType != nil {
+			group.LaunchTemplate.InternetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
+		}
+		if asc.InternetAccessible.InternetMaxBandwidthOut != nil {
+			group.LaunchTemplate.InternetAccess.InternetMaxBandwidth = uint32(*asc.InternetAccessible.InternetMaxBandwidthOut)
+		}
+		if asc.InternetAccessible.PublicIpAssigned != nil {
+			group.LaunchTemplate.InternetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
+		}
+	}
+	if asc.SecurityGroupIds != nil {
+		group.LaunchTemplate.SecurityGroupIDs = make([]string, 0)
+		for _, v := range asc.SecurityGroupIds {
+			group.LaunchTemplate.SecurityGroupIDs = append(group.LaunchTemplate.SecurityGroupIDs, *v)
+		}
+	}
+	if asc.ImageId != nil {
+		group.LaunchTemplate.ImageInfo = &proto.ImageInfo{ImageID: *asc.ImageId}
+	}
+	if asc.UserData != nil {
+		group.LaunchTemplate.UserData = *asc.UserData
+	}
+	if asc.EnhancedService != nil {
+		if asc.EnhancedService.MonitorService != nil && asc.EnhancedService.MonitorService.Enabled != nil {
+			group.LaunchTemplate.IsMonitorService = *asc.EnhancedService.MonitorService.Enabled
+		}
+		if asc.EnhancedService.SecurityService != nil && asc.EnhancedService.SecurityService.Enabled != nil {
+			group.LaunchTemplate.IsSecurityService = *asc.EnhancedService.SecurityService.Enabled
+		}
+	}
+	return group
 }
 
 // UpdateCreateNodeGroupDBInfoTask update create node group db info task
@@ -293,10 +417,9 @@ func generateAutoScalingGroupPara(as *proto.AutoScalingGroup) *api.AutoScalingGr
 		return nil
 	}
 	return &api.AutoScalingGroup{
-		AutoScalingGroupName: common.StringPtr(as.AutoScalingName),
-		MaxSize:              common.Uint64Ptr(uint64(as.MaxSize)),
-		MinSize:              common.Uint64Ptr(uint64(as.MinSize)),
-		// TODO 使用集群的 VPC
+		AutoScalingGroupName:  common.StringPtr(as.AutoScalingName),
+		MaxSize:               common.Uint64Ptr(uint64(as.MaxSize)),
+		MinSize:               common.Uint64Ptr(uint64(as.MinSize)),
 		VpcID:                 common.StringPtr(as.VpcID),
 		DefaultCooldown:       common.Uint64Ptr(uint64(as.DefaultCooldown)),
 		SubnetIds:             common.StringPtrs(as.SubnetIDs),
@@ -307,34 +430,28 @@ func generateAutoScalingGroupPara(as *proto.AutoScalingGroup) *api.AutoScalingGr
 	}
 }
 
-func generateLaunchConfigurePara(template *proto.LaunchConfiguration) *api.LaunchConfiguration {
+func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration {
 	if template == nil {
 		return nil
 	}
 	conf := &api.LaunchConfiguration{
 		LaunchConfigurationName: &template.LaunchConfigureName,
 		InstanceType:            &template.InstanceType,
-		InstanceChargeType:      common.StringPtr("POSTPAID_BY_HOUR"),
-		InternetAccessible: &api.InternetAccessible{
-			InternetChargeType: common.StringPtr("TRAFFIC_POSTPAID_BY_HOUR"),
-		},
-		LoginSettings:    &api.LoginSettings{Password: template.InitLoginPassword},
-		SecurityGroupIds: common.StringPtrs(template.SecurityGroupIDs),
+		InstanceChargeType:      &template.InstanceChargeType,
+		LoginSettings:           &api.LoginSettings{Password: template.InitLoginPassword},
+		SecurityGroupIds:        common.StringPtrs(template.SecurityGroupIDs),
 	}
-	if template.ImageInfo != nil {
-		conf.ImageID = &template.ImageInfo.ImageID
-	}
-	if template.SystemDisk != nil {
+	if nodeTemplate.SystemDisk != nil {
 		conf.SystemDisk = &api.SystemDisk{
-			DiskType: &template.SystemDisk.DiskType}
-		diskSize, err := strconv.Atoi(template.SystemDisk.DiskSize)
+			DiskType: &nodeTemplate.SystemDisk.DiskType}
+		diskSize, err := strconv.Atoi(nodeTemplate.SystemDisk.DiskSize)
 		if err != nil && diskSize > 0 {
 			conf.SystemDisk.DiskSize = common.Uint64Ptr(uint64(diskSize))
 		}
 	}
-	if template.DataDisks != nil {
+	if nodeTemplate.DataDisks != nil {
 		conf.DataDisks = make([]*api.DataDisk, 0)
-		for _, v := range template.DataDisks {
+		for _, v := range nodeTemplate.DataDisks {
 			disk := &api.DataDisk{DiskType: v.DiskType}
 			diskSize, err := strconv.Atoi(v.DiskSize)
 			if err != nil && diskSize > 0 {
@@ -347,14 +464,8 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration) *api.Launc
 		if template.InternetAccess.InternetChargeType != "" {
 			conf.InternetAccessible.InternetChargeType = common.StringPtr(template.InternetAccess.InternetChargeType)
 		}
-		bandwidth, err := strconv.Atoi(template.InternetAccess.InternetMaxBandwidth)
-		if err == nil && bandwidth > 0 {
-			conf.InternetAccessible.InternetMaxBandwidthOut = common.Uint64Ptr(uint64(bandwidth))
-		}
+		conf.InternetAccessible.InternetMaxBandwidthOut = common.Uint64Ptr(uint64(template.InternetAccess.InternetMaxBandwidth))
 		conf.InternetAccessible.PublicIPAssigned = common.BoolPtr(template.InternetAccess.PublicIPAssigned)
-	}
-	if template.InstanceChargeType != "" {
-		conf.InstanceChargeType = common.StringPtr(template.InstanceChargeType)
 	}
 	conf.EnhancedService = &api.EnhancedService{
 		SecurityService: template.IsSecurityService,

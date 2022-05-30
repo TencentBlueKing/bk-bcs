@@ -91,3 +91,20 @@ func (cm *ClusterManager) ListCloudInstanceTypes(ctx context.Context,
 	blog.V(5).Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// ListCloudImageOs implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudImageOs(ctx context.Context,
+	req *cmproto.ListCloudImageOsRequest, resp *cmproto.ListCloudImageOsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudresource.NewListCloudImageOsAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudImageOs", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudImageOs, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudImageOs, req %v, resp %v", reqID, req, resp)
+	return nil
+}

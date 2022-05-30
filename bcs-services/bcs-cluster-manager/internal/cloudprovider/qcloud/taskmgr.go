@@ -77,7 +77,6 @@ func newtask() *Task {
 
 	// delete nodeGroup task
 	task.works[deleteNodeGroupTask] = tasks.DeleteCloudNodeGroupTask
-	task.works[uninstallAutoScalerTask] = tasks.UnInstallAutoScalerTask
 	task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
 
 	// clean node in nodeGroup task
@@ -782,23 +781,21 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	task.StepSequence = append(task.StepSequence, checkCloudNodeGroupStatusTask)
 
 	// step3. ensure autoscaler in cluster
-	if group.EnableAutoscale {
-		installCAStep := &proto.Step{
-			Name:       ensureAutoScalerTask,
-			System:     "api",
-			Params:     make(map[string]string),
-			Retry:      3,
-			Status:     cloudprovider.TaskStatusNotStarted,
-			TaskMethod: ensureAutoScalerTask,
-			TaskName:   "开启自动伸缩组件",
-		}
-		installCAStep.Params["ClusterID"] = group.ClusterID
-		installCAStep.Params["NodeGroupID"] = group.NodeGroupID
-		installCAStep.Params["CloudID"] = group.Provider
-
-		task.Steps[ensureAutoScalerTask] = installCAStep
-		task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+	ensureCAStep := &proto.Step{
+		Name:       ensureAutoScalerTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      3,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: ensureAutoScalerTask,
+		TaskName:   "开启自动伸缩组件",
 	}
+	ensureCAStep.Params["ClusterID"] = group.ClusterID
+	ensureCAStep.Params["NodeGroupID"] = group.NodeGroupID
+	ensureCAStep.Params["CloudID"] = group.Provider
+
+	task.Steps[ensureAutoScalerTask] = ensureCAStep
+	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
 
 	// step4. update node group info in DB
 	updateDBStep := &proto.Step{
@@ -982,28 +979,15 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 	deleteStep.Params["ClusterID"] = group.ClusterID
 	deleteStep.Params["NodeGroupID"] = group.NodeGroupID
 	deleteStep.Params["CloudID"] = group.Provider
+	deleteStep.Params["KeepInstance"] = "true"
+	if opt.CleanInstanceInCluster {
+		deleteStep.Params["KeepInstance"] = "false"
+	}
 
 	task.Steps[deleteNodeGroupTask] = deleteStep
 	task.StepSequence = append(task.StepSequence, deleteNodeGroupTask)
 
-	// step2. uninstall autoscaler
-	uninstallStep := &proto.Step{
-		Name:       uninstallAutoScalerTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      0,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: uninstallAutoScalerTask,
-		TaskName:   "删除自动伸缩组件",
-	}
-	uninstallStep.Params["ClusterID"] = group.ClusterID
-	uninstallStep.Params["NodeGroupID"] = group.NodeGroupID
-	uninstallStep.Params["CloudID"] = group.Provider
-
-	task.Steps[uninstallAutoScalerTask] = uninstallStep
-	task.StepSequence = append(task.StepSequence, uninstallAutoScalerTask)
-
-	// step3. update node group info in DB
+	// step2. update node group info in DB
 	dbStep := &proto.Step{
 		Name:       updateDeleteNodeGroupDBInfoTask,
 		System:     "api",

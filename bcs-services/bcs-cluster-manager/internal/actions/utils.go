@@ -65,3 +65,11 @@ func GetClusterInfoByClusterID(model store.ClusterManagerModel, clusterID string
 
 	return cluster, nil
 }
+
+// GetDefaultClusterAutoScalingOption get default cluster auto scaling option
+func GetDefaultClusterAutoScalingOption() *proto.ClusterAutoScalingOption {
+	return &proto.ClusterAutoScalingOption{
+		Expander:            "random",
+		BufferResourceRatio: 100,
+	}
+}

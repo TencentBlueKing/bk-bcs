@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
@@ -139,4 +140,115 @@ func (c *ASClient) ModifyDesiredCapacity(asgID string, capacity uint64) error {
 	}
 	blog.Infof("ModifyDesiredCapacity success, requestID: %s", resp.Response.RequestId)
 	return nil
+}
+
+// ModifyAutoScalingGroup 修改伸缩组的属性
+// https://cloud.tencent.com/document/api/377/20433
+func (c *ASClient) ModifyAutoScalingGroup(asg *as.ModifyAutoScalingGroupRequest) error {
+	blog.Infof("ModifyAutoScalingGroup input: %v", utils.ToJSONString(asg))
+	resp, err := c.as.ModifyAutoScalingGroup(asg)
+	if err != nil {
+		blog.Errorf("ModifyAutoScalingGroup failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("ModifyAutoScalingGroup resp is nil")
+		return fmt.Errorf("ModifyAutoScalingGroup resp is nil")
+	}
+	blog.Infof("ModifyAutoScalingGroup success, requestID: %s", resp.Response.RequestId)
+	return nil
+}
+
+// ModifyLaunchConfigurationAttributes 修改启动配置的属性
+// https://cloud.tencent.com/document/api/377/31298
+func (c *ASClient) ModifyLaunchConfigurationAttributes(req *as.ModifyLaunchConfigurationAttributesRequest) error {
+	blog.Infof("ModifyLaunchConfigurationAttributes input: %v", utils.ToJSONString(req))
+	resp, err := c.as.ModifyLaunchConfigurationAttributes(req)
+	if err != nil {
+		blog.Errorf("ModifyLaunchConfigurationAttributes failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("ModifyLaunchConfigurationAttributes resp is nil")
+		return fmt.Errorf("ModifyLaunchConfigurationAttributes resp is nil")
+	}
+	blog.Infof("ModifyLaunchConfigurationAttributes success, requestID: %s", resp.Response.RequestId)
+	return nil
+}
+
+// UpgradeLaunchConfiguration 升级启动配置
+// https://cloud.tencent.com/document/api/377/35199
+func (c *ASClient) UpgradeLaunchConfiguration(req *as.UpgradeLaunchConfigurationRequest) error {
+	blog.Infof("UpgradeLaunchConfiguration input: %v", utils.ToJSONString(req))
+	resp, err := c.as.UpgradeLaunchConfiguration(req)
+	if err != nil {
+		blog.Errorf("UpgradeLaunchConfiguration failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("UpgradeLaunchConfiguration resp is nil")
+		return fmt.Errorf("UpgradeLaunchConfiguration resp is nil")
+	}
+	blog.Infof("UpgradeLaunchConfiguration success, requestID: %s", resp.Response.RequestId)
+	return nil
+}
+
+// DescribeAutoScalingGroups describe auto scaling groups, when asgIDs is empty, describe all
+// https://cloud.tencent.com/document/api/377/20438
+func (c *ASClient) DescribeAutoScalingGroups(asgIDs []string) ([]*as.AutoScalingGroup, error) {
+	blog.Infof("DescribeAutoScalingGroups input: %s", asgIDs)
+	req := as.NewDescribeAutoScalingGroupsRequest()
+	req.Limit = common.Uint64Ptr(limit)
+	req.AutoScalingGroupIds = common.StringPtrs(asgIDs)
+	got, total := 0, 0
+	first := true
+	ins := make([]*as.AutoScalingGroup, 0)
+	for got < total || first {
+		first = false
+		req.Offset = common.Uint64Ptr(uint64(got))
+		resp, err := c.as.DescribeAutoScalingGroups(req)
+		if err != nil {
+			blog.Errorf("DescribeAutoScalingGroups failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeAutoScalingGroups resp is nil")
+			return nil, fmt.Errorf("DescribeAutoScalingGroups resp is nil")
+		}
+		blog.Infof("DescribeAutoScalingGroups success, requestID: %s", resp.Response.RequestId)
+		ins = append(ins, resp.Response.AutoScalingGroupSet...)
+		got += len(resp.Response.AutoScalingGroupSet)
+		total = int(*resp.Response.TotalCount)
+	}
+	return ins, nil
+}
+
+// DescribeLaunchConfigurations describe LaunchConfigurations, when ascIDs is empty, describe all
+// https://cloud.tencent.com/document/api/377/20445
+func (c *ASClient) DescribeLaunchConfigurations(ascIDs []string) ([]*as.LaunchConfiguration, error) {
+	blog.Infof("DescribeLaunchConfigurations input: %s", ascIDs)
+	req := as.NewDescribeLaunchConfigurationsRequest()
+	req.Limit = common.Uint64Ptr(limit)
+	req.LaunchConfigurationIds = common.StringPtrs(ascIDs)
+	got, total := 0, 0
+	first := true
+	ins := make([]*as.LaunchConfiguration, 0)
+	for got < total || first {
+		first = false
+		req.Offset = common.Uint64Ptr(uint64(got))
+		resp, err := c.as.DescribeLaunchConfigurations(req)
+		if err != nil {
+			blog.Errorf("DescribeLaunchConfigurations failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeLaunchConfigurations resp is nil")
+			return nil, fmt.Errorf("DescribeLaunchConfigurations resp is nil")
+		}
+		blog.Infof("DescribeLaunchConfigurations success, requestID: %s", resp.Response.RequestId)
+		ins = append(ins, resp.Response.LaunchConfigurationSet...)
+		got += len(resp.Response.LaunchConfigurationSet)
+		total = int(*resp.Response.TotalCount)
+	}
+	return ins, nil
 }

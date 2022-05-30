@@ -252,7 +252,7 @@ type DeleteNodeGroupOption struct {
 	// move all nodes out of cluster, clean all containers
 	// but keep nodes running
 	ReservedNodeInstance bool
-	// move all node out of cluster and return all nodes
+	// move all node out of cluster and delete all nodes
 	CleanInstanceInCluster bool
 	// cloud is used for cloudprovider template
 	Cloud *proto.Cloud

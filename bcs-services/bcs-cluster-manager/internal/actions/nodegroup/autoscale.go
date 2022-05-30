@@ -56,11 +56,6 @@ func (ua *EnableNodeGroupAutoScaleAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
 	}
-	// if nodegroup is not running, return error
-	if ua.group.Status != common.StatusRunning {
-		blog.Errorf("nodegroup %s status is not running, can not enable auto scale", ua.group.Name)
-		return errors.New("nodegroup is not running")
-	}
 	return nil
 }
 
@@ -186,6 +181,13 @@ func (ua *EnableNodeGroupAutoScaleAction) Handle(
 		return
 	}
 
+	// if nodegroup is not running, return error
+	if ua.group.Status != common.StatusRunning {
+		blog.Errorf("nodegroup %s status is not running, can not enable auto scale", ua.group.Name)
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, errors.New("nodegroup is not running").Error())
+		return
+	}
+
 	if err := ua.enableNodeGroupAutoScale(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
@@ -222,11 +224,6 @@ func (ua *DisableNodeGroupAutoScaleAction) setResp(code uint32, msg string) {
 func (ua *DisableNodeGroupAutoScaleAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
-	}
-	// if nodegroup is not running, return error
-	if ua.group.Status != common.StatusRunning {
-		blog.Errorf("nodegroup %s status is not running, can not disable auto scale", ua.group.Name)
-		return errors.New("nodegroup is not running")
 	}
 	return nil
 }
@@ -350,6 +347,13 @@ func (ua *DisableNodeGroupAutoScaleAction) Handle(
 	// getRelativeResource get cluster / cloud provider
 	if err := ua.getRelativeResource(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	// if nodegroup is not running, return error
+	if ua.group.Status != common.StatusRunning {
+		blog.Errorf("nodegroup %s status is not running, can not disable auto scale", ua.group.Name)
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, errors.New("nodegroup is not running").Error())
 		return
 	}
 

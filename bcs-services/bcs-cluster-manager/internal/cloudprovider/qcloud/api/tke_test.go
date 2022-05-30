@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
+	cloudtke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 func getClient(region string) *TkeClient {
@@ -407,9 +408,9 @@ func TestDescribeClusterNodePoolDetail(t *testing.T) {
 
 func TestModifyClusterNodePool(t *testing.T) {
 	cli := getClient("ap-guangzhou")
-	err := cli.ModifyClusterNodePool(&ModifyClusterNodePoolInput{
-		ClusterID:   common.StringPtr("cls-xxx"),
-		NodePoolID:  common.StringPtr("np-xxx"),
+	err := cli.ModifyClusterNodePool(&cloudtke.ModifyClusterNodePoolRequest{
+		ClusterId:   common.StringPtr("cls-xxx"),
+		NodePoolId:  common.StringPtr("np-xxx"),
 		Name:        common.StringPtr("test-node-pool"),
 		MaxNodesNum: common.Int64Ptr(3),
 		MinNodesNum: common.Int64Ptr(0),

@@ -220,25 +220,6 @@ func updateNodeGroupCloudNodeGroupID(nodeGroupID string, cloudNodeGroupID string
 	return nil
 }
 
-// updateNodeGroupASGID set nodegroup asgID
-func updateNodeGroupASGID(nodeGroupID string, asgID string) error {
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		return err
-	}
-
-	if group.AutoScaling == nil {
-		group.AutoScaling = &cmproto.AutoScalingGroup{}
-	}
-	group.AutoScaling.AutoScalingID = asgID
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // updateNodeGroupDesiredSize set nodegroup desired size
 func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
 	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)

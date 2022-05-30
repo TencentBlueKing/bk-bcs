@@ -217,3 +217,11 @@ var Develop = "dev"
 
 // StagClusterENV stag env
 var StagClusterENV = "stag"
+
+// ImageProvider
+const (
+	// 公共镜像
+	PublicImageProvider = "PUBLIC_IMAGE"
+	// 市场镜像
+	MarketImageProvider = "MARKET_IMAGE"
+)

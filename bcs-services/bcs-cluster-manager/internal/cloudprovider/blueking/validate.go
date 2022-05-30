@@ -110,3 +110,8 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
 	return nil
 }
+
+// ListCloudImageOsValidate xxx
+func (c *CloudValidate) ListCloudImageOsValidate(req *proto.ListCloudImageOsRequest, account *proto.Account) error {
+	return nil
+}

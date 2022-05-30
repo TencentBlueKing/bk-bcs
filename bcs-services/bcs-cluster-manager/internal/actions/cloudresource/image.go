@@ -24,67 +24,29 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
-// cloud cluster list
-
-// ListCloudClusterAction action for get cloud region clusters
-type ListCloudClusterAction struct {
-	ctx   context.Context
-	model store.ClusterManagerModel
-
+// ListCloudImageOsAction list action for image os
+type ListCloudImageOsAction struct {
+	ctx         context.Context
 	cloud       *cmproto.Cloud
 	account     *cmproto.CloudAccount
-	req         *cmproto.ListCloudRegionClusterRequest
-	resp        *cmproto.ListCloudRegionClusterResponse
-	clusterList []*cmproto.CloudClusterInfo
+	model       store.ClusterManagerModel
+	req         *cmproto.ListCloudImageOsRequest
+	resp        *cmproto.ListCloudImageOsResponse
+	ImageOsList []*cmproto.ImageOs
 }
 
-// NewListCloudClusterAction create list action for cloud regions
-func NewListCloudClusterAction(model store.ClusterManagerModel) *ListCloudClusterAction {
-	return &ListCloudClusterAction{
+// NewListCloudImageOsAction create list action for image os
+func NewListCloudImageOsAction(model store.ClusterManagerModel) *ListCloudImageOsAction {
+	return &ListCloudImageOsAction{
 		model: model,
 	}
 }
 
-func (la *ListCloudClusterAction) listCloudRegions() error {
-	clsMgr, err := cloudprovider.GetClusterMgr(la.cloud.CloudProvider)
-	if err != nil {
+func (la *ListCloudImageOsAction) validate() error {
+	if err := la.req.Validate(); err != nil {
 		return err
 	}
-
-	clusterList, err := clsMgr.ListCluster(&cloudprovider.ListClusterOption{
-		CommonOption: cloudprovider.CommonOption{
-			Key:    la.account.Account.SecretID,
-			Secret: la.account.Account.SecretKey,
-			Region: la.req.Region,
-			CommonConf: cloudprovider.CloudConf{
-				CloudInternalEnable: la.cloud.ConfInfo.CloudInternalEnable,
-				CloudDomain:         la.cloud.ConfInfo.CloudDomain,
-				MachineDomain:       la.cloud.ConfInfo.MachineDomain,
-			},
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	la.clusterList = clusterList
-	return nil
-}
-
-func (la *ListCloudClusterAction) setResp(code uint32, msg string) {
-	la.resp.Code = code
-	la.resp.Message = msg
-	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.clusterList
-}
-
-func (la *ListCloudClusterAction) validate() error {
-	err := la.req.Validate()
-	if err != nil {
-		return err
-	}
-
-	err = la.getRelativeData()
+	err := la.getRelativeData()
 	if err != nil {
 		return err
 	}
@@ -94,7 +56,7 @@ func (la *ListCloudClusterAction) validate() error {
 		return err
 	}
 
-	err = validate.ListCloudRegionClusterValidate(la.req, &cmproto.Account{
+	err = validate.ListCloudImageOsValidate(la.req, &cmproto.Account{
 		SecretID:  la.account.Account.SecretID,
 		SecretKey: la.account.Account.SecretKey,
 	})
@@ -105,7 +67,7 @@ func (la *ListCloudClusterAction) validate() error {
 	return nil
 }
 
-func (la *ListCloudClusterAction) getRelativeData() error {
+func (la *ListCloudImageOsAction) getRelativeData() error {
 	cloud, err := actions.GetCloudByCloudID(la.model, la.req.CloudID)
 	if err != nil {
 		return err
@@ -120,11 +82,44 @@ func (la *ListCloudClusterAction) getRelativeData() error {
 	return nil
 }
 
-// Handle handle list cloud cluster list
-func (la *ListCloudClusterAction) Handle(
-	ctx context.Context, req *cmproto.ListCloudRegionClusterRequest, resp *cmproto.ListCloudRegionClusterResponse) {
+func (la *ListCloudImageOsAction) setResp(code uint32, msg string) {
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.ImageOsList
+}
+
+func (la *ListCloudImageOsAction) listCloudImageOs() error {
+	nodeMgr, err := cloudprovider.GetNodeMgr(la.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s VPCManager for list imageos failed, %s", la.cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     la.cloud,
+		AccountID: la.req.AccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s list imageos failed, %s",
+			la.cloud.CloudID, la.cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption.Region = la.req.Region
+
+	// get image os list
+	imageOsList, err := nodeMgr.ListImageOs(la.req.Provider, cmOption)
+	if err != nil {
+		return err
+	}
+	la.ImageOsList = imageOsList
+	return nil
+}
+
+// Handle handle list image os request
+func (la *ListCloudImageOsAction) Handle(ctx context.Context,
+	req *cmproto.ListCloudImageOsRequest, resp *cmproto.ListCloudImageOsResponse) {
 	if req == nil || resp == nil {
-		blog.Errorf("get cloud region cluster list failed, req or resp is empty")
+		blog.Errorf("list image os failed, req or resp is empty")
 		return
 	}
 	la.ctx = ctx
@@ -135,10 +130,12 @@ func (la *ListCloudClusterAction) Handle(
 		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	if err := la.listCloudRegions(); err != nil {
-		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+
+	if err := la.listCloudImageOs(); err != nil {
+		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
+
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

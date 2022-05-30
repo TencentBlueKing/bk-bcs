@@ -584,6 +584,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudImageOs",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/imageos"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -686,6 +692,7 @@ type ClusterManagerService interface {
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
+	ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, opts ...client.CallOption) (*ListCloudImageOsResponse, error)
 }
 
 type clusterManagerService struct {
@@ -1520,6 +1527,16 @@ func (c *clusterManagerService) ListCloudInstanceTypes(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, opts ...client.CallOption) (*ListCloudImageOsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudImageOs", in)
+	out := new(ListCloudImageOsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
@@ -1619,6 +1636,7 @@ type ClusterManagerHandler interface {
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest, *ListCloudSubnetsResponse) error
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
+	ListCloudImageOs(context.Context, *ListCloudImageOsRequest, *ListCloudImageOsResponse) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -1705,6 +1723,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
+		ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, out *ListCloudImageOsResponse) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -2252,6 +2271,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudImageOs",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/imageos"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
 }
 
@@ -2585,4 +2610,8 @@ func (h *clusterManagerHandler) ListCloudSecurityGroups(ctx context.Context, in 
 
 func (h *clusterManagerHandler) ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error {
 	return h.ClusterManagerHandler.ListCloudInstanceTypes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, out *ListCloudImageOsResponse) error {
+	return h.ClusterManagerHandler.ListCloudImageOs(ctx, in, out)
 }

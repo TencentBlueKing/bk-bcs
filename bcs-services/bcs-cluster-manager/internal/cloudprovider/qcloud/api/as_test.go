@@ -64,3 +64,12 @@ func TestModifyDesiredCapacity(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestDescribeLaunchConfigurations(t *testing.T) {
+	cli := getASClient("ap-guangzhou")
+	asc, err := cli.DescribeLaunchConfigurations([]string{"asc-xxx"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(utils.ToJSONString(asc))
+}

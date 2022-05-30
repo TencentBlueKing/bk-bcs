@@ -103,7 +103,7 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zo
 	return zones, nil
 }
 
-// GetRegionsInfo get regionInfo
+// GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
 	client, err := GetCVMClient(opt)
 	if err != nil {
@@ -416,33 +416,27 @@ func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, 
 	return zoneIDMap, nil
 }
 
-// ListNodeInstance list node type by zone and node family
-func (nm *NodeManager) ListNodeInstance(zone, nodeFamily string, opt *cloudprovider.CommonOption) (
+// ListNodeInstanceType list node type by zone and node family
+func (nm *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
-	blog.Infof("ListNodeType input: zone/%s, nodeFamily/%s", zone, nodeFamily)
-
-	filter := make([]*Filter, 0)
-	if len(zone) > 0 {
-		filter = append(filter, &Filter{Name: Zone.String(), Values: []string{zone}})
-	}
-	if len(nodeFamily) > 0 {
-		filter = append(filter, &Filter{Name: InstanceFamily.String(), Values: []string{nodeFamily}})
-	}
-
-	list, err := nm.DescribeInstanceTypeConfigs(filter, opt)
+	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d", zone, nodeFamily, cpu, memory)
+	list, err := nm.DescribeZoneInstanceConfigInfos(zone, nodeFamily, "", opt)
 	if err != nil {
 		return nil, err
 	}
 	result := make([]*proto.InstanceType, 0)
-	for _, v := range list {
-		result = append(result, &proto.InstanceType{
-			Zone:       *v.Zone,
-			NodeType:   *v.InstanceType,
-			NodeFamily: *v.InstanceFamily,
-			Cpu:        uint32(*v.CPU),
-			Memory:     uint32(*v.Memory),
-			Gpu:        uint32(*v.GPU),
-		})
+	for _, item := range list {
+		if cpu > 0 {
+			if item.Cpu != cpu {
+				continue
+			}
+		}
+		if memory > 0 {
+			if item.Memory != memory {
+				continue
+			}
+		}
+		result = append(result, item)
 	}
 	return result, nil
 }
@@ -485,6 +479,85 @@ func (nm *NodeManager) DescribeInstanceTypeConfigs(filters []*Filter, opt *cloud
 		})
 	}
 	blog.Infof("DescribeInstanceTypeConfigs success, result: %s", utils.ToJSONString(result))
+	return result, nil
+}
+
+// DescribeZoneInstanceConfigInfos describe zone instance config infos
+// https://cloud.tencent.com/document/api/213/17378
+func (nm *NodeManager) DescribeZoneInstanceConfigInfos(zone, instanceFamily, instanceType string, opt *cloudprovider.CommonOption) (
+	[]*proto.InstanceType, error) {
+	blog.Infof("DescribeZoneInstanceConfigInfos input: zone/%s, instanceFamily/%s, instanceType/%s", zone, instanceFamily, instanceType)
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when DescribeZoneInstanceConfigInfos failed: %v", err)
+		return nil, err
+	}
+	req := cvm.NewDescribeZoneInstanceConfigInfosRequest()
+	req.Filters = make([]*cvm.Filter, 0)
+	// 按量计费
+	req.Filters = append(req.Filters, &cvm.Filter{
+		Name: common.StringPtr("instance-charge-type"), Values: common.StringPtrs([]string{"POSTPAID_BY_HOUR"})})
+	if len(zone) > 0 {
+		req.Filters = append(req.Filters, &cvm.Filter{
+			Name: common.StringPtr("zone"), Values: common.StringPtrs([]string{zone})})
+	}
+	if len(instanceFamily) > 0 {
+		req.Filters = append(req.Filters, &cvm.Filter{
+			Name: common.StringPtr("instance-family"), Values: common.StringPtrs([]string{instanceFamily})})
+	}
+	if len(instanceType) > 0 {
+		req.Filters = append(req.Filters, &cvm.Filter{
+			Name: common.StringPtr("instance-type"), Values: common.StringPtrs([]string{instanceType})})
+	}
+	resp, err := client.DescribeZoneInstanceConfigInfos(req)
+	if err != nil {
+		blog.Errorf("cvm client DescribeZoneInstanceConfigInfos failed: %v", err)
+		return nil, err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("cvm client DescribeZoneInstanceConfigInfos lost response information")
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+
+	result := make([]*proto.InstanceType, 0)
+	instanceMap := make(map[string][]string) // instanceType: []zone
+	for _, v := range resp.Response.InstanceTypeQuotaSet {
+		if _, ok := instanceMap[*v.InstanceType]; ok {
+			instanceMap[*v.InstanceType] = append(instanceMap[*v.InstanceType], *v.Zone)
+			continue
+		}
+		instanceMap[*v.InstanceType] = append(instanceMap[*v.InstanceType], *v.Zone)
+		t := &proto.InstanceType{}
+		if v.InstanceType != nil {
+			t.NodeType = *v.InstanceType
+		}
+		if v.TypeName != nil {
+			t.NodeFamily = *v.TypeName
+		}
+		if v.InstanceFamily != nil {
+			t.NodeFamily = *v.InstanceFamily
+		}
+		if v.Cpu != nil {
+			t.Cpu = uint32(*v.Cpu)
+		}
+		if v.Memory != nil {
+			t.Memory = uint32(*v.Memory)
+		}
+		if v.Gpu != nil {
+			t.Gpu = uint32(*v.Gpu)
+		}
+		if v.Price != nil && v.Price.UnitPrice != nil {
+			t.UnitPrice = float32(*v.Price.UnitPrice)
+		}
+		if v.Status != nil {
+			t.Status = *v.Status
+		}
+		result = append(result, t)
+	}
+	for i := range result {
+		result[i].Zones = instanceMap[result[i].NodeType]
+	}
+	blog.Infof("DescribeZoneInstanceConfigInfos success, result: %s", utils.ToJSONString(result))
 	return result, nil
 }
 
@@ -558,4 +631,17 @@ func (nm *NodeManager) DescribeInstances(ins []string, filters []*Filter, opt *c
 		total = int(*resp.Response.TotalCount)
 	}
 	return nodes, nil
+}
+
+// ListImageOs list image os
+func (nm *NodeManager) ListImageOs(provider string, opt *cloudprovider.CommonOption) (
+	[]*proto.ImageOs, error) {
+	result := make([]*proto.ImageOs, 0)
+	for _, v := range imageOsList {
+		if v.Provider != provider {
+			continue
+		}
+		result = append(result, v)
+	}
+	return result, nil
 }

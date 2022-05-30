@@ -149,11 +149,13 @@ func (c *VPCClient) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) (
 	result := make([]*proto.Subnet, 0)
 	for _, v := range subnets {
 		result = append(result, &proto.Subnet{
-			VpcID:         *v.VpcID,
-			SubnetID:      *v.SubnetID,
-			SubnetName:    *v.SubnetName,
-			CidrRange:     *v.CidrBlock,
-			Ipv6CidrRange: *v.Ipv6CidrBlock,
+			VpcID:                   *v.VpcID,
+			SubnetID:                *v.SubnetID,
+			SubnetName:              *v.SubnetName,
+			CidrRange:               *v.CidrBlock,
+			Ipv6CidrRange:           *v.Ipv6CidrBlock,
+			Zone:                    *v.Zone,
+			AvailableIPAddressCount: *v.AvailableIPAddressCount,
 		})
 	}
 	return result, nil

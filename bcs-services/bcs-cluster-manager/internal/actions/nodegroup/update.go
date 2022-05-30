@@ -27,14 +27,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // UpdateAction update action for online cluster credential
 type UpdateAction struct {
-	ctx   context.Context
-	model store.ClusterManagerModel
-	req   *cmproto.UpdateNodeGroupRequest
-	resp  *cmproto.UpdateNodeGroupResponse
+	ctx     context.Context
+	model   store.ClusterManagerModel
+	group   *cmproto.NodeGroup
+	cluster *cmproto.Cluster
+	cloud   *cmproto.Cloud
+	req     *cmproto.UpdateNodeGroupRequest
+	resp    *cmproto.UpdateNodeGroupResponse
 }
 
 // NewUpdateAction create update action for online cluster credential
@@ -44,91 +48,185 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 	}
 }
 
-func (ua *UpdateAction) updateCloudNodeGroup(group *cmproto.NodeGroup) error {
-	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, group.Provider, group.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cloud %s and Project %s failed when update NodeGroup %s, %s",
-			group.Provider, group.ProjectID, group.NodeGroupID, err.Error(),
-		)
+func (ua *UpdateAction) setResp(code uint32, msg string) {
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (ua *UpdateAction) validate() error {
+	if err := ua.req.Validate(); err != nil {
 		return err
 	}
-	//get credential for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("get Credential for Cloud %s/%s when update NodeGroup %s in Cluster %s failed, %s",
-			cloud.CloudID, cloud.CloudProvider, group.NodeGroupID, group.ClusterID, err.Error(),
-		)
-		return err
+	if ua.req.NodeGroupID == "" {
+		return fmt.Errorf("nodeGroupID is empty")
 	}
-	//create nodegroup with cloudprovider
-	mgr, err := cloudprovider.GetNodeGroupMgr(cloud.CloudProvider)
-	if err != nil {
-		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for update nodegroup %s in cluster %s failed, %s",
-			cloud.CloudID, cloud.CloudProvider, group.NodeGroupID, group.ClusterID, err.Error(),
-		)
-		return err
+	if ua.req.ClusterID == "" {
+		return fmt.Errorf("clusterID is empty")
 	}
-	cmOption.Region = group.Region
-	err = mgr.UpdateNodeGroup(group, cmOption)
-	if err != nil {
-		blog.Errorf("update nodegroup %s in cluster %s with cloudprovider %s failed, %s",
-			group.NodeGroupID, group.ClusterID, cloud.CloudProvider, err.Error(),
-		)
-		return err
+	if ua.req.AutoScaling == nil {
+		return fmt.Errorf("autoScaling is empty")
 	}
-	ua.resp.Data = group
+	if ua.req.LaunchTemplate == nil {
+		return fmt.Errorf("launchTemplate is empty")
+	}
+	if ua.req.NodeTemplate == nil {
+		return fmt.Errorf("nodeTemplate is empty")
+	}
 	return nil
 }
 
-func (ua *UpdateAction) updateNodeGroupField(group *cmproto.NodeGroup) error {
+// trans request args to node group
+func (ua *UpdateAction) modifyNodeGroupField() {
 	timeStr := time.Now().Format(time.RFC3339)
 	//update field if required
+	group := ua.group
 	group.UpdateTime = timeStr
 	group.Updater = ua.req.Updater
 	if len(ua.req.Name) != 0 {
 		group.Name = ua.req.Name
 	}
-	if len(ua.req.ClusterID) != 0 {
-		group.ClusterID = ua.req.ClusterID
-	}
-	if len(ua.req.Region) != 0 {
-		group.Region = ua.req.Region
-	}
-	if ua.req.EnableAutoscale != nil && ua.req.EnableAutoscale.GetValue() != group.EnableAutoscale {
-		group.EnableAutoscale = ua.req.EnableAutoscale.GetValue()
-	}
 	if ua.req.AutoScaling != nil {
-		group.AutoScaling = ua.req.AutoScaling
+		if ua.req.AutoScaling.MaxSize != 0 {
+			group.AutoScaling.MaxSize = ua.req.AutoScaling.MaxSize
+		}
+		group.AutoScaling.MinSize = ua.req.AutoScaling.MinSize
+		if ua.req.AutoScaling.DefaultCooldown != 0 {
+			group.AutoScaling.DefaultCooldown = ua.req.AutoScaling.DefaultCooldown
+		}
+		if ua.req.AutoScaling.SubnetIDs != nil {
+			group.AutoScaling.SubnetIDs = ua.req.AutoScaling.SubnetIDs
+		}
+		if ua.req.AutoScaling.RetryPolicy != "" {
+			group.AutoScaling.RetryPolicy = ua.req.AutoScaling.RetryPolicy
+		}
+		if ua.req.AutoScaling.MultiZoneSubnetPolicy != "" {
+			group.AutoScaling.MultiZoneSubnetPolicy = ua.req.AutoScaling.MultiZoneSubnetPolicy
+		}
+		if ua.req.AutoScaling.ScalingMode != "" {
+			group.AutoScaling.ScalingMode = ua.req.AutoScaling.ScalingMode
+		}
 	}
 	if ua.req.LaunchTemplate != nil {
-		group.LaunchTemplate = ua.req.LaunchTemplate
+		if ua.req.LaunchTemplate.InstanceType != "" {
+			group.LaunchTemplate.InstanceType = ua.req.LaunchTemplate.InstanceType
+		}
+		if ua.req.LaunchTemplate.InstanceChargeType != "" {
+			group.LaunchTemplate.InstanceChargeType = ua.req.LaunchTemplate.InstanceChargeType
+		}
+		if ua.req.LaunchTemplate.InternetAccess != nil {
+			group.LaunchTemplate.InternetAccess = ua.req.LaunchTemplate.InternetAccess
+		}
+		if ua.req.LaunchTemplate.InitLoginPassword != "" {
+			group.LaunchTemplate.InitLoginPassword = ua.req.LaunchTemplate.InitLoginPassword
+		}
+		if ua.req.LaunchTemplate.SecurityGroupIDs != nil {
+			group.LaunchTemplate.SecurityGroupIDs = ua.req.LaunchTemplate.SecurityGroupIDs
+		}
+		group.LaunchTemplate.UserData = ua.req.LaunchTemplate.UserData
+		group.LaunchTemplate.IsMonitorService = ua.req.LaunchTemplate.IsMonitorService
+		group.LaunchTemplate.IsSecurityService = ua.req.LaunchTemplate.IsSecurityService
 	}
-	if ua.req.Labels != nil {
-		group.Labels = ua.req.Labels
+	if ua.req.NodeTemplate != nil {
+		group.NodeTemplate = ua.req.NodeTemplate
 	}
-	if ua.req.Taints != nil {
-		group.Taints = ua.req.Taints
-	}
+	group.Labels = ua.req.Labels
+	group.Taints = ua.req.Taints
+	group.Tags = ua.req.Tags
 	if len(ua.req.NodeOS) != 0 {
 		group.NodeOS = ua.req.NodeOS
 	}
-	if len(ua.req.Provider) != 0 {
-		group.Provider = ua.req.Provider
+	ua.group = group
+}
+
+func (ua *UpdateAction) getRelativeResource() error {
+	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
+	if err != nil {
+		blog.Errorf("get NodeGroup %s failed, %s", ua.req.NodeGroupID, err.Error())
+		return err
 	}
-	if len(ua.req.ConsumerID) != 0 {
-		group.ConsumerID = ua.req.ConsumerID
+	ua.group = group
+
+	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
+	if err != nil {
+		blog.Errorf("can not get relative Cluster %s when update NodeGroup", ua.req.ClusterID)
+		return fmt.Errorf("get relative cluster %s info err, %s", ua.req.ClusterID, err.Error())
 	}
+	ua.cluster = cluster
+
+	cloud, err := actions.GetCloudByCloudID(ua.model, ua.group.Provider)
+	if err != nil {
+		blog.Errorf("can not get relative Cloud %s when update NodeGroup for Cluster %s, %s",
+			ua.group.Provider, ua.req.ClusterID, err.Error(),
+		)
+		return err
+	}
+	ua.cloud = cloud
 
 	return nil
 }
 
-func (ua *UpdateAction) setResp(code uint32, msg string) {
-	ua.resp.Code = code
-	ua.resp.Message = msg
-	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+func (ua *UpdateAction) updateCloudNodeGroup() error {
+	//get credential for cloudprovider operation
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ua.cloud,
+		AccountID: ua.cluster.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get Credential for Cloud %s/%s when update NodeGroup %s in Cluster %s failed, %s",
+			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, ua.group.ClusterID, err.Error(),
+		)
+		return err
+	}
+	//create nodegroup with cloudprovider
+	mgr, err := cloudprovider.GetNodeGroupMgr(ua.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for update nodegroup %s in cluster %s failed, %s",
+			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, ua.group.ClusterID, err.Error(),
+		)
+		return err
+	}
+	cmOption.Region = ua.group.Region
+	err = mgr.UpdateNodeGroup(ua.group, cmOption)
+	if err != nil {
+		blog.Errorf("update nodegroup %s in cluster %s with cloudprovider %s failed, %s",
+			ua.group.NodeGroupID, ua.group.ClusterID, ua.cloud.CloudProvider, err.Error(),
+		)
+		return err
+	}
+	ua.resp.Data = ua.group
+	return nil
+}
+
+func (ua *UpdateAction) setNodeGroupUpdating() error {
+	ua.group.Status = common.StatusUpdating
+	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
+		blog.Infof("update nodegroup %s failed, %v", ua.group.NodeGroupID, err)
+		return err
+	}
+	blog.Infof("update nodegroup %s successfully", ua.group.NodeGroupID)
+	return nil
+}
+
+func (ua *UpdateAction) saveDB() error {
+	ua.group.Status = common.StatusRunning
+	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
+		blog.Errorf("nodegroup %s update in cloudprovider %s success, but update failed in local storage, %s. detail: %+v",
+			ua.group.NodeGroupID, ua.group.Provider, err.Error(), utils.ToJSONString(ua.group),
+		)
+		return err
+	}
+	blog.Infof("update nodegroup %s successfully", ua.group.NodeGroupID)
+	return nil
+}
+
+func (ua *UpdateAction) checkStatus() error {
+	// if nodegroup is creating/deleting/deleted, return error
+	if ua.group.Status == common.StatusCreating || ua.group.Status == common.StatusDeleting || ua.group.Status == common.StatusDeleted {
+		err := fmt.Errorf("nodegroup %s status is not running, can not disable auto scale", ua.group.NodeGroupID)
+		return err
+	}
+	return nil
 }
 
 // Handle handle update cluster credential
@@ -143,47 +241,49 @@ func (ua *UpdateAction) Handle(
 	ua.req = req
 	ua.resp = resp
 
-	if err := req.Validate(); err != nil {
+	if err := ua.validate(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	//get old project information, update fields if required
-	destGroup, err := ua.model.GetNodeGroup(ua.ctx, req.NodeGroupID)
-	if err != nil {
+
+	if err := ua.getRelativeResource(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		blog.Errorf("find nodegroup %s failed when pre-update checking, err %s", req.NodeGroupID, err.Error())
 		return
 	}
-	if err := ua.updateNodeGroupField(destGroup); err != nil {
+
+	if err := ua.checkStatus(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	if err := ua.updateCloudNodeGroup(destGroup); err != nil {
+
+	if err := ua.setNodeGroupUpdating(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	ua.modifyNodeGroupField()
+	if err := ua.updateCloudNodeGroup(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	if err = ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
-		blog.Errorf("nodegroup %s update in cloudprovider %s success, but update failed in local storage, %s. detail: %+v",
-			destGroup.NodeGroupID, destGroup.Provider, err.Error(), destGroup,
-		)
+
+	if err := ua.saveDB(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	blog.Infof("update nodegroup %s successfully", destGroup.NodeGroupID)
 
-	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+	if err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
-		ResourceID:   destGroup.NodeGroupID,
+		ResourceID:   ua.req.NodeGroupID,
 		TaskID:       "",
-		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", destGroup.ClusterID, destGroup.NodeGroupID),
+		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
 		OpUser:       req.Updater,
 		CreateTime:   time.Now().String(),
-	})
-	if err != nil {
-		blog.Errorf("UpdateNodeGroup[%s] CreateOperationLog failed: %v", destGroup.NodeGroupID, err)
+	}); err != nil {
+		blog.Errorf("UpdateNodeGroup[%s] CreateOperationLog failed: %v", ua.req.NodeGroupID, err)
 	}
 
-	ua.resp.Data = destGroup
+	ua.resp.Data = ua.group
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

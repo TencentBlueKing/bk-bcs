@@ -117,6 +117,14 @@ func (da *DeleteAction) Handle(
 		return
 	}
 
+	// set nodeGroup status to deleting
+	da.group.Status = common.StatusDeleting
+	if err := da.model.UpdateNodeGroup(da.ctx, da.group); err != nil {
+		blog.Errorf("update NodeGroup %s status to deleting failed, %s", da.group.NodeGroupID, err.Error())
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
 	// nodeGroup cloud provider
 	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
@@ -152,12 +160,13 @@ func (da *DeleteAction) Handle(
 
 	// delete nodeGroup task
 	task, err := mgr.DeleteNodeGroup(da.group, da.nodes, &cloudprovider.DeleteNodeGroupOption{
-		CommonOption:          *cmOption,
-		IsForce:               req.IsForce,
-		ReserveNodesInCluster: req.ReserveNodesInCluster,
-		ReservedNodeInstance:  req.KeepNodesInstance,
-		Operator:              req.Operator,
-		Cloud:                 cloud,
+		CommonOption:           *cmOption,
+		IsForce:                req.IsForce,
+		ReserveNodesInCluster:  req.ReserveNodesInCluster,
+		ReservedNodeInstance:   req.KeepNodesInstance,
+		CleanInstanceInCluster: !req.KeepNodesInstance,
+		Operator:               req.Operator,
+		Cloud:                  cloud,
 	})
 	if err != nil {
 		blog.Errorf("delete NodeGroup %s in Cluster %s with cloudprovider %s failed, %s",

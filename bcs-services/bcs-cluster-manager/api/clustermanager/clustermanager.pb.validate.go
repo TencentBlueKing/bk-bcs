@@ -7206,7 +7206,7 @@ func (m *NodeGroup) validate(all bool) error {
 	if _, ok := _NodeGroup_Status_InLookup[m.GetStatus()]; !ok {
 		err := NodeGroupValidationError{
 			field:  "Status",
-			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION DELETED]",
+			reason: "value must be in list [CREATING RUNNING DELETING UPDATING DELETED]",
 		}
 		if !all {
 			return err
@@ -7257,6 +7257,8 @@ func (m *NodeGroup) validate(all bool) error {
 	}
 
 	// no validation rules for CloudNodeGroupID
+
+	// no validation rules for Tags
 
 	if len(errors) > 0 {
 		return NodeGroupMultiError(errors)
@@ -7338,12 +7340,11 @@ var _ interface {
 var _NodeGroup_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _NodeGroup_Status_InLookup = map[string]struct{}{
-	"CREATING":       {},
-	"RUNNING":        {},
-	"DELETING":       {},
-	"FALURE":         {},
-	"INITIALIZATION": {},
-	"DELETED":        {},
+	"CREATING": {},
+	"RUNNING":  {},
+	"DELETING": {},
+	"UPDATING": {},
+	"DELETED":  {},
 }
 
 // Validate checks the field values on AutoScalingGroup with the rules defined
@@ -8127,69 +8128,6 @@ func (m *LaunchConfiguration) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetSystemDisk()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, LaunchConfigurationValidationError{
-					field:  "SystemDisk",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, LaunchConfigurationValidationError{
-					field:  "SystemDisk",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetSystemDisk()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return LaunchConfigurationValidationError{
-				field:  "SystemDisk",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	for idx, item := range m.GetDataDisks() {
-		_, _ = idx, item
-
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, LaunchConfigurationValidationError{
-						field:  fmt.Sprintf("DataDisks[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, LaunchConfigurationValidationError{
-						field:  fmt.Sprintf("DataDisks[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return LaunchConfigurationValidationError{
-					field:  fmt.Sprintf("DataDisks[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	if all {
 		switch v := interface{}(m.GetInternetAccess()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -8252,6 +8190,8 @@ func (m *LaunchConfiguration) validate(all bool) error {
 	// no validation rules for IsSecurityService
 
 	// no validation rules for IsMonitorService
+
+	// no validation rules for UserData
 
 	if len(errors) > 0 {
 		return LaunchConfigurationMultiError(errors)
@@ -8464,7 +8404,7 @@ func (m *ClusterAutoScalingOption) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for IsScaleDwonEnable
+	// no validation rules for IsScaleDownEnable
 
 	// no validation rules for Expander
 
@@ -8503,6 +8443,10 @@ func (m *ClusterAutoScalingOption) validate(all bool) error {
 	// no validation rules for UpdateTime
 
 	// no validation rules for Provider
+
+	// no validation rules for EnableAutoscale
+
+	// no validation rules for BufferResourceRatio
 
 	if len(errors) > 0 {
 		return ClusterAutoScalingOptionMultiError(errors)
@@ -8779,6 +8723,35 @@ func (m *NodeTemplate) validate(all bool) error {
 	// no validation rules for UserScript
 
 	// no validation rules for UnSchedulable
+
+	if all {
+		switch v := interface{}(m.GetSystemDisk()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NodeTemplateValidationError{
+					field:  "SystemDisk",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NodeTemplateValidationError{
+					field:  "SystemDisk",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSystemDisk()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeTemplateValidationError{
+				field:  "SystemDisk",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	for idx, item := range m.GetDataDisks() {
 		_, _ = idx, item
@@ -23245,6 +23218,8 @@ func (m *CreateNodeGroupRequest) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Tags
+
 	if len(errors) > 0 {
 		return CreateNodeGroupRequestMultiError(errors)
 	}
@@ -23662,12 +23637,10 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Name
-
-	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
 		err := UpdateNodeGroupRequestValidationError{
 			field:  "ClusterID",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be between 2 and 100 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -23675,35 +23648,72 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Region
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	if all {
-		switch v := interface{}(m.GetEnableAutoscale()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, UpdateNodeGroupRequestValidationError{
-					field:  "EnableAutoscale",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, UpdateNodeGroupRequestValidationError{
-					field:  "EnableAutoscale",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
+	if !_UpdateNodeGroupRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
-	} else if v, ok := interface{}(m.GetEnableAutoscale()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return UpdateNodeGroupRequestValidationError{
-				field:  "EnableAutoscale",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+		if !all {
+			return err
 		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 64 {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 2 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetRegion()); l < 1 || l > 32 {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "Region",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateNodeGroupRequest_Region_Pattern.MatchString(m.GetRegion()) {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for EnableAutoscale
+
+	if m.GetAutoScaling() == nil {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "AutoScaling",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if all {
@@ -23735,6 +23745,17 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		}
 	}
 
+	if m.GetLaunchTemplate() == nil {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "LaunchTemplate",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if all {
 		switch v := interface{}(m.GetLaunchTemplate()).(type) {
 		case interface{ ValidateAll() error }:
@@ -23764,9 +23785,51 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		}
 	}
 
+	if m.GetNodeTemplate() == nil {
+		err := UpdateNodeGroupRequestValidationError{
+			field:  "NodeTemplate",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetNodeTemplate()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateNodeGroupRequestValidationError{
+					field:  "NodeTemplate",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateNodeGroupRequestValidationError{
+					field:  "NodeTemplate",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetNodeTemplate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupRequestValidationError{
+				field:  "NodeTemplate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	// no validation rules for Labels
 
 	// no validation rules for Taints
+
+	// no validation rules for Tags
 
 	// no validation rules for NodeOS
 
@@ -23791,10 +23854,6 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
-
-	// no validation rules for Provider
-
-	// no validation rules for ConsumerID
 
 	if len(errors) > 0 {
 		return UpdateNodeGroupRequestMultiError(errors)
@@ -23875,6 +23934,10 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateNodeGroupRequestValidationError{}
+
+var _UpdateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _UpdateNodeGroupRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _UpdateNodeGroupRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
@@ -29686,7 +29749,7 @@ func (m *CreateAutoScalingOptionRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for IsScaleDwonEnable
+	// no validation rules for IsScaleDownEnable
 
 	// no validation rules for Expander
 
@@ -32453,6 +32516,10 @@ func (m *ListCloudInstanceTypeRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Cpu
+
+	// no validation rules for Memory
+
 	if len(errors) > 0 {
 		return ListCloudInstanceTypeRequestMultiError(errors)
 	}
@@ -32699,9 +32766,9 @@ func (m *InstanceType) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Zone
-
 	// no validation rules for NodeType
+
+	// no validation rules for TypeName
 
 	// no validation rules for NodeFamily
 
@@ -32710,6 +32777,10 @@ func (m *InstanceType) validate(all bool) error {
 	// no validation rules for Memory
 
 	// no validation rules for Gpu
+
+	// no validation rules for Status
+
+	// no validation rules for UnitPrice
 
 	if len(errors) > 0 {
 		return InstanceTypeMultiError(errors)
@@ -32787,6 +32858,390 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = InstanceTypeValidationError{}
+
+// Validate checks the field values on ListCloudImageOsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudImageOsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudImageOsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudImageOsRequestMultiError, or nil if none found.
+func (m *ListCloudImageOsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudImageOsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		err := ListCloudImageOsRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Region
+
+	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
+		err := ListCloudImageOsRequestValidationError{
+			field:  "AccountID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Provider
+
+	if len(errors) > 0 {
+		return ListCloudImageOsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudImageOsRequestMultiError is an error wrapping multiple validation
+// errors returned by ListCloudImageOsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudImageOsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudImageOsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudImageOsRequestMultiError) AllErrors() []error { return m }
+
+// ListCloudImageOsRequestValidationError is the validation error returned by
+// ListCloudImageOsRequest.Validate if the designated constraints aren't met.
+type ListCloudImageOsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudImageOsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudImageOsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudImageOsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudImageOsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudImageOsRequestValidationError) ErrorName() string {
+	return "ListCloudImageOsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudImageOsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudImageOsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudImageOsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudImageOsRequestValidationError{}
+
+// Validate checks the field values on ListCloudImageOsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudImageOsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudImageOsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudImageOsResponseMultiError, or nil if none found.
+func (m *ListCloudImageOsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudImageOsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCloudImageOsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCloudImageOsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudImageOsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListCloudImageOsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudImageOsResponseMultiError is an error wrapping multiple validation
+// errors returned by ListCloudImageOsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudImageOsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudImageOsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudImageOsResponseMultiError) AllErrors() []error { return m }
+
+// ListCloudImageOsResponseValidationError is the validation error returned by
+// ListCloudImageOsResponse.Validate if the designated constraints aren't met.
+type ListCloudImageOsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudImageOsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudImageOsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudImageOsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudImageOsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudImageOsResponseValidationError) ErrorName() string {
+	return "ListCloudImageOsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudImageOsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudImageOsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudImageOsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudImageOsResponseValidationError{}
+
+// Validate checks the field values on ImageOs with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ImageOs) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImageOs with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in ImageOsMultiError, or nil if none found.
+func (m *ImageOs) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImageOs) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Alias
+
+	// no validation rules for Arch
+
+	// no validation rules for ImageID
+
+	// no validation rules for OsCustomizeType
+
+	// no validation rules for OsName
+
+	// no validation rules for SeriesName
+
+	// no validation rules for Status
+
+	// no validation rules for Provider
+
+	if len(errors) > 0 {
+		return ImageOsMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImageOsMultiError is an error wrapping multiple validation errors returned
+// by ImageOs.ValidateAll() if the designated constraints aren't met.
+type ImageOsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImageOsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImageOsMultiError) AllErrors() []error { return m }
+
+// ImageOsValidationError is the validation error returned by ImageOs.Validate
+// if the designated constraints aren't met.
+type ImageOsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImageOsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImageOsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImageOsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImageOsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImageOsValidationError) ErrorName() string { return "ImageOsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ImageOsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImageOs.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImageOsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImageOsValidationError{}
 
 // Validate checks the field values on ListCloudSubnetsRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -33092,6 +33547,10 @@ func (m *Subnet) validate(all bool) error {
 	// no validation rules for CidrRange
 
 	// no validation rules for Ipv6CidrRange
+
+	// no validation rules for Zone
+
+	// no validation rules for AvailableIPAddressCount
 
 	if len(errors) > 0 {
 		return SubnetMultiError(errors)

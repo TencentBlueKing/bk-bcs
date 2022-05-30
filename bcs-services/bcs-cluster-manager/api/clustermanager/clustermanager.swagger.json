@@ -758,6 +758,60 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/imageos": {
+      "get": {
+        "summary": "查询Node操作系统列表",
+        "description": "根据筛选条件查询Node操作系统列表",
+        "operationId": "ClusterManager_ListCloudImageOs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudImageOsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 镜像提供方，可选值：PUBLIC_IMAGE(公共镜像)，MARKET_IMAGE(市场镜像)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/instancetypes": {
       "get": {
         "summary": "查询Node机型",
@@ -812,6 +866,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "cpu",
+            "description": "cpu. CPU 核数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "memory",
+            "description": "memory. 内存大小，单位 GB",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -4809,15 +4879,15 @@
     "clustermanagerClusterAutoScalingOption": {
       "type": "object",
       "properties": {
-        "isScaleDwonEnable": {
+        "isScaleDownEnable": {
           "type": "boolean",
           "format": "boolean",
           "description": "是否开启缩容，默认为false",
-          "title": "isScaleDwonEnable"
+          "title": "isScaleDownEnable"
         },
         "expander": {
           "type": "string",
-          "description": "多个伸缩组下扩容算法，（默认）random，most-pods，least-waste（最少浪费）",
+          "description": "多个伸缩组下扩容算法，（默认）random, least-waste, most-pod, priority",
           "title": "expander"
         },
         "maxEmptyBulkDelete": {
@@ -4920,6 +4990,18 @@
           "type": "string",
           "description": "ClusterAutoScaling具体实现，用于覆盖所属cluster中定义的provider信息调整实现的细节。便于在一个云环境中扩展自定义的模板，使用不同",
           "title": "provider"
+        },
+        "enableAutoscale": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启自动扩缩容，开启后会在该集群部署 ClusterAutoScaling 组件，默认为 false",
+          "title": "enableAutoscale"
+        },
+        "bufferResourceRatio": {
+          "type": "integer",
+          "format": "int64",
+          "description": "触发扩容资源阈值，集群资源使用率超过该值，则出发扩容，默认 100%",
+          "title": "bufferResourceRatio"
         }
       },
       "title": "ClusterAutoScalingOption cluster autoScaler module parameter"
@@ -5031,11 +5113,11 @@
     "clustermanagerCreateAutoScalingOptionRequest": {
       "type": "object",
       "properties": {
-        "isScaleDwonEnable": {
+        "isScaleDownEnable": {
           "type": "boolean",
           "format": "boolean",
           "description": "是否开启缩容，默认为false",
-          "title": "isScaleDwonEnable"
+          "title": "isScaleDownEnable"
         },
         "expander": {
           "type": "string",
@@ -6012,6 +6094,12 @@
           "$ref": "#/definitions/clustermanagerNodeTemplate",
           "description": "节点组实例设置",
           "title": "nodeTemplate"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "创建节点组请求",
@@ -7299,6 +7387,53 @@
       },
       "title": "ImageInfo 创建cvm实例的镜像信息"
     },
+    "clustermanagerImageOs": {
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string",
+          "description": "镜像别名",
+          "title": "alias"
+        },
+        "arch": {
+          "type": "string",
+          "description": "镜像CPU架构",
+          "title": "arch"
+        },
+        "imageID": {
+          "type": "string",
+          "description": "镜像 ID",
+          "title": "imageID"
+        },
+        "osCustomizeType": {
+          "type": "string",
+          "description": "定制系统类型",
+          "title": "osCustomizeType"
+        },
+        "osName": {
+          "type": "string",
+          "description": "操作系统名称",
+          "title": "osName"
+        },
+        "seriesName": {
+          "type": "string",
+          "description": "操作系统系列名称",
+          "title": "seriesName"
+        },
+        "status": {
+          "type": "string",
+          "description": "镜像状态，online 为可使用状态",
+          "title": "status"
+        },
+        "provider": {
+          "type": "string",
+          "description": "镜像提供方，可选值：PUBLIC_IMAGE(公共镜像)，MARKET_IMAGE(市场镜像)",
+          "title": "provider"
+        }
+      },
+      "description": "操作系统",
+      "title": "ImageOs"
+    },
     "clustermanagerImportCloudMode": {
       "type": "object",
       "properties": {
@@ -7594,15 +7729,15 @@
     "clustermanagerInstanceType": {
       "type": "object",
       "properties": {
-        "zone": {
-          "type": "string",
-          "description": "可用区",
-          "title": "zone"
-        },
         "nodeType": {
           "type": "string",
           "description": "机器类型",
           "title": "nodeType"
+        },
+        "typeName": {
+          "type": "string",
+          "description": "机型名称",
+          "title": "typeName"
         },
         "nodeFamily": {
           "type": "string",
@@ -7626,6 +7761,25 @@
           "format": "int64",
           "description": "gpu核数",
           "title": "gpu"
+        },
+        "status": {
+          "type": "string",
+          "description": "机型状态，SELL：表示实例可购买，SOLD_OUT：表示实例已售罄",
+          "title": "status"
+        },
+        "unitPrice": {
+          "type": "number",
+          "format": "float",
+          "description": "实例价格，单位：元",
+          "title": "unitPrice"
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "支持的可用区",
+          "title": "zones"
         }
       },
       "description": "机器类型",
@@ -7640,7 +7794,8 @@
           "title": "internetChargeType"
         },
         "internetMaxBandwidth": {
-          "type": "string",
+          "type": "integer",
+          "format": "int64",
           "description": "公网出带宽上限，单位：Mbps。默认值：0Mbps。",
           "title": "internetMaxBandwidth"
         },
@@ -7711,7 +7866,8 @@
           "title": "launchConfigureName"
         },
         "projectID": {
-          "type": "string",
+          "type": "integer",
+          "format": "int64",
           "description": "用于表明该配置属于哪个项目，便于项目复用，该项目不是BCS项目信息",
           "title": "projectID"
         },
@@ -7742,19 +7898,6 @@
           "type": "string",
           "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。如不设置，BCS暂时默认提供包年包月的类型",
           "title": "instanceChargeType"
-        },
-        "systemDisk": {
-          "$ref": "#/definitions/clustermanagerDataDisk",
-          "description": "系统盘信息，BCS默认设置为高性能云盘，大小为50G",
-          "title": "systemDisk"
-        },
-        "dataDisks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerDataDisk"
-          },
-          "description": "数据盘信息，无默认设置则不购买",
-          "title": "dataDisks"
         },
         "internetAccess": {
           "$ref": "#/definitions/clustermanagerInternetAccessible",
@@ -7790,6 +7933,11 @@
           "format": "boolean",
           "description": "新实例启动时的是否开启云监控, 选填 默认开启",
           "title": "isMonitorService"
+        },
+        "userData": {
+          "type": "string",
+          "description": "经过 Base64 编码后的自定义数据，最大长度不超过16KB。",
+          "title": "userData"
         }
       },
       "title": "LaunchConfigure template for scaling node"
@@ -7861,6 +8009,42 @@
       },
       "description": "查询云账号返回",
       "title": "ListCloudAccountResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudImageOsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerImageOs"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询机型列表返回",
+      "title": "ListCloudImageOsResponse",
       "required": [
         "code",
         "message"
@@ -8857,7 +9041,7 @@
         },
         "status": {
           "type": "string",
-          "description": "节点组状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED",
+          "description": "节点组状态，可能状态CREATING，RUNNING，DELETING，UPDATING，DELETED",
           "title": "status"
         },
         "consumerID": {
@@ -8874,6 +9058,12 @@
           "type": "string",
           "description": "NodeGroup 在各个云上的 ID",
           "title": "cloudNodeGroupID"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "节点组，对蓝鲸、腾讯云、AWS弹性伸缩能力封装",
@@ -9039,6 +9229,11 @@
           "format": "int64",
           "description": "设置加入的节点是否参与调度，默认值0表示参与调度，非0表示不参与调度(加入节点时可覆盖参数)",
           "title": "unSchedulable"
+        },
+        "systemDisk": {
+          "$ref": "#/definitions/clustermanagerDataDisk",
+          "description": "系统盘信息",
+          "title": "systemDisk"
         },
         "dataDisks": {
           "type": "array",
@@ -9592,6 +9787,17 @@
           "type": "string",
           "description": "子网 IPv6 CIDR",
           "title": "ipv6CidrRange"
+        },
+        "zone": {
+          "type": "string",
+          "description": "子网所在可用区",
+          "title": "zone"
+        },
+        "availableIPAddressCount": {
+          "type": "string",
+          "format": "uint64",
+          "description": "剩余 IP 数",
+          "title": "availableIPAddressCount"
         }
       },
       "description": "子网信息",
@@ -10749,15 +10955,15 @@
           "description": "节点组ID",
           "title": "nodeGroupID"
         },
-        "name": {
-          "type": "string",
-          "description": "节点组名称",
-          "title": "name"
-        },
         "clusterID": {
           "type": "string",
           "description": "节点组所关联的集群，该ID为BCS集群ID",
           "title": "clusterID"
+        },
+        "name": {
+          "type": "string",
+          "description": "节点组名称",
+          "title": "name"
         },
         "region": {
           "type": "string",
@@ -10780,6 +10986,11 @@
           "description": "伸缩时创建具体实例的配置模板",
           "title": "launchTemplate"
         },
+        "nodeTemplate": {
+          "$ref": "#/definitions/clustermanagerNodeTemplate",
+          "description": "节点组实例设置",
+          "title": "nodeTemplate"
+        },
         "labels": {
           "type": "object",
           "additionalProperties": {
@@ -10792,6 +11003,12 @@
             "type": "string"
           }
         },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "nodeOS": {
           "type": "string",
           "description": "新实例选用的系统OS，参照云信息中配置的默认值",
@@ -10799,18 +11016,8 @@
         },
         "updater": {
           "type": "string",
-          "description": "信息更新者",
-          "title": "updater"
-        },
-        "provider": {
-          "type": "string",
-          "description": "NodeGroup具体依赖的云实现方案，用于方案组合与扩展。默认为空，如果要设置，必须是CloudID",
-          "title": "provider"
-        },
-        "consumerID": {
-          "type": "string",
-          "description": "consumerID对接resourceManager模块申请资源使用",
-          "title": "consumerID"
+          "description": "信息创建者",
+          "title": "creator"
         }
       },
       "description": "更新NodeGroup请求",

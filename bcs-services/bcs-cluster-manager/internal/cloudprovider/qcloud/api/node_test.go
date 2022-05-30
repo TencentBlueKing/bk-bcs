@@ -124,3 +124,16 @@ func TestDescribeInstanceTypeConfigs(t *testing.T) {
 
 	t.Log(utils.ToJSONString(instanceTypeConfigs))
 }
+
+func TestListNodeInstanceType(t *testing.T) {
+	instanceTypeConfigs, err := nodeManager.ListNodeInstanceType("", "", 4, 0, &cloudprovider.CommonOption{
+		Key:    "xxx",
+		Secret: "xxx",
+		Region: regions.Guangzhou,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(utils.ToJSONString(instanceTypeConfigs))
+}

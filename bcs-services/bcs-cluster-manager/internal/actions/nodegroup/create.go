@@ -37,6 +37,7 @@ type CreateAction struct {
 	req   *cmproto.CreateNodeGroupRequest
 	resp  *cmproto.CreateNodeGroupResponse
 
+	group   *cmproto.NodeGroup
 	cluster *cmproto.Cluster
 	cloud   *cmproto.Cloud
 }
@@ -87,6 +88,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		LaunchTemplate:  ca.req.LaunchTemplate,
 		Labels:          ca.req.Labels,
 		Taints:          ca.req.Taints,
+		Tags:            ca.req.Tags,
 		NodeOS:          ca.req.NodeOS,
 		Provider:        ca.req.Provider,
 		Status:          common.StatusCreating,
@@ -95,6 +97,16 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		CreateTime:      timeStr,
 		UpdateTime:      timeStr,
 	}
+	if group.Region == "" {
+		group.Region = ca.cluster.Region
+	}
+	if group.ProjectID == "" {
+		group.ProjectID = ca.cluster.ProjectID
+	}
+	if group.Provider == "" {
+		group.Provider = ca.cluster.Provider
+	}
+
 	return group
 }
 
@@ -102,6 +114,118 @@ func (ca *CreateAction) setResp(code uint32, msg string) {
 	ca.resp.Code = code
 	ca.resp.Message = msg
 	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (ca *CreateAction) generateNodeGroupID() string {
+	str := utils.RandomString(8)
+	return fmt.Sprintf("BCS-ng-%s", str)
+}
+
+func (ca *CreateAction) validate() error {
+	if err := ca.req.Validate(); err != nil {
+		return err
+	}
+	if ca.req.ClusterID == "" {
+		return fmt.Errorf("clusterID is empty")
+	}
+	if ca.req.AutoScaling == nil {
+		return fmt.Errorf("autoScaling is empty")
+	}
+	if ca.req.LaunchTemplate == nil {
+		return fmt.Errorf("launchTemplate is empty")
+	}
+	if ca.req.NodeTemplate == nil {
+		return fmt.Errorf("nodeTemplate is empty")
+	}
+	return nil
+}
+
+func (ca *CreateAction) save() error {
+	group := ca.constructNodeGroup()
+
+	// generate nodeGroupID
+	group.NodeGroupID = ca.generateNodeGroupID()
+
+	// store NodeGroup information to DB
+	if err := ca.model.CreateNodeGroup(ca.ctx, group); err != nil {
+		blog.Errorf("store nodegroup %+v information to DB failed, %s", group, err.Error())
+		return err
+	}
+	ca.group = group
+	ca.resp.Data.NodeGroup = group
+	blog.Infof("create nodegroup %s information for Cluster %s to DB successfully", group, ca.cluster.ClusterID)
+
+	// ensure ClusterAutoScalingOption
+	if _, err := ca.model.GetAutoScalingOption(ca.ctx, ca.cluster.ClusterID); err != nil {
+		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
+			blog.Errorf("get cluster %s autoScalingOption failed, %s", ca.cluster.ClusterID, err.Error())
+			return err
+		}
+		aso := actions.GetDefaultClusterAutoScalingOption()
+		if err := ca.model.CreateAutoScalingOption(ca.ctx, aso); err != nil {
+			blog.Errorf("create cluster %s autoScalingOption failed, %s", ca.cluster.ClusterID, err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
+func (ca *CreateAction) createNodeGroup() error {
+	// create nodegroup with cloudprovider
+	mgr, err := cloudprovider.GetNodeGroupMgr(ca.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for create nodegroup in Cluster %s failed, %s",
+			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.cluster.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get Credential for Cloud %s/%s when create NodeGroup for cluster %s failed, %s",
+			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+	cmOption.Region = ca.cluster.Region
+	// cloud provider nodeGroup
+	task, err := mgr.CreateNodeGroup(ca.group, &cloudprovider.CreateNodeGroupOption{CommonOption: *cmOption})
+	if err != nil {
+		blog.Errorf("create NodeGroup in cloudprovider %s/%s for Cluster %s failed, %s",
+			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+
+	// create task and dispatch task
+	ca.resp.Data.Task = task
+	if err := ca.model.CreateTask(ca.ctx, task); err != nil {
+		blog.Errorf("save create node group task for cluster %s failed, %s",
+			ca.group.ClusterID, err.Error(),
+		)
+		return err
+	}
+	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+		blog.Errorf("dispatch create node group task for cluster %s failed, %s",
+			ca.group.ClusterID, err.Error(),
+		)
+		return err
+	}
+
+	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   ca.group.NodeGroupID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
+		OpUser:       ca.req.Creator,
+		CreateTime:   time.Now().String(),
+	})
+	if err != nil {
+		blog.Errorf("CreateNodeGroup[%s] CreateOperationLog failed: %v", ca.cluster.ClusterID, err)
+	}
+	return nil
 }
 
 // Handle create nodeGroup request
@@ -116,7 +240,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	ca.resp = resp
 	ca.resp.Data = &cmproto.CreateNodeGroupResponseData{}
 
-	if err := req.Validate(); err != nil {
+	if err := ca.validate(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
@@ -126,89 +250,18 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	group := ca.constructNodeGroup()
 
-	// generate nodeGroupID
-	group.NodeGroupID = ca.generateNodeGroupID()
-
-	// 1. store NodeGroup information to DB
-	if err := ca.model.CreateNodeGroup(ca.ctx, group); err != nil {
-		blog.Errorf("store nodegroup %+v information to DB failed, %s", group, err.Error())
-		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
-			ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
-			return
-		}
+	// save nodegroup to storage
+	if err := ca.save(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	blog.Infof("create nodegroup %s information for Cluster %s to DB successfully", group, ca.cluster.ClusterID)
 
-	// 2. create nodegroup with cloudprovider
-	mgr, err := cloudprovider.GetNodeGroupMgr(ca.cloud.CloudProvider)
-	if err != nil {
-		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for create nodegroup in Cluster %s failed, %s",
-			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
-		)
+	// cloudprovider create nodegroup
+	if err := ca.createNodeGroup(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     ca.cloud,
-		AccountID: ca.cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("get Credential for Cloud %s/%s when create NodeGroup for cluster %s failed, %s",
-			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
-		)
-		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	cmOption.Region = group.Region
-	// cloud provider nodeGroup
-	task, err := mgr.CreateNodeGroup(group, &cloudprovider.CreateNodeGroupOption{CommonOption: *cmOption})
-	if err != nil {
-		blog.Errorf("create NodeGroup in cloudprovider %s/%s for Cluster %s failed, %s",
-			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
-		)
-		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-
-	// 3. create task and dispatch task
-	ca.resp.Data.Task = task
-	ca.resp.Data.NodeGroup = group
-	if err := ca.model.CreateTask(ca.ctx, task); err != nil {
-		blog.Errorf("save create node group task for cluster %s failed, %s",
-			group.ClusterID, err.Error(),
-		)
-		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch create node group task for cluster %s failed, %s",
-			group.ClusterID, err.Error(),
-		)
-		ca.setResp(common.BcsErrClusterManagerTaskErr, err.Error())
-		return
-	}
-
-	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
-		ResourceType: common.NodeGroup.String(),
-		ResourceID:   group.NodeGroupID,
-		TaskID:       "",
-		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, group.NodeGroupID),
-		OpUser:       req.Creator,
-		CreateTime:   time.Now().String(),
-	})
-	if err != nil {
-		blog.Errorf("CreateNodeGroup[%s] CreateOperationLog failed: %v", ca.cluster.ClusterID, err)
-	}
-	ca.resp.Data.NodeGroup = group
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
-}
-
-func (ca *CreateAction) generateNodeGroupID() string {
-	str := utils.RandomString(8)
-	return fmt.Sprintf("BCS-ng-%s", str)
 }
