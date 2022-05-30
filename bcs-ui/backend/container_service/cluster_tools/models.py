@@ -30,7 +30,7 @@ class Tool(models.Model):
 
     chart_name = models.CharField(max_length=128, unique=True)
     name = models.CharField(_('组件名'), max_length=64)
-    default_version = models.CharField(_('单个组件的默认版本'), max_length=64)
+    default_version = models.CharField(_('单个组件的默认版本'), max_length=64, null=True, blank=True)
     default_values = models.TextField(null=True, blank=True, help_text=_('组件启用时需要额外设置的变量值，文本内容格式为 yaml'))
     # 记录一些额外的启动命令如 --disable-openapi-validation 等
     extra_options = models.TextField(default='')
