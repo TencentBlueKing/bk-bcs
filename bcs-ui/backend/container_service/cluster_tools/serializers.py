@@ -12,7 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict
+from typing import Dict, List
 
 from rest_framework import serializers
 
@@ -21,10 +21,11 @@ from .models import InstalledTool, Tool
 
 class ClusterToolSLZ(serializers.ModelSerializer):
     installed_info = serializers.SerializerMethodField()
+    supported_actions = serializers.SerializerMethodField()
 
     class Meta:
-        models = Tool
-        fields = '__all__'
+        model = Tool
+        exclude = ('extra_options', 'namespace')
 
     def get_installed_info(self, obj: Tool) -> Dict[str, str]:
         try:
@@ -34,6 +35,9 @@ class ClusterToolSLZ(serializers.ModelSerializer):
             return {'cluster_id': t.cluster_id, 'values': t.values, 'status': t.status, 'message': t.message}
         except InstalledTool.DoesNotExist:
             return {}
+
+    def get_supported_actions(self, obj: Tool) -> List[str]:
+        return [action.strip() for action in obj.supported_actions.split(',')]
 
 
 class UpgradeToolSLZ(serializers.Serializer):

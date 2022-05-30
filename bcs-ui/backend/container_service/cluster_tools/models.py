@@ -35,6 +35,7 @@ class Tool(models.Model):
     # 记录一些额外的启动命令如 --disable-openapi-validation 等
     extra_options = models.TextField(default='')
     namespace = models.CharField(max_length=64, default='bcs-system')
+    supported_actions = models.CharField(_('组件支持的操作'), max_length=128, default='install')
     description = models.TextField(help_text=_('组件功能介绍'), null=True, blank=True)
     help_link = models.CharField(max_length=255, null=True, blank=True)
     logo = models.TextField(_('图片 logo'), null=True, blank=True)
