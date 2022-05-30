@@ -17,11 +17,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/thanos-io/thanos/pkg/component"
@@ -36,6 +35,7 @@ import (
 )
 
 const (
+	// BKMONITOR 蓝鲸监控数据源
 	BKMONITOR config.StoreProvider = "BK_MONITOR"
 )
 
@@ -45,11 +45,11 @@ type Store struct {
 	Address string
 	Server  *grpcserver.Server
 	cancel  func()
-	mtx     sync.Mutex
 	ctx     context.Context
 	logger  log.Logger
 }
 
+// GetStoreSvr 工厂模式
 func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.StoreConf) (storepb.StoreServer, error) {
 	level.Info(logger).Log("msg", "loading store configuration")
 
@@ -66,6 +66,7 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 	}
 }
 
+// NewStore
 func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, conf *config.StoreConf) (*Store, error) {
 	storeSvr, err := GetStoreSvr(logger, reg, conf)
 	if err != nil {

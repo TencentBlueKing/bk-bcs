@@ -102,10 +102,12 @@ func registerRoutes(engine *gin.RouterGroup) {
 	}
 }
 
+// HealthyHandler 健康检查
 func HealthyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
+// ReadyHandler 健康检查
 func ReadyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }

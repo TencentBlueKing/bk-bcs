@@ -19,7 +19,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
@@ -73,6 +72,7 @@ func DumpPromQL(req *storepb.SeriesRequest) string {
 	return LabelMatcherToString(req.Matchers)
 }
 
+// LabelMatcherToString LabelMatcher 组装字符串
 func LabelMatcherToString(matchers []storepb.LabelMatcher) string {
 	b := strings.Builder{}
 	for i, m := range matchers {
@@ -91,32 +91,6 @@ func LabelMatcherToString(matchers []storepb.LabelMatcher) string {
 		fmt.Fprintf(&b, "%s%s%q", m.Name, t, m.Value)
 	}
 	return fmt.Sprintf("{%v}", &b)
-}
-
-func SampleStreamToSeries(values model.Matrix, ignoreLabels map[string]string, appendLabels map[string]string) []*prompb.TimeSeries {
-	series := make([]*prompb.TimeSeries, 0, len(values))
-	for _, value := range values {
-		lb := make([]prompb.Label, 0, len(value.Metric))
-		for k, v := range value.Metric {
-			// 需要过滤掉的 label
-			if _, ok := ignoreLabels[string(k)]; ok {
-				continue
-			}
-			lb = append(lb, prompb.Label{Name: string(k), Value: string(v)})
-		}
-
-		// 替换原始 labels
-		for name, value := range appendLabels {
-			lb = append(lb, prompb.Label{Name: name, Value: value})
-		}
-
-		samples := make([]prompb.Sample, 0, len(value.Values))
-		for _, v := range value.Values {
-			samples = append(samples, prompb.Sample{Value: float64(v.Value), Timestamp: int64(v.Timestamp)})
-		}
-		series = append(series, &prompb.TimeSeries{Labels: lb, Samples: samples})
-	}
-	return series
 }
 
 // GetCluterID : 获取集群id value
@@ -157,22 +131,6 @@ func matchMetricNames(m *labels.Matcher, metricNames []string) bool {
 		}
 	}
 	return false
-}
-
-func MatchLabels(matchers []*labels.Matcher, lb labels.Labels, metricNames []string) bool {
-	for _, m := range matchers {
-		if m.Name == labels.MetricName {
-			if !matchMetricNames(m, metricNames) {
-				return false
-			}
-			continue
-		}
-
-		if !m.Matches(lb.Get(m.Name)) {
-			return false
-		}
-	}
-	return true
 }
 
 // GetEQMatcherMap 获取 = 匹配关系
@@ -288,6 +246,7 @@ func MergeTimeSeriesMap(seriesMap map[uint64]*prompb.TimeSeries, toBeMerged map[
 	return
 }
 
+// GetLabelMatch
 func GetLabelMatch(name string, matchers []storepb.LabelMatcher) *storepb.LabelMatcher {
 	// 可能存在多个名称相同的 LabelMatch, prom解析为且的关系, 因为这里只支持=, =~, 可忽略这种 case
 	for _, m := range matchers {
@@ -298,6 +257,7 @@ func GetLabelMatch(name string, matchers []storepb.LabelMatcher) *storepb.LabelM
 	return nil
 }
 
+// GetLabelMatchValues
 func GetLabelMatchValues(name string, matchers []storepb.LabelMatcher) ([]string, error) {
 	m := GetLabelMatch(name, matchers)
 	if m == nil {
@@ -316,6 +276,7 @@ func GetLabelMatchValues(name string, matchers []storepb.LabelMatcher) ([]string
 	return []string{}, errors.Errorf("Not support match type: %s", m.Type)
 }
 
+// GetLabelMatchValue
 func GetLabelMatchValue(name string, matchers []storepb.LabelMatcher) (string, error) {
 	m := GetLabelMatch(name, matchers)
 	if m == nil {

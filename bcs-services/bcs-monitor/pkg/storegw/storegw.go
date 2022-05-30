@@ -17,8 +17,8 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -35,6 +35,7 @@ type StoreGW struct {
 	GRPCAdvertiseIP string
 }
 
+// NewStoreGW
 func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, confs []*config.StoreConf) (*StoreGW, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -51,6 +52,7 @@ func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry
 	return gw, nil
 }
 
+// Run 启动服务
 func (s *StoreGW) Run() error {
 	for idx, conf := range s.confs {
 		logger := log.With(s.logger, "provider", conf.Type, "id", idx)
@@ -77,6 +79,7 @@ func (s *StoreGW) Run() error {
 	return nil
 }
 
+// Shutdown
 func (s *StoreGW) Shutdown(err error) {
 	s.stop()
 }

@@ -18,8 +18,11 @@ import (
 )
 
 const (
-	DevEnv  = "dev"
+	// DevEnv
+	DevEnv = "dev"
+	// StagEnv
 	StagEnv = "stag"
+	// ProdEnv
 	ProdEnv = "prod"
 )
 

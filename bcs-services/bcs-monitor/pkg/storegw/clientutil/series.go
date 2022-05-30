@@ -21,16 +21,18 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 )
 
+// TimeSeries 时间序列封装
 type TimeSeries struct {
 	*prompb.TimeSeries
 }
 
-// 添加 Label
+// AddLabels 添加 Labels
 func (s *TimeSeries) AddLabels(promLabels []prompb.Label) *TimeSeries {
 	s.Labels = append(s.Labels, promLabels...)
 	return s
 }
 
+// AddLabel
 func (s *TimeSeries) AddLabel(name, value string) *TimeSeries {
 	s.Labels = append(s.Labels, prompb.Label{Name: name, Value: value})
 	return s
