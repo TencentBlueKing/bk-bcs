@@ -24,9 +24,6 @@ from .serializers import ClusterToolSLZ, InstalledToolSLZ, UpgradeToolSLZ
 class ToolsViewSet(SystemViewSet):
     """组件库"""
 
-    permission_classes = ()
-    authentication_classes = ()
-
     def list(self, request, project_id, cluster_id):
         """查询集群中可用的组件"""
         serializer = ClusterToolSLZ(
