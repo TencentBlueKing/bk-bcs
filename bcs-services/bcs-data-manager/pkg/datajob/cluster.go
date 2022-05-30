@@ -102,6 +102,12 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 		ClusterID:  opts.ClusterID,
 		Dimension:  types.DimensionHour,
 	}
+	minuteOpts := &types.JobCommonOpts{
+		ObjectType: types.ClusterType,
+		ProjectID:  opts.ProjectID,
+		ClusterID:  opts.ClusterID,
+		Dimension:  types.DimensionMinute,
+	}
 	bucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
 	hourMetrics, err := p.store.GetRawClusterInfo(ctx, hourOpts, bucket)
 	if err != nil {
@@ -113,7 +119,7 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 	}
 	hourMetric := hourMetrics[0]
 	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
-	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	workloadCount, err := p.store.GetWorkloadCount(ctx, minuteOpts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
 	if err != nil {
 		blog.Errorf("do cluster day policy failed, get cluster workload count err: %v", err)
 	}
@@ -193,7 +199,7 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 	}
 	minuteMetric := minuteMetrics[0]
 	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
-	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	workloadCount, err := p.store.GetWorkloadCount(ctx, minuteOpts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
 	if err != nil {
 		blog.Errorf("do cluster hour policy failed, get cluster workload count err: %v", err)
 	}
