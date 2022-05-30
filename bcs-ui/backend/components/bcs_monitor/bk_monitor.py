@@ -34,7 +34,7 @@ DISK_MOUNTPOINT = "/data"
 PROVIDER = "BK-Monitor"
 
 
-def query_range(query, start, end, step, project_id=None, milliseconds=True):
+def query_range(query, start, end, step, project_id=None, milliseconds=False):
     """范围请求API"""
     url = f'{BK_MONITOR_QUERY_HOST}/query/ts/promql'
     data = {"promql": query, "start": str(int(start)), "end": str(int(end)), "step": f"{step}s"}
@@ -44,7 +44,7 @@ def query_range(query, start, end, step, project_id=None, milliseconds=True):
     return prom_resp
 
 
-def query(_query, timestamp=None, project_id=None, milliseconds=True):
+def query(_query, timestamp=None, project_id=None, milliseconds=False):
     """查询API"""
     end = time.time()
     # 蓝鲸监控没有实时数据接口, 这里的方案是向前追溯5分钟, 取最新的一个点
@@ -58,7 +58,23 @@ def query(_query, timestamp=None, project_id=None, milliseconds=True):
     return prom_resp
 
 
-def series2prom(resp_series, milliseconds=True):
+def refine_timestamp(timestamp, milliseconds):
+    """转换时间"""
+    # 返回毫秒
+    if milliseconds is True:
+        if len(str(int(timestamp))) > 10:
+            return timestamp
+        else:
+            return timestamp * 1000
+
+    # 返回秒
+    if len(str(int(timestamp))) > 10:
+        return int(timestamp / 1000)
+    else:
+        return timestamp
+
+
+def series2prom(resp_series, milliseconds=False):
     """蓝鲸监控数据返回转换为prom返回"""
     result = []
     series_list = resp_series.get('series') or []
@@ -75,12 +91,8 @@ def series2prom(resp_series, milliseconds=True):
             timestamp_index = 0
 
         for value in series["values"]:
-
             # 是否使用毫秒单位
-            if milliseconds is True:
-                timestamp = value[timestamp_index]  # 蓝鲸监控固定单位
-            else:
-                timestamp = int(value[timestamp_index] / 1000)  # 部分 prom 使用了秒做单位
+            timestamp = refine_timestamp(value[timestamp_index], milliseconds)
 
             values.append((timestamp, str(value[value_index])))
 
@@ -491,7 +503,7 @@ def get_container_cpu_usage_range(cluster_id, namespace, pod_name, container_nam
         container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}}[2m])) * 100
         """  # noqa
 
-    resp = query_range(prom_query, start, end, step, milliseconds=False)
+    resp = query_range(prom_query, start, end, step)
     return resp.get("data") or {}
 
 
@@ -505,7 +517,7 @@ def get_container_cpu_limit(cluster_id, namespace, pod_name, container_name, bk_
         container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
-    resp = query(prom_query, milliseconds=False)
+    resp = query(prom_query)
     return resp.get("data") or {}
 
 
@@ -520,7 +532,7 @@ def get_container_memory_usage_range(cluster_id, namespace, pod_name, container_
         container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
-    resp = query_range(prom_query, start, end, step, milliseconds=False)
+    resp = query_range(prom_query, start, end, step)
     return resp.get("data") or {}
 
 
@@ -534,7 +546,7 @@ def get_container_memory_limit(cluster_id, namespace, pod_name, container_name, 
         container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}}) > 0
         """  # noqa
 
-    resp = query(prom_query, milliseconds=False)
+    resp = query(prom_query)
     return resp.get("data") or {}
 
 
