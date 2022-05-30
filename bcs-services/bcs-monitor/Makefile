@@ -44,3 +44,7 @@ openapi:
 build_benchmark:
 	@echo ">> build benchmark"
 	cd test/benchmark && go build -o ../../bin/benchmark
+
+.PHONY: docker
+docker:
+	@docker build -t bcs-monitor:latest .

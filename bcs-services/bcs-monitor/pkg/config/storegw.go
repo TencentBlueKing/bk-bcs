@@ -15,6 +15,15 @@ package config
 
 import "time"
 
+// StoreProvider :
+type StoreProvider string
+
+// StoreConf :
+type StoreConf struct {
+	Type   StoreProvider `yaml:"type"`
+	Config interface{}   `yaml:"config,omitempty"`
+}
+
 // StoreGWConf
 type StoreGWConf struct {
 	HTTP    *EndpointConfig `yaml:"http" mapstructure:"http"`

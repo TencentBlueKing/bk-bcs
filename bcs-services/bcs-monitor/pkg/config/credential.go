@@ -26,19 +26,26 @@ type CredentialType string
 
 // Credential 支持的类型, 配置 Unmarshal 会通过, 但是不会有匹配
 const (
-	CredentialBasicAuth   CredentialType = "basic_auth"   // Basic验证
+	// CredentialBasicAuth
+	CredentialBasicAuth CredentialType = "basic_auth" // Basic验证
+	// CredentialBearerToken
 	CredentialBearerToken CredentialType = "bearer_token" // Token验证
-	CredentialAppCode     CredentialType = "app_code"     // 蓝鲸App
-	CredentialManager     CredentialType = "manager"      // 管理员
+	// CredentialAppCode
+	CredentialAppCode CredentialType = "app_code" // 蓝鲸App
+	// CredentialManager
+	CredentialManager CredentialType = "manager" // 管理员
 )
 
 // ScopeType 类型, 配置 Unmarshal 会通过, 但是不会有匹配
 type ScopeType string
 
 const (
-	ScopeProjectId   ScopeType = "project_id"   // 项目Id
+	// ScopeProjectId
+	ScopeProjectId ScopeType = "project_id" // 项目Id
+	// ScopeProjectCode
 	ScopeProjectCode ScopeType = "project_code" // 项目Code
-	ScopeClusterId   ScopeType = "cluster_id"   // 集群Id
+	// ScopeClusterId
+	ScopeClusterId ScopeType = "cluster_id" // 集群Id
 )
 
 // Scope 权限控制，格式如cluster_id: "RE_BCS-K8S-40000", 多个取且关系

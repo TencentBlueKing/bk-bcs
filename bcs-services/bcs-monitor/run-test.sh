@@ -1,7 +1,7 @@
 #!/bin/bash
 # 本地测试工具
 
-function run_prometheus() {
+function prometheus() {
     prometheus \
         --config.file=./etc/prometheus_dev.yml \
         --log.level=debug \
@@ -12,14 +12,24 @@ function run_prometheus() {
         --web.enable-lifecycle
 }
 
-function run_api() {
+function api() {
     ./bin/bcs-monitor api \
-        --config ./etc/dev_bcs-monitor.yml
+        --config ./etc/config_dev.yaml \
+        --http-address 0.0.0.0:11902
 }
 
-function run_storegw() {
+function query {
+    ./bin/bcs-monitor query \
+    --config ./etc/config_dev.yaml \
+    --credential-config ./etc/credentials_dev.yaml \
+    --credential-config ./etc/credentials_mgr_dev.yaml \
+    --store 127.0.0.1:19901 \
+    --store 127.0.0.1:1998
+}
+
+function storegw() {
     ./bin/bcs-monitor storegw \
-        --config ./etc/dev_bcs-monitor.yml
+        --config ./etc/config_dev.yaml
 }
 
 ############

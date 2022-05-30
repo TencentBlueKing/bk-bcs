@@ -14,8 +14,10 @@
 package config
 
 const (
+	// RedisStandAloneType
 	RedisStandAloneType = "standalone" // 单节点redis
-	RedisSentinelType   = "sentinel"   // 哨兵模式redis，哨兵实例
+	// RedisSentinelType
+	RedisSentinelType = "sentinel" // 哨兵模式redis，哨兵实例
 )
 
 // RedisConf :

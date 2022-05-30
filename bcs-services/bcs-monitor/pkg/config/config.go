@@ -21,12 +21,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// 子模块前缀
+const (
+	APIServicePrefix   = "/api"
+	QueryServicePrefix = "/prom"
+)
+
 // Configuration 配置
 type Configuration struct {
 	mtx         sync.Mutex
 	Base        *BaseConf                  `yaml:"base_conf"`
 	Redis       *RedisConf                 `yaml:"redis"`
 	StoreGW     *StoreGWConf               `yaml:"store"`
+	StoreGWList []*StoreConf               `yaml:"storegw"`
 	API         *APIConf                   `yaml:"query"`
 	Logging     *LogConf                   `yaml:"logging"`
 	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`

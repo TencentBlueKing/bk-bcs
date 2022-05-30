@@ -127,6 +127,12 @@ const docTemplate = `{
                         "name": "container_name",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "开始时间",
+                        "name": "started_at",
+                        "in": "query"
                     }
                 ],
                 "responses": {

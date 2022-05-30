@@ -17,23 +17,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-)
-
-const (
-	TokenExpired = time.Hour * 24
-)
-
-// bcs-usermamager 用户类型
-type BCSTokenUserType int
-
-const (
-	AdminUser   BCSTokenUserType = 1
-	SaaSUser    BCSTokenUserType = 2
-	GeneralUser BCSTokenUserType = 3
 )
 
 // Cluster 集群信息

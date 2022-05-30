@@ -27,7 +27,8 @@ import (
 // PodLogStream Server Sent Events Handler 连接处理函数
 // @Summary  SSE 实时日志流
 // @Tags     Pod
-// @Param    container_name  query  string  true  "容器名称"
+// @Param    container_name  query  string  true   "容器名称"
+// @Param    started_at      query  string  false  "开始时间"
 // @Produce  text/event-stream
 // @Success  200  {string}  string
 // @Router   /namespaces/:namespace/pods/:pod/logs/stream [get]
@@ -59,15 +60,18 @@ func PodLogStream(c *rest.Context) {
 	}
 
 	c.Stream(func(w io.Writer) bool {
-		for log := range logChan {
-			id := base64.StdEncoding.EncodeToString([]byte(log.Time))
-			c.Render(-1, sse.Event{
-				Event: "message",
-				Data:  log,
-				Id:    id,
-				Retry: 5000, // 5 秒重试
-			})
+		log, ok := <-logChan
+		if !ok {
+			return false
 		}
+
+		id := base64.StdEncoding.EncodeToString([]byte(log.Time))
+		c.Render(-1, sse.Event{
+			Event: "message",
+			Data:  log,
+			Id:    id,
+			Retry: 5000, // 5 秒重试
+		})
 		return true
 	})
 }
