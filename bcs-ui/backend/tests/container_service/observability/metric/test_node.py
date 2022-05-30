@@ -34,7 +34,6 @@ class TestNodeMetric:
         )
         assert response.json()['code'] == 0
         assert response.json()['data'] == {
-            'provider': bcs_monitor.PROVIDER,
             'container_count': '0',
             'pod_count': '8',
             'cpu_usage': None,
@@ -46,6 +45,7 @@ class TestNodeMetric:
         response = api_client.get(f'{self.common_prefix}/info/')
         assert response.json()['code'] == 0
         assert response.json()['data'] == {
+            'provider': bcs_monitor.PROVIDER,
             'dockerVersion': 'v1',
             'osVersion': 'v2',
             'cpu_count': '8',
