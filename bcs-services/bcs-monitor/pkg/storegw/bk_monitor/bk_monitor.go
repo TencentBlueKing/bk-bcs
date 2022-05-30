@@ -100,6 +100,12 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	start := time.UnixMilli(r.MinTime).Unix()
 	end := time.UnixMilli(r.MaxTime).Unix()
 
+	// series 数据, 这里只查询最近1分钟
+	if r.SkipChunks {
+		end = time.Now().Unix()
+		start = end - 60
+	}
+
 	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.Host, 2, start, end, r.Step, r.Matchers)
 	if err != nil {
 		return err
@@ -113,7 +119,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	for _, promSeries := range promSeriesSet {
 		series := &clientutil.TimeSeries{TimeSeries: promSeries}
 		series = series.AddLabel("__name__", metricName)
-		s, err := series.ToThanosSeries()
+		s, err := series.ToThanosSeries(r.SkipChunks)
 		if err != nil {
 			return err
 		}

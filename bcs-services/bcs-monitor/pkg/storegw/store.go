@@ -79,7 +79,7 @@ func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, 
 	_reg := prometheus.NewRegistry()
 
 	grpcProbe := prober.NewGRPC()
-	address := fmt.Sprintf("%s:%d", gprcAdvertiseIP, 1998)
+	address := fmt.Sprintf("%s:%d", gprcAdvertiseIP, conf.GRPCPort)
 
 	g := grpcserver.New(logger, _reg, nil, nil, nil, component.Store, grpcProbe,
 		grpcserver.WithServer(store.RegisterStoreServer(storeSvr)),

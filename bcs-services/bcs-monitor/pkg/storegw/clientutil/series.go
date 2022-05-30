@@ -39,7 +39,7 @@ func (s *TimeSeries) AddLabel(name, value string) *TimeSeries {
 }
 
 // ToThanosSeries 转换为
-func (s *TimeSeries) ToThanosSeries() (*storepb.Series, error) {
+func (s *TimeSeries) ToThanosSeries(skipChunks bool) (*storepb.Series, error) {
 	// 返回的点需要按时间排序
 	sort.Slice(s.Samples, func(i, j int) bool {
 		return s.Samples[i].Timestamp < s.Samples[j].Timestamp
@@ -51,9 +51,15 @@ func (s *TimeSeries) ToThanosSeries() (*storepb.Series, error) {
 		lset = append(lset, storepb.Label{Name: v.Name, Value: v.Value})
 	}
 
-	aggregatedChunks, err := ChunkSamples(s.TimeSeries, store.MaxSamplesPerChunk)
-	if err != nil {
-		return nil, err
+	series := &storepb.Series{Labels: lset}
+	// 不需要 chunks 数据, series 接口场景
+	if !skipChunks {
+		aggregatedChunks, err := ChunkSamples(s.TimeSeries, store.MaxSamplesPerChunk)
+		if err != nil {
+			return nil, err
+		}
+		series.Chunks = aggregatedChunks
 	}
-	return &storepb.Series{Labels: lset, Chunks: aggregatedChunks}, nil
+
+	return series, nil
 }

@@ -20,8 +20,9 @@ type StoreProvider string
 
 // StoreConf :
 type StoreConf struct {
-	Type   StoreProvider `yaml:"type"`
-	Config interface{}   `yaml:"config,omitempty"`
+	Type     StoreProvider `yaml:"type"`
+	GRPCPort int           `yaml:"grpc_port"`
+	Config   interface{}   `yaml:"config,omitempty"`
 }
 
 // StoreGWConf
