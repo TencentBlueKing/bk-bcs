@@ -49,17 +49,27 @@ local function get_secret(conf)
 end
 
 
-local function get_real_payload(username, auth_conf)
-    return {
+local function get_real_payload(userinfo, auth_conf)
+    local retTable = {
         sub_type = "user",
-        username = username,
         exp = ngx_time() + auth_conf.exp,
         iss = "bcs-auth-plugin",
     }
+    if type(userinfo) == "string" then
+        retTable["username"] = userinfo
+    elseif type(userinfo) == "number" then
+        retTable["username"] = tostring(userinfo)
+    elseif type(userinfo) == "table" then
+        for key, value in pairs(userinfo) do
+            retTable[key] = value
+        end
+    end
+
+    return retTable
 end
 
 
-local function sign_jwt_with_RS256(username, auth_conf)
+local function sign_jwt_with_RS256(userinfo, auth_conf)
     local auth_secret = get_secret(auth_conf)
     local ok, jwt_token = pcall(jwt.sign, _M,
         auth_secret,
@@ -68,7 +78,7 @@ local function sign_jwt_with_RS256(username, auth_conf)
                 typ = "JWT",
                 alg = "RS256"
             },
-            payload = get_real_payload(username, auth_conf)
+            payload = get_real_payload(userinfo, auth_conf)
         }
     )
     if not ok then
@@ -82,14 +92,19 @@ end
 local _M = {}
 
 
-function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get_username_handler)
+function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get_userinfo_handler)
     local ok, red = pcall(get_redis_client, conf)
     if not ok then
         core.log.error("failed to connect redis:", red)
         core.response.exit(500, plugin_error_msg)
     end
 
-    local key = key_prefix .. credential.user_token
+    local key = key_prefix
+    if not credential.redis_key then
+        key = key .. credential.user_token
+    else
+        key = key .. credential.redis_key
+    end
     local jwt_token, err = red:get(key)
     if not jwt_token then
         core.log.error("failed to get jwt_token, err: ", err)
@@ -98,9 +113,9 @@ function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get
     -- redis 的 key 过期或者并未创建
 
     if (jwt_token == ngx.null and create_if_null) then
-        local username = get_username_handler(credential, conf.bk_login_host)
-        if username then
-            jwt_token = sign_jwt_with_RS256(username, conf)
+        local userinfo = get_userinfo_handler(credential, conf.bk_login_host)
+        if userinfo then
+            jwt_token = sign_jwt_with_RS256(userinfo, conf)
 
             local ok, err = red:set(key, jwt_token, "EX", conf.exp)
             if not ok then

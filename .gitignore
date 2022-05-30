@@ -131,3 +131,5 @@ bcs-ui/support-files/iam/
 .kube/
 .husky
 .codecc
+
+build.yaml

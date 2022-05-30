@@ -196,8 +196,13 @@ type GetNodesOption struct {
 	CommonOption
 }
 
-// GetClusterOption create cluster option
+// GetClusterOption get cluster option
 type GetClusterOption struct {
+	CommonOption
+}
+
+// ListClusterOption list cluster option
+type ListClusterOption struct {
 	CommonOption
 }
 

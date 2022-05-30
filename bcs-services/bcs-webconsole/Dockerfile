@@ -8,7 +8,7 @@ COPY . .
 RUN make tidy build
 
 FROM alpine
-RUN apk --update --no-cache add ca-certificates bash vim
+RUN apk --update --no-cache add ca-certificates bash vim curl
 COPY --from=builder /go/src/bcs-webconsole/bcs-webconsole /bcs-webconsole
 ENTRYPOINT ["/bcs-webconsole"]
 CMD []

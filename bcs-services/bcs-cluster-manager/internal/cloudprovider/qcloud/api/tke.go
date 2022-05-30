@@ -126,6 +126,44 @@ func (cli *TkeClient) GetTKECluster(clusterID string) (*tke.Cluster, error) {
 	return response.Clusters[0], nil
 }
 
+// ListTKECluster get tke cluster list, region parameter init tke client
+func (cli *TkeClient) ListTKECluster() ([]*tke.Cluster, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	var (
+		initOffset      int64
+		clusterList  = make([]*tke.Cluster, 0)
+		clusterListLen = 100
+	)
+
+	for {
+		if clusterListLen != 100 {
+			break
+		}
+		req := tke.NewDescribeClustersRequest()
+		req.Offset = common.Int64Ptr(initOffset)
+		req.Limit = common.Int64Ptr(int64(100))
+
+		resp, err := cli.tke.DescribeClusters(req)
+		if err != nil {
+			return nil, err
+		}
+		//check response
+		response := resp.Response
+		if response == nil {
+			return nil, cloudprovider.ErrCloudLostResponse
+		}
+
+		clusterList = append(clusterList, response.Clusters...)
+		clusterListLen = len(response.Clusters)
+		initOffset = initOffset + 100
+	}
+
+	return clusterList, nil
+}
+
 // DeleteTKECluster delete cluster bu clusterID, deleteMode: terminate retain
 func (cli *TkeClient) DeleteTKECluster(clusterID string, deleteMode DeleteMode) error {
 	if cli == nil {
@@ -557,7 +595,7 @@ func (cli *TkeClient) CreateClusterEndpoint(clusterID string) error {
 	return nil
 }
 
-// DeleteClusterEndpoint 删除集群访问端口,默认开启公网访问
+// DeleteClusterEndpoint 删除集群访问端口, 默认开启公网访问
 func (cli *TkeClient) DeleteClusterEndpoint(clusterID string) error {
 	if cli == nil {
 		return cloudprovider.ErrServerIsNil

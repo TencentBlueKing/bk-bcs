@@ -158,7 +158,9 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 		}
 
 		if node == nil {
-			err = cloudprovider.GetStorageModel().CreateNode(ctx, node)
+			n.ClusterID = opt.ClusterID
+			n.Status = common.StatusRunning
+			err = cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)
 			}

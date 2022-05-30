@@ -295,8 +295,8 @@ user-manager:pre
 
 webconsole:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webconsole
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webconsole ${PACKAGEPATH}/bcs-servicesf
-	cd bcs-services/bcs-webconsole/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webconsole/bcs-webconsole ./main.go
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webconsole ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-webconsole/ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webconsole/bcs-webconsole ./main.go
 
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -326,7 +326,7 @@ mcs-agent:pre
 general-pod-autoscaler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-general-pod-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/gpa ./cmd/gpa/main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/bcs-general-pod-autoscaler ./cmd/gpa/main.go
 
 # network plugins section
 networkpolicy:pre

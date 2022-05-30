@@ -25,7 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO, ordereddict
 
-from backend.components import bcs, paas_cc
+from backend.components import paas_cc
 from backend.helm.helm.utils.util import EmptyVaue, fix_rancher_value_by_type
 from backend.helm.toolkit.diff import parser
 from backend.resources.utils.kube_client import get_dynamic_client
@@ -51,12 +51,16 @@ yaml.add_representer(type(None), represent_none)
 def ruamel_yaml_load(content):
     # be carefule, ruamel.yaml doesn't work well with dpath
     yaml = YAML()
+    # 添加 preserve_quotes=True, 避免 json 转换 yaml 时，丢掉双引号
+    yaml.preserve_quotes = True
     return yaml.load(content)
 
 
 def ruamel_yaml_dump(yaml_obj):
     # be carefule, ruamel.yaml doesn't work well with dpath
     yaml = YAML()
+    # 添加 preserve_quotes=True, 避免 json 转换 yaml 时，丢掉双引号
+    yaml.preserve_quotes = True
     stream = StringIO()
     yaml.dump(yaml_obj, stream=stream)
     content = stream.getvalue()
@@ -68,8 +72,16 @@ def yaml_load(content):
 
 
 def yaml_dump(obj):
+    # 添加 presenter, 避免 json 转换 yaml 时，丢掉双引号
+    def literal_presenter(dumper, data):
+        if isinstance(data, str) and "\n" in data:
+            return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+
     noalias_dumper = yaml.dumper.SafeDumper
     noalias_dumper.ignore_aliases = lambda self, data: True
+    noalias_dumper.add_representer(str, literal_presenter)
+
     return yaml.dump(obj, default_flow_style=False, Dumper=noalias_dumper)
 
 

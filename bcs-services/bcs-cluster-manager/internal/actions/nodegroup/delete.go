@@ -117,16 +117,19 @@ func (da *DeleteAction) Handle(
 	}
 
 	// nodeGroup cloud provider
-	cloud, project, err := actions.GetProjectAndCloud(da.model, da.group.ProjectID, da.group.Provider)
+	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
-		blog.Errorf("get Cloud %s Project %s for NodeGroup %s in Cluster %s deletion failed, %s",
-			da.group.Provider, da.group.ProjectID, da.group.NodeGroupID, da.group.ClusterID, err.Error(),
+		blog.Errorf("get Cloud %s for NodeGroup %s in Cluster %s deletion failed, %s",
+			da.group.Provider, da.group.NodeGroupID, da.group.ClusterID, err.Error(),
 		)
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	//get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential for NodeGroup %s in Cluster %s deletion failed, %s",
 			da.group.NodeGroupID, da.group.ClusterID, err.Error(),
@@ -322,16 +325,19 @@ func (da *RemoveNodeAction) Handle(
 		return
 	}
 	//get dependency resource and release it
-	cloud, project, err := actions.GetProjectAndCloud(da.model, da.group.ProjectID, da.group.Provider)
+	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
-		blog.Errorf("get Cloud %s Project %s for NodeGroup %s to remove Node failed, %s",
-			da.group.Provider, da.group.ProjectID, da.group.NodeGroupID, err.Error(),
+		blog.Errorf("get Cloud %s for NodeGroup %s to remove Node failed, %s",
+			da.group.Provider, da.group.NodeGroupID, err.Error(),
 		)
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	//get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential for NodeGroup %s cluster %s to remove Node failed, %s",
 			da.group.NodeGroupID, da.group.ClusterID, err.Error(),
@@ -484,19 +490,10 @@ func (da *CleanNodesAction) Handle(
 		return
 	}
 	//get dependency resource
-	cloud, project, err := actions.GetProjectAndCloud(da.model, da.group.ProjectID, da.group.Provider)
+	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
-		blog.Errorf("get Cloud %s Project %s for NodeGroup %s to clean Node failed, %s",
-			da.group.Provider, da.group.ProjectID, da.group.NodeGroupID, err.Error(),
-		)
-		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	//get dependency resource
-	cluster, err := da.model.GetCluster(ctx, da.req.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cluster %s for NodeGroup %s to clean Node failed, %s",
-			da.group.ClusterID, da.group.NodeGroupID, err.Error(),
+		blog.Errorf("get Cloud %s for NodeGroup %s to clean Node failed, %s",
+			da.group.Provider, da.group.NodeGroupID, err.Error(),
 		)
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
@@ -529,7 +526,6 @@ func (da *CleanNodesAction) Handle(
 	// build clean task and dispatch to run
 	task, err := taskMgr.BuildCleanNodesInGroupTask(da.cleanNodes, da.group, &cloudprovider.TaskOptions{
 		Cloud:    cloud,
-		Project:  project,
 		Cluster:  cluster,
 		Operator: req.Operator,
 	})

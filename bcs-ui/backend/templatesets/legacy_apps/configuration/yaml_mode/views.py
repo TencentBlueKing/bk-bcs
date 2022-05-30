@@ -213,7 +213,7 @@ class TemplateReleaseViewSet(viewsets.ViewSet, TemplatePermission):
         processor = ReleaseDataProcessor(
             user=self.request.user, raw_release_data=self._raw_release_data(project_id, validated_data)
         )
-        release_data = processor.release_data()
+        release_data = processor.release_data(is_preview=validated_data["is_preview"])
 
         if validated_data["is_preview"]:
             return Response(release_data.template_files)

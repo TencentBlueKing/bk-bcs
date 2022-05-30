@@ -361,15 +361,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 
 	operator := state.Task.CommonParams["operator"]
 
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("CreateTkeClusterTask[%s]: get cluster for %s failed", taskID, clusterID)
-		retErr := fmt.Errorf("get cluster information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	cloud, project, err := actions.GetProjectAndCloud(cloudprovider.GetStorageModel(), cluster.ProjectID, cloudID)
+	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
 	if err != nil {
 		blog.Errorf("CreateTkeClusterTask[%s]: get cloud/project for cluster %s in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -379,7 +371,10 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	}
 
 	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("CreateTkeClusterTask[%s]: get credential for cluster %s in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -532,15 +527,7 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	cloudID := step.Params["CloudID"]
 	systemID := state.Task.CommonParams["SystemID"]
 
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("CheckTkeClusterStatusTask[%s]: get cluster for %s failed", taskID, clusterID)
-		retErr := fmt.Errorf("get cluster information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	cloud, project, err := actions.GetProjectAndCloud(cloudprovider.GetStorageModel(), cluster.ProjectID, cloudID)
+	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
 	if err != nil {
 		blog.Errorf("CheckTkeClusterStatusTask[%s]: get cloud/project for cluster %s in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -550,7 +537,10 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	}
 
 	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("CheckTkeClusterStatusTask[%s]: get credential for cluster %s in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -660,15 +650,7 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 	cloudID := step.Params["CloudID"]
 	systemID := state.Task.CommonParams["SystemID"]
 
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: get cluster for %s failed", taskID, clusterID)
-		retErr := fmt.Errorf("get cluster information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	cloud, project, err := actions.GetProjectAndCloud(cloudprovider.GetStorageModel(), cluster.ProjectID, cloudID)
+	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
 	if err != nil {
 		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: get cloud/project for cluster %s in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -678,7 +660,10 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 	}
 
 	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(project, cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: get credential for cluster %s in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())

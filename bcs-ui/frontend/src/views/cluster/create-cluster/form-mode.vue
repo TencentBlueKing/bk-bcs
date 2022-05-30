@@ -6,10 +6,15 @@
             </bcs-select>
         </bk-form-item>
         <bk-form-item :label="$t('网络类型')" required>
-            <bcs-select v-model="formData.networkType" :clearable="false">
-                <bcs-option id="underlay" name="underlay"></bcs-option>
-                <bcs-option id="overlay" name="overlay"></bcs-option>
-            </bcs-select>
+            <div class="item-network">
+                <bcs-select v-model="formData.networkType" :clearable="false">
+                    <!-- <bcs-option id="underlay" name="underlay"></bcs-option> -->
+                    <bcs-option id="overlay" name="overlay"></bcs-option>
+                </bcs-select>
+                <span class="ml10" v-bk-tooltips="{ content: $t('如需vpc-cni网络，请联系蓝鲸容器助手') }">
+                    <i class="bcs-icon bcs-icon-question-circle"></i>
+                </span>
+            </div>
         </bk-form-item>
         <bk-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
             <bcs-select v-model="formData.region" :loading="regionLoading" searchable :clearable="false">
@@ -210,7 +215,7 @@
                 const serviceNumber = Number(formData.value.networkSettings.maxServiceNum)
                 if (!ipNumber || !serviceNumber) return []
 
-                const minExponential = Math.log2(16)
+                const minExponential = Math.log2(32)
                 const maxExponential = Math.log2(Math.min(ipNumber - serviceNumber, 128))
                 return getIpNumRange(minExponential, maxExponential)
             })
@@ -342,5 +347,9 @@
         height: 16px;
         padding: 0 4px;
     }
+}
+/deep/ .item-network {
+    display: flex;
+    align-items: center;
 }
 </style>

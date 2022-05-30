@@ -15,18 +15,19 @@ package api
 
 import (
 	"fmt"
+	"testing"
 	"time"
 
-	"testing"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 )
 
 func getClient(region string) *TkeClient {
 	cli, _ := NewTkeClient(&cloudprovider.CommonOption{
-		Secret: "xxx",
 		Key:    "xxx",
+		Secret: "xxx",
 		Region: region,
 	})
 
@@ -98,7 +99,7 @@ func generateInstanceAdvanceInfo() *InstanceAdvancedSettings {
 }
 
 func generateExistedInstance() *ExistedInstancesForNode {
-	passwd := cloudprovider.BuildInstancePwd()
+	passwd := utils.BuildInstancePwd()
 
 	masterInstanceIDs := []string{"ins-xxx", "ins-xxx", "ins-xxx"}
 	existedInstance := &ExistedInstancesForNode{
@@ -137,7 +138,7 @@ func TestTkeClient_CreateTKECluster(t *testing.T) {
 }
 
 func TestTkeClient_GetTKECluster(t *testing.T) {
-	cli := getClient("ap-nanjing")
+	cli := getClient("ap-guangzhou")
 
 	cluster, err := cli.GetTKECluster("cls-xxx")
 	if err != nil {
@@ -148,9 +149,22 @@ func TestTkeClient_GetTKECluster(t *testing.T) {
 	t.Logf("%+v", *cluster.ClusterNetworkSettings.VpcId)
 }
 
+func TestTkeClient_ListTKECluster(t *testing.T) {
+	cli := getClient(regions.Guangzhou)
+
+	clusterList, err := cli.ListTKECluster()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range clusterList {
+		t.Logf("%v\n", *clusterList[i].ClusterId)
+	}
+}
+
 func TestTkeClient_AddExistedInstancesToCluster(t *testing.T) {
 	cli := getClient("ap-nanjing")
-	passwd := cloudprovider.BuildInstancePwd()
+	passwd := utils.BuildInstancePwd()
 
 	req := &AddExistedInstanceReq{
 		ClusterID:   "cls-xxx",
@@ -249,6 +263,46 @@ func TestTkeClient_GetTKEClusterImages(t *testing.T) {
 	for _, image := range images {
 		t.Log(image.OsName, image.ImageID)
 	}
+}
+
+func TestTkeClient_GetTKEClusterKubeConfig(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	kubeBytes, err := cli.GetTKEClusterKubeConfig("cls-xxx", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(kubeBytes)
+}
+
+func TestTkeClient_GetClusterEndpointStatus(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	status, err := cli.GetClusterEndpointStatus("cls-xxx", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(status)
+}
+
+func TestTkeClient_CreateClusterEndpoint(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.CreateClusterEndpoint("cls-xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestTkeClient_DeleteClusterEndpoint(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.DeleteClusterEndpoint("cls-xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
 }
 
 func TestTkeClient_EnableTKEVpcCniMode(t *testing.T) {

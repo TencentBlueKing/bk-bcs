@@ -35,7 +35,6 @@ type CreateAction struct {
 
 	//inner data for creation
 	cluster *cmproto.Cluster
-	project *cmproto.Project
 	//cloud for implementation
 	cloud *cmproto.Cloud
 }
@@ -115,7 +114,10 @@ func (ca *CreateAction) createAutoScalingOption() error {
 		blog.Errorf("AutoScalingOption %s store to DB failed, %s", option.ClusterID, err.Error())
 		return err
 	}
-	coption, err := cloudprovider.GetCredential(ca.project, ca.cloud)
+	coption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.cluster.CloudAccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential for AutoScalingOption %s failed, %s",
 			option.ClusterID, err.Error(),
@@ -161,14 +163,6 @@ func (ca *CreateAction) validate() error {
 		return fmt.Errorf("get relative cloud err, %s", err.Error())
 	}
 
-	// get cloud information for cloudprovider
-	ca.project, err = ca.model.GetProject(ca.ctx, ca.cluster.ProjectID)
-	if err != nil {
-		blog.Errorf("Get %s ClusterAutoScalingOption relative Project %s failed, %s",
-			ca.req.ClusterID, ca.cluster.ProjectID, err.Error(),
-		)
-		return fmt.Errorf("get relative project err, %s", err.Error())
-	}
 	return nil
 }
 

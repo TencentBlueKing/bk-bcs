@@ -104,7 +104,7 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zo
 }
 
 // GetRegionsInfo get regionInfo
-func (nm *NodeManager) GetRegionsInfo(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
+func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
 	client, err := GetCVMClient(opt)
 	if err != nil {
 		blog.Errorf("create CVM client when GetRegionsInfo failed: %v", err)
