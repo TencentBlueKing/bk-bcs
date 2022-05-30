@@ -15,7 +15,6 @@ package bcs
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
@@ -27,6 +26,7 @@ type Cluster struct {
 	ProjectId   string `json:"projectID"`
 	ClusterId   string `json:"clusterID"`
 	ClusterName string `json:"clusterName"`
+	BKBizID     uint64 `json:"businessID"`
 	Status      string `json:"status"`
 	IsShared    bool   `json:"is_shared"`
 }
@@ -68,7 +68,7 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 }
 
 // GetCluster 获取集群详情
-func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, clusterId string) (*Cluster, error) {
+func GetCluster(ctx context.Context, bcsConf *config.BCSConf, clusterId string) (*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterId)
 
 	resp, err := component.GetClient().R().
@@ -83,11 +83,6 @@ func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, cluster
 	var cluster *Cluster
 	if err := component.UnmarshalBKResult(resp, &cluster); err != nil {
 		return nil, err
-	}
-
-	// 共享集群的项目Id和当前项目会不一致
-	if !cluster.IsShared && cluster.ProjectId != projectId {
-		return nil, errors.New("project or cluster not valid")
 	}
 
 	return cluster, nil

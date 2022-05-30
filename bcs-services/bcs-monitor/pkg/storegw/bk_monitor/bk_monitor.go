@@ -27,7 +27,9 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
@@ -106,12 +108,33 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		start = end - 60
 	}
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.Host, 2, start, end, r.Step, r.Matchers)
+	metricName, err := clientutil.GetLabelMatchValue("__name__", r.Matchers)
 	if err != nil {
 		return err
 	}
 
-	metricName, err := clientutil.GetLabelMatchValue("__name__", r.Matchers)
+	clusterId, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
+	if err != nil {
+		return err
+	}
+
+	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
+	for _, m := range r.Matchers {
+		// 集群Id转换为 bcs 的规范
+		if m.Name == "cluster_id" {
+			newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: m.Value})
+		} else {
+			newMatchers = append(newMatchers, m)
+		}
+	}
+
+	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
+	cluster, err := bcs.GetCluster(srv.Context(), bcsConf, clusterId)
+	if err != nil {
+		return err
+	}
+
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.Host, cluster.BKBizID, start, end, r.Step, newMatchers)
 	if err != nil {
 		return err
 	}
@@ -119,6 +142,8 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	for _, promSeries := range promSeriesSet {
 		series := &clientutil.TimeSeries{TimeSeries: promSeries}
 		series = series.AddLabel("__name__", metricName)
+		series = series.AddLabel("cluster_id", clusterId)
+
 		s, err := series.ToThanosSeries(r.SkipChunks)
 		if err != nil {
 			return err
@@ -126,7 +151,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		if err := srv.Send(storepb.NewSeriesResponse(s)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }

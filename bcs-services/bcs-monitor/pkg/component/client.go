@@ -14,6 +14,7 @@
 package component
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -40,6 +41,7 @@ func GetClient() *resty.Client {
 			globalClient = resty.New().SetTimeout(timeout)
 			globalClient = globalClient.SetDebug(true)
 			globalClient.SetDebugBodyLimit(1024)
+			globalClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 		})
 	}
 	return globalClient
