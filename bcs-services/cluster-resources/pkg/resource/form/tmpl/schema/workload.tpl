@@ -321,6 +321,13 @@ volumeClaimTmpl:
             type: normal
           style:
             background: '#fff'
+        ui:order:
+          - pvcName
+          - claimType
+          - pvName
+          - scName
+          - storageSize
+          - accessModes
       ui:group:
         props:
           showTitle: true
