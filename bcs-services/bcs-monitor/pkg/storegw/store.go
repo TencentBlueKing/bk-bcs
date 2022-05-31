@@ -55,7 +55,7 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 
 	config, err := yaml.Marshal(conf.Config)
 	if err != nil {
-		return nil, errors.Wrap(err, "marshal content of bucket configuration")
+		return nil, errors.Wrap(err, "marshal content of store configuration")
 	}
 
 	switch strings.ToUpper(string(conf.Type)) {
