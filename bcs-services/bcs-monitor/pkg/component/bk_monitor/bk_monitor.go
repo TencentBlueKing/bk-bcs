@@ -77,7 +77,7 @@ type Series struct {
 // ToPromSeries 转换为 prom 时序
 func (s *Series) ToPromSeries() (*prompb.TimeSeries, error) {
 	if len(s.GroupValues) < len(s.GroupKeys) {
-		return nil, errors.Errorf("len GroupValues(%s) < GroupKeys(%s)", len(s.GroupValues), len(s.GroupKeys))
+		return nil, errors.Errorf("len GroupValues(%d) < GroupKeys(%d)", len(s.GroupValues), len(s.GroupKeys))
 	}
 
 	labels := make([]prompb.Label, 0, len(s.GroupKeys))
