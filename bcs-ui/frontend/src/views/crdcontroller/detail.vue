@@ -3,7 +3,7 @@
         <div class="biz-top-bar">
             <div class="biz-crd-title">
                 <a class="bcs-icon bcs-icon-arrows-left back" href="javascript:void(0);" @click="goBack"></a>
-                <span>{{curChartInfo.display_name || curCrdName}}</span>
+                <span>{{curApp.name}}</span>
             </div>
         </div>
 
@@ -26,7 +26,7 @@
                             </svg>
                             <div class="desc" :title="curApp.description">
                                 <span>{{$t('简介')}}：</span>
-                                {{curChartInfo.description || '--'}}
+                                {{curApp.description || '--'}}
                             </div>
                         </div>
                     </div>
@@ -203,7 +203,6 @@
                 },
                 diffEditorHeight: 350,
                 editorHeight: 500,
-                curChartInfo: {},
                 curApp: {
                     namespace: ''
                 },
@@ -223,28 +222,20 @@
         created () {
             this.curClusterId = this.$route.params.clusterId
             this.curCrdId = this.$route.params.id
-            this.curCrdName = this.$route.params.name
             this.chartName = this.$route.params.chartName
 
-            if (window.sessionStorage['bcs-crdcontroller']) {
-                const obj = JSON.parse(window.sessionStorage['bcs-crdcontroller'])
-                if (String(obj.crd_ctr_id) === String(this.curCrdId)) {
-                    this.curChartInfo = obj
-                }
-            }
             this.getCommonCrdInstanceDetail()
             this.fetchChartVersionsList()
         },
         methods: {
             async getCommonCrdInstanceDetail () {
                 try {
-                    const projectId = this.projectId
                     const clusterId = this.curClusterId
                     const crdId = this.curCrdId
-                    const res = await this.$store.dispatch('crdcontroller/getCommonCrdInstanceDetail', { projectId, clusterId, crdId })
-                    this.curApp = res.data
-                    this.editorOptions.content = res.data.values_content
-                    this.editorOptions.originContent = res.data.values_content
+                    const data = await this.$store.dispatch('crdcontroller/clusterToolsInstalledDetail', { $clusterId: clusterId, $toolId: crdId })
+                    this.curApp = data
+                    this.editorOptions.content = data.values
+                    this.editorOptions.originContent = data.values
                 } catch (e) {
                     catchErrorHandler(e, this)
                 }
@@ -307,19 +298,21 @@
                 try {
                     const curVersion = this.chartVersionsList.find(i => i.version === this.curApp.chart_version)
                     const chartUrl = curVersion && curVersion.urls[0]
-                    const projectId = this.projectId
                     const clusterId = this.curClusterId
-                    const crdId = this.curApp.crd_ctr_id
-                    const data = {
-                        values_content: this.editorOptions.content,
-                        chart_url: chartUrl
-                    }
-                    await this.$store.dispatch('crdcontroller/updateCommonCrdInstance', { projectId, clusterId, crdId, data })
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('配置已下发成功')
+                    const crdId = this.curApp.tool_id
+                    const result = await this.$store.dispatch('crdcontroller/clusterToolsUpgrade', {
+                        $clusterId: clusterId,
+                        $toolId: crdId,
+                        values: this.editorOptions.content || '',
+                        chart_url: chartUrl || ''
                     })
-                    this.goBack()
+                    if (result) {
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('配置已下发成功')
+                        })
+                        this.goBack()
+                    }
                 } catch (e) {
                     catchErrorHandler(e, this)
                 } finally {
