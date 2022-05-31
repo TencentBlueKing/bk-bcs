@@ -255,18 +255,35 @@ type DataDetailDisk struct {
 	AutoFormatAndMount bool `json:"autoFormatAndMount"`
 }
 
-// EnhancedService instance enhanced service
+// EnhancedService tke cluster enhanced service
 type EnhancedService struct {
-	// SecurityService cloud security
-	SecurityService bool `json:"securityService"`
-	// MonitorService cloud monitor
-	MonitorService bool `json:"monitorService"`
+	// 开启云安全服务。若不指定该参数，则默认开启云安全服务。
+	SecurityService *RunSecurityServiceEnabled `json:"SecurityService,omitempty" name:"SecurityService"`
+
+	// 开启云监控服务。若不指定该参数，则默认开启云监控服务。
+	MonitorService *RunMonitorServiceEnabled `json:"MonitorService,omitempty" name:"MonitorService"`
+}
+
+// RunMonitorServiceEnabled tke cluster monitor service
+type RunMonitorServiceEnabled struct {
+
+	// 是否开启[云监控](https://cloud.tencent.com/document/product/248)服务。取值范围：<br><li>TRUE：表示开启云监控服务<br><li>FALSE：表示不开启云监控服务<br><br>默认取值：TRUE。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Enabled *bool `json:"Enabled,omitempty" name:"Enabled"`
+}
+
+// RunSecurityServiceEnabled 开启云安全服务。若不指定该参数，则默认开启云安全服务。
+type RunSecurityServiceEnabled struct {
+
+	// 是否开启[云安全](https://cloud.tencent.com/document/product/296)服务。取值范围：<br><li>TRUE：表示开启云安全服务<br><li>FALSE：表示不开启云安全服务<br><br>默认取值：TRUE。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	Enabled *bool `json:"Enabled,omitempty" name:"Enabled"`
 }
 
 // LoginSettings reset passwd
 type LoginSettings struct {
 	// Password reset instance passwd
-	Password string `json:"password"`
+	Password string `json:"Password"`
 }
 
 // NodePoolOption nodePool options

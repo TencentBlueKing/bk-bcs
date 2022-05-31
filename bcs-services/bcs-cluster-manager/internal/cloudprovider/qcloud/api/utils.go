@@ -16,6 +16,7 @@ package api
 import (
 	"fmt"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -127,13 +128,18 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 	}
 
 	if addReq.EnhancedSetting != nil {
-		req.EnhancedService = &tke.EnhancedService{
-			SecurityService: &tke.RunSecurityServiceEnabled{
-				Enabled: common.BoolPtr(addReq.EnhancedSetting.SecurityService),
-			},
-			MonitorService: &tke.RunMonitorServiceEnabled{
-				Enabled: common.BoolPtr(addReq.EnhancedSetting.MonitorService),
-			},
+		req.EnhancedService = &tke.EnhancedService{}
+		if addReq.EnhancedSetting.SecurityService != nil &&
+			addReq.EnhancedSetting.SecurityService.Enabled != nil {
+			req.EnhancedService.SecurityService = &tke.RunSecurityServiceEnabled{
+				Enabled: common.BoolPtr(*addReq.EnhancedSetting.SecurityService.Enabled),
+			}
+		}
+		if addReq.EnhancedSetting.MonitorService != nil &&
+			addReq.EnhancedSetting.MonitorService.Enabled != nil {
+			req.EnhancedService.MonitorService = &tke.RunMonitorServiceEnabled{
+				Enabled: common.BoolPtr(*addReq.EnhancedSetting.MonitorService.Enabled),
+			}
 		}
 	}
 
@@ -357,11 +363,14 @@ func generateEnhancedService(service *EnhancedService) *tke.EnhancedService {
 	if service == nil {
 		return nil
 	}
-
-	return &tke.EnhancedService{
-		SecurityService: &tke.RunSecurityServiceEnabled{Enabled: common.BoolPtr(service.SecurityService)},
-		MonitorService:  &tke.RunMonitorServiceEnabled{Enabled: common.BoolPtr(service.MonitorService)},
+	svc := &tke.EnhancedService{}
+	if service.SecurityService != nil && service.SecurityService.Enabled != nil {
+		svc.SecurityService = &tke.RunSecurityServiceEnabled{Enabled: common.BoolPtr(*service.SecurityService.Enabled)}
 	}
+	if service.MonitorService != nil && service.MonitorService.Enabled != nil {
+		svc.MonitorService = &tke.RunMonitorServiceEnabled{Enabled: common.BoolPtr(*service.MonitorService.Enabled)}
+	}
+	return svc
 }
 
 func generateLoginSet(settings *LoginSettings) *tke.LoginSettings {
@@ -479,12 +488,13 @@ func MapToLabels(labels map[string]string) []*Label {
 }
 
 // MapToTaints converts a map of string-string to a slice of Taint
-func MapToTaints(taints map[string]string) []*Taint {
+func MapToTaints(taints []*proto.Taint) []*Taint {
 	result := make([]*Taint, 0)
-	for k, v := range taints {
-		key := k
-		value := v
-		result = append(result, &Taint{Key: &key, Value: &value})
+	for _, v := range taints {
+		key := v.Key
+		value := v.Value
+		effect := v.Effect
+		result = append(result, &Taint{Key: &key, Value: &value, Effect: &effect})
 	}
 	return result
 }
@@ -512,12 +522,13 @@ func MapToCloudLabels(labels map[string]string) []*tke.Label {
 }
 
 // MapToCloudTaints converts a map of string-string to a slice of Taint
-func MapToCloudTaints(taints map[string]string) []*tke.Taint {
+func MapToCloudTaints(taints []*proto.Taint) []*tke.Taint {
 	result := make([]*tke.Taint, 0)
-	for k, v := range taints {
-		key := k
-		value := v
-		result = append(result, &tke.Taint{Key: &key, Value: &value})
+	for _, v := range taints {
+		key := v.Key
+		value := v.Value
+		effect := v.Effect
+		result = append(result, &tke.Taint{Key: &key, Value: &value, Effect: &effect})
 	}
 	return result
 }

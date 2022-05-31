@@ -85,7 +85,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}
-	err = tkeCli.DeleteClusterNodePool(group.ClusterID, []string{group.CloudNodeGroupID}, keepInstance)
+	err = tkeCli.DeleteClusterNodePool(cluster.SystemID, []string{group.CloudNodeGroupID}, keepInstance)
 	if err != nil {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())

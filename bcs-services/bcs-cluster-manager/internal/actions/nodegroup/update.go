@@ -64,15 +64,6 @@ func (ua *UpdateAction) validate() error {
 	if ua.req.ClusterID == "" {
 		return fmt.Errorf("clusterID is empty")
 	}
-	if ua.req.AutoScaling == nil {
-		return fmt.Errorf("autoScaling is empty")
-	}
-	if ua.req.LaunchTemplate == nil {
-		return fmt.Errorf("launchTemplate is empty")
-	}
-	if ua.req.NodeTemplate == nil {
-		return fmt.Errorf("nodeTemplate is empty")
-	}
 	return nil
 }
 
@@ -123,12 +114,50 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		if ua.req.LaunchTemplate.SecurityGroupIDs != nil {
 			group.LaunchTemplate.SecurityGroupIDs = ua.req.LaunchTemplate.SecurityGroupIDs
 		}
-		group.LaunchTemplate.UserData = ua.req.LaunchTemplate.UserData
+		if ua.req.LaunchTemplate.UserData != "" {
+			group.LaunchTemplate.UserData = ua.req.LaunchTemplate.UserData
+		}
+		if ua.req.LaunchTemplate.ImageInfo != nil {
+			group.LaunchTemplate.ImageInfo = ua.req.LaunchTemplate.ImageInfo
+		}
 		group.LaunchTemplate.IsMonitorService = ua.req.LaunchTemplate.IsMonitorService
 		group.LaunchTemplate.IsSecurityService = ua.req.LaunchTemplate.IsSecurityService
 	}
 	if ua.req.NodeTemplate != nil {
-		group.NodeTemplate = ua.req.NodeTemplate
+		if ua.req.NodeTemplate.NodeTemplateID != "" {
+			group.NodeTemplate.NodeTemplateID = ua.req.NodeTemplate.NodeTemplateID
+		}
+		if ua.req.NodeTemplate.Name != "" {
+			group.NodeTemplate.Name = ua.req.NodeTemplate.Name
+		}
+		if ua.req.NodeTemplate.ProjectID != "" {
+			group.NodeTemplate.ProjectID = ua.req.NodeTemplate.ProjectID
+		}
+		if ua.req.NodeTemplate.DockerGraphPath != "" {
+			group.NodeTemplate.DockerGraphPath = ua.req.NodeTemplate.DockerGraphPath
+		}
+		if ua.req.NodeTemplate.MountTarget != "" {
+			group.NodeTemplate.MountTarget = ua.req.NodeTemplate.MountTarget
+		}
+		if ua.req.NodeTemplate.UserScript != "" {
+			group.NodeTemplate.UserScript = ua.req.NodeTemplate.UserScript
+		}
+		if ua.req.NodeTemplate.SystemDisk != nil {
+			group.NodeTemplate.SystemDisk = ua.req.NodeTemplate.SystemDisk
+		}
+		if ua.req.NodeTemplate.DataDisks != nil {
+			group.NodeTemplate.DataDisks = ua.req.NodeTemplate.DataDisks
+		}
+		if ua.req.NodeTemplate.BcsAddons != nil {
+			group.NodeTemplate.BcsAddons = ua.req.NodeTemplate.BcsAddons
+		}
+		if ua.req.NodeTemplate.ExtraAddons != nil {
+			group.NodeTemplate.ExtraAddons = ua.req.NodeTemplate.ExtraAddons
+		}
+		if ua.req.NodeTemplate.ExtraArgs != nil {
+			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
+		}
+		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
 	}
 	group.Labels = ua.req.Labels
 	group.Taints = ua.req.Taints

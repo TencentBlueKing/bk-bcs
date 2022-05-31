@@ -68,7 +68,9 @@ func (c *VPCClient) DescribeSecurityGroups(securityGroupIds []string, filters []
 	blog.Infof("DescribeSecurityGroups input: %s, %s", utils.ToJSONString(securityGroupIds),
 		utils.ToJSONString(filters))
 	req := vpc.NewDescribeSecurityGroupsRequest()
-	req.SecurityGroupIds = common.StringPtrs(securityGroupIds)
+	if securityGroupIds != nil {
+		req.SecurityGroupIds = common.StringPtrs(securityGroupIds)
+	}
 	req.Limit = common.StringPtr(strconv.Itoa(limit))
 	req.Filters = make([]*vpc.Filter, 0)
 	for _, v := range filters {
@@ -140,9 +142,15 @@ func (c *VPCClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 // ListSubnets list vpc subnets
 func (c *VPCClient) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
 	blog.Infof("ListSubnets input: vpcID/%s", vpcID)
+	vpcCli, err := NewVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return nil, err
+	}
+
 	filter := make([]*Filter, 0)
 	filter = append(filter, &Filter{Name: "vpc-id", Values: []string{vpcID}})
-	subnets, err := c.DescribeSubnets(nil, filter)
+	subnets, err := vpcCli.DescribeSubnets(nil, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +171,13 @@ func (c *VPCClient) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) (
 
 // ListSecurityGroups list security groups
 func (c *VPCClient) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
-	sgs, err := c.DescribeSecurityGroups(nil, nil)
+	vpcCli, err := NewVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return nil, err
+	}
+
+	sgs, err := vpcCli.DescribeSecurityGroups(nil, nil)
 	if err != nil {
 		return nil, err
 	}

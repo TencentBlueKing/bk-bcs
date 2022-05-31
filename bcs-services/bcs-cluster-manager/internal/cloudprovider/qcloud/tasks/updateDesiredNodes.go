@@ -86,7 +86,7 @@ func UpdateDesiredNodesTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	err = tkeCli.ModifyNodePoolDesiredCapacityAboutAsg(group.ClusterID, group.NodeGroupID, int64(group.AutoScaling.DesiredSize))
+	err = tkeCli.ModifyNodePoolDesiredCapacityAboutAsg(cluster.SystemID, group.NodeGroupID, int64(group.AutoScaling.DesiredSize))
 	if err != nil {
 		blog.Errorf("UpdateDesiredNodesTask[%s]: call ModifyNodePoolDesiredCapacityAboutAsg[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -172,7 +172,7 @@ func CheckUpdateDesiredNodesStatusTask(taskID string, stepName string) error {
 
 	// wait all nodes to be ready
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, err := cli.DescribeClusterNodePoolDetail(group.ClusterID, group.CloudNodeGroupID)
+		np, err := cli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, group.ClusterID,
 				group.CloudNodeGroupID, err)
@@ -194,6 +194,17 @@ func CheckUpdateDesiredNodesStatusTask(taskID string, stepName string) error {
 	}, cloudprovider.LoopInterval(10*time.Second))
 	if err != nil {
 		blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail failed: %v", taskID, err)
+		return err
+	}
+
+	// update response information to task common params
+	if state.Task.CommonParams == nil {
+		state.Task.CommonParams = make(map[string]string)
+	}
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CheckUpdateDesiredNodesStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
 	return nil

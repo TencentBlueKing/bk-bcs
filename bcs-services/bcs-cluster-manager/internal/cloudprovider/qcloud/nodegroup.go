@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -84,6 +85,11 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 
 // UpdateNodeGroup update specified nodegroup configuration
 func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
+	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
+	if err != nil {
+		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
+		return err
+	}
 	tkeCli, err := api.NewTkeClient(opt)
 	if err != nil {
 		blog.Errorf("create tke client failed, err: %s", err.Error())
@@ -99,6 +105,12 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return fmt.Errorf("nodegroup id or cluster id is empty")
 	}
 
+	// modify node pool
+	// 节点池必须在 asg 前更新，因为 nodePool NodeOs 参数会覆盖 asg imageID
+	if err := tkeCli.ModifyClusterNodePool(ng.generateModifyClusterNodePoolInput(group, cluster.SystemID)); err != nil {
+		return err
+	}
+
 	// modify asg
 	if err := asCli.ModifyAutoScalingGroup(ng.generateModifyAutoScalingGroupInput(group)); err != nil {
 		return err
@@ -108,25 +120,19 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	if err := asCli.UpgradeLaunchConfiguration(ng.generateUpgradeLaunchConfigurationInput(group)); err != nil {
 		return err
 	}
-
-	// modify node pool
-	if err := tkeCli.ModifyClusterNodePool(ng.generateModifyClusterNodePoolInput(group)); err != nil {
-		return err
-	}
 	return nil
 }
 
-func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup) *tke.ModifyClusterNodePoolRequest {
+func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string) *tke.ModifyClusterNodePoolRequest {
 	// modify nodegroup
 	req := tke.NewModifyClusterNodePoolRequest()
-	req.ClusterId = &group.ClusterID
-	req.NodePoolId = &group.NodeGroupID
+	req.ClusterId = &clusterID
+	req.NodePoolId = &group.CloudNodeGroupID
 	req.Name = &group.Name
 	req.Labels = api.MapToCloudLabels(group.Labels)
 	req.Taints = api.MapToCloudTaints(group.Taints)
 	req.Tags = api.MapToCloudTags(group.Tags)
 	req.EnableAutoscale = common.BoolPtr(false)
-	req.OsName = &group.NodeOS
 	// MaxNodesNum/MinNodesNum 通过 asg 修改，这里不用修改
 	if group.NodeTemplate != nil {
 		req.Unschedulable = common.Int64Ptr(int64(group.NodeTemplate.UnSchedulable))
@@ -202,14 +208,24 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
 	}
+	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
+	if err != nil {
+		blog.Errorf("GetCloudAndCluster failed, err: %s", err.Error())
+		return nil, err
+	}
 	tkecli, err := api.NewTkeClient(opt)
 	if err != nil {
 		blog.Errorf("create tke client failed, err: %s", err.Error())
 		return nil, err
 	}
-	nodePool, err := tkecli.DescribeClusterNodePoolDetail(group.ClusterID, group.NodeGroupID)
+	nodePool, err := tkecli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		blog.Errorf("DescribeClusterNodePoolDetail failed, err: %s", err.Error())
+		return nil, err
+	}
+	if nodePool == nil || nodePool.AutoscalingGroupId == nil {
+		err = fmt.Errorf("GetNodesInGroup failed, node pool is empty")
+		blog.Errorf("%s", err.Error())
 		return nil, err
 	}
 	asCli, err := api.NewASClient(opt)
@@ -265,6 +281,11 @@ func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.Node
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return fmt.Errorf("nodegroup id or cluster id is empty")
 	}
+	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
+	if err != nil {
+		blog.Errorf("GetCloudAndCluster failed, err: %s", err.Error())
+		return err
+	}
 	tkeCli, err := api.NewTkeClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create tke client failed, err: %s", err.Error())
@@ -274,7 +295,7 @@ func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.Node
 	for _, v := range nodes {
 		ids = append(ids, v.NodeID)
 	}
-	return tkeCli.RemoveNodeFromNodePool(group.ClusterID, group.NodeGroupID, ids)
+	return tkeCli.RemoveNodeFromNodePool(cluster.SystemID, group.NodeGroupID, ids)
 }
 
 // CleanNodesInGroup clean specified nodes in NodeGroup,

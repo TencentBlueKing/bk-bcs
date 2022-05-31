@@ -2286,7 +2286,7 @@ message NodeGroup {
     title: "labels", 
     description: "新实例初始化label信息"
   }];
-  map<string, string> taints = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated Taint taints = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taints", 
     description: "新实例初始化的污点信息"
   }];
@@ -2570,8 +2570,7 @@ message LaunchConfiguration {
     title: "instanceChargeType", 
     description: "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。"
                 "如不设置，BCS暂时默认提供包年包月的类型"
-  },(validate.rules).string = {in: ["PREPAID", "POSTPAID_BY_HOUR", "SPOTPAID"]}
-  ];
+  }];
   InternetAccessible internetAccess = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "internetAccess", 
     description: "公网信息设置，建议设置"
@@ -2709,9 +2708,18 @@ message ClusterAutoScalingOption {
 
 // Taint for node taints
 message Taint {
-  string Key = 1;
-  string Value = 2;
-  string Effect = 3;
+  string key = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "key",
+    description: "污点 Key"
+  }];
+  string value = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "value",
+    description: "污点 Value"
+  }];
+  string effect = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "effect",
+    description: "污点效果，(NoSchedule, PreferNoSchedule, NoExecute)"
+  }];
 }
 
 // NodeTemplate for kubernetes cluster node common setting
@@ -2733,9 +2741,7 @@ message NodeTemplate {
   string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "projectID",
     description: "节点模版所关联的项目，该项目为蓝鲸的项目"
-  },
-    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
-  ];
+  }];
   map<string, string> labels = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "labels",
     description: "新实例初始化label信息"
@@ -6253,7 +6259,7 @@ message CreateNodeGroupRequest {
     title: "labels", 
     description: "新实例初始化label信息"
   }];
-  map<string, string> taints = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated Taint taints = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taints", 
     description: "新实例初始化的污点信息"
   }];
@@ -6340,8 +6346,7 @@ message UpdateNodeGroupRequest {
   string region = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "region", 
     description: "节点组所关联区域信息"
-  },(validate.rules).string = {min_len : 1, max_len : 32, pattern : "^[0-9a-zA-Z-]+$"}
-  ];
+  }];
   bool enableAutoscale = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "enableAutoscale", 
     description: "是否开启弹性伸缩，默认false"
@@ -6365,7 +6370,7 @@ message UpdateNodeGroupRequest {
     title: "labels", 
     description: "新实例初始化label信息"
   }];
-  map<string, string> taints = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated Taint taints = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taints", 
     description: "新实例初始化的污点信息"
   }];

@@ -7187,7 +7187,39 @@ func (m *NodeGroup) validate(all bool) error {
 
 	// no validation rules for Labels
 
-	// no validation rules for Taints
+	for idx, item := range m.GetTaints() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, NodeGroupValidationError{
+						field:  fmt.Sprintf("Taints[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, NodeGroupValidationError{
+						field:  fmt.Sprintf("Taints[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return NodeGroupValidationError{
+					field:  fmt.Sprintf("Taints[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	// no validation rules for NodeOS
 
@@ -8116,16 +8148,7 @@ func (m *LaunchConfiguration) validate(all bool) error {
 
 	// no validation rules for InstanceType
 
-	if _, ok := _LaunchConfiguration_InstanceChargeType_InLookup[m.GetInstanceChargeType()]; !ok {
-		err := LaunchConfigurationValidationError{
-			field:  "InstanceChargeType",
-			reason: "value must be in list [PREPAID POSTPAID_BY_HOUR SPOTPAID]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for InstanceChargeType
 
 	if all {
 		switch v := interface{}(m.GetInternetAccess()).(type) {
@@ -8272,12 +8295,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = LaunchConfigurationValidationError{}
-
-var _LaunchConfiguration_InstanceChargeType_InLookup = map[string]struct{}{
-	"PREPAID":          {},
-	"POSTPAID_BY_HOUR": {},
-	"SPOTPAID":         {},
-}
 
 // Validate checks the field values on ImageInfo with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -8658,27 +8675,7 @@ func (m *NodeTemplate) validate(all bool) error {
 
 	// no validation rules for Name
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 2 || l > 100 {
-		err := NodeTemplateValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_NodeTemplate_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := NodeTemplateValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ProjectID
 
 	// no validation rules for Labels
 
@@ -8967,8 +8964,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = NodeTemplateValidationError{}
-
-var _NodeTemplate_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on Project with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -23148,7 +23143,39 @@ func (m *CreateNodeGroupRequest) validate(all bool) error {
 
 	// no validation rules for Labels
 
-	// no validation rules for Taints
+	for idx, item := range m.GetTaints() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateNodeGroupRequestValidationError{
+						field:  fmt.Sprintf("Taints[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateNodeGroupRequestValidationError{
+						field:  fmt.Sprintf("Taints[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateNodeGroupRequestValidationError{
+					field:  fmt.Sprintf("Taints[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	// no validation rules for NodeOS
 
@@ -23681,27 +23708,7 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetRegion()); l < 1 || l > 32 {
-		err := UpdateNodeGroupRequestValidationError{
-			field:  "Region",
-			reason: "value length must be between 1 and 32 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_UpdateNodeGroupRequest_Region_Pattern.MatchString(m.GetRegion()) {
-		err := UpdateNodeGroupRequestValidationError{
-			field:  "Region",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Region
 
 	// no validation rules for EnableAutoscale
 
@@ -23827,7 +23834,39 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 
 	// no validation rules for Labels
 
-	// no validation rules for Taints
+	for idx, item := range m.GetTaints() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UpdateNodeGroupRequestValidationError{
+						field:  fmt.Sprintf("Taints[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UpdateNodeGroupRequestValidationError{
+						field:  fmt.Sprintf("Taints[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateNodeGroupRequestValidationError{
+					field:  fmt.Sprintf("Taints[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	// no validation rules for Tags
 
@@ -23936,8 +23975,6 @@ var _ interface {
 } = UpdateNodeGroupRequestValidationError{}
 
 var _UpdateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _UpdateNodeGroupRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _UpdateNodeGroupRequest_Updater_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 

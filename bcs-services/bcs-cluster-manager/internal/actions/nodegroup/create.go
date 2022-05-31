@@ -86,6 +86,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		EnableAutoscale: ca.req.EnableAutoscale,
 		AutoScaling:     ca.req.AutoScaling,
 		LaunchTemplate:  ca.req.LaunchTemplate,
+		NodeTemplate:    ca.req.NodeTemplate,
 		Labels:          ca.req.Labels,
 		Taints:          ca.req.Taints,
 		Tags:            ca.req.Tags,
@@ -161,7 +162,7 @@ func (ca *CreateAction) save() error {
 			blog.Errorf("get cluster %s autoScalingOption failed, %s", ca.cluster.ClusterID, err.Error())
 			return err
 		}
-		aso := actions.GetDefaultClusterAutoScalingOption()
+		aso := actions.GetDefaultClusterAutoScalingOption(ca.cluster.ClusterID)
 		if err := ca.model.CreateAutoScalingOption(ca.ctx, aso); err != nil {
 			blog.Errorf("create cluster %s autoScalingOption failed, %s", ca.cluster.ClusterID, err.Error())
 			return err

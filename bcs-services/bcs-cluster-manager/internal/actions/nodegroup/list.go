@@ -14,11 +14,14 @@ package nodegroup
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -99,10 +102,13 @@ func (la *ListAction) Handle(
 
 // ListNodesAction action for list online cluster credential
 type ListNodesAction struct {
-	ctx   context.Context
-	model store.ClusterManagerModel
-	req   *cmproto.GetNodeGroupRequest
-	resp  *cmproto.ListNodesInGroupResponse
+	ctx     context.Context
+	model   store.ClusterManagerModel
+	group   *cmproto.NodeGroup
+	cluster *cmproto.Cluster
+	cloud   *cmproto.Cloud
+	req     *cmproto.GetNodeGroupRequest
+	resp    *cmproto.ListNodesInGroupResponse
 }
 
 // NewListNodesAction create list action for cluster credential
@@ -116,6 +122,66 @@ func (la *ListNodesAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (la *ListNodesAction) getRelativeResource() error {
+	group, err := la.model.GetNodeGroup(la.ctx, la.req.NodeGroupID)
+	if err != nil {
+		blog.Errorf("get NodeGroup %s failed when list its all nodes, %s", la.req.NodeGroupID, err.Error())
+		return err
+	}
+	la.group = group
+
+	//get relative cluster for information injection
+	cluster, err := la.model.GetCluster(la.ctx, la.group.ClusterID)
+	if err != nil {
+		blog.Errorf("can not get relative Cluster %s when list nodes in group", la.group.ClusterID)
+		return fmt.Errorf("get relative cluster %s info err, %s", la.group.ClusterID, err.Error())
+	}
+	la.cluster = cluster
+
+	cloud, err := actions.GetCloudByCloudID(la.model, la.group.Provider)
+	if err != nil {
+		blog.Errorf("can not get relative Cloud %s when list nodes in group for Cluster %s, %s",
+			la.group.Provider, la.group.ClusterID, err.Error(),
+		)
+		return err
+	}
+	la.cloud = cloud
+
+	return nil
+}
+
+func (la *ListNodesAction) listNodesInGroup() error {
+	// create nodegroup with cloudprovider
+	mgr, err := cloudprovider.GetNodeGroupMgr(la.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for list nodes in group %s failed, %s",
+			la.cloud.CloudID, la.cloud.CloudProvider, la.group.NodeGroupID, err.Error(),
+		)
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     la.cloud,
+		AccountID: la.cluster.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get Credential for Cloud %s/%s when list nodes in group for cluster %s failed, %s",
+			la.cloud.CloudID, la.cloud.CloudProvider, la.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+	cmOption.Region = la.cluster.Region
+	// cloud provider nodeGroup
+	nodes, err := mgr.GetNodesInGroup(la.group, cmOption)
+	if err != nil {
+		blog.Errorf("list group nodes in cloudprovider %s/%s for Cluster %s failed, %s",
+			la.cloud.CloudID, la.cloud.CloudProvider, la.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+	la.resp.Data = nodes
+	return nil
 }
 
 // Handle handle list cluster credential
@@ -133,24 +199,17 @@ func (la *ListNodesAction) Handle(
 		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	group, err := la.model.GetNodeGroup(ctx, req.NodeGroupID)
-	if err != nil {
-		blog.Errorf("get NodeGroup %s failed when list its all nodes, %s", req.NodeGroupID, err.Error())
+
+	if err := la.getRelativeResource(); err != nil {
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	//check if nodes are already in cluster
-	condM := make(operator.M)
-	condM["nodegroupid"] = group.NodeGroupID
-	cond := operator.NewLeafCondition(operator.Eq, condM)
-	nodes, err := la.model.ListNode(ctx, cond, &storeopt.ListOption{})
-	if err != nil {
-		blog.Errorf("get NodeGroup %s all Nodes failed, %s", group.NodeGroupID, err.Error())
-		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+
+	if err := la.listNodesInGroup(); err != nil {
+		la.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return
 	}
-	for i := range nodes {
-		resp.Data = append(resp.Data, nodes[i])
-	}
+
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

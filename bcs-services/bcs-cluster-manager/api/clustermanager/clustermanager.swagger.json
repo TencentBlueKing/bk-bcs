@@ -6065,10 +6065,12 @@
           }
         },
         "taints": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaint"
+          },
+          "description": "新实例初始化的污点信息",
+          "title": "taints"
         },
         "nodeOS": {
           "type": "string",
@@ -9007,10 +9009,12 @@
           }
         },
         "taints": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaint"
+          },
+          "description": "新实例初始化的污点信息",
+          "title": "taints"
         },
         "nodeOS": {
           "type": "string",
@@ -9821,14 +9825,20 @@
     "clustermanagerTaint": {
       "type": "object",
       "properties": {
-        "Key": {
-          "type": "string"
+        "key": {
+          "type": "string",
+          "description": "污点 Key",
+          "title": "key"
         },
-        "Value": {
-          "type": "string"
+        "value": {
+          "type": "string",
+          "description": "污点 Value",
+          "title": "value"
         },
-        "Effect": {
-          "type": "string"
+        "effect": {
+          "type": "string",
+          "description": "污点效果，(NoSchedule, PreferNoSchedule, NoExecute)",
+          "title": "effect"
         }
       },
       "title": "Taint for node taints"
@@ -10998,10 +11008,12 @@
           }
         },
         "taints": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaint"
+          },
+          "description": "新实例初始化的污点信息",
+          "title": "taints"
         },
         "tags": {
           "type": "object",

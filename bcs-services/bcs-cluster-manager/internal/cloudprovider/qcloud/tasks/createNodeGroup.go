@@ -88,7 +88,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return err
 	}
 	nodePool := api.CreateNodePoolInput{
-		ClusterID:                &group.ClusterID,
+		ClusterID:                &cluster.SystemID,
 		AutoScalingGroupPara:     generateAutoScalingGroupPara(group.AutoScaling),
 		LaunchConfigurePara:      generateLaunchConfigurePara(group.LaunchTemplate, group.NodeTemplate),
 		InstanceAdvancedSettings: generateInstanceAdvanceSettings(group.NodeTemplate),
@@ -100,7 +100,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		Taints:          api.MapToTaints(group.Taints),
 		Tags:            api.MapToTags(group.Tags),
 	}
-	if *nodePool.AutoScalingGroupPara.VpcID == "" {
+	if nodePool.AutoScalingGroupPara != nil && nodePool.AutoScalingGroupPara.VpcID == nil {
 		nodePool.AutoScalingGroupPara.VpcID = &cluster.VpcID
 	}
 	npID, err := tkeCli.CreateClusterNodePool(&nodePool)
@@ -210,9 +210,9 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	asgID := ""
 	ascID := ""
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, err := tkeCli.DescribeClusterNodePoolDetail(group.ClusterID, group.CloudNodeGroupID)
+		np, err := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
-			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, group.ClusterID,
+			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, cluster.SystemID,
 				group.CloudNodeGroupID, err)
 			return nil
 		}
@@ -237,6 +237,17 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return err
 	}
 
+	// update image id
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
+		ascReq := as.NewModifyLaunchConfigurationAttributesRequest()
+		ascReq.LaunchConfigurationId = &ascID
+		ascReq.ImageId = &group.LaunchTemplate.ImageInfo.ImageID
+		if err := asCli.ModifyLaunchConfigurationAttributes(ascReq); err != nil {
+			blog.Errorf("taskID[%s] ModifyLaunchConfigurationAttributes[%s] failed: %v", taskID, ascID, err)
+			return err
+		}
+	}
+
 	// get asg info
 	asgArr, err := asCli.DescribeAutoScalingGroups([]string{asgID})
 	if err != nil {
@@ -249,17 +260,6 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("taskID[%s] DescribeLaunchConfigurations[%s] failed: %v", taskID, ascID, err)
 		return err
-	}
-
-	// update image id
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
-		ascReq := as.NewModifyLaunchConfigurationAttributesRequest()
-		ascReq.LaunchConfigurationId = &ascID
-		ascReq.ImageId = &group.LaunchTemplate.ImageInfo.ImageID
-		if err := asCli.ModifyLaunchConfigurationAttributes(ascReq); err != nil {
-			blog.Errorf("taskID[%s] ModifyLaunchConfigurationAttributes[%s] failed: %v", taskID, ascID, err)
-			return err
-		}
 	}
 
 	// update node group status
@@ -276,6 +276,17 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	// update response information to task common params
+	if state.Task.CommonParams == nil {
+		state.Task.CommonParams = make(map[string]string)
+	}
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		return err
 	}
 	return nil
 }
@@ -371,6 +382,9 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingG
 			group.LaunchTemplate.IsSecurityService = *asc.EnhancedService.SecurityService.Enabled
 		}
 	}
+	if asc.ProjectId != nil {
+		group.LaunchTemplate.ProjectID = uint32(*asc.ProjectId)
+	}
 	return group
 }
 
@@ -416,18 +430,31 @@ func generateAutoScalingGroupPara(as *proto.AutoScalingGroup) *api.AutoScalingGr
 	if as == nil {
 		return nil
 	}
-	return &api.AutoScalingGroup{
-		AutoScalingGroupName:  common.StringPtr(as.AutoScalingName),
-		MaxSize:               common.Uint64Ptr(uint64(as.MaxSize)),
-		MinSize:               common.Uint64Ptr(uint64(as.MinSize)),
-		VpcID:                 common.StringPtr(as.VpcID),
-		DefaultCooldown:       common.Uint64Ptr(uint64(as.DefaultCooldown)),
-		SubnetIds:             common.StringPtrs(as.SubnetIDs),
-		DesiredCapacity:       common.Uint64Ptr(uint64(as.DesiredSize)),
-		RetryPolicy:           common.StringPtr(as.RetryPolicy),
-		ServiceSettings:       &api.ServiceSettings{ScalingMode: common.StringPtr(as.ScalingMode)},
-		MultiZoneSubnetPolicy: common.StringPtr(as.MultiZoneSubnetPolicy),
+	asg := &api.AutoScalingGroup{
+		MaxSize:         common.Uint64Ptr(uint64(as.MaxSize)),
+		MinSize:         common.Uint64Ptr(uint64(as.MinSize)),
+		SubnetIds:       common.StringPtrs(as.SubnetIDs),
+		DesiredCapacity: common.Uint64Ptr(uint64(as.DesiredSize)),
 	}
+	if as.AutoScalingName != "" {
+		asg.AutoScalingGroupName = common.StringPtr(as.AutoScalingName)
+	}
+	if as.VpcID != "" {
+		asg.VpcID = common.StringPtr(as.VpcID)
+	}
+	if as.DefaultCooldown != 0 {
+		asg.DefaultCooldown = common.Uint64Ptr(uint64(as.DefaultCooldown))
+	}
+	if as.RetryPolicy != "" {
+		asg.RetryPolicy = common.StringPtr(as.RetryPolicy)
+	}
+	if as.ScalingMode != "" {
+		asg.ServiceSettings = &api.ServiceSettings{ScalingMode: common.StringPtr(as.ScalingMode)}
+	}
+	if as.MultiZoneSubnetPolicy != "" {
+		asg.MultiZoneSubnetPolicy = common.StringPtr(as.MultiZoneSubnetPolicy)
+	}
+	return asg
 }
 
 func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration {
@@ -445,7 +472,7 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTempla
 		conf.SystemDisk = &api.SystemDisk{
 			DiskType: &nodeTemplate.SystemDisk.DiskType}
 		diskSize, err := strconv.Atoi(nodeTemplate.SystemDisk.DiskSize)
-		if err != nil && diskSize > 0 {
+		if err == nil && diskSize > 0 {
 			conf.SystemDisk.DiskSize = common.Uint64Ptr(uint64(diskSize))
 		}
 	}
@@ -461,15 +488,17 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTempla
 		}
 	}
 	if template.InternetAccess != nil {
+		conf.InternetAccessible = &api.InternetAccessible{
+			PublicIPAssigned:        common.BoolPtr(template.InternetAccess.PublicIPAssigned),
+			InternetMaxBandwidthOut: common.Uint64Ptr(uint64(template.InternetAccess.InternetMaxBandwidth)),
+		}
 		if template.InternetAccess.InternetChargeType != "" {
 			conf.InternetAccessible.InternetChargeType = common.StringPtr(template.InternetAccess.InternetChargeType)
 		}
-		conf.InternetAccessible.InternetMaxBandwidthOut = common.Uint64Ptr(uint64(template.InternetAccess.InternetMaxBandwidth))
-		conf.InternetAccessible.PublicIPAssigned = common.BoolPtr(template.InternetAccess.PublicIPAssigned)
 	}
 	conf.EnhancedService = &api.EnhancedService{
-		SecurityService: template.IsSecurityService,
-		MonitorService:  template.IsMonitorService,
+		SecurityService: &api.RunSecurityServiceEnabled{Enabled: common.BoolPtr(template.IsSecurityService)},
+		MonitorService:  &api.RunMonitorServiceEnabled{Enabled: common.BoolPtr(template.IsMonitorService)},
 	}
 	return conf
 }
@@ -479,10 +508,16 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 		return nil
 	}
 	result := &api.InstanceAdvancedSettings{
-		MountTarget:     template.MountTarget,
-		DockerGraphPath: template.DockerGraphPath,
-		Unschedulable:   common.Int64Ptr(int64(template.UnSchedulable)),
-		UserScript:      template.UserScript,
+		Unschedulable: common.Int64Ptr(int64(template.UnSchedulable)),
+	}
+	if template.MountTarget != "" {
+		result.MountTarget = template.MountTarget
+	}
+	if template.DockerGraphPath != "" {
+		result.DockerGraphPath = template.DockerGraphPath
+	}
+	if template.UserScript != "" {
+		result.UserScript = template.UserScript
 	}
 	if template.Labels != nil {
 		result.Labels = make([]*api.KeyValue, 0)

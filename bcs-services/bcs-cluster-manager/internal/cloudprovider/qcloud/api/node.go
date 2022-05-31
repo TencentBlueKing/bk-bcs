@@ -600,29 +600,35 @@ func (nm *NodeManager) DescribeInstances(ins []string, filters []*Filter, opt *c
 			blog.Errorf("DescribeInstances resp is nil")
 			return nil, fmt.Errorf("DescribeInstances resp is nil")
 		}
-		blog.Infof("DescribeInstances success, requestID: %s", resp.Response.RequestId)
+		blog.Infof("DescribeInstances success, requestID: %s", *resp.Response.RequestId)
 		for _, v := range resp.Response.InstanceSet {
-			node := &proto.Node{
-				NodeID:       *v.InstanceId,
-				InstanceType: *v.InstanceType,
-				CPU:          uint32(*v.CPU),
-				Mem:          uint32(*v.Memory),
-				Status:       *v.InstanceState,
+			node := &proto.Node{NodeID: *v.InstanceId}
+			if v.InstanceType != nil {
+				node.InstanceType = *v.InstanceType
+			}
+			if v.CPU != nil {
+				node.CPU = uint32(*v.CPU)
+			}
+			if v.Memory != nil {
+				node.Mem = uint32(*v.Memory)
+			}
+			if v.InstanceState != nil {
+				node.Status = *v.InstanceState
 			}
 			if len(v.PrivateIpAddresses) > 0 {
 				node.InnerIP = *v.PrivateIpAddresses[0]
 			}
-			if v.GPUInfo != nil {
+			if v.GPUInfo != nil && v.GPUInfo.GPUCount != nil {
 				node.GPU = uint32(*v.GPUInfo.GPUCount)
 			}
-			if v.Placement != nil {
+			if v.Placement != nil && v.Placement.Zone != nil {
 				node.ZoneID = *v.Placement.Zone
 				node.Zone = zoneInfo[*v.Placement.Zone]
 			}
-			if v.VirtualPrivateCloud != nil {
+			if v.VirtualPrivateCloud != nil && v.VirtualPrivateCloud.VpcId != nil {
 				node.VPC = *v.VirtualPrivateCloud.VpcId
 			}
-			if v.LoginSettings != nil {
+			if v.LoginSettings != nil && v.LoginSettings.Password != nil {
 				node.Passwd = *v.LoginSettings.Password
 			}
 			nodes = append(nodes, node)

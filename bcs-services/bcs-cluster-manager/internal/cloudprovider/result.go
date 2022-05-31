@@ -105,6 +105,13 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	case ImportClusterJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusImportClusterFailed)
 		return sjr.updateClusterResultStatus(isSuccess)
+	case CreateNodeGroupJob:
+	case UpdateNodeGroupJob:
+	case DeleteNodeGroupJob:
+	case UpdateNodeGroupDisiredNodeJob:
+	case CleanNodeGroupNodesJob:
+	case MoveNodesToNodeGroupJob:
+		break
 	}
 
 	return fmt.Errorf(ErrJobType, sjr.JobType)
