@@ -36,7 +36,7 @@ promu:
 
 .PHONY: build
 build:
-	${GOBUILD} ${LDFLAG} -o bcs-monitor ./cmd/bcs-monitor
+	${GOBUILD} ${LDFLAG} -o bin/bcs-monitor ./cmd/bcs-monitor
 
 .PHONY: test
 test:
