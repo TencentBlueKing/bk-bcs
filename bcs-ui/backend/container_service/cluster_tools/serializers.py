@@ -12,7 +12,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from rest_framework import serializers
 
@@ -46,6 +46,13 @@ class UpgradeToolSLZ(serializers.Serializer):
 
 
 class InstalledToolSLZ(serializers.ModelSerializer):
+    chart_version = serializers.ReadOnlyField()
+    tool_info = serializers.SerializerMethodField()
+
     class Meta:
         model = InstalledTool
-        fields = '__all__'
+        exclude = ('id', 'tool', 'extra_options', 'deleted_time', 'is_deleted')
+
+    def get_tool_info(self, obj: InstalledTool) -> Dict[str, Union[int, str]]:
+        tool = obj.tool
+        return {'id': tool.id, 'name': tool.name, 'description': tool.description}
