@@ -17,6 +17,7 @@ import (
 	"context"
 	"math"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
@@ -27,7 +28,9 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
@@ -100,12 +103,50 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	start := time.UnixMilli(r.MinTime).Unix()
 	end := time.UnixMilli(r.MaxTime).Unix()
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.Host, 2, start, end, r.Step, r.Matchers)
+	// series 数据, 这里只查询最近1分钟
+	if r.SkipChunks {
+		end = time.Now().Unix()
+		start = end - 60
+	}
+
+	metricName, err := clientutil.GetLabelMatchValue("__name__", r.Matchers)
+	if err != nil {
+		return err
+	}
+	if metricName == "" {
+		return errors.New("metric name is required")
+	}
+
+	clusterId, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
 	if err != nil {
 		return err
 	}
 
-	metricName, err := clientutil.GetLabelMatchValue("__name__", r.Matchers)
+	if clusterId == "" {
+		return errors.New("cluster_id is required")
+	}
+
+	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
+	for _, m := range r.Matchers {
+		// 集群Id转换为 bcs 的规范
+		if m.Name == "cluster_id" {
+			// 对 bkmonitor: 为 蓝鲸监控主机的数据, 不能添加集群过滤
+			if strings.HasPrefix(metricName, "bkmonitor:") {
+				continue
+			}
+			newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: m.Value})
+		} else {
+			newMatchers = append(newMatchers, m)
+		}
+	}
+
+	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
+	cluster, err := bcs.GetCluster(srv.Context(), bcsConf, clusterId)
+	if err != nil {
+		return err
+	}
+
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.Host, cluster.BKBizID, start, end, r.Step, newMatchers)
 	if err != nil {
 		return err
 	}
@@ -113,14 +154,18 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	for _, promSeries := range promSeriesSet {
 		series := &clientutil.TimeSeries{TimeSeries: promSeries}
 		series = series.AddLabel("__name__", metricName)
-		s, err := series.ToThanosSeries()
+		series = series.AddLabel("cluster_id", clusterId)
+		series = series.RenameLabel("bk_namespace", "namespace")
+		series = series.RenameLabel("bk_pod", "pod")
+
+		s, err := series.ToThanosSeries(r.SkipChunks)
 		if err != nil {
 			return err
 		}
 		if err := srv.Send(storepb.NewSeriesResponse(s)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }

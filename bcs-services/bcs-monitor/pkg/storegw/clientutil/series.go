@@ -38,8 +38,18 @@ func (s *TimeSeries) AddLabel(name, value string) *TimeSeries {
 	return s
 }
 
+// RenameLabel 重命名一个label, 如果有重复label，以后面一个为准
+func (s *TimeSeries) RenameLabel(oldname, newName string) *TimeSeries {
+	for _, label := range s.TimeSeries.Labels {
+		if label.Name == oldname {
+			s.Labels = append(s.Labels, prompb.Label{Name: newName, Value: label.Value})
+		}
+	}
+	return s
+}
+
 // ToThanosSeries 转换为
-func (s *TimeSeries) ToThanosSeries() (*storepb.Series, error) {
+func (s *TimeSeries) ToThanosSeries(skipChunks bool) (*storepb.Series, error) {
 	// 返回的点需要按时间排序
 	sort.Slice(s.Samples, func(i, j int) bool {
 		return s.Samples[i].Timestamp < s.Samples[j].Timestamp
@@ -51,9 +61,15 @@ func (s *TimeSeries) ToThanosSeries() (*storepb.Series, error) {
 		lset = append(lset, storepb.Label{Name: v.Name, Value: v.Value})
 	}
 
-	aggregatedChunks, err := ChunkSamples(s.TimeSeries, store.MaxSamplesPerChunk)
-	if err != nil {
-		return nil, err
+	series := &storepb.Series{Labels: lset}
+	// 不需要 chunks 数据, series 接口场景
+	if !skipChunks {
+		aggregatedChunks, err := ChunkSamples(s.TimeSeries, store.MaxSamplesPerChunk)
+		if err != nil {
+			return nil, err
+		}
+		series.Chunks = aggregatedChunks
 	}
-	return &storepb.Series{Labels: lset, Chunks: aggregatedChunks}, nil
+
+	return series, nil
 }

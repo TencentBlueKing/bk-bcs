@@ -24,7 +24,7 @@ function query {
     --credential-config ./etc/credentials_dev.yaml \
     --credential-config ./etc/credentials_mgr_dev.yaml \
     --store 127.0.0.1:19901 \
-    --store 127.0.0.1:1998
+    --store 127.0.0.1:11901
 }
 
 function storegw() {

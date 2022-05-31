@@ -55,7 +55,7 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 
 	config, err := yaml.Marshal(conf.Config)
 	if err != nil {
-		return nil, errors.Wrap(err, "marshal content of bucket configuration")
+		return nil, errors.Wrap(err, "marshal content of store configuration")
 	}
 
 	switch strings.ToUpper(string(conf.Type)) {
@@ -79,7 +79,7 @@ func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, 
 	_reg := prometheus.NewRegistry()
 
 	grpcProbe := prober.NewGRPC()
-	address := fmt.Sprintf("%s:%d", gprcAdvertiseIP, 1998)
+	address := fmt.Sprintf("%s:%d", gprcAdvertiseIP, conf.GRPCPort)
 
 	g := grpcserver.New(logger, _reg, nil, nil, nil, component.Store, grpcProbe,
 		grpcserver.WithServer(store.RegisterStoreServer(storeSvr)),

@@ -243,7 +243,6 @@ func MergeTimeSeriesMap(seriesMap map[uint64]*prompb.TimeSeries, toBeMerged map[
 			seriesMap[hash].Samples = append(seriesMap[hash].Samples, series.Samples...)
 		}
 	}
-	return
 }
 
 // GetLabelMatch
