@@ -26,7 +26,7 @@ from .constants import ToolStatus
 
 
 class Tool(models.Model):
-    """组件库中的组件信息(通过 Helm Chart 管理)."""
+    """组件库中的组件信息(通过 Helm Chart 管理)"""
 
     chart_name = models.CharField(max_length=128, unique=True)
     name = models.CharField(_('组件名'), max_length=64)
