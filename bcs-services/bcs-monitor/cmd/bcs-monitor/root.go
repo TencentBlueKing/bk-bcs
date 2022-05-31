@@ -19,9 +19,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/prometheus/common/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -35,6 +35,7 @@ var (
 	logLevel     string
 	certCfgFiles []string
 	httpAddress  string
+	appName      = "bcs-monitor"
 
 	rootCmd = &cobra.Command{
 		Use:   "bcs-monitor",
@@ -75,6 +76,8 @@ func init() {
 	rootCmd.AddCommand(QueryCmd())
 	rootCmd.AddCommand(StoreGWCmd())
 	rootCmd.AddCommand(VersionCmd())
+	rootCmd.Version = printVersion()
+	rootCmd.SetVersionTemplate(`{{printf "%s" .Version}}`)
 
 	// 自定义 help 函数, 需要主动关闭 runGroup
 	defaultHelpFn := rootCmd.HelpFunc()
@@ -136,9 +139,14 @@ func VersionCmd() *cobra.Command {
 		Short: "Show application version",
 		Long:  `All software has versions. This is bcs-monitor's`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(version.Print("bcs-monitor"))
+			fmt.Println(printVersion())
 			stopCmd(cmd)
 		},
 	}
 	return cmd
+}
+
+func printVersion() string {
+	v := appName + ", " + version.GetVersion()
+	return v
 }
