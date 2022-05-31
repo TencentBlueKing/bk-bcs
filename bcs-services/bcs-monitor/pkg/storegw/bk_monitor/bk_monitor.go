@@ -17,6 +17,7 @@ import (
 	"context"
 	"math"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
@@ -129,6 +130,10 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	for _, m := range r.Matchers {
 		// 集群Id转换为 bcs 的规范
 		if m.Name == "cluster_id" {
+			// 对 bkmonitor: 为 蓝鲸监控主机的数据, 不能添加集群过滤
+			if strings.HasPrefix(metricName, "bkmonitor:") {
+				continue
+			}
 			newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: m.Value})
 		} else {
 			newMatchers = append(newMatchers, m)
