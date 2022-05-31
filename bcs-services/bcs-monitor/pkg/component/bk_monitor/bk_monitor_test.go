@@ -46,7 +46,7 @@ func TestQueryByPromQL(t *testing.T) {
 
 	host := os.Getenv("BK_MONITOR_HOST")
 
-	series, err := QueryByPromQL(ctx, host, 2, start, end, step, matchers)
+	series, err := QueryByPromQL(ctx, host, "2", start, end, step, matchers)
 	assert.NoError(t, err)
 	assert.True(t, len(series) > 1)
 }

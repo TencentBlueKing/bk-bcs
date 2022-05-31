@@ -112,10 +112,17 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	if err != nil {
 		return err
 	}
+	if metricName == "" {
+		return errors.New("metric name is required")
+	}
 
 	clusterId, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
 	if err != nil {
 		return err
+	}
+
+	if clusterId == "" {
+		return errors.New("cluster_id is required")
 	}
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))

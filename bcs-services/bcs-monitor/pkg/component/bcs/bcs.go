@@ -26,7 +26,7 @@ type Cluster struct {
 	ProjectId   string `json:"projectID"`
 	ClusterId   string `json:"clusterID"`
 	ClusterName string `json:"clusterName"`
-	BKBizID     uint64 `json:"businessID"`
+	BKBizID     string `json:"businessID"`
 	Status      string `json:"status"`
 	IsShared    bool   `json:"is_shared"`
 }
