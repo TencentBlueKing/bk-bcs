@@ -91,6 +91,7 @@ type ReleaseConfig struct {
 	Encrypted          bool   `json:"encrypted"`
 }
 
+// JWTConfig option for jwt config
 type JWTConfig struct {
 	Enable         bool   `json:"enable"`
 	PublicKey      string `json:"publickey"`
@@ -99,21 +100,36 @@ type JWTConfig struct {
 	PrivateKeyFile string `json:"privatekeyfile"`
 }
 
+// ExemptClientsConfig option for helm perm
 type ExemptClientsConfig struct {
 	ClientIDs string `json:"clientids"`
 }
 
+// AppConfig basic config
+type AppConfig struct {
+	Code   string `json:"code"`
+	Secret string `json:"secret"`
+	Token  string `json:"token"`
+}
+
+// ProjectServiceConfig option for project config service
+type ProjectServiceConfig struct {
+	Host string `json:"host"`
+}
+
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd          EtcdOption          `json:"etcd"`
-	BcsLog        LogConfig           `json:"bcslog"`
-	Swagger       SwaggerConfig       `json:"swagger"`
-	Mongo         MongoConfig         `json:"mongo"`
-	Repo          RepoConfig          `json:"repo"`
-	Release       ReleaseConfig       `json:"release"`
-	JWT           JWTConfig           `json:"jwt"`
-	ExemptClients ExemptClientsConfig `json:"exemptclients"`
-	Debug         bool                `json:"debug"`
+	Etcd           EtcdOption           `json:"etcd"`
+	BcsLog         LogConfig            `json:"bcslog"`
+	Swagger        SwaggerConfig        `json:"swagger"`
+	Mongo          MongoConfig          `json:"mongo"`
+	Repo           RepoConfig           `json:"repo"`
+	Release        ReleaseConfig        `json:"release"`
+	JWT            JWTConfig            `json:"jwt"`
+	ExemptClients  ExemptClientsConfig  `json:"exemptclients"`
+	ProjectService ProjectServiceConfig `json:"projectservice"`
+	App            AppConfig            `json:"app"`
+	Debug          bool                 `json:"debug"`
 	ServerConfig
 	ClientConfig
 }

@@ -34,6 +34,7 @@ const (
 	ErrHelmManagerUpgradeActionFailed
 	ErrHelmManagerRollbackActionFailed
 	ErrHelmManagerAuthFailed
+	ErrHelmManagerRequestComponentFailed
 )
 
 // Int32 return HelmManagerError's code value
@@ -68,17 +69,18 @@ func (hme HelmManagerError) OK() *bool {
 }
 
 var errorCodeMapping = map[HelmManagerError]string{
-	ErrHelmManagerSuccess:               "success",
-	ErrHelmManagerReqOrRespEmpty:        "grpc req or resp is empty",
-	ErrHelmManagerRequestParamInvalid:   "request param invalid",
-	ErrHelmManagerCreateActionFailed:    "create action failed",
-	ErrHelmManagerUpdateActionFailed:    "update action failed",
-	ErrHelmManagerGetActionFailed:       "get action failed",
-	ErrHelmManagerListActionFailed:      "list action failed",
-	ErrHelmManagerDeleteActionFailed:    "delete action failed",
-	ErrHelmManagerInstallActionFailed:   "install action failed",
-	ErrHelmManagerUninstallActionFailed: "uninstall action failed",
-	ErrHelmManagerUpgradeActionFailed:   "upgrade action failed",
-	ErrHelmManagerRollbackActionFailed:  "rollback action failed",
-	ErrHelmManagerAuthFailed:            "user auth failed",
+	ErrHelmManagerSuccess:                "success",
+	ErrHelmManagerReqOrRespEmpty:         "grpc req or resp is empty",
+	ErrHelmManagerRequestParamInvalid:    "request param invalid",
+	ErrHelmManagerCreateActionFailed:     "create action failed",
+	ErrHelmManagerUpdateActionFailed:     "update action failed",
+	ErrHelmManagerGetActionFailed:        "get action failed",
+	ErrHelmManagerListActionFailed:       "list action failed",
+	ErrHelmManagerDeleteActionFailed:     "delete action failed",
+	ErrHelmManagerInstallActionFailed:    "install action failed",
+	ErrHelmManagerUninstallActionFailed:  "uninstall action failed",
+	ErrHelmManagerUpgradeActionFailed:    "upgrade action failed",
+	ErrHelmManagerRollbackActionFailed:   "rollback action failed",
+	ErrHelmManagerAuthFailed:             "user auth failed",
+	ErrHelmManagerRequestComponentFailed: "request third party failed",
 }
