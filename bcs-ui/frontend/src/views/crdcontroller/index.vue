@@ -685,10 +685,6 @@
                             $toolId: crdcontrollerId
                         })
                         if (result) {
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('卸载成功')
-                            })
                             this.getCrdControllersByCluster()
                         }
                     }
