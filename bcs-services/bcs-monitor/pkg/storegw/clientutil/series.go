@@ -38,6 +38,16 @@ func (s *TimeSeries) AddLabel(name, value string) *TimeSeries {
 	return s
 }
 
+// RenameLabel 重命名一个label, 如果有重复label，以后面一个为准
+func (s *TimeSeries) RenameLabel(oldname, newName string) *TimeSeries {
+	for _, label := range s.TimeSeries.Labels {
+		if label.Name == oldname {
+			s.Labels = append(s.Labels, prompb.Label{Name: newName, Value: label.Value})
+		}
+	}
+	return s
+}
+
 // ToThanosSeries 转换为
 func (s *TimeSeries) ToThanosSeries(skipChunks bool) (*storepb.Series, error) {
 	// 返回的点需要按时间排序

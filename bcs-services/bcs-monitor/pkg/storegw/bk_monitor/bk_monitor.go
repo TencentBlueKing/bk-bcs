@@ -155,6 +155,8 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		series := &clientutil.TimeSeries{TimeSeries: promSeries}
 		series = series.AddLabel("__name__", metricName)
 		series = series.AddLabel("cluster_id", clusterId)
+		series = series.RenameLabel("bk_namespace", "namespace")
+		series = series.RenameLabel("bk_pod", "pod")
 
 		s, err := series.ToThanosSeries(r.SkipChunks)
 		if err != nil {
