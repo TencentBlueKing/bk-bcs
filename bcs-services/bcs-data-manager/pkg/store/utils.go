@@ -32,6 +32,8 @@ const (
 	ObjectTypeKey = "object_type"
 	// ProjectIDKey key for project id
 	ProjectIDKey = "project_id"
+	// BusinessIDKey key for business id
+	BusinessIDKey = "business_id"
 	// ClusterIDKey key for cluster id
 	ClusterIDKey = "cluster_id"
 	// NamespaceKey key for namespace

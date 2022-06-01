@@ -36,14 +36,14 @@ func TestModelProject_GetProjectInfo(t *testing.T) {
 		{
 			name: "test1",
 			req: &bcsdatamanager.GetProjectInfoRequest{
-				ProjectID: "testproject1",
+				Project:   "testproject1",
 				Dimension: types.DimensionMinute,
 			},
 		},
 		{
 			name: "test2",
 			req: &bcsdatamanager.GetProjectInfoRequest{
-				ProjectID: "testproject2",
+				Project:   "testproject2",
 				Dimension: types.DimensionMinute,
 			},
 		},

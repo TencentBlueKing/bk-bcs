@@ -180,7 +180,8 @@ func (p *Producer) ProjectProducer(dimension string) {
 	}
 	for _, project := range projectList {
 		opts := types.JobCommonOpts{
-			ProjectID:   project,
+			ProjectID:   project.ProjectID,
+			BusinessID:  project.BusinessID,
 			CurrentTime: jobTime,
 			Dimension:   dimension,
 			ObjectType:  types.ProjectType,
@@ -218,6 +219,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 	for _, cluster := range clusterList {
 		opts := types.JobCommonOpts{
 			ProjectID:   cluster.ProjectID,
+			BusinessID:  cluster.BusinessID,
 			ClusterID:   cluster.ClusterID,
 			ClusterType: cluster.ClusterType,
 			CurrentTime: jobTime,
@@ -259,6 +261,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 		opts := types.JobCommonOpts{
 			ClusterID:   namespace.ClusterID,
 			ProjectID:   namespace.ProjectID,
+			BusinessID:  namespace.BusinessID,
 			ClusterType: namespace.ClusterType,
 			Namespace:   namespace.Name,
 			CurrentTime: jobTime,
@@ -334,6 +337,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 			for _, workload := range workloadList {
 				opts := types.JobCommonOpts{
 					ProjectID:    workload.ProjectID,
+					BusinessID:   workload.BusinessID,
 					ClusterID:    workload.ClusterID,
 					ClusterType:  workload.ClusterType,
 					Namespace:    workload.Namespace,

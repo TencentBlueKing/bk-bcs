@@ -543,6 +543,7 @@ func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 		k8sStorageCli.Client = restclient.NewRESTClient()
 	}
 	k8sTransport := &http.Transport{}
+	k8sTransport.TLSClientConfig = s.clientTLSConfig
 	k8sStorageCli.Client.WithTransport(k8sTransport)
 	_, err := k8sStorageCli.QueryK8SDeployment("test", "test")
 	if err != nil {

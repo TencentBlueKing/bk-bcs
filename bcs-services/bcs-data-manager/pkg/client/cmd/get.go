@@ -25,6 +25,7 @@ import (
 var (
 	flagOutput       string
 	flagProject      string
+	flagBusinessID   string
 	flagCluster      string
 	flagNamespace    string
 	flagDimension    string
@@ -71,11 +72,8 @@ var (
 // GetProject get project info
 func GetProject(cmd *cobra.Command, args []string) {
 	req := &bcsdatamanager.GetProjectInfoRequest{}
-	if len(args) == 0 {
-		fmt.Printf("get project data need specific projectid\n")
-		os.Exit(1)
-	}
-	req.ProjectID = args[0]
+	req.Project = flagProject
+	req.Business = flagBusinessID
 	req.Dimension = flagDimension
 	client := pkg.NewClientWithConfiguration()
 	rsp, err := client.GetProjectInfo(req)
@@ -196,6 +194,8 @@ func init() {
 	getCMD.AddCommand(getWorkloadCMD)
 	getCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
+	getCMD.PersistentFlags().StringVarP(
+		&flagBusinessID, "business", "", "", "business id for operation")
 	getCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace for operation")
 	getCMD.PersistentFlags().StringVarP(

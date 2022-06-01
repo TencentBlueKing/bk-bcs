@@ -41,14 +41,30 @@ func TestGetClusterInfoList(t *testing.T) {
 	storeServer := mock.NewMockStore()
 	handler := NewBcsDataManager(storeServer)
 	ctx := context.Background()
-	req := &bcsdatamanager.GetClusterInfoListRequest{ProjectID: "testProject"}
-	rsp := &bcsdatamanager.GetClusterInfoListResponse{}
-	err := handler.GetClusterInfoList(ctx, req, rsp)
+	req := &bcsdatamanager.GetClusterListRequest{Project: "testProject"}
+	rsp := &bcsdatamanager.GetClusterListResponse{}
+	err := handler.GetClusterListByProject(ctx, req, rsp)
 	assert.Nil(t, err)
 	assert.Equal(t, uint32(common.BcsSuccess), rsp.GetCode())
-	reqErr := &bcsdatamanager.GetClusterInfoListRequest{ProjectID: "testErr"}
-	rspErr := &bcsdatamanager.GetClusterInfoListResponse{}
-	err = handler.GetClusterInfoList(ctx, reqErr, rspErr)
+	reqErr := &bcsdatamanager.GetClusterListRequest{Project: "testErr"}
+	rspErr := &bcsdatamanager.GetClusterListResponse{}
+	err = handler.GetClusterListByProject(ctx, reqErr, rspErr)
+	assert.Nil(t, err)
+	assert.Equal(t, uint32(common.AdditionErrorCode+500), rspErr.GetCode())
+}
+
+func TestGetAllClusterList(t *testing.T) {
+	storeServer := mock.NewMockStore()
+	handler := NewBcsDataManager(storeServer)
+	ctx := context.Background()
+	req := &bcsdatamanager.GetClusterListRequest{Project: "testProject"}
+	rsp := &bcsdatamanager.GetClusterListResponse{}
+	err := handler.GetAllClusterList(ctx, req, rsp)
+	assert.Nil(t, err)
+	assert.Equal(t, uint32(common.BcsSuccess), rsp.GetCode())
+	reqErr := &bcsdatamanager.GetClusterListRequest{Project: "testErr"}
+	rspErr := &bcsdatamanager.GetClusterListResponse{}
+	err = handler.GetAllClusterList(ctx, reqErr, rspErr)
 	assert.Nil(t, err)
 	assert.Equal(t, uint32(common.AdditionErrorCode+500), rspErr.GetCode())
 }
@@ -85,16 +101,27 @@ func TestGetNamespaceInfoList(t *testing.T) {
 	assert.Equal(t, uint32(common.AdditionErrorCode+500), rspErr.GetCode())
 }
 
+func TestGetAllProjectList(t *testing.T) {
+	storeServer := mock.NewMockStore()
+	handler := NewBcsDataManager(storeServer)
+	ctx := context.Background()
+	req := &bcsdatamanager.GetAllProjectListRequest{}
+	rsp := &bcsdatamanager.GetAllProjectListResponse{}
+	err := handler.GetAllProjectList(ctx, req, rsp)
+	assert.Nil(t, err)
+	assert.Equal(t, uint32(common.BcsSuccess), rsp.GetCode())
+}
+
 func TestGetProjectInfo(t *testing.T) {
 	storeServer := mock.NewMockStore()
 	handler := NewBcsDataManager(storeServer)
 	ctx := context.Background()
-	req := &bcsdatamanager.GetProjectInfoRequest{ProjectID: "testProject"}
+	req := &bcsdatamanager.GetProjectInfoRequest{Project: "testProject"}
 	rsp := &bcsdatamanager.GetProjectInfoResponse{}
 	err := handler.GetProjectInfo(ctx, req, rsp)
 	assert.Nil(t, err)
 	assert.Equal(t, uint32(common.BcsSuccess), rsp.GetCode())
-	reqErr := &bcsdatamanager.GetProjectInfoRequest{ProjectID: "testErr"}
+	reqErr := &bcsdatamanager.GetProjectInfoRequest{Project: "testErr"}
 	rspErr := &bcsdatamanager.GetProjectInfoResponse{}
 	err = handler.GetProjectInfo(ctx, reqErr, rspErr)
 	assert.Nil(t, err)
