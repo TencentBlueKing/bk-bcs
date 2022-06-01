@@ -41,7 +41,7 @@ func parseCObjAPIVersion(manifest map[string]interface{}) string {
 	group := mapx.GetStr(manifest, "spec.group")
 	versions := mapx.GetList(manifest, "spec.versions")
 
-	if versions != nil && len(versions) != 0 {
+	if len(versions) != 0 {
 		for _, ver := range versions {
 			v, _ := ver.(map[string]interface{})
 			if v["served"].(bool) {
