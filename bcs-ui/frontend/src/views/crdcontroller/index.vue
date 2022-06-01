@@ -107,12 +107,12 @@
                                                             <div class="rotate rotate7"></div>
                                                             <div class="rotate rotate8"></div>
                                                         </div>
-                                                        <span class="vm">{{$t('启用中...')}}</span>
+                                                        <span class="vm">{{$t('变更中...')}}</span>
                                                     </template>
                                                 </td>
                                                 <td class="description">
                                                     <p class="text">
-                                                        {{crdcontroller.description}}
+                                                        {{crdcontroller.description || '--'}}
                                                         <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('详情查看文档')}}</a>
                                                     </p>
                                                 </td>
@@ -170,7 +170,7 @@
                                                         </span>
                                                     </template>
                                                     <template v-else-if="crdcontroller.status === 'pending'">
-                                                        <bk-button :disabled="true">{{$t('启用中...')}}</bk-button>
+                                                        <bk-button :disabled="true">{{$t('变更中...')}}</bk-button>
                                                     </template>
                                                 </td>
                                             </tr>
@@ -238,7 +238,7 @@
                                                 </td>
                                                 <td class="description">
                                                     <p class="text">
-                                                        {{crdcontroller.description}}
+                                                        {{crdcontroller.description || '--'}}
                                                         <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('详情查看文档')}}</a>
                                                     </p>
                                                 </td>

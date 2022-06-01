@@ -3,7 +3,7 @@
         <div class="biz-top-bar">
             <div class="biz-crd-title">
                 <a class="bcs-icon bcs-icon-arrows-left back" href="javascript:void(0);" @click="goBack"></a>
-                <span>{{curApp.name}}</span>
+                <span>{{curApp.tool_info.name}}</span>
             </div>
         </div>
 
@@ -26,7 +26,7 @@
                             </svg>
                             <div class="desc" :title="curApp.description">
                                 <span>{{$t('简介')}}：</span>
-                                {{curApp.description || '--'}}
+                                {{curApp.tool_info.description || '--'}}
                             </div>
                         </div>
                     </div>
@@ -299,7 +299,7 @@
                     const curVersion = this.chartVersionsList.find(i => i.version === this.curApp.chart_version)
                     const chartUrl = curVersion && curVersion.urls[0]
                     const clusterId = this.curClusterId
-                    const crdId = this.curApp.tool_id
+                    const crdId = this.curApp.tool_info.id
                     const result = await this.$store.dispatch('crdcontroller/clusterToolsUpgrade', {
                         $clusterId: clusterId,
                         $toolId: crdId,
