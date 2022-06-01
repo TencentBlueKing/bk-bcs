@@ -204,7 +204,8 @@
                 diffEditorHeight: 350,
                 editorHeight: 500,
                 curApp: {
-                    namespace: ''
+                    namespace: '',
+                    tool_info: {}
                 },
                 namespaceList: [],
                 chartVersionsList: []

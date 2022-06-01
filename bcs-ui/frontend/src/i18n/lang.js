@@ -2806,5 +2806,8 @@ export default {
     ],
     "如需vpc-cni网络，请联系蓝鲸容器助手": [
         "If you need a VPC-CNI network, please contact the blue whale container assistant"
+    ],
+    "卸载组件": [
+        "Uninstall Components"
     ]
 }
