@@ -217,7 +217,11 @@ def helm_uninstall(access_token: str, release_args: ArgsDict) -> Optional[str]:
         deployer = HelmDeployer(access_token=access_token, helm_args=ReleaseArgs.from_dict(release_args))
         deployer.uninstall()
     except Exception as e:
-        return _generate_err_msg(HelmOperation.UNINSTALL, release_args, e)
+        err_msg = _generate_err_msg(HelmOperation.UNINSTALL, release_args, e)
+        # 忽略 release: not found 的错误
+        if 'release: not found' in err_msg:
+            return
+        return err_msg
 
 
 def _generate_err_msg(op: str, release_args: ArgsDict, e: Exception) -> str:
