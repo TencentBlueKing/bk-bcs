@@ -136,8 +136,8 @@ func (cli *TkeClient) ListTKECluster() ([]*tke.Cluster, error) {
 	}
 
 	var (
-		initOffset      int64
-		clusterList  = make([]*tke.Cluster, 0)
+		initOffset     int64
+		clusterList    = make([]*tke.Cluster, 0)
 		clusterListLen = 100
 	)
 
@@ -213,7 +213,7 @@ func (cli *TkeClient) DeleteTKECluster(clusterID string, deleteMode DeleteMode) 
 // TKE node relative interface
 
 // QueryTkeClusterAllInstances query all cluster instances
-func (cli *TkeClient) QueryTkeClusterAllInstances(clusterID string) ([]*InstanceInfo, error) {
+func (cli *TkeClient) QueryTkeClusterAllInstances(clusterID string, filter QueryFilter) ([]*InstanceInfo, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
@@ -235,6 +235,9 @@ func (cli *TkeClient) QueryTkeClusterAllInstances(clusterID string) ([]*Instance
 		req := tke.NewDescribeClusterInstancesRequest()
 		req.ClusterId = common.StringPtr(clusterID)
 		req.InstanceRole = common.StringPtr(ALL.String())
+		if filter != nil {
+			req.Filters = filter.BuildFilters()
+		}
 		req.Offset = common.Int64Ptr(initOffset)
 		req.Limit = common.Int64Ptr(int64(100))
 
@@ -250,10 +253,12 @@ func (cli *TkeClient) QueryTkeClusterAllInstances(clusterID string) ([]*Instance
 
 		for _, instance := range response.InstanceSet {
 			instanceIDList = append(instanceIDList, &InstanceInfo{
-				InstanceID:    *instance.InstanceId,
-				InstanceIP:    *instance.LanIP,
-				InstanceRole:  *instance.InstanceRole,
-				InstanceState: *instance.InstanceState,
+				InstanceID:         *instance.InstanceId,
+				InstanceIP:         *instance.LanIP,
+				InstanceRole:       *instance.InstanceRole,
+				InstanceState:      *instance.InstanceState,
+				NodePoolId:         *instance.NodePoolId,
+				AutoscalingGroupId: *instance.AutoscalingGroupId,
 			})
 		}
 

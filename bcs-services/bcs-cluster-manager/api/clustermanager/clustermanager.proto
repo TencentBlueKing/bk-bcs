@@ -797,7 +797,7 @@ service ClusterManager {
       summary : "查询cloud地域列表"
     };
   }
-  rpc GetCloudZones(GetCloudRegionZonesRequest) returns (GetCloudRegionZonesResponse) {
+  rpc GetCloudRegionZones(GetCloudRegionZonesRequest) returns (GetCloudRegionZonesResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/zones"
     };
@@ -2398,15 +2398,15 @@ message DataDisk {
     description: "数据盘大小，10G起跳，默认为0，为0时不购买"
   }];
   string fileSystem = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "fileSystem", 
+    title: "fileSystem",
     description: "文件系统(ext3/ext4/xfs)"
   }];
   bool autoFormatAndMount = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "autoFormatAndMount", 
+    title: "autoFormatAndMount",
     description: "是否自动化格式盘并挂载"
   }];
   string mountTarget = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "mountTarget", 
+    title: "mountTarget",
     description: "挂载目录"
   }];
 }
@@ -2735,22 +2735,40 @@ message NodeTemplate {
   }];
   string preStartUserScript = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "preStartUserScript",
-    description: "base64 编码的用户脚本，在初始化节点之前执行，目前只对添加已有节点生效"
+    description: "base64 编码的用户脚本，在初始化节点之前执行，注意目前只对添加已有节点生效"
   }];
-  map<string, BKOpsPlugin> bcsAddons = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "bcsAddons",
-    description: "创建集群时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群"
+  Action bcsScaleOutAddons = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bcsScaleOutAddons",
+    description: "上架节点时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群"
         "正常初始化之后进行调用。"
   }];
-  map<string, BKOpsPlugin> extraAddons = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "extraAddons",
-    description: "创建集群时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后"
+  Action bcsScaleInAddons = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bcsScaleInAddons",
+    description: "下架节点时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群"
+        "正常初始化之后进行调用。"
+  }];
+  Action ScaleOutExtraAddons = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ScaleOutExtraAddons",
+    description: "上架节点时用户额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后"
         "进行调用与安装。"
   }];
-  string creator = 15;
-  string updater = 16;
-  string createTime = 17;
-  string updateTime = 18;
+  Action ScaleInExtraAddons = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ScaleInExtraAddons",
+    description: "下架节点时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后"
+        "进行调用与安装。"
+  }];
+  string nodeOS = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeOS",
+    description: "节点模版OS"
+  }];
+  string moduleID = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "moduleID",
+    description: "CC模块ID,CA扩容节点挂载模块"
+  }];
+  string creator = 19;
+  string updater = 20;
+  string createTime = 21;
+  string updateTime = 22;
 }
 
 message Project {

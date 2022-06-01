@@ -211,14 +211,18 @@ func TestTkeClient_DeleteTKECluster(t *testing.T) {
 }
 
 func TestTkeClient_QueryTkeClusterAllInstances(t *testing.T) {
-	cli := getClient("ap-nanjing")
-	instances, err := cli.QueryTkeClusterAllInstances("cls-xxx")
+	cli := getClient("ap-guangzhou")
+	instances, err := cli.QueryTkeClusterAllInstances("cls-xxx", QueryClusterInstanceFilter{
+		NodePoolID:           "",
+		NodePoolInstanceType: "",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for i := range instances {
-		t.Log(instances[i].InstanceID, instances[i].InstanceIP, instances[i].InstanceRole)
+		t.Log(instances[i].InstanceID, instances[i].InstanceIP, instances[i].InstanceRole, instances[i].InstanceState,
+			instances[i].NodePoolId, instances[i].AutoscalingGroupId)
 	}
 	t.Log(len(instances))
 }

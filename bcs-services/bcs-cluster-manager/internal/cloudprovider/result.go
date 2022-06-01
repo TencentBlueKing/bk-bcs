@@ -50,8 +50,8 @@ var (
 	UpdateNodeGroupJob JobType = "update-nodegroup"
 	// DeleteNodeGroupJob for deleteNodeGroup job
 	DeleteNodeGroupJob JobType = "delete-nodegroup"
-	// UpdateNodeGroupDisiredNodeJob for updateNodeGroupDisiredNode job
-	UpdateNodeGroupDisiredNodeJob JobType = "update-nodegroup-disired-node"
+	// UpdateNodeGroupDesiredNodeJob for UpdateNodeGroupDesiredNodeJob job
+	UpdateNodeGroupDesiredNodeJob JobType = "update-nodegroup-desired-node"
 	// CleanNodeGroupNodesJob for cleanNodeGroupNodes job
 	CleanNodeGroupNodesJob JobType = "clean-nodegroup-nodes"
 	// MoveNodesToNodeGroupJob for moveNodesToNodeGroup job
@@ -105,6 +105,12 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	case ImportClusterJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusImportClusterFailed)
 		return sjr.updateClusterResultStatus(isSuccess)
+	case UpdateNodeGroupDesiredNodeJob:
+		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusAddNodesFailed)
+		return sjr.updateCANodesResultStatus(isSuccess)
+	case CleanNodeGroupNodesJob:
+		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
+		return sjr.deleteCANodesResultStatus(isSuccess)
 	}
 
 	return fmt.Errorf(ErrJobType, sjr.JobType)
@@ -293,10 +299,10 @@ func (sjr *SyncJobResult) updateNodeStatusByNodeID(idList []string, status strin
 func NewJobSyncResult(task *cmproto.Task) *SyncJobResult {
 	return &SyncJobResult{
 		TaskID:      task.TaskID,
-		JobType:     JobType(task.CommonParams["JobType"]),
+		JobType:     JobType(task.CommonParams[JobTypeKey.String()]),
 		ClusterID:   task.ClusterID,
 		NodeGroupID: task.NodeGroupID,
-		NodeIPs:     strings.Split(task.CommonParams["NodeIPs"], ","),
-		NodeIDs:     strings.Split(task.CommonParams["NodeIDs"], ","),
+		NodeIPs:     strings.Split(task.CommonParams[NodeIPsKey.String()], ","),
+		NodeIDs:     strings.Split(task.CommonParams[NodeIDsKey.String()], ","),
 	}
 }

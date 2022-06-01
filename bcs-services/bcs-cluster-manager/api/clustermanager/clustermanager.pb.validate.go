@@ -5495,39 +5495,49 @@ func (m *NodeTemplate) Validate() error {
 
 	// no validation rules for PreStartUserScript
 
-	for key, val := range m.GetBcsAddons() {
-		_ = val
-
-		// no validation rules for BcsAddons[key]
-
-		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return NodeTemplateValidationError{
-					field:  fmt.Sprintf("BcsAddons[%v]", key),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
+	if v, ok := interface{}(m.GetBcsScaleOutAddons()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeTemplateValidationError{
+				field:  "BcsScaleOutAddons",
+				reason: "embedded message failed validation",
+				cause:  err,
 			}
 		}
-
 	}
 
-	for key, val := range m.GetExtraAddons() {
-		_ = val
-
-		// no validation rules for ExtraAddons[key]
-
-		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return NodeTemplateValidationError{
-					field:  fmt.Sprintf("ExtraAddons[%v]", key),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
+	if v, ok := interface{}(m.GetBcsScaleInAddons()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeTemplateValidationError{
+				field:  "BcsScaleInAddons",
+				reason: "embedded message failed validation",
+				cause:  err,
 			}
 		}
-
 	}
+
+	if v, ok := interface{}(m.GetScaleOutExtraAddons()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeTemplateValidationError{
+				field:  "ScaleOutExtraAddons",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetScaleInExtraAddons()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeTemplateValidationError{
+				field:  "ScaleInExtraAddons",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for NodeOS
+
+	// no validation rules for ModuleID
 
 	// no validation rules for Creator
 

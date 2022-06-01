@@ -33,7 +33,7 @@ import (
 func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "CreateCloudNodeGroupTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "CheckCloudNodeGroupStatusTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func InstallAutoScalerTask(taskID string, stepName string) error {
 func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "UpdateCreateNodeGroupDBInfoTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}

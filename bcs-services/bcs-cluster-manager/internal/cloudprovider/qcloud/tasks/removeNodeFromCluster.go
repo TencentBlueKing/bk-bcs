@@ -104,7 +104,7 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	allClusterInstance, err := cli.QueryTkeClusterAllInstances(cluster.SystemID)
+	allClusterInstance, err := cli.QueryTkeClusterAllInstances(cluster.SystemID, nil)
 	if err != nil {
 		blog.Errorf("RemoveNodesFromClusterTask[%s]: QueryTkeClusterAllInstances for cluster[%s] in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())

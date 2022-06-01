@@ -13,7 +13,12 @@
 
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+)
 
 // EndpointStatus endpoint status
 type EndpointStatus string
@@ -54,6 +59,65 @@ var (
 	Deleted EndpointStatus = "Deleted"
 )
 
+// ActivityStatus activity status
+type ActivityStatus string
+
+// Status return es
+func (as ActivityStatus) String() string {
+	return string(as)
+}
+
+var (
+	// InitActivity xxx
+	InitActivity ActivityStatus = "INIT"
+	// RunningActivity xxx
+	RunningActivity ActivityStatus = "RUNNING"
+	// SuccessfulActivity xxx
+	SuccessfulActivity ActivityStatus = "SUCCESSFUL"
+	// SuccessfulPartActivity xxx
+	SuccessfulPartActivity ActivityStatus = "PARTIALLY_SUCCESSFUL"
+	// FailedActivity xxx
+	FailedActivity ActivityStatus = "FAILED"
+	// CancelledActivity xxx
+	CancelledActivity ActivityStatus = "CANCELLED"
+)
+
+// InstanceAsStatus 实例在伸缩活动中的状态
+type InstanceAsStatus string
+
+// Status return es
+func (is InstanceAsStatus) String() string {
+	return string(is)
+}
+
+var (
+	// InitInstanceAS xxx
+	InitInstanceAS InstanceAsStatus = "INIT"
+	// RunningInstanceAS xxx
+	RunningInstanceAS InstanceAsStatus = "RUNNING"
+	// SuccessfulInstanceAS xxx
+	SuccessfulInstanceAS InstanceAsStatus = "SUCCESSFUL"
+	// FailedInstanceAS xxx
+	FailedInstanceAS InstanceAsStatus = "FAILED"
+)
+
+// InstanceTkeStatus tke集群中实例状态
+type InstanceTkeStatus string
+
+// Status return es
+func (is InstanceTkeStatus) String() string {
+	return string(is)
+}
+
+var (
+	// InitInstanceTke xxx
+	InitInstanceTke InstanceAsStatus = "initializing"
+	// RunningInstanceTke xxx
+	RunningInstanceTke InstanceAsStatus = "running"
+	// FailedInstanceTke xxx
+	FailedInstanceTke InstanceAsStatus = "failed"
+)
+
 const (
 	// DockerGraphPath default docker graphPath
 	DockerGraphPath = "/data/bcs/service/docker"
@@ -61,6 +125,7 @@ const (
 	MountTarget = "/data"
 )
 
+// filter key
 const (
 	// NodePoolIDKey poolID
 	NodePoolIDKey = "nodepool-id"
@@ -79,6 +144,39 @@ const (
 	// TKEDirectEni direct-eni
 	TKEDirectEni = "tke-direct-eni"
 )
+
+// QueryFilter xxx
+type QueryFilter interface {
+	// BuildFilters() build filters
+	BuildFilters() []*tke.Filter
+}
+
+// QueryClusterInstanceFilter xxx
+type QueryClusterInstanceFilter struct {
+	NodePoolID           string
+	NodePoolInstanceType string
+}
+
+// BuildFilters build filter
+func (filter QueryClusterInstanceFilter) BuildFilters() []*tke.Filter {
+	filters := make([]*tke.Filter, 0)
+
+	if len(filter.NodePoolID) > 0 {
+		filters = append(filters, &tke.Filter{
+			Name:   common.StringPtr(NodePoolIDKey),
+			Values: []*string{common.StringPtr(filter.NodePoolID)},
+		})
+	}
+
+	if len(filter.NodePoolInstanceType) > 0 {
+		filters = append(filters, &tke.Filter{
+			Name:   common.StringPtr(NodePoolInstanceTypeKey),
+			Values: []*string{common.StringPtr(filter.NodePoolInstanceType)},
+		})
+	}
+
+	return filters
+}
 
 var (
 	// MASTER role
@@ -497,10 +595,18 @@ type RegionInfo struct {
 
 // InstanceInfo instanceInfo
 type InstanceInfo struct {
-	InstanceID    string
-	InstanceIP    string
-	InstanceRole  string
+	// 实例ID
+	InstanceID string
+	// 节点内网IP
+	InstanceIP string
+	// 节点角色, MASTER, WORKER, ETCD, MASTER_ETCD,ALL, 默认为WORKER
+	InstanceRole string
+	// 实例的状态（running 运行中，initializing 初始化中，failed 异常）
 	InstanceState string
+	// 资源池ID
+	NodePoolId string
+	// 自动伸缩组ID
+	AutoscalingGroupId string
 }
 
 // EnableVpcCniInput xxx

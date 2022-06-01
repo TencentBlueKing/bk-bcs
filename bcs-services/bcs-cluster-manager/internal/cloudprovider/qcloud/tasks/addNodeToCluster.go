@@ -179,7 +179,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	}
 
 	// 实例的状态（running 运行中，initializing 初始化中，failed 异常）
-	allClusterInstance, err := cli.QueryTkeClusterAllInstances(cluster.SystemID)
+	allClusterInstance, err := cli.QueryTkeClusterAllInstances(cluster.SystemID, nil)
 	if err != nil {
 		blog.Errorf("AddNodesToClusterTask[%s]: QueryTkeClusterAllInstances for cluster[%s] in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())

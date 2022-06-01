@@ -978,7 +978,7 @@
       "get": {
         "summary": "查询cloud地域可用区列表",
         "description": "查询cloud地域可用区列表",
-        "operationId": "ClusterManager_GetCloudZones",
+        "operationId": "ClusterManager_GetCloudRegionZones",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -8874,20 +8874,38 @@
         },
         "preStartUserScript": {
           "type": "string",
-          "description": "base64 编码的用户脚本，在初始化节点之前执行，目前只对添加已有节点生效",
+          "description": "base64 编码的用户脚本，在初始化节点之前执行，注意目前只对添加已有节点生效",
           "title": "preStartUserScript"
         },
-        "bcsAddons": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+        "bcsScaleOutAddons": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "上架节点时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群正常初始化之后进行调用。",
+          "title": "bcsScaleOutAddons"
         },
-        "extraAddons": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+        "bcsScaleInAddons": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "下架节点时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群正常初始化之后进行调用。",
+          "title": "bcsScaleInAddons"
+        },
+        "ScaleOutExtraAddons": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "上架节点时用户额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后进行调用与安装。",
+          "title": "ScaleOutExtraAddons"
+        },
+        "ScaleInExtraAddons": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "下架节点时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后进行调用与安装。",
+          "title": "ScaleInExtraAddons"
+        },
+        "nodeOS": {
+          "type": "string",
+          "description": "节点模版OS",
+          "title": "nodeOS"
+        },
+        "moduleID": {
+          "type": "string",
+          "description": "CC模块ID,CA扩容节点挂载模块",
+          "title": "moduleID"
         },
         "creator": {
           "type": "string"

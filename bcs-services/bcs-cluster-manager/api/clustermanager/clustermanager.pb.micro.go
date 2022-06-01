@@ -541,7 +541,7 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.GetCloudZones",
+			Name:    "ClusterManager.GetCloudRegionZones",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/zones"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
@@ -665,7 +665,7 @@ type ClusterManagerService interface {
 	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error)
 	// Cloud Resource management
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
-	GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
+	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
 	ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...client.CallOption) (*ListCloudRegionClusterResponse, error)
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
@@ -1434,8 +1434,8 @@ func (c *clusterManagerService) GetCloudRegions(ctx context.Context, in *GetClou
 	return out, nil
 }
 
-func (c *clusterManagerService) GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudZones", in)
+func (c *clusterManagerService) GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudRegionZones", in)
 	out := new(GetCloudRegionZonesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -1576,7 +1576,7 @@ type ClusterManagerHandler interface {
 	ListCloudAccount(context.Context, *ListCloudAccountRequest, *ListCloudAccountResponse) error
 	// Cloud Resource management
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
-	GetCloudZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
+	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
 	ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest, *ListCloudRegionClusterResponse) error
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest, *ListCloudSubnetsResponse) error
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
@@ -1660,7 +1660,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error
 		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
 		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
-		GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
+		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
 		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
 		ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
@@ -2169,7 +2169,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetCloudZones",
+		Name:    "ClusterManager.GetCloudRegionZones",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/zones"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
@@ -2505,8 +2505,8 @@ func (h *clusterManagerHandler) GetCloudRegions(ctx context.Context, in *GetClou
 	return h.ClusterManagerHandler.GetCloudRegions(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetCloudZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error {
-	return h.ClusterManagerHandler.GetCloudZones(ctx, in, out)
+func (h *clusterManagerHandler) GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error {
+	return h.ClusterManagerHandler.GetCloudRegionZones(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error {
