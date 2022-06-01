@@ -32,10 +32,6 @@ func (sn StepName) String() string {
 var (
 	// CreateNodeGroup task
 	CreateNodeGroupTask TaskName = "创建节点池"
-	// ApplyInstanceMachinesStep step
-	ApplyInstanceMachinesStep StepName = "申请节点任务"
-	// CheckClusterNodesStatusStep step
-	CheckClusterNodesStatusStep StepName = "检测节点状态"
 
 	// UpdateDesiredNodes task
 	UpdateDesiredNodesTask TaskName = "扩容节点池"
