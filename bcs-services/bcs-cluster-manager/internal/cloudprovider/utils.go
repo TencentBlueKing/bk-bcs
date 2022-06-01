@@ -15,13 +15,21 @@ package cloudprovider
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
@@ -151,14 +159,20 @@ var (
 	UpdateNodeGroup TaskType = "UpdateNodeGroup"
 	// DeleteNodeGroup task
 	DeleteNodeGroup TaskType = "DeleteNodeGroup"
-	// UpdateNodeGroupDisiredNode task
-	UpdateNodeGroupDisiredNode TaskType = "UpdateNodeGroupDisiredNode"
-	// CleanNodeGroupNodes task
-	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
 	// MoveNodesToNodeGroup task
 	MoveNodesToNodeGroup TaskType = "MoveNodesToNodeGroup"
+
 	// SwitchNodeGroupAutoScaling task
 	SwitchNodeGroupAutoScaling TaskType = "SwitchNodeGroupAutoScaling"
+
+	// UpdateNodeGroupDesiredNode task
+	UpdateNodeGroupDesiredNode TaskType = "UpdateNodeGroupDesiredNode"
+
+	// ApplyInstanceMachinesTask apply instance subTask
+	ApplyInstanceMachinesTask TaskType = "ApplyInstanceMachinesTask"
+
+	// CleanNodeGroupNodes task
+	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
 )
 
 // GetTaskType getTaskType by cloud
@@ -172,22 +186,28 @@ type CloudDependBasicInfo struct {
 	Cluster *proto.Cluster
 	// Cloud info
 	Cloud *proto.Cloud
+	// NodeGroup info
+	NodeGroup *proto.NodeGroup
 	// CmOption option
 	CmOption *CommonOption
 }
 
-// GetClusterDependBasicInfo get cluster and cloud depend info
-func GetClusterDependBasicInfo(clusterID string, cloudID string) (*CloudDependBasicInfo, error) {
-	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+// GetClusterDependBasicInfo get cluster/cloud/nodeGroup depend info, nodeGroup may be nil.
+// only get metadata, try not to change it
+func GetClusterDependBasicInfo(clusterID string, cloudID string, nodeGroupID string) (*CloudDependBasicInfo, error) {
+	var (
+		cluster   *proto.Cluster
+		cloud     *proto.Cloud
+		nodeGroup *proto.NodeGroup
+		err       error
+	)
+
+	cloud, cluster, err = actions.GetCloudAndCluster(GetStorageModel(), cloudID, clusterID)
 	if err != nil {
 		return nil, err
 	}
 
-	cloud, err := actions.GetCloudByCloudID(GetStorageModel(), cloudID)
-	if err != nil {
-		return nil, err
-	}
-
+	// cloud credential info
 	cmOption, err := GetCredential(&CredentialData{
 		Cloud:     cloud,
 		AccountID: cluster.CloudAccountID,
@@ -197,7 +217,14 @@ func GetClusterDependBasicInfo(clusterID string, cloudID string) (*CloudDependBa
 	}
 	cmOption.Region = cluster.Region
 
-	return &CloudDependBasicInfo{cluster, cloud, cmOption}, nil
+	if len(nodeGroupID) > 0 {
+		nodeGroup, err = actions.GetNodeGroupByGroupID(GetStorageModel(), nodeGroupID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &CloudDependBasicInfo{cluster, cloud, nodeGroup, cmOption}, nil
 }
 
 // UpdateClusterStatus set cluster status
@@ -265,6 +292,133 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 		ClientKey:     clientKey,
 		ClientCert:    clientCert,
 	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ListNodesInClusterNodePool list nodeGroup nodes
+func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, error) {
+	condM := make(operator.M)
+	condM["nodegroupid"] = nodePoolID
+	condM["clusterid"] = clusterID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	nodes, err := GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("ListNodesInClusterNodePool NodeGroup %s all Nodes failed, %s", nodePoolID, err.Error())
+		return nil, err
+	}
+
+	//sum running & creating nodes, these status are ready to serve workload
+	var (
+		goodNodes []*proto.Node
+	)
+	for _, node := range nodes {
+		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization {
+			goodNodes = append(goodNodes, node)
+		}
+	}
+
+	return goodNodes, nil
+}
+
+// GetNodesNumWhenApplyInstanceTask get nodeNum
+func GetNodesNumWhenApplyInstanceTask(clusterID, nodeGroupID, taskType, status string, steps []string) (int, error) {
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"clusterid":   clusterID,
+		"tasktype":    taskType,
+		"nodegroupid": nodeGroupID,
+		"status":      status,
+	})
+	taskList, err := GetStorageModel().ListTask(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("GetNodesNumWhenApplyInstanceTask failed: %v", err)
+		return 0, err
+	}
+
+	currentScalingNodes := 0
+	for i := range taskList {
+		if utils.StringInSlice(taskList[i].CurrentStep, steps) {
+			desiredNodes := taskList[i].CommonParams[ScalingKey.String()]
+			nodeNum, err := strconv.Atoi(desiredNodes)
+			if err != nil {
+				blog.Errorf("GetNodesNumWhenApplyInstanceTask strconv desiredNodes failed: %v", err)
+				continue
+			}
+			currentScalingNodes += nodeNum
+		}
+	}
+
+	return currentScalingNodes, nil
+}
+
+// UpdateNodeGroupDesiredSize when scaleOutNodes failed
+func UpdateNodeGroupDesiredSize(groupID string, nodeNum int, scaleOut bool) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), groupID)
+	if err != nil {
+		blog.Errorf("updateNodeGroupDesiredSize failed when CA scale nodes: %v", err)
+		return err
+	}
+
+	if scaleOut {
+		if group.AutoScaling.DesiredSize >= uint32(nodeNum) {
+			group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize - uint32(nodeNum)
+		} else {
+			group.AutoScaling.DesiredSize = 0
+			blog.Warnf("updateNodeGroupDesiredSize abnormal, desiredSize[%v] scaleNodesNum[%v]",
+				group.AutoScaling.DesiredSize, nodeNum)
+		}
+	} else {
+		group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize + uint32(nodeNum)
+	}
+
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		blog.Errorf("updateNodeGroupDesiredSize failed when CA scale nodes: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// SaveNodeInfoToDB save node to DB
+func SaveNodeInfoToDB(node *proto.Node) error {
+	instanceID := node.NodeID
+
+	oldNode, err := GetStorageModel().GetNode(context.Background(), instanceID)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return fmt.Errorf("saveNodeInfoToDB getNode[%s] failed: %v", node.NodeID, err)
+	}
+
+	if oldNode == nil {
+		err = GetStorageModel().CreateNode(context.Background(), node)
+		if err != nil {
+			return fmt.Errorf("saveNodeInfoToDB createNode[%s] failed: %v", node.NodeID, err)
+		}
+
+		return nil
+	}
+
+	err = GetStorageModel().UpdateNode(context.Background(), node)
+	if err != nil {
+		return fmt.Errorf("saveNodeInfoToDB updateNode[%s] failed: %v", node.NodeID, err)
+	}
+
+	return nil
+}
+
+// UpdateNodeStatusByInstanceID update node status
+func UpdateNodeStatusByInstanceID(instanceID, status string) error {
+	node, err := GetStorageModel().GetNode(context.Background(), instanceID)
+	if err != nil {
+		return err
+	}
+
+	node.Status = status
+
+	err = GetStorageModel().UpdateNode(context.Background(), node)
 	if err != nil {
 		return err
 	}

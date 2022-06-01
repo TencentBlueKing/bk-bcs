@@ -293,8 +293,10 @@ type CleanNodesResponse struct {
 // UpdateDesiredNodeOption update desired node
 type UpdateDesiredNodeOption struct {
 	CommonOption
-	Cluster *proto.Cluster
-	Cloud   *proto.Cloud
+	Cluster   *proto.Cluster
+	Cloud     *proto.Cloud
+	NodeGroup *proto.NodeGroup
+	Operator  string
 }
 
 // SwitchNodeGroupAutoScalingOption switch nodegroup auto scaling

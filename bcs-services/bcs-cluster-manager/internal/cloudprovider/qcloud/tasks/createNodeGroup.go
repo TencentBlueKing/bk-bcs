@@ -26,7 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 )
@@ -35,7 +34,7 @@ import (
 func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "CreateCloudNodeGroupTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -143,7 +142,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "CheckCloudNodeGroupStatusTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -249,7 +248,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	}
 
 	// get asg info
-	asgArr, err := asCli.DescribeAutoScalingGroups([]string{asgID})
+	asgArr, err := asCli.DescribeAutoScalingGroups(asgID)
 	if err != nil {
 		blog.Errorf("taskID[%s] DescribeAutoScalingGroups[%s] failed: %v", taskID, asgID, err)
 		return err
@@ -262,14 +261,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return err
 	}
 
-	// update node group status
-	if len(asgArr) != 1 || len(ascArr) != 1 {
-		err := fmt.Errorf("get asg/asc info failed, asgArr: %v, ascArr: %v", utils.ToJSONString(asgArr), utils.ToJSONString(ascArr))
-		blog.Errorf("taskID[%s] err:%s", taskID, err.Error())
-		return err
-	}
-
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group, asgArr[0], ascArr[0]))
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group, asgArr, ascArr[0]))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -392,7 +384,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingG
 func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "UpdateCreateNodeGroupDBInfoTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -468,17 +460,17 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTempla
 		LoginSettings:           &api.LoginSettings{Password: template.InitLoginPassword},
 		SecurityGroupIds:        common.StringPtrs(template.SecurityGroupIDs),
 	}
-	if nodeTemplate.SystemDisk != nil {
+	if template.SystemDisk != nil {
 		conf.SystemDisk = &api.SystemDisk{
-			DiskType: &nodeTemplate.SystemDisk.DiskType}
-		diskSize, err := strconv.Atoi(nodeTemplate.SystemDisk.DiskSize)
+			DiskType: &template.SystemDisk.DiskType}
+		diskSize, err := strconv.Atoi(template.SystemDisk.DiskSize)
 		if err == nil && diskSize > 0 {
 			conf.SystemDisk.DiskSize = common.Uint64Ptr(uint64(diskSize))
 		}
 	}
-	if nodeTemplate.DataDisks != nil {
+	if template.DataDisks != nil {
 		conf.DataDisks = make([]*api.DataDisk, 0)
-		for _, v := range nodeTemplate.DataDisks {
+		for _, v := range template.DataDisks {
 			disk := &api.DataDisk{DiskType: v.DiskType}
 			diskSize, err := strconv.Atoi(v.DiskSize)
 			if err != nil && diskSize > 0 {

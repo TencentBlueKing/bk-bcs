@@ -66,7 +66,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	clusterID := step.Params["ClusterID"]
 	cloudID := step.Params["CloudID"]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID)
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())

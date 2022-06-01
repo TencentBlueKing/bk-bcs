@@ -2431,15 +2431,15 @@ message DataDisk {
     description: "数据盘大小，10G起跳，默认为0，为0时不购买"
   }];
   string fileSystem = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "fileSystem", 
+    title: "fileSystem",
     description: "文件系统(ext3/ext4/xfs)"
   }];
   bool autoFormatAndMount = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "autoFormatAndMount", 
+    title: "autoFormatAndMount",
     description: "是否自动化格式盘并挂载"
   }];
   string mountTarget = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "mountTarget", 
+    title: "mountTarget",
     description: "挂载目录"
   }];
 }
@@ -2571,31 +2571,39 @@ message LaunchConfiguration {
     description: "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。"
                 "如不设置，BCS暂时默认提供包年包月的类型"
   }];
-  InternetAccessible internetAccess = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  DataDisk systemDisk = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "systemDisk",
+    description: "系统盘信息，BCS默认设置为高性能云盘，大小为50G"
+  }];
+  repeated DataDisk dataDisks = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dataDisks",
+    description: "数据盘信息，无默认设置则不购买"
+  }];
+  InternetAccessible internetAccess = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "internetAccess", 
     description: "公网信息设置，建议设置"
   }];
-  string initLoginPassword = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string initLoginPassword = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "initLoginPassword", 
     description: "新实例初始设置password"
   }];
-  repeated string securityGroupIDs = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated string securityGroupIDs = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "securityGroupIDs", 
     description: "新实例安全组关联的ID列表，如果不填写，BCS默认使用各云信息配置中预留的信息"
   }];
-  ImageInfo imageInfo = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  ImageInfo imageInfo = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "imageInfo",
     description: "新实例启动时的配置镜像信息"
   }];
-  bool isSecurityService = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool isSecurityService = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isSecurityService",
     description: "新实例启动时的是否开启云安全, 选填 yunti默认关闭"
   }];
-  bool isMonitorService = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool isMonitorService = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isMonitorService",
     description: "新实例启动时的是否开启云监控, 选填 默认开启"
   }];
-  string userData = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string userData = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "userData",
     description: "经过 Base64 编码后的自定义数据，最大长度不超过16KB。"
   }];
@@ -2767,37 +2775,51 @@ message NodeTemplate {
     title: "unSchedulable",
     description: "设置加入的节点是否参与调度，默认值0表示参与调度，非0表示不参与调度(加入节点时可覆盖参数)"
   }];
-  DataDisk systemDisk= 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "systemDisk",
-    description: "系统盘信息"
-  }];
-  repeated DataDisk dataDisks = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated DataDisk dataDisks = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dataDisks",
     description: "数据盘信息，无默认设置则不购买. 多盘数据盘挂载信息：新建节点时请确保购买CVM的参数传递了购买多个数据盘的信息"
   }];
-  map<string, string> extraArgs = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  map<string, string> extraArgs = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "extraArgs",
     description: "配置各模块自定义参数，预定义的key为kubelet"
         "value为各模块进程启动参数，多个参数之间使用;间隔，例如Kubelet: root-dir=/var/lib/kubelet;"
   }];
-  string preStartUserScript = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string preStartUserScript = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "preStartUserScript",
-    description: "base64 编码的用户脚本，在初始化节点之前执行，目前只对添加已有节点生效"
+    description: "base64 编码的用户脚本，在初始化节点之前执行，注意目前只对添加已有节点生效"
   }];
-  map<string, BKOpsPlugin> bcsAddons = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "bcsAddons",
-    description: "创建集群时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群"
+  Action bcsScaleOutAddons = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bcsScaleOutAddons",
+    description: "上架节点时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群"
         "正常初始化之后进行调用。"
   }];
-  map<string, BKOpsPlugin> extraAddons = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "extraAddons",
-    description: "创建集群时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后"
+  Action bcsScaleInAddons = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bcsScaleInAddons",
+    description: "下架节点时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群"
+        "正常初始化之后进行调用。"
+  }];
+  Action ScaleOutExtraAddons = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ScaleOutExtraAddons",
+    description: "上架节点时用户额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后"
         "进行调用与安装。"
   }];
-  string creator = 16;
-  string updater = 17;
-  string createTime = 18;
-  string updateTime = 19;
+  Action ScaleInExtraAddons = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ScaleInExtraAddons",
+    description: "下架节点时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后"
+        "进行调用与安装。"
+  }];
+  string nodeOS = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeOS",
+    description: "节点模版OS"
+  }];
+  string moduleID = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "moduleID",
+    description: "CC模块ID,CA扩容节点挂载模块"
+  }];
+  string creator = 19;
+  string updater = 20;
+  string createTime = 21;
+  string updateTime = 22;
 }
 
 message Project {

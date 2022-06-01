@@ -193,9 +193,9 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGr
 	req.LoginSettings = &as.LoginSettings{Password: common.StringPtr(group.LaunchTemplate.InitLoginPassword)}
 	req.ProjectId = common.Int64Ptr(int64(group.LaunchTemplate.ProjectID))
 	req.SecurityGroupIds = common.StringPtrs(group.LaunchTemplate.SecurityGroupIDs)
-	diskSize, _ := strconv.Atoi(group.NodeTemplate.SystemDisk.DiskSize)
+	diskSize, _ := strconv.Atoi(group.LaunchTemplate.SystemDisk.DiskSize)
 	req.SystemDisk = &as.SystemDisk{
-		DiskType: common.StringPtr(group.NodeTemplate.SystemDisk.DiskType),
+		DiskType: common.StringPtr(group.LaunchTemplate.SystemDisk.DiskType),
 		DiskSize: common.Uint64Ptr(uint64(diskSize)),
 	}
 	req.UserData = common.StringPtr(group.LaunchTemplate.UserData)
@@ -301,18 +301,20 @@ func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.Node
 // CleanNodesInGroup clean specified nodes in NodeGroup,
 func (ng *NodeGroup) CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
+	if len(nodes) == 0 || opt == nil || opt.Cluster == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+
 	mgr, err := cloudprovider.GetTaskManager(cloudName)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when CleanNodesInGroup %s failed, %s",
-			cloudName, group.Name, err.Error(),
-		)
+			cloudName, group.Name, err.Error())
 		return nil, err
 	}
 	task, err := mgr.BuildCleanNodesInGroupTask(nodes, group, opt)
 	if err != nil {
 		blog.Errorf("build CleanNodesInGroup task for cluster %s with cloudprovider %s failed, %s",
-			group.ClusterID, cloudName, err.Error(),
-		)
+			group.ClusterID, cloudName, err.Error())
 		return nil, err
 	}
 	return task, nil
@@ -320,22 +322,54 @@ func (ng *NodeGroup) CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGro
 
 // UpdateDesiredNodes update nodegroup desired node
 func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
-	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
-	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	opt *cloudprovider.UpdateDesiredNodeOption) (*cloudprovider.ScalingResponse, error) {
+	if group == nil || opt == nil || opt.Cluster == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+
+	// scaling nodes with desired, first get all node for status filtering
+	// check if nodes are already in cluster
+	goodNodes, err := cloudprovider.ListNodesInClusterNodePool(opt.Cluster.ClusterID, group.NodeGroupID)
 	if err != nil {
-		blog.Errorf("get cloud %s TaskManager when UpdateDesiredNodes %s failed, %s",
-			cloudName, group.Name, err.Error(),
-		)
+		blog.Errorf("cloudprovider yunti get NodeGroup %s all Nodes failed, %s", group.NodeGroupID, err.Error())
 		return nil, err
 	}
-	task, err := mgr.BuildUpdateDesiredNodesTask(desired, group, opt)
+
+	// check incoming nodes
+	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(opt.Cluster.ClusterID, group.NodeGroupID,
+		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode), cloudprovider.TaskStatusRunning,
+		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)})
 	if err != nil {
-		blog.Errorf("build UpdateDesiredNodes task for cluster %s with cloudprovider %s failed, %s",
-			group.ClusterID, cloudName, err.Error(),
-		)
+		blog.Errorf("UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed: %v", err)
 		return nil, err
 	}
-	return task, nil
+
+	// cluster current node
+	current := len(goodNodes) + inComingNodes
+
+	nodeNames := make([]string, 0)
+	for _, node := range goodNodes {
+		nodeNames = append(nodeNames, node.InnerIP)
+	}
+	blog.Infof("NodeGroup %s has total nodes %d, current capable nodes %d, current incoming nodes %d, details %v",
+		group.NodeGroupID, len(goodNodes), current, inComingNodes, nodeNames)
+
+	if current >= int(desired) {
+		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
+			group.NodeGroupID, current, desired)
+		return &cloudprovider.ScalingResponse{
+			ScalingUp:    0,
+			CapableNodes: nodeNames,
+		}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current, desired)
+	}
+
+	// current scale nodeNum
+	scalingUp := int(desired) - current
+
+	return &cloudprovider.ScalingResponse{
+		ScalingUp:    uint32(scalingUp),
+		CapableNodes: nodeNames,
+	}, nil
 }
 
 // SwitchNodeGroupAutoScaling switch nodegroup auto scaling

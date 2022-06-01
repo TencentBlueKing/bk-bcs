@@ -65,7 +65,7 @@ func (ng *NodeGroup) CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGro
 
 // UpdateDesiredNodes update nodegroup desired node
 func (ng *NodeGroup) UpdateDesiredNodes(desiredNode uint32, group *proto.NodeGroup,
-	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
+	opt *cloudprovider.UpdateDesiredNodeOption) (*cloudprovider.ScalingResponse, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

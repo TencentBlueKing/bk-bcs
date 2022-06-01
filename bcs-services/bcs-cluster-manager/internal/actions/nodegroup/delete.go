@@ -413,10 +413,14 @@ func (da *RemoveNodeAction) Handle(
 type CleanNodesAction struct {
 	ctx context.Context
 
-	model      store.ClusterManagerModel
-	req        *cmproto.CleanNodesInGroupRequest
-	resp       *cmproto.CleanNodesInGroupResponse
+	model store.ClusterManagerModel
+	req   *cmproto.CleanNodesInGroupRequest
+	resp  *cmproto.CleanNodesInGroupResponse
+
+	cloud      *cmproto.Cloud
+	cluster    *cmproto.Cluster
 	group      *cmproto.NodeGroup
+	task       *cmproto.Task
 	cleanNodes []*cmproto.Node
 }
 
@@ -433,45 +437,47 @@ func (da *CleanNodesAction) setResp(code uint32, msg string) {
 	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (da *CleanNodesAction) validate() error {
-	if err := da.req.Validate(); err != nil {
-		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
-		return err
-	}
-	//try to get original data for return
+func (da *CleanNodesAction) checkNodeGroupClusterID(groupID string) error {
+	// try to get original data for return
 	group, err := da.model.GetNodeGroup(da.ctx, da.req.NodeGroupID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		blog.Errorf("Get NodeGroup %s in pre-CleanNode checking failed, err %s", da.req.NodeGroupID, err.Error())
 		return err
 	}
+	da.group = group
+
 	if group.ClusterID != da.req.ClusterID {
 		blog.Errorf("request ClusterID %s is not same with NodeGroup.ClusterID %s when CleanNode",
 			da.req.ClusterID, group.ClusterID,
 		)
 		err := fmt.Errorf("request ClusterID is not same with NodeGroup.ClusterID %s", group.ClusterID)
-		da.setResp(
-			common.BcsErrClusterManagerCommonErr,
-			err.Error(),
-		)
+		da.setResp(common.BcsErrClusterManagerCommonErr, err.Error())
 		return err
 	}
-	da.group = group
-	//get specified node for clean validation
+
+	return nil
+}
+
+func (da *CleanNodesAction) checkCleanNodesExistInCluster() error {
+	// get specified node for clean validation
 	condM := make(operator.M)
 	condM["nodegroupid"] = da.group.NodeGroupID
 	condM["clusterid"] = da.group.ClusterID
 	cond := operator.NewLeafCondition(operator.Eq, condM)
+
 	nodes, err := da.model.ListNode(da.ctx, cond, &options.ListOption{})
 	if err != nil {
 		blog.Errorf("get NodeGroup %s all Nodes failed, %s", da.group.NodeGroupID, err.Error())
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
 	}
+
 	allNodes := make(map[string]*cmproto.Node)
 	for i := range nodes {
 		allNodes[nodes[i].InnerIP] = nodes[i]
 	}
+
 	// Nodes validation for clean
 	for _, ip := range da.req.Nodes {
 		node, ok := allNodes[ip]
@@ -481,6 +487,104 @@ func (da *CleanNodesAction) validate() error {
 		}
 		da.cleanNodes = append(da.cleanNodes, node)
 	}
+	return nil
+}
+
+func (da *CleanNodesAction) validate() error {
+	if err := da.req.Validate(); err != nil {
+		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return err
+	}
+
+	// check group clusterID
+	err := da.checkNodeGroupClusterID(da.req.NodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	// check clean nodes
+	err = da.checkCleanNodesExistInCluster()
+	if err != nil {
+		return nil
+	}
+
+	return nil
+}
+
+func (da *CleanNodesAction) getRelativeData() error {
+	//get dependency resource
+	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
+	if err != nil {
+		blog.Errorf("get Cloud %s Project %s for NodeGroup %s to clean Node failed, %s",
+			da.group.Provider, da.group.ProjectID, da.group.NodeGroupID, err.Error(),
+		)
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return err
+	}
+	da.cluster = cluster
+	da.cloud = cloud
+
+	return nil
+}
+
+func (da *CleanNodesAction) updateCleanNodesStatus() error {
+	// try to update Cluster & NodeGroup
+	for _, node := range da.cleanNodes {
+		node.Status = common.StatusDeleting
+		if err := da.model.UpdateNode(da.ctx, node); err != nil {
+			blog.Errorf("update NodeGroup %s with Nodes %v status change to DELETING failed, %s",
+				da.group.ClusterID, da.req.Nodes, err.Error(),
+			)
+			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+			return err
+		}
+		blog.Infof("Nodes %v of NodeGroup %s change to DELETING successfully", node.InnerIP, da.group.NodeGroupID)
+	}
+
+	return nil
+}
+
+func (da *CleanNodesAction) handleTask() error {
+	//ready to create background task
+	nodeGroupMgr, err := cloudprovider.GetNodeGroupMgr(da.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s/%s for NodeGroup %s to clean Nodes %v failed, %s",
+			da.cloud.CloudID, da.cloud.CloudProvider, da.group.NodeGroupID, da.req.Nodes, err.Error(),
+		)
+		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return err
+	}
+
+	// build clean task and dispatch to run
+	task, err := nodeGroupMgr.CleanNodesInGroup(da.cleanNodes, da.group, &cloudprovider.CleanNodesOption{
+		Cloud:    da.cloud,
+		Cluster:  da.cluster,
+		Operator: da.req.Operator,
+	})
+	if err != nil {
+		blog.Errorf("build clean Node %v task from NodeGroup %s with cloudprovider %s failed, %s",
+			da.req.Nodes, da.group.NodeGroupID, da.cloud.CloudProvider, err.Error(),
+		)
+		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return err
+	}
+	if err = da.model.CreateTask(da.ctx, task); err != nil {
+		blog.Errorf("save clean Node %v task from NodeGroup %s failed, %s",
+			da.req.Nodes, da.group.NodeGroupID, err.Error())
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return err
+	}
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
+		blog.Errorf("dispatch clean Node %v task from NodeGroup %s failed, %s",
+			da.req.Nodes, da.group.NodeGroupID, err.Error(),
+		)
+		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return err
+	}
+	blog.Infof("NodeGroup %s clean nodes %v task created with cloudprovider %s/%s successfully",
+		da.group.NodeGroupID, da.req.Nodes, da.cloud.CloudID, da.cloud.CloudProvider)
+
+	da.task = task
 	return nil
 }
 
@@ -496,88 +600,28 @@ func (da *CleanNodesAction) Handle(
 	da.resp = resp
 
 	if err := da.validate(); err != nil {
-		//valiate already sets response information
+		//validate already sets response information
 		return
 	}
-	//get dependency resource
-	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cloud %s Project %s for NodeGroup %s to clean Node failed, %s",
-			da.group.Provider, da.group.ProjectID, da.group.NodeGroupID, err.Error(),
-		)
-		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	//get dependency resource
-	cluster, err = da.model.GetCluster(ctx, da.req.ClusterID)
-	if err != nil {
-		blog.Errorf("get Cloud %s for NodeGroup %s to clean Node failed, %s",
-			da.group.Provider, da.group.NodeGroupID, err.Error(),
-		)
-		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	//ready to create background task
-	taskMgr, err := cloudprovider.GetTaskManager(cloud.CloudProvider)
-	if err != nil {
-		blog.Errorf("get cloudprovider %s/%s for NodeGroup %s to clean Nodes %v failed, %s",
-			cloud.CloudID, cloud.CloudProvider, da.group.NodeGroupID, req.Nodes, err.Error(),
-		)
-		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+	if err := da.getRelativeData(); err != nil {
 		return
 	}
 
-	// try to update Cluster & NodeGroup
-	for _, node := range da.cleanNodes {
-		node.Status = common.StatusDeleting
-		// how to ensure consistency with other operation?
-		if err = da.model.UpdateNode(ctx, node); err != nil {
-			blog.Errorf("update NodeGroup %s with Nodes %v status change to DELETING failed, %s",
-				da.group.ClusterID, req.Nodes, err.Error(),
-			)
-			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-			return
-		}
-		blog.Infof("Nodes %v of NodeGroup %s change to DELETING successfully",
-			node.InnerIP, da.group.NodeGroupID,
-		)
-	}
-	// build clean task and dispatch to run
-	task, err := taskMgr.BuildCleanNodesInGroupTask(da.cleanNodes, da.group, &cloudprovider.CleanNodesOption{
-		Cloud:    cloud,
-		Cluster:  cluster,
-		Operator: req.Operator,
-	})
-	if err != nil {
-		blog.Errorf("build clean Node %v task from NodeGroup %s with cloudprovider %s failed, %s",
-			req.Nodes, da.group.NodeGroupID, cloud.CloudProvider, err.Error(),
-		)
-		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+	// update clean node status
+	if err := da.updateCleanNodesStatus(); err != nil {
 		return
 	}
-	if err = da.model.CreateTask(ctx, task); err != nil {
-		blog.Errorf("save clean Node %v task from NodeGroup %s failed, %s",
-			req.Nodes, da.group.NodeGroupID, err.Error(),
-		)
-		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch clean Node %v task from NodeGroup %s failed, %s",
-			req.Nodes, da.group.NodeGroupID, err.Error(),
-		)
-		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-	blog.Infof("NodeGroup %s clean nodes %v task created with cloudprovider %s/%s successfully",
-		da.group.NodeGroupID, req.Nodes, cloud.CloudID, cloud.CloudProvider,
-	)
 
-	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
+	// dispatch task
+	if err := da.handleTask(); err != nil {
+		return
+	}
+
+	err := da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
-		TaskID:       task.TaskID,
-		Message:      fmt.Sprintf("集群%s节点池%s删除节点", da.group.ClusterID, da.group.NodeGroupID),
+		TaskID:       da.task.TaskID,
+		Message:      fmt.Sprintf("集群%s节点池%s删除节点%v", da.group.ClusterID, da.group.NodeGroupID, da.req.Nodes),
 		OpUser:       req.Operator,
 		CreateTime:   time.Now().String(),
 	})
@@ -585,7 +629,7 @@ func (da *CleanNodesAction) Handle(
 		blog.Errorf("CleanNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
 	}
 
-	resp.Data = task
+	resp.Data = da.task
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

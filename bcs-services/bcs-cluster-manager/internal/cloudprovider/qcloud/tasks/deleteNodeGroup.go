@@ -29,7 +29,7 @@ import (
 func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "DeleteCloudNodeGroupTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 func UpdateDeleteNodeGroupDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "UpdateDeleteNodeGroupDBInfoTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}

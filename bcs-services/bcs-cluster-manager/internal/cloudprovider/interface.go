@@ -287,7 +287,7 @@ type NodeGroupManager interface {
 	// CleanNodesInGroup clean specified nodes in NodeGroup,
 	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
 	// UpdateDesiredNodes update nodegroup desired node
-	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
+	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*ScalingResponse, error)
 	// SwitchNodeGroupAutoScale switch nodegroup auto scale
 	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
 
@@ -316,6 +316,7 @@ type TaskManager interface {
 	Name() string
 	// GetAllTask get all register task for worker running
 	GetAllTask() map[string]interface{}
+
 
 	// specific cloud different implement
 

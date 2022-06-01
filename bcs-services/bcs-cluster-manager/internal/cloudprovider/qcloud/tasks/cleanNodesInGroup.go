@@ -16,6 +16,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"strings"
 	"time"
 
@@ -23,85 +24,60 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+
+	"github.com/avast/retry-go"
 )
 
 // CleanNodeGroupNodesTask clean node group nodes task
 func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "CleanNodeGroupNodesTask", stepName)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
+	// previous step successful when retry task
 	if step == nil {
 		return nil
 	}
 
-	// step login started here
-	cloudID := step.Params["CloudID"]
-	nodeGroupID := step.Params["NodeGroupID"]
-	nodesIDs := step.Params["NodesIDs"]
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	// extract parameter && check validate
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	nodeIDs := strings.Split(state.Task.CommonParams[cloudprovider.NodeIDsKey.String()], ",")
+
+	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(nodeIDs) == 0 {
+		blog.Errorf("CleanNodeGroupNodesTask[%s]: check parameter validate failed", taskID)
+		retErr := fmt.Errorf("CleanNodeGroupNodesTask check parameters failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
 	if err != nil {
-		blog.Errorf("CleanNodeGroupNodesTask[%s]: get nodegroup for %s failed", taskID, nodeGroupID)
-		retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
+		blog.Errorf("CleanNodeGroupNodesTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("CleanNodeGroupNodesTask GetClusterDependBasicInfo failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	// get cloud and project info
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
-	if err != nil {
-		blog.Errorf("CleanNodeGroupNodesTask[%s]: get cloud for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("CleanNodeGroupNodesTask[%s]: get credential for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = group.Region
-
-	// create node group
-	asCli, err := api.NewASClient(cmOption)
-	if err != nil {
-		blog.Errorf("CleanNodeGroupNodesTask[%s]: get as client for nodegroup[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud as client err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return err
-	}
-	if group.AutoScaling == nil || group.AutoScaling.AutoScalingID == "" {
+	if dependInfo.NodeGroup.AutoScaling == nil || dependInfo.NodeGroup.AutoScaling.AutoScalingID == "" {
 		blog.Errorf("CleanNodeGroupNodesTask[%s]: nodegroup %s in task %s step %s has no autoscaling group",
 			taskID, nodeGroupID, taskID, stepName)
-		retErr := fmt.Errorf("get autoScalingID err, %s", err.Error())
+		retErr := fmt.Errorf("get autoScalingID err, %v", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	err = asCli.RemoveInstances(group.AutoScaling.AutoScalingID, strings.Split(nodesIDs, ","))
-	if err != nil {
-		blog.Errorf("CleanNodeGroupNodesTask[%s]: call RemoveInstances[%s] api in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call RemoveInstances[%s] api err, %s", nodeGroupID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	blog.Infof("CleanNodeGroupNodesTask[%s]: call RemoveInstances successful", taskID)
 
-	// update response information to task common params
-	if state.Task.CommonParams == nil {
-		state.Task.CommonParams = make(map[string]string)
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	err = removeAsgInstances(ctx, dependInfo, nodeIDs)
+	if err != nil {
+		blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeAsgInstances failed: %v",
+			taskID, nodeGroupID, err)
+		retErr := fmt.Errorf("removeAsgInstances err, %v", err)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 
 	// update step
@@ -112,11 +88,67 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 	return nil
 }
 
+func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	asgID, err := getAsgIDByNodePool(ctx, info)
+	if err != nil {
+		return fmt.Errorf("removeAsgInstances[%s] getAsgIDByNodePool failed: %v", taskID, err)
+	}
+
+	// create node group
+	asCli, err := api.NewASClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("removeAsgInstances[%s] get as client failed: %v", taskID, err.Error())
+		return err
+	}
+
+	// check instances if exist
+	var (
+		instanceIDList, validateInstances = make([]string, 0), make([]string, 0)
+	)
+	asgInstances, err := asCli.DescribeAutoScalingInstances(asgID)
+	if err != nil {
+		blog.Errorf("removeAsgInstances[%s] DescribeAutoScalingInstances[%s] failed: %v", taskID, asgID, err.Error())
+		return err
+	}
+	for _, ins := range asgInstances {
+		instanceIDList = append(instanceIDList, *ins.InstanceID)
+	}
+	for _, id := range nodeIDs {
+		if utils.StringInSlice(id, instanceIDList) {
+			validateInstances = append(validateInstances, id)
+		}
+	}
+	if len(validateInstances) == 0 {
+		blog.Infof("removeAsgInstances[%s] validateInstances is empty", taskID)
+		return nil
+	}
+
+	blog.Infof("removeAsgInstances[%s] validateInstances[%v]", taskID, validateInstances)
+	err = retry.Do(func() error {
+		activityID, err := asCli.RemoveInstances(asgID, validateInstances)
+		if err != nil {
+			blog.Errorf("removeAsgInstances[%s] RemoveInstances failed: %v", taskID, err)
+			return err
+		}
+
+		blog.Infof("removeAsgInstances[%s] RemoveInstances[%v] successful[%s]", taskID, nodeIDs, activityID)
+		return nil
+	}, retry.Attempts(3))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CheckCleanNodeGroupNodesStatusTask ckeck clean node group nodes status task
 func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "CheckCleanNodeGroupNodesStatusTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -206,7 +238,7 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "UpdateCleanNodeGroupNodesDBInfoTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}

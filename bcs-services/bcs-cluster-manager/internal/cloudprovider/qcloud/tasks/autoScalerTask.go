@@ -27,7 +27,7 @@ import (
 func EnsureAutoScalerTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "EnsureAutoScalerTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 func DeleteAutoScalerTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "DeleteAutoScalerTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func DeleteAutoScalerTask(taskID string, stepName string) error {
 func UpdateNodeGroupAutoScalingDBTask(taskID string, stepName string) error {
 	start := time.Now()
 	//get task information and validate
-	state, step, err := getStateAndStep(taskID, "UpdateNodeGroupAutoScalingDBTask", stepName)
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}

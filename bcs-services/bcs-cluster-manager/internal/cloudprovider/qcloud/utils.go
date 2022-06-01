@@ -15,6 +15,8 @@ package qcloud
 
 import (
 	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
 var (
@@ -35,8 +37,8 @@ const (
 	createNodeGroupTaskTemplate = "tke-create node group: %s/%s"
 	// deleteNodeGroupTaskTemplate bk-sops add task template
 	deleteNodeGroupTaskTemplate = "tke-delete node group: %s/%s"
-	// updateNodeGroupDisiredNode bk-sops add task template
-	updateNodeGroupDisiredNodeTemplate = "tke-update node group disired node: %s/%s"
+	// updateNodeGroupDesiredNode bk-sops add task template
+	updateNodeGroupDesiredNodeTemplate = "tke-update node group desired node: %s/%s"
 	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
 	cleanNodeGroupNodesTaskTemplate = "tke-remove node group nodes: %s/%s"
 	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
@@ -87,9 +89,9 @@ var (
 	updateCleanNodeGroupNodesDBInfoTask = fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName)
 
 	// update desired nodes task
-	updateDesiredNodesTask            = fmt.Sprintf("%s-UpdateDesiredNodesTask", cloudName)
-	checkUpdateDesiredNodesStatusTask = fmt.Sprintf("%s-CheckUpdateDesiredNodesStatusTask", cloudName)
-	updateDesiredNodesDBInfoTask      = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
+	applyInstanceMachinesTask    = fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyInstanceMachinesTask)
+	checkClusterNodesStatusTask  = fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName)
+	updateDesiredNodesDBInfoTask = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
 
 	// auto scale task
 	ensureAutoScalerTask             = fmt.Sprintf("%s-EnsureAutoScalerTask", cloudName)
