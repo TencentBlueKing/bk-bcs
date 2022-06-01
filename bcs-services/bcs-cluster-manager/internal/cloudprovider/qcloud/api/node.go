@@ -370,7 +370,8 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 		}
 
 		nodeMap[node.NodeID] = node
-		node.InnerIP = *inst.InstanceId
+		// default get first privateIP
+		node.InnerIP = *inst.PrivateIpAddresses[0]
 		node.Region = opt.Common.Region
 
 		// check node vpc and cluster vpc

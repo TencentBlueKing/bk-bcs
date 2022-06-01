@@ -195,15 +195,6 @@ func (da *DeleteAction) Handle(
 		blog.Infof("delete nodeGroup task successfully for %s", da.group.NodeGroupID)
 	}
 
-	if !req.IsForce && len(da.nodes) == 0 {
-		// here means no Nodes in NodeGroup, just delete local information
-		if err = da.model.DeleteNodeGroup(da.ctx, da.group.NodeGroupID); err != nil {
-			blog.Errorf("delete NodeGroup %s local information in Cluster %s failed, %s",
-				da.group.NodeGroupID, da.group.ClusterID, err.Error(),
-			)
-			//! no return here, task already started, try another deletion in final task step
-		}
-	}
 	resp.Data.NodeGroup = da.group
 	resp.Data.Task = task
 

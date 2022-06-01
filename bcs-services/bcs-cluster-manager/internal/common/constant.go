@@ -145,6 +145,13 @@ const (
 	//StatusRemoveNodesFailed status remove nodes failed
 	StatusRemoveNodesFailed = "REMOVE-FAILURE"
 
+	// StatusDeleteNodeGroupFailed xxx
+	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"
+	// StatusCreateNodeGroupCreating xxx
+	StatusCreateNodeGroupCreating = "INITIALIZATION"
+	// StatusDeleteNodeGroupFailed xxx
+	StatusCreateNodeGroupFailed = "CREATE-FAILURE"
+
 	//StatusFailed status failed
 	StatusFailed = "FAILURE"
 	//StatusCreating node status creating for scaling up

@@ -257,7 +257,7 @@ func (ua *UpdateAction) saveDB() error {
 
 func (ua *UpdateAction) checkStatus() error {
 	// if nodegroup is creating/deleting/deleted, return error
-	if ua.group.Status == common.StatusCreating || ua.group.Status == common.StatusDeleting || ua.group.Status == common.StatusDeleted {
+	if ua.group.Status == common.StatusCreateNodeGroupCreating || ua.group.Status == common.StatusDeleting || ua.group.Status == common.StatusDeleted {
 		err := fmt.Errorf("nodegroup %s status is not running, can not disable auto scale", ua.group.NodeGroupID)
 		return err
 	}

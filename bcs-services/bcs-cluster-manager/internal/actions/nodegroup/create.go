@@ -92,7 +92,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		Tags:            ca.req.Tags,
 		NodeOS:          ca.req.NodeOS,
 		Provider:        ca.req.Provider,
-		Status:          common.StatusCreating,
+		Status:          common.StatusCreateNodeGroupCreating,
 		ConsumerID:      ca.req.ConsumerID,
 		Creator:         ca.req.Creator,
 		CreateTime:      timeStr,

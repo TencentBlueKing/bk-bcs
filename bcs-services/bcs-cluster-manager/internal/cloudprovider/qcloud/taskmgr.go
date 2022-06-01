@@ -71,14 +71,19 @@ func newtask() *Task {
 
 	// init qcloud node-group task
 
+	// autoScaler task
+	task.works[ensureAutoScalerTask] = tasks.EnsureAutoScalerTask
+	task.works[deleteAutoScalerTask] = tasks.DeleteAutoScalerTask
+	task.works[updateNodeGroupAutoScalingDBTask] = tasks.UpdateNodeGroupAutoScalingDBTask
+
 	// create nodeGroup task
 	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
 	task.works[checkCloudNodeGroupStatusTask] = tasks.CheckCloudNodeGroupStatusTask
-	task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
+	//task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
 
 	// delete nodeGroup task
 	task.works[deleteNodeGroupTask] = tasks.DeleteCloudNodeGroupTask
-	task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
+	//task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesTask] = tasks.CleanNodeGroupNodesTask
@@ -91,11 +96,6 @@ func newtask() *Task {
 	// business user define sops
 
 	// move nodes to nodeGroup task
-
-	// autoScaler task
-	task.works[ensureAutoScalerTask] = tasks.EnsureAutoScalerTask
-	task.works[deleteAutoScalerTask] = tasks.DeleteAutoScalerTask
-	task.works[updateNodeGroupAutoScalingDBTask] = tasks.UpdateNodeGroupAutoScalingDBTask
 
 	return task
 }
@@ -727,7 +727,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
 		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CreateNodeGroup),
-		TaskName:       "创建 NodeGroup",
+		TaskName:       cloudprovider.CreateNodeGroupTask.String(),
 		Status:         cloudprovider.TaskStatusInit,
 		Message:        "task initializing",
 		Start:          nowStr,
@@ -740,6 +740,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 		LastUpdate:     nowStr,
 		CommonParams:   make(map[string]string),
 		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
 	}
 	// generate taskName
 	taskName := fmt.Sprintf(createNodeGroupTaskTemplate, group.ClusterID, group.Name)
@@ -798,29 +799,13 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	task.Steps[ensureAutoScalerTask] = ensureCAStep
 	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
 
-	// step4. update node group info in DB
-	updateDBStep := &proto.Step{
-		Name:       updateCreateNodeGroupDBInfoTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      0,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: updateCreateNodeGroupDBInfoTask,
-		TaskName:   "更新任务状态",
-	}
-	updateDBStep.Params["ClusterID"] = group.ClusterID
-	updateDBStep.Params["NodeGroupID"] = group.NodeGroupID
-	updateDBStep.Params["CloudID"] = group.Provider
-
-	task.Steps[updateCreateNodeGroupDBInfoTask] = updateDBStep
-	task.StepSequence = append(task.StepSequence, updateCreateNodeGroupDBInfoTask)
-
 	// set current step
 	if len(task.StepSequence) == 0 {
 		return nil, fmt.Errorf("BuildCreateNodeGroupTask task StepSequence empty")
 	}
+
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.CreateNodeGroup.String()
+	task.CommonParams["JobType"] = cloudprovider.CreateNodeGroupJob.String()
 
 	return task, nil
 }
@@ -983,6 +968,7 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 		LastUpdate:     nowStr,
 		CommonParams:   make(map[string]string),
 		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
 	}
 	// generate taskName
 	taskName := fmt.Sprintf(deleteNodeGroupTaskTemplate, group.ClusterID, group.Name)
@@ -1012,28 +998,13 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 	task.StepSequence = append(task.StepSequence, deleteNodeGroupTask)
 
 	// step2. update node group info in DB
-	dbStep := &proto.Step{
-		Name:       updateDeleteNodeGroupDBInfoTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      0,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: updateDeleteNodeGroupDBInfoTask,
-		TaskName:   "更新任务状态",
-	}
-	dbStep.Params["ClusterID"] = group.ClusterID
-	dbStep.Params["NodeGroupID"] = group.NodeGroupID
-	dbStep.Params["CloudID"] = group.Provider
-
-	task.Steps[updateDeleteNodeGroupDBInfoTask] = dbStep
-	task.StepSequence = append(task.StepSequence, updateDeleteNodeGroupDBInfoTask)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
 		return nil, fmt.Errorf("BuildDeleteNodeGroupTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.DeleteNodeGroup.String()
+	task.CommonParams["JobType"] = cloudprovider.DeleteNodeGroupJob.String()
 	return task, nil
 }
 

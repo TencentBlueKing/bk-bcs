@@ -63,7 +63,7 @@ func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 }
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
-// will be released. Task is backgroup automatic task
+// will be released. Task is background automatic task
 func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	mgr, err := cloudprovider.GetTaskManager(cloudName)
@@ -246,7 +246,10 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return nil, nil
 	}
 	nm := api.NodeManager{}
-	nodes, err := nm.DescribeInstances(insIDs, nil, opt)
+	nodes, err := nm.ListNodesByInstanceID(insIDs, &cloudprovider.ListNodesOption{
+		Common:       opt,
+		ClusterVPCID: group.AutoScaling.VpcID,
+	})
 	if err != nil {
 		blog.Errorf("DescribeInstances failed, err: %s", err.Error())
 		return nil, err

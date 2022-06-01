@@ -114,6 +114,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		activityID, err = asCli.ScaleOutInstances(asgID, nodeNum)
 		if err != nil {
 			if strings.Contains(err.Error(), as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY) {
+				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID, as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY)
 				return nil
 			}
 			blog.Errorf("applyInstanceMachines[%s] ScaleOutInstances failed: %v", taskID, err)

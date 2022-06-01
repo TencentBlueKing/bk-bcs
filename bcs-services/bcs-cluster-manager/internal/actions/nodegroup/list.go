@@ -15,7 +15,6 @@ package nodegroup
 import (
 	"context"
 	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -60,7 +59,9 @@ func (la *ListAction) listNodeGroup() error {
 	}
 
 	cond := operator.NewLeafCondition(operator.Eq, condM)
-	groups, err := la.model.ListNodeGroup(la.ctx, cond, &storeopt.ListOption{})
+	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+	branchCond := operator.NewBranchCondition(operator.And, cond, condStatus)
+	groups, err := la.model.ListNodeGroup(la.ctx, branchCond, &storeopt.ListOption{})
 	if err != nil {
 		return err
 	}

@@ -111,6 +111,12 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	case CleanNodeGroupNodesJob:
 		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
 		return sjr.deleteCANodesResultStatus(isSuccess)
+	case DeleteNodeGroupJob:
+		sjr.Status = generateStatusResult(common.StatusDeleted, common.StatusDeleteNodeGroupFailed)
+		return sjr.updateNodeGroupStatus(isSuccess)
+	case CreateNodeGroupJob:
+		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusCreateNodeGroupFailed)
+		return sjr.updateNodeGroupStatus(isSuccess)
 	}
 
 	return fmt.Errorf(ErrJobType, sjr.JobType)
@@ -221,6 +227,41 @@ func (sjr *SyncJobResult) updateCANodesResultStatus(isSuccess bool) error {
 	}
 
 	return sjr.updateNodeStatusByIP(sjr.NodeIPs, sjr.Status.Success)
+}
+
+func (sjr *SyncJobResult) updateNodeGroupStatus(isSuccess bool) error {
+	if len(sjr.NodeGroupID) == 0 {
+		return fmt.Errorf("SyncJobResult updateNodeGroupStatus failed: %v", "NodeGroupID is empty")
+	}
+
+	getStatus := func() string {
+		if isSuccess {
+			return sjr.Status.Success
+		}
+
+		return sjr.Status.Failure
+	}
+
+	return sjr.updateNodeGroupStatusByID(sjr.NodeGroupID, getStatus())
+}
+
+// updateNodeGroupStatusByID set nodeGroup status
+func (sjr *SyncJobResult) updateNodeGroupStatusByID(nodeGroupID string, status string) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+	blog.Infof("task[%s] nodeGroup[%s] status[%s]", sjr.TaskID, nodeGroupID, group.Status)
+	if group.Status == status {
+		return nil
+	}
+	group.Status = status
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (sjr *SyncJobResult) updateNodesResultStatus(isSuccess bool) error {
