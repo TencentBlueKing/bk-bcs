@@ -55,6 +55,7 @@
                             <tr>
                                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
                                 <th style="width: 250px; padding-left: 20px;">{{$t('组件名称')}}</th>
+                                <th style="width: 100px; padding-left: 20px">{{$t('版本')}}</th>
                                 <th style="width: 150px; padding-left: 20px;">{{$t('状态')}}</th>
                                 <th style="padding-left: 0;">{{$t('描述')}}</th>
                                 <th style="width: 170px; padding-left: 0;">{{$t('操作')}}</th>
@@ -65,7 +66,7 @@
                                 <tr
                                     v-for="crdcontroller of crdControllerList"
                                     :key="crdcontroller.id">
-                                    <td colspan="5">
+                                    <td colspan="6">
                                         <table class="biz-inner-table">
                                             <tr>
                                                 <td class="logo">
@@ -78,6 +79,9 @@
                                                 </td>
                                                 <td class="name" style="width: 250px;">
                                                     <p class="text">{{crdcontroller.name || '--'}}</p>
+                                                </td>
+                                                <td class="version" style="width: 100px;padding: 0 10px 0 20px;">
+                                                    <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
                                                 </td>
                                                 <td class="status">
                                                     <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
@@ -144,7 +148,8 @@
                                                         <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('启用')}}</bk-button>
                                                     </template>
                                                     <template v-else-if="crdcontroller.status === 'failed'">
-                                                        <template v-if="!crdcontroller.supported_actions.includes('upgrade')">
+                                                        <template v-if="!crdcontroller.supported_actions.includes('upgrade')
+                                                            && !crdcontroller.supported_actions.includes('uninstall')">
                                                             <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('重新启用')}}</bk-button>
                                                         </template>
                                                         <template v-else>
@@ -157,8 +162,11 @@
                                                                     <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                                                                 </bk-button>
                                                                 <ul class="bk-dropdown-list" slot="dropdown-content">
-                                                                    <li>
+                                                                    <li v-if="crdcontroller.supported_actions.includes('upgrade')">
                                                                         <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
+                                                                    </li>
+                                                                    <li v-if="crdcontroller.supported_actions.includes('uninstall')">
+                                                                        <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('卸载组件')}}</a>
                                                                     </li>
                                                                 </ul>
                                                             </bk-dropdown-menu>
@@ -193,6 +201,7 @@
                             <tr>
                                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
                                 <th style="width: 110px; padding-left: 20px;">{{$t('组件名称')}}</th>
+                                <th style="width: 100px; padding-left: 20px">{{$t('版本')}}</th>
                                 <th style="width: 100px; padding-left: 20px;">{{$t('状态')}}</th>
                                 <th style="width: 390px; padding-left: 20px;">{{$t('数据源信息')}}</th>
                                 <th style="padding-left: 0;">{{$t('描述')}}</th>
@@ -204,7 +213,7 @@
                                 <tr
                                     v-for="crdcontroller of crdControllerList"
                                     :key="crdcontroller.id">
-                                    <td colspan="6">
+                                    <td colspan="7">
                                         <table class="biz-inner-table">
                                             <tr>
                                                 <td class="logo">
@@ -217,6 +226,9 @@
                                                 </td>
                                                 <td class="log-name">
                                                     <p class="text">{{crdcontroller.name || '--'}}</p>
+                                                </td>
+                                                <td style="width: 100px;padding: 0 10px 0 20px;">
+                                                    <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
                                                 </td>
                                                 <td class="log-status">
                                                     <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
