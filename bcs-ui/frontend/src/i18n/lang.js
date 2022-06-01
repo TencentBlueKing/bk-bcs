@@ -46,7 +46,7 @@ export default {
     '查看实例': ['View'],
     '暂停': ['Pause'],
     '更新': ['Update'],
-    '更新组件': ['Update Components'],
+    '更新组件': ['Upgrade'],
     '恢复': ['Resume'],
     '删除': ['Delete'],
     '数据清洗': ['Data Clean'],
@@ -368,7 +368,7 @@ export default {
     '磁盘使用率': ['Disk Usage'],
     '点击新建集群': ['Create Cluster'],
     '欢迎使用容器服务': ['Welcome to the BCS'],
-    '使用容器服务，蓝鲸将为您快速搭建、运维和管理容器集群，您可以轻松对容器进行启动、停止等操作，也可以查看集群、容器及服务的状态，以及使用各种组件服务。': ['Using BCS will quickly build, operate, and manage container clusters for you. You can easily start and stop containers, view the status of clusters, containers and services, and use various component services.'],
+    '使用容器服务，蓝鲸将为您快速搭建、运维和管理容器集群，您可以轻松对容器进行启动、停止等操作，也可以查看集群、容器及服务的状态，以及使用各种组件服务。': ['Using BCS will quickly build, operate, and manage container clusters for you. You can easily start and stop containers, view the status of clusters, containers and services, and use various cluster tools.'],
     '请点击了解更多': ['Read More'],
     '创建容器集群': ['Create Cluster'],
     '快速入门指引': ['Quick Start Guide'],
@@ -478,7 +478,7 @@ export default {
     '对象及类型': ['Object and Type'],
     '发起者': ['Operator'],
     '对象：': ['Object：'],
-    '描述': ['Desc'],
+    '描述': ['Description'],
     '事件查询': ['Events'],
     '事件对象': ['Event Object'],
     '事件级别': ['Event Level'],
@@ -1461,13 +1461,13 @@ export default {
     'DB名称': ['DB name'],
     'DB授权配置管理': ['Database authorization configuration management'],
     '组件库': ['Cluster Tools'],
-    '前往配置': ['Configuration'],
+    '前往配置': ['Config'],
     '已启用前往配置': ['Cconfiguration enabled'],
     '业务名称': ['Business'],
     '确定要删除': ['Are you sure you want to delete the '],
     '请联系“蓝鲸容器助手”部署组件': ['If need to use, please contact BCS'],
-    '组件名称': ['Component name'],
-    '通过选择集群名来查询集群下的组件': ['Query the components under the cluster by selecting the cluster name'],
+    '组件名称': ['Tool Name'],
+    '通过选择集群名来查询集群下的组件': ['Query the cluster tools under the cluster by selecting the cluster name'],
     'DB信息': ['DB Configuration'],
 
     '访问权限': ['Access Mode'],
@@ -1806,7 +1806,7 @@ export default {
     '请输入键{key}的值！': ['Please enter the value of the key \'{key}\'!'],
     '请先添加键！': ['Please add keys first!'],
     '导入失败': ['Import failed'],
-    '启用组件：': ['Enable components: '],
+    '启用组件：': ['Enable cluster tools: '],
     '默认锁定values内容为当前release': ['The default lock values content is the current release'],
     '的内容，解除锁定后，加载为对应Chart中的values内容': [', after unlocking, it is loaded as the contents of the values in the corresponding Chart'],
     '如果选择，部署时，不会通过Kubernetes OpenAPI Schema校验渲染的模板': ['If selected, the rendered template will not be verified through Kubernetes OpenAPI Schema during deployment'],
@@ -2808,6 +2808,8 @@ export default {
         "If you need a VPC-CNI network, please contact the blue whale container assistant"
     ],
     "卸载组件": [
-        "Uninstall Components"
-    ]
+        "Uninstall"
+    ],
+    "变更中...": ['changing'],
+    "确定卸载": ['Confirm Uninstall']
 }
