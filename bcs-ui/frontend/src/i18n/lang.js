@@ -1460,7 +1460,7 @@ export default {
     'bcs-webhook-server用labels过滤，相同labels的pod被选中注入用于DB授权的init-container': ['BCS webhook server is filtered by labels. Pod of the same labels is selected to be injected into init container for DB authorization'],
     'DB名称': ['DB name'],
     'DB授权配置管理': ['Database authorization configuration management'],
-    '组件库': ['Component library'],
+    '组件库': ['Cluster Tools'],
     '前往配置': ['Configuration'],
     '已启用前往配置': ['Cconfiguration enabled'],
     '业务名称': ['Business'],
