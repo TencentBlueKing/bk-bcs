@@ -88,6 +88,12 @@ export const getTokens = request('get', `${prefix}/usermanager/v1/users/$usernam
 // auth
 export const userPerms = request('post', '/api/iam/user_perms/')
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
+// cluster tools
+export const clusterTools = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/')
+export const clusterToolsInstall = request('post', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/')
+export const clusterToolsUpgrade = request('put', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/')
+export const clusterToolsUninstall = request('delete', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/')
+export const clusterToolsInstalledDetail = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/installed_detail/')
 
 export default {
     stdLogs,
