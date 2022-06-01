@@ -55,7 +55,7 @@
                             <tr>
                                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
                                 <th style="width: 250px; padding-left: 20px;">{{$t('组件名称')}}</th>
-                                <th style="width: 100px; padding-left: 20px">{{$t('版本')}}</th>
+                                <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
                                 <th style="width: 150px; padding-left: 20px;">{{$t('状态')}}</th>
                                 <th style="padding-left: 0;">{{$t('描述')}}</th>
                                 <th style="width: 170px; padding-left: 0;">{{$t('操作')}}</th>
@@ -80,7 +80,7 @@
                                                 <td class="name" style="width: 250px;">
                                                     <p class="text">{{crdcontroller.name || '--'}}</p>
                                                 </td>
-                                                <td class="version" style="width: 100px;padding: 0 10px 0 20px;">
+                                                <td class="version" style="width: 120px;padding: 0 10px 0 20px;">
                                                     <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
                                                 </td>
                                                 <td class="status">
@@ -201,7 +201,7 @@
                             <tr>
                                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
                                 <th style="width: 110px; padding-left: 20px;">{{$t('组件名称')}}</th>
-                                <th style="width: 100px; padding-left: 20px">{{$t('版本')}}</th>
+                                <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
                                 <th style="width: 100px; padding-left: 20px;">{{$t('状态')}}</th>
                                 <th style="width: 390px; padding-left: 20px;">{{$t('数据源信息')}}</th>
                                 <th style="padding-left: 0;">{{$t('描述')}}</th>
@@ -227,7 +227,7 @@
                                                 <td class="log-name">
                                                     <p class="text">{{crdcontroller.name || '--'}}</p>
                                                 </td>
-                                                <td style="width: 100px;padding: 0 10px 0 20px;">
+                                                <td style="width: 120px;padding: 0 10px 0 20px;">
                                                     <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
                                                 </td>
                                                 <td class="log-status">
