@@ -207,19 +207,19 @@ func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTyp
 	return nil
 }
 
-// ListCloudImageOsValidate xxx
-func (c *CloudValidate) ListCloudImageOsValidate(req *proto.ListCloudImageOsRequest, account *proto.Account) error {
+// ListCloudOsImageValidate xxx
+func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
 	// call qcloud interface to check account
 	if c == nil || account == nil {
-		return fmt.Errorf("%s ListCloudImageOsValidate request is empty", cloudName)
+		return fmt.Errorf("%s ListCloudOsImageValidate request is empty", cloudName)
 	}
 
 	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
-		return fmt.Errorf("%s ListCloudImageOsValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListCloudImageOsValidate request lost valid region info", cloudName)
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
 	}
 
 	return nil

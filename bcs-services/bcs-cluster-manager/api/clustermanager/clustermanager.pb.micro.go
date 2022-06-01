@@ -143,6 +143,20 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CordonNode",
+			Path:    []string{"/clustermanager/v1/node/cordon"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UnCordonNode",
+			Path:    []string{"/clustermanager/v1/node/uncordon"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.GetClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"GET"},
@@ -585,8 +599,8 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.ListCloudImageOs",
-			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/imageos"},
+			Name:    "ClusterManager.ListCloudOsImage",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/osimage"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -613,6 +627,8 @@ type ClusterManagerService interface {
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
 	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error)
+	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error)
+	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
@@ -692,7 +708,7 @@ type ClusterManagerService interface {
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...client.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
-	ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, opts ...client.CallOption) (*ListCloudImageOsResponse, error)
+	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
 }
 
 type clusterManagerService struct {
@@ -850,6 +866,26 @@ func (c *clusterManagerService) UpdateNode(ctx context.Context, in *UpdateNodeRe
 func (c *clusterManagerService) CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CheckNodeInCluster", in)
 	out := new(CheckNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CordonNode", in)
+	out := new(CordonNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UnCordonNode", in)
+	out := new(UnCordonNodeResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1527,9 +1563,9 @@ func (c *clusterManagerService) ListCloudInstanceTypes(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *clusterManagerService) ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, opts ...client.CallOption) (*ListCloudImageOsResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudImageOs", in)
-	out := new(ListCloudImageOsResponse)
+func (c *clusterManagerService) ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudOsImage", in)
+	out := new(ListCloudOsImageResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1557,6 +1593,8 @@ type ClusterManagerHandler interface {
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
 	CheckNodeInCluster(context.Context, *CheckNodesRequest, *CheckNodesResponse) error
+	CordonNode(context.Context, *CordonNodeRequest, *CordonNodeResponse) error
+	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
@@ -1636,7 +1674,7 @@ type ClusterManagerHandler interface {
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest, *ListCloudSubnetsResponse) error
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
-	ListCloudImageOs(context.Context, *ListCloudImageOsRequest, *ListCloudImageOsResponse) error
+	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -1656,6 +1694,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
 		CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error
+		CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error
+		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
@@ -1723,7 +1763,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, out *ListCloudSubnetsResponse) error
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
-		ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, out *ListCloudImageOsResponse) error
+		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -1826,6 +1866,20 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.CheckNodeInCluster",
 		Path:    []string{"/clustermanager/v1/node/available"},
 		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CordonNode",
+		Path:    []string{"/clustermanager/v1/node/cordon"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UnCordonNode",
+		Path:    []string{"/clustermanager/v1/node/uncordon"},
+		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
@@ -2272,8 +2326,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.ListCloudImageOs",
-		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/imageos"},
+		Name:    "ClusterManager.ListCloudOsImage",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/osimage"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -2342,6 +2396,14 @@ func (h *clusterManagerHandler) UpdateNode(ctx context.Context, in *UpdateNodeRe
 
 func (h *clusterManagerHandler) CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error {
 	return h.ClusterManagerHandler.CheckNodeInCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error {
+	return h.ClusterManagerHandler.CordonNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error {
+	return h.ClusterManagerHandler.UnCordonNode(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {
@@ -2612,6 +2674,6 @@ func (h *clusterManagerHandler) ListCloudInstanceTypes(ctx context.Context, in *
 	return h.ClusterManagerHandler.ListCloudInstanceTypes(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) ListCloudImageOs(ctx context.Context, in *ListCloudImageOsRequest, out *ListCloudImageOsResponse) error {
-	return h.ClusterManagerHandler.ListCloudImageOs(ctx, in, out)
+func (h *clusterManagerHandler) ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error {
+	return h.ClusterManagerHandler.ListCloudOsImage(ctx, in, out)
 }

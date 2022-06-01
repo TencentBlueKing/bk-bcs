@@ -77,8 +77,8 @@ func (nm *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// ListImageOs list image os
-func (nm *NodeManager) ListImageOs(provider string, opt *cloudprovider.CommonOption) (
-	[]*proto.ImageOs, error) {
+// ListOsImage list image os
+func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) (
+	[]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

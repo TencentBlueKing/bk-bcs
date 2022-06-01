@@ -15,6 +15,7 @@ package clusterops
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -28,6 +29,11 @@ import (
 	k8scorecliset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+)
+
+var (
+	// ErrServerNotInited error for server not init
+	ErrServerNotInit = errors.New("server not init")
 )
 
 // K8SOperator operator of k8s

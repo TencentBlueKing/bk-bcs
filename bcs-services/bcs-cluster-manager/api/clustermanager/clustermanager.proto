@@ -175,6 +175,28 @@ service ClusterManager {
     };
   }
 
+  rpc CordonNode(CordonNodeRequest) returns (CordonNodeResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/node/cordon"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "节点设置不可调度状态"
+      summary : "节点不可调度态"
+    };
+  }
+
+  rpc UnCordonNode(UnCordonNodeRequest) returns (UnCordonNodeResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/node/uncordon"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "节点设置可调度状态"
+      summary : "节点可调度态"
+    };
+  }
+
   //* cluster credential management
   rpc GetClusterCredential(GetClusterCredentialReq)
       returns (GetClusterCredentialResp) {
@@ -862,13 +884,13 @@ service ClusterManager {
       summary : "查询Node机型"
     };
   }
-  rpc ListCloudImageOs(ListCloudImageOsRequest) returns (ListCloudImageOsResponse) {
+  rpc ListCloudOsImage(ListCloudOsImageRequest) returns (ListCloudOsImageResponse) {
     option (google.api.http) = {
-      get : "/clustermanager/v1/clouds/{cloudID}/imageos"
+      get : "/clustermanager/v1/clouds/{cloudID}/osimage"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "根据筛选条件查询Node操作系统列表"
-      summary : "查询Node操作系统列表"
+      description : "根据筛选条件查询Node操作系统镜像列表"
+      summary : "查询Node操作系统镜像列表"
     };
   }
 }
@@ -4022,6 +4044,124 @@ message NodeResult {
       description : "节点所在集群名称"
     }
   ];
+}
+
+message UnCordonNodeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UnCordonNodeRequest"
+      description : "设置节点可调度状态"
+      required : [ "innerIPs","clusterID" ]
+    }
+  };
+
+  repeated string innerIPs = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "innerIPs",
+      description : "节点内网IP列表"
+    },
+    (validate.rules).repeated = {min_items: 1, max_items: 100}
+  ];
+
+  string clusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "更新节点所属的clusterID"
+    },
+    (validate.rules).string = {min_bytes: 1}
+  ];
+  string updater = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "updater",
+      description : "更新者"
+    },
+    (validate.rules).string = {min_bytes: 1}
+  ];
+}
+
+message UnCordonNodeResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UnCordonNodeResponse"
+      description : "更新节点可调度状态"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated string fail = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "fail",
+    description : "返回操作失败的节点列表"
+  }];
+}
+
+message CordonNodeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CordonNodeRequest"
+      description : "设置节点不可调度状态"
+      required : [ "innerIPs" ]
+    }
+  };
+
+  repeated string innerIPs = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "innerIPs",
+      description : "节点内网IP列表"
+    },
+    (validate.rules).repeated = {min_items: 1, max_items: 100}
+  ];
+
+  string clusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "更新节点所属的clusterID"
+    },
+    (validate.rules).string = {min_bytes: 1}
+  ];
+  string updater = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "updater",
+      description : "更新者"
+    },
+    (validate.rules).string = {min_bytes: 1}
+  ];
+}
+
+message CordonNodeResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CordonNodeResponse"
+      description : "更新节点不可调度状态"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated string fail = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "fail",
+    description : "返回操作失败的节点列表"
+  }];
 }
 
 message UpdateNodeRequest {
@@ -8138,10 +8278,10 @@ message InstanceType {
   }];
 }
 
-message ListCloudImageOsRequest {
+message ListCloudOsImageRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "ListCloudImageOsRequest"
+      title : "ListCloudOsImageRequest"
       description : "查询操作系统列表"
     }
   };
@@ -8160,15 +8300,15 @@ message ListCloudImageOsRequest {
   },(validate.rules).string = {min_len : 2}];
   string provider = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "provider",
-    description : "镜像提供方，可选值：PUBLIC_IMAGE(公共镜像)，MARKET_IMAGE(市场镜像)"
+    description : "镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)"
   }];
 }
 
-message ListCloudImageOsResponse {
+message ListCloudOsImageResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "ListCloudImageOsResponse"
-      description : "查询机型列表返回"
+      title : "ListCloudOsImageResponse"
+      description : "查询操作系统镜像列表返回"
       required : [ "code", "message" ]
     }
   };
@@ -8185,31 +8325,31 @@ message ListCloudImageOsResponse {
     title : "result", 
     description : "返回结果"
   }];
-  repeated ImageOs data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated OsImage data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data", 
     description : "获取到的信息"
   }];
 }
 
-message ImageOs {
+message OsImage {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "ImageOs"
-      description : "操作系统"
+      title : "OsImage"
+      description : "操作系统镜像"
     }
   };
 
-  string alias = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string imageID = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "imageID",
+    description : "镜像 ID"
+  }];
+  string alias = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "alias",
     description : "镜像别名"
   }];
-  string arch = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string arch = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "arch",
     description : "镜像CPU架构"
-  }];
-  string imageID = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "imageID",
-    description : "镜像 ID"
   }];
   string osCustomizeType = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "osCustomizeType",
@@ -8225,11 +8365,11 @@ message ImageOs {
   }];
   string status = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "status",
-    description : "镜像状态，online 为可使用状态"
+    description : "镜像状态: NORMAL(正常)"
   }];
   string provider = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "provider",
-    description : "镜像提供方，可选值：PUBLIC_IMAGE(公共镜像)，MARKET_IMAGE(市场镜像)"
+    description : "镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)"
   }];
 }
 

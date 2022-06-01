@@ -758,60 +758,6 @@
         ]
       }
     },
-    "/clustermanager/v1/clouds/{cloudID}/imageos": {
-      "get": {
-        "summary": "查询Node操作系统列表",
-        "description": "根据筛选条件查询Node操作系统列表",
-        "operationId": "ClusterManager_ListCloudImageOs",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerListCloudImageOsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "cloudID",
-            "description": "云信息",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "region",
-            "description": "region. 云地域信息",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "accountID",
-            "description": "accountID. 云凭证ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "provider",
-            "description": "provider. 镜像提供方，可选值：PUBLIC_IMAGE(公共镜像)，MARKET_IMAGE(市场镜像)",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
     "/clustermanager/v1/clouds/{cloudID}/instancetypes": {
       "get": {
         "summary": "查询Node机型",
@@ -882,6 +828,60 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/osimage": {
+      "get": {
+        "summary": "查询Node操作系统镜像列表",
+        "description": "根据筛选条件查询Node操作系统镜像列表",
+        "operationId": "ClusterManager_ListCloudOsImage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudOsImageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2663,6 +2663,74 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerCheckNodesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/node/cordon": {
+      "put": {
+        "summary": "节点不可调度态",
+        "description": "节点设置不可调度状态",
+        "operationId": "ClusterManager_CordonNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCordonNodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCordonNodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/node/uncordon": {
+      "put": {
+        "summary": "节点可调度态",
+        "description": "节点设置可调度状态",
+        "operationId": "ClusterManager_UnCordonNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUnCordonNodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUnCordonNodeRequest"
             }
           }
         ],
@@ -5110,6 +5178,70 @@
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
       "title": "ClusterMgr"
     },
+    "clustermanagerCordonNodeRequest": {
+      "type": "object",
+      "properties": {
+        "innerIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点内网IP列表",
+          "title": "innerIPs"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "更新节点所属的clusterID",
+          "title": "clusterID"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        }
+      },
+      "description": "设置节点不可调度状态",
+      "title": "CordonNodeRequest",
+      "required": [
+        "innerIPs"
+      ]
+    },
+    "clustermanagerCordonNodeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "fail": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "返回操作失败的节点列表",
+          "title": "fail"
+        }
+      },
+      "description": "更新节点不可调度状态",
+      "title": "CordonNodeResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerCreateAutoScalingOptionRequest": {
       "type": "object",
       "properties": {
@@ -7389,53 +7521,6 @@
       },
       "title": "ImageInfo 创建cvm实例的镜像信息"
     },
-    "clustermanagerImageOs": {
-      "type": "object",
-      "properties": {
-        "alias": {
-          "type": "string",
-          "description": "镜像别名",
-          "title": "alias"
-        },
-        "arch": {
-          "type": "string",
-          "description": "镜像CPU架构",
-          "title": "arch"
-        },
-        "imageID": {
-          "type": "string",
-          "description": "镜像 ID",
-          "title": "imageID"
-        },
-        "osCustomizeType": {
-          "type": "string",
-          "description": "定制系统类型",
-          "title": "osCustomizeType"
-        },
-        "osName": {
-          "type": "string",
-          "description": "操作系统名称",
-          "title": "osName"
-        },
-        "seriesName": {
-          "type": "string",
-          "description": "操作系统系列名称",
-          "title": "seriesName"
-        },
-        "status": {
-          "type": "string",
-          "description": "镜像状态，online 为可使用状态",
-          "title": "status"
-        },
-        "provider": {
-          "type": "string",
-          "description": "镜像提供方，可选值：PUBLIC_IMAGE(公共镜像)，MARKET_IMAGE(市场镜像)",
-          "title": "provider"
-        }
-      },
-      "description": "操作系统",
-      "title": "ImageOs"
-    },
     "clustermanagerImportCloudMode": {
       "type": "object",
       "properties": {
@@ -8029,42 +8114,6 @@
         "message"
       ]
     },
-    "clustermanagerListCloudImageOsResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "result": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "返回结果",
-          "title": "result"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerImageOs"
-          },
-          "description": "获取到的信息",
-          "title": "data"
-        }
-      },
-      "description": "查询机型列表返回",
-      "title": "ListCloudImageOsResponse",
-      "required": [
-        "code",
-        "message"
-      ]
-    },
     "clustermanagerListCloudInstanceTypeResponse": {
       "type": "object",
       "properties": {
@@ -8096,6 +8145,42 @@
       },
       "description": "查询机型列表返回",
       "title": "ListNodeTypeResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudOsImageResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerOsImage"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询操作系统镜像列表返回",
+      "title": "ListCloudOsImageResponse",
       "required": [
         "code",
         "message"
@@ -9349,6 +9434,53 @@
       "description": "用于记录一些固定的系统信息，用于帮助OS层面信息展示",
       "title": "OSInfo"
     },
+    "clustermanagerOsImage": {
+      "type": "object",
+      "properties": {
+        "imageID": {
+          "type": "string",
+          "description": "镜像 ID",
+          "title": "imageID"
+        },
+        "alias": {
+          "type": "string",
+          "description": "镜像别名",
+          "title": "alias"
+        },
+        "arch": {
+          "type": "string",
+          "description": "镜像CPU架构",
+          "title": "arch"
+        },
+        "osCustomizeType": {
+          "type": "string",
+          "description": "定制系统类型",
+          "title": "osCustomizeType"
+        },
+        "osName": {
+          "type": "string",
+          "description": "操作系统名称",
+          "title": "osName"
+        },
+        "seriesName": {
+          "type": "string",
+          "description": "操作系统系列名称",
+          "title": "seriesName"
+        },
+        "status": {
+          "type": "string",
+          "description": "镜像状态: NORMAL(正常)",
+          "title": "status"
+        },
+        "provider": {
+          "type": "string",
+          "description": "镜像提供方，可选值: PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像)",
+          "title": "provider"
+        }
+      },
+      "description": "操作系统镜像",
+      "title": "OsImage"
+    },
     "clustermanagerProject": {
       "type": "object",
       "properties": {
@@ -10013,6 +10145,71 @@
       },
       "description": "autoScale定时扩缩配置",
       "title": "TimeRange"
+    },
+    "clustermanagerUnCordonNodeRequest": {
+      "type": "object",
+      "properties": {
+        "innerIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点内网IP列表",
+          "title": "innerIPs"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "更新节点所属的clusterID",
+          "title": "clusterID"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        }
+      },
+      "description": "设置节点可调度状态",
+      "title": "UnCordonNodeRequest",
+      "required": [
+        "innerIPs",
+        "clusterID"
+      ]
+    },
+    "clustermanagerUnCordonNodeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "fail": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "返回操作失败的节点列表",
+          "title": "fail"
+        }
+      },
+      "description": "更新节点可调度状态",
+      "title": "UnCordonNodeResponse",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerUpdateAutoScalingOptionRequest": {
       "type": "object",

@@ -21,6 +21,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -748,15 +749,74 @@ func (nm *NodeManager) DescribeInstances(ins []string, filters []*Filter, opt *c
 	return nodes, nil
 }
 
-// ListImageOs list image os
-func (nm *NodeManager) ListImageOs(provider string, opt *cloudprovider.CommonOption) (
-	[]*proto.ImageOs, error) {
-	result := make([]*proto.ImageOs, 0)
-	for _, v := range imageOsList {
-		if v.Provider != provider {
-			continue
-		}
-		result = append(result, v)
+// DescribeImages describe images
+// https://cloud.tencent.com/document/api/213/15715
+func (nm *NodeManager) DescribeImages(imageType string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+	blog.Infof("DescribeImages input: %s", imageType)
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when DescribeImages failed: %v", err)
+		return nil, err
 	}
-	return result, nil
+	req := cvm.NewDescribeImagesRequest()
+	if imageType != "" {
+		req.Filters = []*cvm.Filter{
+			{
+				Name:   common.StringPtr("image-type"),
+				Values: common.StringPtrs([]string{imageType}),
+			},
+		}
+	}
+	images := make([]*proto.OsImage, 0)
+	got, total := 0, 0
+	first := true
+	for got < total || first {
+		first = false
+		req.Offset = common.Uint64Ptr(uint64(got))
+		resp, err := client.DescribeImages(req)
+		if err != nil {
+			blog.Errorf("DescribeImages failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeImages resp is nil")
+			return nil, fmt.Errorf("DescribeImages resp is nil")
+		}
+		blog.Infof("DescribeImages success, requestID: %s", *resp.Response.RequestId)
+		for _, v := range resp.Response.ImageSet {
+			if v.ImageId == nil {
+				continue
+			}
+			image := &proto.OsImage{
+				ImageID: *v.ImageId,
+			}
+			if v.ImageName != nil {
+				image.Alias = *v.ImageName
+			}
+			if v.Architecture != nil {
+				image.Arch = *v.Architecture
+			}
+			if v.OsName != nil {
+				image.OsName = *v.OsName
+			}
+			if v.ImageType != nil {
+				image.Provider = *v.ImageType
+			}
+			if v.ImageState != nil {
+				image.Status = *v.ImageState
+			}
+			images = append(images, image)
+		}
+		got += len(resp.Response.ImageSet)
+		total = int(*resp.Response.TotalCount)
+	}
+	return images, nil
+}
+
+// ListOsImage list image os
+func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+	if provider == cmcommon.MarketImageProvider {
+		return imageOsList, nil
+	}
+	return nm.DescribeImages(provider, opt)
 }

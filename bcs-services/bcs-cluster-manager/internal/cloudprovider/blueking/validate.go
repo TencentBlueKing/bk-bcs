@@ -111,7 +111,7 @@ func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTyp
 	return nil
 }
 
-// ListCloudImageOsValidate xxx
-func (c *CloudValidate) ListCloudImageOsValidate(req *proto.ListCloudImageOsRequest, account *proto.Account) error {
+// ListCloudOsImageValidate xxx
+func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
 	return nil
 }

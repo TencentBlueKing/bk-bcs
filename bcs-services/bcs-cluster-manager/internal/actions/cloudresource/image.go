@@ -24,25 +24,25 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
-// ListCloudImageOsAction list action for image os
-type ListCloudImageOsAction struct {
+// ListCloudOsImageAction list action for osimage
+type ListCloudOsImageAction struct {
 	ctx         context.Context
 	cloud       *cmproto.Cloud
 	account     *cmproto.CloudAccount
 	model       store.ClusterManagerModel
-	req         *cmproto.ListCloudImageOsRequest
-	resp        *cmproto.ListCloudImageOsResponse
-	ImageOsList []*cmproto.ImageOs
+	req         *cmproto.ListCloudOsImageRequest
+	resp        *cmproto.ListCloudOsImageResponse
+	OsImageList []*cmproto.OsImage
 }
 
-// NewListCloudImageOsAction create list action for image os
-func NewListCloudImageOsAction(model store.ClusterManagerModel) *ListCloudImageOsAction {
-	return &ListCloudImageOsAction{
+// NewListCloudOsImageAction create list action for image os
+func NewListCloudOsImageAction(model store.ClusterManagerModel) *ListCloudOsImageAction {
+	return &ListCloudOsImageAction{
 		model: model,
 	}
 }
 
-func (la *ListCloudImageOsAction) validate() error {
+func (la *ListCloudOsImageAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
 	}
@@ -51,23 +51,10 @@ func (la *ListCloudImageOsAction) validate() error {
 		return err
 	}
 
-	validate, err := cloudprovider.GetCloudValidateMgr(la.cloud.CloudProvider)
-	if err != nil {
-		return err
-	}
-
-	err = validate.ListCloudImageOsValidate(la.req, &cmproto.Account{
-		SecretID:  la.account.Account.SecretID,
-		SecretKey: la.account.Account.SecretKey,
-	})
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (la *ListCloudImageOsAction) getRelativeData() error {
+func (la *ListCloudOsImageAction) getRelativeData() error {
 	cloud, err := actions.GetCloudByCloudID(la.model, la.req.CloudID)
 	if err != nil {
 		return err
@@ -82,14 +69,14 @@ func (la *ListCloudImageOsAction) getRelativeData() error {
 	return nil
 }
 
-func (la *ListCloudImageOsAction) setResp(code uint32, msg string) {
+func (la *ListCloudOsImageAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.ImageOsList
+	la.resp.Data = la.OsImageList
 }
 
-func (la *ListCloudImageOsAction) listCloudImageOs() error {
+func (la *ListCloudOsImageAction) listCloudImageOs() error {
 	nodeMgr, err := cloudprovider.GetNodeMgr(la.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloudprovider %s VPCManager for list imageos failed, %s", la.cloud.CloudProvider, err.Error())
@@ -107,17 +94,17 @@ func (la *ListCloudImageOsAction) listCloudImageOs() error {
 	cmOption.Region = la.req.Region
 
 	// get image os list
-	imageOsList, err := nodeMgr.ListImageOs(la.req.Provider, cmOption)
+	imageOsList, err := nodeMgr.ListOsImage(la.req.Provider, cmOption)
 	if err != nil {
 		return err
 	}
-	la.ImageOsList = imageOsList
+	la.OsImageList = imageOsList
 	return nil
 }
 
 // Handle handle list image os request
-func (la *ListCloudImageOsAction) Handle(ctx context.Context,
-	req *cmproto.ListCloudImageOsRequest, resp *cmproto.ListCloudImageOsResponse) {
+func (la *ListCloudOsImageAction) Handle(ctx context.Context,
+	req *cmproto.ListCloudOsImageRequest, resp *cmproto.ListCloudOsImageResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("list image os failed, req or resp is empty")
 		return
