@@ -23,7 +23,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -171,11 +173,11 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGr
 		req.ImageId = common.StringPtr(group.LaunchTemplate.ImageInfo.ImageID)
 	}
 	req.InstanceTypes = common.StringPtrs([]string{group.LaunchTemplate.InstanceType})
-	if group.NodeTemplate.DataDisks != nil {
-		for i := range group.NodeTemplate.DataDisks {
-			diskSize, _ := strconv.Atoi(group.NodeTemplate.DataDisks[i].DiskSize)
+	if group.LaunchTemplate.DataDisks != nil {
+		for i := range group.LaunchTemplate.DataDisks {
+			diskSize, _ := strconv.Atoi(group.LaunchTemplate.DataDisks[i].DiskSize)
 			req.DataDisks = append(req.DataDisks, &as.DataDisk{
-				DiskType: common.StringPtr(group.NodeTemplate.DataDisks[i].DiskType),
+				DiskType: common.StringPtr(group.LaunchTemplate.DataDisks[i].DiskType),
 				DiskSize: common.Uint64Ptr(uint64(diskSize)),
 			})
 		}
@@ -193,9 +195,9 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGr
 	req.LoginSettings = &as.LoginSettings{Password: common.StringPtr(group.LaunchTemplate.InitLoginPassword)}
 	req.ProjectId = common.Int64Ptr(int64(group.LaunchTemplate.ProjectID))
 	req.SecurityGroupIds = common.StringPtrs(group.LaunchTemplate.SecurityGroupIDs)
-	diskSize, _ := strconv.Atoi(group.LaunchTemplate.SystemDisk.DiskSize)
+	diskSize, _ := strconv.Atoi(group.LaunchTemplate.SystemDisk.GetDiskSize())
 	req.SystemDisk = &as.SystemDisk{
-		DiskType: common.StringPtr(group.LaunchTemplate.SystemDisk.DiskType),
+		DiskType: common.StringPtr(group.LaunchTemplate.SystemDisk.GetDiskType()),
 		DiskSize: common.Uint64Ptr(uint64(diskSize)),
 	}
 	req.UserData = common.StringPtr(group.LaunchTemplate.UserData)
@@ -254,6 +256,15 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 		blog.Errorf("DescribeInstances failed, err: %s", err.Error())
 		return nil, err
 	}
+
+	groupNodes := make([]*proto.Node, 0)
+	for i := range nodes {
+		nodes[i].Status = intercommon.StatusRunning
+		nodes[i].ClusterID = group.ClusterID
+		nodes[i].NodeGroupID = group.NodeGroupID
+		groupNodes = append(groupNodes, nodes[i])
+	}
+
 	return nodes, nil
 }
 

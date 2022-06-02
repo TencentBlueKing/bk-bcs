@@ -116,6 +116,8 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 		cfg.TLSClientConfig = rest.TLSClientConfig{
 			Insecure: false,
 			CAData:   []byte(cred.CaCertData),
+			CertData: []byte(cred.ClientCert),
+			KeyData:  []byte(cred.ClientKey),
 		}
 		cfg.BearerToken = cred.UserToken
 		cliset, err := k8scorecliset.NewForConfig(cfg)

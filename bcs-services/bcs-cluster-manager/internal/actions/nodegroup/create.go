@@ -134,10 +134,25 @@ func (ca *CreateAction) validate() error {
 	}
 	if ca.req.LaunchTemplate == nil {
 		return fmt.Errorf("launchTemplate is empty")
+	} else {
+		err := validateLaunchTemplate(ca.req.LaunchTemplate)
+		if err != nil {
+			return err
+		}
 	}
+
 	if ca.req.NodeTemplate == nil {
 		return fmt.Errorf("nodeTemplate is empty")
 	}
+	return nil
+}
+
+func validateLaunchTemplate(conf *cmproto.LaunchConfiguration) error {
+	// simply check instanceType conf info
+	if conf.CPU == 0 || conf.Mem == 0 {
+		return fmt.Errorf("validateLaunchTemplate cpu/mem empty")
+	}
+
 	return nil
 }
 
@@ -218,7 +233,7 @@ func (ca *CreateAction) createNodeGroup() error {
 	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ca.group.NodeGroupID,
-		TaskID:       "",
+		TaskID:       task.TaskID,
 		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
 		OpUser:       ca.req.Creator,
 		CreateTime:   time.Now().String(),
@@ -246,7 +261,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		return
 	}
 
-	// getRelativeResource get cluster / project/ cloud provider
+	// getRelativeResource get cluster / cloud provider
 	if err := ca.getRelativeResource(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
@@ -258,7 +273,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		return
 	}
 
-	// cloudprovider create nodegroup
+	// cloudprovider create nodegroup && dispatch task
 	if err := ca.createNodeGroup(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return

@@ -112,7 +112,7 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
 		return sjr.deleteCANodesResultStatus(isSuccess)
 	case DeleteNodeGroupJob:
-		sjr.Status = generateStatusResult(common.StatusDeleted, common.StatusDeleteNodeGroupFailed)
+		sjr.Status = generateStatusResult("", common.StatusDeleteNodeGroupFailed)
 		return sjr.updateNodeGroupStatus(isSuccess)
 	case CreateNodeGroupJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusCreateNodeGroupFailed)
@@ -242,7 +242,26 @@ func (sjr *SyncJobResult) updateNodeGroupStatus(isSuccess bool) error {
 		return sjr.Status.Failure
 	}
 
-	return sjr.updateNodeGroupStatusByID(sjr.NodeGroupID, getStatus())
+	if !isSuccess {
+		return sjr.updateNodeGroupStatusByID(sjr.NodeGroupID, getStatus())
+	}
+
+	return sjr.deleteNodeGroupByID(sjr.NodeGroupID)
+}
+
+// deleteNodeGroupByID delete nodegroup by ID
+func (sjr *SyncJobResult) deleteNodeGroupByID(nodeGroupID string) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+	blog.Infof("task[%s] nodeGroup[%s] status[%s]", sjr.TaskID, nodeGroupID, group.Status)
+	err = GetStorageModel().DeleteNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // updateNodeGroupStatusByID set nodeGroup status
