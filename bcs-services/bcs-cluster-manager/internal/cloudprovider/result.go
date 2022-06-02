@@ -113,7 +113,7 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 		return sjr.deleteCANodesResultStatus(isSuccess)
 	case DeleteNodeGroupJob:
 		sjr.Status = generateStatusResult("", common.StatusDeleteNodeGroupFailed)
-		return sjr.updateNodeGroupStatus(isSuccess)
+		return sjr.updateDeleteNodeGroupStatus(isSuccess)
 	case CreateNodeGroupJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusCreateNodeGroupFailed)
 		return sjr.updateNodeGroupStatus(isSuccess)
@@ -232,6 +232,22 @@ func (sjr *SyncJobResult) updateCANodesResultStatus(isSuccess bool) error {
 func (sjr *SyncJobResult) updateNodeGroupStatus(isSuccess bool) error {
 	if len(sjr.NodeGroupID) == 0 {
 		return fmt.Errorf("SyncJobResult updateNodeGroupStatus failed: %v", "NodeGroupID is empty")
+	}
+
+	getStatus := func() string {
+		if isSuccess {
+			return sjr.Status.Success
+		}
+
+		return sjr.Status.Failure
+	}
+
+	return sjr.updateNodeGroupStatusByID(sjr.NodeGroupID, getStatus())
+}
+
+func (sjr *SyncJobResult) updateDeleteNodeGroupStatus(isSuccess bool) error {
+	if len(sjr.NodeGroupID) == 0 {
+		return fmt.Errorf("SyncJobResult updateDeleteNodeGroupStatus failed: %v", "NodeGroupID is empty")
 	}
 
 	getStatus := func() string {
