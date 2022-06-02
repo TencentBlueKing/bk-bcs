@@ -15,6 +15,7 @@ package qcloud
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -67,6 +68,34 @@ func newtask() *Task {
 	// remove node from cluster
 	task.works[removeNodesFromClusterTask] = tasks.RemoveNodesFromClusterTask
 	task.works[updateRemoveNodeDBInfoTask] = tasks.UpdateRemoveNodeDBInfoTask
+
+	// init qcloud node-group task
+
+	// autoScaler task
+	task.works[ensureAutoScalerTask] = tasks.EnsureAutoScalerTask
+	task.works[deleteAutoScalerTask] = tasks.DeleteAutoScalerTask
+	task.works[updateNodeGroupAutoScalingDBTask] = tasks.UpdateNodeGroupAutoScalingDBTask
+
+	// create nodeGroup task
+	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
+	task.works[checkCloudNodeGroupStatusTask] = tasks.CheckCloudNodeGroupStatusTask
+	//task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
+
+	// delete nodeGroup task
+	task.works[deleteNodeGroupTask] = tasks.DeleteCloudNodeGroupTask
+	//task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
+
+	// clean node in nodeGroup task
+	task.works[cleanNodeGroupNodesTask] = tasks.CleanNodeGroupNodesTask
+	//task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
+	//task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
+
+	// update desired nodes task
+	task.works[applyInstanceMachinesTask] = tasks.ApplyInstanceMachinesTask
+	task.works[checkClusterNodesStatusTask] = tasks.CheckClusterNodesStatusTask
+	// business user define sops
+
+	// move nodes to nodeGroup task
 
 	return task
 }
@@ -223,7 +252,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams["operator"] = opt.Operator
 	task.CommonParams["user"] = opt.Operator
-	task.CommonParams["JobType"] = cloudprovider.CreateClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateClusterJob.String()
 
 	return task, nil
 }
@@ -307,7 +336,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams["operator"] = opt.Operator
-	task.CommonParams["JobType"] = cloudprovider.ImportClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.ImportClusterJob.String()
 
 	return task, nil
 }
@@ -408,7 +437,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 		return nil, fmt.Errorf("BuildDeleteClusterTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.DeleteClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteClusterJob.String()
 
 	return task, nil
 }
@@ -557,7 +586,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	task.CommonParams["operator"] = opt.Operator
 	task.CommonParams["user"] = opt.Operator
 
-	task.CommonParams["JobType"] = cloudprovider.AddNodeJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.AddNodeJob.String()
 	task.CommonParams["NodeIPs"] = strings.Join(nodeIPs, ",")
 	task.CommonParams["NodeIDs"] = strings.Join(nodeIDs, ",")
 
@@ -676,28 +705,236 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		return nil, fmt.Errorf("BuildRemoveNodesFromClusterTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.DeleteNodeJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteNodeJob.String()
 	task.CommonParams["NodeIPs"] = strings.Join(nodeIPs, ",")
 	task.CommonParams["NodeIDs"] = strings.Join(nodeIDs, ",")
 
 	return task, nil
 }
 
-//BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
-// including remove nodes from NodeGroup, clean data in nodes
-func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
-	opt *cloudprovider.TaskOptions) (*proto.Task, error) {
-	//build task step1: move nodes out of nodegroup
-	//step2: delete nodes in cluster
-	//step3: delete nodes record in local storage
-	return nil, cloudprovider.ErrCloudNotImplemented
+// BuildCreateNodeGroupTask build create node group task
+func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
+	*proto.Task, error) {
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CreateNodeGroup),
+		TaskName:       cloudprovider.CreateNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(createNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. call qcloud create node group
+	createStep := &proto.Step{
+		Name:       createCloudNodeGroupTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: createCloudNodeGroupTask,
+		TaskName:   "创建 NodeGroup",
+	}
+	createStep.Params["ClusterID"] = group.ClusterID
+	createStep.Params["NodeGroupID"] = group.NodeGroupID
+	createStep.Params["CloudID"] = group.Provider
+
+	task.Steps[createCloudNodeGroupTask] = createStep
+	task.StepSequence = append(task.StepSequence, createCloudNodeGroupTask)
+
+	// step2. wait qcloud create node group complete
+	checkStep := &proto.Step{
+		Name:       checkCloudNodeGroupStatusTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: checkCloudNodeGroupStatusTask,
+		TaskName:   "检测 NodeGroup 状态",
+	}
+	checkStep.Params["ClusterID"] = group.ClusterID
+	checkStep.Params["NodeGroupID"] = group.NodeGroupID
+	checkStep.Params["CloudID"] = group.Provider
+
+	task.Steps[checkCloudNodeGroupStatusTask] = checkStep
+	task.StepSequence = append(task.StepSequence, checkCloudNodeGroupStatusTask)
+
+	// step3. ensure autoscaler in cluster
+	ensureCAStep := &proto.Step{
+		Name:       ensureAutoScalerTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      3,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: ensureAutoScalerTask,
+		TaskName:   "开启自动伸缩组件",
+	}
+	ensureCAStep.Params["ClusterID"] = group.ClusterID
+	ensureCAStep.Params["NodeGroupID"] = group.NodeGroupID
+	ensureCAStep.Params["CloudID"] = group.Provider
+
+	task.Steps[ensureAutoScalerTask] = ensureCAStep
+	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask task StepSequence empty")
+	}
+
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateNodeGroupJob.String()
+
+	return task, nil
 }
 
-//BuildScalingNodesTask when scaling nodes, we need to create background
-// task to verify scaling status and update new nodes to local storage
-func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt *cloudprovider.TaskOptions) (*proto.Task, error) {
-	//validate request params
-	return nil, nil
+// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
+// including remove nodes from NodeGroup, clean data in nodes
+func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
+
+	// clean nodeGroup nodes in cloud only has two steps:
+	// 1. call asg RemoveInstances to clean cluster nodes
+	// because cvms return to cloud asg resource pool, all clean works are handle by asg
+	// we do little task here
+
+	// validate request params
+	if nodes == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask nodes info empty")
+	}
+	if group == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask group info empty")
+	}
+	if opt == nil || len(opt.Operator) == 0 || opt.Cluster == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask TaskOptions is lost")
+	}
+
+	var (
+		nodeIPs, nodeIDs = make([]string, 0), make([]string, 0)
+	)
+	for _, node := range nodes {
+		nodeIPs = append(nodeIPs, node.InnerIP)
+		nodeIDs = append(nodeIDs, node.NodeID)
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CleanNodeGroupNodes),
+		TaskName:       cloudprovider.CleanNodesInGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(cleanNodeGroupNodesTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// instance passwd
+	passwd := group.LaunchTemplate.InitLoginPassword
+	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
+
+	// step1. bcs default steps
+	if group.NodeTemplate.BcsScaleInAddons != nil && len(group.NodeTemplate.BcsScaleInAddons.PreActions) > 0 {
+		step := &template.BkSopsStepAction{
+			TaskName: taskName,
+			Actions:  group.NodeTemplate.BcsScaleOutAddons.PostActions,
+			Plugins:  group.NodeTemplate.BcsScaleOutAddons.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, opt.Cluster, template.ExtraInfo{
+			InstancePasswd: passwd,
+			NodeIPList:     strings.Join(nodeIPs, ","),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask BcsScaleInAddons.PreActions BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step2. business user define flow
+	if group.NodeTemplate.ScaleInExtraAddons != nil && len(group.NodeTemplate.ScaleInExtraAddons.PreActions) > 0 {
+		step := &template.BkSopsStepAction{
+			TaskName: taskName,
+			Actions:  group.NodeTemplate.ScaleInExtraAddons.PreActions,
+			Plugins:  group.NodeTemplate.ScaleInExtraAddons.Plugins,
+		}
+
+		err := step.BuildBkSopsStepAction(task, opt.Cluster, template.ExtraInfo{
+			InstancePasswd: passwd,
+			NodeIPList:     strings.Join(nodeIPs, ","),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// setting all steps details
+	// step1: cluster scaleIn to clean cluster nodes
+	cleanStep := &proto.Step{
+		Name:   cleanNodeGroupNodesTask,
+		System: "api",
+		Params: make(map[string]string),
+		Retry:  0,
+		Start:  nowStr,
+		Status: cloudprovider.TaskStatusNotStarted,
+		// method name is registered name to taskserver
+		TaskMethod: cleanNodeGroupNodesTask,
+		TaskName:   cloudprovider.CleanNodeGroupNodesStep.String(),
+	}
+	cleanStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID
+	cleanStep.Params[cloudprovider.NodeGroupIDKey.String()] = group.NodeGroupID
+	cleanStep.Params[cloudprovider.CloudIDKey.String()] = group.Provider
+
+	cleanStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
+	cleanStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
+
+	task.Steps[cleanNodeGroupNodesTask] = cleanStep
+	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask task StepSequence empty")
+	}
+
+	task.CurrentStep = task.StepSequence[0]
+
+	// set global task paras
+	task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
+	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
+
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CleanNodeGroupNodesJob.String()
+	return task, nil
 }
 
 //BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
@@ -706,5 +943,274 @@ func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt
 //@param group: need to delete
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
-	return nil, nil
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.DeleteNodeGroup),
+		TaskName:       "删除 NodeGroup",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(deleteNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. call qcloud delete node group
+	deleteStep := &proto.Step{
+		Name:       deleteNodeGroupTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: deleteNodeGroupTask,
+		TaskName:   "删除云 NodeGroup",
+	}
+	deleteStep.Params["ClusterID"] = group.ClusterID
+	deleteStep.Params["NodeGroupID"] = group.NodeGroupID
+	deleteStep.Params["CloudID"] = group.Provider
+	deleteStep.Params["KeepInstance"] = "true"
+	if opt.CleanInstanceInCluster {
+		deleteStep.Params["KeepInstance"] = "false"
+	}
+
+	task.Steps[deleteNodeGroupTask] = deleteStep
+	task.StepSequence = append(task.StepSequence, deleteNodeGroupTask)
+
+	// step2. update node group info in DB
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteNodeGroupJob.String()
+	return task, nil
+}
+
+// BuildMoveNodesToGroupTask build move nodes to group task
+func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildUpdateDesiredNodesTask build update desired nodes task
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
+	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
+	// validate request params
+	if desired == 0 {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask desired is zero")
+	}
+	if group == nil {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask group info empty")
+	}
+	if opt == nil || len(opt.Operator) == 0 || opt.Cluster == nil {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask TaskOptions is lost")
+	}
+
+	// generate main task
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroupDesiredNode),
+		TaskName:       cloudprovider.UpdateDesiredNodesTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateNodeGroupDesiredNodeTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	passwd := group.LaunchTemplate.InitLoginPassword
+	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
+
+	// setting all steps details
+	// step1. call qcloud interface to set desired nodes
+	applyInstanceStep := &proto.Step{
+		Name:       applyInstanceMachinesTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: applyInstanceMachinesTask,
+		TaskName:   cloudprovider.ApplyInstanceMachinesStep.String(),
+	}
+	applyInstanceStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID
+	applyInstanceStep.Params[cloudprovider.NodeGroupIDKey.String()] = group.NodeGroupID
+	applyInstanceStep.Params[cloudprovider.CloudIDKey.String()] = group.Provider
+	applyInstanceStep.Params[cloudprovider.ScalingKey.String()] = strconv.Itoa(int(desired))
+	applyInstanceStep.Params[cloudprovider.OperatorKey.String()] = opt.Operator
+
+	task.Steps[applyInstanceMachinesTask] = applyInstanceStep
+	task.StepSequence = append(task.StepSequence, applyInstanceMachinesTask)
+
+	// step2. check cluster nodes and all nodes status is running
+	checkClusterNodeStatusStep := &proto.Step{
+		Name:       checkClusterNodesStatusTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: checkClusterNodesStatusTask,
+		TaskName:   cloudprovider.CheckClusterNodesStatusStep.String(),
+	}
+	checkClusterNodeStatusStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID
+	checkClusterNodeStatusStep.Params[cloudprovider.NodeGroupIDKey.String()] = group.NodeGroupID
+	checkClusterNodeStatusStep.Params[cloudprovider.CloudIDKey.String()] = group.Provider
+
+	task.Steps[checkClusterNodesStatusTask] = checkClusterNodeStatusStep
+	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusTask)
+
+	// step3. bcs default steps
+	if opt.NodeGroup != nil && opt.NodeGroup.NodeTemplate.BcsScaleOutAddons != nil && len(opt.NodeGroup.NodeTemplate.BcsScaleOutAddons.PostActions) > 0 {
+		step := &template.BkSopsStepAction{
+			TaskName: taskName,
+			Actions:  opt.NodeGroup.NodeTemplate.BcsScaleOutAddons.PostActions,
+			Plugins:  opt.NodeGroup.NodeTemplate.BcsScaleOutAddons.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, opt.Cluster, template.ExtraInfo{
+			InstancePasswd: passwd,
+			NodeIPList:     "",
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask BcsAddons.PostActions BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step4. business user define flow
+	if opt.NodeGroup != nil && opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons != nil && len(opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons.PostActions) > 0 {
+		step := &template.BkSopsStepAction{
+			TaskName: taskName,
+			Actions:  opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons.PostActions,
+			Plugins:  opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons.Plugins,
+		}
+
+		err := step.BuildBkSopsStepAction(task, opt.Cluster, template.ExtraInfo{
+			InstancePasswd: passwd,
+			NodeIPList:     "",
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask ExtraAddons.PostActions BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+
+	// must set job-type
+	task.CommonParams[cloudprovider.ScalingKey.String()] = strconv.Itoa(int(desired))
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupDesiredNodeJob.String()
+	return task, nil
+}
+
+// BuildSwitchNodeGroupAutoScalingTask ensure auto scaler status and update nodegroup status to normal
+func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask nodegroup info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.SwitchNodeGroupAutoScaling),
+		TaskName:       "开启/关闭 NodeGroup 自动伸缩",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(switchNodeGroupAutoScalingTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	ensureStep := &proto.Step{
+		Name:       ensureAutoScalerTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: ensureAutoScalerTask,
+		TaskName:   "安装/更新 AutoScaler",
+	}
+	ensureStep.Params["ClusterID"] = group.ClusterID
+	ensureStep.Params["NodeGroupID"] = group.NodeGroupID
+	ensureStep.Params["CloudID"] = group.Provider
+
+	task.Steps[ensureAutoScalerTask] = ensureStep
+	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+
+	// step2. update node group info in DB
+	dbStep := &proto.Step{
+		Name:       updateNodeGroupAutoScalingDBTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      0,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: updateNodeGroupAutoScalingDBTask,
+		TaskName:   "更新任务状态",
+	}
+	dbStep.Params["ClusterID"] = group.ClusterID
+	dbStep.Params["NodeGroupID"] = group.NodeGroupID
+	dbStep.Params["CloudID"] = group.Provider
+
+	task.Steps[updateNodeGroupAutoScalingDBTask] = dbStep
+	task.StepSequence = append(task.StepSequence, updateNodeGroupAutoScalingDBTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.SwitchNodeGroupAutoScaling.String()
+	return task, nil
 }

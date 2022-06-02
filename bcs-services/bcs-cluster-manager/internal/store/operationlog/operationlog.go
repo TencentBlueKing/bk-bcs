@@ -55,7 +55,7 @@ var (
 				bson.E{Key: resourceID, Value: 1},
 				bson.E{Key: taskID, Value: 1},
 			},
-			Unique: true,
+			Unique: false,
 		},
 	}
 )

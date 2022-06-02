@@ -13,6 +13,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -88,4 +89,10 @@ func SplitStringsChunks(strList []string, limit int) [][]string {
 	}
 
 	return ss
+}
+
+// ToJSONString convert data struct to json string
+func ToJSONString(data interface{}) string {
+	b, _ := json.Marshal(data)
+	return string(b)
 }

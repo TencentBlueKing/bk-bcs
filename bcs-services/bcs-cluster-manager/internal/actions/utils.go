@@ -46,6 +46,16 @@ func GetCloudByCloudID(model store.ClusterManagerModel, cloudID string) (*proto.
 	return cloud, nil
 }
 
+// GetNodeGroupByGroupID get nodeGroup info
+func GetNodeGroupByGroupID(model store.ClusterManagerModel, groupID string) (*proto.NodeGroup, error) {
+	nodeGroup, err := model.GetNodeGroup(context.Background(), groupID)
+	if err != nil {
+		return nil, fmt.Errorf("nodeGroup %s err, %s", groupID, err.Error())
+	}
+
+	return nodeGroup, nil
+}
+
 // GetProjectByProjectID get project info
 func GetProjectByProjectID(model store.ClusterManagerModel, projectID string) (*proto.Project, error) {
 	project, err := model.GetProject(context.Background(), projectID)
@@ -64,4 +74,13 @@ func GetClusterInfoByClusterID(model store.ClusterManagerModel, clusterID string
 	}
 
 	return cluster, nil
+}
+
+// GetDefaultClusterAutoScalingOption get default cluster auto scaling option
+func GetDefaultClusterAutoScalingOption(clusterID string) *proto.ClusterAutoScalingOption {
+	return &proto.ClusterAutoScalingOption{
+		Expander:            "random",
+		BufferResourceRatio: 100,
+		ClusterID:           clusterID,
+	}
 }

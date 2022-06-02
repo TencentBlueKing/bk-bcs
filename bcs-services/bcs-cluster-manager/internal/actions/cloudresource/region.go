@@ -211,7 +211,8 @@ func (ga *GetCloudRegionZonesAction) validate() error {
 	if err != nil {
 		return err
 	}
-	err = validate.ImportCloudAccountValidate(&cmproto.Account{
+
+	err = validate.GetCloudRegionZonesValidate(ga.req, &cmproto.Account{
 		SecretID:  ga.account.Account.SecretID,
 		SecretKey: ga.account.Account.SecretKey,
 	})

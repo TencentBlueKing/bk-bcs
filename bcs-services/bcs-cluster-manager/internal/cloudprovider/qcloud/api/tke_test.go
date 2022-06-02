@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
+	cloudtke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 func getClient(region string) *TkeClient {
@@ -211,14 +212,18 @@ func TestTkeClient_DeleteTKECluster(t *testing.T) {
 }
 
 func TestTkeClient_QueryTkeClusterAllInstances(t *testing.T) {
-	cli := getClient("ap-nanjing")
-	instances, err := cli.QueryTkeClusterAllInstances("cls-xxx")
+	cli := getClient("ap-guangzhou")
+	instances, err := cli.QueryTkeClusterAllInstances("cls-xxx", QueryClusterInstanceFilter{
+		NodePoolID:           "",
+		NodePoolInstanceType: "",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for i := range instances {
-		t.Log(instances[i].InstanceID, instances[i].InstanceIP, instances[i].InstanceRole)
+		t.Log(instances[i].InstanceID, instances[i].InstanceIP, instances[i].InstanceRole, instances[i].InstanceState,
+			instances[i].NodePoolId, instances[i].AutoscalingGroupId)
 	}
 	t.Log(len(instances))
 }
@@ -265,7 +270,7 @@ func TestTkeClient_GetTKEClusterImages(t *testing.T) {
 	}
 }
 
-func TestTkeClient_GetTKEClusterKubeConfig(t *testing.T) {
+func TestGetTKEClusterKubeConfig(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	kubeBytes, err := cli.GetTKEClusterKubeConfig("cls-xxx", true)
 	if err != nil {
@@ -275,7 +280,7 @@ func TestTkeClient_GetTKEClusterKubeConfig(t *testing.T) {
 	t.Log(kubeBytes)
 }
 
-func TestTkeClient_GetClusterEndpointStatus(t *testing.T) {
+func TestGetClusterEndpointStatus(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	status, err := cli.GetClusterEndpointStatus("cls-xxx", true)
 	if err != nil {
@@ -285,7 +290,7 @@ func TestTkeClient_GetClusterEndpointStatus(t *testing.T) {
 	t.Log(status)
 }
 
-func TestTkeClient_CreateClusterEndpoint(t *testing.T) {
+func TestCreateClusterEndpoint(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	err := cli.CreateClusterEndpoint("cls-xxx")
 	if err != nil {
@@ -295,7 +300,7 @@ func TestTkeClient_CreateClusterEndpoint(t *testing.T) {
 	t.Log("success")
 }
 
-func TestTkeClient_DeleteClusterEndpoint(t *testing.T) {
+func TestDeleteClusterEndpoint(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	err := cli.DeleteClusterEndpoint("cls-xxx")
 	if err != nil {
@@ -347,5 +352,106 @@ func TestTkeClient_GetEnableVpcCniProgress(t *testing.T) {
 			fmt.Println("return")
 			break
 		}
+	}
+}
+
+func TestCreateClusterNodePool(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	input := &CreateNodePoolInput{
+		ClusterID:       common.StringPtr("cls-xxx"),
+		EnableAutoscale: common.BoolPtr(false),
+		Name:            common.StringPtr("test-node-pool"),
+		AutoScalingGroupPara: &AutoScalingGroup{
+			MaxSize:         common.Uint64Ptr(2),
+			MinSize:         common.Uint64Ptr(0),
+			DesiredCapacity: common.Uint64Ptr(0),
+			VpcID:           common.StringPtr("vpc-xxx"),
+			SubnetIds:       common.StringPtrs([]string{"subnet-xxx"}),
+			RetryPolicy:     common.StringPtr("IMMEDIATE_RETRY"),
+			ServiceSettings: &ServiceSettings{ScalingMode: common.StringPtr("CLASSIC_SCALING")},
+		},
+		LaunchConfigurePara: &LaunchConfiguration{
+			InstanceType: common.StringPtr("SA2.MEDIUM2"),
+			SystemDisk: &SystemDisk{
+				DiskType: common.StringPtr("CLOUD_PREMIUM"),
+				DiskSize: common.Uint64Ptr(50),
+			},
+			InternetAccessible: &InternetAccessible{
+				InternetChargeType:      common.StringPtr("TRAFFIC_POSTPAID_BY_HOUR"),
+				InternetMaxBandwidthOut: common.Uint64Ptr(0),
+			},
+			SecurityGroupIds:   common.StringPtrs([]string{"sg-xxx"}),
+			InstanceChargeType: common.StringPtr("POSTPAID_BY_HOUR"),
+		},
+		InstanceAdvancedSettings: generateInstanceAdvanceInfo(),
+	}
+	np, err := cli.CreateClusterNodePool(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(np)
+}
+
+func TestDescribeClusterNodePools(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	np, total, err := cli.DescribeClusterNodePools("cls-xxx", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(utils.ToJSONString(np), total)
+}
+
+func TestDescribeClusterNodePoolDetail(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	np, err := cli.DescribeClusterNodePoolDetail("cls-xxx", "np-xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(utils.ToJSONString(np))
+}
+
+func TestModifyClusterNodePool(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.ModifyClusterNodePool(&cloudtke.ModifyClusterNodePoolRequest{
+		ClusterId:   common.StringPtr("cls-xxx"),
+		NodePoolId:  common.StringPtr("np-xxx"),
+		Name:        common.StringPtr("test-node-pool"),
+		MaxNodesNum: common.Int64Ptr(3),
+		MinNodesNum: common.Int64Ptr(0),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDeleteClusterNodePool(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.DeleteClusterNodePool("cls-xxx", []string{"np-xxx"}, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestModifyNodePoolDesiredCapacityAboutAsg(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.ModifyNodePoolDesiredCapacityAboutAsg("cls-xxx", "np-xxx", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestModifyNodePoolInstanceTypes(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.ModifyNodePoolInstanceTypes("cls-xxx", "np-xxx", []string{"SA2.MEDIUM2", "S5.MEDIUM2", "S4.MEDIUM2"})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRemoveNodeFromNodePool(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.RemoveNodeFromNodePool("cls-xxx", "np-xxx", []string{"ins-xxx"})
+	if err != nil {
+		t.Fatal(err)
 	}
 }
