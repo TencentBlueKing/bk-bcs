@@ -21,46 +21,29 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 )
 
-// NewAnnos ...
-func NewAnnos(funcs ...AnnoFunc) Annotations {
-	annos := Annotations{
-		Perm: Perm{
-			Page:  ObjPerm{},
-			Items: map[ResUID]ObjPerm{},
-		},
-		FeatureFlag: map[FeatureFlagKey]bool{},
-	}
-	for _, f := range funcs {
-		f(&annos)
-	}
-	return annos
+// FeatureFlagKey FeatureFlag 键
+type FeatureFlagKey string
+
+// ObjName 前端页面对象名称（按钮等）
+type ObjName string
+
+// ObjPerm 前端对象权限信息集合
+type ObjPerm map[ObjName]PermDetail
+
+// ResUID 资源唯一 ID
+type ResUID string
+
+// Perm 权限注解
+type Perm struct {
+	Page  ObjPerm
+	Items map[ResUID]ObjPerm
 }
 
-// NewFeatureFlag 向注解中添加 FeatureFlag
-func NewFeatureFlag(featureFlag FeatureFlagKey, enabled bool) AnnoFunc {
-	return func(a *Annotations) {
-		a.FeatureFlag[featureFlag] = enabled
-	}
-}
-
-// NewPagePerm 向注解中添加 PagePerm
-func NewPagePerm(objName ObjName, detail PermDetail) AnnoFunc {
-	return func(a *Annotations) {
-		a.Perm.Page[objName] = detail
-	}
-}
-
-// NewItemPerm 向注解中添加 ItemPerm
-func NewItemPerm(uid ResUID, objName ObjName, detail PermDetail) AnnoFunc {
-	return func(a *Annotations) {
-		if itemPerm, exists := a.Perm.Items[uid]; exists {
-			itemPerm[objName] = detail
-		} else {
-			a.Perm.Items[uid] = map[ObjName]PermDetail{
-				objName: detail,
-			}
-		}
-	}
+// PermDetail 权限信息
+type PermDetail struct {
+	Clickable bool   `structs:"clickable"`
+	Tip       string `structs:"tip"`
+	ApplyURL  string `structs:"applyURL"`
 }
 
 // AnnoFunc ...
@@ -133,27 +116,44 @@ func (a Annotations) ToPbStruct() (*spb.Struct, error) {
 	)
 }
 
-// Perm 权限注解
-type Perm struct {
-	Page  ObjPerm
-	Items map[ResUID]ObjPerm
+// NewAnnos ...
+func NewAnnos(funcs ...AnnoFunc) Annotations {
+	annos := Annotations{
+		Perm: Perm{
+			Page:  ObjPerm{},
+			Items: map[ResUID]ObjPerm{},
+		},
+		FeatureFlag: map[FeatureFlagKey]bool{},
+	}
+	for _, f := range funcs {
+		f(&annos)
+	}
+	return annos
 }
 
-// FeatureFlagKey FeatureFlag 键
-type FeatureFlagKey string
+// NewFeatureFlag 向注解中添加 FeatureFlag
+func NewFeatureFlag(featureFlag FeatureFlagKey, enabled bool) AnnoFunc {
+	return func(a *Annotations) {
+		a.FeatureFlag[featureFlag] = enabled
+	}
+}
 
-// ObjName 前端页面对象名称（按钮等）
-type ObjName string
+// NewPagePerm 向注解中添加 PagePerm
+func NewPagePerm(objName ObjName, detail PermDetail) AnnoFunc {
+	return func(a *Annotations) {
+		a.Perm.Page[objName] = detail
+	}
+}
 
-// ObjPerm 前端对象权限信息集合
-type ObjPerm map[ObjName]PermDetail
-
-// ResUID 资源唯一 ID
-type ResUID string
-
-// PermDetail 权限信息
-type PermDetail struct {
-	Clickable bool   `structs:"clickable"`
-	Tip       string `structs:"tip"`
-	ApplyURL  string `structs:"applyURL"`
+// NewItemPerm 向注解中添加 ItemPerm
+func NewItemPerm(uid ResUID, objName ObjName, detail PermDetail) AnnoFunc {
+	return func(a *Annotations) {
+		if itemPerm, exists := a.Perm.Items[uid]; exists {
+			itemPerm[objName] = detail
+		} else {
+			a.Perm.Items[uid] = map[ObjName]PermDetail{
+				objName: detail,
+			}
+		}
+	}
 }
