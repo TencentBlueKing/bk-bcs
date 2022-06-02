@@ -59,16 +59,16 @@ var (
 	TaskNameKey ParamKey = "taskName"
 
 	// ClusterIDKey xxx
-	ClusterIDKey   ParamKey = "clusterID"
+	ClusterIDKey ParamKey = "clusterID"
 	// NodeGroupIDKey xxx
 	NodeGroupIDKey ParamKey = "nodeGroupID"
 	// CloudIDKey xxx
-	CloudIDKey     ParamKey = "cloudID"
+	CloudIDKey ParamKey = "cloudID"
 
 	// PasswordKey xxx
 	PasswordKey ParamKey = "password"
 	// ScalingKey xxx
-	ScalingKey  ParamKey = "scaling"
+	ScalingKey ParamKey = "scaling"
 	// OperatorKey xxx
 	OperatorKey ParamKey = "operator"
 
@@ -85,13 +85,13 @@ var (
 	// SuccessNodeIDsKey xxx
 	SuccessNodeIDsKey ParamKey = "successNodeIDs"
 	// FailedNodeIDsKey xxx
-	FailedNodeIDsKey  ParamKey = "failedNodeIDs"
+	FailedNodeIDsKey ParamKey = "failedNodeIDs"
 
 	// cloud cluster success & failed Instance
 	// SuccessClusterNodeIDsKey xxx
 	SuccessClusterNodeIDsKey ParamKey = "successClusterNodeIDs"
 	// FailedClusterNodeIDsKey xxx
-	FailedClusterNodeIDsKey  ParamKey = "failedClusterNodeIDs"
+	FailedClusterNodeIDsKey ParamKey = "failedClusterNodeIDs"
 
 	// JobTypeKey xxx
 	JobTypeKey ParamKey = "jobType"

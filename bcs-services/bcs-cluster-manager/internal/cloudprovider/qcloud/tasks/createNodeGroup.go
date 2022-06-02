@@ -334,7 +334,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingG
 		group.LaunchTemplate.LaunchConfigureName = *asc.LaunchConfigurationName
 	}
 	if asc.ProjectId != nil {
-		group.LaunchTemplate.ProjectID = uint32(*asc.ProjectId)
+		group.LaunchTemplate.ProjectID = fmt.Sprintf("%d", uint32(*asc.ProjectId))
 	}
 	if asc.InstanceType != nil {
 		group.LaunchTemplate.InstanceType = *asc.InstanceType
@@ -375,7 +375,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingG
 		}
 	}
 	if asc.ProjectId != nil {
-		group.LaunchTemplate.ProjectID = uint32(*asc.ProjectId)
+		group.LaunchTemplate.ProjectID = fmt.Sprintf("%d", uint32(*asc.ProjectId))
 	}
 	return group
 }

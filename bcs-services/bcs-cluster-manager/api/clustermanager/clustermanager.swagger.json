@@ -7953,8 +7953,7 @@
           "title": "launchConfigureName"
         },
         "projectID": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "description": "用于表明该配置属于哪个项目，便于项目复用，该项目不是BCS项目信息",
           "title": "projectID"
         },

@@ -208,7 +208,7 @@ func (la *ListAction) listCluster() error {
 // GetProjectClustersV3Perm get iam v3 perm
 func (la *ListAction) GetProjectClustersV3Perm(user PermInfo, clusterList []string) (map[string]*spb.Struct, error) {
 	var (
-		v3Perm = make(map[string]map[string]interface{})
+		v3Perm map[string]map[string]interface{}
 		err    error
 	)
 

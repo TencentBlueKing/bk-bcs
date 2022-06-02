@@ -91,6 +91,7 @@ func (la *ListSubnetsAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.subnets
 }
 
+// ListCloudSubnets list cloud subnets
 func (la *ListSubnetsAction) ListCloudSubnets() error {
 	// create vpc client with cloudProvider
 	vpcMgr, err := cloudprovider.GetVPCMgr(la.cloud.CloudProvider)

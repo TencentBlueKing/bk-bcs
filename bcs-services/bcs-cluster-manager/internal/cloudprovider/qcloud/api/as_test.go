@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 func getASClient(region string) *ASClient {
@@ -84,7 +85,7 @@ func TestDescribeAutoScalingGroups(t *testing.T) {
 	t.Log(*asg.DefaultCooldown)
 }
 
-func TestASClient_DescribeAutoScalingActivities(t *testing.T) {
+func TestDescribeAutoScalingActivities(t *testing.T) {
 	cli := getASClient("ap-guangzhou")
 	activity, err := cli.DescribeAutoScalingActivities("")
 	if err != nil {
@@ -126,11 +127,11 @@ func TestASClient_ScaleOutInstances(t *testing.T) {
 
 	var (
 		successInstanceID []string
-		failedInstanceID []string
+		failedInstanceID  []string
 	)
 
 	for _, ins := range activity.ActivityRelatedInstanceSet {
-		if *ins.InstanceStatus ==  "SUCCESSFUL" {
+		if *ins.InstanceStatus == "SUCCESSFUL" {
 			successInstanceID = append(successInstanceID, *ins.InstanceId)
 		} else {
 			failedInstanceID = append(failedInstanceID, *ins.InstanceId)
@@ -146,15 +147,16 @@ func TestASClient_ScaleOutInstances(t *testing.T) {
 	defer cancel()
 
 	var (
-		addSucessNodes = make([]string, 0)
+		addSucessNodes  = make([]string, 0)
 		addFailureNodes = make([]string, 0)
+		instances       []*tke.Instance
 	)
 
 	// wait all nodes to be ready
 	err = cloudprovider.LoopDoFunc(timeCtx, func() error {
-		instances, err := tkeCli.QueryTkeClusterInstances(&DescribeClusterInstances{
-			ClusterID:    "cls-xxx",
-			InstanceIDs:  successInstanceID,
+		instances, err = tkeCli.QueryTkeClusterInstances(&DescribeClusterInstances{
+			ClusterID:   "cls-xxx",
+			InstanceIDs: successInstanceID,
 		})
 		if err != nil {
 			return nil
@@ -184,7 +186,7 @@ func TestASClient_ScaleOutInstances(t *testing.T) {
 		return nil
 	}, cloudprovider.LoopInterval(10*time.Second))
 	// other error
-	if err != nil && !errors.Is(err, context.DeadlineExceeded){
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		fmt.Printf("checkClusterInstanceStatus QueryTkeClusterInstances failed: %v", err)
 		return
 	}
@@ -199,7 +201,7 @@ func TestASClient_ScaleOutInstances2(t *testing.T) {
 
 	var (
 		activityID string
-		err error
+		err        error
 	)
 
 	cloudprovider.LoopDoFunc(context.Background(), func() error {
@@ -213,7 +215,7 @@ func TestASClient_ScaleOutInstances2(t *testing.T) {
 
 		fmt.Println(activityID)
 		return cloudprovider.EndLoop
-	}, cloudprovider.LoopInterval(1 * time.Second))
+	}, cloudprovider.LoopInterval(1*time.Second))
 
 	if activityID == "" {
 		t.Fatal("failed")

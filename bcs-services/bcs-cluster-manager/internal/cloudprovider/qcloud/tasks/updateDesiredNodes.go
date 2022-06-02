@@ -363,7 +363,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	for _, n := range addFailureNodes {
 		err = cloudprovider.UpdateNodeStatusByInstanceID(n, common.StatusAddNodesFailed)
 		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n)
+			blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n, err)
 		}
 	}
 
@@ -430,7 +430,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CheckClusterNodesStatusTask[%] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("CheckClusterNodesStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
 

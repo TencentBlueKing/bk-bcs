@@ -134,11 +134,10 @@ func (ca *CreateAction) validate() error {
 	}
 	if ca.req.LaunchTemplate == nil {
 		return fmt.Errorf("launchTemplate is empty")
-	} else {
-		err := validateLaunchTemplate(ca.req.LaunchTemplate)
-		if err != nil {
-			return err
-		}
+	}
+	err := validateLaunchTemplate(ca.req.LaunchTemplate)
+	if err != nil {
+		return err
 	}
 
 	if ca.req.NodeTemplate == nil {

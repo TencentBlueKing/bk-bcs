@@ -270,7 +270,7 @@ func TestTkeClient_GetTKEClusterImages(t *testing.T) {
 	}
 }
 
-func TestTkeClient_GetTKEClusterKubeConfig(t *testing.T) {
+func TestGetTKEClusterKubeConfig(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	kubeBytes, err := cli.GetTKEClusterKubeConfig("cls-xxx", true)
 	if err != nil {
@@ -280,7 +280,7 @@ func TestTkeClient_GetTKEClusterKubeConfig(t *testing.T) {
 	t.Log(kubeBytes)
 }
 
-func TestTkeClient_GetClusterEndpointStatus(t *testing.T) {
+func TestGetClusterEndpointStatus(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	status, err := cli.GetClusterEndpointStatus("cls-xxx", true)
 	if err != nil {
@@ -290,7 +290,7 @@ func TestTkeClient_GetClusterEndpointStatus(t *testing.T) {
 	t.Log(status)
 }
 
-func TestTkeClient_CreateClusterEndpoint(t *testing.T) {
+func TestCreateClusterEndpoint(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	err := cli.CreateClusterEndpoint("cls-xxx")
 	if err != nil {
@@ -300,7 +300,7 @@ func TestTkeClient_CreateClusterEndpoint(t *testing.T) {
 	t.Log("success")
 }
 
-func TestTkeClient_DeleteClusterEndpoint(t *testing.T) {
+func TestDeleteClusterEndpoint(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	err := cli.DeleteClusterEndpoint("cls-xxx")
 	if err != nil {

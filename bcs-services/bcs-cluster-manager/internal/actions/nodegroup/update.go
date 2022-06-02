@@ -727,7 +727,7 @@ func (ua *UpdateDesiredNodeAction) Handle(
 	}
 
 	// handler cloud update desired node
-	if err := ua.handleTask(scaleResp); err != nil {
+	if err = ua.handleTask(scaleResp); err != nil {
 		ua.setResp(common.BcsErrClusterManagerTaskErr, err.Error())
 		return
 	}

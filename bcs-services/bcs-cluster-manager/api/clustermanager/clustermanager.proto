@@ -2568,7 +2568,7 @@ message LaunchConfiguration {
     title: "launchConfigureName", 
     description: "配置模板名称"
   }];
-  uint32 projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "projectID", 
     description: "用于表明该配置属于哪个项目，便于项目复用，该项目不是BCS项目信息"
   }];

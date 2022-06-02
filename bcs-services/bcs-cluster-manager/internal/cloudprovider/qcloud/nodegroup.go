@@ -193,7 +193,11 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGr
 		PublicIpAssigned:        common.BoolPtr(group.LaunchTemplate.InternetAccess.PublicIPAssigned),
 	}
 	req.LoginSettings = &as.LoginSettings{Password: common.StringPtr(group.LaunchTemplate.InitLoginPassword)}
-	req.ProjectId = common.Int64Ptr(int64(group.LaunchTemplate.ProjectID))
+
+	projectID, err := strconv.Atoi(group.LaunchTemplate.ProjectID)
+	if err == nil {
+		req.ProjectId = common.Int64Ptr(int64(projectID))
+	}
 	req.SecurityGroupIds = common.StringPtrs(group.LaunchTemplate.SecurityGroupIDs)
 	diskSize, _ := strconv.Atoi(group.LaunchTemplate.SystemDisk.GetDiskSize())
 	req.SystemDisk = &as.SystemDisk{
