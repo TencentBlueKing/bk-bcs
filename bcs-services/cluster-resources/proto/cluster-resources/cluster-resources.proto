@@ -1209,6 +1209,9 @@ message HealthzReq {
 	bool raiseErr = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "raiseErr", description: "存在依赖服务异常的情况，是否返回错误（默认只在响应体中标记）"
 	}];
+	string token = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "Token", description: "Healthz API Token"
+	}];
 }
 
 message HealthzResp {
