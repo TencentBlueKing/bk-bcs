@@ -129,7 +129,8 @@ func (mgr *WatcherManager) AddEvent(obj interface{}) {
 	if strings.HasSuffix(crdObj.Spec.Group, ".kubefed.io") ||
 		crdObj.Spec.Group == resources.BkbcsGroupName ||
 		crdObj.Name == resources.TkexGameDeploymentName ||
-		crdObj.Name == resources.TkexGameStatefulSetName {
+		crdObj.Name == resources.TkexGameStatefulSetName ||
+		crdObj.Name == resources.TkexGPAName {
 		glog.Infof("run watcher for crd: %s", crdObj.Name)
 		mgr.runCrdWatcher(crdObj)
 		return
