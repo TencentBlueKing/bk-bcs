@@ -32,6 +32,7 @@ class GlobalClusterFeatureFlag(BaseFeatureFlag):
     WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
     NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
     CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
+    TOOLS = FeatureFlagField(name='TOOLS', label='组件库', default=True)
     REPO = FeatureFlagField(name='REPO', label='仓库', default=True)
     AUDIT = FeatureFlagField(name='AUDIT', label='操作审计', default=True)
     EVENT = FeatureFlagField(name='EVENT', label='事件查询', default=True)
@@ -46,6 +47,7 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
     WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
     NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
     CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
+    TOOLS = FeatureFlagField(name='TOOLS', label='组件库', default=True)
     EVENT = FeatureFlagField(name='EVENT', label='事件查询', default=True)
     MONITOR = FeatureFlagField(name='MONITOR', label='监控中心', default=True)
 
