@@ -7,6 +7,7 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler => github.com/okkervil/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler v0.0.0-20220606121058-8f7f4cced839
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
