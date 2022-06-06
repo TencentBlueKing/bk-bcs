@@ -116,6 +116,7 @@ type DataManagerOptions struct {
 	FilterRules    ClusterFilterRules `json:"filterRules"`
 	AppCode        string             `json:"appCode"`
 	AppSecret      string             `json:"appSecret"`
+	ProducerConfig ProducerConfig     `json:"producerConfig"`
 }
 
 // ClusterFilterRules rules for cluster filter
@@ -123,6 +124,11 @@ type ClusterFilterRules struct {
 	NeedFilter bool   `json:"needFilter"`
 	ClusterIDs string `json:"clusterIDs"`
 	Env        string `json:"env"`
+}
+
+// ProducerConfig config for producer
+type ProducerConfig struct {
+	Concurrency int `json:"concurrency"`
 }
 
 // NewDataManagerOptions new dataManagerOptions

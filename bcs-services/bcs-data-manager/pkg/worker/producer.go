@@ -41,12 +41,13 @@ type Producer struct {
 	ctx             context.Context
 	cancel          context.CancelFunc
 	resourceGetter  common.GetterInterface
+	concurrency     int
 }
 
 // NewProducer new producer
 func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *cron.Cron,
 	cmClient cmanager.ClusterManagerClient, k8sStorageCli, mesosStorageCli bcsapi.Storage,
-	getter common.GetterInterface) *Producer {
+	getter common.GetterInterface, concurrency int) *Producer {
 	ctx, cancel := context.WithCancel(rootCtx)
 	return &Producer{
 		msgQueue:        msgQueue,
@@ -57,6 +58,7 @@ func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *
 		ctx:             ctx,
 		cancel:          cancel,
 		resourceGetter:  getter,
+		concurrency:     concurrency,
 	}
 }
 
@@ -302,7 +304,8 @@ func (p *Producer) WorkloadProducer(dimension string) {
 			totalWorkload = totalWorkload + count
 		}
 	}()
-	chPool := make(chan struct{}, 100)
+	chPool := make(chan struct{}, p.concurrency)
+	blog.Infof("[producer] concurrency:%d", p.concurrency)
 	wg := sync.WaitGroup{}
 	for key := range clusterList {
 		chPool <- struct{}{}
