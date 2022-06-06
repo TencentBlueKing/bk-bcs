@@ -14,6 +14,5 @@
 ARG BASEIMAGE=centos:centos7
 FROM $BASEIMAGE
 
-
 COPY bcs-cluster-autoscaler /
 CMD ["/bcs-cluster-autoscaler"]
