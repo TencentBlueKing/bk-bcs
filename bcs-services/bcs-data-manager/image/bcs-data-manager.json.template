@@ -29,6 +29,9 @@
     "concurrency": ${concurrency},
     "chanQueueLen": ${chanQueueLen}
   },
+  "producerConfig":{
+    "concurrency": ${producerConcurrency}
+  },
   "mongoConf": {
       "endpoints": "${bcsDataManagerMongoAddress}",
       "connecttimeout": ${bcsDataManagerMongoConnectTimeout},

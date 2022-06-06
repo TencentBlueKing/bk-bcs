@@ -376,7 +376,8 @@ func (s *Server) initWorker() error {
 	blog.Infof("selected cluster: %v", selectClusters)
 	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
 	resourceGetter := common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env)
-	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli, resourceGetter)
+	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli,
+		resourceGetter, s.opt.ProducerConfig.Concurrency)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
 		return err
@@ -543,6 +544,7 @@ func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 		k8sStorageCli.Client = restclient.NewRESTClient()
 	}
 	k8sTransport := &http.Transport{}
+	k8sTransport.TLSClientConfig = s.clientTLSConfig
 	k8sStorageCli.Client.WithTransport(k8sTransport)
 	_, err := k8sStorageCli.QueryK8SDeployment("test", "test")
 	if err != nil {
