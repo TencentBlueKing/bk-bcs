@@ -52,7 +52,7 @@ bcs-k8s: bcs-component bcs-network
 bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
 	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
 	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent \
-	general-pod-autoscaler
+	general-pod-autoscaler cluster-autoscaler
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -332,6 +332,11 @@ general-pod-autoscaler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-general-pod-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/bcs-general-pod-autoscaler ./cmd/gpa/main.go
+
+cluster-autoscaler:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cluster-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler ./main.go
 
 # network plugins section
 networkpolicy:pre

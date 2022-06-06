@@ -145,7 +145,8 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 			if instance.NodeGroupID != groupID {
 				continue
 			}
-			ref := InstanceRef{Name: instance.NodeID}
+			// ref := InstanceRef{Name: instance.NodeID}
+			ref := InstanceRef{IP: instance.InnerIP}
 			newCache[ref] = group
 			newTypeCache[ref] = CreationType(CreationTypeAuto)
 		}
