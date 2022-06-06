@@ -4,8 +4,10 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1"
 	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamestatefulset/v1alpha1"
+	gpav1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/generalpodautoscaler/v1alpha1"
 	schedtype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/types"
 	appv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	"time"
 )
@@ -55,6 +57,16 @@ type MesosNamespace string
 type K8sNode struct {
 	CommonDataHeader
 	Data *corev1.Node
+}
+
+type Hpa struct {
+	CommonDataHeader
+	Data *autoscalingv1.HorizontalPodAutoscaler
+}
+
+type Gpa struct {
+	CommonDataHeader
+	Data *gpav1alpha1.GeneralPodAutoscaler
 }
 
 type Application struct {

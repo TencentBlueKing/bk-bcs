@@ -68,6 +68,10 @@ type Storage interface {
 	QueryK8SGameStatefulSet(cluster, namespace string) ([]*storage.GameStatefulSet, error)
 	// QueryK8SNode query all node in specified cluster
 	QueryK8SNode(cluster string) ([]*storage.K8sNode, error)
+	// QueryK8sHPA query all hpa in specified cluster and namespace
+	QueryK8sHPA(cluster, namespace string) ([]*storage.Hpa, error)
+	// QueryK8sGPA query all gpa in specified cluster and namespace
+	QueryK8sGPA(cluster, namespace string) ([]*storage.Gpa, error)
 	// QueryMesosNamespace query all namespace in specified cluster
 	QueryMesosNamespace(cluster string) ([]*storage.MesosNamespace, error)
 	//QueryMesosDeployment query all deployment in specified cluster
@@ -101,6 +105,74 @@ type StorageCli struct {
 	Config   *Config
 	Client   *restclient.RESTClient
 	discover registry.Registry
+}
+
+func (c *StorageCli) QueryK8sHPA(cluster, namespace string) ([]*storage.Hpa, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/HorizontalPodAutoscaler"
+
+	var hpas []*storage.Hpa
+	offset := 0
+	for {
+		var hpasTmp []*storage.Hpa
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &hpasTmp); err != nil {
+			return nil, fmt.Errorf("hpa slice decode err: %s", err.Error())
+		}
+		hpas = append(hpas, hpasTmp...)
+		if len(hpasTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
+	}
+
+	if len(hpas) == 0 {
+		blog.V(5).Infof("query kubernetes empty hpas in cluster %s", cluster)
+		return nil, nil
+	}
+	return hpas, nil
+}
+
+func (c *StorageCli) QueryK8sGPA(cluster, namespace string) ([]*storage.Gpa, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/GeneralPodAutoscaler"
+
+	var gpas []*storage.Gpa
+	offset := 0
+	for {
+		var gpasTmp []*storage.Gpa
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &gpasTmp); err != nil {
+			return nil, fmt.Errorf("gpa slice decode err: %s", err.Error())
+		}
+		gpas = append(gpas, gpasTmp...)
+		if len(gpasTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
+	}
+
+	if len(gpas) == 0 {
+		blog.V(5).Infof("query kubernetes empty gpas in cluster %s", cluster)
+		return nil, nil
+	}
+	return gpas, nil
 }
 
 func (c *StorageCli) QueryK8SNode(cluster string) ([]*storage.K8sNode, error) {
