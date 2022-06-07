@@ -155,6 +155,7 @@ function BKUserCli:construct_identity(conf, request)
     request_url="",
     resource = "",
     action = "",
+    project_id = "",
   }
   auth.action = request.get_method()
   if is_cluster_resource(conf.module) then
@@ -179,6 +180,15 @@ function BKUserCli:construct_identity(conf, request)
     auth.cluster_id = id[0]
     auth.request_url = ngx.var.uri
     auth.resource = id[0]
+    -- try to retrieve project id from url, or leave project id empty
+    local project_id_matches, err = ngx.re.gmatch(ngx.var.uri, "^/projects/([a-zA-Z0-9-]+)/")
+    if project_id_matches then
+      local project_id_matche_item, err = project_id_matches()
+      if project_id_matche_item and #project_id_matche_item == 1 then
+        core.log.debug("projectid retrieved: "..project_id_matche_item[1])
+        auth.project_id = project_id_matche_item[1]
+      end
+    end
   elseif conf.module == MESOSDRIVER then
     local headers = request.get_headers()
     if not headers[CLUSTER_HEADER] then
