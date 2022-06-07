@@ -25,12 +25,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/shlex"
+	"github.com/pkg/errors"
 )
 
 type service struct {
@@ -132,7 +134,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	data := types.APIResponse{
 		Data: map[string]string{
 			"session_id": sessionId,
-			"ws_url":     makeWebSocketUrl(sessionId, consoleQuery.Lang, false),
+			"ws_url":     makeWebSocketURL(sessionId, consoleQuery.Lang, false),
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -162,7 +164,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 	data := types.APIResponse{
 		Data: map[string]string{
 			"session_id": sessionId,
-			"ws_url":     makeWebSocketUrl(sessionId, "", false),
+			"ws_url":     makeWebSocketURL(sessionId, "", false),
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -219,8 +221,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	data := map[string]string{
 		"session_id":      sessionId,
-		"web_console_url": makeWebConsoleUrl(sessionId, podCtx),
-		// "ws_acquire_url":  makeWSAcquireUrl(sessionId, podCtx),
+		"web_console_url": makeWebConsoleURL(sessionId, podCtx),
 	}
 
 	// 这里直接置换新的session_id
@@ -232,7 +233,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 			return
 		}
 
-		data["ws_url"] = makeWebSocketUrl(wsSessionId, "", true)
+		data["ws_url"] = makeWebSocketURL(wsSessionId, "", true)
 	}
 
 	respData := types.APIResponse{
@@ -245,8 +246,8 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	c.JSON(http.StatusOK, respData)
 }
 
-// makeWebSocketUrl webconsole 页面访问地址
-func makeWebConsoleUrl(sessionId string, podCtx *types.PodContext) string {
+// makeWebConsoleURL webconsole 页面访问地址
+func makeWebConsoleURL(sessionId string, podCtx *types.PodContext) string {
 	u := *config.G.Web.BaseURL
 	u.Path = path.Join(u.Path, "/portal/container/")
 
@@ -259,8 +260,8 @@ func makeWebConsoleUrl(sessionId string, podCtx *types.PodContext) string {
 	return u.String()
 }
 
-// makeWebSocketUrl http 转换为 ws 协议链接
-func makeWebSocketUrl(sessionId, lang string, withScheme bool) string {
+// makeWebSocketURL http 转换为 ws 协议链接
+func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
 	u := *config.G.Web.BaseURL
 	u.Path = path.Join(u.Path, "/ws/sessions/", sessionId) + "/"
 
@@ -287,15 +288,9 @@ func makeWebSocketUrl(sessionId, lang string, withScheme bool) string {
 	return u.String()
 }
 
-// makeWSAcquireUrl webconsole 页面访问地址
-func makeWSAcquireUrl(sessionId string, podCtx *types.PodContext) string {
-	u := *config.G.Web.BaseURL
-	u.Path = path.Join(u.Path, "/portal/sessions/", sessionId) + "/"
-
-	return u.String()
-}
-
+// CreateClusterPortalSession 集群级别的 webconsole openapi
 func (s *service) CreateClusterPortalSession(c *gin.Context) {
+	rest.AbortWithBadRequestError(c, errors.New("Not implemented"))
 }
 
 // APIError 简易的错误返回
