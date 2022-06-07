@@ -68,12 +68,12 @@
                         <bk-table-column :label="$t('Release名称')" min-width="160">
                             <template slot-scope="{ row }">
                                 <div>
-                                    <span v-if="row.transitioning_on" class="f14 fb app-name">
+                                    <span v-if="row.transitioning_on" class="f14 fb app-name bcs-ellipsis">
                                         {{ row.name }}
                                     </span>
                                     <a @click="showAppDetail(row)"
                                         href="javascript:void(0)"
-                                        class="bk-text-button app-name f14"
+                                        class="bk-text-button app-name f14 bcs-ellipsis"
                                         v-authority="{
                                             clickable: webAnnotationsPerms[row.iam_ns_id]
                                                 && webAnnotationsPerms[row.iam_ns_id].namespace_scoped_view,
@@ -123,19 +123,20 @@
                         <bk-table-column :label="$t('集群')" prop="status" :show-overflow-tooltip="false" min-width="250">
                             <template slot-scope="{ row }">
                                 <div class="col-cluster">
-                                    {{$t('所属集群')}}：
+                                    <span style="display: inline-block;min-width: 70px;">{{$t('所属集群')}}：</span>
                                     <bcs-popover :content="row.cluster_id || '--'" placement="top">
-                                        <span>{{row.cluster_name ? row.cluster_name : '--'}}</span>
+                                        <span class="bcs-ellipsis">{{row.cluster_name ? row.cluster_name : '--'}}</span>
                                     </bcs-popover>
                                     <template v-if="row.cluster_env === 'stag'">
-                                        <bk-tag type="filled" theme="warning" class="biz-small-tag m0">{{$t('测试')}}</bk-tag>
+                                        <bk-tag style="min-width: 48px" type="filled" theme="warning" class="biz-small-tag m0">{{$t('测试')}}</bk-tag>
                                     </template>
                                     <template v-else-if="row.cluster_env === 'prod'">
-                                        <bk-tag type="filled" theme="success" class="biz-small-tag m0">{{$t('正式')}}</bk-tag>
+                                        <bk-tag style="min-width: 48px" type="filled" theme="success" class="biz-small-tag m0">{{$t('正式')}}</bk-tag>
                                     </template>
                                 </div>
                                 <p>
-                                    {{$t('命名空间')}}：<span class="biz-text-wrapper ml5">{{row.namespace}}</span>
+                                    <span style="display: inline-block;min-width: 70px;">{{$t('命名空间')}}：</span>
+                                    <span class="biz-text-wrapper">{{row.namespace}}</span>
                                 </p>
                             </template>
                         </bk-table-column>
