@@ -13,6 +13,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -68,8 +69,13 @@ func ListProject(cmd *cobra.Command, args []string) {
 	req.Dimension = flagDimension
 	req.Page = flagPage
 	req.Size = flagSize
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.ListProjectInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetAllProjectList(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get project list data err:%v\n", err)
 		os.Exit(1)
@@ -95,13 +101,17 @@ func ListCluster(cmd *cobra.Command, args []string) {
 	req.Dimension = flagDimension
 	req.Page = flagPage
 	req.Size = flagSize
-	client := pkg.NewClientWithConfiguration()
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
 	rsp := &bcsdatamanager.GetClusterListResponse{}
-	var err error
 	if allClusters {
-		rsp, err = client.GetAllClusterList(req)
+		rsp, err = client.GetAllClusterList(cliCtx, req)
 	} else {
-		rsp, err = client.GetClusterListByProject(req)
+		rsp, err = client.GetClusterListByProject(cliCtx, req)
 	}
 	if err != nil {
 		fmt.Printf("get cluster list data err:%v\n", err)
@@ -127,8 +137,13 @@ func ListNamespace(cmd *cobra.Command, args []string) {
 	req.Dimension = flagDimension
 	req.Page = flagPage
 	req.Size = flagSize
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetNamespaceInfoList(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetNamespaceInfoList(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get namespace list data err:%v\n", err)
 		os.Exit(1)
@@ -159,8 +174,13 @@ func ListWorkload(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	req.WorkloadType = flagWorkloadType
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetWorkloadInfoList(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetWorkloadInfoList(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get workload list data err:%v\n", err)
 		os.Exit(1)
