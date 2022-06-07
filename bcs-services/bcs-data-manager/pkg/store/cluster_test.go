@@ -63,21 +63,21 @@ func TestModelCluster_GetClusterInfoList(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		req     *bcsdatamanager.GetClusterInfoListRequest
+		req     *bcsdatamanager.GetClusterListRequest
 		want    *bcsdatamanager.Cluster
 		wantErr bool
 	}{
 		{
 			name: "test1",
-			req: &bcsdatamanager.GetClusterInfoListRequest{
-				ProjectID: "testproject1",
+			req: &bcsdatamanager.GetClusterListRequest{
+				Project:   "",
 				Dimension: types.DimensionMinute,
 			},
 		},
 		{
 			name: "test2",
-			req: &bcsdatamanager.GetClusterInfoListRequest{
-				ProjectID: "testproject3",
+			req: &bcsdatamanager.GetClusterListRequest{
+				Project:   "testproject3",
 				Dimension: types.DimensionMinute,
 			},
 		},
@@ -154,6 +154,7 @@ func TestModelCluster_InsertClusterInfo(t *testing.T) {
 				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
+				BusinessID:  "testbusiness1",
 				ClusterType: types.Kubernetes,
 				Dimension:   types.DimensionMinute,
 				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
@@ -210,6 +211,7 @@ func TestModelCluster_InsertClusterInfo(t *testing.T) {
 				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
+				BusinessID:  "testbusiness1",
 				ClusterType: types.Kubernetes,
 				Dimension:   types.DimensionMinute,
 				CurrentTime: utils.FormatTime(time.Now(), types.DimensionMinute),
@@ -265,6 +267,7 @@ func TestModelCluster_InsertClusterInfo(t *testing.T) {
 				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject2",
 				ClusterID:   "testcluster2",
+				BusinessID:  "testbusiness2",
 				ClusterType: types.Kubernetes,
 				Dimension:   types.DimensionMinute,
 				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),

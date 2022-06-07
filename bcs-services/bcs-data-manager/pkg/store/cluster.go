@@ -55,13 +55,22 @@ var (
 			},
 		},
 		{
+			Name: types.ClusterTableName + "_list_idx2",
+			Key: bson.D{
+				bson.E{Key: BusinessIDKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
 			Name: types.ClusterTableName + "_get_idx",
 			Key: bson.D{
-				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: MetricTimeKey, Value: 1},
 			},
+			Background: true,
 		},
 		{
 			Key: bson.D{
@@ -92,6 +101,12 @@ var (
 				bson.E{Key: MetricTimeKey, Value: 1},
 			},
 			Name: MetricTimeKey + "_1",
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: BusinessIDKey, Value: 1},
+			},
+			Name: BusinessIDKey + "_1",
 		},
 	}
 )
@@ -140,6 +155,7 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 				BucketTime:  bucketTime,
 				Dimension:   opts.Dimension,
 				ProjectID:   opts.ProjectID,
+				BusinessID:  opts.BusinessID,
 				ClusterID:   opts.ClusterID,
 				ClusterType: opts.ClusterType,
 				Metrics:     newMetrics,
@@ -155,6 +171,9 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 	}
 	m.preAggregate(retCluster, metrics)
 	retCluster.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
+	if retCluster.BusinessID == "" {
+		retCluster.BusinessID = opts.BusinessID
+	}
 	retCluster.Metrics = append(retCluster.Metrics, metrics)
 	return m.DB.Table(m.TableName).
 		Update(ctx, cond, operator.M{"$set": retCluster})
@@ -162,7 +181,7 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 
 // GetClusterInfoList get cluster list by project id
 func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
-	request *bcsdatamanager.GetClusterInfoListRequest) ([]*bcsdatamanager.Cluster, int64, error) {
+	request *bcsdatamanager.GetClusterListRequest) ([]*bcsdatamanager.Cluster, int64, error) {
 	err := ensureTable(ctx, &m.Public)
 	var total int64
 	if err != nil {
@@ -173,13 +192,21 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	cond := make([]*operator.Condition, 0)
-	cond = append(cond,
-		operator.NewLeafCondition(operator.Eq, operator.M{
-			ProjectIDKey: request.ProjectID,
-			DimensionKey: dimension,
-		}), operator.NewLeafCondition(operator.Gte, operator.M{
-			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+	if request.GetProject() != "" {
+		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+			ProjectIDKey: request.Project,
 		}))
+	} else if request.GetBusiness() != "" {
+		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+			BusinessIDKey: request.GetBusiness(),
+		}))
+	}
+	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+		DimensionKey: dimension,
+	}))
+	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+		MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+	}))
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempClusterList := make([]map[string]string, 0)
 	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ClusterIDKey: 1, "_id": 0}).
@@ -235,21 +262,30 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	if dimension == "" {
 		dimension = types.DimensionMinute
 	}
-	clusterMetricsMap := make([]map[string]*types.ClusterMetrics, 0)
+	clusterMetricsMap := make([]*types.ClusterData, 0)
 
 	pipeline := make([]map[string]interface{}, 0)
-	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
-	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
-		ClusterIDKey: request.ClusterID,
-		DimensionKey: dimension,
-		MetricTimeKey: map[string]interface{}{
-			"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
-		},
-	}})
-	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":     0,
-		"metrics": 1,
-	}})
+	pipeline = append(pipeline,
+		map[string]interface{}{"$unwind": "$metrics"},
+		map[string]interface{}{"$match": map[string]interface{}{
+			ClusterIDKey: request.ClusterID,
+			DimensionKey: dimension,
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			},
+		}}, map[string]interface{}{"$project": map[string]interface{}{
+			"_id":         0,
+			"metrics":     1,
+			"cluster_id":  1,
+			"business_id": 1,
+			"project_id":  1,
+		}}, map[string]interface{}{"$group": map[string]interface{}{
+			"_id":         nil,
+			"cluster_id":  map[string]interface{}{"$first": "$cluster_id"},
+			"project_id":  map[string]interface{}{"$first": "$project_id"},
+			"business_id": map[string]interface{}{"$max": "$business_id"},
+			"metrics":     map[string]interface{}{"$push": "$metrics"},
+		}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &clusterMetricsMap)
 	if err != nil {
 		blog.Errorf("find cluster data fail, err:%v", err)
@@ -259,12 +295,15 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 		return &bcsdatamanager.Cluster{}, nil
 	}
 	clusterMetrics := make([]*types.ClusterMetrics, 0)
+	projectID := clusterMetricsMap[0].ProjectID
+	businessID := clusterMetricsMap[0].BusinessID
+	clusterID := clusterMetricsMap[0].ClusterID
 	for _, metrics := range clusterMetricsMap {
-		clusterMetrics = append(clusterMetrics, metrics["metrics"])
+		clusterMetrics = append(clusterMetrics, metrics.Metrics...)
 	}
 	startTime := clusterMetrics[0].Time.Time().String()
 	endTime := clusterMetrics[len(clusterMetrics)-1].Time.Time().String()
-	return m.generateClusterResponse(clusterMetrics, request.ClusterID, dimension, startTime, endTime), nil
+	return m.generateClusterResponse(clusterMetrics, projectID, businessID, clusterID, dimension, startTime, endTime), nil
 }
 
 // GetRawClusterInfo get raw cluster data without time range
@@ -299,14 +338,16 @@ func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *types.JobCom
 	return retCluster, nil
 }
 
-func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetrics, clusterID, dimension,
-	startTime, endTime string) *bcsdatamanager.Cluster {
+func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetrics, projectID, businessID, clusterID,
+	dimension, startTime, endTime string) *bcsdatamanager.Cluster {
 	response := &bcsdatamanager.Cluster{
-		ClusterID: clusterID,
-		Dimension: dimension,
-		StartTime: startTime,
-		EndTime:   endTime,
-		Metrics:   nil,
+		ProjectID:  projectID,
+		BusinessID: businessID,
+		ClusterID:  clusterID,
+		Dimension:  dimension,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		Metrics:    nil,
 	}
 	responseMetrics := make([]*bcsdatamanager.ClusterMetrics, 0)
 	for _, metric := range metricSlice {

@@ -23,8 +23,9 @@ import (
 
 // Server store server interface
 type Server interface {
+	GetProjectList(ctx context.Context, req *datamanager.GetAllProjectListRequest) ([]*datamanager.Project, int64, error)
 	GetProjectInfo(ctx context.Context, req *datamanager.GetProjectInfoRequest) (*datamanager.Project, error)
-	GetClusterInfoList(ctx context.Context, req *datamanager.GetClusterInfoListRequest) ([]*datamanager.Cluster,
+	GetClusterInfoList(ctx context.Context, req *datamanager.GetClusterListRequest) ([]*datamanager.Cluster,
 		int64, error)
 	GetClusterInfo(ctx context.Context, req *datamanager.GetClusterInfoRequest) (*datamanager.Cluster, error)
 	GetNamespaceInfoList(ctx context.Context, req *datamanager.GetNamespaceInfoListRequest) ([]*datamanager.Namespace,

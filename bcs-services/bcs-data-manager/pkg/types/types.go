@@ -89,12 +89,14 @@ const (
 
 // ProjectMeta meta for project
 type ProjectMeta struct {
-	ProjectID string `json:"projectID"`
+	ProjectID  string `json:"projectID"`
+	BusinessID string `json:"businessID"`
 }
 
 // ClusterMeta meta for cluster
 type ClusterMeta struct {
 	ProjectID   string `json:"projectID"`
+	BusinessID  string `json:"businessID"`
 	ClusterID   string `json:"clusterID"`
 	ClusterType string `json:"clusterType"`
 }
@@ -102,6 +104,7 @@ type ClusterMeta struct {
 // NamespaceMeta meta for namespace
 type NamespaceMeta struct {
 	ProjectID   string `json:"projectID"`
+	BusinessID  string `json:"businessID"`
 	ClusterID   string `json:"clusterID"`
 	ClusterType string `json:"clusterType"`
 	Name        string `json:"name"`
@@ -111,6 +114,7 @@ type NamespaceMeta struct {
 type WorkloadMeta struct {
 	ProjectID    string `json:"projectID"`
 	ClusterID    string `json:"clusterID"`
+	BusinessID   string `json:"businessID"`
 	ClusterType  string `json:"clusterType"`
 	Namespace    string `json:"namespace"`
 	ResourceType string `json:"resourceType"`
@@ -123,6 +127,7 @@ type PublicData struct {
 	UpdateTime   primitive.DateTime `json:"update_time" bson:"update_time"`
 	ObjectType   string             `json:"object_type" bson:"object_type"`
 	ProjectID    string             `json:"projectID" bson:"project_id"`
+	BusinessID   string             `json:"businessID" bson:"business_id"`
 	ClusterID    string             `json:"clusterID" bson:"cluster_id"`
 	ClusterType  string             `json:"clusterType" bson:"cluster_type"`
 	Namespace    string             `json:"namespace" bson:"namespace"`
@@ -138,6 +143,7 @@ type WorkloadData struct {
 	BucketTime         string                         `json:"bucketTime" bson:"bucket_time"`
 	Dimension          string                         `json:"dimension" bson:"dimension"`
 	ProjectID          string                         `json:"projectID" bson:"project_id"`
+	BusinessID         string                         `json:"businessID" bson:"business_id"`
 	ClusterID          string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType        string                         `json:"clusterType" bson:"cluster_type"`
 	Namespace          string                         `json:"namespace" bson:"namespace"`
@@ -163,6 +169,7 @@ type ProjectData struct {
 	BucketTime string                         `json:"bucketTime" bson:"bucket_time"`
 	Dimension  string                         `json:"dimension" bson:"dimension"`
 	ProjectID  string                         `json:"projectID" bson:"project_id"`
+	BusinessID string                         `json:"businessID" bson:"business_id"`
 	MinNode    *bcsdatamanager.ExtremumRecord `json:"minNode,omitempty" bson:"min_node"`
 	MaxNode    *bcsdatamanager.ExtremumRecord `json:"maxNode,omitempty" bson:"max_node"`
 	Metrics    []*ProjectMetrics              `json:"metrics" bson:"metrics"`
@@ -175,6 +182,7 @@ type NamespaceData struct {
 	BucketTime         string                         `json:"bucketTime" bson:"bucket_time"`
 	Dimension          string                         `json:"dimension" bson:"dimension"`
 	ProjectID          string                         `json:"projectID" bson:"project_id"`
+	BusinessID         string                         `json:"businessID" bson:"business_id"`
 	ClusterID          string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType        string                         `json:"clusterType" bson:"cluster_type"`
 	Namespace          string                         `json:"namespace" bson:"namespace"`
@@ -196,6 +204,7 @@ type ClusterData struct {
 	BucketTime  string                         `json:"bucketTime" bson:"bucket_time"`
 	Dimension   string                         `json:"dimension" bson:"dimension"`
 	ProjectID   string                         `json:"projectID" bson:"project_id"`
+	BusinessID  string                         `json:"businessID" bson:"business_id"`
 	ClusterID   string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType string                         `json:"clusterType" bson:"cluster_type"`
 	MinNode     *bcsdatamanager.ExtremumRecord `json:"minNode,omitempty" bson:"min_node"`
@@ -321,6 +330,7 @@ type WorkloadMetrics struct {
 type JobCommonOpts struct {
 	ObjectType   string
 	ProjectID    string
+	BusinessID   string
 	ClusterID    string
 	ClusterType  string
 	Namespace    string

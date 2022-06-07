@@ -14,6 +14,69 @@
     "application/json"
   ],
   "paths": {
+    "/datamanager/v1/clusters": {
+      "get": {
+        "summary": "查询cluster list",
+        "description": "查询所有集群资源信息列表",
+        "operationId": "DataManager_GetAllClusterList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetClusterListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "description": "project. 项目ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "business",
+            "description": "business. 业务ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，minute，hour，day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
     "/datamanager/v1/clusters/{clusterID}": {
       "get": {
         "summary": "查询Cluster",
@@ -288,7 +351,7 @@
         ]
       }
     },
-    "/datamanager/v1/projects/{projectID}": {
+    "/datamanager/v1/project": {
       "get": {
         "summary": "查询project",
         "description": "查询指定projectID的项目资源信息",
@@ -309,15 +372,22 @@
         },
         "parameters": [
           {
-            "name": "projectID",
-            "description": "项目ID",
-            "in": "path",
-            "required": true,
+            "name": "project",
+            "description": "project. 项目ID",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
             "name": "dimension",
             "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "business",
+            "description": "business. 业务ID",
             "in": "query",
             "required": false,
             "type": "string"
@@ -328,16 +398,16 @@
         ]
       }
     },
-    "/datamanager/v1/projects/{projectID}/cluster": {
+    "/datamanager/v1/projects": {
       "get": {
-        "summary": "查询cluster list",
-        "description": "查询指定projectID的集群资源信息列表",
-        "operationId": "DataManager_GetClusterInfoList",
+        "summary": "查询project列表",
+        "description": "查询所有的项目资源信息",
+        "operationId": "DataManager_GetAllProjectList",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/datamanagerGetClusterInfoListResponse"
+              "$ref": "#/definitions/datamanagerGetAllProjectListResponse"
             }
           },
           "default": {
@@ -349,10 +419,66 @@
         },
         "parameters": [
           {
-            "name": "projectID",
-            "description": "项目ID",
-            "in": "path",
-            "required": true,
+            "name": "dimension",
+            "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/projects/clusters": {
+      "get": {
+        "summary": "查询cluster list",
+        "description": "查询指定projectID的集群资源信息列表",
+        "operationId": "DataManager_GetClusterListByProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetClusterListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project",
+            "description": "project. 项目ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "business",
+            "description": "business. 业务ID",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -441,6 +567,11 @@
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "最大实例数及时间",
           "title": "maxInstance"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "业务id",
+          "title": "businessID"
         }
       },
       "description": "记录cluster资源信息",
@@ -585,7 +716,72 @@
         }
       }
     },
-    "datamanagerGetClusterInfoListResponse": {
+    "datamanagerGetAllProjectListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datamanagerProject"
+          },
+          "description": "项目信息",
+          "title": "data"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        }
+      },
+      "description": "查询项目信息返回",
+      "title": "GetProjectInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetClusterInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/datamanagerCluster",
+          "description": "集群信息",
+          "title": "data"
+        }
+      },
+      "description": "查询集群返回",
+      "title": "GetClusterInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetClusterListResponse": {
       "type": "object",
       "properties": {
         "code": {
@@ -615,35 +811,7 @@
         }
       },
       "description": "查询集群列表返回",
-      "title": "GetClusterInfoListResponse",
-      "required": [
-        "code",
-        "message",
-        "data"
-      ]
-    },
-    "datamanagerGetClusterInfoResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "data": {
-          "$ref": "#/definitions/datamanagerCluster",
-          "description": "集群信息",
-          "title": "data"
-        }
-      },
-      "description": "查询集群返回",
-      "title": "GetClusterInfoResponse",
+      "title": "GetClusterListResponse",
       "required": [
         "code",
         "message",
@@ -903,6 +1071,11 @@
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "使用率最大模块及时间",
           "title": "MaxWorkloadUsage"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "业务id",
+          "title": "businessID"
         }
       },
       "description": "记录namespace资源信息",
@@ -1016,6 +1189,11 @@
           "type": "string",
           "description": "项目id",
           "title": "projectID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "业务id",
+          "title": "businessID"
         },
         "dimension": {
           "type": "string",
@@ -1254,6 +1432,11 @@
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "最大实例数及时间",
           "title": "MaxInstanceTime"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "业务id",
+          "title": "businessID"
         }
       },
       "description": "记录模块资源信息",

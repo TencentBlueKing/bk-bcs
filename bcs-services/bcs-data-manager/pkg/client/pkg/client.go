@@ -44,8 +44,10 @@ func NewClientWithConfiguration() DataManagerClient {
 
 // DataManagerClient dataManagerClient interface
 type DataManagerClient interface {
+	ListProjectInfo(req *datamanager.GetAllProjectListRequest) (*datamanager.GetAllProjectListResponse, error)
 	GetProjectInfo(req *datamanager.GetProjectInfoRequest) (*datamanager.GetProjectInfoResponse, error)
-	GetClusterInfoList(req *datamanager.GetClusterInfoListRequest) (*datamanager.GetClusterInfoListResponse, error)
+	GetAllClusterList(req *datamanager.GetClusterListRequest) (*datamanager.GetClusterListResponse, error)
+	GetClusterListByProject(req *datamanager.GetClusterListRequest) (*datamanager.GetClusterListResponse, error)
 	GetClusterInfo(req *datamanager.GetClusterInfoRequest) (*datamanager.GetClusterInfoResponse, error)
 	GetNamespaceInfoList(req *datamanager.GetNamespaceInfoListRequest) (*datamanager.GetNamespaceInfoListResponse, error)
 	GetNamespaceInfo(req *datamanager.GetNamespaceInfoRequest) (*datamanager.GetNamespaceInfoResponse, error)
@@ -93,10 +95,26 @@ func (r *requester) DoRequest(url, method string, header http.Header, data []byt
 	return rsp, nil
 }
 
+// ListProjectInfo list project
+func (m *dataManager) ListProjectInfo(req *datamanager.GetAllProjectListRequest) (
+	*datamanager.GetAllProjectListResponse, error) {
+	url := m.clientOption.APIServer + PrefixUrl + fmt.Sprintf(ListProjectUrl, req.Dimension,
+		strconv.Itoa(int(req.Page)), strconv.Itoa(int(req.Size)))
+	rsp, err := m.requestClient.DoRequest(url, "GET", m.defaultHeader, nil)
+	if err != nil {
+		return nil, fmt.Errorf("get project list error, url: %s, error: %v", url, err)
+	}
+	var result datamanager.GetAllProjectListResponse
+	if err = json.Unmarshal(rsp, &result); err != nil {
+		return nil, fmt.Errorf("result decode err: %v", err)
+	}
+	return &result, nil
+}
+
 // GetProjectInfo get project
 func (m *dataManager) GetProjectInfo(req *datamanager.GetProjectInfoRequest) (
 	*datamanager.GetProjectInfoResponse, error) {
-	url := m.clientOption.APIServer + PrefixUrl + fmt.Sprintf(GetProjectUrl, req.ProjectID, req.Dimension)
+	url := m.clientOption.APIServer + PrefixUrl + fmt.Sprintf(GetProjectUrl, req.Project, req.Business, req.Dimension)
 	rsp, err := m.requestClient.DoRequest(url, "GET", m.defaultHeader, nil)
 	if err != nil {
 		return nil, fmt.Errorf("get project info error, url: %s, error: %v", url, err)
@@ -108,16 +126,32 @@ func (m *dataManager) GetProjectInfo(req *datamanager.GetProjectInfoRequest) (
 	return &result, nil
 }
 
-// GetClusterInfoList list clusters
-func (m *dataManager) GetClusterInfoList(req *datamanager.GetClusterInfoListRequest) (
-	*datamanager.GetClusterInfoListResponse, error) {
-	url := m.clientOption.APIServer + PrefixUrl + fmt.Sprintf(ListClusterUrl, req.ProjectID, req.Dimension,
+// GetAllClusterList list  all clusters
+func (m *dataManager) GetAllClusterList(req *datamanager.GetClusterListRequest) (
+	*datamanager.GetClusterListResponse, error) {
+	url := m.clientOption.APIServer + PrefixUrl + fmt.Sprintf(ListAllClusterUrl, req.Dimension,
 		strconv.Itoa(int(req.Page)), strconv.Itoa(int(req.Size)))
 	rsp, err := m.requestClient.DoRequest(url, "GET", m.defaultHeader, nil)
 	if err != nil {
 		return nil, fmt.Errorf("list cluster info error, url: %s, error: %v", url, err)
 	}
-	var result datamanager.GetClusterInfoListResponse
+	var result datamanager.GetClusterListResponse
+	if err = json.Unmarshal(rsp, &result); err != nil {
+		return nil, fmt.Errorf("result decode err: %v", err)
+	}
+	return &result, nil
+}
+
+// GetClusterListByProject list clusters
+func (m *dataManager) GetClusterListByProject(req *datamanager.GetClusterListRequest) (
+	*datamanager.GetClusterListResponse, error) {
+	url := m.clientOption.APIServer + PrefixUrl + fmt.Sprintf(ListClusterUrl, req.Project, req.Business, req.Dimension,
+		strconv.Itoa(int(req.Page)), strconv.Itoa(int(req.Size)))
+	rsp, err := m.requestClient.DoRequest(url, "GET", m.defaultHeader, nil)
+	if err != nil {
+		return nil, fmt.Errorf("list cluster info error, url: %s, error: %v", url, err)
+	}
+	var result datamanager.GetClusterListResponse
 	if err = json.Unmarshal(rsp, &result); err != nil {
 		return nil, fmt.Errorf("result decode err: %v", err)
 	}
