@@ -46,7 +46,7 @@ type ListAction struct {
 func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAction {
 	return &ListAction{
 		model: model,
-		iam: iam,
+		iam:   iam,
 	}
 }
 
@@ -99,7 +99,7 @@ func (la *ListAction) getSharedCluster() error {
 
 	if la.resp.WebAnnotations == nil {
 		la.resp.WebAnnotations = &cmproto.WebAnnotations{
-			Perms:                make(map[string]*spb.Struct),
+			Perms: make(map[string]*spb.Struct),
 		}
 	} else {
 		if la.resp.WebAnnotations.Perms == nil {
@@ -205,9 +205,10 @@ func (la *ListAction) listCluster() error {
 	return nil
 }
 
+// GetProjectClustersV3Perm get iam v3 perm
 func (la *ListAction) GetProjectClustersV3Perm(user PermInfo, clusterList []string) (map[string]*spb.Struct, error) {
 	var (
-		v3Perm = make(map[string]map[string]interface{})
+		v3Perm map[string]map[string]interface{}
 		err    error
 	)
 

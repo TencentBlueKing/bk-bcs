@@ -351,12 +351,18 @@ func (cc *ClientConfig) transClusterToClusterSnap(cls *proto.Cluster) *CreateClu
 }
 
 func (cc *ClientConfig) transCMClusterToCC(cluster *proto.Cluster) *ClusterParamsRequest {
-	var areaID int
+	var (
+		areaID int = 1
+	)
 
 	if strings.Contains(cc.server, "prod") {
-		areaID = prodAreaCode[cluster.Region]
+		if v, ok := prodAreaCode[cluster.Region]; ok {
+			areaID = v
+		}
 	} else {
-		areaID = testAreaCode[cluster.Region]
+		if v, ok := testAreaCode[cluster.Region]; ok {
+			areaID = v
+		}
 	}
 
 	masterIPs := make([]ManagerMasters, 0)

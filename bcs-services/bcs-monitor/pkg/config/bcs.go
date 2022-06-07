@@ -23,9 +23,12 @@ import (
 type BCSClusterEnv string
 
 const (
-	ProdCluster  BCSClusterEnv = "prod"  // 正式环境
+	// ProdCluster
+	ProdCluster BCSClusterEnv = "prod" // 正式环境
+	// DebugCLuster
 	DebugCLuster BCSClusterEnv = "debug" // debug 环境
-	UatCluster   BCSClusterEnv = "uat"   // uat 环境
+	// UatCluster
+	UatCluster BCSClusterEnv = "uat" // uat 环境
 )
 
 // BCSConf

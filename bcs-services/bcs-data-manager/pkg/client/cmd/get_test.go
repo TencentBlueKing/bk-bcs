@@ -16,53 +16,8 @@ import (
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/cmd/printer"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/pkg"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-	"github.com/stretchr/testify/assert"
 )
-
-func TestGetCluster(t *testing.T) {
-	client := pkg.NewDataManagerCli(&pkg.Config{
-		APIServer: "",
-		AuthToken: "",
-	})
-	rsp, err := client.GetClusterInfo(&bcsdatamanager.GetClusterInfoRequest{
-		ClusterID: "BCS-K8S-15202",
-		Dimension: "hour",
-	})
-	assert.Nil(t, err)
-	assert.NotNil(t, rsp)
-}
-
-func TestGetNamespace(t *testing.T) {
-	client := pkg.NewDataManagerCli(&pkg.Config{
-		APIServer: "",
-		AuthToken: "",
-	})
-	rsp, err := client.GetNamespaceInfo(&bcsdatamanager.GetNamespaceInfoRequest{
-		ClusterID: "BCS-K8S-15202",
-		Dimension: "hour",
-	})
-	assert.Nil(t, err)
-	assert.NotNil(t, rsp)
-}
-
-func TestGetProject(t *testing.T) {
-	//GetProject(nil, []string{"111"})
-	client := pkg.NewDataManagerCli(&pkg.Config{
-		APIServer: "",
-		AuthToken: "",
-	})
-	rsp, err := client.GetProjectInfo(&bcsdatamanager.GetProjectInfoRequest{
-		ProjectID: "111",
-	})
-	assert.Nil(t, err)
-	assert.NotNil(t, rsp)
-}
-
-func TestGetWorkload(t *testing.T) {
-
-}
 
 func TestClusterPrint(t *testing.T) {
 	metrics := make([]*bcsdatamanager.ClusterMetrics, 0)

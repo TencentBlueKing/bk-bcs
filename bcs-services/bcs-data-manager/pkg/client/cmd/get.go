@@ -13,6 +13,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -25,6 +26,7 @@ import (
 var (
 	flagOutput       string
 	flagProject      string
+	flagBusinessID   string
 	flagCluster      string
 	flagNamespace    string
 	flagDimension    string
@@ -71,14 +73,17 @@ var (
 // GetProject get project info
 func GetProject(cmd *cobra.Command, args []string) {
 	req := &bcsdatamanager.GetProjectInfoRequest{}
-	if len(args) == 0 {
-		fmt.Printf("get project data need specific projectid\n")
+	req.Project = flagProject
+	req.Business = flagBusinessID
+	req.Dimension = flagDimension
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
 		os.Exit(1)
 	}
-	req.ProjectID = args[0]
-	req.Dimension = flagDimension
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetProjectInfo(req)
+
+	rsp, err := client.GetProjectInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get project data err:%v\n", err)
 		os.Exit(1)
@@ -104,8 +109,13 @@ func GetCluster(cmd *cobra.Command, args []string) {
 	}
 	req.ClusterID = args[0]
 	req.Dimension = flagDimension
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetClusterInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetClusterInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get cluster data err:%v\n", err)
 		os.Exit(1)
@@ -134,8 +144,13 @@ func GetNamespace(cmd *cobra.Command, args []string) {
 	req.Namespace = args[0]
 	req.ClusterID = flagCluster
 	req.Dimension = flagDimension
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetNamespaceInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetNamespaceInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get namespace data err:%v\n", err)
 		os.Exit(1)
@@ -170,8 +185,13 @@ func GetWorkload(cmd *cobra.Command, args []string) {
 	}
 	req.WorkloadType = flagWorkloadType
 	req.WorkloadName = args[0]
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetWorkloadInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetWorkloadInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get workload data err:%v\n", err)
 		os.Exit(1)
@@ -196,6 +216,8 @@ func init() {
 	getCMD.AddCommand(getWorkloadCMD)
 	getCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
+	getCMD.PersistentFlags().StringVarP(
+		&flagBusinessID, "business", "", "", "business id for operation")
 	getCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace for operation")
 	getCMD.PersistentFlags().StringVarP(

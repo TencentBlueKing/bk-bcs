@@ -15,11 +15,42 @@ package mock
 import (
 	"context"
 	"encoding/json"
-
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
 )
+
+type MockCmClient struct {
+	mock.Mock
+}
+
+func NewMockCmClient() cmanager.ClusterManagerClient {
+	return &MockCmClient{}
+}
+
+func (m *MockCmClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) {
+	return nil, nil
+}
+
+func (m *MockCmClient) GetClusterManagerClient() (cm.ClusterManagerClient, error) {
+	return NewMockCm(), nil
+}
+
+func (m *MockCmClient) GetClusterManagerConn() (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithInsecure())
+	var conn *grpc.ClientConn
+	conn, _ = grpc.Dial("127.0.0.1", opts...)
+	return conn, nil
+}
+
+func (m *MockCmClient) NewGrpcClientWithHeader(ctx context.Context, conn *grpc.ClientConn) *cmanager.ClusterManagerClientWithHeader {
+	return &cmanager.ClusterManagerClientWithHeader{
+		Cli: NewMockCm(),
+		Ctx: ctx,
+	}
+}
 
 // MockCm mock cm
 type MockCm struct {
@@ -29,12 +60,12 @@ type MockCm struct {
 // NewMockCm new mock cm
 func NewMockCm() cm.ClusterManagerClient {
 	mockCm := &MockCm{}
-	rawClusters := []byte("{\"code\":0,\"message\":\"success\",\"result\":true,\"data\":[{\"clusterID\":\"BCS-MESOS-10039\",\"clusterName\":\"mesos测试\",\"federationClusterID\":\"\",\"provider\":\"bluekingCloud\",\"region\":\"sz\",\"vpcID\":\"\",\"projectID\":\"ab2b254938e84f6b86b466cc22e730b1\",\"businessID\":\"100148\",\"environment\":\"stag\",\"engineType\":\"mesos\",\"isExclusive\":true,\"clusterType\":\"single\",\"labels\":{\"bellketest\":\"test\"},\"creator\":\"boweiguan\",\"createTime\":\"2021-11-23T21:59:32+08:00\",\"updateTime\":\"2021-11-23T22:06:27+08:00\",\"bcsAddons\":{},\"extraAddons\":{},\"systemID\":\"\",\"manageType\":\"INDEPENDENT_CLUSTER\",\"master\":{\"\":{\"nodeID\":\"\",\"innerIP\":\"\",\"instanceType\":\"\",\"CPU\":0,\"mem\":0,\"GPU\":0,\"status\":\"RUNNING\",\"zoneID\":\"\",\"nodeGroupID\":\"\",\"clusterID\":\"\",\"VPC\":\"\",\"region\":\"\",\"passwd\":\"\",\"zone\":0,\"deviceID\":\"\"}},\"networkSettings\":{\"clusterIPv4CIDR\":\"\",\"serviceIPv4CIDR\":\"\",\"maxNodePodNum\":0,\"maxServiceNum\":0,\"enableVPCCni\":false,\"eniSubnetIDs\":[],\"subnetSource\":null,\"isStaticIpMode\":false,\"claimExpiredSeconds\":0,\"multiClusterCIDR\":[],\"cidrStep\":0},\"clusterBasicSettings\":{\"OS\":\"Tencent tlinux release 2.2 (Final)\",\"version\":\"1.16\",\"clusterTags\":{},\"versionName\":\"BCS-MESOS-10039\"},\"clusterAdvanceSettings\":{\"IPVS\":false,\"containerRuntime\":\"\",\"runtimeVersion\":\"\",\"extraArgs\":{}},\"nodeSettings\":{\"dockerGraphPath\":\"/data/bcs/service/docker\",\"mountTarget\":\"/data\",\"unSchedulable\":1,\"labels\":{},\"extraArgs\":{}},\"status\":\"RUNNING\",\"updater\":\"boweiguan\",\"networkType\":\"overlay\",\"autoGenerateMasterNodes\":false,\"template\":[],\"extraInfo\":{},\"moduleID\":\"\",\"extraClusterID\":\"\",\"isCommonCluster\":false,\"description\":\"\",\"clusterCategory\":\"builder\",\"is_shared\":false},{\"clusterID\":\"BCS-K8S-15091\",\"clusterName\":\"先不要使用此集群\",\"federationClusterID\":\"\",\"provider\":\"bluekingCloud\",\"region\":\"sz\",\"vpcID\":\"\",\"projectID\":\"b37778ec757544868a01e1f01f07037f\",\"businessID\":\"100148\",\"environment\":\"stag\",\"engineType\":\"k8s\",\"isExclusive\":true,\"clusterType\":\"single\",\"labels\":{},\"creator\":\"bellkeyang\",\"createTime\":\"2019-10-15T15:48:19+08:00\",\"updateTime\":\"2022-03-02T12:05:57+08:00\",\"bcsAddons\":{},\"extraAddons\":{},\"systemID\":\"\",\"manageType\":\"INDEPENDENT_CLUSTER\",\"master\":{\"\":{\"nodeID\":\"\",\"innerIP\":\"\",\"instanceType\":\"\",\"CPU\":0,\"mem\":0,\"GPU\":0,\"status\":\"RUNNING\",\"zoneID\":\"\",\"nodeGroupID\":\"\",\"clusterID\":\"\",\"VPC\":\"\",\"region\":\"\",\"passwd\":\"\",\"zone\":0,\"deviceID\":\"\"}},\"networkSettings\":{\"clusterIPv4CIDR\":\"\",\"serviceIPv4CIDR\":\"\",\"maxNodePodNum\":0,\"maxServiceNum\":0,\"enableVPCCni\":false,\"eniSubnetIDs\":[],\"subnetSource\":null,\"isStaticIpMode\":false,\"claimExpiredSeconds\":0,\"multiClusterCIDR\":[],\"cidrStep\":0},\"clusterBasicSettings\":{\"OS\":\"Tencent tlinux release 2.2 (Final)\",\"version\":\"1.16\",\"clusterTags\":{},\"versionName\":\"BCS-K8S-15091\"},\"clusterAdvanceSettings\":{\"IPVS\":false,\"containerRuntime\":\"\",\"runtimeVersion\":\"\",\"extraArgs\":{}},\"nodeSettings\":{\"dockerGraphPath\":\"/data/bcs/service/docker\",\"mountTarget\":\"/data\",\"unSchedulable\":1,\"labels\":{},\"extraArgs\":{}},\"status\":\"RUNNING\",\"updater\":\"bellkeyang\",\"networkType\":\"overlay\",\"autoGenerateMasterNodes\":false,\"template\":[],\"extraInfo\":{},\"moduleID\":\"\",\"extraClusterID\":\"\",\"isCommonCluster\":false,\"description\":\"自动化测试信息\",\"clusterCategory\":\"builder\",\"is_shared\":false}],\"clusterPerm\":{\"BCS-K8S-15171\":{\"policy\":{\"cluster_create\":false,\"cluster_delete\":false,\"cluster_manage\":false,\"cluster_use\":true,\"cluster_view\":true,\"create\":false,\"delete\":false,\"deploy\":false,\"download\":false,\"edit\":false,\"use\":true,\"view\":true}}},\"clusterExtraInfo\":{\"BCS-K8S-15091\":{\"canDeleted\":false,\"providerType\":\"k8s\"},\"BCS-MESOS-10039\":{\"canDeleted\":true,\"providerType\":\"k8s\"}},\"permissions\":{},\"web_annotations\":null}")
+	rawClusters := []byte("{\"code\":0,\"message\":\"success\",\"result\":true,\"data\":[{\"clusterID\":\"BCS-MESOS-10039\",\"clusterName\":\"mesos测试\",\"federationClusterID\":\"\",\"provider\":\"bluekingCloud\",\"region\":\"sz\",\"vpcID\":\"\",\"projectID\":\"ab2b254938e84f6b86b466cc22e730b1\",\"businessID\":\"100148\",\"environment\":\"stag\",\"engineType\":\"mesos\",\"isExclusive\":true,\"clusterType\":\"single\",\"labels\":{\"bellketest\":\"test\"},\"creator\":\"boweiguan\",\"createTime\":\"2021-11-23T21:59:32+08:00\",\"updateTime\":\"2021-11-23T22:06:27+08:00\",\"bcsAddons\":{},\"extraAddons\":{},\"systemID\":\"\",\"manageType\":\"INDEPENDENT_CLUSTER\",\"master\":{\"\":{\"nodeID\":\"\",\"innerIP\":\"\",\"instanceType\":\"\",\"CPU\":0,\"mem\":0,\"GPU\":0,\"status\":\"RUNNING\",\"zoneID\":\"\",\"nodeGroupID\":\"\",\"clusterID\":\"\",\"VPC\":\"\",\"region\":\"\",\"passwd\":\"\",\"zone\":0,\"deviceID\":\"\"}},\"networkSettings\":{\"clusterIPv4CIDR\":\"\",\"serviceIPv4CIDR\":\"\",\"maxNodePodNum\":0,\"maxServiceNum\":0,\"enableVPCCni\":false,\"eniSubnetIDs\":[],\"subnetSource\":null,\"isStaticIpMode\":false,\"claimExpiredSeconds\":0,\"multiClusterCIDR\":[],\"cidrStep\":0},\"clusterBasicSettings\":{\"OS\":\"Tencent tlinux release 2.2 (Final)\",\"version\":\"1.16\",\"clusterTags\":{},\"versionName\":\"BCS-MESOS-10039\"},\"clusterAdvanceSettings\":{\"IPVS\":false,\"containerRuntime\":\"\",\"runtimeVersion\":\"\",\"extraArgs\":{}},\"nodeSettings\":{\"dockerGraphPath\":\"/data/bcs/service/docker\",\"mountTarget\":\"/data\",\"unSchedulable\":1,\"labels\":{},\"extraArgs\":{}},\"status\":\"RUNNING\",\"updater\":\"boweiguan\",\"networkType\":\"overlay\",\"autoGenerateMasterNodes\":false,\"template\":[],\"extraInfo\":{},\"moduleID\":\"\",\"extraClusterID\":\"\",\"isCommonCluster\":false,\"description\":\"\",\"clusterCategory\":\"builder\",\"is_shared\":false},{\"clusterID\":\"BCS-K8S-15091\",\"clusterName\":\"先不要使用此集群\",\"federationClusterID\":\"\",\"provider\":\"bluekingCloud\",\"region\":\"sz\",\"vpcID\":\"\",\"projectID\":\"b37778ec757544868a01e1f01f07037f\",\"businessID\":\"100248\",\"environment\":\"stag\",\"engineType\":\"k8s\",\"isExclusive\":true,\"clusterType\":\"single\",\"labels\":{},\"creator\":\"bellkeyang\",\"createTime\":\"2019-10-15T15:48:19+08:00\",\"updateTime\":\"2022-03-02T12:05:57+08:00\",\"bcsAddons\":{},\"extraAddons\":{},\"systemID\":\"\",\"manageType\":\"INDEPENDENT_CLUSTER\",\"master\":{\"\":{\"nodeID\":\"\",\"innerIP\":\"\",\"instanceType\":\"\",\"CPU\":0,\"mem\":0,\"GPU\":0,\"status\":\"RUNNING\",\"zoneID\":\"\",\"nodeGroupID\":\"\",\"clusterID\":\"\",\"VPC\":\"\",\"region\":\"\",\"passwd\":\"\",\"zone\":0,\"deviceID\":\"\"}},\"networkSettings\":{\"clusterIPv4CIDR\":\"\",\"serviceIPv4CIDR\":\"\",\"maxNodePodNum\":0,\"maxServiceNum\":0,\"enableVPCCni\":false,\"eniSubnetIDs\":[],\"subnetSource\":null,\"isStaticIpMode\":false,\"claimExpiredSeconds\":0,\"multiClusterCIDR\":[],\"cidrStep\":0},\"clusterBasicSettings\":{\"OS\":\"Tencent tlinux release 2.2 (Final)\",\"version\":\"1.16\",\"clusterTags\":{},\"versionName\":\"BCS-K8S-15091\"},\"clusterAdvanceSettings\":{\"IPVS\":false,\"containerRuntime\":\"\",\"runtimeVersion\":\"\",\"extraArgs\":{}},\"nodeSettings\":{\"dockerGraphPath\":\"/data/bcs/service/docker\",\"mountTarget\":\"/data\",\"unSchedulable\":1,\"labels\":{},\"extraArgs\":{}},\"status\":\"RUNNING\",\"updater\":\"bellkeyang\",\"networkType\":\"overlay\",\"autoGenerateMasterNodes\":false,\"template\":[],\"extraInfo\":{},\"moduleID\":\"\",\"extraClusterID\":\"\",\"isCommonCluster\":false,\"description\":\"自动化测试信息\",\"clusterCategory\":\"builder\",\"is_shared\":false}],\"clusterPerm\":{\"BCS-K8S-15171\":{\"policy\":{\"cluster_create\":false,\"cluster_delete\":false,\"cluster_manage\":false,\"cluster_use\":true,\"cluster_view\":true,\"create\":false,\"delete\":false,\"deploy\":false,\"download\":false,\"edit\":false,\"use\":true,\"view\":true}}},\"clusterExtraInfo\":{\"BCS-K8S-15091\":{\"canDeleted\":false,\"providerType\":\"k8s\"},\"BCS-MESOS-10039\":{\"canDeleted\":true,\"providerType\":\"k8s\"}},\"permissions\":{},\"web_annotations\":null}")
 	clusterListRsp := &cm.ListClusterResp{}
 	json.Unmarshal(rawClusters, clusterListRsp)
 	mockCm.On("GetCluster", &cm.GetClusterReq{}).
 		Return(&cm.GetClusterResp{}, nil)
-	mockCm.On("ListCluster", &cm.ListClusterReq{}).
+	mockCm.On("ListCluster", &cm.ListClusterReq{Environment: "stag"}).
 		Return(clusterListRsp, nil)
 	return mockCm
 }

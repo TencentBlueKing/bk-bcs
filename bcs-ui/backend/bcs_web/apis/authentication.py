@@ -14,10 +14,9 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework.authentication import BaseAuthentication
 
+from backend.bcs_web.constants import APIGW_JWT_KEY_NAME, BCS_APP_APIGW_PUBLIC_KEY, USERNAME_KEY_NAME
 from backend.utils.authentication import JWTClient, JWTUser
 from backend.utils.whitelist import is_app_open_api_trusted
-
-from .constants import APIGW_JWT_KEY_NAME, BCS_APP_APIGW_PUBLIC_KEY, USERNAME_KEY_NAME
 
 
 class JWTAuthentication(BaseAuthentication):

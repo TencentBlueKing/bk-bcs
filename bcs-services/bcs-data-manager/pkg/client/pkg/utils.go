@@ -13,12 +13,14 @@
 package pkg
 
 const (
-	GetProjectUrl    = "/datamanager/v1/projects/%s?dimension=%s"
-	GetClusterUrl    = "/datamanager/v1/clusters/%s?dimension=%s"
-	GetNamespaceUrl  = "/datamanager/v1/clusters/%s/namespaces/%s?dimension=%s"
-	GetWorkloadUrl   = "/datamanager/v1/clusters/%s/namespaces/%s/%s/%s?dimension=%s"
-	ListClusterUrl   = "/datamanager/v1/projects/%s/cluster?dimension=%s&page=%s&size=%s"
-	ListNamespaceUrl = "/datamanager/v1/clusters/%s/namespaces?dimension=%s&page=%s&size=%s"
-	ListWorkloadUrl  = "/datamanager/v1/clusters/%s/namespaces/%s/%s?dimension=%s&page=%s&size=%s"
-	PrefixUrl        = "/bcsapi/v4"
+	ListProjectUrl    = "/datamanager/v1/projects?dimension=%s&page=%s&size=%s"
+	GetProjectUrl     = "/datamanager/v1/project?project=%s&business=%s&dimension=%s"
+	GetClusterUrl     = "/datamanager/v1/clusters/%s?dimension=%s"
+	GetNamespaceUrl   = "/datamanager/v1/clusters/%s/namespaces/%s?dimension=%s"
+	GetWorkloadUrl    = "/datamanager/v1/clusters/%s/namespaces/%s/%s/%s?dimension=%s"
+	ListClusterUrl    = "/datamanager/v1/projects/clusters?project=%s&business=%s&dimension=%s&page=%s&size=%s"
+	ListAllClusterUrl = "/datamanager/v1/clusters?dimension=%s&page=%s&size=%s"
+	ListNamespaceUrl  = "/datamanager/v1/clusters/%s/namespaces?dimension=%s&page=%s&size=%s"
+	ListWorkloadUrl   = "/datamanager/v1/clusters/%s/namespaces/%s/%s?dimension=%s&page=%s&size=%s"
+	PrefixUrl         = "/bcsapi/v4"
 )

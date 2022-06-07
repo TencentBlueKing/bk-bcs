@@ -15,6 +15,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +32,7 @@ import (
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
@@ -50,7 +52,8 @@ import (
 var (
 	// 变量, 编译后覆盖
 	service              = "webconsole.bkbcs.tencent.com"
-	version              = "latest"
+	appName              = "bcs-webconsole"
+	versionTag           = "latest"
 	credentialConfigPath = cli.StringSlice{}
 )
 
@@ -114,7 +117,11 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 
 	cmdOptions := []cmd.Option{
 		cmd.Description("bcs webconsole micro service"),
-		cmd.Version(version),
+		cmd.Version(versionTag),
+	}
+
+	cli.VersionPrinter = func(c *cli.Context) {
+		fmt.Println(appName+",", version.GetVersion())
 	}
 
 	microCmd := cmd.NewCmd(cmdOptions...)
@@ -167,7 +174,7 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	srv := micro.NewService(micro.Server(mhttp.NewServer()))
 	opts := []micro.Option{
 		micro.Name(service),
-		micro.Version(version),
+		micro.Version(versionTag),
 		micro.Cmd(microCmd),
 	}
 
@@ -238,8 +245,26 @@ func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
 	return etcdRegistry, nil
 }
 
+// checkVersion refer to https://github.com/urfave/cli/blob/main/help.go#L318 but use os.args check
+func checkVersion() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+	arg := os.Args[1]
+	for _, name := range cli.VersionFlag.Names() {
+		if arg == "-"+name || arg == "--"+name {
+			return true
+		}
+	}
+	return false
+}
+
 // Run create a pid
 func (c *WebConsoleManager) Run() error {
+	if checkVersion() {
+		return nil
+	}
+
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(c.ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

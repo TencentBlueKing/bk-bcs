@@ -3,6 +3,7 @@ GO                      ?= go
 FIRST_GOPATH            := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 GOHOSTOS                ?= $(shell $(GO) env GOHOSTOS)
 GOHOSTARCH              ?= $(shell $(GO) env GOHOSTARCH)
+GOBUILD=CGO_ENABLED=0 go build -trimpath
 
 ifeq (arm, $(GOHOSTARCH))
 	GOHOSTARM ?= $(shell GOARM= $(GO) env GOARM)
@@ -14,6 +15,17 @@ endif
 PROMU_VERSION           ?= 0.12.0
 PROMU_URL               := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
 
+BUILDTIME=$(shell date +%Y-%m-%dT%T%z)
+GITHASH=$(shell git rev-parse HEAD)
+VERSION=${GITTAG}-$(shell date +%y.%m.%d)
+bcs_edition?=inner_edition
+
+LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
+
 .PHONY: promu
 promu:
 	$(eval PROMU_TMP := $(shell mktemp -d))
@@ -24,12 +36,7 @@ promu:
 
 .PHONY: build
 build:
-ifeq (, $(shell which promu))
-	@echo ">> installing promu"
-	GO111MODULE=on GOOS= GOARCH= go install github.com/prometheus/promu
-endif
-	@echo ">> rebuilding binaries using promu"
-	GO111MODULE=on promu build --prefix $(PREFIX)
+	${GOBUILD} ${LDFLAG} -o bin/bcs-monitor ./cmd/bcs-monitor
 
 .PHONY: test
 test:
@@ -44,3 +51,7 @@ openapi:
 build_benchmark:
 	@echo ">> build benchmark"
 	cd test/benchmark && go build -o ../../bin/benchmark
+
+.PHONY: docker
+docker:
+	@docker build -t bcs-monitor:latest .

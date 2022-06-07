@@ -44,7 +44,7 @@ FROM alpine:3.15 AS runner
 
 LABEL maintainer="Tencent BlueKing"
 
-RUN apk --update --no-cache add bash ca-certificates
+RUN apk --update --no-cache -y add bash ca-certificates vim
 
 WORKDIR /data/workspace
 

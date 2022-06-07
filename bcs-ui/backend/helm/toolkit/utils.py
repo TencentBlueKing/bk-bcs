@@ -27,7 +27,7 @@ except ImportError:
 
 def get_kubectl_version(cluster_version, kubectl_version_info, default_kubectl_version):
     # CE 版本目前仅提供默认版本的 kubectld
-    if settings.REGION == 'ce':
+    if settings.EDITION == settings.COMMUNITY_EDITION:
         return default_kubectl_version
 
     return get_bcs_component_version(cluster_version, kubectl_version_info, default_kubectl_version)

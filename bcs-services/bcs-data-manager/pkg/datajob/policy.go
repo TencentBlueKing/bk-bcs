@@ -13,9 +13,9 @@
 package datajob
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 var (
@@ -55,34 +55,34 @@ func (f *policyFactory) Init() {
 	f.initWorkloadMap()
 	f.initPublicMap()
 	f.initProjectMap()
-	PolicyMap[common.ClusterType] = ClusterMap
-	PolicyMap[common.NamespaceType] = NamespaceMap
-	PolicyMap[common.WorkloadType] = WorkloadMap
-	PolicyMap[common.ProjectType] = ProjectMap
-	PolicyMap[common.PublicType] = PublicMap
+	PolicyMap[types.ClusterType] = ClusterMap
+	PolicyMap[types.NamespaceType] = NamespaceMap
+	PolicyMap[types.WorkloadType] = WorkloadMap
+	PolicyMap[types.ProjectType] = ProjectMap
+	PolicyMap[types.PublicType] = PublicMap
 }
 func (f *policyFactory) initClusterMap() {
-	ClusterMap[common.DimensionMinute] = NewClusterMinutePolicy(&metric.MetricGetter{}, f.store)
-	ClusterMap[common.DimensionHour] = NewClusterHourPolicy(&metric.MetricGetter{}, f.store)
-	ClusterMap[common.DimensionDay] = NewClusterDayPolicy(&metric.MetricGetter{}, f.store)
+	ClusterMap[types.DimensionMinute] = NewClusterMinutePolicy(&metric.MetricGetter{}, f.store)
+	ClusterMap[types.DimensionHour] = NewClusterHourPolicy(&metric.MetricGetter{}, f.store)
+	ClusterMap[types.DimensionDay] = NewClusterDayPolicy(&metric.MetricGetter{}, f.store)
 }
 
 func (f *policyFactory) initNamespaceMap() {
-	NamespaceMap[common.DimensionMinute] = NewNamespaceMinutePolicy(&metric.MetricGetter{}, f.store)
-	NamespaceMap[common.DimensionHour] = NewNamespaceHourPolicy(&metric.MetricGetter{}, f.store)
-	NamespaceMap[common.DimensionDay] = NewNamespaceDayPolicy(&metric.MetricGetter{}, f.store)
+	NamespaceMap[types.DimensionMinute] = NewNamespaceMinutePolicy(&metric.MetricGetter{}, f.store)
+	NamespaceMap[types.DimensionHour] = NewNamespaceHourPolicy(&metric.MetricGetter{}, f.store)
+	NamespaceMap[types.DimensionDay] = NewNamespaceDayPolicy(&metric.MetricGetter{}, f.store)
 }
 
 func (f *policyFactory) initWorkloadMap() {
-	WorkloadMap[common.DimensionMinute] = NewWorkloadMinutePolicy(&metric.MetricGetter{}, f.store)
-	WorkloadMap[common.DimensionHour] = NewWorkloadHourPolicy(&metric.MetricGetter{}, f.store)
-	WorkloadMap[common.DimensionDay] = NewWorkloadDayPolicy(&metric.MetricGetter{}, f.store)
+	WorkloadMap[types.DimensionMinute] = NewWorkloadMinutePolicy(&metric.MetricGetter{}, f.store)
+	WorkloadMap[types.DimensionHour] = NewWorkloadHourPolicy(&metric.MetricGetter{}, f.store)
+	WorkloadMap[types.DimensionDay] = NewWorkloadDayPolicy(&metric.MetricGetter{}, f.store)
 }
 
 func (f *policyFactory) initPublicMap() {
-	PublicMap[common.DimensionDay] = NewPublicDayPolicy(&metric.MetricGetter{}, f.store)
+	PublicMap[types.DimensionDay] = NewPublicDayPolicy(&metric.MetricGetter{}, f.store)
 }
 
 func (f *policyFactory) initProjectMap() {
-	ProjectMap[common.DimensionDay] = NewProjectDayPolicy(&metric.MetricGetter{}, f.store)
+	ProjectMap[types.DimensionDay] = NewProjectDayPolicy(&metric.MetricGetter{}, f.store)
 }

@@ -15,13 +15,14 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,7 +37,7 @@ var (
 			Name: CreateTimeKey + "_1",
 		},
 		{
-			Name: common.ProjectTableName + "_idx",
+			Name: types.ProjectTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
@@ -45,12 +46,21 @@ var (
 			Unique: true,
 		},
 		{
-			Name: common.ProjectTableName + "_get_idx",
+			Name: types.ProjectTableName + "_get_idx",
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
 				bson.E{Key: MetricTimeKey, Value: 1},
 			},
+		},
+		{
+			Name: types.ProjectTableName + "_get_idx2",
+			Key: bson.D{
+				bson.E{Key: BusinessIDKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
 		},
 		{
 			Key: bson.D{
@@ -76,6 +86,13 @@ var (
 			},
 			Name: MetricTimeKey + "_1",
 		},
+		{
+			Key: bson.D{
+				bson.E{Key: BusinessIDKey, Value: 1},
+			},
+			Name:       BusinessIDKey + "_1",
+			Background: true,
+		},
 	}
 )
 
@@ -87,10 +104,72 @@ type ModelProject struct {
 // NewModelProject new project model
 func NewModelProject(db drivers.DB) *ModelProject {
 	return &ModelProject{Public: Public{
-		TableName: common.DataTableNamePrefix + common.ProjectTableName,
+		TableName: types.DataTableNamePrefix + types.ProjectTableName,
 		Indexes:   modelProjectIndexes,
 		DB:        db,
 	}}
+}
+
+// GetProjectList get project list
+func (m *ModelProject) GetProjectList(ctx context.Context,
+	req *bcsdatamanager.GetAllProjectListRequest) ([]*bcsdatamanager.Project, int64, error) {
+	err := ensureTable(ctx, &m.Public)
+	var total int64
+	if err != nil {
+		return nil, total, err
+	}
+	dimension := req.Dimension
+	if dimension == "" {
+		dimension = types.DimensionDay
+	}
+	cond := make([]*operator.Condition, 0)
+	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+		DimensionKey: dimension,
+	}),
+		operator.NewLeafCondition(operator.Gte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+		}))
+	conds := operator.NewBranchCondition(operator.And, cond...)
+	tempProjectList := make([]map[string]string, 0)
+	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ProjectIDKey: 1, "_id": 0}).
+		WithSort(map[string]interface{}{ProjectIDKey: 1}).All(ctx, &tempProjectList)
+	if err != nil {
+		blog.Errorf("get project id list error")
+		return nil, total, err
+	}
+	projectList := distinctSlice("project_id", &tempProjectList)
+	if len(projectList) == 0 {
+		return nil, total, nil
+	}
+	total = int64(len(projectList))
+	page := int(req.Page)
+	size := int(req.Size)
+	if size == 0 {
+		size = DefaultSize
+	}
+	endIndex := (page + 1) * size
+	startIndex := page * size
+	if startIndex >= len(projectList) {
+		return nil, total, nil
+	}
+	if endIndex >= len(projectList) {
+		endIndex = len(projectList)
+	}
+	chooseProject := projectList[startIndex:endIndex]
+	response := make([]*bcsdatamanager.Project, 0)
+	for _, project := range chooseProject {
+		projectRequest := &bcsdatamanager.GetProjectInfoRequest{
+			Project:   project,
+			Dimension: dimension,
+		}
+		projectInfo, err := m.GetProjectInfo(ctx, projectRequest)
+		if err != nil {
+			blog.Errorf("get project[%s] info err:%v", project, err)
+		} else {
+			response = append(response, projectInfo)
+		}
+	}
+	return response, total, nil
 }
 
 // GetProjectInfo get project info data
@@ -102,21 +181,39 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	}
 	dimension := request.Dimension
 	if dimension == "" {
-		dimension = common.DimensionDay
+		dimension = types.DimensionDay
 	}
-	projectMetricsMap := make([]map[string]*common.ProjectMetrics, 0)
+	projectMetricsMap := make([]*types.ProjectData, 0)
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
-	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
-		ProjectIDKey: request.ProjectID,
-		DimensionKey: dimension,
-		MetricTimeKey: map[string]interface{}{
-			"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
-		},
-	}})
+	if request.Project != "" {
+		pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
+			ProjectIDKey: request.Project,
+			DimensionKey: dimension,
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			},
+		}})
+	} else if request.Business != "" {
+		pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
+			BusinessIDKey: request.Business,
+			DimensionKey:  dimension,
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			},
+		}})
+	}
+
 	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":     0,
-		"metrics": 1,
+		"_id":         0,
+		"project_id":  1,
+		"business_id": 1,
+		"metrics":     1,
+	}}, map[string]interface{}{"$group": map[string]interface{}{
+		"_id":         nil,
+		"project_id":  map[string]interface{}{"$first": "$project_id"},
+		"business_id": map[string]interface{}{"$max": "$business_id"},
+		"metrics":     map[string]interface{}{"$push": "$metrics"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &projectMetricsMap)
 	if err != nil {
@@ -126,23 +223,25 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	if len(projectMetricsMap) == 0 {
 		return &bcsdatamanager.Project{}, nil
 	}
-	projectMetrics := make([]*common.ProjectMetrics, 0)
+	projectMetrics := make([]*types.ProjectMetrics, 0)
+	projectID := projectMetricsMap[0].ProjectID
+	businessID := projectMetricsMap[0].BusinessID
 	for _, metrics := range projectMetricsMap {
-		projectMetrics = append(projectMetrics, metrics["metrics"])
+		projectMetrics = append(projectMetrics, metrics.Metrics...)
 	}
 	startTime := projectMetrics[len(projectMetrics)-1].Time.Time().String()
 	endTime := projectMetrics[0].Time.Time().String()
-	return m.generateProjectResponse(projectMetrics, request.ProjectID, dimension, startTime, endTime), nil
+	return m.generateProjectResponse(projectMetrics, projectID, businessID, dimension, startTime, endTime), nil
 }
 
 // InsertProjectInfo insert project info data
-func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *common.ProjectMetrics,
-	opts *common.JobCommonOpts) error {
+func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.ProjectMetrics,
+	opts *types.JobCommonOpts) error {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
 	}
-	bucketTime, err := common.GetBucketTime(opts.CurrentTime, opts.Dimension)
+	bucketTime, err := utils.GetBucketTime(opts.CurrentTime, opts.Dimension)
 	if err != nil {
 		return err
 	}
@@ -151,19 +250,20 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *common.Pr
 		DimensionKey:  opts.Dimension,
 		BucketTimeKey: bucketTime,
 	})
-	retProject := &common.ProjectData{}
+	retProject := &types.ProjectData{}
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retProject)
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Infof("project info not found, create a new bucket")
-			newMetrics := make([]*common.ProjectMetrics, 0)
+			newMetrics := make([]*types.ProjectMetrics, 0)
 			newMetrics = append(newMetrics, metrics)
-			newProjectBucket := &common.ProjectData{
+			newProjectBucket := &types.ProjectData{
 				CreateTime: primitive.NewDateTimeFromTime(time.Now()),
 				UpdateTime: primitive.NewDateTimeFromTime(time.Now()),
 				BucketTime: bucketTime,
 				Dimension:  opts.Dimension,
 				ProjectID:  opts.ProjectID,
+				BusinessID: opts.BusinessID,
 				Metrics:    newMetrics,
 			}
 			m.preAggregate(newProjectBucket, metrics)
@@ -176,15 +276,18 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *common.Pr
 		return err
 	}
 	m.preAggregate(retProject, metrics)
+	if retProject.BusinessID == "" {
+		retProject.BusinessID = opts.BusinessID
+	}
 	retProject.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retProject.Metrics = append(retProject.Metrics, metrics)
 	return m.DB.Table(m.TableName).
-		Update(ctx, cond, operator.M{"$set": bson.M{"update_time": time.Now()}, "$push": bson.M{"metrics": metrics}})
+		Update(ctx, cond, operator.M{"$set": retProject})
 }
 
 // GetRawProjectInfo get raw project info data
-func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *common.JobCommonOpts,
-	bucket string) ([]*common.ProjectData, error) {
+func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *types.JobCommonOpts,
+	bucket string) ([]*types.ProjectData, error) {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
@@ -201,7 +304,7 @@ func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *common.JobCo
 		}))
 	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
-	retProject := make([]*common.ProjectData, 0)
+	retProject := make([]*types.ProjectData, 0)
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retProject)
 	if err != nil {
 		return nil, err
@@ -209,14 +312,15 @@ func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *common.JobCo
 	return retProject, nil
 }
 
-func (m *ModelProject) generateProjectResponse(metricSlice []*common.ProjectMetrics, projectID, dimension,
-	startTime, endTime string) *bcsdatamanager.Project {
+func (m *ModelProject) generateProjectResponse(metricSlice []*types.ProjectMetrics,
+	projectID, businessID, dimension, startTime, endTime string) *bcsdatamanager.Project {
 	response := &bcsdatamanager.Project{
-		ProjectID: projectID,
-		Dimension: dimension,
-		StartTime: startTime,
-		EndTime:   endTime,
-		Metrics:   nil,
+		ProjectID:  projectID,
+		BusinessID: businessID,
+		Dimension:  dimension,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		Metrics:    nil,
 	}
 	responseMetrics := make([]*bcsdatamanager.ProjectMetrics, 0)
 	for _, metric := range metricSlice {
@@ -244,7 +348,7 @@ func (m *ModelProject) generateProjectResponse(metricSlice []*common.ProjectMetr
 	return response
 }
 
-func (m *ModelProject) preAggregate(data *common.ProjectData, newMetric *common.ProjectMetrics) {
+func (m *ModelProject) preAggregate(data *types.ProjectData, newMetric *types.ProjectMetrics) {
 	if data.MaxNode == nil {
 		data.MaxNode = newMetric.MaxNode
 	} else if newMetric.MaxNode.Value > data.MaxNode.Value {

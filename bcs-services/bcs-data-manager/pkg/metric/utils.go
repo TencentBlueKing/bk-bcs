@@ -14,11 +14,11 @@ package metric
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 )
 
 const (
@@ -101,11 +101,11 @@ func GetInt64Data(response *bcsmonitor.QueryResponse) int64 {
 
 func getDimensionPromql(dimension string) string {
 	switch dimension {
-	case common.DimensionDay:
+	case types.DimensionDay:
 		return "1d"
-	case common.DimensionHour:
+	case types.DimensionHour:
 		return "1h"
-	case common.DimensionMinute:
+	case types.DimensionMinute:
 		return "1m"
 	default:
 		return ""
@@ -114,7 +114,7 @@ func getDimensionPromql(dimension string) string {
 
 func generatePodCondition(clusterID, namespace, workloadType, workloadName string) string {
 	switch workloadType {
-	case common.DeploymentType:
+	case types.DeploymentType:
 		return fmt.Sprintf(DeploymentPodCondition, clusterID, namespace, workloadName)
 	default:
 		return fmt.Sprintf(OtherPodCondition, clusterID, namespace, workloadName)

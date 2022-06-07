@@ -16,6 +16,7 @@ package clustermanager
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -36,9 +37,12 @@ type Client struct {
 
 // WithoutTLSClient init a non-tls client
 func WithoutTLSClient(header http.Header, url string) *Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	c := &Client{
 		header:     nil,
-		HttpClient: &http.Client{},
+		HttpClient: &http.Client{Transport: tr},
 	}
 	c.baseURL = url
 	c.header = header

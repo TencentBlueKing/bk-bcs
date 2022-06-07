@@ -27,7 +27,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/route"
 	"github.com/prometheus/prometheus/promql"
-	"github.com/spf13/viper"
 	v1 "github.com/thanos-io/thanos/pkg/api/query"
 	"github.com/thanos-io/thanos/pkg/compact/downsample"
 	"github.com/thanos-io/thanos/pkg/component"
@@ -40,57 +39,34 @@ import (
 	"github.com/thanos-io/thanos/pkg/prober"
 	"github.com/thanos-io/thanos/pkg/query"
 	"github.com/thanos-io/thanos/pkg/runutil"
-	grpcserver "github.com/thanos-io/thanos/pkg/server/grpc"
 	httpserver "github.com/thanos-io/thanos/pkg/server/http"
 	"github.com/thanos-io/thanos/pkg/store"
-	"github.com/thanos-io/thanos/pkg/tls"
 	"github.com/thanos-io/thanos/pkg/tracing/client"
 	"github.com/thanos-io/thanos/pkg/ui"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
-// API
-type API struct {
+// QueryAPI promql api 服务, 封装 thaons 的API使用
+type QueryAPI struct {
 	StoresList   []string
 	endpoints    *query.EndpointSet
 	srv          *httpserver.Server
-	grpc         *grpcserver.Server
 	statusProber prober.Probe
 	ctx          context.Context
-	cancel       context.CancelFunc
 }
 
 // 这个包对thanos的query做一些封装，重新调用等
 // 使用配置文件配置
 // 启动 query 模块，暴露http
 // query模块对应我们的store
-func NewAPI(
+func NewQueryAPI(
+	ctx context.Context,
 	reg *prometheus.Registry,
 	tracer opentracing.Tracer,
 	kitLogger gokit.Logger,
-	conf *config.APIConf,
+	httpAddr string,
+	storeList []string,
 	g *run.Group,
-) (*API, error) {
-
-	var (
-		maxConcurrentQueries              = viper.GetInt(QueryMaxConCurrentQueriesConfKey)
-		maxConcurrentSelects              = viper.GetInt(QueryMaxConCurrentSelectsConfKey)
-		defaultRangeQueryStep             = viper.GetDuration(QueryDefaultRangeQueryStepConfKey)
-		queryTimeout                      = viper.GetDuration(QueryStoreTimeoutConfKey)
-		lookbackDelta                     = viper.GetDuration(QueryMaxLookBackDeltaConfKey)
-		dynamicLookbackDelta              = viper.GetBool(QueryDynamicLookbackDeltaConfKey)
-		enableAutodownsampling            = viper.GetBool(QueryEnableAutoDownsamplingConfKey)
-		enableQueryPartialResponse        = viper.GetBool(QueryEnableQueryPartialConfKey)
-		instantDefaultMaxSourceResolution = viper.GetDuration(QueryMaxSourceResolutionConfKey)
-		defaultMetadataTimeRange          = viper.GetDuration(QueryDefaultMetadataTimeRangeConfKey)
-		unhealthyStoreTimeout             = viper.GetDuration(QueryUnhealthyStoreTimeoutKey)
-		//storeList                         = viper.GetStringSlice(QueryStoreListKey)
-		storeResponseTimeout      = viper.GetDuration(QueryStoreRespTimeoutKey)
-		defaultEvaluationInterval = 1 * time.Minute // 自查询的默认处理间隔。这里用不到
-	)
-
-	logger.Infof("api will listen http: %s, grpc: %s", conf.HTTP.Address, conf.GRPC.Address)
+) (*QueryAPI, error) {
 
 	dnsStoreProvider := dns.NewProvider(
 		kitLogger,
@@ -104,7 +80,7 @@ func NewAPI(
 		return nil, errors.Wrap(err, "building gRPC client")
 	}
 	var (
-		apiServer = &API{}
+		apiServer = &QueryAPI{ctx: ctx}
 		comp      = component.Query
 		endpoints = query.NewEndpointSet(
 			kitLogger,
@@ -142,7 +118,7 @@ func NewAPI(
 		}
 	)
 	apiServer.endpoints = endpoints
-	logger.Infof("store list: [%v]", conf.StoreList)
+	logger.Infof("store list: [%v]", storeList)
 
 	// Periodically update the store set with the addresses we see in our cluster.
 	{
@@ -165,7 +141,7 @@ func NewAPI(
 			return runutil.Repeat(time.Second*30, ctx.Done(), func() error {
 				resolveCtx, resolveCancel := context.WithTimeout(ctx, time.Second*30)
 				defer resolveCancel()
-				if err := dnsStoreProvider.Resolve(resolveCtx, conf.StoreList); err != nil {
+				if err := dnsStoreProvider.Resolve(resolveCtx, storeList); err != nil {
 					logger.Errorw("failed to resolve addresses for storeAPIs", "err", err)
 				}
 				return nil
@@ -195,6 +171,7 @@ func NewAPI(
 		logMiddleware := logging.NewHTTPServerMiddleware(kitLogger)
 
 		ins := extpromhttp.NewInstrumentationMiddleware(reg, nil)
+		tenantAuthMiddleware, _ := NewTenantAuthMiddleware(ctx, ins)
 
 		// 启动一个ui界面
 		ui.NewQueryUI(kitLogger, endpoints, "", "", "").Register(router, ins)
@@ -228,32 +205,15 @@ func NewAPI(
 			reg,
 		)
 
-		api.Register(router.WithPrefix("/api/v1"), tracer, kitLogger, ins, logMiddleware)
+		api.Register(router.WithPrefix("/api/v1"), tracer, kitLogger, tenantAuthMiddleware, logMiddleware)
 
 		srv := httpserver.New(kitLogger, reg, comp, httpProbe,
-			httpserver.WithListen(conf.HTTP.Address),
-			httpserver.WithGracePeriod(conf.HTTP.GracePeriod),
+			httpserver.WithListen(httpAddr),
+			httpserver.WithGracePeriod(time.Minute*2),
 		)
 		srv.Handle("/", router)
 
 		apiServer.srv = srv
-	}
-
-	// Start query (proxy) gRPC StoreAPI.
-	{
-		tlsCfg, err := tls.NewServerConfig(kitLogger, "", "", "")
-		if err != nil {
-			return nil, errors.Wrap(err, "setup gRPC server")
-		}
-
-		s := grpcserver.New(kitLogger, reg, tracer, nil, nil, comp, grpcProbe,
-			grpcserver.WithServer(store.RegisterStoreServer(proxy)),
-			grpcserver.WithListen(conf.GRPC.Address),
-			grpcserver.WithGracePeriod(conf.GRPC.GracePeriod),
-			grpcserver.WithTLSConfig(tlsCfg),
-		)
-
-		apiServer.grpc = s
 	}
 
 	logger.Infof("starting query node")
@@ -312,36 +272,21 @@ func engineFactory(
 }
 
 // RunHttp
-func (a *API) RunHttp() error {
+func (a *QueryAPI) RunHttp() error {
+	a.statusProber.Healthy()
 	a.statusProber.Ready()
 	return a.srv.ListenAndServe()
 }
 
 // ShutDownHttp
-func (a *API) ShutDownHttp(err error) {
+func (a *QueryAPI) ShutDownHttp(err error) {
+	a.statusProber.NotHealthy(err)
 	a.statusProber.NotReady(err)
 	a.srv.Shutdown(err)
 }
 
-// RunGrpc
-func (a *API) RunGrpc() error {
-	a.statusProber.Ready()
-	return a.grpc.ListenAndServe()
-}
-
-// ShutDownGrpc
-func (a *API) ShutDownGrpc(err error) {
-	a.statusProber.NotReady(err)
-	a.grpc.Shutdown(err)
-}
-
 // RunGetStore 周期性对store进行健康检查，剔除不健康的stores
-func (a *API) RunGetStore() error {
-	//Periodically update the store set with the addresses we see in our cluster.
-	if a.ctx == nil {
-		ctx := context.Background()
-		a.ctx, a.cancel = context.WithCancel(ctx)
-	}
+func (a *QueryAPI) RunGetStore() error {
 	return runutil.Repeat(5*time.Second, a.ctx.Done(), func() error {
 		a.endpoints.Update(a.ctx)
 		return nil
@@ -349,7 +294,6 @@ func (a *API) RunGetStore() error {
 }
 
 // ShutDownGetStore
-func (a *API) ShutDownGetStore(_ error) {
-	a.cancel()
+func (a *QueryAPI) ShutDownGetStore(_ error) {
 	a.endpoints.Close()
 }

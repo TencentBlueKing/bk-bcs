@@ -14,45 +14,140 @@ package worker
 
 import (
 	"context"
+	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/mock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 
 	"github.com/robfig/cron/v3"
 )
 
 func TestProducer_ClusterProducer(t *testing.T) {
-
+	cmCli := mock.NewMockCmClient()
+	queue := mock.NewMockQueue()
+	storageCli := mock.NewMockStorage()
+	ctx := context.Background()
+	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
+	producer.ClusterProducer(types.DimensionMinute)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
+	producer.ClusterProducer(types.DimensionHour)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
+	producer.ClusterProducer(types.DimensionDay)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
 }
 
 func TestProducer_NamespaceProducer(t *testing.T) {
-
+	cmCli := mock.NewMockCmClient()
+	queue := mock.NewMockQueue()
+	storageCli := mock.NewMockStorage()
+	ctx := context.Background()
+	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
+	producer.NamespaceProducer(types.DimensionMinute)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
+	producer.NamespaceProducer(types.DimensionHour)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
+	producer.NamespaceProducer(types.DimensionDay)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
 }
 
 func TestProducer_ProjectProducer(t *testing.T) {
-
+	cmCli := mock.NewMockCmClient()
+	queue := mock.NewMockQueue()
+	storageCli := mock.NewMockStorage()
+	ctx := context.Background()
+	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
+	producer.ProjectProducer(types.DimensionDay)
+	assert.NotEqual(t, 0, queue.Length())
 }
 
 func TestProducer_PublicProducer(t *testing.T) {
-
+	cmCli := mock.NewMockCmClient()
+	queue := mock.NewMockQueue()
+	storageCli := mock.NewMockStorage()
+	ctx := context.Background()
+	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
+	producer.PublicProducer(types.DimensionDay)
+	assert.NotEqual(t, 0, queue.Length())
+	fmt.Println(queue.Length())
 }
 
 func TestProducer_Run(t *testing.T) {
 	ctx := context.Background()
 	newcron := cron.New()
+	minSpec := "0-59/1 * * * * "
+	_, err := newcron.AddFunc(minSpec, func() {
+		fmt.Println("cron work")
+	})
+	assert.Nil(t, err)
 	p := &Producer{
 		cron: newcron,
 		ctx:  ctx,
 	}
 	p.Run()
+	time.Sleep(1 * time.Minute)
+	p.Stop()
 }
 
 func TestProducer_SendJob(t *testing.T) {
-
+	cmCli := mock.NewMockCmClient()
+	queue := mock.NewMockQueue()
+	storageCli := mock.NewMockStorage()
+	ctx := context.Background()
+	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
+	opts := types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
+		ProjectID:   "testProject",
+		ClusterID:   "testCluster",
+		ClusterType: types.Kubernetes,
+		Dimension:   types.DimensionMinute,
+		CurrentTime: time.Now(),
+	}
+	err := producer.SendJob(opts)
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, queue.Length())
 }
 
 func TestProducer_WorkloadProducer(t *testing.T) {
-
+	cmCli := mock.NewMockCmClient()
+	queue := mock.NewMockQueue()
+	storageCli := mock.NewMockStorage()
+	ctx := context.Background()
+	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
+	producer.WorkloadProducer(types.DimensionMinute)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
+	producer.WorkloadProducer(types.DimensionHour)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
+	producer.WorkloadProducer(types.DimensionDay)
+	assert.NotEqual(t, 0, queue.Length())
+	queue.CleanAll()
 }
 
-func TestProducer_getCronList(t *testing.T) {
-
+func TestProducerInitCronList(t *testing.T) {
+	cmCli := mock.NewMockCmClient()
+	queue := mock.NewMockQueue()
+	storageCli := mock.NewMockStorage()
+	ctx := context.Background()
+	newcron := cron.New()
+	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	producer := NewProducer(ctx, queue, newcron, cmCli, storageCli, storageCli, getter)
+	err := producer.InitCronList()
+	assert.Nil(t, err)
+	assert.Equal(t, 11, len(newcron.Entries()))
 }

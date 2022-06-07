@@ -15,13 +15,14 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,7 +37,7 @@ var (
 			Name: CreateTimeKey + "_1",
 		},
 		{
-			Name: common.WorkloadTableName + "_idx",
+			Name: types.WorkloadTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
@@ -49,7 +50,7 @@ var (
 			Unique: true,
 		},
 		{
-			Name: common.WorkloadTableName + "_list_idx",
+			Name: types.WorkloadTableName + "_list_idx",
 			Key: bson.D{
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: NamespaceKey, Value: 1},
@@ -59,7 +60,7 @@ var (
 			},
 		},
 		{
-			Name: common.WorkloadTableName + "_get_idx",
+			Name: types.WorkloadTableName + "_get_idx",
 			Key: bson.D{
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: NamespaceKey, Value: 1},
@@ -128,20 +129,20 @@ type ModelWorkload struct {
 // NewModelWorkload new workload model
 func NewModelWorkload(db drivers.DB) *ModelWorkload {
 	return &ModelWorkload{Public: Public{
-		TableName: common.DataTableNamePrefix + common.WorkloadTableName,
+		TableName: types.DataTableNamePrefix + types.WorkloadTableName,
 		Indexes:   modelWorkloadIndexes,
 		DB:        db,
 	}}
 }
 
 // InsertWorkloadInfo insert workload info
-func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *common.WorkloadMetrics,
-	opts *common.JobCommonOpts) error {
+func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.WorkloadMetrics,
+	opts *types.JobCommonOpts) error {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
 	}
-	bucketTime, err := common.GetBucketTime(opts.CurrentTime, opts.Dimension)
+	bucketTime, err := utils.GetBucketTime(opts.CurrentTime, opts.Dimension)
 	if err != nil {
 		return err
 	}
@@ -154,19 +155,20 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *common.
 		WorkloadNameKey: opts.Name,
 		BucketTimeKey:   bucketTime,
 	})
-	retWorkload := &common.WorkloadData{}
+	retWorkload := &types.WorkloadData{}
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retWorkload)
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Infof(" workload info not found, create a new bucket")
-			newMetrics := make([]*common.WorkloadMetrics, 0)
+			newMetrics := make([]*types.WorkloadMetrics, 0)
 			newMetrics = append(newMetrics, metrics)
-			newWorkloadBucket := &common.WorkloadData{
+			newWorkloadBucket := &types.WorkloadData{
 				CreateTime:   primitive.NewDateTimeFromTime(time.Now()),
 				UpdateTime:   primitive.NewDateTimeFromTime(time.Now()),
 				BucketTime:   bucketTime,
 				Dimension:    opts.Dimension,
 				ProjectID:    opts.ProjectID,
+				BusinessID:   opts.BusinessID,
 				ClusterID:    opts.ClusterID,
 				ClusterType:  opts.ClusterType,
 				Namespace:    opts.Namespace,
@@ -174,8 +176,8 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *common.
 				Name:         opts.Name,
 				Metrics:      newMetrics,
 			}
-			m.preAggregateMax(newWorkloadBucket, metrics)
-			m.preAggregateMin(newWorkloadBucket, metrics)
+			m.PreAggregateMax(newWorkloadBucket, metrics)
+			m.PreAggregateMin(newWorkloadBucket, metrics)
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{newWorkloadBucket})
 			if err != nil {
 				return err
@@ -184,8 +186,11 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *common.
 		}
 		return err
 	}
-	m.preAggregateMax(retWorkload, metrics)
-	m.preAggregateMin(retWorkload, metrics)
+	m.PreAggregateMax(retWorkload, metrics)
+	m.PreAggregateMin(retWorkload, metrics)
+	if retWorkload.BusinessID == "" {
+		retWorkload.BusinessID = opts.BusinessID
+	}
 	retWorkload.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retWorkload.Metrics = append(retWorkload.Metrics, metrics)
 	return m.DB.Table(m.TableName).
@@ -202,7 +207,7 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	}
 	dimension := request.Dimension
 	if dimension == "" {
-		dimension = common.DimensionMinute
+		dimension = types.DimensionMinute
 	}
 	cond := make([]*operator.Condition, 0)
 	cond = append(cond,
@@ -268,21 +273,21 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	workloadMetricsMap := make([]map[string]*common.WorkloadMetrics, 0)
+	workloadMetricsMap := make([]map[string]*types.WorkloadMetrics, 0)
 	publicCond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ClusterIDKey:    request.ClusterID,
-		ObjectTypeKey:   common.NamespaceType,
+		ObjectTypeKey:   types.NamespaceType,
 		NamespaceKey:    request.Namespace,
 		WorkloadNameKey: request.WorkloadName,
 		WorkloadTypeKey: request.WorkloadType,
 	})
-	workloadPublic := common.WorkloadPublicMetrics{
+	workloadPublic := types.WorkloadPublicMetrics{
 		SuggestCPU:    0,
 		SuggestMemory: 0,
 	}
 	publicData := getPublicData(ctx, m.DB, publicCond)
 	if publicData != nil && publicData.Metrics != nil {
-		public, ok := publicData.Metrics.(common.WorkloadPublicMetrics)
+		public, ok := publicData.Metrics.(types.WorkloadPublicMetrics)
 		if !ok {
 			blog.Errorf("assert public data to namespace public failed")
 		} else {
@@ -292,7 +297,7 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 
 	dimension := request.Dimension
 	if dimension == "" {
-		dimension = common.DimensionMinute
+		dimension = types.DimensionMinute
 	}
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
@@ -318,7 +323,7 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	if len(workloadMetricsMap) == 0 {
 		return &bcsdatamanager.Workload{}, nil
 	}
-	workloadMetrics := make([]*common.WorkloadMetrics, 0)
+	workloadMetrics := make([]*types.WorkloadMetrics, 0)
 	for _, metrics := range workloadMetricsMap {
 		workloadMetrics = append(workloadMetrics, metrics["metrics"])
 	}
@@ -329,15 +334,15 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 }
 
 // GetRawWorkloadInfo get raw workload data
-func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *common.JobCommonOpts,
-	bucket string) ([]*common.WorkloadData, error) {
+func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *types.JobCommonOpts,
+	bucket string) ([]*types.WorkloadData, error) {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
 	}
 	cond := m.generateCond(opts, bucket)
 	conds := operator.NewBranchCondition(operator.And, cond...)
-	retWorkload := make([]*common.WorkloadData, 0)
+	retWorkload := make([]*types.WorkloadData, 0)
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retWorkload)
 	if err != nil {
 		return nil, err
@@ -345,8 +350,8 @@ func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *common.Job
 	return retWorkload, nil
 }
 
-// GetWorkloadCount get raw workload data
-func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *common.JobCommonOpts,
+// GetWorkloadCount get workload count
+func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string, after time.Time) (int64, error) {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
@@ -357,7 +362,7 @@ func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *common.JobCo
 		MetricTimeKey: primitive.NewDateTimeFromTime(after),
 	}))
 	conds := operator.NewBranchCondition(operator.And, cond...)
-	retWorkload := make([]*common.WorkloadData, 0)
+	retWorkload := make([]*types.WorkloadData, 0)
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retWorkload)
 	if err != nil {
 		return 0, err
@@ -365,8 +370,8 @@ func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *common.JobCo
 	return int64(len(retWorkload)), nil
 }
 
-func (m *ModelWorkload) generateWorkloadResponse(public common.WorkloadPublicMetrics,
-	metricSlice []*common.WorkloadMetrics, clusterID, namespace, dimension, workloadType, workloadName, startTime,
+func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetrics,
+	metricSlice []*types.WorkloadMetrics, clusterID, namespace, dimension, workloadType, workloadName, startTime,
 	endTime string) *bcsdatamanager.Workload {
 	response := &bcsdatamanager.Workload{
 		ClusterID:     clusterID,
@@ -405,7 +410,7 @@ func (m *ModelWorkload) generateWorkloadResponse(public common.WorkloadPublicMet
 }
 
 // pre aggregate max value before update
-func (m *ModelWorkload) preAggregateMax(data *common.WorkloadData, newMetric *common.WorkloadMetrics) {
+func (m *ModelWorkload) PreAggregateMax(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MaxInstanceTime != nil && newMetric.MaxInstanceTime != nil {
 		data.MaxInstanceTime = getMax(data.MaxInstanceTime, newMetric.MaxInstanceTime)
 	} else if newMetric.MaxInstanceTime != nil {
@@ -438,7 +443,7 @@ func (m *ModelWorkload) preAggregateMax(data *common.WorkloadData, newMetric *co
 }
 
 // pre aggragate min value before update
-func (m *ModelWorkload) preAggregateMin(data *common.WorkloadData, newMetric *common.WorkloadMetrics) {
+func (m *ModelWorkload) PreAggregateMin(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MinInstanceTime != nil && newMetric.MinInstanceTime != nil {
 		data.MinInstanceTime = getMin(data.MinInstanceTime, newMetric.MinInstanceTime)
 	} else if newMetric.MinInstanceTime != nil {
@@ -485,7 +490,7 @@ func getMin(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumReco
 }
 
 // generate cond according to job options
-func (m *ModelWorkload) generateCond(opts *common.JobCommonOpts, bucket string) []*operator.Condition {
+func (m *ModelWorkload) generateCond(opts *types.JobCommonOpts, bucket string) []*operator.Condition {
 	cond := make([]*operator.Condition, 0)
 	if opts.ProjectID != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{

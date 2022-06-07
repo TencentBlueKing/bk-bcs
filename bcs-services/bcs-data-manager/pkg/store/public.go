@@ -16,12 +16,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -35,7 +35,7 @@ var (
 			Name: CreateTimeKey + "_1",
 		},
 		{
-			Name: common.PublicTableName + "_idx",
+			Name: types.PublicTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: ObjectTypeKey, Value: 1},
 				bson.E{Key: ProjectIDKey, Value: 1},
@@ -57,15 +57,15 @@ type ModelPublic struct {
 // NewModelPublic new public model
 func NewModelPublic(db drivers.DB) *ModelPublic {
 	return &ModelPublic{Public: Public{
-		TableName: common.DataTableNamePrefix + common.PublicTableName,
+		TableName: types.DataTableNamePrefix + types.PublicTableName,
 		Indexes:   modelPublicIndexes,
 		DB:        db,
 	}}
 }
 
 // InsertPublicInfo insert public info
-func (m *ModelPublic) InsertPublicInfo(ctx context.Context, metrics *common.PublicData,
-	opts *common.JobCommonOpts) error {
+func (m *ModelPublic) InsertPublicInfo(ctx context.Context, metrics *types.PublicData,
+	opts *types.JobCommonOpts) error {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (m *ModelPublic) InsertPublicInfo(ctx context.Context, metrics *common.Publ
 	if err != nil {
 		return err
 	}
-	retPublic := &common.PublicData{}
+	retPublic := &types.PublicData{}
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retPublic)
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
@@ -96,7 +96,7 @@ func (m *ModelPublic) InsertPublicInfo(ctx context.Context, metrics *common.Publ
 }
 
 // GetRawPublicInfo get raw public info data
-func (m *ModelPublic) GetRawPublicInfo(ctx context.Context, opts *common.JobCommonOpts) ([]*common.PublicData, error) {
+func (m *ModelPublic) GetRawPublicInfo(ctx context.Context, opts *types.JobCommonOpts) ([]*types.PublicData, error) {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (m *ModelPublic) GetRawPublicInfo(ctx context.Context, opts *common.JobComm
 	if err != nil {
 		return nil, err
 	}
-	retPublic := make([]*common.PublicData, 0)
+	retPublic := make([]*types.PublicData, 0)
 	err = m.DB.Table(m.TableName).Find(cond).All(ctx, &retPublic)
 	if err != nil {
 		return nil, err
@@ -113,34 +113,34 @@ func (m *ModelPublic) GetRawPublicInfo(ctx context.Context, opts *common.JobComm
 	return retPublic, nil
 }
 
-func (m *ModelPublic) generateCond(opts *common.JobCommonOpts) (*operator.Condition, error) {
+func (m *ModelPublic) generateCond(opts *types.JobCommonOpts) (*operator.Condition, error) {
 	switch opts.ObjectType {
-	case common.ProjectType:
+	case types.ProjectType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
 			ProjectIDKey:  opts.ProjectID,
-			ObjectTypeKey: common.ProjectType,
+			ObjectTypeKey: types.ProjectType,
 		}), nil
-	case common.ClusterType:
+	case types.ClusterType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
 			ProjectIDKey:  opts.ProjectID,
 			ClusterIDKey:  opts.ClusterID,
-			ObjectTypeKey: common.ClusterType,
+			ObjectTypeKey: types.ClusterType,
 		}), nil
-	case common.NamespaceType:
+	case types.NamespaceType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
 			ProjectIDKey:  opts.ProjectID,
 			ClusterIDKey:  opts.ClusterID,
 			NamespaceKey:  opts.Namespace,
-			ObjectTypeKey: common.NamespaceType,
+			ObjectTypeKey: types.NamespaceType,
 		}), nil
-	case common.WorkloadType:
+	case types.WorkloadType:
 		return operator.NewLeafCondition(operator.Eq, operator.M{
 			ProjectIDKey:    opts.ProjectID,
 			ClusterIDKey:    opts.ClusterID,
 			NamespaceKey:    opts.Namespace,
 			WorkloadTypeKey: opts.WorkloadType,
 			WorkloadNameKey: opts.Name,
-			ObjectTypeKey:   common.WorkloadType,
+			ObjectTypeKey:   types.WorkloadType,
 		}), nil
 	default:
 		return nil, fmt.Errorf("wrong object type: %s", opts.ObjectType)

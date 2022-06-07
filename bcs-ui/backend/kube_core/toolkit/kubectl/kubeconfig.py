@@ -114,7 +114,7 @@ class KubeConfig:
             "contexts": [self.format_context(context) for context in self.contexts],
             "current-context": current_context,
         }
-        return yaml.dump(payload, default_flow_style=False)
+        return yaml.dump(payload, default_style='"', default_flow_style=False)
 
     @contextlib.contextmanager
     def as_tempfile(self):

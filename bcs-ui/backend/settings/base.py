@@ -47,6 +47,9 @@ SECRET_KEY = "jllc(^rzpe8_udv)oadny2j3ym#qd^x^3ns11_8kq(1rf8qpd2"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# 社区版本
+COMMUNITY_EDITION = 'ce'
+
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
@@ -77,6 +80,7 @@ INSTALLED_APPS = [
     # 模板集功能模块
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
     "backend.change_log",
+    "backend.container_service.cluster_tools.apps.ClusterToolsConfig",
     "django_prometheus",
 ]
 
@@ -495,6 +499,9 @@ PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
 BK_MONITOR_QUERY_HOST = os.environ.get(
     'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
 )
+
+# 组件库的 Chart 仓库前缀
+CLUSTER_TOOLS_REPO_PREFIX = os.environ.get('CLUSTER_TOOLS_REPO_PREFIX')
 
 # 是否支持使用 Mesos 服务
 SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")

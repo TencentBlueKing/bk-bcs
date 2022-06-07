@@ -149,14 +149,12 @@ func (c *Client) FetchAllHostsByBizID(bizID int) ([]HostData, error) {
 		hostLock = &sync.RWMutex{}
 	)
 
-	wgHost := sync.WaitGroup{}
-	con := utils.NewBarrier(20)
+	con := utils.NewRoutinePool(20)
+	defer con.Close()
 
 	for i := range pages {
-		con.Advance()
-		wgHost.Add(1)
+		con.Add(1)
 		go func(page Page) {
-			defer wgHost.Done()
 			defer con.Done()
 			_, hosts, err := c.QueryHostByBizID(bizID, page)
 			if err != nil {
@@ -168,7 +166,7 @@ func (c *Client) FetchAllHostsByBizID(bizID int) ([]HostData, error) {
 			hostLock.Unlock()
 		}(pages[i])
 	}
-	wgHost.Wait()
+	con.Wait()
 
 	blog.Infof("FetchAllHostsByBizID successful %v", bizID)
 	if len(hostList) == 0 {

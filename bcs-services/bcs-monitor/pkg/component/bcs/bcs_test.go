@@ -85,7 +85,7 @@ func TestGetCluster(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	cluster, err := GetCluster(ctx, config.G.BCS, getTestProjectId(), getTestClusterId())
+	cluster, err := GetCluster(ctx, config.G.BCS, getTestClusterId())
 	assert.NoError(t, err)
 	assert.Equal(t, cluster.ProjectId, getTestProjectId())
 }

@@ -16,6 +16,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -299,9 +300,9 @@ func (s *Server) initHTTPService() error {
 func (s *Server) initMicro() error {
 	// New Service
 	microService := microgrpcsvc.NewService(
-		microsvc.Name(common.ServiceDomain),
+		microsvc.Name(types.ServiceDomain),
 		microsvc.Metadata(map[string]string{
-			common.MicroMetaKeyHTTPPort: strconv.Itoa(int(s.opt.HTTPPort)),
+			types.MicroMetaKeyHTTPPort: strconv.Itoa(int(s.opt.HTTPPort)),
 		}),
 		microgrpcsvc.WithTLS(s.tlsConfig),
 		microsvc.Address(s.opt.Address+":"+strconv.Itoa(int(s.opt.Port))),
@@ -373,8 +374,10 @@ func (s *Server) initWorker() error {
 	producerCron := cron.New()
 	selectClusters := strings.Split(s.opt.FilterRules.ClusterIDs, ",")
 	blog.Infof("selected cluster: %v", selectClusters)
-	resourceGetter := common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters)
-	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli, resourceGetter)
+	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
+	resourceGetter := common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env)
+	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli,
+		resourceGetter, s.opt.ProducerConfig.Concurrency)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
 		return err
@@ -418,7 +421,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	commonOption := msgqueue.CommonOpts(&msgqueue.CommonOptions{
 		QueueFlag:       opts.QueueFlag,
 		QueueKind:       msgqueue.QueueKind("rabbitmq"),
-		ResourceToQueue: map[string]string{common.DataJobQueue: common.DataJobQueue},
+		ResourceToQueue: map[string]string{types.DataJobQueue: types.DataJobQueue},
 		Address:         parseAddress,
 	})
 	exchangeOption := msgqueue.Exchange(
@@ -436,7 +439,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 		})
 	publishOption := msgqueue.PublishOpts(
 		&msgqueue.PublishOptions{
-			TopicName:    common.DataJobQueue,
+			TopicName:    types.DataJobQueue,
 			DeliveryMode: uint8(opts.PublishDelivery),
 		})
 	arguments := make(map[string]interface{})
@@ -452,8 +455,8 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	}
 	subscribeOption := msgqueue.SubscribeOpts(
 		&msgqueue.SubscribeOptions{
-			TopicName:         common.DataJobQueue,
-			QueueName:         common.DataJobQueue,
+			TopicName:         types.DataJobQueue,
+			QueueName:         types.DataJobQueue,
 			DisableAutoAck:    true,
 			Durable:           true,
 			AckOnSuccess:      true,
@@ -476,7 +479,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 }
 
 // init cluster manager cli
-func (s *Server) initClusterManager() (*cmanager.ClusterManagerClient, error) {
+func (s *Server) initClusterManager() (cmanager.ClusterManagerClient, error) {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	opts := &cmanager.Options{
 		Module:          cmanager.ModuleClusterManager,
@@ -541,6 +544,7 @@ func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 		k8sStorageCli.Client = restclient.NewRESTClient()
 	}
 	k8sTransport := &http.Transport{}
+	k8sTransport.TLSClientConfig = s.clientTLSConfig
 	k8sStorageCli.Client.WithTransport(k8sTransport)
 	_, err := k8sStorageCli.QueryK8SDeployment("test", "test")
 	if err != nil {

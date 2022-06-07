@@ -14,10 +14,11 @@ package store
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -27,33 +28,33 @@ func TestModelPublic_GetRawPublicInfo(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
+		opts    *types.JobCommonOpts
 		wantErr bool
 	}{
 		{
 			name: "test1",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.NamespaceType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.NamespaceType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
 				Namespace:   "testnamespace1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
 		},
 		{
 			name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.WorkloadType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.WorkloadType,
 				ProjectID:    "testproject1",
 				ClusterID:    "testcluster1",
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				Name:         "testdeploy1",
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
-				CurrentTime:  common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
 		},
 	}
@@ -70,30 +71,30 @@ func TestModelPublic_InsertPublicInfo(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
-		metric  *common.PublicData
+		opts    *types.JobCommonOpts
+		metric  *types.PublicData
 		wantErr bool
 	}{
 		{
 			name: "test1",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.NamespaceType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.NamespaceType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
 				Namespace:   "testnamespace1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &common.PublicData{
+			metric: &types.PublicData{
 				CreateTime:  primitive.NewDateTimeFromTime(time.Now()),
 				UpdateTime:  primitive.NewDateTimeFromTime(time.Now()),
-				ObjectType:  common.NamespaceType,
+				ObjectType:  types.NamespaceType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
-				ClusterType: common.Kubernetes,
+				ClusterType: types.Kubernetes,
 				Namespace:   "testnamespace1",
-				Metrics: &common.NamespacePublicMetrics{
+				Metrics: &types.NamespacePublicMetrics{
 					ResourceLimit: nil,
 					SuggestCPU:    200,
 					SuggestMemory: 400,
@@ -102,28 +103,28 @@ func TestModelPublic_InsertPublicInfo(t *testing.T) {
 		},
 		{
 			name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.WorkloadType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.WorkloadType,
 				ProjectID:    "testproject1",
 				ClusterID:    "testcluster1",
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				Name:         "testdeploy1",
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
-				CurrentTime:  common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &common.PublicData{
+			metric: &types.PublicData{
 				CreateTime:   primitive.NewDateTimeFromTime(time.Now()),
 				UpdateTime:   primitive.NewDateTimeFromTime(time.Now()),
-				ObjectType:   common.NamespaceType,
+				ObjectType:   types.NamespaceType,
 				ProjectID:    "testproject1",
 				ClusterID:    "testcluster1",
-				ClusterType:  common.Kubernetes,
+				ClusterType:  types.Kubernetes,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				WorkloadName: "testdeploy1",
-				Metrics: &common.WorkloadPublicMetrics{
+				Metrics: &types.WorkloadPublicMetrics{
 					SuggestCPU:    2,
 					SuggestMemory: 4,
 				},

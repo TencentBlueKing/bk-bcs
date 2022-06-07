@@ -69,6 +69,20 @@ type option struct {
 	cancel func()
 }
 
+// isPrintVersion 是否是--version, -v命令
+func isPrintVersion() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+	arg := os.Args[1]
+	for _, name := range []string{"version", "v"} {
+		if arg == "-"+name || arg == "--"+name {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	// metrics 配置
 	metrics := prometheus.NewRegistry()
@@ -102,6 +116,10 @@ func main() {
 
 	if err := Execute(ctx); err != nil {
 		os.Exit(1)
+	}
+
+	if isPrintVersion() {
+		os.Exit(0)
 	}
 
 	if err := g.Run(); err != nil && err != ctx.Err() {

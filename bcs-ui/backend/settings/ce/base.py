@@ -19,7 +19,7 @@ from urllib import parse
 from ..base import *  # noqa
 from ..base import BASE_DIR, REST_FRAMEWORK
 
-REGION = "ce"
+EDITION = COMMUNITY_EDITION
 
 # TODO 统一 APP_ID 和 BCS_APP_CODE 为 APP_CODE, 统一 APP_TOKEN 和 BCS_APP_SECRET 为 APP_SECRET
 APP_ID = "bk_bcs_app"
@@ -281,7 +281,6 @@ BCS_APP_SECRET = SECRET_KEY
 
 # REPO 相关配置
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-BK_REPO_URL_PREFIX = os.environ.get('BK_REPO_URL_PREFIX')
 
 # 默认 BKCC 设备供应方，社区版默认 '0'
 BKCC_DEFAULT_SUPPLIER_ACCOUNT = os.environ.get('BKCC_DEFAULT_SUPPLIER_ACCOUNT', '0')

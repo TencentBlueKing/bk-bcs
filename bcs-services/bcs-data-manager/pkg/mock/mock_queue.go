@@ -18,6 +18,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var (
+	mockQueue []*broker.Message
+)
+
 // MockQueue mock queue
 type MockQueue struct {
 	mock.Mock
@@ -25,7 +29,9 @@ type MockQueue struct {
 
 // Publish mock queue
 func (m *MockQueue) Publish(data *broker.Message) error {
-	args := m.Called(data)
+	mockQueue = append(mockQueue, data)
+	m.On("Publish").Return(nil)
+	args := m.Called()
 	return args.Error(0)
 }
 
@@ -52,6 +58,14 @@ func (m *MockQueue) String() (string, error) {
 // Stop the message queue
 func (m *MockQueue) Stop() {
 
+}
+
+func (m *MockQueue) Length() int {
+	return len(mockQueue)
+}
+
+func (m *MockQueue) CleanAll() {
+	mockQueue = mockQueue[:0]
 }
 
 // NewMockQueue new mock queue

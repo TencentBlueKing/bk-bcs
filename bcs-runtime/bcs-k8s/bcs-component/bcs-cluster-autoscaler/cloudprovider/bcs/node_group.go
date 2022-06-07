@@ -159,7 +159,8 @@ func (group *NodeGroup) DecreaseTargetSize(delta int) error {
 func (group *NodeGroup) Belongs(node *apiv1.Node) (bool, error) {
 	ip := getIP(node)
 	if len(ip) == 0 {
-		qcloudref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+		// qcloudref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+		qcloudref, err := InstanceRefFromInnerIP(node.Status.Addresses)
 		if err != nil {
 			return false, err
 		}

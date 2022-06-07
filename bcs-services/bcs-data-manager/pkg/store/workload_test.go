@@ -14,10 +14,11 @@ package store
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,48 +29,48 @@ func Test_GetRawWorkloadInfo(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
+		opts    *types.JobCommonOpts
 		bucket  string
 		want    int
 		wantErr bool
 	}{
 		{
 			name: "test1",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.ClusterType,
 				ProjectID:    "testproject1",
 				ClusterID:    "testcluster1",
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				Name:         "testdeploy1",
 			},
 			bucket: "2022-03-16 14:00:00",
 		},
 		{
 			name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.ClusterType,
 				ProjectID:    "testproject1",
 				ClusterID:    "testcluster1",
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				Name:         "testdeploy1",
 			},
 		},
 		{
 			name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.ClusterType,
 				ProjectID:    "testproject2",
 				ClusterID:    "testcluster3",
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				Name:         "testdeploy1",
 			},
 		},
@@ -95,9 +96,9 @@ func Test_GetWorkloadInfo(t *testing.T) {
 			name: "test1",
 			req: &bcsdatamanager.GetWorkloadInfoRequest{
 				ClusterID:    "testcluster1",
-				Dimension:    common.DimensionMinute,
+				Dimension:    types.DimensionMinute,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				WorkloadName: "testdeploy1",
 			},
 		},
@@ -105,9 +106,9 @@ func Test_GetWorkloadInfo(t *testing.T) {
 			name: "test2",
 			req: &bcsdatamanager.GetWorkloadInfoRequest{
 				ClusterID:    "testcluster3",
-				Dimension:    common.DimensionMinute,
+				Dimension:    types.DimensionMinute,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				WorkloadName: "testdeploy1",
 			},
 		},
@@ -133,18 +134,18 @@ func Test_GetWorkloadInfoList(t *testing.T) {
 			name: "test1",
 			req: &bcsdatamanager.GetWorkloadInfoListRequest{
 				ClusterID:    "testcluster1",
-				Dimension:    common.DimensionMinute,
+				Dimension:    types.DimensionMinute,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 			},
 		},
 		{
 			name: "test2",
 			req: &bcsdatamanager.GetWorkloadInfoListRequest{
 				ClusterID:    "testcluster3",
-				Dimension:    common.DimensionMinute,
+				Dimension:    types.DimensionMinute,
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 			},
 		},
 	}
@@ -161,25 +162,25 @@ func Test_InsertWorkloadInfo(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
-		metric  *common.WorkloadMetrics
+		opts    *types.JobCommonOpts
+		metric  *types.WorkloadMetrics
 		wantErr bool
 	}{
 		{name: "test1",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.WorkloadType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.WorkloadType,
 				ProjectID:    "testproject1",
 				ClusterID:    "testcluster1",
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				Name:         "testdeploy1",
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
-				CurrentTime:  common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &common.WorkloadMetrics{
-				Time: primitive.NewDateTimeFromTime(common.FormatTime(time.Now().Add((-10)*time.Minute),
-					common.DimensionMinute)),
+			metric: &types.WorkloadMetrics{
+				Time: primitive.NewDateTimeFromTime(utils.FormatTime(time.Now().Add((-10)*time.Minute),
+					types.DimensionMinute)),
 				CPUUsage:          0.2,
 				MemoryRequest:     20,
 				MemoryUsage:       0.2,
@@ -249,19 +250,19 @@ func Test_InsertWorkloadInfo(t *testing.T) {
 				},
 			}},
 		{name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.ClusterType,
 				ProjectID:    "testproject1",
 				ClusterID:    "testcluster1",
 				Namespace:    "testnamespace1",
-				WorkloadType: common.DeploymentType,
+				WorkloadType: types.DeploymentType,
 				Name:         "testdeploy1",
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
-				CurrentTime:  common.FormatTime(time.Now(), common.DimensionMinute),
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now(), types.DimensionMinute),
 			},
-			metric: &common.WorkloadMetrics{
-				Time:              primitive.NewDateTimeFromTime(common.FormatTime(time.Now(), common.DimensionMinute)),
+			metric: &types.WorkloadMetrics{
+				Time:              primitive.NewDateTimeFromTime(utils.FormatTime(time.Now(), types.DimensionMinute)),
 				CPUUsage:          0.3,
 				MemoryRequest:     20,
 				MemoryUsage:       0.3,
@@ -331,20 +332,20 @@ func Test_InsertWorkloadInfo(t *testing.T) {
 				},
 			}},
 		{name: "test3",
-			opts: &common.JobCommonOpts{
-				ObjectType:   common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:   types.ClusterType,
 				ProjectID:    "testproject2",
 				ClusterID:    "testcluster2",
 				Namespace:    "testnamespace1",
 				Name:         "testdeploy2",
-				WorkloadType: common.DeploymentType,
-				ClusterType:  common.Kubernetes,
-				Dimension:    common.DimensionMinute,
-				CurrentTime:  common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				WorkloadType: types.DeploymentType,
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &common.WorkloadMetrics{
-				Time: primitive.NewDateTimeFromTime(common.FormatTime(time.Now().Add((-10)*time.Minute),
-					common.DimensionMinute)),
+			metric: &types.WorkloadMetrics{
+				Time: primitive.NewDateTimeFromTime(utils.FormatTime(time.Now().Add((-10)*time.Minute),
+					types.DimensionMinute)),
 				CPUUsage:          0.2,
 				MemoryRequest:     20,
 				MemoryUsage:       0.2,

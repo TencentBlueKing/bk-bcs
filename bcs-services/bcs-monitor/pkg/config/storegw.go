@@ -15,6 +15,16 @@ package config
 
 import "time"
 
+// StoreProvider :
+type StoreProvider string
+
+// StoreConf :
+type StoreConf struct {
+	Type     StoreProvider `yaml:"type"`
+	GRPCPort int           `yaml:"grpc_port"`
+	Config   interface{}   `yaml:"config,omitempty"`
+}
+
 // StoreGWConf
 type StoreGWConf struct {
 	HTTP    *EndpointConfig `yaml:"http" mapstructure:"http"`

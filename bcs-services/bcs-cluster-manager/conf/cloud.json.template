@@ -1,6 +1,48 @@
 {
   "cloudList": [
     {
+      "cloudID": "tencentCloud",
+      "name": "TKE",
+      "editable": true,
+      "engineType": "tke",
+      "enable": "true",
+      "cloudCredential": {
+        "key": "${qcloudKey}",
+        "secret": "${qcloudSecret}"
+      },
+      "networkInfo": {
+        "cidrStep": [2048, 4096]
+      },
+      "confInfo": {
+        "cloudInternalEnable": false,
+        "disableCreateCluster": true,
+        "disableImportCluster": false
+      },
+      "osManagement": {
+        "availableVersion": ["default"],
+        "instanceType": [],
+        "defaultSecurityGroups": [],
+        "regions": {}
+      },
+      "clusterManagement": {
+        "availableVersion": ["1.20.6", "1.18.4", "1.14.3-tk8s", "1.16.3"],
+        "createCluster": { },
+        "deleteCluster": { },
+        "addNodesToCluster": { },
+        "deleteNodesFromCluster": { }
+      },
+      "creator": "evanxinli",
+      "updater": "evanxinli",
+      "cloudProvider": "qcloud",
+      "description": "腾讯云容器服务（Tencent Kubernetes Engine，TKE）基于原生 kubernetes 提供以容器为核心的、高度可扩展的高性能容器管理服务",
+      "platformInfo": {
+        "image_register": "",
+        "storage_zookeeper": "",
+        "storage_url": "",
+        "bcs_api_host": ""
+      }
+    },
+    {
       "cloudID": "bluekingCloud",
       "name": "原生K8S集群",
       "engineType": "k8s",
@@ -15,7 +57,11 @@
       "networkInfo": {
         "cidrStep": [0, 0]
       },
-      "confInfo": { "cloudInternalEnable": false},
+      "confInfo": {
+        "cloudInternalEnable": false,
+        "disableCreateCluster": false,
+        "disableImportCluster": true
+      },
       "clusterManagement": {
         "availableVersion": ["v1.14.3-tk8s-v1.1-1"],
         "createCluster": {

@@ -15,12 +15,20 @@ package main
 
 import (
 	"context"
+	"time"
 
+	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/thanos-io/thanos/pkg/component"
+	"github.com/thanos-io/thanos/pkg/extprom"
+	"github.com/thanos-io/thanos/pkg/prober"
+	httpserver "github.com/thanos-io/thanos/pkg/server/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 )
 
 // StoreGWCmd StoreGW 命令
@@ -35,8 +43,8 @@ func StoreGWCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address, "store gateway listen http ip, default localhost:10210")
-	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-address", config.G.StoreGW.GRPC.Address, "store gateway listen grpc ip, default localhost:10211")
+	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address, "Listen host:port for HTTP endpoints.")
+	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-advertise-ip", "127.0.0.1", "grpc advertise ip")
 
 	// 设置配置命令行优先级高与配置文件
 	viper.BindPFlag("store.http.address", cmd.Flag("http-address"))
@@ -46,9 +54,40 @@ func StoreGWCmd() *cobra.Command {
 }
 
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
-	var (
-		err error
+	kitLogger := gokit.NewLogger(logger.StandardLogger())
+	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, config.G.StoreGW.GRPC.Address, config.G.StoreGWList)
+	if err != nil {
+		return err
+	}
+
+	httpProbe := prober.NewHTTP()
+	statusProber := prober.Combine(
+		httpProbe,
+		prober.NewInstrumentation(component.Store, kitLogger, extprom.WrapRegistererWithPrefix("bcsmonitor_", opt.reg)),
 	)
+
+	srv := httpserver.New(kitLogger, opt.reg, component.Store, httpProbe,
+		httpserver.WithListen(config.G.StoreGW.HTTP.Address),
+		httpserver.WithGracePeriod(time.Duration(config.G.StoreGW.HTTP.GracePeriod)),
+	)
+
+	g.Add(func() error {
+		statusProber.Healthy()
+		statusProber.Ready()
+
+		return srv.ListenAndServe()
+	}, func(err error) {
+		defer statusProber.NotHealthy(err)
+		defer statusProber.NotReady(err)
+
+		srv.Shutdown(err)
+	})
+
+	g.Add(func() error {
+		return gw.Run()
+	}, func(err error) {
+		gw.Shutdown(err)
+	})
 
 	return err
 }

@@ -15,13 +15,14 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,7 +37,7 @@ var (
 			Name: CreateTimeKey + "_1",
 		},
 		{
-			Name: common.ClusterTableName + "_idx",
+			Name: types.ClusterTableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
@@ -46,7 +47,7 @@ var (
 			Unique: true,
 		},
 		{
-			Name: common.ClusterTableName + "_list_idx",
+			Name: types.ClusterTableName + "_list_idx",
 			Key: bson.D{
 				bson.E{Key: ProjectIDKey, Value: 1},
 				bson.E{Key: DimensionKey, Value: 1},
@@ -54,13 +55,22 @@ var (
 			},
 		},
 		{
-			Name: common.ClusterTableName + "_get_idx",
+			Name: types.ClusterTableName + "_list_idx2",
 			Key: bson.D{
-				bson.E{Key: ProjectIDKey, Value: 1},
+				bson.E{Key: BusinessIDKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
+			Name: types.ClusterTableName + "_get_idx",
+			Key: bson.D{
 				bson.E{Key: DimensionKey, Value: 1},
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: MetricTimeKey, Value: 1},
 			},
+			Background: true,
 		},
 		{
 			Key: bson.D{
@@ -92,6 +102,12 @@ var (
 			},
 			Name: MetricTimeKey + "_1",
 		},
+		{
+			Key: bson.D{
+				bson.E{Key: BusinessIDKey, Value: 1},
+			},
+			Name: BusinessIDKey + "_1",
+		},
 	}
 )
 
@@ -103,20 +119,20 @@ type ModelCluster struct {
 // NewModelCluster new cluster model
 func NewModelCluster(db drivers.DB) *ModelCluster {
 	return &ModelCluster{Public: Public{
-		TableName: common.DataTableNamePrefix + common.ClusterTableName,
+		TableName: types.DataTableNamePrefix + types.ClusterTableName,
 		Indexes:   modelClusterIndexes,
 		DB:        db,
 	}}
 }
 
 // InsertClusterInfo insert cluster data
-func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *common.ClusterMetrics,
-	opts *common.JobCommonOpts) error {
+func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.ClusterMetrics,
+	opts *types.JobCommonOpts) error {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
 	}
-	bucketTime, err := common.GetBucketTime(opts.CurrentTime, opts.Dimension)
+	bucketTime, err := utils.GetBucketTime(opts.CurrentTime, opts.Dimension)
 	if err != nil {
 		return err
 	}
@@ -126,19 +142,20 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *common.Cl
 		DimensionKey:  opts.Dimension,
 		BucketTimeKey: bucketTime,
 	})
-	retCluster := &common.ClusterData{}
+	retCluster := &types.ClusterData{}
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retCluster)
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Infof("cluster info not found, create a new bucket")
-			newMetrics := make([]*common.ClusterMetrics, 0)
+			newMetrics := make([]*types.ClusterMetrics, 0)
 			newMetrics = append(newMetrics, metrics)
-			newClusterBucket := &common.ClusterData{
+			newClusterBucket := &types.ClusterData{
 				CreateTime:  primitive.NewDateTimeFromTime(time.Now()),
 				UpdateTime:  primitive.NewDateTimeFromTime(time.Now()),
 				BucketTime:  bucketTime,
 				Dimension:   opts.Dimension,
 				ProjectID:   opts.ProjectID,
+				BusinessID:  opts.BusinessID,
 				ClusterID:   opts.ClusterID,
 				ClusterType: opts.ClusterType,
 				Metrics:     newMetrics,
@@ -154,6 +171,9 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *common.Cl
 	}
 	m.preAggregate(retCluster, metrics)
 	retCluster.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
+	if retCluster.BusinessID == "" {
+		retCluster.BusinessID = opts.BusinessID
+	}
 	retCluster.Metrics = append(retCluster.Metrics, metrics)
 	return m.DB.Table(m.TableName).
 		Update(ctx, cond, operator.M{"$set": retCluster})
@@ -161,7 +181,7 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *common.Cl
 
 // GetClusterInfoList get cluster list by project id
 func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
-	request *bcsdatamanager.GetClusterInfoListRequest) ([]*bcsdatamanager.Cluster, int64, error) {
+	request *bcsdatamanager.GetClusterListRequest) ([]*bcsdatamanager.Cluster, int64, error) {
 	err := ensureTable(ctx, &m.Public)
 	var total int64
 	if err != nil {
@@ -169,16 +189,24 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	}
 	dimension := request.Dimension
 	if dimension == "" {
-		dimension = common.DimensionMinute
+		dimension = types.DimensionMinute
 	}
 	cond := make([]*operator.Condition, 0)
-	cond = append(cond,
-		operator.NewLeafCondition(operator.Eq, operator.M{
-			ProjectIDKey: request.ProjectID,
-			DimensionKey: dimension,
-		}), operator.NewLeafCondition(operator.Gte, operator.M{
-			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+	if request.GetProject() != "" {
+		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+			ProjectIDKey: request.Project,
 		}))
+	} else if request.GetBusiness() != "" {
+		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+			BusinessIDKey: request.GetBusiness(),
+		}))
+	}
+	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+		DimensionKey: dimension,
+	}))
+	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+		MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+	}))
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempClusterList := make([]map[string]string, 0)
 	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ClusterIDKey: 1, "_id": 0}).
@@ -232,23 +260,32 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	}
 	dimension := request.Dimension
 	if dimension == "" {
-		dimension = common.DimensionMinute
+		dimension = types.DimensionMinute
 	}
-	clusterMetricsMap := make([]map[string]*common.ClusterMetrics, 0)
+	clusterMetricsMap := make([]*types.ClusterData, 0)
 
 	pipeline := make([]map[string]interface{}, 0)
-	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
-	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
-		ClusterIDKey: request.ClusterID,
-		DimensionKey: dimension,
-		MetricTimeKey: map[string]interface{}{
-			"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
-		},
-	}})
-	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":     0,
-		"metrics": 1,
-	}})
+	pipeline = append(pipeline,
+		map[string]interface{}{"$unwind": "$metrics"},
+		map[string]interface{}{"$match": map[string]interface{}{
+			ClusterIDKey: request.ClusterID,
+			DimensionKey: dimension,
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			},
+		}}, map[string]interface{}{"$project": map[string]interface{}{
+			"_id":         0,
+			"metrics":     1,
+			"cluster_id":  1,
+			"business_id": 1,
+			"project_id":  1,
+		}}, map[string]interface{}{"$group": map[string]interface{}{
+			"_id":         nil,
+			"cluster_id":  map[string]interface{}{"$first": "$cluster_id"},
+			"project_id":  map[string]interface{}{"$first": "$project_id"},
+			"business_id": map[string]interface{}{"$max": "$business_id"},
+			"metrics":     map[string]interface{}{"$push": "$metrics"},
+		}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &clusterMetricsMap)
 	if err != nil {
 		blog.Errorf("find cluster data fail, err:%v", err)
@@ -257,18 +294,21 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	if len(clusterMetricsMap) == 0 {
 		return &bcsdatamanager.Cluster{}, nil
 	}
-	clusterMetrics := make([]*common.ClusterMetrics, 0)
+	clusterMetrics := make([]*types.ClusterMetrics, 0)
+	projectID := clusterMetricsMap[0].ProjectID
+	businessID := clusterMetricsMap[0].BusinessID
+	clusterID := clusterMetricsMap[0].ClusterID
 	for _, metrics := range clusterMetricsMap {
-		clusterMetrics = append(clusterMetrics, metrics["metrics"])
+		clusterMetrics = append(clusterMetrics, metrics.Metrics...)
 	}
 	startTime := clusterMetrics[0].Time.Time().String()
 	endTime := clusterMetrics[len(clusterMetrics)-1].Time.Time().String()
-	return m.generateClusterResponse(clusterMetrics, request.ClusterID, dimension, startTime, endTime), nil
+	return m.generateClusterResponse(clusterMetrics, projectID, businessID, clusterID, dimension, startTime, endTime), nil
 }
 
 // GetRawClusterInfo get raw cluster data without time range
-func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *common.JobCommonOpts,
-	bucket string) ([]*common.ClusterData, error) {
+func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *types.JobCommonOpts,
+	bucket string) ([]*types.ClusterData, error) {
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
@@ -290,7 +330,7 @@ func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *common.JobCo
 		}))
 	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
-	retCluster := make([]*common.ClusterData, 0)
+	retCluster := make([]*types.ClusterData, 0)
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retCluster)
 	if err != nil {
 		return nil, err
@@ -298,14 +338,16 @@ func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *common.JobCo
 	return retCluster, nil
 }
 
-func (m *ModelCluster) generateClusterResponse(metricSlice []*common.ClusterMetrics, clusterID, dimension,
-	startTime, endTime string) *bcsdatamanager.Cluster {
+func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetrics, projectID, businessID, clusterID,
+	dimension, startTime, endTime string) *bcsdatamanager.Cluster {
 	response := &bcsdatamanager.Cluster{
-		ClusterID: clusterID,
-		Dimension: dimension,
-		StartTime: startTime,
-		EndTime:   endTime,
-		Metrics:   nil,
+		ProjectID:  projectID,
+		BusinessID: businessID,
+		ClusterID:  clusterID,
+		Dimension:  dimension,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		Metrics:    nil,
 	}
 	responseMetrics := make([]*bcsdatamanager.ClusterMetrics, 0)
 	for _, metric := range metricSlice {
@@ -338,7 +380,7 @@ func (m *ModelCluster) generateClusterResponse(metricSlice []*common.ClusterMetr
 	return response
 }
 
-func (m *ModelCluster) preAggregate(data *common.ClusterData, newMetric *common.ClusterMetrics) {
+func (m *ModelCluster) preAggregate(data *types.ClusterData, newMetric *types.ClusterMetrics) {
 	if data.MaxInstance == nil {
 		data.MaxInstance = newMetric.MaxInstance
 	} else if newMetric.MaxInstance.Value > data.MaxInstance.Value {

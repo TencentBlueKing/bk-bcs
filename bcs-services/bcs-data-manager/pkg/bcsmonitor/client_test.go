@@ -25,7 +25,7 @@ var (
 	testRequester = NewRequester()
 )
 
-func TestBcsMonitorClient_LabelValues(t *testing.T) {
+func TestLabelValues(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -69,7 +69,7 @@ func TestBcsMonitorClient_LabelValues(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_Labels(t *testing.T) {
+func TestLabels(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -113,7 +113,7 @@ func TestBcsMonitorClient_Labels(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_Query(t *testing.T) {
+func TestQuery(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -156,7 +156,7 @@ func TestBcsMonitorClient_Query(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_QueryByPost(t *testing.T) {
+func TestQueryByPost(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -199,7 +199,7 @@ func TestBcsMonitorClient_QueryByPost(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_QueryRange(t *testing.T) {
+func TestQueryRange(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -244,7 +244,7 @@ func TestBcsMonitorClient_QueryRange(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_QueryRangeByPost(t *testing.T) {
+func TestQueryRangeByPost(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -289,7 +289,7 @@ func TestBcsMonitorClient_QueryRangeByPost(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_Series(t *testing.T) {
+func TestSeries(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -333,7 +333,7 @@ func TestBcsMonitorClient_Series(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_SeriesByPost(t *testing.T) {
+func TestSeriesByPost(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -377,7 +377,7 @@ func TestBcsMonitorClient_SeriesByPost(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_setQuery(t *testing.T) {
+func TestSetQuery(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
@@ -416,7 +416,7 @@ func TestBcsMonitorClient_setQuery(t *testing.T) {
 	}
 }
 
-func TestBcsMonitorClient_setSelectors(t *testing.T) {
+func TestSetSelectors(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header

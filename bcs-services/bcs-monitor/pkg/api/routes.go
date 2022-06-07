@@ -31,9 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
 )
 
-// 子模块前缀
-const apiModulePrefix = "/api"
-
 // APIServer
 type APIServer struct {
 	ctx    context.Context
@@ -79,18 +76,21 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 	)
 
 	engine.Use(requestIdMiddleware, cors.Default())
-	engine.Use(middleware.AuthRequired())
 
 	// openapi 文档
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	engine.GET("/-/healthy", HealthyHandler)
+	engine.GET("/-/ready", ReadyHandler)
 
 	// 注册 HTTP 请求
-	registerRoutes(engine.Group(apiModulePrefix))
-	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, apiModulePrefix)))
+	registerRoutes(engine.Group(config.APIServicePrefix))
+	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
 }
 
 func registerRoutes(engine *gin.RouterGroup) {
 	// 日志相关接口
+	engine.Use(middleware.AuthRequired())
+
 	route := engine.Group("/projects/:projectId/clusters/:clusterId")
 	{
 		route.GET("/namespaces/:namespace/pods/:pod/containers", rest.RestHandlerFunc(pod.GetPodContainers))
@@ -100,4 +100,14 @@ func registerRoutes(engine *gin.RouterGroup) {
 		// sse 实时日志流
 		route.GET("/namespaces/:namespace/pods/:pod/logs/stream", rest.StreamHandler(pod.PodLogStream))
 	}
+}
+
+// HealthyHandler 健康检查
+func HealthyHandler(c *gin.Context) {
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+}
+
+// ReadyHandler 健康检查
+func ReadyHandler(c *gin.Context) {
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }

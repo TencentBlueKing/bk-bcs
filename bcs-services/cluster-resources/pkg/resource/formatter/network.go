@@ -104,8 +104,8 @@ func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interf
 				"host":        r["host"],
 				"path":        p["path"],
 				"pathType":    p["pathType"],
-				"serviceName": mapx.Get(p, "backend.service.name", "--"),
-				"port":        mapx.Get(p, "backend.service.port.number", "--"),
+				"serviceName": mapx.Get(p, "backend.service.name", "N/A"),
+				"port":        mapx.Get(p, "backend.service.port.number", "N/A"),
 			}
 			rules = append(rules, subRules)
 		}
@@ -125,8 +125,8 @@ func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]i
 				"host":        r["host"],
 				"path":        p["path"],
 				"pathType":    "--",
-				"serviceName": mapx.Get(p, "backend.serviceName", "--"),
-				"port":        mapx.Get(p, "backend.servicePort", "--"),
+				"serviceName": mapx.Get(p, "backend.serviceName", "N/A"),
+				"port":        mapx.Get(p, "backend.servicePort", "N/A"),
 			}
 			rules = append(rules, subRules)
 		}

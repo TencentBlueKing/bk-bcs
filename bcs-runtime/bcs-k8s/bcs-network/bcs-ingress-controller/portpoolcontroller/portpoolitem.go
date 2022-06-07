@@ -128,7 +128,7 @@ func (ppih *PortPoolItemHandler) checkPortPoolItemDeletion(itemStatus *netextv1.
 	found := false
 	// check whether there is listener related to this port pool item
 	for _, lbObj := range itemStatus.PoolItemLoadBalancers {
-		listenerList, err := ppih.getListenerList(lbObj.LoadbalancerID)
+		listenerList, err := ppih.getListenerList(lbObj.LoadbalancerID, ppih.PortPoolName, itemStatus.ItemName)
 		if err != nil {
 			return err
 		}
@@ -192,10 +192,11 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 }
 
 // get listener from k8s apiserver
-func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.ListenerList, error) {
+func (ppih *PortPoolItemHandler) getListenerList(lbID, portpoolName, itemName string) (*netextv1.ListenerList, error) {
 	set := k8slabels.Set(map[string]string{
-		netextv1.LabelKeyForPortPoolListener: netextv1.LabelValueTrue,
-		netextv1.LabelKeyForLoadbalanceID:    generator.GetLabelLBId(lbID),
+		netextv1.LabelKeyForPortPoolListener:                       netextv1.LabelValueTrue,
+		netextv1.LabelKeyForLoadbalanceID:                          generator.GetLabelLBId(lbID),
+		common.GetPortPoolListenerLabelKey(portpoolName, itemName): netextv1.LabelValueForPortPoolItemName,
 	})
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(set))
 	if err != nil {
@@ -203,6 +204,7 @@ func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.Listene
 	}
 	listenerList := &netextv1.ListenerList{}
 	if err := ppih.K8sClient.List(context.Background(), listenerList, &client.ListOptions{
+		Namespace:     ppih.Namespace,
 		LabelSelector: selector,
 	}); err != nil {
 		return nil, fmt.Errorf("get listener by labelSelector %s failed, err %s", selector.String(), err.Error())
@@ -213,7 +215,7 @@ func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.Listene
 // ensure listeners about this port pool item
 func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, startPort, endPort,
 	segment uint32, protocol string) error {
-	listenerList, err := ppih.getListenerList(lbID)
+	listenerList, err := ppih.getListenerList(lbID, ppih.PortPoolName, itemName)
 	if err != nil {
 		return err
 	}

@@ -15,6 +15,7 @@ package metrics
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -67,6 +68,24 @@ var (
 		},
 		metricLabels,
 	)
+	scalerExecDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "scaler",
+			Name:      "exec_duration",
+			Help:      "Duration(seconds) of executing scaler",
+		},
+		[]string{"namespace", "name", "scaledObject", "metric", "scaler", "status"},
+	)
+	scaleUpdateDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "update_duration",
+			Help:      "Duration(seconds) of updating scale",
+		},
+		[]string{"namespace", "name", "scaledObject", "status"},
+	)
 	scaledObjectErrors = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "keda_metrics_adapter",
@@ -82,6 +101,15 @@ var (
 			Subsystem: "gpa",
 			Name:      "desired_replicas_value",
 			Help:      "Desired Replicas Value of a GPA",
+		},
+		[]string{"namespace", "name", "scaledObject"},
+	)
+	gpaCurrentReplicasValue = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "current_replicas_value",
+			Help:      "Current Replicas Value of a GPA",
 		},
 		[]string{"namespace", "name", "scaledObject"},
 	)
@@ -119,8 +147,11 @@ func init() {
 	registry.MustRegister(scalerErrors)
 	registry.MustRegister(scaledObjectErrors)
 	registry.MustRegister(gpaDesiredReplicasValue)
+	registry.MustRegister(gpaCurrentReplicasValue)
 	registry.MustRegister(gpaMinReplicasValue)
 	registry.MustRegister(gpaMaxReplicasValue)
+	registry.MustRegister(scalerExecDuration)
+	registry.MustRegister(scaleUpdateDuration)
 }
 
 // NewServer creates a new http serving instance of prometheus metrics
@@ -152,37 +183,63 @@ func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(namespace stri
 }
 
 // RecordGPAScalerDesiredReplicas record desired replicas value computed by a scaling mode for GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, name string, scaledObject string, scaler string, replicas int32) {
-	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
+func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, name string,
+	scaledObject string, scaler string, replicas int32) {
+	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name,
+		"scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
 }
 
+// RecordGPAReplicas record final replicas value for GPA
 func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, name string, scaledObject string,
-	minReplicas int32, maxReplicas int32, desiredReplicas int32) {
+	minReplicas, maxReplicas, desiredReplicas, currentReplicas int32) {
 	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(minReplicas))
 	gpaMaxReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(maxReplicas))
 	gpaDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(desiredReplicas))
+	gpaCurrentReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(currentReplicas))
+}
+
+// RecordScalerExecDuration records duration by seconds when executing scaler.
+// In metric mode, it records duration of executing every metric.
+func (metricsServer PrometheusMetricServer) RecordScalerExecDuration(namespace, name, scaledObject, metric, scaler,
+	status string, duration time.Duration) {
+	scalerExecDuration.WithLabelValues(namespace, name, scaledObject, metric, scaler, status).Observe(duration.Seconds())
+}
+
+// RecordScalerUpdateDuration records duration by seconds when updating a scale.
+func (metricsServer PrometheusMetricServer) RecordScalerUpdateDuration(namespace, name, scaledObject,
+	status string, duration time.Duration) {
+	scaleUpdateDuration.WithLabelValues(namespace, name, scaledObject, status).Observe(duration.Seconds())
 }
 
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, name string, scaledObject string, scaler string, metric string, err error) {
-	if err != nil {
+func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, name string, scaledObject string,
+	scaler string, metric string, isErr bool) {
+	if isErr {
 		scalerErrors.With(getLabels(namespace, name, scaledObject, scaler, metric)).Inc()
 		// scaledObjectErrors.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject}).Inc()
-		metricsServer.RecordScalerObjectError(namespace, name, scaledObject, err)
+		metricsServer.RecordScalerObjectError(namespace, name, scaledObject, isErr)
 		scalerErrorsTotal.With(prometheus.Labels{}).Inc()
 		return
 	}
 	// initialize metric with 0 if not already set
 	_, errscaler := scalerErrors.GetMetricWith(getLabels(namespace, name, scaledObject, scaler, metric))
+	_, errscaledobject := scaledObjectErrors.GetMetricWith(
+		prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject})
 	if errscaler != nil {
 		log.Fatalf("Unable to write to serve custom metrics: %v", errscaler)
+		return
+	}
+	if errscaledobject != nil {
+		log.Fatalf("Unable to write to serve custom metrics: %v", errscaledobject)
+		return
 	}
 }
 
 // RecordScalerObjectError counts the number of errors with the scaled object
-func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, name string, scaledObject string, err error) {
+func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, name string,
+	scaledObject string, isErr bool) {
 	labels := prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}
-	if err != nil {
+	if isErr {
 		scaledObjectErrors.With(labels).Inc()
 		return
 	}
