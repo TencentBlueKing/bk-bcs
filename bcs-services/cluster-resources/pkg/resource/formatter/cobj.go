@@ -23,9 +23,9 @@ import (
 // FormatCRD ...
 func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
-	ret["name"] = mapx.Get(manifest, "metadata.name", "--")
-	ret["scope"] = mapx.Get(manifest, "spec.scope", "--")
-	ret["kind"] = mapx.Get(manifest, "spec.names.kind", "--")
+	ret["name"] = mapx.GetStr(manifest, "metadata.name")
+	ret["scope"] = mapx.Get(manifest, "spec.scope", "N/A")
+	ret["kind"] = mapx.Get(manifest, "spec.names.kind", "N/A")
 	ret["apiVersion"] = parseCObjAPIVersion(manifest)
 	return ret
 }

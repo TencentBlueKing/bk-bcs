@@ -42,7 +42,7 @@ func FormatHPA(manifest map[string]interface{}) map[string]interface{} {
 	ret["targets"] = parser.Parse()
 	ret["minPods"] = mapx.Get(manifest, "spec.minReplicas", "<unset>")
 	ret["maxPods"] = mapx.Get(manifest, "spec.maxReplicas", "<unset>")
-	ret["replicas"] = mapx.Get(manifest, "status.currentReplicas", "--")
+	ret["replicas"] = mapx.Get(manifest, "status.currentReplicas", "N/A")
 	return ret
 }
 
