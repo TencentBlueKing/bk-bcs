@@ -114,6 +114,7 @@ func init() {
 	G = g
 }
 
+// ReadCred
 func (c *Configurations) ReadCred(name string, content []byte) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()

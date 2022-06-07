@@ -18,10 +18,12 @@ import (
 	"go-micro.dev/v4/client"
 )
 
+// Registrar
 type Registrar interface {
 	RegisterRoute(gin.IRoutes)
 }
 
+// Options
 type Options struct {
 	RoutePrefix string
 	Client      client.Client

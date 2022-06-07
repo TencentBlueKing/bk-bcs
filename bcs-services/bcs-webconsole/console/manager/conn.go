@@ -80,6 +80,7 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 	return conn
 }
 
+// ReadInputMsg
 func (r *RemoteStreamConn) ReadInputMsg() <-chan wsMessage {
 	inputMsgChan := make(chan wsMessage)
 	go func() {
@@ -178,6 +179,7 @@ func (r *RemoteStreamConn) Next() *remotecommand.TerminalSize {
 	}
 }
 
+// Close
 func (r *RemoteStreamConn) Close() {
 	r.once.Do(func() {
 		close(r.outputMsgChan)
@@ -185,6 +187,7 @@ func (r *RemoteStreamConn) Close() {
 	})
 }
 
+// Run
 func (r *RemoteStreamConn) Run() error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()

@@ -259,6 +259,7 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 	return podCtx, err
 }
 
+// OpenQuery openapi 参数
 type OpenQuery struct {
 	Operator      string `json:"operator" binding:"required"`
 	Command       string `json:"command"`

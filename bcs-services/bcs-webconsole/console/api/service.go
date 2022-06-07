@@ -39,10 +39,12 @@ type service struct {
 	opts *route.Options
 }
 
+// NewRouteRegistrar
 func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
+// RegisterRoute
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
@@ -64,6 +66,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	api.GET("/ws/sessions/:sessionId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
 }
 
+// ListClusters 集群列表
 func (s *service) ListClusters(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
