@@ -62,9 +62,9 @@ COPY --from=builder /go/src/form_tmpl /data/workspace/form_tmpl
 
 ENV FORM_TMPL_FILE_BASE_DIR=/data/workspace/form_tmpl
 
-COPY --form=builder /go/src/pkg/i18n/localize.yaml /data/workspace/localize.yaml
+COPY --form=builder /go/src/pkg/i18n/locale/lc_msgs.yaml /data/workspace/lc_msgs.yaml
 
-ENV LOCALIZE_FILE_PATH=/data/workspace/localize.yaml
+ENV LOCALIZE_FILE_PATH=/data/workspace/lc_msgs.yaml
 
 # default log file base dir
 RUN mkdir -p /tmp/logs

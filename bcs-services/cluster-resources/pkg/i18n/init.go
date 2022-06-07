@@ -22,6 +22,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 )
 
+// NOTE ClusterResources 国际化主要有三部分：
+// 1. 错误信息、2. 表单模板（Schema）、3. 示例文件（example conf, references）
+// 示例文件采用中、英两份配置来完成国际化，而错误信息和表单模板则使用自制的一套逻辑（MsgMap）
+// 没有使用常用的 golang i18n 框架原因是为兼容模板国际化，如果有支持模板的 i18n 框架也可替换
+
 // 国际化字典
 var i18nMsgMap map[string]map[string]string
 
