@@ -13,6 +13,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -75,8 +76,14 @@ func GetProject(cmd *cobra.Command, args []string) {
 	req.Project = flagProject
 	req.Business = flagBusinessID
 	req.Dimension = flagDimension
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetProjectInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+
+	rsp, err := client.GetProjectInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get project data err:%v\n", err)
 		os.Exit(1)
@@ -102,8 +109,13 @@ func GetCluster(cmd *cobra.Command, args []string) {
 	}
 	req.ClusterID = args[0]
 	req.Dimension = flagDimension
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetClusterInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetClusterInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get cluster data err:%v\n", err)
 		os.Exit(1)
@@ -132,8 +144,13 @@ func GetNamespace(cmd *cobra.Command, args []string) {
 	req.Namespace = args[0]
 	req.ClusterID = flagCluster
 	req.Dimension = flagDimension
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetNamespaceInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetNamespaceInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get namespace data err:%v\n", err)
 		os.Exit(1)
@@ -168,8 +185,13 @@ func GetWorkload(cmd *cobra.Command, args []string) {
 	}
 	req.WorkloadType = flagWorkloadType
 	req.WorkloadName = args[0]
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetWorkloadInfo(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetWorkloadInfo(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get workload data err:%v\n", err)
 		os.Exit(1)
