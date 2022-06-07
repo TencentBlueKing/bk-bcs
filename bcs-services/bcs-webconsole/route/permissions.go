@@ -143,11 +143,7 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
-		// 校验项目 or 集群权限
-		switch {
-		case config.G.ValidateCred(config.CredentialAppCode, authCtx.BindAPIGW.App.AppCode, config.ScopeProjectCode, authCtx.ProjectCode):
-		case config.G.ValidateCred(config.CredentialAppCode, authCtx.BindAPIGW.App.AppCode, config.ScopeClusterId, authCtx.ClusterId): // 校验集群权限
-		default:
+		if !config.G.ValidateCred(config.CredentialAppCode, authCtx.BindAPIGW.App.AppCode, config.ScopeProjectCode, authCtx.ProjectCode) {
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
 				Message:   fmt.Sprintf("app %s have no permission, %s, %s", authCtx.BindAPIGW.App.AppCode, authCtx.BindProject, authCtx.BindCluster),
