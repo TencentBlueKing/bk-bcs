@@ -42,6 +42,7 @@ type UserInfo struct {
 // ClusterResource cluster permission metadata
 type ClusterResource struct {
 	ClusterType ClusterType
+	ProjectID   string
 	ClusterID   string
 	Namespace   string
 	URL         string
@@ -131,6 +132,7 @@ type VerifyPermissionReq struct {
 	ResourceType string `json:"resource_type" validate:"required"`
 	// clusterType mesos/k8s when ResourceType="cluster"
 	ClusterType ClusterType `json:"cluster_type"`
+	ProjectID   string      `json:"project_id"`
 	ClusterID   string      `json:"cluster_id"`
 	RequestURL  string      `json:"request_url"`
 

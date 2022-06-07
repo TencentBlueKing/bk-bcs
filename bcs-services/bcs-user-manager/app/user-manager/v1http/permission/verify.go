@@ -41,7 +41,8 @@ const (
 	namespaceScopedType string = "namespace_scoped"
 	namespaceType       string = "namespace"
 
-	prefixAPIK8S string = "/clusters"
+	prefixClustersAPIK8S string = "/clusters"
+	prefixProjectsAPIK8S string = "/projects"
 )
 
 // NewPermVerifyClient verify permission client
@@ -248,7 +249,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 	if resource.ClusterID == "" || resource.Namespace == "" {
 		return false, errors.New("resource clusterID or resource namespace is null")
 	}
-	projectID, err := cli.getProjectIDByClusterID(resource.ClusterID)
+	projectID, err := cli.getProjectIDFromResource(resource)
 	if err != nil {
 		return false, fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
 	}
@@ -304,12 +305,9 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 		return false, fmt.Errorf("invalid action[%s]", action)
 	}
 
-	if resource.ClusterID == "" {
-		return false, fmt.Errorf("resource clusterID or namespace is null")
-	}
-	projectID, err := cli.getProjectIDByClusterID(resource.ClusterID)
+	projectID, err := cli.getProjectIDFromResource(resource)
 	if err != nil {
-		return false, fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
+		return false, err
 	}
 
 	// cal nameSpace perm ID
@@ -354,11 +352,22 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 	return allow, nil
 }
 
-func (cli *PermVerifyClient) getProjectIDByClusterID(clusterID string) (string, error) {
-	projectID, err := cli.ClusterClient.GetProjectIDByClusterID(clusterID)
-	if err != nil {
-		blog.Infof("PermVerifyClient getProjectIDByClusterID[%s] failed: %v", clusterID, err)
-		return "", err
+func (cli *PermVerifyClient) getProjectIDFromResource(resource ClusterResource) (string, error) {
+	if resource.ClusterID == "" {
+		return "", fmt.Errorf("resource clusterID is null")
+	}
+
+	var (
+		projectID string
+		err       error
+	)
+	if resource.ProjectID != "" {
+		projectID = resource.ProjectID
+	} else {
+		projectID, err = cli.ClusterClient.GetProjectIDByClusterID(resource.ClusterID)
+		if err != nil {
+			return "", fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
+		}
 	}
 
 	return projectID, nil
@@ -381,12 +390,9 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, acti
 		return false, fmt.Errorf("invalid action[%s]", action)
 	}
 
-	if resource.ClusterID == "" {
-		return false, fmt.Errorf("resource clusterID is null")
-	}
-	projectID, err := cli.getProjectIDByClusterID(resource.ClusterID)
+	projectID, err := cli.getProjectIDFromResource(resource)
 	if err != nil {
-		return false, fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
+		return false, err
 	}
 	blog.Infof("verifyUserClusterScopedPermission getProjectIDByClusterID[%s]: %s", resource.ClusterID, projectID)
 
@@ -437,16 +443,25 @@ func getK8sRequestAPIInfo(method, url string) (*parser.RequestInfo, error) {
 
 // trans bcs clusters API to k8s API url
 func transToAPIServerURL(url string) string {
-	if len(url) == 0 || !strings.HasPrefix(url, prefixAPIK8S) {
-		return ""
+	if strings.HasPrefix(url, prefixClustersAPIK8S) {
+		urlStrs := strings.Split(url, "/")
+		if len(urlStrs) <= 3 {
+			return ""
+		}
+
+		return "/" + strings.Join(urlStrs[3:], "/")
 	}
 
-	urlStrs := strings.Split(url, "/")
-	if len(urlStrs) <= 3 {
-		return ""
+	if strings.HasPrefix(url, prefixProjectsAPIK8S) {
+		urlStrs := strings.Split(url, "/")
+		if len(urlStrs) <= 5 {
+			return ""
+		}
+
+		return "/" + strings.Join(urlStrs[5:], "/")
 	}
 
-	return "/" + strings.Join(urlStrs[3:], "/")
+	return ""
 }
 
 func buildK8sOperationLog(user string, resource ClusterResource, info *parser.RequestInfo, allow bool) error {
