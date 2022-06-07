@@ -26,3 +26,12 @@ generate-default: pre
 	$(KOURSE_PROJECT_PACKAGE)/pkg/apis \
 	"tkex:v1alpha1" \
 	--go-header-file ./hack/boilerplate.go.txt
+
+gamedeployment:
+	echo "Do not support gamedeployment"
+
+gamestatefulset:
+	echo "Do not support gamestatefulset"
+
+hook-operator:
+	echo "Do not support hook operator"
