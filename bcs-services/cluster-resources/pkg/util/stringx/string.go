@@ -26,7 +26,7 @@ const DefaultCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234
 func Split(originStr string) []string {
 	originStr = strings.ReplaceAll(originStr, ";", ",")
 	originStr = strings.ReplaceAll(originStr, " ", ",")
-	return strings.Split(originStr, ",")
+	return strings.FieldsFunc(originStr, func(c rune) bool { return c == ',' })
 }
 
 // Partition 从指定分隔符的第一个位置，将字符串分为两段

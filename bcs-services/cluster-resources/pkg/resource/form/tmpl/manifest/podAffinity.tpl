@@ -14,8 +14,10 @@ requiredDuringSchedulingIgnoredDuringExecution:
         {{- range .selector.expressions }}
         - key: {{ .key | quote }}
           operator: {{ .op }}
+          {{- if .values }}
           values:
             {{- include "common.splitStr2Slice" .values | indent 12 }}
+          {{- end }}
         {{- end }}
       {{- end }}
       {{- if .selector.labels }}
@@ -45,8 +47,10 @@ preferredDuringSchedulingIgnoredDuringExecution:
           {{- range .selector.expressions }}
           - key: {{ .key | quote }}
             operator: {{ .op }}
+            {{- if .values }}
             values:
               {{- include "common.splitStr2Slice" .values | indent 14 }}
+            {{- end }}
           {{- end }}
         {{- end }}
         {{- if .selector.labels }}

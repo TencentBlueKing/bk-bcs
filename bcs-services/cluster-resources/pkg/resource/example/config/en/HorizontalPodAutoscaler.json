@@ -1,0 +1,13 @@
+{
+  "kind": "HorizontalPodAutoscaler",
+  "class": "hpa",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_hpa",
+      "alias": "HPA Simple Demo",
+      "description": "A simple hpa demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

@@ -477,6 +477,8 @@ func (m *HealthzReq) validate(all bool) error {
 
 	// no validation rules for RaiseErr
 
+	// no validation rules for Token
+
 	if len(errors) > 0 {
 		return HealthzReqMultiError(errors)
 	}

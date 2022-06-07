@@ -77,6 +77,13 @@
             "in": "query",
             "required": false,
             "type": "boolean"
+          },
+          {
+            "name": "token",
+            "description": "Token. Healthz API Token",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

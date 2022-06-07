@@ -8,10 +8,10 @@
           prop: replicas
       - - group:
             - - group:
-                  - [ "pvcName", "claimType" ]
-                  - [ "pvName", "." ]
-                  - [ "scName", "storageSize" ]
-                  - [ "accessModes", "." ]
+                  # 3 * 2 的自适应列
+                  - [ ".", "." ]
+                  - [ ".", "." ]
+                  - [ ".", "." ]
                 prop: claims
           prop: volumeClaimTmpl
       {{- include "workload.affinity" . | nindent 6 }}

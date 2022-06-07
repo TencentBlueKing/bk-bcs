@@ -9,8 +9,10 @@ requiredDuringSchedulingIgnoredDuringExecution:
       {{- range .selector.expressions }}
       - key: {{ .key | quote }}
         operator: {{ .op }}
+        {{- if .values }}
         values:
           {{- include "common.splitStr2Slice" .values | indent 10 }}
+        {{- end }}
       {{- end }}
       {{- end }}
       {{- if .selector.fields }}
@@ -18,8 +20,10 @@ requiredDuringSchedulingIgnoredDuringExecution:
       {{- range .selector.fields }}
       - key: {{ .key | quote }}
         operator: {{ .op }}
+        {{- if .values }}
         values:
           {{- include "common.splitStr2Slice" .values | indent 10 }}
+        {{- end }}
       {{- end }}
       {{- end }}
     {{- end }}
@@ -39,8 +43,10 @@ preferredDuringSchedulingIgnoredDuringExecution:
       {{- range .selector.expressions }}
       - key: {{ .key | quote }}
         operator: {{ .op }}
+        {{- if .values }}
         values:
           {{- include "common.splitStr2Slice" .values | indent 10 }}
+        {{- end }}
       {{- end }}
       {{- end }}
       {{- if .selector.fields }}
@@ -48,8 +54,10 @@ preferredDuringSchedulingIgnoredDuringExecution:
       {{- range .selector.fields }}
       - key: {{ .key | quote }}
         operator: {{ .op }}
+        {{- if .values }}
         values:
           {{- include "common.splitStr2Slice" .values | indent 10 }}
+        {{- end }}
       {{- end }}
       {{- end }}
     {{- end }}

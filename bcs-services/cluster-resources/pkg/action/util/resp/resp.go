@@ -46,7 +46,7 @@ func BuildListAPIResp(
 		return nil, err
 	}
 
-	respDataBuilder, err := NewRespDataBuilder(ret.UnstructuredContent(), resKind, format)
+	respDataBuilder, err := NewRespDataBuilder(ctx, ret.UnstructuredContent(), resKind, format)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func BuildRetrieveAPIResp(
 		return nil, err
 	}
 
-	respDataBuilder, err := NewRespDataBuilder(ret.UnstructuredContent(), resKind, format)
+	respDataBuilder, err := NewRespDataBuilder(ctx, ret.UnstructuredContent(), resKind, format)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func BuildListPodRelatedResResp(
 	if err != nil {
 		return nil, err
 	}
-	respDataBuilder, err := NewRespDataBuilder(relatedRes, resKind, format)
+	respDataBuilder, err := NewRespDataBuilder(ctx, relatedRes, resKind, format)
 	if err != nil {
 		return nil, err
 	}

@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/perm"
@@ -79,7 +80,11 @@ func (c *ResClient) Create(
 	if isNSScoped {
 		namespace = mapx.GetStr(manifest, "metadata.namespace")
 		if namespace == "" {
-			return nil, errorx.New(errcode.ValidateErr, "创建 %s 需要指定 metadata.namespace", c.res.Resource)
+			return nil, errorx.New(
+				errcode.ValidateErr,
+				i18n.GetMsg(ctx, "创建 %s 需要指定 metadata.namespace"),
+				c.res.Resource,
+			)
 		}
 	}
 	if err := c.permValidate(ctx, action.Create, namespace); err != nil {
@@ -95,7 +100,10 @@ func (c *ResClient) Update(
 	// 检查 name 与 manifest.metadata.name 是否一致
 	manifestName, err := mapx.GetItems(manifest, "metadata.name")
 	if err != nil || name != manifestName {
-		return nil, errorx.New(errcode.ValidateErr, "metadata.name 必须指定且与准备编辑的资源名保持一致")
+		return nil, errorx.New(
+			errcode.ValidateErr,
+			i18n.GetMsg(ctx, "metadata.name 必须指定且与准备编辑的资源名保持一致"),
+		)
 	}
 	if err = c.permValidate(ctx, action.Update, namespace); err != nil {
 		return nil, err
@@ -120,11 +128,11 @@ func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.Lis
 func (c *ResClient) permValidate(ctx context.Context, action, namespace string) error {
 	projInfo, err := project.FromContext(ctx)
 	if err != nil {
-		return errorx.New(errcode.General, "由 Context 获取项目信息失败")
+		return errorx.New(errcode.General, i18n.GetMsg(ctx, "由 Context 获取项目信息失败"))
 	}
 	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
-		return errorx.New(errcode.General, "由 Context 获取集群信息失败")
+		return errorx.New(errcode.General, i18n.GetMsg(ctx, "由 Context 获取集群信息失败"))
 	}
 	return perm.Validate(ctx, c.res.Resource, action, projInfo.ID, clusterInfo.ID, namespace)
 }

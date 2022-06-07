@@ -1,7 +1,7 @@
 {{ include "common.metadata" . }}
 - - group:
       - - container:
-            grid-template-columns: "1fr 64px 1fr"
+            grid-template-columns: "1fr 70px 1fr"
           group:
             - [ "updateStrategy" ]
             - [ "maxUnavailable", "muaUnit", "minReadySecs" ]

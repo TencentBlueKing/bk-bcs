@@ -1,12 +1,14 @@
 {{- define "affinity.podAffinity" }}
 podAffinity:
-  title: Pod 规则
+  title: {{ i18n "Pod 规则" .lang }}
   type: array
   items:
     type: object
+    required:
+      - topologyKey
     properties:
       namespaces:
-        title: 命名空间
+        title: {{ i18n "命名空间" .lang }}
         type: array
         ui:component:
           name: select
@@ -23,26 +25,26 @@ podAffinity:
               actions:
                 - "{{`{{`}} $loadDataSource {{`}}`}}"
       priority:
-        title: 优先级
+        title: {{ i18n "优先级" .lang }}
         type: string
         default: preferred
         ui:component:
           name: radio
           props:
             datasource:
-              - label: 优先
+              - label: {{ i18n "优先" .lang }}
                 value: preferred
-              - label: 必须
+              - label: {{ i18n "必须" .lang }}
                 value: required
         ui:reactions:
           - target: "{{`{{`}} $widgetNode?.getSibling('weight')?.id {{`}}`}}"
             if: "{{`{{`}} $self.value === 'required' {{`}}`}}"
             then:
               state:
-                disabled: true
+                visible: false
             else:
               state:
-                disabled: false
+                visible: true
       selector:
         type: object
         properties:
@@ -64,10 +66,6 @@ podAffinity:
                     name: select
                     props:
                       datasource:
-                        - label: Lt
-                          value: Lt
-                        - label: Gt
-                          value: Gt
                         - label: Exists
                           value: Exists
                         - label: DoesNotExist
@@ -76,9 +74,22 @@ podAffinity:
                           value: In
                         - label: NotIn
                           value: NotIn
+                  ui:reactions:
+                    - target: "{{`{{`}} $widgetNode?.getSibling('values')?.id {{`}}`}}"
+                      if: "{{`{{`}} $self.value === 'Exists' || $self.value === 'DoesNotExist' {{`}}`}}"
+                      then:
+                        state:
+                          disabled: true
+                          value: ""
+                      else:
+                        state:
+                          disabled: false
                 values:
                   title: values
                   type: string
+                  ui:component:
+                    props:
+                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
@@ -104,24 +115,25 @@ podAffinity:
             ui:component:
               name: noTitleArray
       topologyKey:
-        title: 拓扑键
+        title: {{ i18n "拓扑键" .lang }}
         type: string
         ui:rules:
+          - required
           - maxLength250
       type:
-        title: 类型
+        title: {{ i18n "类型" .lang }}
         type: string
         default: affinity
         ui:component:
           name: radio
           props:
             datasource:
-              - label: 亲和性
+              - label: {{ i18n "亲和性" .lang }}
                 value: affinity
-              - label: 反亲和性
+              - label: {{ i18n "反亲和性" .lang }}
                 value: antiAffinity
       weight:
-        title: 权重
+        title: {{ i18n "权重" .lang }}
         type: integer
         default: 10
         ui:component:
@@ -144,32 +156,32 @@ podAffinity:
 
 {{- define "affinity.nodeAffinity" }}
 nodeAffinity:
-  title: Node 规则
+  title: {{ i18n "Node 规则" .lang }}
   type: array
   items:
     type: object
     properties:
       priority:
-        title: 优先级
+        title: {{ i18n "优先级" .lang }}
         type: string
         default: preferred
         ui:component:
           name: radio
           props:
             datasource:
-              - label: 优先
+              - label: {{ i18n "优先" .lang }}
                 value: preferred
-              - label: 必须
+              - label: {{ i18n "必须" .lang }}
                 value: required
         ui:reactions:
           - target: "{{`{{`}} $widgetNode?.getSibling('weight')?.id {{`}}`}}"
             if: "{{`{{`}} $self.value === 'required' {{`}}`}}"
             then:
               state:
-                disabled: true
+                visible: false
             else:
               state:
-                disabled: false
+                visible: true
       selector:
         type: object
         properties:
@@ -201,9 +213,22 @@ nodeAffinity:
                           value: In
                         - label: NotIn
                           value: NotIn
+                  ui:reactions:
+                    - target: "{{`{{`}} $widgetNode?.getSibling('values')?.id {{`}}`}}"
+                      if: "{{`{{`}} $self.value === 'Exists' || $self.value === 'DoesNotExist' {{`}}`}}"
+                      then:
+                        state:
+                          disabled: true
+                          value: ""
+                      else:
+                        state:
+                          disabled: false
                 values:
                   title: values
                   type: string
+                  ui:component:
+                    props:
+                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
@@ -211,7 +236,7 @@ nodeAffinity:
             type: array
             ui:component:
               name: noTitleArray
-          labels:
+          fields:
             items:
               properties:
                 key:
@@ -239,9 +264,22 @@ nodeAffinity:
                           value: In
                         - label: NotIn
                           value: NotIn
+                  ui:reactions:
+                    - target: "{{`{{`}} $widgetNode?.getSibling('values')?.id {{`}}`}}"
+                      if: "{{`{{`}} $self.value === 'Exists' || $self.value === 'DoesNotExist' {{`}}`}}"
+                      then:
+                        state:
+                          disabled: true
+                          value: ""
+                      else:
+                        state:
+                          disabled: false
                 values:
                   title: values
                   type: string
+                  ui:component:
+                    props:
+                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
@@ -251,7 +289,7 @@ nodeAffinity:
               name: noTitleArray
       weight:
         default: 10
-        title: 权重
+        title: {{ i18n "权重" .lang }}
         type: integer
         ui:component:
           props:

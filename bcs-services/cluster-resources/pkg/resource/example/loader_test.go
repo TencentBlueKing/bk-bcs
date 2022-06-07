@@ -15,36 +15,51 @@
 package example
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 func TestLoadResConf(t *testing.T) {
-	conf, _ := LoadResConf(res.Deploy)
+	ctx := context.TODO()
+	conf, _ := LoadResConf(ctx, res.Deploy)
 	assert.Equal(t, "Deployment", conf["kind"])
 	assert.Equal(t, "workload", conf["class"])
 
 	for _, kind := range HasDemoManifestResKinds {
-		conf, _ = LoadResConf(kind)
+		conf, _ = LoadResConf(ctx, kind)
 		assert.Equal(t, kind, conf["kind"])
 	}
 
-	_, err := LoadResConf(res.CRD)
+	ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.EN)
+	for _, kind := range HasDemoManifestResKinds {
+		conf, _ = LoadResConf(ctx, kind)
+		assert.Equal(t, kind, conf["kind"])
+	}
+
+	_, err := LoadResConf(ctx, res.CRD)
 	assert.NotNil(t, err)
 }
 
 func TestLoadResRefs(t *testing.T) {
-	refs, _ := LoadResRefs(res.Deploy)
+	ctx := context.TODO()
+	refs, _ := LoadResRefs(ctx, res.Deploy)
 	assert.True(t, len(refs) > 0)
 
-	refs, _ = LoadResRefs(res.Secret)
+	refs, _ = LoadResRefs(ctx, res.Secret)
 	assert.True(t, len(refs) > 0)
 
-	_, err := LoadResRefs(res.CRD)
+	ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.EN)
+	refs, _ = LoadResRefs(ctx, res.Secret)
+	assert.True(t, len(refs) > 0)
+
+	_, err := LoadResRefs(ctx, res.CRD)
 	assert.NotNil(t, err)
 }
 

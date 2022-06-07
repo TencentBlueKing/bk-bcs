@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -45,7 +46,7 @@ func (h *Handler) ListPo(
 		return err
 	}
 
-	respDataBuilder, err := respUtil.NewRespDataBuilder(ret, res.Po, req.Format)
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, ret, res.Po, req.Format)
 	if err != nil {
 		return err
 	}
@@ -164,12 +165,20 @@ func (h *Handler) ReschedulePo(
 	// 检查 Pod 配置，必须有父级资源且不为 Job 才可以重新调度
 	ownerReferences, err := mapx.GetItems(podManifest, "metadata.ownerReferences")
 	if err != nil {
-		return errorx.New(errcode.Unsupported, "Pod %s/%s 不存在父级资源，不允许重新调度", req.Namespace, req.Name)
+		return errorx.New(
+			errcode.Unsupported,
+			i18n.GetMsg(ctx, "Pod %s/%s 不存在父级资源，不允许重新调度"),
+			req.Namespace, req.Name,
+		)
 	}
 	// 检查确保父级资源不为 Job
 	for _, ref := range ownerReferences.([]interface{}) {
 		if ref.(map[string]interface{})["kind"].(string) == res.Job {
-			return errorx.New(errcode.Unsupported, "Pod %s/%s 父级资源存在 Job，不允许重新调度", req.Namespace, req.Name)
+			return errorx.New(
+				errcode.Unsupported,
+				i18n.GetMsg(ctx, "Pod %s/%s 父级资源存在 Job，不允许重新调度"),
+				req.Namespace, req.Name,
+			)
 		}
 	}
 

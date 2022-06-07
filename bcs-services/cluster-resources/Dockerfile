@@ -44,7 +44,7 @@ FROM alpine:3.15 AS runner
 
 LABEL maintainer="Tencent BlueKing"
 
-RUN apk --update --no-cache add bash ca-certificates
+RUN apk --update --no-cache -y add bash ca-certificates vim
 
 WORKDIR /data/workspace
 
@@ -61,6 +61,10 @@ ENV EXAMPLE_FILE_BASE_DIR=/data/workspace/example
 COPY --from=builder /go/src/form_tmpl /data/workspace/form_tmpl
 
 ENV FORM_TMPL_FILE_BASE_DIR=/data/workspace/form_tmpl
+
+COPY --form=builder /go/src/pkg/i18n/locale/lc_msgs.yaml /data/workspace/lc_msgs.yaml
+
+ENV LOCALIZE_FILE_PATH=/data/workspace/lc_msgs.yaml
 
 # default log file base dir
 RUN mkdir -p /tmp/logs

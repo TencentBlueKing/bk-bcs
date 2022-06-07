@@ -137,7 +137,7 @@ shareProcessNamespace: {{ .shareProcessNamespace }}
 hostname: {{ .hostname }}
 {{- end }}
 {{- if .subdomain }}
-subdomain: {{ .subdomain }}
+subdomain: {{ .subdomain | quote }}
 {{- end }}
 {{- if or .nameServers .searches .dnsResolverOpts }}
 dnsConfig:
@@ -161,8 +161,10 @@ dnsConfig:
 hostAliases:
   {{- range .hostAliases }}
   - ip: {{ .ip | quote }}
+    {{- if .alias }}
     hostnames:
       {{- include "common.splitStr2Slice" .alias | indent 6 }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- end }}

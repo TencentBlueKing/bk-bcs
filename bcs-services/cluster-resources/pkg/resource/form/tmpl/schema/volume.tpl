@@ -6,7 +6,7 @@ pvc:
     type: object
     properties:
       name:
-        title: 名称
+        title: {{ i18n "名称" .lang }}
         type: string
         ui:rules:
           - required
@@ -35,7 +35,7 @@ pvc:
         ui:rules:
           - required
       readOnly:
-        title: 只读
+        title: {{ i18n "只读" .lang }}
         type: boolean
         ui:component:
           name: checkbox
@@ -53,19 +53,19 @@ hostPath:
     type: object
     properties:
       name:
-        title: 名称
+        title: {{ i18n "名称" .lang }}
         type: string
         ui:rules:
           - required
           - maxLength128
       path:
-        title: 路径或节点
+        title: {{ i18n "路径或节点" .lang }}
         type: string
         ui:rules:
           - required
           - maxLength250
       type:
-        title: 类型
+        title: {{ i18n "类型" .lang }}
         type: string
         default: Directory
         ui:component:
@@ -104,16 +104,16 @@ configMap:
       - cmName
     properties:
       name:
-        title: 名称
+        title: {{ i18n "名称" .lang }}
         type: string
         ui:rules:
           - required
           - maxLength128
       defaultMode:
-        title: 默认模式
+        title: {{ i18n "默认模式" .lang }}
         type: string
         default: 0644
-        description: 八进制数字（0000-0777）或十进制数字（0-511）
+        description: {{ i18n "八进制数字（0000-0777）或十进制数字（0-511）" .lang }}
         ui:rules:
           - numberRegex
       cmName:
@@ -145,13 +145,13 @@ configMap:
         items:
           properties:
             key:
-              title: 键
+              title: {{ i18n "键" .lang }}
               type: string
               ui:rules:
                 - required
                 - maxLength128
             path:
-              title: 映射目标路径
+              title: {{ i18n "映射目标路径" .lang }}
               type: string
               ui:rules:
                 - required
@@ -181,16 +181,16 @@ secret:
       - secretName
     properties:
       name:
-        title: 名称
+        title: {{ i18n "名称" .lang }}
         type: string
         ui:rules:
           - required
           - maxLength128
       defaultMode:
-        title: 默认模式
+        title: {{ i18n "默认模式" .lang }}
         type: string
         default: 0644
-        description: 八进制数字（0000-0777）或十进制数字（0-511）
+        description: {{ i18n "八进制数字（0000-0777）或十进制数字（0-511）" .lang }}
         ui:rules:
           - numberRegex
       secretName:
@@ -222,13 +222,13 @@ secret:
         items:
           properties:
             key:
-              title: 键
+              title: {{ i18n "键" .lang }}
               type: string
               ui:rules:
                 - required
                 - maxLength128
             path:
-              title: 映射目标路径
+              title: {{ i18n "映射目标路径" .lang }}
               type: string
               ui:rules:
                 - required
@@ -255,7 +255,7 @@ emptyDir:
     type: object
     properties:
       name:
-        title: 名称
+        title: {{ i18n "名称" .lang }}
         type: string
         ui:rules:
           - required
@@ -274,13 +274,13 @@ nfs:
     type: object
     properties:
       name:
-        title: 名称
+        title: {{ i18n "名称" .lang }}
         type: string
         ui:rules:
           - required
           - maxLength128
       path:
-        title: 路径
+        title: {{ i18n "路径" .lang }}
         type: string
         ui:rules:
           - required
@@ -292,7 +292,7 @@ nfs:
           - required
           - maxLength128
       readOnly:
-        title: 只读
+        title: {{ i18n "只读" .lang }}
         type: boolean
         ui:component:
           name: checkbox
