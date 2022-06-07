@@ -90,7 +90,7 @@ func LoadDemoManifest(path, namespace string) (map[string]interface{}, error) {
 
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
-	rawName := mapx.Get(manifest, "metadata.name", "")
+	rawName := mapx.GetStr(manifest, "metadata.name")
 	if err = mapx.SetItems(manifest, "metadata.name", fmt.Sprintf("%s-%s", rawName, randSuffix)); err != nil {
 		return manifest, err
 	}

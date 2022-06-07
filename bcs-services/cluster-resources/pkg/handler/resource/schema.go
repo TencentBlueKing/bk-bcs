@@ -28,7 +28,7 @@ import (
 func (h *Handler) GetResFormSchema(
 	_ context.Context, req *clusterRes.GetResFormSchemaReq, resp *clusterRes.CommonResp,
 ) error {
-	schema, err := renderer.NewSchemaRenderer(req.Kind).Render()
+	schema, err := renderer.NewSchemaRenderer(req.Kind, req.Namespace).Render()
 	if err != nil {
 		return err
 	}
@@ -38,11 +38,11 @@ func (h *Handler) GetResFormSchema(
 
 // GetFormSupportedAPIVersions ...
 func (h *Handler) GetFormSupportedAPIVersions(
-	_ context.Context, req *clusterRes.GetFormSupportedApiVersionsReq, resp *clusterRes.CommonListResp,
+	_ context.Context, req *clusterRes.GetFormSupportedApiVersionsReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	supportedAPIVersions, ok := renderer.FormRenderSupportedResAPIVersion[req.Kind]
 	if !ok {
-		return errorx.New(errcode.Unsupported, "资源类型 %s 不支持表单化", req.Kind)
+		return errorx.New(errcode.Unsupported, "资源类型 `%s` 不支持表单化", req.Kind)
 	}
 	versions := []map[string]interface{}{
 		{"label": "Preferred Version", "value": ""},
@@ -50,6 +50,6 @@ func (h *Handler) GetFormSupportedAPIVersions(
 	for _, ver := range supportedAPIVersions {
 		versions = append(versions, map[string]interface{}{"label": ver, "value": ver})
 	}
-	resp.Data, err = pbstruct.MapSlice2ListValue(versions)
+	resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"selectItems": versions})
 	return err
 }

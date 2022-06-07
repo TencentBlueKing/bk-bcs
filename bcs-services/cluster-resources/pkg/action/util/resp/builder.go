@@ -26,7 +26,7 @@ import (
 // NewRespDataBuilder 根据 Format 类型，生成不同的 Retrieve 请求响应数据生成器
 func NewRespDataBuilder(manifest map[string]interface{}, kind, format string) (DataBuilder, error) {
 	switch format {
-	case action.ManifestFormat:
+	case action.DefaultFormat, action.ManifestFormat:
 		return &ManifestRespBuilder{manifest: manifest, kind: kind}, nil
 	case action.FormDataFormat:
 		return &FormDataRespBuilder{manifest: manifest, kind: kind}, nil
@@ -96,7 +96,7 @@ func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
 	// 取每个 K8S 资源的名称，作为下拉框选项
 	selectItems := []interface{}{}
 	for _, item := range mapx.GetList(b.manifest, "items") {
-		name := mapx.Get(item.(map[string]interface{}), "metadata.name", "--")
+		name := mapx.GetStr(item.(map[string]interface{}), "metadata.name")
 		selectItems = append(selectItems, map[string]interface{}{
 			"label": name, "value": name,
 		})

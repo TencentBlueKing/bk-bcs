@@ -43,3 +43,12 @@ func TestConvertMemoryUnit(t *testing.T) {
 	assert.Equal(t, 1024, ConvertMemoryUnit("1G"))
 	assert.Equal(t, 2048, ConvertMemoryUnit("2Gi"))
 }
+
+func TestConvertStorageUnit(t *testing.T) {
+	assert.Equal(t, 1, ConvertStorageUnit("100M"))
+	assert.Equal(t, 1, ConvertStorageUnit("120Mi"))
+	assert.Equal(t, 1, ConvertStorageUnit("1024Mi"))
+	assert.Equal(t, 2, ConvertStorageUnit("1050Mi"))
+	assert.Equal(t, 2, ConvertStorageUnit("2Gi"))
+	assert.Equal(t, 3, ConvertStorageUnit("3G"))
+}

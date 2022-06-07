@@ -32,14 +32,12 @@ RUN cp -R $SRC_EXAMPLE_DIR/manifest/* $TARGET_EXAMPLE_DIR/manifest/
 RUN cp -R $SRC_EXAMPLE_DIR/reference/* $TARGET_EXAMPLE_DIR/reference/
 
 # package form tmpl & schema files
-ARG SRC_FORM_DIR=/go/src/pkg/resource/form
-ARG TARGET_FORM_DIR=/go/src/form
+ARG SRC_FORM_TMPL_DIR=/go/src/pkg/resource/form/tmpl
+ARG TARGET_FORM_TMPL_DIR=/go/src/form_tmpl
 
-RUN mkdir -p $TARGET_FORM_DIR/tmpl
-RUN mkdir -p $TARGET_FORM_DIR/schema
+RUN mkdir -p $TARGET_FORM_TMPL_DIR
 
-RUN cp -R $SRC_FORM_DIR/tmpl/* $TARGET_FORM_DIR/tmpl/
-RUN cp -R $SRC_FORM_DIR/schema/* $TARGET_FORM_DIR/schema/
+RUN cp -R $SRC_FORM_TMPL_DIR/* $TARGET_FORM_TMPL_DIR/
 
 # -------------- runner container --------------
 FROM alpine:3.15 AS runner
@@ -60,9 +58,9 @@ COPY --from=builder /go/src/example /data/workspace/example
 
 ENV EXAMPLE_FILE_BASE_DIR=/data/workspace/example
 
-COPY --from=builder /go/src/form /data/workspace/form
+COPY --from=builder /go/src/form_tmpl /data/workspace/form_tmpl
 
-ENV FORM_FILE_BASE_DIR=/data/workspace/form
+ENV FORM_TMPL_FILE_BASE_DIR=/data/workspace/form_tmpl
 
 # default log file base dir
 RUN mkdir -p /tmp/logs

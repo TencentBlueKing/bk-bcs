@@ -1,0 +1,23 @@
+{{ include "common.metadata" . }}
+- - group:
+      - - container:
+            grid-template-columns: "1fr 1fr"
+          group:
+            - [ "cnt", "svcName" ]
+            - [ "updateStrategy",  "podManPolicy" ]
+          prop: replicas
+      - - group:
+            - - group:
+                  - [ "pvcName", "claimType" ]
+                  - [ "pvName", "." ]
+                  - [ "scName", "storageSize" ]
+                  - [ "accessModes", "." ]
+                prop: claims
+          prop: volumeClaimTmpl
+      {{- include "workload.affinity" . | nindent 6 }}
+      {{- include "workload.networking" . | indent 6 }}
+      {{- include "workload.security" . | indent 6 }}
+      {{- include "workload.other" . | indent 6 }}
+    prop: spec
+{{- include "workload.volume" . }}
+{{- include "container.containerGroup" . }}

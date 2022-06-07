@@ -19,14 +19,16 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // New 根据 Format 类型，生成不同的 Manifest 转换器
 func New(ctx context.Context, rawData map[string]interface{}, clusterID, kind, format string) (Transformer, error) {
 	switch format {
-	case action.ManifestFormat:
+	case action.DefaultFormat, action.ManifestFormat:
 		return &DummyTransformer{manifest: rawData}, nil
 	case action.FormDataFormat:
 		return &FormDataTransformer{ctx: ctx, formData: rawData, clusterID: clusterID, kind: kind}, nil
@@ -42,6 +44,14 @@ type DummyTransformer struct {
 
 // ToManifest 转换成 Manifest
 func (t *DummyTransformer) ToManifest() (map[string]interface{}, error) {
+	// 若原始配置中没有 labels，则默认新建
+	if labels, _ := mapx.GetItems(t.manifest, "metadata.labels"); labels == nil {
+		_ = mapx.SetItems(t.manifest, "metadata.labels", map[string]interface{}{})
+	}
+	// 使用原生 Manifest 作为创建 / 更新配置的，添加 EditMode == yaml 的标识
+	if err := mapx.SetItems(t.manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeYaml); err != nil {
+		return nil, err
+	}
 	return t.manifest, nil
 }
 
@@ -55,5 +65,6 @@ type FormDataTransformer struct {
 
 // ToManifest 转换成 Manifest
 func (t *FormDataTransformer) ToManifest() (map[string]interface{}, error) {
+	// ManifestRenderer Render 会标识 EditMode == form
 	return renderer.NewManifestRenderer(t.ctx, t.formData, t.clusterID, t.kind).Render()
 }

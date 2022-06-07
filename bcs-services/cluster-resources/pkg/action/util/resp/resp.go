@@ -211,29 +211,30 @@ func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName
 
 	// 各项容器数据组装
 	containerInfo := map[string]interface{}{
-		"hostName":      mapx.Get(podManifest, "spec.nodeName", "--"),
-		"hostIP":        mapx.Get(podManifest, "status.hostIP", "--"),
-		"containerIP":   mapx.Get(podManifest, "status.podIP", "--"),
+		"hostName":      mapx.Get(podManifest, "spec.nodeName", "N/A"),
+		"hostIP":        mapx.Get(podManifest, "status.hostIP", "N/A"),
+		"containerIP":   mapx.Get(podManifest, "status.podIP", "N/A"),
 		"containerID":   extractContainerID(mapx.GetStr(curContainerStatus, "containerID")),
 		"containerName": containerName,
-		"image":         mapx.Get(curContainerStatus, "image", "--"),
-		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "--"),
-		"ports":         mapx.Get(curContainerSpec, "ports", []interface{}{}),
-		"volumes":       []map[string]interface{}{},
+		"image":         mapx.Get(curContainerStatus, "image", "N/A"),
+		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "N/A"),
+		"ports":         mapx.GetList(curContainerSpec, "ports"),
 		"resources":     mapx.Get(curContainerSpec, "resources", map[string]interface{}{}),
 		"command": map[string]interface{}{
-			"command": mapx.Get(curContainerSpec, "command", []string{}),
-			"args":    mapx.Get(curContainerSpec, "args", []string{}),
+			"command": mapx.GetList(curContainerSpec, "command"),
+			"args":    mapx.GetList(curContainerSpec, "args"),
 		},
 	}
-	mounts := mapx.Get(curContainerSpec, "volumeMounts", []map[string]interface{}{})
-	for _, mount := range mounts.([]interface{}) {
+	mounts := mapx.GetList(curContainerSpec, "volumeMounts")
+	for _, mount := range mounts {
 		m, _ := mount.(map[string]interface{})
-		containerInfo["volumes"] = append(containerInfo["volumes"].([]map[string]interface{}), map[string]interface{}{
-			"name":      mapx.Get(m, "name", "--"),
-			"mountPath": mapx.Get(m, "mountPath", "--"),
-			"readonly":  mapx.Get(m, "readOnly", "--"),
+		volumes := []map[string]interface{}{}
+		volumes = append(volumes, map[string]interface{}{
+			"name":      mapx.Get(m, "name", "N/A"),
+			"mountPath": mapx.Get(m, "mountPath", "N/A"),
+			"readonly":  mapx.Get(m, "readOnly", "N/A"),
 		})
+		containerInfo["volumes"] = volumes
 	}
 
 	return pbstruct.Map2pbStruct(containerInfo)

@@ -40,7 +40,7 @@ func TestGetFormSupportedApiVersions(t *testing.T) {
 	ctx := context.TODO()
 
 	for kind := range renderer.FormRenderSupportedResAPIVersion {
-		req, resp := clusterRes.GetFormSupportedApiVersionsReq{Kind: kind}, clusterRes.CommonListResp{}
+		req, resp := clusterRes.GetFormSupportedApiVersionsReq{Kind: kind}, clusterRes.CommonResp{}
 		err := hdlr.GetFormSupportedAPIVersions(ctx, &req, &resp)
 		assert.Nil(t, err)
 	}
