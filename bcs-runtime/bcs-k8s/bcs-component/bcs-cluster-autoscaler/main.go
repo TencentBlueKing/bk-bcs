@@ -387,6 +387,9 @@ func run(healthCheck *metrics.HealthCheck) {
 				healthCheck.UpdateLastActivity(loopStart)
 
 				err := autoscaler.RunOnce(loopStart)
+				if err != nil {
+					klog.Warningf("scaler error: %s", err.Error())
+				}
 				if err != nil && err.Type() != errors.TransientError {
 					metrics.RegisterError(err)
 				} else {

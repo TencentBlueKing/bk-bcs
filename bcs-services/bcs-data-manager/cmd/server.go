@@ -376,7 +376,8 @@ func (s *Server) initWorker() error {
 	blog.Infof("selected cluster: %v", selectClusters)
 	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
 	resourceGetter := common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env)
-	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli, resourceGetter)
+	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli,
+		resourceGetter, s.opt.ProducerConfig.Concurrency)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
 		return err

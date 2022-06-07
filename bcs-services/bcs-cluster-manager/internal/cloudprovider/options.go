@@ -15,6 +15,7 @@ package cloudprovider
 
 import (
 	"errors"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
@@ -251,7 +252,7 @@ type DeleteNodeGroupOption struct {
 	// move all nodes out of cluster, clean all containers
 	// but keep nodes running
 	ReservedNodeInstance bool
-	// move all node out of cluster and return all nodes
+	// move all node out of cluster and delete all nodes
 	CleanInstanceInCluster bool
 	// cloud is used for cloudprovider template
 	Cloud *proto.Cloud
@@ -291,6 +292,15 @@ type CleanNodesResponse struct {
 
 // UpdateDesiredNodeOption update desired node
 type UpdateDesiredNodeOption struct {
+	CommonOption
+	Cluster   *proto.Cluster
+	Cloud     *proto.Cloud
+	NodeGroup *proto.NodeGroup
+	Operator  string
+}
+
+// SwitchNodeGroupAutoScalingOption switch nodegroup auto scaling
+type SwitchNodeGroupAutoScalingOption struct {
 	CommonOption
 	Cluster *proto.Cluster
 	Cloud   *proto.Cloud

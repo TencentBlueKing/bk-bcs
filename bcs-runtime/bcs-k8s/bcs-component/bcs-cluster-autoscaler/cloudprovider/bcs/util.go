@@ -174,6 +174,16 @@ func InstanceRefFromProviderID(id string) (*InstanceRef, error) {
 	}, nil
 }
 
+// InstanceRefFromInnerIP creates InstanceConfig object from internal address
+func InstanceRefFromInnerIP(addrs []apiv1.NodeAddress) (*InstanceRef, error) {
+	for _, addr := range addrs {
+		if addr.Type == apiv1.NodeInternalIP {
+			return &InstanceRef{IP: addr.Address}, nil
+		}
+	}
+	return nil, fmt.Errorf("Cannot find internal address for node")
+}
+
 // buildNodeGroupFromSpec builds node group with value format: <min>:<max>:<nodeGroupID>
 func buildNodeGroupFromSpec(value string, client clustermanager.NodePoolClientInterface) (*NodeGroup, error) {
 	spec, err := dynamic.SpecFromString(value, true)

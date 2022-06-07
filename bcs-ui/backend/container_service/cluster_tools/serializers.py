@@ -32,7 +32,13 @@ class ClusterToolSLZ(serializers.ModelSerializer):
             t = InstalledTool.objects.get(
                 tool=obj, project_id=self.context['project_id'], cluster_id=self.context['cluster_id']
             )
-            return {'cluster_id': t.cluster_id, 'values': t.values, 'status': t.status, 'message': t.message}
+            return {
+                'cluster_id': t.cluster_id,
+                'chart_version': t.chart_version,
+                'values': t.values,
+                'status': t.status,
+                'message': t.message,
+            }
         except InstalledTool.DoesNotExist:
             return {}
 

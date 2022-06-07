@@ -376,7 +376,7 @@ const menu: IMenu = {
         {
             name: crdcontroller,
             icon: 'bcs-icon-crd1',
-            id: 'COMPONENTS',
+            id: 'TOOLS',
             routeName: 'dbCrdcontroller'
         },
         { type: 'line' },

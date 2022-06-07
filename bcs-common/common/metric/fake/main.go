@@ -69,8 +69,10 @@ func main() {
 	select {}
 }
 
+// DemoMetric xxx
 type DemoMetric struct{}
 
+// GetNumericMeta xxx
 func (DemoMetric) GetNumericMeta() *metric.MetricMeta {
 	return &metric.MetricMeta{
 		Name: "timenow_seconds",
@@ -81,6 +83,7 @@ func (DemoMetric) GetNumericMeta() *metric.MetricMeta {
 	}
 }
 
+// GetNumericResult xxx
 func (DemoMetric) GetNumericResult() (*metric.MetricResult, error) {
 	v, err := metric.FormFloatOrString(time.Now().Unix())
 	if err != nil {
@@ -94,6 +97,7 @@ func (DemoMetric) GetNumericResult() (*metric.MetricResult, error) {
 	}, nil
 }
 
+// GetStringMeta xxx
 func (DemoMetric) GetStringMeta() *metric.MetricMeta {
 	return &metric.MetricMeta{
 		Name: "birthday_string",
@@ -104,6 +108,7 @@ func (DemoMetric) GetStringMeta() *metric.MetricMeta {
 	}
 }
 
+// GetStringResult xxx
 func (DemoMetric) GetStringResult() (*metric.MetricResult, error) {
 	v, err := metric.FormFloatOrString(time.Now().String())
 	if err != nil {

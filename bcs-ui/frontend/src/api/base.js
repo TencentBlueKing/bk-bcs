@@ -78,7 +78,7 @@ export const cloudAccounts = request('get', `${prefix}/clustermanager/v1/clouds/
 export const createCloudAccounts = request('post', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts`)
 export const deleteCloudAccounts = request('delete', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts/$accountID`)
 export const cloudRegionByAccount = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions`)
-export const cloudClusterList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions/$regionId/clusters`)
+export const cloudClusterList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/clusters`)
 
 // token
 export const createToken = request('post', `${prefix}/usermanager/v1/tokens`)
@@ -88,6 +88,12 @@ export const getTokens = request('get', `${prefix}/usermanager/v1/users/$usernam
 // auth
 export const userPerms = request('post', '/api/iam/user_perms/')
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
+// cluster tools
+export const clusterTools = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/')
+export const clusterToolsInstall = request('post', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/')
+export const clusterToolsUpgrade = request('put', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/')
+export const clusterToolsUninstall = request('delete', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/')
+export const clusterToolsInstalledDetail = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/installed_detail/')
 
 export default {
     stdLogs,

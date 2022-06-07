@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -362,10 +363,45 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
 		return fmt.Errorf("ImportCluster CommonValidate CloudMode cloudID&kubeConfig empty")
 	}
+	err := ia.checkCloudModeValidate(req.CloudMode)
+	if err != nil {
+		return fmt.Errorf("ImportCluster CommonValidate failed: %v", err)
+	}
+
 	if len(req.AccountID) > 0 {
 		_, err := ia.model.GetCloudAccount(ia.ctx, ia.cloud.CloudID, req.AccountID)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (ia *ImportAction) checkCloudModeValidate(mode *cmproto.ImportCloudMode) error {
+	clusterList, err := getClusterList(ia.model)
+	if err != nil {
+		return err
+	}
+
+	var (
+		kubeRet   string
+		clusterID string
+	)
+	if mode.KubeConfig != "" {
+		kubeRet = base64.StdEncoding.EncodeToString([]byte(ia.req.CloudMode.KubeConfig))
+		for _, cls := range clusterList {
+			if strings.EqualFold(cls.KubeConfig, kubeRet) {
+				return fmt.Errorf("cluster[%s] already import kubeconfig", cls.ClusterID)
+			}
+		}
+	}
+	if mode.CloudID != "" {
+		clusterID = mode.CloudID
+		for _, cls := range clusterList {
+			if strings.EqualFold(cls.SystemID, clusterID) {
+				return fmt.Errorf("cluster[%s] already import cloudID", cls.ClusterID)
+			}
 		}
 	}
 

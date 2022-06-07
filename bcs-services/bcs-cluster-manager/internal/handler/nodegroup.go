@@ -195,3 +195,33 @@ func (cm *ClusterManager) UpdateGroupDesiredSize(ctx context.Context,
 	blog.Infof("reqID: %s, action: UpdateGroupDesiredSize, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// EnableNodeGroupAutoScale implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) EnableNodeGroupAutoScale(ctx context.Context,
+	req *cmproto.EnableNodeGroupAutoScaleRequest, resp *cmproto.EnableNodeGroupAutoScaleResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := nodegroup.NewEnableNodeGroupAutoScaleAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("EnableNodeGroupAutoScale", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: EnableNodeGroupAutoScale, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// DisableNodeGroupAutoScale implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) DisableNodeGroupAutoScale(ctx context.Context,
+	req *cmproto.DisableNodeGroupAutoScaleRequest, resp *cmproto.DisableNodeGroupAutoScaleResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := nodegroup.NewDisableNodeGroupAutoScaleAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("DisableNodeGroupAutoScale", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: DisableNodeGroupAutoScale, req %v, resp %v", reqID, req, resp)
+	return nil
+}

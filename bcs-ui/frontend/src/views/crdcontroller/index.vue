@@ -55,6 +55,7 @@
                             <tr>
                                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
                                 <th style="width: 250px; padding-left: 20px;">{{$t('组件名称')}}</th>
+                                <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
                                 <th style="width: 150px; padding-left: 20px;">{{$t('状态')}}</th>
                                 <th style="padding-left: 0;">{{$t('描述')}}</th>
                                 <th style="width: 170px; padding-left: 0;">{{$t('操作')}}</th>
@@ -65,25 +66,28 @@
                                 <tr
                                     v-for="crdcontroller of crdControllerList"
                                     :key="crdcontroller.id">
-                                    <td colspan="5">
+                                    <td colspan="6">
                                         <table class="biz-inner-table">
                                             <tr>
                                                 <td class="logo">
-                                                    <div class="logo-wrapper" v-if="logMap[crdcontroller.name]">
-                                                        <i :class="logMap[crdcontroller.name]"></i>
+                                                    <div class="logo-wrapper" v-if="logMap[crdcontroller.chart_name]">
+                                                        <i :class="logMap[crdcontroller.chart_name]"></i>
                                                     </div>
                                                     <svg class="biz-set-icon" v-else>
                                                         <use xlink:href="#biz-set-icon"></use>
                                                     </svg>
                                                 </td>
                                                 <td class="name" style="width: 250px;">
-                                                    <p class="text">{{crdcontroller.display_name || '--'}}</p>
+                                                    <p class="text">{{crdcontroller.name || '--'}}</p>
+                                                </td>
+                                                <td class="version" style="width: 120px;padding: 0 10px 0 20px;">
+                                                    <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
                                                 </td>
                                                 <td class="status">
                                                     <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
                                                         <bk-tag type="filled" theme="success">{{$t('已部署')}}</bk-tag>
                                                     </span>
-                                                    <span class="biz-mark" v-else-if="!crdcontroller.status || crdcontroller.status === 'not_deployed'">
+                                                    <span class="biz-mark" v-else-if="!crdcontroller.status">
                                                         <bk-tag type="filled">{{$t('未启用')}}</bk-tag>
                                                     </span>
                                                     <span class="biz-mark" v-else-if="crdcontroller.status === 'failed'">
@@ -107,47 +111,46 @@
                                                             <div class="rotate rotate7"></div>
                                                             <div class="rotate rotate8"></div>
                                                         </div>
-                                                        <span class="vm">{{$t('启用中...')}}</span>
+                                                        <span class="vm">{{$t('变更中...')}}</span>
                                                     </template>
                                                 </td>
                                                 <td class="description">
                                                     <p class="text">
-                                                        {{crdcontroller.description}}
+                                                        {{crdcontroller.description || '--'}}
                                                         <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('详情查看文档')}}</a>
                                                     </p>
                                                 </td>
                                                 <td class="action">
                                                     <template v-if="crdcontroller.status === 'deployed'">
-                                                        <template v-if="crdcontroller.name === 'DbPrivilege'">
-                                                            <bk-button type="primary" @click="goControllerInstances(crdcontroller)">{{$t('前往配置')}}</bk-button>
-                                                        </template>
-                                                        <template v-else>
-                                                            <bk-dropdown-menu
-                                                                class="dropdown-menu"
-                                                                :align="'left'"
-                                                                ref="dropdown">
-                                                                <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
-                                                                    <span>{{$t('操作')}}</span>
-                                                                    <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
-                                                                </bk-button>
+                                                        <bk-dropdown-menu
+                                                            class="dropdown-menu"
+                                                            :align="'left'"
+                                                            ref="dropdown">
+                                                            <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
+                                                                <span>{{$t('操作')}}</span>
+                                                                <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
+                                                            </bk-button>
 
-                                                                <ul class="bk-dropdown-list" slot="dropdown-content">
-                                                                    <li v-if="crdcontroller.name === 'BcsPolaris'">
-                                                                        <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('前往配置')}}</a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
-                                                                    </li>
-                                                                </ul>
-                                                            </bk-dropdown-menu>
-                                                        </template>
+                                                            <ul class="bk-dropdown-list" slot="dropdown-content">
+                                                                <li v-if="crdcontroller.supported_actions.includes('config')">
+                                                                    <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('前往配置')}}</a>
+                                                                </li>
+                                                                <li v-if="crdcontroller.supported_actions.includes('upgrade')">
+                                                                    <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
+                                                                </li>
+                                                                <li v-if="crdcontroller.supported_actions.includes('uninstall')">
+                                                                    <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('卸载组件')}}</a>
+                                                                </li>
+                                                            </ul>
+                                                        </bk-dropdown-menu>
                                                     </template>
-                                                    <template v-else-if="!crdcontroller.status || crdcontroller.status === 'not_deployed'">
-                                                        <bk-button :loading="crdcontroller.status === 'pending'" type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('启用')}}</bk-button>
+                                                    <template v-else-if="!crdcontroller.status">
+                                                        <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('启用')}}</bk-button>
                                                     </template>
                                                     <template v-else-if="crdcontroller.status === 'failed'">
-                                                        <template v-if="crdcontroller.name === 'DbPrivilege'">
-                                                            <bk-button :loading="crdcontroller.status === 'pending'" type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('重新启用')}}</bk-button>
+                                                        <template v-if="!crdcontroller.supported_actions.includes('upgrade')
+                                                            && !crdcontroller.supported_actions.includes('uninstall')">
+                                                            <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('重新启用')}}</bk-button>
                                                         </template>
                                                         <template v-else>
                                                             <bk-dropdown-menu
@@ -159,8 +162,11 @@
                                                                     <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                                                                 </bk-button>
                                                                 <ul class="bk-dropdown-list" slot="dropdown-content">
-                                                                    <li>
+                                                                    <li v-if="crdcontroller.supported_actions.includes('upgrade')">
                                                                         <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
+                                                                    </li>
+                                                                    <li v-if="crdcontroller.supported_actions.includes('uninstall')">
+                                                                        <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('卸载组件')}}</a>
                                                                     </li>
                                                                 </ul>
                                                             </bk-dropdown-menu>
@@ -172,7 +178,7 @@
                                                         </span>
                                                     </template>
                                                     <template v-else-if="crdcontroller.status === 'pending'">
-                                                        <bk-button :disabled="true">{{$t('启用中...')}}</bk-button>
+                                                        <bk-button :disabled="true">{{$t('变更中...')}}</bk-button>
                                                     </template>
                                                 </td>
                                             </tr>
@@ -194,7 +200,8 @@
                         <thead>
                             <tr>
                                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
-                                <th style="width: 110px; padding-left: 20px;">{{$t('组件名称')}}</th>
+                                <th style="width: 150px; padding-left: 20px;">{{$t('组件名称')}}</th>
+                                <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
                                 <th style="width: 100px; padding-left: 20px;">{{$t('状态')}}</th>
                                 <th style="width: 390px; padding-left: 20px;">{{$t('数据源信息')}}</th>
                                 <th style="padding-left: 0;">{{$t('描述')}}</th>
@@ -206,25 +213,28 @@
                                 <tr
                                     v-for="crdcontroller of crdControllerList"
                                     :key="crdcontroller.id">
-                                    <td colspan="6">
+                                    <td colspan="7">
                                         <table class="biz-inner-table">
                                             <tr>
                                                 <td class="logo">
-                                                    <div class="logo-wrapper" v-if="crdcontroller.logo && isImage(crdcontroller.logo)">
-                                                        <img :src="crdcontroller.logo">
+                                                    <div class="logo-wrapper" v-if="logMap[crdcontroller.chart_name]">
+                                                        <i :class="logMap[crdcontroller.chart_name]"></i>
                                                     </div>
                                                     <svg class="biz-set-icon" v-else>
                                                         <use xlink:href="#biz-set-icon"></use>
                                                     </svg>
                                                 </td>
                                                 <td class="log-name">
-                                                    <p class="text">{{crdcontroller.display_name || '--'}}</p>
+                                                    <p class="text">{{crdcontroller.name || '--'}}</p>
+                                                </td>
+                                                <td style="width: 120px;padding: 0 10px 0 20px;">
+                                                    <p class="text">{{crdcontroller.installed_info.chart_version || '--'}}</p>
                                                 </td>
                                                 <td class="log-status">
                                                     <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
                                                         <bk-tag type="filled" theme="success">{{$t('已启用')}}</bk-tag>
                                                     </span>
-                                                    <span class="biz-mark" v-else-if="!crdcontroller.status || crdcontroller.status === 'not_deployed'">
+                                                    <span class="biz-mark" v-else-if="!crdcontroller.status">
                                                         <bk-tag type="filled">{{$t('未启用')}}</bk-tag>
                                                     </span>
                                                     <span class="biz-mark" v-else-if="crdcontroller.status === 'failed'">
@@ -233,14 +243,14 @@
                                                         </bcs-popover>
                                                     </span>
                                                 </td>
-                                                <td class="log-source" v-if="crdKind === 'BcsLog'">
+                                                <td class="log-source">
                                                     <p>{{$t('标准日志')}}：{{dataSource.std_data_name || '--'}}</p>
                                                     <p>{{$t('文件路径日志')}}：{{dataSource.file_data_name || '--'}}</p>
                                                     <p>{{$t('系统日志')}}：{{dataSource.sys_data_name || '--'}}</p>
                                                 </td>
                                                 <td class="description">
                                                     <p class="text">
-                                                        {{crdcontroller.description}}
+                                                        {{crdcontroller.description || '--'}}
                                                         <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('详情查看文档')}}</a>
                                                     </p>
                                                 </td>
@@ -308,7 +318,7 @@
         },
         data () {
             return {
-                fiexedStatus: ['not_deployed', 'deployed', 'failed', 'unknown'],
+                fiexedStatus: ['deployed', 'failed', 'unknown'],
                 isInitLoading: true,
                 isPageLoading: false,
                 crdControllerList: [],
@@ -337,14 +347,14 @@
                     sys_data_name: ''
                 },
                 logMap: {
-                    DbPrivilege: 'bcs-icon bcs-icon-db-auth',
-                    BcsLog: 'bcs-icon bcs-icon-log',
-                    GameStatefulSet: 'bcs-icon bcs-icon-gss',
-                    GameDeployment: 'bcs-icon bcs-icon-gd',
-                    PrometheusAdapter: 'bcs-icon bcs-icon-prom',
-                    BcsIngressController: 'bcs-icon bcs-icon-bi-2',
-                    BcsHookOperator: 'bcs-icon bcs-icon-bh',
-                    BcsPolaris: 'bcs-icon bcs-icon-pol'
+                    'db-privilege': 'bcs-icon bcs-icon-db-auth',
+                    'bk-log-collector': 'bcs-icon bcs-icon-log',
+                    'bcs-gamestatefulset-operator': 'bcs-icon bcs-icon-gss',
+                    'bcs-gamedeployment-operator': 'bcs-icon bcs-icon-gd',
+                    'prometheus-adapter': 'bcs-icon bcs-icon-prom',
+                    'bcs-ingress-controller': 'bcs-icon bcs-icon-bi-2',
+                    'bcs-hook-operator': 'bcs-icon bcs-icon-bh',
+                    'bcs-polaris-operator': 'bcs-icon bcs-icon-pol'
                 }
             }
         },
@@ -430,10 +440,10 @@
                 this.editorOptions.originContent = ''
 
                 this.curCrdcontroller = crdcontroller
-                if (crdcontroller.default_values_content) {
+                if (crdcontroller.default_values) {
                     this.valueSlider.title = `${this.$t('启用组件：')}${crdcontroller.name}`
-                    this.editorOptions.content = crdcontroller.default_values_content
-                    this.editorOptions.originContent = crdcontroller.default_values_content
+                    this.editorOptions.content = crdcontroller.default_values
+                    this.editorOptions.originContent = crdcontroller.default_values
                     this.renderEditorKey++
                     this.valueSlider.isShow = true
                 } else {
@@ -444,15 +454,15 @@
             async enableCrdController () {
                 try {
                     const crdcontroller = this.curCrdcontroller
-                    const projectId = this.projectId
                     const clusterId = this.searchScope
-                    const id = crdcontroller.crd_ctr_id
-                    const data = {
-                        values_content: this.editorOptions.content
-                    }
+                    const id = crdcontroller.id
                     crdcontroller.status = 'pending'
                     this.valueSlider.isShow = false
-                    await this.$store.dispatch('crdcontroller/enableCrdController', { projectId, clusterId, id, data })
+                    await this.$store.dispatch('crdcontroller/clusterToolsInstall', {
+                        $clusterId: clusterId,
+                        $toolId: id,
+                        values: this.editorOptions.content
+                    })
                     // this.getCrdControllersByCluster()
                     this.getCrdcontrollerStatus(crdcontroller)
                 } catch (e) {
@@ -476,32 +486,31 @@
                 if (!this.searchScope) {
                     return false
                 }
-                const projectId = this.projectId
                 const clusterId = this.searchScope
 
                 this.isPageLoading = true
                 try {
-                    const res = await this.$store.dispatch('crdcontroller/getCrdControllersByCluster', { projectId, clusterId })
-                    res.data.forEach(item => {
-                        const instance = item.crd_ctr_inst
+                    const data = await this.$store.dispatch('crdcontroller/clusterTools', { $clusterId: clusterId })
+                    data.forEach(item => {
+                        const instance = item.installed_info
                         item.cluster_id = instance.cluster_id || ''
                         item.message = instance.message || ''
                         item.status = instance.status || ''
                         item.values_content = instance.values_content || ''
                     })
                     // 搜索
-                    let results = res.data.filter(item => {
+                    let results = data.filter(item => {
                         if (this.crdKind === 'BcsLog') {
-                            return item.name === 'BcsLog'
+                            return item.chart_name === 'bk-log-collector'
                         } else {
-                            return item.name !== 'BcsLog'
+                            return item.chart_name !== 'bk-log-collector'
                         }
                     })
                     if (this.searchKeyword.trim()) {
                         results = []
                         const keyword = this.searchKeyword.trim()
-                        const keyList = ['display_name']
-                        const list = res.data
+                        const keyList = ['name']
+                        const list = data
 
                         list.forEach(item => {
                             item.isChecked = false
@@ -569,8 +578,7 @@
                     name: 'crdcontrollerInstanceDetail',
                     params: {
                         clusterId: this.searchScope,
-                        name: crdcontroller.name,
-                        id: crdcontroller.crd_ctr_id,
+                        id: crdcontroller.id,
                         chartName: crdcontroller.chart_name
                     }
                 })
@@ -588,7 +596,6 @@
                         this.$router.push({
                             name: 'crdcontrollerLogInstances',
                             params: {
-                                crdKind: crdcontroller.name,
                                 clusterId: this.searchScope
                             }
                         })
@@ -598,19 +605,17 @@
                         }
                     }
                 } else {
-                    if (crdcontroller.name === 'DbPrivilege') {
+                    if (crdcontroller.chart_name === 'db-privilege') {
                         this.$router.push({
                             name: 'crdcontrollerDBInstances',
                             params: {
-                                crdKind: crdcontroller.name,
                                 clusterId: this.searchScope
                             }
                         })
-                    } else if (crdcontroller.name === 'BcsPolaris') {
+                    } else if (crdcontroller.chart_name === 'bcs-polaris-operator') {
                         this.$router.push({
                             name: 'crdcontrollerPolarisInstances',
                             params: {
-                                crdKind: crdcontroller.name,
                                 clusterId: this.searchScope
                             }
                         })
@@ -648,28 +653,26 @@
              * @param  {number} index 索引
              */
             getCrdcontrollerStatus (crdcontroller, index) {
-                if (crdcontroller.crd_ctr_id === undefined) {
+                if (crdcontroller.id === undefined) {
                     return false
                 }
-                const projectId = this.projectId
-                const crdcontrollerId = crdcontroller.crd_ctr_id
+                const crdcontrollerId = crdcontroller.id
                 const clusterId = crdcontroller.cluster_id || this.searchScope
                 const self = this
 
-                clearInterval(this.statusTimer[crdcontroller.crd_ctr_id])
-                this.statusTimer[crdcontroller.crd_ctr_id] = setInterval(async () => {
+                clearInterval(this.statusTimer[crdcontroller.id])
+                this.statusTimer[crdcontroller.id] = setInterval(async () => {
                     try {
-                        const res = await this.$store.dispatch('crdcontroller/getCrdcontrollerStatus', {
-                            projectId,
-                            clusterId,
-                            crdcontrollerId
+                        const data = await this.$store.dispatch('crdcontroller/clusterToolsInstalledDetail', {
+                            $clusterId: clusterId,
+                            $toolId: crdcontrollerId
                         })
-                        if (this.fiexedStatus.includes(res.data.status)) {
-                            clearInterval(self.statusTimer[crdcontroller.crd_ctr_id])
+                        if (this.fiexedStatus.includes(data.status) || !data.status) {
+                            clearInterval(self.statusTimer[crdcontroller.id])
                             this.crdControllerList.forEach(item => {
-                                if (item.crd_ctr_id === crdcontrollerId) {
-                                    item.status = res.data.status
-                                    item.message = res.data.message
+                                if (item.id === crdcontrollerId) {
+                                    item.status = data.status
+                                    item.message = data.message
                                 }
                             })
                         }
@@ -677,11 +680,35 @@
                         catchErrorHandler(e, this)
                     }
                 }, 2000)
+            },
+            // 卸载组件
+            handleUninstall (crdcontroller) {
+                const crdcontrollerId = crdcontroller.id
+                const clusterId = crdcontroller.cluster_id || this.searchScope
+                this.$bkInfo({
+                    type: 'warning',
+                    clsName: 'custom-info-confirm',
+                    subTitle: crdcontroller.name,
+                    title: this.$t('确定卸载'),
+                    defaultInfo: true,
+                    confirmFn: async (vm) => {
+                        const result = await this.$store.dispatch('crdcontroller/clusterToolsUninstall', {
+                            $clusterId: clusterId,
+                            $toolId: crdcontrollerId
+                        })
+                        if (result) {
+                            this.getCrdControllersByCluster()
+                        }
+                    }
+                })
             }
         }
     }
 </script>
 
-<style scoped>
+<style lang="postcss" scoped>
     @import './index.css';
+    /deep/ .bk-dropdown-menu .bk-dropdown-list {
+        overflow: hidden;
+    }
 </style>

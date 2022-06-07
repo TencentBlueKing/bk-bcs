@@ -83,3 +83,35 @@ func (c *CloudValidate) ImportCloudAccountValidate(req *proto.Account) error {
 	// blueking cloud not cloud Account
 	return nil
 }
+
+// GetCloudRegionZonesValidate xxx
+func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
+	// blueking cloud not cloud Account
+	return nil
+}
+
+// ListCloudRegionClusterValidate xxx
+func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
+	// blueking cloud not cloud Account
+	return nil
+}
+
+// ListCloudSubnetsValidate xxx
+func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListSecurityGroupsValidate xxx
+func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListInstanceTypeValidate xxx
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListCloudOsImageValidate xxx
+func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
+	return nil
+}

@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 )
 
@@ -28,7 +29,7 @@ var defaultCommonOption = &cloudprovider.CommonOption{
 }
 
 func TestNodeManager_GetCVMImageIDByImageName(t *testing.T) {
-	imageName1 := "Tencent tlinux release 2.2 (Final)"
+	imageName1 := "Tencent tlinux xxx"
 	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName1, &cloudprovider.CommonOption{
 		Secret: "xxx",
 		Key:    "xxx",
@@ -64,7 +65,12 @@ func TestNodeManager_GetZoneList(t *testing.T) {
 }
 
 func TestNodeManager_GetNodeByIP(t *testing.T) {
-	node, err := nodeManager.GetNodeByIP("127.0.0.1", nil)
+	defaultCommonOption.Region = regions.Guangzhou
+
+	node, err := nodeManager.GetNodeByIP("10.0.xx", &cloudprovider.GetNodeOption{
+		Common:       defaultCommonOption,
+		ClusterVPCID: "vpc-6jhti3nx",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,14 +79,26 @@ func TestNodeManager_GetNodeByIP(t *testing.T) {
 }
 
 func TestNodeManager_ListNodesByIP(t *testing.T) {
-	IPList := []string{"127.0.0.1", "127.0.0.2"}
+	IPList := []string{"xxx"}
 
+	defaultCommonOption.Region = regions.Guangzhou
 	nodes, err := nodeManager.ListNodesByIP(IPList, &cloudprovider.ListNodesOption{
-		Common: &cloudprovider.CommonOption{
-			Secret: "xxx",
-			Key:    "xxx",
-			Region: regions.Shanghai,
-		},
+		Common:       defaultCommonOption,
+		ClusterVPCID: "vpc-xxx",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(nodes)
+}
+
+func TestNodeManager_ListNodesByInstance(t *testing.T) {
+	instanceList := []string{"ins-xxx", "ins-xxx"}
+
+	defaultCommonOption.Region = regions.Guangzhou
+	nodes, err := nodeManager.ListNodesByInstanceID(instanceList, &cloudprovider.ListNodesOption{
+		Common:       defaultCommonOption,
 		ClusterVPCID: "vpc-xxx",
 	})
 	if err != nil {
@@ -106,4 +124,33 @@ func TestGetZoneInfoByRegion(t *testing.T) {
 	}
 
 	t.Log(zoneInfo)
+}
+
+func TestDescribeInstanceTypeConfigs(t *testing.T) {
+	filters := []*Filter{
+		{Name: "zone", Values: []string{"ap-guangzhou-3"}},
+	}
+	instanceTypeConfigs, err := nodeManager.DescribeInstanceTypeConfigs(filters, &cloudprovider.CommonOption{
+		Key:    "xxx",
+		Secret: "xxx",
+		Region: regions.Guangzhou,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(utils.ToJSONString(instanceTypeConfigs))
+}
+
+func TestListNodeInstanceType(t *testing.T) {
+	instanceTypeConfigs, err := nodeManager.ListNodeInstanceType("", "", 4, 0, &cloudprovider.CommonOption{
+		Key:    "xxx",
+		Secret: "xxx",
+		Region: regions.Guangzhou,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(utils.ToJSONString(instanceTypeConfigs))
 }

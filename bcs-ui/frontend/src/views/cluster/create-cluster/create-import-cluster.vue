@@ -270,7 +270,7 @@
 
                 clusterLoading.value = true
                 clusterList.value = await $store.dispatch('clustermanager/cloudClusterList', {
-                    $regionId: importClusterInfo.value.region,
+                    region: importClusterInfo.value.region,
                     $cloudId: importClusterInfo.value.provider,
                     accountID: importClusterInfo.value.accountID
                 })

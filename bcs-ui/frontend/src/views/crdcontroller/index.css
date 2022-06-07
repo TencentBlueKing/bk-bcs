@@ -132,7 +132,7 @@
     }
 
     .log-name {
-        width: 110px;
+        width: 150px;
         padding: 0 10px 0 20px;
     }
 
@@ -311,7 +311,7 @@
 .save-crd-btn {
     position: absolute;
     top: 13px;
-    right: 90px;
+    right: 100px;
 }
 
 .hide-crd-btn {
