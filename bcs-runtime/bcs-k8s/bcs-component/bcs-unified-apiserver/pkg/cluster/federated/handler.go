@@ -13,12 +13,8 @@
 package federated
 
 import (
-	"fmt"
-
 	v1 "k8s.io/api/core/v1"
-	apiproxy "k8s.io/apimachinery/pkg/util/proxy"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest/apis"
@@ -28,26 +24,22 @@ import (
 type Handler struct {
 	clusterId          string
 	members            []string
-	proxyHandler       *apiproxy.UpgradeAwareHandler
+	proxyHandler       *proxy.ProxyHandler
 	podHander          *apis.PodHandler
 	deploymentHandler  *apis.DeploymentHandler
 	statefulSetHandler *apis.StatefulSetHandler
 	serviceHandler     *apis.ServiceHandler
 	configmapHandler   *apis.ConfigMapHandler
 	secretHandler      *apis.SecretHandler
+	eventHandler       *apis.EventHandler
 	clusterHandler     *apis.ClusterHandler
 }
 
 // NewHandler create federated cluster handler
 func NewHandler(clusterId string, members []string) (*Handler, error) {
-	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
+	proxyHandler, err := proxy.NewProxyHandler(clusterId)
 	if err != nil {
-		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
-	}
-
-	proxyHandler, err := proxy.NewProxyHandlerFromConfig(kubeConf)
-	if err != nil {
-		return nil, fmt.Errorf("build proxy handler from config %s failed, err %s", kubeConf.String(), err.Error())
+		return nil, err
 	}
 
 	h := &Handler{
@@ -100,6 +92,12 @@ func (h *Handler) Register(clusterId string, members []string) error {
 	}
 	h.secretHandler = apis.NewSecretHandler(secretStor)
 
+	eventStor, err := NewEventStor(clusterId, members)
+	if err != nil {
+		return err
+	}
+	h.eventHandler = apis.NewEventHandler(eventStor)
+
 	clusterStor, err := NewClusterStor(clusterId, members)
 	if err != nil {
 		return err
@@ -126,6 +124,8 @@ func (h *Handler) Serve(c *rest.RequestContext) {
 		err = h.configmapHandler.Serve(c)
 	case "secrets":
 		err = h.secretHandler.Serve(c)
+	case "events":
+		err = h.eventHandler.Serve(c)
 	}
 
 	// 未实现的功能, 使用代理请求

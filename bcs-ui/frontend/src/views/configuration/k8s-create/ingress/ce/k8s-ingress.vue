@@ -4,12 +4,12 @@
             <div class="bk-form-item">
                 <div class="bk-form-content" style="margin-left: 0;">
                     <div class="bk-form-item is-required">
-                        <label class="bk-label" style="width: 130px;">名称：</label>
+                        <label class="bk-label" style="width: 130px;">{{$t('名称')}}：</label>
                         <div class="bk-form-content" style="margin-left: 130px;">
-                            <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" placeholder="请输入30个字符以内" style="width: 310px;" v-model="curIngress.config.metadata.name" maxlength="30" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+                            <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('请输入30个字符以内')" style="width: 310px;" v-model="curIngress.config.metadata.name" maxlength="30" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
                         </div>
                         <div class="bk-form-tip is-danger" style="margin-left: 130px;" v-if="errors.has('applicationName')">
-                            <p class="bk-tip-text">名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)</p>
+                            <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
                         </div>
                     </div>
                 </div>
@@ -18,10 +18,10 @@
             <div class="bk-form-item">
                 <div class="bk-form-content" style="margin-left: 130px;">
                     <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isTlsPanelShow }]" @click.stop.prevent="toggleTlsPanel">
-                        TLS设置<i class="bk-icon icon-angle-double-down ml5"></i>
+                        {{$t('TLS设置')}}<i class="bk-icon icon-angle-double-down ml5"></i>
                     </button>
                     <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isPanelShow }]" @click.stop.prevent="togglePanel">
-                        更多设置<i class="bk-icon icon-angle-double-down ml5"></i>
+                        {{$t('更多设置')}}<i class="bk-icon icon-angle-double-down ml5"></i>
                     </button>
                 </div>
             </div>
@@ -37,7 +37,7 @@
                                             <td>
                                                 <bk-input
                                                     type="text"
-                                                    placeholder="主机名，多个用英文逗号分隔"
+                                                    :placeholder="$t('主机名，多个用英文逗号分隔')"
                                                     style="width: 310px;"
                                                     :value.sync="computer.hosts"
                                                     :list="varList"
@@ -73,12 +73,12 @@
             <div class="bk-form-item mt0" v-show="isPanelShow">
                 <div class="bk-form-content" style="margin-left: 130px;">
                     <bk-tab :type="'fill'" :active-name="'remark'" :size="'small'">
-                        <bk-tabpanel name="remark" title="备注">
+                        <bk-tabpanel name="remark" :title="$t('备注')">
                             <div class="biz-tab-wrapper m20">
                                 <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer"></bk-keyer>
                             </div>
                         </bk-tabpanel>
-                        <bk-tabpanel name="label" title="标签">
+                        <bk-tabpanel name="label" :title="$t('标签')">
                             <div class="biz-tab-wrapper m20">
                                 <bk-keyer :key-list.sync="curLabelList" :var-list="varList" ref="labelKeyer"></bk-keyer>
                             </div>
@@ -92,12 +92,12 @@
                 <div class="bk-button-group">
                     <div class="item" v-for="(rule, index) in curIngress.config.spec.rules" :key="index">
                         <button :class="['bk-button bk-default is-outline', { 'is-selected': curRuleIndex === index }]" @click.stop="setCurRule(rule, index)">
-                            {{rule.host || '未命名'}}
+                            {{rule.host || $t('未命名')}}
                         </button>
                         <span class="bk-icon icon-close-circle" @click.stop="removeRule(index)" v-if="curIngress.config.spec.rules.length > 1"></span>
                     </div>
-                    <bk-tooltip ref="containerTooltip" :content="curIngress.config.spec.rules.length >= 5 ? '最多添加5个' : '添加Rule'" placement="top">
-                        <button type="button" class="bk-button bk-default is-outline is-icon" :disabled="curIngress.config.spec.rules.length >= 5 " @click.stop.prevent="addLocalRule">
+                    <bk-tooltip ref="containerTooltip" :content="$t('添加Rule')" placement="top">
+                        <button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalRule">
                             <i class="bk-icon icon-plus"></i>
                         </button>
                     </bk-tooltip>
@@ -106,16 +106,16 @@
 
             <div class="bk-form biz-configuration-form pb15">
                 <div class="biz-span" style="margin-left: 130px;">
-                    <span class="title">基础信息</span>
+                    <span class="title">{{$t('基础信息')}}</span>
                 </div>
                 <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 130px;">主机名：</label>
+                    <label class="bk-label" style="width: 130px;">{{$t('主机名')}}：</label>
                     <div class="bk-form-content" style="margin-left: 130px;">
-                        <input type="text" :class="['bk-form-input']" placeholder="请输入30个字符以内" style="width: 310px;" v-model="curRule.host" maxlength="30" name="ruleName">
+                        <input type="text" :class="['bk-form-input']" :placeholder="$t('请输入30个字符以内')" style="width: 310px;" v-model="curRule.host" maxlength="30" name="ruleName">
                     </div>
                 </div>
                 <div class="bk-form-item">
-                    <label class="bk-label" style="width: 130px;">路径组：</label>
+                    <label class="bk-label" style="width: 130px;">{{$t('路径组')}}：</label>
                     <div class="bk-form-content" style="margin-left: 130px;">
                         <table class="biz-simple-table">
                             <tbody>
@@ -123,7 +123,7 @@
                                     <td>
                                         <bk-input
                                             type="text"
-                                            placeholder="路径"
+                                            :placeholder="$t('路径')"
                                             style="width: 310px;"
                                             :value.sync="pathRule.path"
                                             :list="varList"
@@ -136,7 +136,7 @@
                                     <td>
                                         <bk-selector
                                             style="width: 180px;"
-                                            placeholder="服务名称"
+                                            :placeholder="$t('服务名称')"
                                             :disabled="isLoadBalanceEdited"
                                             :setting-key="'_name'"
                                             :display-key="'_name'"
@@ -148,7 +148,7 @@
                                     <td>
                                         <bk-selector
                                             style="width: 180px;"
-                                            placeholder="服务端口"
+                                            :placeholder="$t('服务端口')"
                                             :disabled="isLoadBalanceEdited"
                                             :setting-key="'_id'"
                                             :display-key="'_name'"
@@ -404,7 +404,7 @@
                         if (path.backend.serviceName && !this.serviceNames.includes(path.backend.serviceName)) {
                             this.$bkMessage({
                                 theme: 'error',
-                                message: `${this.curIngress.config.metadata.name}中路径组：关联的Service【${path.backend.serviceName}】不存在，请重新绑定！`,
+                                message: this.$t('{name}中路径组：关联的Service【{serviceName}】不存在，请重新绑定！', { name: this.curIngress.config.metadata.name, serviceName: path.backend.serviceName }),
                                 delay: 5000
                             })
                             return false

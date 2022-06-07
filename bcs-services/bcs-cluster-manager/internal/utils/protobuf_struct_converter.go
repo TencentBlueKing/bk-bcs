@@ -20,6 +20,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// MapToProtobufStruct converts a map to a protobuf struct.
 func MapToProtobufStruct(m map[string]interface{}) (*structpb.Struct, error) {
 	b, err := json.Marshal(m)
 	if err != nil {
@@ -33,6 +34,7 @@ func MapToProtobufStruct(m map[string]interface{}) (*structpb.Struct, error) {
 	return s, nil
 }
 
+// ProtobufStructToMap converts a protobuf struct to a map.
 func ProtobufStructToMap(s *structpb.Struct) (map[string]interface{}, error) {
 	b, err := protojson.Marshal(s)
 	if err != nil {
@@ -46,10 +48,12 @@ func ProtobufStructToMap(s *structpb.Struct) (map[string]interface{}, error) {
 	return m, nil
 }
 
+// StructToProtobufStruct converts a struct to a protobuf struct.
 func StructToProtobufStruct(s interface{}) (*structpb.Struct, error) {
 	return MapToProtobufStruct(s.(map[string]interface{}))
 }
 
+// ProtobufStructToStruct converts a protobuf struct to a struct.
 func ProtobufStructToStruct(s *structpb.Struct) (interface{}, error) {
 	return ProtobufStructToMap(s)
 }

@@ -89,6 +89,11 @@ urlpatterns = [
         include("backend.helm.app.release_url"),
     ),
     path(r"change_log/", include("backend.change_log.urls")),
+    # 组件库
+    path(
+        'api/cluster_tools/projects/<slug:project_id>/clusters/<slug:cluster_id>/',
+        include('backend.container_service.cluster_tools.urls'),
+    ),
     # cluster manager的代理请求
     url(
         r"^{}".format(settings.CLUSTER_MANAGER_PROXY["PREFIX_PATH"]),

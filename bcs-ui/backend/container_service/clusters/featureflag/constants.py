@@ -19,7 +19,7 @@ UNSELECTED_CLUSTER_PLACEHOLDER = '-'
 
 
 class ViewMode(str, enum.StructuredEnum):
-    """ 查看模式 """
+    """查看模式"""
 
     ClusterManagement = enum.EnumField('ClusterManagement', label='集群管理')
     ResourceDashboard = enum.EnumField('ResourceDashboard', label='资源视图')

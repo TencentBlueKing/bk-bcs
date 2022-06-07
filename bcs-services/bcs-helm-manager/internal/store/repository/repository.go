@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -33,9 +34,9 @@ var (
 	tableIndexes = []drivers.Index{
 		{
 			Name: tableName + "_idx",
-			Key: map[string]int32{
-				entity.FieldKeyProjectID: 1,
-				entity.FieldKeyName:      1,
+			Key: bson.D{
+				bson.E{Key: entity.FieldKeyProjectID, Value: 1},
+				bson.E{Key: entity.FieldKeyName, Value: 1},
 			},
 			Unique: true,
 		},

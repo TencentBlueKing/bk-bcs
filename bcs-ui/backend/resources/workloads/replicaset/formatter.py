@@ -18,7 +18,7 @@ from backend.resources.workloads.common.formatter import WorkloadFormatter
 
 
 class ReplicaSetFormatter(WorkloadFormatter):
-    """ ReplicaSet 格式化 """
+    """ReplicaSet 格式化"""
 
     def format_dict(self, resource_dict: Dict) -> Dict:
         return self.format_common_dict(resource_dict)

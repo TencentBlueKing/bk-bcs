@@ -13,36 +13,42 @@
 
 package utils
 
-// Barrier for limited go-routines
-type Barrier struct {
-	c chan struct{}
+import "sync"
+
+// RoutinePool
+type RoutinePool struct {
+	c  chan struct{}
+	wg *sync.WaitGroup
 }
 
-// NewBarrier creates new object and inits it
-func NewBarrier(num int) *Barrier {
-	b := &Barrier{}
-	b.c = make(chan struct{}, num)
-	for i := 0; i < num; i++ {
-		b.c <- struct{}{}
+// NewRoutinePool
+func NewRoutinePool(maxSize int) *RoutinePool {
+	return &RoutinePool{
+		c:  make(chan struct{}, maxSize),
+		wg: new(sync.WaitGroup),
 	}
-	return b
 }
 
-// Advance 1 step if there still is a unused go-routine
-func (b *Barrier) Advance() {
-	if b == nil {
-		return
+// Add
+func (c *RoutinePool) Add(delta int) {
+	c.wg.Add(delta)
+	for i := 0; i < delta; i++ {
+		c.c <- struct{}{}
 	}
-	<-b.c
 }
 
-// Done means outside will release the go routine
-func (b *Barrier) Done() {
-	if b == nil {
-		return
-	}
-	select {
-	case b.c <- struct{}{}:
-	default:
-	}
+// Done
+func (c *RoutinePool) Done() {
+	<-c.c
+	c.wg.Done()
+}
+
+// Close
+func (c *RoutinePool) Close() {
+	close(c.c)
+}
+
+// Wait
+func (c *RoutinePool) Wait() {
+	c.wg.Wait()
 }

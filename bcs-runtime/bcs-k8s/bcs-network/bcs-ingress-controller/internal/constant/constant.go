@@ -19,6 +19,8 @@ const (
 	CloudTencent = "tencentcloud"
 	// CloudAWS aws cloud
 	CloudAWS = "aws"
+	// CloudGCP gcp cloud
+	CloudGCP = "gcp"
 
 	// EnvNameIsTCPUDPPortReuse env name for option if the loadbalancer provider support tcp udp port reuse
 	// if enabled, we will find protocol info in 4 layer listener name
@@ -94,11 +96,11 @@ const (
 	PatchOperationRemove = "remove"
 	// PatchPathPodAnnotations annotations path for patch operation
 	PatchPathPodAnnotations = "/metadata/annotations"
-	// PathPathContainerEnv container env path for patch operation
+	// PatchPathContainerEnv container env path for patch operation
 	PatchPathContainerEnv = "/spec/containers/%v/env"
 	// PathPathInitContainerEnv init container env path for patch operation
 	PathPathInitContainerEnv = "/spec/initContainers/%v/env"
-	// PatchPathPodReadinessGate
+	// PatchPathPodReadinessGate readiness gate path for patch operation
 	PatchPathPodReadinessGate = "/spec/readinessGates"
 
 	// EnvVIPsPrefixForPortPoolPort env prefix for port in port pool
@@ -115,9 +117,9 @@ const (
 	PortPoolPortProtocolTCPUDP = "TCP_UDP"
 
 	//LoadBalanceCheckFormatWithAp regular expression for check lb format "ap-xxxxx:lb-xxxxx"
-	LoadBalanceCheckFormatWithApLbID = "^ap-[A-Za-z0-9]+:lb-[A-Za-z0-9]+"
+	LoadBalanceCheckFormatWithApLbID = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:lb-[A-Za-z0-9]+"
 	//LoadBalanceCheckFormat regular expression for check lb format "lb-xxxxx"
 	LoadBalanceCheckFormat = "^lb-[A-Za-z0-9]+"
 	//LoadBalanceCheckFormatWithApLbName
-	LoadBalanceCheckFormatWithApLbName = "^ap-[A-Za-z0-9]+:[A-Za-z0-9]+"
+	LoadBalanceCheckFormatWithApLbName = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:[A-Za-z0-9]+"
 )

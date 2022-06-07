@@ -25,7 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -33,7 +32,7 @@ import (
 
 // BuildListAPIResp ...
 func BuildListAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace string, opts metav1.ListOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, format string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
@@ -47,7 +46,15 @@ func BuildListAPIResp(
 		return nil, err
 	}
 
-	return GenListResRespData(ret.UnstructuredContent(), resKind)
+	respDataBuilder, err := NewRespDataBuilder(ctx, ret.UnstructuredContent(), resKind, format)
+	if err != nil {
+		return nil, err
+	}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return nil, err
+	}
+	return pbstruct.Map2pbStruct(respData)
 }
 
 // BuildRetrieveAPIResp ...
@@ -66,11 +73,11 @@ func BuildRetrieveAPIResp(
 		return nil, err
 	}
 
-	respDataBuilder, err := NewGetRespDataBuilder(ret.UnstructuredContent(), resKind, format)
+	respDataBuilder, err := NewRespDataBuilder(ctx, ret.UnstructuredContent(), resKind, format)
 	if err != nil {
 		return nil, err
 	}
-	respData, err := respDataBuilder.Do()
+	respData, err := respDataBuilder.Build()
 	if err != nil {
 		return nil, err
 	}
@@ -127,27 +134,20 @@ func BuildDeleteAPIResp(
 
 // BuildListPodRelatedResResp ...
 func BuildListPodRelatedResResp(
-	ctx context.Context, clusterID, namespace, podName, resKind string,
+	ctx context.Context, clusterID, namespace, podName, format, resKind string,
 ) (*structpb.Struct, error) {
 	relatedRes, err := cli.NewPodCliByClusterID(ctx, clusterID).ListPodRelatedRes(ctx, namespace, podName, resKind)
 	if err != nil {
 		return nil, err
 	}
-	return GenListResRespData(relatedRes, resKind)
-}
-
-// GenListResRespData 根据 ResList Manifest 生成获取某类资源列表的响应结果
-func GenListResRespData(manifest map[string]interface{}, resKind string) (*structpb.Struct, error) {
-	manifestExt := map[string]interface{}{}
-	formatFunc := formatter.GetFormatFunc(resKind)
-	// 遍历列表中的每个资源，生成 manifestExt
-	for _, item := range manifest["items"].([]interface{}) {
-		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
-		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
+	respDataBuilder, err := NewRespDataBuilder(ctx, relatedRes, resKind, format)
+	if err != nil {
+		return nil, err
 	}
-
-	// 组装数据，并转换为 structpb.Struct 格式
-	respData := map[string]interface{}{"manifest": manifest, "manifestExt": manifestExt}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return nil, err
+	}
 	return pbstruct.Map2pbStruct(respData)
 }
 
@@ -171,7 +171,7 @@ func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podNam
 			message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
 		}
 		containers = append(containers, map[string]interface{}{
-			"containerID": extractContainerID(mapx.Get(cs, "containerID", "").(string)),
+			"containerID": extractContainerID(mapx.GetStr(cs, "containerID")),
 			"image":       cs["image"].(string),
 			"name":        cs["name"].(string),
 			"status":      status,
@@ -211,29 +211,30 @@ func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName
 
 	// 各项容器数据组装
 	containerInfo := map[string]interface{}{
-		"hostName":      mapx.Get(podManifest, "spec.nodeName", "--"),
-		"hostIP":        mapx.Get(podManifest, "status.hostIP", "--"),
-		"containerIP":   mapx.Get(podManifest, "status.podIP", "--"),
-		"containerID":   extractContainerID(mapx.Get(curContainerStatus, "containerID", "").(string)),
+		"hostName":      mapx.Get(podManifest, "spec.nodeName", "N/A"),
+		"hostIP":        mapx.Get(podManifest, "status.hostIP", "N/A"),
+		"containerIP":   mapx.Get(podManifest, "status.podIP", "N/A"),
+		"containerID":   extractContainerID(mapx.GetStr(curContainerStatus, "containerID")),
 		"containerName": containerName,
-		"image":         mapx.Get(curContainerStatus, "image", "--"),
-		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "--"),
-		"ports":         mapx.Get(curContainerSpec, "ports", []interface{}{}),
-		"volumes":       []map[string]interface{}{},
+		"image":         mapx.Get(curContainerStatus, "image", "N/A"),
+		"networkMode":   mapx.Get(podManifest, "spec.dnsPolicy", "N/A"),
+		"ports":         mapx.GetList(curContainerSpec, "ports"),
 		"resources":     mapx.Get(curContainerSpec, "resources", map[string]interface{}{}),
 		"command": map[string]interface{}{
-			"command": mapx.Get(curContainerSpec, "command", []string{}),
-			"args":    mapx.Get(curContainerSpec, "args", []string{}),
+			"command": mapx.GetList(curContainerSpec, "command"),
+			"args":    mapx.GetList(curContainerSpec, "args"),
 		},
 	}
-	mounts := mapx.Get(curContainerSpec, "volumeMounts", []map[string]interface{}{})
-	for _, mount := range mounts.([]interface{}) {
+	mounts := mapx.GetList(curContainerSpec, "volumeMounts")
+	for _, mount := range mounts {
 		m, _ := mount.(map[string]interface{})
-		containerInfo["volumes"] = append(containerInfo["volumes"].([]map[string]interface{}), map[string]interface{}{
-			"name":      mapx.Get(m, "name", "--"),
-			"mountPath": mapx.Get(m, "mountPath", "--"),
-			"readonly":  mapx.Get(m, "readOnly", "--"),
+		volumes := []map[string]interface{}{}
+		volumes = append(volumes, map[string]interface{}{
+			"name":      mapx.Get(m, "name", "N/A"),
+			"mountPath": mapx.Get(m, "mountPath", "N/A"),
+			"readonly":  mapx.Get(m, "readOnly", "N/A"),
 		})
+		containerInfo["volumes"] = volumes
 	}
 
 	return pbstruct.Map2pbStruct(containerInfo)

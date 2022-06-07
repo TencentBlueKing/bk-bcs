@@ -1175,11 +1175,6 @@
 }
 
 .english {
-    .bk-form .bk-label {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-    }
 
     .bk-form.bk-form-vertical .bk-label {
         width: auto;

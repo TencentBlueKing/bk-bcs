@@ -70,13 +70,14 @@ func TestCObj(t *testing.T) {
 		ClusterID: envs.TestClusterID,
 		CRDName:   handler.CRDName4Test,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = h.ListCObj(ctx, &listReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CronTabList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "CronTabList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Update
 	_ = mapx.SetItems(cobjManifest4Test, "spec.cronSpec", "* * * * */5")
@@ -107,8 +108,8 @@ func TestCObj(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CronTab", mapx.Get(respData, "manifest.kind", ""))
-	assert.Equal(t, "* * * * */5", mapx.Get(respData, "manifest.spec.cronSpec", ""))
+	assert.Equal(t, "CronTab", mapx.GetStr(respData, "manifest.kind"))
+	assert.Equal(t, "* * * * */5", mapx.GetStr(respData, "manifest.spec.cronSpec"))
 
 	// Delete
 	deleteReq := clusterRes.CObjDeleteReq{
@@ -135,6 +136,7 @@ func TestCObjInSharedCluster(t *testing.T) {
 		ClusterID: envs.TestSharedClusterID,
 		CRDName:   handler.CRDName4Test,
 		Namespace: envs.TestSharedClusterNS,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = hdlr.ListCObj(ctx, &listReq, &listResp)

@@ -228,10 +228,11 @@ type AuthConf struct {
 
 // BasicConf 项目基础配置
 type BasicConf struct {
-	AppCode     string `yaml:"appCode" usage:"应用 ID"`
-	AppSecret   string `yaml:"appSecret" usage:"应用 Secret"`
-	BKAPIGWHost string `yaml:"bkApiGWHost" usage:"蓝鲸 API 网关 Host"` // nolint:tagliatelle
-	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"蓝鲸 PaaS（esb）Host"`
+	AppCode      string `yaml:"appCode" usage:"应用 ID"`
+	AppSecret    string `yaml:"appSecret" usage:"应用 Secret"`
+	BKAPIGWHost  string `yaml:"bkApiGWHost" usage:"蓝鲸 API 网关 Host"` // nolint:tagliatelle
+	BKPaaSHost   string `yaml:"bkPaaSHost" usage:"蓝鲸 PaaS（esb）Host"`
+	HealthzToken string `yaml:"healthzToken" usage:"Healthz API Token"`
 }
 
 // BCSAPIGatewayConf 容器服务网关配置

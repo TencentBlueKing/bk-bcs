@@ -25,4 +25,6 @@ const (
 	ProjKey = types.ContextKey("project")
 	// ClusterKey ...
 	ClusterKey = types.ContextKey("cluster")
+	// LangKey 语言版本
+	LangKey = types.ContextKey("lang")
 )

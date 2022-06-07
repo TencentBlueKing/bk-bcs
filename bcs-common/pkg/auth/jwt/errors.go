@@ -30,4 +30,6 @@ var (
 	ErrJWtClientNameEmpty = errors.New("jwt uerInfo clientName empty")
 	// ErrJWtSubType for jwt user type error
 	ErrJWtSubType = errors.New("jwt subType err: user or client")
+	// ErrTokenIsNil parse with claim return token is nil
+	ErrTokenIsNil = errors.New("parse with claims return token is nil")
 )

@@ -31,7 +31,7 @@ func TestDS(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_daemonset", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,26 +45,26 @@ func TestDS(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "DaemonSetList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "DaemonSetList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.template.metadata.labels.tKey", "tVal")
 	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
-	updateReq := handler.GenResUpdateReq(updateManifest, resName.(string))
+	updateReq := handler.GenResUpdateReq(updateManifest, resName)
 	err = h.UpdateDS(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetDS(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "DaemonSet", mapx.Get(respData, "manifest.kind", ""))
-	assert.Equal(t, "tVal", mapx.Get(respData, "manifest.spec.template.metadata.labels.tKey", ""))
+	assert.Equal(t, "DaemonSet", mapx.GetStr(respData, "manifest.kind"))
+	assert.Equal(t, "tVal", mapx.GetStr(respData, "manifest.spec.template.metadata.labels.tKey"))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteDS(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

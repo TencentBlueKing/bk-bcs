@@ -18,29 +18,35 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+
+	spb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // ListAction list action for cluster
 type ListAction struct {
 	ctx         context.Context
 	model       store.ClusterManagerModel
+	iam         iam.PermClient
 	req         *cmproto.ListClusterReq
 	resp        *cmproto.ListClusterResp
 	clusterList []*cmproto.Cluster
 }
 
 // NewListAction create list action for cluster
-func NewListAction(model store.ClusterManagerModel) *ListAction {
+func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAction {
 	return &ListAction{
 		model: model,
+		iam:   iam,
 	}
 }
 
@@ -91,15 +97,23 @@ func (la *ListAction) getSharedCluster() error {
 		clusterIDs = append(clusterIDs, clusterList[i].ClusterID)
 	}
 
-	if la.resp.ClusterPerm == nil {
-		la.resp.ClusterPerm = make(map[string]*cmproto.Permission)
+	if la.resp.WebAnnotations == nil {
+		la.resp.WebAnnotations = &cmproto.WebAnnotations{
+			Perms: make(map[string]*spb.Struct),
+		}
+	} else {
+		if la.resp.WebAnnotations.Perms == nil {
+			la.resp.WebAnnotations.Perms = make(map[string]*spb.Struct)
+		}
 	}
 
 	for _, clusterID := range clusterIDs {
-		if _, ok := la.resp.ClusterPerm[clusterID]; !ok {
-			la.resp.ClusterPerm[clusterID] = &cmproto.Permission{
-				Policy: auth.GetSharedClusterPerm(),
+		if _, ok := la.resp.WebAnnotations.Perms[clusterID]; !ok {
+			actionPerm, err := spb.NewStruct(auth.GetV3SharedClusterPerm())
+			if err != nil {
+				continue
 			}
+			la.resp.WebAnnotations.Perms[clusterID] = actionPerm
 		}
 	}
 
@@ -167,22 +181,16 @@ func (la *ListAction) listCluster() error {
 
 	// projectID / operator get user perm
 	if la.req.ProjectID != "" && la.req.Operator != "" {
-		perms, err := GetUserPermListByProjectAndCluster(UserInfo{
+		v3Perm, err := la.GetProjectClustersV3Perm(PermInfo{
 			ProjectID: la.req.ProjectID,
 			UserID:    la.req.Operator,
-		}, clusterIDList, false)
+		}, clusterIDList)
 		if err != nil {
 			blog.Errorf("listCluster GetUserPermListByProjectAndCluster failed: %v", err.Error())
-			return err
 		}
-
-		la.resp.ClusterPerm = perms
-
-		createPerm := GetClusterCreatePerm(UserInfo{
-			ProjectID: la.req.ProjectID,
-			UserID:    la.req.Operator,
-		})
-		la.resp.Permissions = createPerm
+		la.resp.WebAnnotations = &cmproto.WebAnnotations{
+			Perms: v3Perm,
+		}
 	}
 
 	// default return shared cluster
@@ -195,6 +203,55 @@ func (la *ListAction) listCluster() error {
 	}
 
 	return nil
+}
+
+// GetProjectClustersV3Perm get iam v3 perm
+func (la *ListAction) GetProjectClustersV3Perm(user PermInfo, clusterList []string) (map[string]*spb.Struct, error) {
+	var (
+		v3Perm map[string]map[string]interface{}
+		err    error
+	)
+
+	v3Perm, err = la.getUserClusterPermList(user, clusterList)
+	if err != nil {
+		blog.Errorf("listCluster GetUserClusterPermList failed: %v", err.Error())
+		return nil, err
+	}
+
+	// trans result for adapt front
+	v3ResultPerm := make(map[string]*spb.Struct)
+	for clsID := range v3Perm {
+		actionPerm, err := spb.NewStruct(v3Perm[clsID])
+		if err != nil {
+			return nil, err
+		}
+
+		v3ResultPerm[clsID] = actionPerm
+	}
+
+	return v3ResultPerm, nil
+}
+
+func (la *ListAction) getUserClusterPermList(user PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
+	permissions := make(map[string]map[string]interface{})
+	clusterPerm := cluster.NewBCSClusterPermClient(la.iam)
+
+	actionIDs := []string{cluster.ClusterView.String(), cluster.ClusterManage.String(), cluster.ClusterDelete.String()}
+	perms, err := clusterPerm.GetMultiClusterMultiActionPermission(user.UserID, user.ProjectID, clusterList, actionIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for clusterID, perm := range perms {
+		if permissions[clusterID] == nil {
+			permissions[clusterID] = make(map[string]interface{})
+		}
+		for action, res := range perm {
+			permissions[clusterID][action] = res
+		}
+	}
+
+	return permissions, nil
 }
 
 // GetCloudProviderEngine get cloud engineType
@@ -235,6 +292,92 @@ func (la *ListAction) setResp(code uint32, msg string) {
 func (la *ListAction) Handle(ctx context.Context, req *cmproto.ListClusterReq, resp *cmproto.ListClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("list cluster failed, req or resp is empty")
+		return
+	}
+	la.ctx = ctx
+	la.req = req
+	la.resp = resp
+
+	if err := la.validate(); err != nil {
+		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	if err := la.listCluster(); err != nil {
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}
+
+// ListCommonClusterAction list action for cluster
+type ListCommonClusterAction struct {
+	ctx         context.Context
+	model       store.ClusterManagerModel
+	req         *cmproto.ListCommonClusterReq
+	resp        *cmproto.ListCommonClusterResp
+	clusterList []*cmproto.Cluster
+}
+
+// NewListCommonClusterAction create list action for cluster
+func NewListCommonClusterAction(model store.ClusterManagerModel) *ListCommonClusterAction {
+	return &ListCommonClusterAction{
+		model: model,
+	}
+}
+
+func (la *ListCommonClusterAction) validate() error {
+	if err := la.req.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (la *ListCommonClusterAction) listCluster() error {
+	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
+		"isshared": true,
+	})
+	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+
+	clusterList, err := la.model.ListCluster(la.ctx, branchCond, &storeopt.ListOption{})
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	clusterIDList := make([]string, 0)
+	for i := range clusterList {
+		la.clusterList = append(la.clusterList, &clusterList[i])
+		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
+	}
+
+	// get common cluster permission
+	if len(clusterIDList) > 0 {
+		v3Perm, err := GetProjectCommonClustersPerm(clusterIDList)
+		if err != nil {
+			blog.Errorf("listCluster GetUserPermListByProjectAndCluster failed: %v", err)
+		}
+		la.resp.WebAnnotations = &cmproto.WebAnnotations{
+			Perms: v3Perm,
+		}
+	}
+
+	return nil
+}
+
+func (la *ListCommonClusterAction) setResp(code uint32, msg string) {
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.clusterList
+}
+
+// Handle handle list common cluster request
+func (la *ListCommonClusterAction) Handle(ctx context.Context,
+	req *cmproto.ListCommonClusterReq, resp *cmproto.ListCommonClusterResp) {
+	if req == nil || resp == nil {
+		blog.Errorf("list common cluster failed, req or resp is empty")
 		return
 	}
 	la.ctx = ctx

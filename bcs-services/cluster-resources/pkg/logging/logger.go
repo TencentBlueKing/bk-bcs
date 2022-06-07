@@ -43,7 +43,7 @@ func getWriter(conf *config.LogConf) (io.Writer, error) {
 		if !conf.AutoCreateDir {
 			return nil, errorx.New(errcode.General, "file path %s is not exists", conf.Path)
 		}
-		if makeDirErr := os.MkdirAll(conf.Path, 0o755); makeDirErr != nil {
+		if makeDirErr := os.MkdirAll(conf.Path, 0o700); makeDirErr != nil {
 			return nil, errorx.New(errcode.General, "auto create dir %s failed: %v", conf.Path, makeDirErr)
 		}
 	}

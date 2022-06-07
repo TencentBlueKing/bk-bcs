@@ -70,14 +70,15 @@ func InitCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
 	}
 	initOnce.Do(func() {
 		var err error
-		if clusterMgrCli, err = newCMClient(microRtr, cliTLSConf); err != nil {
+		if clusterMgrCli, err = NewCMClient(microRtr, cliTLSConf); err != nil {
 			clusterMgrCli = nil
 			panic(err)
 		}
 	})
 }
 
-func newCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*CMClient, error) {
+// NewCMClient ...
+func NewCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*CMClient, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cli := CMClient{
 		ServiceName:  conf.ClusterMgrServiceName,

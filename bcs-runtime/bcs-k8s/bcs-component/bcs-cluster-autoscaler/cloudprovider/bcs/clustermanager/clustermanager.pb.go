@@ -10,7 +10,7 @@ type NodeGroup struct {
 	AutoScaling          *AutoScalingGroup    `protobuf:"bytes,6,opt,name=autoScaling,proto3" json:"autoScaling,omitempty"`
 	LaunchTemplate       *LaunchConfiguration `protobuf:"bytes,7,opt,name=launchTemplate,proto3" json:"launchTemplate,omitempty"`
 	Labels               map[string]string    `protobuf:"bytes,8,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Taints               map[string]string    `protobuf:"bytes,9,rep,name=taints,proto3" json:"taints,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Taints               []*Taint             `protobuf:"bytes,9,rep,name=taints,proto3" json:"taints,omitempty"`
 	NodeOS               string               `protobuf:"bytes,10,opt,name=nodeOS,proto3" json:"nodeOS,omitempty"`
 	Creator              string               `protobuf:"bytes,11,opt,name=creator,proto3" json:"creator,omitempty"`
 	Updater              string               `protobuf:"bytes,12,opt,name=updater,proto3" json:"updater,omitempty"`
@@ -26,22 +26,23 @@ type NodeGroup struct {
 
 // AutoScalingGroup 自动伸缩定义
 type AutoScalingGroup struct {
-	AutoScalingID         string   `protobuf:"bytes,1,opt,name=autoScalingID,proto3" json:"autoScalingID,omitempty"`
-	AutoScalingName       string   `protobuf:"bytes,2,opt,name=autoScalingName,proto3" json:"autoScalingName,omitempty"`
-	MinSize               uint32   `protobuf:"varint,3,opt,name=minSize,proto3" json:"minSize,omitempty"`
-	MaxSize               uint32   `protobuf:"varint,4,opt,name=maxSize,proto3" json:"maxSize,omitempty"`
-	DesiredSize           uint32   `protobuf:"varint,5,opt,name=desiredSize,proto3" json:"desiredSize,omitempty"`
-	VpcID                 string   `protobuf:"bytes,6,opt,name=vpcID,proto3" json:"vpcID,omitempty"`
-	DefaultCooldown       uint32   `protobuf:"varint,7,opt,name=defaultCooldown,proto3" json:"defaultCooldown,omitempty"`
-	SubnetIDs             []string `protobuf:"bytes,8,rep,name=subnetIDs,proto3" json:"subnetIDs,omitempty"`
-	Zones                 []string `protobuf:"bytes,9,rep,name=zones,proto3" json:"zones,omitempty"`
-	RetryPolicy           string   `protobuf:"bytes,10,opt,name=retryPolicy,proto3" json:"retryPolicy,omitempty"`
-	MultiZoneSubnetPolicy string   `protobuf:"bytes,11,opt,name=multiZoneSubnetPolicy,proto3" json:"multiZoneSubnetPolicy,omitempty"`
-	ReplaceUnhealthy      bool     `protobuf:"varint,12,opt,name=replaceUnhealthy,proto3" json:"replaceUnhealthy,omitempty"`
-	ScalingMode           string   `protobuf:"bytes,13,opt,name=scalingMode,proto3" json:"scalingMode,omitempty"`
-	XXX_NoUnkeyedLiteral  struct{} `json:"-" bson:"-"`
-	XXX_unrecognized      []byte   `json:"-" bson:"-"`
-	XXX_sizecache         int32    `json:"-" bson:"-"`
+	AutoScalingID         string       `protobuf:"bytes,1,opt,name=autoScalingID,proto3" json:"autoScalingID,omitempty"`
+	AutoScalingName       string       `protobuf:"bytes,2,opt,name=autoScalingName,proto3" json:"autoScalingName,omitempty"`
+	MinSize               uint32       `protobuf:"varint,3,opt,name=minSize,proto3" json:"minSize,omitempty"`
+	MaxSize               uint32       `protobuf:"varint,4,opt,name=maxSize,proto3" json:"maxSize,omitempty"`
+	DesiredSize           uint32       `protobuf:"varint,5,opt,name=desiredSize,proto3" json:"desiredSize,omitempty"`
+	VpcID                 string       `protobuf:"bytes,6,opt,name=vpcID,proto3" json:"vpcID,omitempty"`
+	DefaultCooldown       uint32       `protobuf:"varint,7,opt,name=defaultCooldown,proto3" json:"defaultCooldown,omitempty"`
+	SubnetIDs             []string     `protobuf:"bytes,8,rep,name=subnetIDs,proto3" json:"subnetIDs,omitempty"`
+	Zones                 []string     `protobuf:"bytes,9,rep,name=zones,proto3" json:"zones,omitempty"`
+	RetryPolicy           string       `protobuf:"bytes,10,opt,name=retryPolicy,proto3" json:"retryPolicy,omitempty"`
+	MultiZoneSubnetPolicy string       `protobuf:"bytes,11,opt,name=multiZoneSubnetPolicy,proto3" json:"multiZoneSubnetPolicy,omitempty"`
+	ReplaceUnhealthy      bool         `protobuf:"varint,12,opt,name=replaceUnhealthy,proto3" json:"replaceUnhealthy,omitempty"`
+	ScalingMode           string       `protobuf:"bytes,13,opt,name=scalingMode,proto3" json:"scalingMode,omitempty"`
+	TimeRanges            []*TimeRange `protobuf:"bytes,14,rep,name=timeRanges,proto3" json:"timeRanges,omitempty"`
+	XXX_NoUnkeyedLiteral  struct{}     `json:"-" bson:"-"`
+	XXX_unrecognized      []byte       `json:"-" bson:"-"`
+	XXX_sizecache         int32        `json:"-" bson:"-"`
 }
 
 // LaunchConfiguration 节点模板定义
@@ -79,7 +80,7 @@ type DataDisk struct {
 // InternetAccessible 公网带宽设置
 type InternetAccessible struct {
 	InternetChargeType   string   `protobuf:"bytes,1,opt,name=internetChargeType,proto3" json:"internetChargeType,omitempty"`
-	InternetMaxBandwidth string   `protobuf:"bytes,2,opt,name=internetMaxBandwidth,proto3" json:"internetMaxBandwidth,omitempty"`
+	InternetMaxBandwidth uint32   `protobuf:"bytes,2,opt,name=internetMaxBandwidth,proto3" json:"internetMaxBandwidth,omitempty"`
 	PublicIPAssigned     bool     `protobuf:"varint,3,opt,name=publicIPAssigned,proto3" json:"publicIPAssigned,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
@@ -253,4 +254,22 @@ type UpdateGroupDesiredSizeResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
+// TimeRange 定时规则定义
+type TimeRange struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Schedule             string   `protobuf:"bytes,2,opt,name=schedule,proto3" json:"schedule,omitempty"`
+	Zone                 string   `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone,omitempty"`
+	DesiredNum           uint32   `protobuf:"varint,4,opt,name=desiredNum,proto3" json:"desiredNum,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
+	XXX_unrecognized     []byte   `json:"-" bson:"-"`
+	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
+// Taint 污点
+type Taint struct {
+	Key    string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value  string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Effect string `protobuf:"bytes,3,opt,name=effect,proto3" json:"effect,omitempty"`
 }

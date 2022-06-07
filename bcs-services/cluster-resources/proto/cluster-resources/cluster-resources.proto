@@ -77,6 +77,19 @@ service Basic {
 	}
 }
 
+// 节点接口
+service Node {
+	rpc ListNode(ResListReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取节点列表"
+			summary: "ListNode API"
+		};
+	}
+}
+
 // 命名空间接口
 service Namespace {
 	rpc ListNS(ResListReq) returns (CommonResp) {
@@ -1143,6 +1156,16 @@ service Resource {
 			summary: "Get resource's form schema API"
 		};
 	}
+
+	rpc GetFormSupportedAPIVersions(GetFormSupportedApiVersionsReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取指定资源可用于表单化的 APIVersion"
+			summary: "Get resource's supported apiVersions for form"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -1185,6 +1208,9 @@ message HealthzReq {
 	};
 	bool raiseErr = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "raiseErr", description: "存在依赖服务异常的情况，是否返回错误（默认只在响应体中标记）"
+	}];
+	string token = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "Token", description: "Healthz API Token"
 	}];
 }
 
@@ -1250,6 +1276,12 @@ message ResListReq {
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
 	}, (validate.rules).string = {max_len: 128}];
+	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "apiVersion"
+	}, (validate.rules).string = {max_len: 63}];
+	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
 }
 
 message ResGetReq {
@@ -1268,9 +1300,12 @@ message ResGetReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
-	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "apiVersion"
+	}, (validate.rules).string = {max_len: 63}];
+	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message ResCreateReq {
@@ -1286,7 +1321,7 @@ message ResCreateReq {
 	google.protobuf.Struct rawData = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message ResUpdateReq {
@@ -1308,7 +1343,7 @@ message ResUpdateReq {
 	google.protobuf.Struct rawData = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message ResDeleteReq {
@@ -1351,6 +1386,9 @@ message PodResListReq {
 	string ownerKind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "所属资源类型"
 	}, (validate.rules).string = {max_len: 64}];
+	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
 }
 
 message ContainerListReq {
@@ -1426,6 +1464,9 @@ message CObjListReq {
 	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/selectItems）"
+	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
 }
 
 message CObjGetReq {
@@ -1449,7 +1490,7 @@ message CObjGetReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
 	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message CObjCreateReq {
@@ -1468,7 +1509,7 @@ message CObjCreateReq {
 	google.protobuf.Struct rawData = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message CObjUpdateReq {
@@ -1493,7 +1534,7 @@ message CObjUpdateReq {
 	google.protobuf.Struct rawData = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
 	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
-	}, (validate.rules).string = {in: ["manifest", "formData"]}];
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
 message CObjDeleteReq {
@@ -1535,6 +1576,9 @@ message CommonResp {
 	}];
 	google.protobuf.Struct data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "data", description : "资源信息"
+	}];
+	google.protobuf.Struct webAnnotations = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "webAnnotations", description : "web 注解"
 	}];
 }
 
@@ -1642,7 +1686,25 @@ message FormRenderPreviewReq {
 
 message GetResFormSchemaReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "SubscribeReq", description: "订阅资源请求体"}
+		json_schema: {title: "GetResFormSchemaReq", description: "获取资源表单化 Schema 请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
+	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 64}];
+}
+
+message GetFormSupportedApiVersionsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetFormSupportedApiVersionsReq", description: "获取指定资源可用于表单化的 ApiVersions"}
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"

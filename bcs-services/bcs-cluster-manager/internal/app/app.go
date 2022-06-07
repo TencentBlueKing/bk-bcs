@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 
@@ -50,6 +51,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tkehandler"
@@ -100,6 +102,9 @@ type ClusterManager struct {
 	// discovery
 	disc *discovery.ModuleDiscovery
 
+	// IAM client
+	iamClient iam.PermClient
+
 	// locker
 	locker lock.DistributedLock
 
@@ -127,6 +132,7 @@ type ClusterManager struct {
 // NewClusterManager create cluster manager
 func NewClusterManager(opt *options.ClusterManagerOptions) *ClusterManager {
 	ctx, cancel := context.WithCancel(context.Background())
+	options.SetGlobalCMOptions(opt)
 	return &ClusterManager{
 		opt:           opt,
 		ctx:           ctx,
@@ -280,6 +286,16 @@ func (cm *ClusterManager) initRemoteClient() error {
 		return err
 	}
 
+	// init user-manager config
+	user.SetUserManagerClient(&user.Options{
+		Enable:          cm.opt.UserManager.Enable,
+		GateWay:         cm.opt.UserManager.GateWay,
+		IsVerifyTLS:     cm.opt.UserManager.IsVerifyTLS,
+		Token:           cm.opt.UserManager.Token,
+		EtcdRegistry:    cm.microRegistry,
+		ClientTLSConfig: cm.clientTLSConfig,
+	})
+
 	return nil
 }
 
@@ -296,6 +312,28 @@ func (cm *ClusterManager) initBKOpsClient() error {
 	})
 	if err != nil {
 		blog.Errorf("initBKOpsClient failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// init iam client for perm
+func (cm *ClusterManager) initIAMClient() error {
+	var err error
+	cm.iamClient, err = iam.NewIamClient(&iam.Options{
+		SystemID:    cm.opt.IAM.SystemID,
+		AppCode:     cm.opt.IAM.AppCode,
+		AppSecret:   cm.opt.IAM.AppSecret,
+		External:    cm.opt.IAM.External,
+		GateWayHost: cm.opt.IAM.GatewayServer,
+		IAMHost:     cm.opt.IAM.IAMServer,
+		BkiIAMHost:  cm.opt.IAM.BkiIAMServer,
+		Metric:      cm.opt.IAM.Metric,
+		Debug:       cm.opt.IAM.Debug,
+	})
+
+	if err != nil {
 		return err
 	}
 
@@ -391,6 +429,15 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 	}
 	if len(cloud.Description) > 0 {
 		destCloud.Description = cloud.Description
+	}
+	if cloud.NetworkInfo != nil {
+		destCloud.NetworkInfo = cloud.NetworkInfo
+	}
+	if cloud.ConfInfo != nil {
+		destCloud.ConfInfo = cloud.ConfInfo
+	}
+	if cloud.PlatformInfo != nil {
+		destCloud.PlatformInfo = cloud.PlatformInfo
 	}
 
 	err = cm.model.UpdateCloud(cm.ctx, destCloud)
@@ -657,7 +704,12 @@ func (cm *ClusterManager) initMicro() error {
 	microService.Init()
 
 	// create cluster manager server handler
-	cm.serverHandler = handler.NewClusterManager(cm.model, cm.k8sops, cm.locker)
+	cm.serverHandler = handler.NewClusterManager(&handler.ControllerOptions{
+		Model:      cm.model,
+		KubeClient: cm.k8sops,
+		Locker:     cm.locker,
+		IAMClient:  cm.iamClient,
+	})
 	// Register handler
 	cmproto.RegisterClusterManagerHandler(microService.Server(), cm.serverHandler)
 	cm.microService = microService
@@ -709,6 +761,11 @@ func (cm *ClusterManager) Init() error {
 	if err := cm.initRegistry(); err != nil {
 		return err
 	}
+	// init IAM client
+	if err := cm.initIAMClient(); err != nil {
+		return err
+	}
+
 	// init core micro service
 	if err := cm.initMicro(); err != nil {
 		return err

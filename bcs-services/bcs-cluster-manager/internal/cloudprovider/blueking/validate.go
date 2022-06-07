@@ -64,7 +64,7 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 	kubeRet := base64.StdEncoding.EncodeToString([]byte(req.CloudMode.KubeConfig))
 	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
-		return fmt.Errorf("%s ImportClusterValidate NewKubeClient failed: %v", err)
+		return fmt.Errorf("%s ImportClusterValidate NewKubeClient failed: %v", cloudName, err)
 	}
 
 	version, err := kubeCli.Discovery().ServerVersion()
@@ -75,5 +75,43 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 
 	blog.Infof("%s ImportClusterValidate CloudMode connect cluster ByKubeConfig success", cloudName)
 
+	return nil
+}
+
+// ImportCloudAccountValidate create cloudAccount account validation
+func (c *CloudValidate) ImportCloudAccountValidate(req *proto.Account) error {
+	// blueking cloud not cloud Account
+	return nil
+}
+
+// GetCloudRegionZonesValidate xxx
+func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
+	// blueking cloud not cloud Account
+	return nil
+}
+
+// ListCloudRegionClusterValidate xxx
+func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
+	// blueking cloud not cloud Account
+	return nil
+}
+
+// ListCloudSubnetsValidate xxx
+func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListSecurityGroupsValidate xxx
+func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListInstanceTypeValidate xxx
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListCloudOsImageValidate xxx
+func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
 	return nil
 }

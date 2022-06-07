@@ -21,11 +21,11 @@ import (
 )
 
 // CopyStruct 结构体的数据复制，从一个结构体赋值到另一个结构体
-func CopyStruct(DstStructPtr interface{}, SrcStructPtr interface{}) *errorx.ProjectError {
-	srcv := reflect.ValueOf(SrcStructPtr)
-	dstv := reflect.ValueOf(DstStructPtr)
-	srct := reflect.TypeOf(SrcStructPtr)
-	dstt := reflect.TypeOf(DstStructPtr)
+func CopyStruct(dstStructPtr interface{}, srcStructPtr interface{}) *errorx.ProjectError {
+	srcv := reflect.ValueOf(srcStructPtr)
+	dstv := reflect.ValueOf(dstStructPtr)
+	srct := reflect.TypeOf(srcStructPtr)
+	dstt := reflect.TypeOf(dstStructPtr)
 	if srct.Kind() != reflect.Ptr || dstt.Kind() != reflect.Ptr || srct.Elem().Kind() == reflect.Ptr || dstt.Elem().Kind() == reflect.Ptr {
 		return errorx.NewInnerErr("Fatal error:type of parameters must be Ptr of value")
 	}
@@ -34,7 +34,7 @@ func CopyStruct(DstStructPtr interface{}, SrcStructPtr interface{}) *errorx.Proj
 	}
 	srcV := srcv.Elem()
 	dstV := dstv.Elem()
-	srcfields := deepFields(reflect.ValueOf(SrcStructPtr).Elem().Type())
+	srcfields := deepFields(reflect.ValueOf(srcStructPtr).Elem().Type())
 	for _, v := range srcfields {
 		if v.Anonymous {
 			continue

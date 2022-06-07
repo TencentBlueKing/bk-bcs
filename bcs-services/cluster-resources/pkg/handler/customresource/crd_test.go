@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
@@ -41,7 +42,7 @@ func TestCRD(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinitionList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "CustomResourceDefinitionList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Get
 	getReq, getResp := handler.GenResGetReq(handler.CRDName4Test), clusterRes.CommonResp{}
@@ -49,8 +50,8 @@ func TestCRD(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinition", mapx.Get(respData, "manifest.kind", ""))
-	assert.Equal(t, "Namespaced", mapx.Get(respData, "manifest.spec.scope", ""))
+	assert.Equal(t, "CustomResourceDefinition", mapx.GetStr(respData, "manifest.kind"))
+	assert.Equal(t, "Namespaced", mapx.GetStr(respData, "manifest.spec.scope"))
 }
 
 func TestCRDInSharedCluster(t *testing.T) {
@@ -64,6 +65,7 @@ func TestCRDInSharedCluster(t *testing.T) {
 	listReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = h.ListCRD(ctx, &listReq, &listResp)

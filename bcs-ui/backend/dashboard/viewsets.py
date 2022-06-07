@@ -42,7 +42,7 @@ from .exceptions import ActionUnsupported
 
 
 class ListAndRetrieveMixin:
-    """ 查询类接口通用逻辑 """
+    """查询类接口通用逻辑"""
 
     def list(self, request, project_id, cluster_id, namespace):
         self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
@@ -63,7 +63,7 @@ class ListAndRetrieveMixin:
 
 
 class DestroyMixin:
-    """ 删除类接口通用逻辑 """
+    """删除类接口通用逻辑"""
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Delete)
     def destroy(self, request, project_id, cluster_id, namespace, name):
@@ -81,7 +81,7 @@ class DestroyMixin:
 
 
 class CreateMixin:
-    """ 创建类接口通用逻辑 """
+    """创建类接口通用逻辑"""
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Add)
     def create(self, request, project_id, cluster_id):
@@ -110,7 +110,7 @@ class CreateMixin:
 
 
 class UpdateMixin:
-    """ 更新类接口通用逻辑 """
+    """更新类接口通用逻辑"""
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id, cluster_id, namespace, name):
@@ -166,7 +166,7 @@ class NamespaceScopeViewSet(
     PermValidateMixin,
     SystemViewSet,
 ):
-    """ 命名空间维度资源 ViewSet，抽层一些通用方法 """
+    """命名空间维度资源 ViewSet，抽层一些通用方法"""
 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX
@@ -181,7 +181,7 @@ class ClusterScopeViewSet(
     PermValidateMixin,
     SystemViewSet,
 ):
-    """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
+    """集群维度资源 ViewSet，对缺省命名空间的情况做兼容"""
 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX

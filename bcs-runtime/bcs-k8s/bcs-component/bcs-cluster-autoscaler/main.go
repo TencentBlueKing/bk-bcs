@@ -340,7 +340,7 @@ func buildAutoscaler() (core.Autoscaler, error) {
 	eventsKubeClient := createKubeClient(getKubeConfig())
 
 	processors := ca_processors.DefaultProcessors()
-	processors.PodListProcessor = core.NewFilterOutSchedulablePodListProcessor()
+	processors.PodListProcessor = coreinternal.NewFilterOutSchedulablePodListProcessor()
 
 	opts := coreinternal.AutoscalerOptions{
 		Options:          autoscalingOptions,
@@ -387,6 +387,9 @@ func run(healthCheck *metrics.HealthCheck) {
 				healthCheck.UpdateLastActivity(loopStart)
 
 				err := autoscaler.RunOnce(loopStart)
+				if err != nil {
+					klog.Warningf("scaler error: %s", err.Error())
+				}
 				if err != nil && err.Type() != errors.TransientError {
 					metrics.RegisterError(err)
 				} else {

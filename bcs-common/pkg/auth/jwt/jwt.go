@@ -86,6 +86,7 @@ func (user *UserInfo) validate() error {
 type UserClaimsInfo struct {
 	SubType      string `json:"sub_type"`
 	UserName     string `json:"username"`
+	BKAppCode    string `json:"bk_app_code"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	// https://tools.ietf.org/html/rfc7519#section-4.1
@@ -168,6 +169,13 @@ func (jc *JWTClient) JWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 	token, err := jwt.ParseWithClaims(jwtToken, &UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
 		return jc.verifyKey, nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
+	if token == nil {
+		return nil, ErrTokenIsNil
+	}
 
 	if claims, ok := token.Claims.(*UserClaimsInfo); ok && token.Valid {
 		return claims, nil

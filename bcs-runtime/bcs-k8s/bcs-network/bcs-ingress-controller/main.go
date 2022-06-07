@@ -25,6 +25,7 @@ import (
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/ingresscontroller"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/gcp"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/namespacedlb"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloudcollector"
@@ -170,6 +171,18 @@ func main() {
 			}
 		} else {
 			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), aws.NewElbWithSecret)
+		}
+
+	case constant.CloudGCP:
+		validater = gcp.NewGclbValidater()
+		if !opts.IsNamespaceScope {
+			lbClient, err = gcp.NewGclb(mgr.GetClient())
+			if err != nil {
+				blog.Errorf("init cloud failed, err %s", err.Error())
+				os.Exit(1)
+			}
+		} else {
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), gcp.NewGclbWithSecret)
 		}
 	}
 

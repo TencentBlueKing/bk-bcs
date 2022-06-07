@@ -18,13 +18,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
-	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -43,18 +43,34 @@ func RequestIdGenerator() string {
 
 // AuthContext :
 type AuthContext struct {
-	RequestId   string                 `json:"request_id"`
-	Operator    string                 `json:"operator"`
-	Username    string                 `json:"username"`
-	ProjectId   string                 `json:"project_id"`
-	ProjectCode string                 `json:"project_code"`
-	ClusterId   string                 `json:"cluster_id"`
-	BindEnv     *EnvToken              `json:"bind_env"`
-	BindBCS     *bcsJwt.UserClaimsInfo `json:"bind_bcs"`
-	BindAPIGW   *APIGWToken            `json:"bind_apigw"`
-	BindCluster *bcs.Cluster           `json:"bind_cluster"`
-	BindProject *bcs.Project           `json:"bind_project"`
-	BindSession *types.PodContext      `json:"bind_session"`
+	RequestId   string            `json:"request_id"`
+	StartTime   time.Time         `json:"start_time"`
+	Operator    string            `json:"operator"`
+	Username    string            `json:"username"`
+	ProjectId   string            `json:"project_id"`
+	ProjectCode string            `json:"project_code"`
+	ClusterId   string            `json:"cluster_id"`
+	BindEnv     *EnvToken         `json:"bind_env"`
+	BindBCS     *UserClaimsInfo   `json:"bind_bcs"`
+	BindAPIGW   *APIGWToken       `json:"bind_apigw"`
+	BindCluster *bcs.Cluster      `json:"bind_cluster"`
+	BindProject *bcs.Project      `json:"bind_project"`
+	BindSession *types.PodContext `json:"bind_session"`
+}
+
+// BKAppCode 返回验证的 AppCode, 兼容bcs网关和蓝鲸网关
+func (c *AuthContext) BKAppCode() string {
+	// BCS网关
+	if c.BindBCS != nil && c.BindBCS.BKAppCode != "" {
+		return c.BindBCS.BKAppCode
+	}
+
+	// 蓝鲸网关
+	if c.BindAPIGW != nil && c.BindAPIGW.App.Verified {
+		return c.BindAPIGW.App.AppCode
+	}
+
+	return ""
 }
 
 // WebAuthRequired Web类型, 不需要鉴权
@@ -62,6 +78,7 @@ func WebAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authCtx := &AuthContext{
 			RequestId: RequestIdGenerator(),
+			StartTime: time.Now(),
 		}
 		c.Set("auth_context", authCtx)
 
@@ -74,6 +91,7 @@ func APIAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authCtx := &AuthContext{
 			RequestId: RequestIdGenerator(),
+			StartTime: time.Now(),
 		}
 		c.Set("auth_context", authCtx)
 
@@ -112,24 +130,38 @@ type EnvToken struct {
 
 // initContextWithDevEnv Dev环境, 可以设置环境变量
 func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
-	// DEV环境
-	if config.G.Base.RunEnv == config.DevEnv {
-		username := os.Getenv("WEBCONSOLE_USERNAME")
-		if username != "" {
-			authCtx.BindEnv = &EnvToken{Username: username}
-			authCtx.Username = username
-			return true
+	if config.G.Base.RunEnv != config.DevEnv {
+		return false
+	}
+
+	// 本地用户认证
+	username := os.Getenv("WEBCONSOLE_USERNAME")
+	if username != "" {
+		authCtx.BindEnv = &EnvToken{Username: username}
+		authCtx.Username = username
+	}
+
+	// AppCode 认证
+	appCode := c.GetHeader("X-BKAPI-JWT-APPCODE")
+	if appCode != "" {
+		authCtx.BindAPIGW = &APIGWToken{
+			App: &APIGWApp{AppCode: appCode, Verified: true},
 		}
 	}
+
+	if username != "" || appCode != "" {
+		return true
+	}
+
 	return false
 }
 
-func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
+func BCSJWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 	if config.G.BCS.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
 	}
 
-	token, err := jwt.ParseWithClaims(jwtToken, &bcsJwt.UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(jwtToken, &UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
 		return config.G.BCS.JWTPubKeyObj, nil
 	})
 	if err != nil {
@@ -140,7 +172,7 @@ func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 		return nil, errors.New("jwt token not valid")
 	}
 
-	claims, ok := token.Claims.(*bcsJwt.UserClaimsInfo)
+	claims, ok := token.Claims.(*UserClaimsInfo)
 	if !ok {
 		return nil, errors.New("jwt token not bcs issuer")
 
@@ -191,6 +223,18 @@ func BKAPIGWJWTDecode(jwtToken string) (*APIGWToken, error) {
 
 	}
 	return claims, nil
+}
+
+// UserClaimsInfo custom jwt claims
+type UserClaimsInfo struct {
+	SubType      string `json:"sub_type"`
+	UserName     string `json:"username"`
+	BKAppCode    string `json:"bk_app_code"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	// https://tools.ietf.org/html/rfc7519#section-4.1
+	// aud: 接收jwt一方; exp: jwt过期时间; jti: jwt唯一身份认证; IssuedAt: 签发时间; Issuer: jwt签发者
+	*jwt.StandardClaims
 }
 
 // initContextWithBCSJwt BCS APISix JWT 鉴权

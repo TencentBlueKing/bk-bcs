@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -28,9 +29,22 @@ func TestGetResFormSchema(t *testing.T) {
 	hdlr := New()
 	ctx := context.TODO()
 
+	assert.Nil(t, i18n.InitMsgMap())
+
 	for kind := range renderer.FormRenderSupportedResAPIVersion {
 		req, resp := clusterRes.GetResFormSchemaReq{Kind: kind}, clusterRes.CommonResp{}
 		err := hdlr.GetResFormSchema(ctx, &req, &resp)
+		assert.Nil(t, err)
+	}
+}
+
+func TestGetFormSupportedApiVersions(t *testing.T) {
+	hdlr := New()
+	ctx := context.TODO()
+
+	for kind := range renderer.FormRenderSupportedResAPIVersion {
+		req, resp := clusterRes.GetFormSupportedApiVersionsReq{Kind: kind}, clusterRes.CommonResp{}
+		err := hdlr.GetFormSupportedAPIVersions(ctx, &req, &resp)
 		assert.Nil(t, err)
 	}
 }

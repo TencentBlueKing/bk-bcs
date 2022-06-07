@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
@@ -32,7 +33,7 @@ func TestPod(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_pod", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,38 +46,39 @@ func TestPod(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
+		Format:    action.ManifestFormat,
 	}
 	listResp := clusterRes.CommonResp{}
 	err = h.ListPo(ctx, &podListReq, &listResp)
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "PodList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "PodList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetPo(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
-	assert.Equal(t, "Pod", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "Pod", mapx.GetStr(getResp.Data.AsMap(), "manifest.kind"))
 
 	// ListPodPVC
 	err = h.ListPoPVC(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
-	assert.Equal(t, "PersistentVolumeClaimList", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "PersistentVolumeClaimList", mapx.GetStr(getResp.Data.AsMap(), "manifest.kind"))
 
 	// ListPodCM
 	err = h.ListPoCM(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
-	assert.Equal(t, "ConfigMapList", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "ConfigMapList", mapx.GetStr(getResp.Data.AsMap(), "manifest.kind"))
 
 	// ListPodSecret
 	err = h.ListPoSecret(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
-	assert.Equal(t, "SecretList", mapx.Get(getResp.Data.AsMap(), "manifest.kind", ""))
+	assert.Equal(t, "SecretList", mapx.GetStr(getResp.Data.AsMap(), "manifest.kind"))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeletePo(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

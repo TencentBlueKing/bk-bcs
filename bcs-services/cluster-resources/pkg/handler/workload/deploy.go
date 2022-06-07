@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -36,9 +38,15 @@ func New() *Handler {
 func (h *Handler) ListDeploy(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Deploy).List(
-		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Deploy).List(
+		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, true),
+	).ToPbStruct()
 	return err
 }
 
@@ -46,9 +54,15 @@ func (h *Handler) ListDeploy(
 func (h *Handler) GetDeploy(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Deploy).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Deploy).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormUpdate, true),
+	).ToPbStruct()
 	return err
 }
 

@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -43,20 +44,22 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
-	gp := metrics.New(s.opts.Router)
-	api.Use(gp.Middleware())
-
 	// 用户登入态鉴权, session鉴权
-	api.GET("/api/projects/:projectId/clusters/:clusterId/session/", route.PermissionRequired(), s.CreateWebConsoleSession)
-	api.GET("/api/projects/:projectId/clusters/", s.ListClusters)
+	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",
+		metrics.RequestCollect("CreateWebConsoleSession"), route.PermissionRequired(), s.CreateWebConsoleSession)
+	api.GET("/api/projects/:projectId/clusters/",
+		metrics.RequestCollect("ListClusters"), s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
-	api.GET("/api/portal/sessions/:sessionId/", s.CreatePortalSession)
-	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/", route.CredentialRequired(), s.CreateContainerPortalSession)
-	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/", route.CredentialRequired(), s.CreateClusterPortalSession)
+	api.GET("/api/portal/sessions/:sessionId/",
+		metrics.RequestCollect("CreatePortalSession"), s.CreatePortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/",
+		metrics.RequestCollect("CreateContainerPortalSession"), route.CredentialRequired(), s.CreateContainerPortalSession)
+	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/",
+		metrics.RequestCollect("CreateClusterPortalSession"), route.CredentialRequired(), s.CreateClusterPortalSession)
 
 	// websocket协议, session鉴权
-	api.GET("/ws/projects/:projectId/clusters/:clusterId/", s.BCSWebSocketHandler)
+	api.GET("/ws/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
 }
 
 func (s *service) ListClusters(c *gin.Context) {
@@ -86,13 +89,37 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	consoleQuery := new(podmanager.ConsoleQuery)
 	c.BindQuery(consoleQuery)
 
-	podCtx, err := podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
+	// 封装一个独立函数, 统计耗时
+	podCtx, err := func() (podCtx *types.PodContext, err error) {
+		start := time.Now()
+		defer func() {
+			if consoleQuery.IsContainerDirectMode() {
+				return
+			}
+
+			// 单独统计 pod metrics
+			podReadyDuration := time.Since(start)
+			metrics.SetRequestIgnoreDuration(c, podReadyDuration)
+
+			metrics.CollectPodReady(
+				podmanager.GetAdminClusterId(clusterId),
+				podmanager.GetNamespace(),
+				podmanager.GetPodName(clusterId, authCtx.Username),
+				err,
+				podReadyDuration,
+			)
+		}()
+
+		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
+		return
+	}()
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
 		return
 	}
 
 	podCtx.ProjectId = projectId
+	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 
 	store := sessions.NewRedisStore(projectId, clusterId)
@@ -188,7 +215,10 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		APIError(c, msg)
 		return
 	}
+
 	podCtx.ProjectId = authCtx.ProjectId
+	// bkapigw 校验, 使用 Operator 做用户标识
+	podCtx.Username = consoleQuery.Operator
 
 	if len(commands) > 0 {
 		podCtx.Commands = commands
@@ -237,5 +267,5 @@ func APIError(c *gin.Context, msg string) {
 		RequestID: authCtx.RequestId,
 	}
 
-	c.AbortWithStatusJSON(http.StatusOK, data)
+	c.AbortWithStatusJSON(http.StatusBadRequest, data)
 }

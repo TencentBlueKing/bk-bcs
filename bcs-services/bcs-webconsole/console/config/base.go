@@ -25,6 +25,7 @@ const (
 type BaseConf struct {
 	AppCode      string              `yaml:"app_code"`
 	AppSecret    string              `yaml:"app_secret"`
+	BKPaaSHost   string              `yaml:"bk_paas_host"`
 	TimeZone     string              `yaml:"time_zone"`
 	LanguageCode string              `yaml:"language_code"`
 	Managers     []string            `yaml:"managers"`
@@ -57,10 +58,4 @@ func (c *BaseConf) InitManagers() error {
 		c.ManagerMap[manager] = struct{}{}
 	}
 	return nil
-}
-
-// IsManager
-func (c *BaseConf) IsManager(username string) bool {
-	_, ok := c.ManagerMap[username]
-	return ok
 }

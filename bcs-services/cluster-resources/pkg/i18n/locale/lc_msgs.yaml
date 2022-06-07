@@ -1,0 +1,385 @@
+# Golang 错误信息
+- msgID: 该请求资源类型在共享集群中不可用
+  en: 'current resource unavailable in shared cluster'
+- msgID: 命名空间 %s 在该共享集群中不属于指定项目
+  en: 'namespace %s not belong to project in this shared cluster'
+- msgID: 在共享集群中，只有指定的数类资源可以执行订阅功能
+  en: 'only several resources allow subscribe events in shared cluster'
+- msgID: 共享集群暂时只支持查询部分自定义资源
+  en: 'only several custom resources available in shared cluster'
+- msgID: 不受支持的生成器格式：%s
+  en: 'unsupported generator form: %s'
+- msgID: 不受支持的转换器格式：%s
+  en: 'unsupported transformer form: %s'
+- msgID: 查看/操作自定义资源 %s 需要指定命名空间
+  en: 'namespace is required when view or operate custom resource %s'
+- msgID: 共享集群中不支持查看 CRD %s 信息
+  en: 'get crd info is disabled in shared cluster'
+- msgID: 无指定操作权限
+  en: 'no operate permission!'
+- msgID: 资源类型 `%s` 暂无参考示例
+  en: 'no example for resource kind %s'
+- msgID: 资源类型 `%s` 不支持表单化
+  en: 'form edit mode is unsupported for resource kind %s'
+- msgID: 获取项目 %s 信息失败：%v
+  en: 'failed to get project %s info: %v'
+- msgID: 获取集群 %s 信息失败：%v
+  en: 'failed to get cluster %s info: %v'
+- msgID: 集群 %s 不属于指定项目!
+  en: 'cluster %s no belong to project!'
+- msgID: 当资源类型为自定义对象时，需要指定 ApiVersion & CRDName
+  en: 'apiVersion & CRDName are required when resource kind is custom object'
+- msgID: CRD %s 的 kind 与 %s 不匹配
+  en: "CRD %s's kind not match %s"
+- msgID: 查询当前自定义资源事件需要指定 Namespace
+  en: "namespace is required when fetch current custom resource's events"
+- msgID: 查询当前资源事件需要指定 Namespace
+  en: "namespace is required when fetch current resource's events"
+- msgID: Pod %s/%s 不存在父级资源，不允许重新调度
+  en: 'reschedule pod %s/%s is not allowed because has not ownerRef'
+- msgID: Pod %s/%s 父级资源存在 Job，不允许重新调度
+  en: 'reschedule pod %s/%s is not allowed because ownerRef exists Job'
+- msgID: 创建 %s 需要指定 metadata.namespace
+  en: 'metadata.name is required when create %s'
+- msgID: metadata.name 必须指定且与准备编辑的资源名保持一致
+  en: 'metadata.name is required and must as same as resource name to be edited'
+- msgID: 由 Context 获取项目信息失败
+  en: 'failed to get project info from context'
+- msgID: 由 Context 获取集群信息失败
+  en: 'failed to get cluster info from context'
+- msgID: 获取资源 APIVersion 信息失败：%v
+  en: 'failed to get resource apiVersion: %v'
+- msgID: 资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化
+  en: 'resource kind %s apiVersion %s not in the list of supported versions %v, please use yaml rather than form edit mode'
+- msgID: 数据清洗零值结果为空集合
+  en: 'cleaning zero-valued data results in an empty collection'
+- msgID: 渲染模板失败：%v
+  en: 'failed to render template: %v'
+- msgID: 加载模板失败：%v
+  en: 'failed to load template: %v'
+# JsonSchema 校验规则
+- msgID: 值不能为空
+  en: 'value required'
+- msgID: 仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾
+  en: "only lowercase letters, numbers and '-' are supported and must start and end with an alphanumeric"
+- msgID: 仅可包含数字字符
+  en: 'can only contain numeric characters'
+- msgID: 超过长度限制（64）
+  en: 'exceeds length limit (64)'
+- msgID: 超过长度限制（128）
+  en: 'exceeds length limit (128)'
+- msgID: 超过长度限制（250）
+  en: 'exceeds length limit (250)'
+- msgID: 仅支持字母，数字，'-'，'_' 及 '/' 且需以字母数字开头和结尾
+  en: "only letters, numbers, '-', '_' and '/' are supported and must start and end with alphanumeric"
+- msgID: 需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字
+  en: "must start and end with alphanumeric, can contain '-', '_', '.' and alphanumeric"
+# JsonSchema 标题，描述等
+- msgID: Pod 规则
+  en: Pod Rules
+- msgID: 命名空间
+  en: Namespace
+- msgID: 优先级
+  en: Priority
+- msgID: 优先
+  en: Preferred
+- msgID: 必须
+  en: Required
+- msgID: 拓扑键
+  en: TopologyKey
+- msgID: 类型
+  en: Type
+- msgID: 亲和性
+  en: Affinity
+- msgID: 反亲和性
+  en: AntiAffinity
+- msgID: 权重
+  en: Weight
+- msgID: Node 规则
+  en: Node Rules
+- msgID: 基本信息
+  en: Metadata
+- msgID: 不同集群版本，同一资源 Preferred Version 可能不同；如 Deployment 在 1.12 版本集群中 Preferred Version 为 extensions/v1beta1，而在更高版本中则为 apps/v1
+  en: Different cluster versions may have different preferred version for the same resource; for example, in k8s 1.12 cluster, the preferred version of Deployment is extensions/v1beta1, and in later versions it is apps/v1
+- msgID: 名称
+  en: Name
+- msgID: 标签
+  en: Labels
+- msgID: 将作为 Pod & Selector 标签
+  en: Will be used as pod & selector label
+- msgID: 键
+  en: Key
+- msgID: 值
+  en: Value
+- msgID: 注解
+  en: Annotations
+- msgID: 容器组
+  en: ContainerGroup
+- msgID: 初始容器
+  en: InitContainer
+- msgID: 标准容器
+  en: Container
+- msgID: 基础信息
+  en: BasicInfo
+- msgID: 容器名称
+  en: ContainerName
+- msgID: 容器镜像
+  en: Image
+- msgID: 拉取策略
+  en: PullPolicy
+- msgID: 命令
+  en: Command
+- msgID: 工作目录
+  en: WorkingDir
+- msgID: 标准输入
+  en: Stdin
+- msgID: 仅一次
+  en: StdinOnce
+- msgID: 参数
+  en: Args
+- msgID: 服务端口
+  en: Ports
+- msgID: 容器端口
+  en: ContainerPort
+- msgID: 协议
+  en: Protocol
+- msgID: 主机端口
+  en: HostPort
+- msgID: 环境变量
+  en: EnvVars
+- msgID: 内容（Name/Prefix）
+  en: Name/Prefix
+- msgID: 来源
+  en: Source
+- msgID: 健康检查
+  en: Healthz
+- msgID: 就绪探针
+  en: ReadinessProbe
+- msgID: 存活探针
+  en: LivenessProbe
+- msgID: 检查类型
+  en: Type
+- msgID: 端口
+  en: Ports
+- msgID: 请求路径
+  en: RequestPath
+- msgID: 初始延时
+  en: InitialDelaySecs
+- msgID: 检查间隔
+  en: PeriodSecs
+- msgID: 超时时间
+  en: TimeoutSecs
+- msgID: 成功阈值
+  en: SuccessThreshold
+- msgID: 失败阈值
+  en: FailureThreshold
+- msgID: 资源
+  en: Resources
+- msgID: CPU 预留
+  en: CPU Requests
+- msgID: 内存预留
+  en: Memory Requests
+- msgID: CPU 限制
+  en: CPU Limits
+- msgID: 内存限制
+  en: Memory Limits
+- msgID: 安全
+  en: Security
+- msgID: 特权模式
+  en: Privileged
+- msgID: 允许提权
+  en: AllowPrivilegeEscalation
+- msgID: 以非 Root 运行
+  en: RunAsNonRoot
+- msgID: 只读 Root 文件系统
+  en: ReadOnlyRootFilesystem
+- msgID: 用户
+  en: RunAsUser
+- msgID: 用户组
+  en: RunAsGroup
+- msgID: 掩码挂载
+  en: ProcMount
+- msgID: 新增权限
+  en: Added Permissions
+- msgID: 消减权限
+  en: Dropped Permissions
+- msgID: SELinux 选项
+  en: SELinuxOptions
+- msgID: 挂载点
+  en: Mount
+- msgID: 卷
+  en: Volume
+- msgID: 数据卷名称
+  en: VolumeName
+- msgID: 挂载路径
+  en: MountPath
+- msgID: 卷内子路径
+  en: SubPath In Volume
+- msgID: 只读
+  en: ReadOnly
+- msgID: 配置信息
+  en: Spec
+- msgID: 路径或节点
+  en: Path
+- msgID: 默认模式
+  en: DefaultMode
+- msgID: 八进制数字（0000-0777）或十进制数字（0-511）
+  en: Octal numbers (0000-0777) or decimal numbers (0-511)
+- msgID: 映射目标路径
+  en: Path
+- msgID: 副本管理
+  en: Replicas
+- msgID: 副本数量
+  en: Replicas
+- msgID: 升级策略
+  en: UpdateStrategy
+- msgID: 滚动升级
+  en: RollingUpdate
+- msgID: 重新创建
+  en: Recreate
+- msgID: 最大调度 Pod 数量
+  en: MaxSurge
+- msgID: 单位
+  en: Unit
+- msgID: 个
+  en: Cnt
+- msgID: 最大不可用数量
+  en: MaxUnavailable
+- msgID: 最小就绪时间
+  en: MinReadySecs
+- msgID: 进程截止时间
+  en: ProgressDeadlineSecs
+- msgID: Pod 管理策略
+  en: PodManagePolicy
+- msgID: 任务管理
+  en: JobManage
+- msgID: 调度规则
+  en: ScheduleRule
+- msgID: CronTab 表达式，形如：*/10 * * * *
+  en: "CronTab expression like */10 * * * *"
+- msgID: 并发策略
+  en: ConcurrencyPolicy
+- msgID: 允许多个 Job 同时运行
+  en: Allow
+- msgID: 若 Job 未结束，则跳过
+  en: Forbid
+- msgID: 若 Job 未结束，则替换
+  en: Replace
+- msgID: 暂停
+  en: Suspend
+- msgID: 需完成数
+  en: Completions
+- msgID: 并发数
+  en: Parallelism
+- msgID: 重试次数
+  en: BackoffLimit
+- msgID: 活跃终止时间
+  en: ActiveDDLSecs
+- msgID: 历史累计成功数
+  en: SuccessfulJobsHistoryLimit
+- msgID: 历史累计失败数
+  en: FailedJobsHistoryLimit
+- msgID: 运行截止时间
+  en: StartingDDLSecs
+- msgID: 节点选择
+  en: NodeSelect
+- msgID: 节点类型
+  en: NodeType
+- msgID: 任意可用节点
+  en: AnyAvailable
+- msgID: 指定节点
+  en: SpecificNode
+- msgID: 调度规则匹配
+  en: SchedulingRule
+- msgID: 节点名称
+  en: NodeName
+- msgID: 调度规则
+  en: ScheduleRules
+- msgID: 至少包含一条调度规则
+  en: At least contains one scheduling rule
+- msgID: 亲和性/反亲和性
+  en: Affinity / Anit
+- msgID: 污点/容忍
+  en: Tolerations
+- msgID: 运算符
+  en: Operator
+- msgID: 影响
+  en: Effect
+- msgID: 所有
+  en: All
+- msgID: 不调度
+  en: NoSchedule
+- msgID: 倾向不调度
+  en: PreferNoSchedule
+- msgID: 不执行
+  en: NoExecute
+- msgID: 容忍时间
+  en: TolerationSecs
+- msgID: 网络
+  en: Networking
+- msgID: DNS 策略
+  en: DNS Policy
+- msgID: 主机 IPC
+  en: HostIPC
+- msgID: 主机网络
+  en: HostNetwork
+- msgID: 主机 PID
+  en: HostPID
+- msgID: 共享进程命名空间
+  en: ShareProcessNamespace
+- msgID: 主机名称
+  en: HostName
+- msgID: 子域名
+  en: Subdomain
+- msgID: 服务器地址
+  en: NameServers
+- msgID: 搜索域
+  en: Searches
+- msgID: DNS 解析
+  en: DNSResolverOptions
+- msgID: 主机别名
+  en: HostAliases
+- msgID: 别名
+  en: Aliases
+- msgID: IP 地址
+  en: IPAddress
+- msgID: 其他
+  en: Other
+- msgID: 镜像拉取密钥
+  en: ImagePullSecrets
+- msgID: 重启策略
+  en: RestartPolicy
+- msgID: 服务账号
+  en: ServiceAccount
+- msgID: 终止容忍期
+  en: TerminationGracePeriodSecs
+- msgID: 数据卷
+  en: Volume
+- msgID: 路径
+  en: Path
+- msgID: 存储卷声明模板
+  en: VolumeClaimTemplate
+- msgID: 持久卷声明名称
+  en: PersistentVolumeClaim Name
+- msgID: 卷声明类型
+  en: ClaimType
+- msgID: 使用已存在的持久卷
+  en: Use existing persistent volume
+- msgID: 指定存储类以创建持久卷
+  en: Use storage class to create persistent volume
+- msgID: 持久卷名称
+  en: PersistentVolume
+- msgID: 存储类名称
+  en: StorageClass
+- msgID: 容量
+  en: Size
+- msgID: 访问模式
+  en: AccessModes
+- msgID: 服务名称
+  en: ServiceName
+- msgID: 卷声明
+  en: Claims
+- msgID: 值（多个值请以英文逗号分隔）
+  en: values (Multiple values should be separated by commas)
+- msgID: 别名（多个值请以英文逗号分隔）
+  en: aliases (Multiple values should be separated by commas)

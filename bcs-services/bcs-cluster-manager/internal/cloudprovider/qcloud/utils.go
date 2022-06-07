@@ -15,6 +15,8 @@ package qcloud
 
 import (
 	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
 var (
@@ -31,9 +33,25 @@ const (
 	tkeAddNodeTaskTemplate = "tke-add node: %s"
 	// tkeCleanNodeTaskTemplate bk-sops add task template
 	tkeCleanNodeTaskTemplate = "tke-remove node: %s"
+	// createNodeGroupTaskTemplate bk-sops add task template
+	createNodeGroupTaskTemplate = "tke-create node group: %s/%s"
+	// deleteNodeGroupTaskTemplate bk-sops add task template
+	deleteNodeGroupTaskTemplate = "tke-delete node group: %s/%s"
+	// updateNodeGroupDesiredNode bk-sops add task template
+	updateNodeGroupDesiredNodeTemplate = "tke-update node group desired node: %s/%s"
+	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
+	cleanNodeGroupNodesTaskTemplate = "tke-remove node group nodes: %s/%s"
+	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
+	moveNodesToNodeGroupTaskTemplate = "tke-move nodes to node group: %s/%s"
+	// switchNodeGroupAutoScalingTaskTemplate bk-sops add task template
+	switchNodeGroupAutoScalingTaskTemplate = "tke-switch node group auto scaling: %s/%s"
 )
 
 var (
+	// import cluster task
+	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
+	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
+
 	// create cluster task
 	createClusterShieldAlarmTask  = fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName)
 	createTKEClusterTask          = fmt.Sprintf("%s-CreateTKEClusterTask", cloudName)
@@ -54,4 +72,31 @@ var (
 	// remove node from cluster
 	removeNodesFromClusterTask = fmt.Sprintf("%s-RemoveNodesFromClusterTask", cloudName)
 	updateRemoveNodeDBInfoTask = fmt.Sprintf("%s-UpdateRemoveNodeDBInfoTask", cloudName)
+
+	// create nodeGroup task
+	createCloudNodeGroupTask        = fmt.Sprintf("%s-CreateCloudNodeGroupTask", cloudName)
+	checkCloudNodeGroupStatusTask   = fmt.Sprintf("%s-CheckCloudNodeGroupStatusTask", cloudName)
+	updateCreateNodeGroupDBInfoTask = fmt.Sprintf("%s-UpdateCreateNodeGroupDBInfoTask", cloudName)
+
+	// delete nodeGroup task
+	deleteNodeGroupTask             = fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName)
+	uninstallAutoScalerTask         = fmt.Sprintf("%s-UninstallAutoScalerTask", cloudName)
+	updateDeleteNodeGroupDBInfoTask = fmt.Sprintf("%s-UpdateDeleteNodeGroupDBInfoTask", cloudName)
+
+	// clean node in nodeGroup task
+	cleanNodeGroupNodesTask             = fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName)
+	checkCleanNodeGroupNodesStatusTask  = fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName)
+	updateCleanNodeGroupNodesDBInfoTask = fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName)
+
+	// update desired nodes task
+	applyInstanceMachinesTask    = fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyInstanceMachinesTask)
+	checkClusterNodesStatusTask  = fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName)
+	updateDesiredNodesDBInfoTask = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
+
+	// auto scale task
+	ensureAutoScalerTask             = fmt.Sprintf("%s-EnsureAutoScalerTask", cloudName)
+	deleteAutoScalerTask             = fmt.Sprintf("%s-DeleteAutoScalerTask", cloudName)
+	updateNodeGroupAutoScalingDBTask = fmt.Sprintf("%s-UpdateNodeGroupAutoScalingDBTask", cloudName)
+
+	// move nodes to nodeGroup task
 )

@@ -16,7 +16,10 @@ package resource
 
 // k8s 资源类型
 const (
-	// NS
+	// Node ...
+	Node = "Node"
+
+	// NS ...
 	NS = "Namespace"
 
 	// Deploy ...
@@ -83,9 +86,6 @@ const (
 )
 
 const (
-	// DefaultCJGroupVersion 特殊指定的 CronJob 版本
-	DefaultCJGroupVersion = "batch/v1beta1"
-
 	// DefaultHPAGroupVersion 特殊指定的 HPA 版本
 	DefaultHPAGroupVersion = "autoscaling/v2beta2"
 )
@@ -103,4 +103,16 @@ const (
 
 	// ClusterScope 集群维度
 	ClusterScope = "Cluster"
+)
+
+const (
+	// EditModeLabelKey 资源被编辑的模式，表单为 form，Key 不存在或 Manifest 则为 Yaml 模式
+	EditModeLabelKey = "io.tencent.bcs.editFormat"
+)
+
+const (
+	// EditModeForm 资源编辑模式 - 表单
+	EditModeForm = "form"
+	// EditModeYaml 资源编辑模式 - Yaml
+	EditModeYaml = "yaml"
 )

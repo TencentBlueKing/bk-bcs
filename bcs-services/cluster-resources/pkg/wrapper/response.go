@@ -43,7 +43,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				if err != nil {
 					r.Data = genNewRespData(err)
 					// 返回 nil 避免框架重复处理 error
-					return nil // nolint:nilerr
+					return nil
 				}
 			case *clusterRes.CommonListResp:
 				r.RequestID = getRequestID(ctx)

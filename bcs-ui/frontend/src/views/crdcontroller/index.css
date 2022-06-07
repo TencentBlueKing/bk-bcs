@@ -132,7 +132,7 @@
     }
 
     .log-name {
-        width: 110px;
+        width: 150px;
         padding: 0 10px 0 20px;
     }
 
@@ -149,7 +149,7 @@
     .action {
         width: 150px;
         .bk-primary.bk-button-normal {
-            width: 88px;
+            min-width: 88px;
         }
     }
 
@@ -311,7 +311,7 @@
 .save-crd-btn {
     position: absolute;
     top: 13px;
-    right: 90px;
+    right: 100px;
 }
 
 .hide-crd-btn {

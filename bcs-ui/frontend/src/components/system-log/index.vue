@@ -21,6 +21,7 @@
                         <div v-if="index === 0" class="new-flag">{{ $t('当前版本') }}</div>
                     </div>
                 </div>
+                <bk-button class="version-features" text @click="handleShowFeature">{{$t('功能特性指引')}}</bk-button>
             </div>
             <div class="layout-right">
                 <div class="content-wraper">
@@ -54,6 +55,22 @@
                     return ''
                 }
                 const md = new MarkdownIt()
+                const defaultRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+                    return self.renderToken(tokens, idx, options)
+                }
+                md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+                    // If you are sure other plugins can't add `target` - drop check below
+                    const aIndex = tokens[idx].attrIndex('target')
+
+                    if (aIndex < 0) {
+                        tokens[idx].attrPush(['target', '_blank']) // add new attribute
+                    } else {
+                        tokens[idx].attrs[aIndex][1] = '_blank' // replace value of existing attr
+                    }
+
+                    // pass token to default renderer.
+                    return defaultRender(tokens, idx, options, env, self)
+                }
                 return md.render(this.list[this.activeIndex].content)
             }
         },
@@ -110,6 +127,9 @@
             },
             dialogChange (val) {
                 if (!val) this.handleClose()
+            },
+            handleShowFeature () {
+                this.$emit('show-feature')
             }
         }
     }
@@ -400,5 +420,12 @@
                 content: "";
             }
         }
+    }
+    .version-features {
+        position: absolute;
+        font-size: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 12px;
     }
 </style>

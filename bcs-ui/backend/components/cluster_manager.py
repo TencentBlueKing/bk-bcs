@@ -13,7 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from django.conf import settings
 from requests import PreparedRequest
@@ -55,7 +55,7 @@ class ClusterManagerClient(BkApiClient):
         self._client = BaseHttpClient(ClusterManagerAuth(access_token))
 
     @response_handler(default=list)
-    def get_nodes(self, cluster_id: str) -> List:
+    def get_nodes(self, cluster_id: str) -> Dict[str, Any]:
         """查询集群下的节点
         :param cluster_id: 集群ID
         :return: 返回节点列表
@@ -64,11 +64,15 @@ class ClusterManagerClient(BkApiClient):
         return self._client.request_json("GET", url)
 
     @response_handler(default=list)
-    def get_shared_clusters(self) -> List:
+    def get_shared_clusters(self) -> Dict[str, Any]:
         """查询共享集群信息
 
         :return: 返回共享集群列表
         """
+        # TODO 功能同步后去除
+        if settings.EDITION == settings.COMMUNITY_EDITION:
+            return {'code': 0, 'data': []}
+
         url = self._config.get_shared_clusters_url
         return self._client.request_json("GET", url)
 

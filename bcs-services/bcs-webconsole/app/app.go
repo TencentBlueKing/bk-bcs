@@ -15,6 +15,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +32,7 @@ import (
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
 	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
@@ -42,7 +44,6 @@ import (
 	microConf "go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/reader"
 	"go-micro.dev/v4/config/reader/json"
-	"go-micro.dev/v4/config/source"
 	"go-micro.dev/v4/config/source/file"
 	"go-micro.dev/v4/registry"
 	"golang.org/x/sync/errgroup"
@@ -51,17 +52,18 @@ import (
 var (
 	// 变量, 编译后覆盖
 	service              = "webconsole.bkbcs.tencent.com"
-	version              = "latest"
-	credentialConfigPath = ""
+	appName              = "bcs-webconsole"
+	versionTag           = "latest"
+	credentialConfigPath = cli.StringSlice{}
 )
 
 // WebConsoleManager is an console struct
 type WebConsoleManager struct {
-	ctx          context.Context
-	opt          *options.WebConsoleManagerOption
-	microService micro.Service
-	microConfig  microConf.Config
-	credConf     microConf.Config
+	ctx           context.Context
+	opt           *options.WebConsoleManagerOption
+	microService  micro.Service
+	microConfig   microConf.Config
+	multiCredConf *options.MultiCredConf
 }
 
 // NewWebConsoleManager
@@ -74,10 +76,10 @@ func NewWebConsoleManager(opt *options.WebConsoleManagerOption) *WebConsoleManag
 
 func (c *WebConsoleManager) Init() error {
 	// 初始化服务注册, 配置文件等
-	microService, microConfig, credConf := c.initMicroService()
+	microService, microConfig, multiCredConf := c.initMicroService()
 	c.microService = microService
 	c.microConfig = microConfig
-	c.credConf = credConf
+	c.multiCredConf = multiCredConf
 
 	// etcd 服务发现注册
 	etcdRegistry, err := c.initEtcdRegistry()
@@ -102,7 +104,7 @@ func (c *WebConsoleManager) Init() error {
 	return nil
 }
 
-func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, microConf.Config) {
+func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, *options.MultiCredConf) {
 	var (
 		configPath string
 	)
@@ -111,13 +113,15 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	conf, _ := microConf.NewConfig(
 		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
 	)
-	credConf, _ := microConf.NewConfig(
-		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
-	)
+	var multiCredConf *options.MultiCredConf
 
 	cmdOptions := []cmd.Option{
 		cmd.Description("bcs webconsole micro service"),
-		cmd.Version(version),
+		cmd.Version(versionTag),
+	}
+
+	cli.VersionPrinter = func(c *cli.Context) {
+		fmt.Println(appName+",", version.GetVersion())
 	}
 
 	microCmd := cmd.NewCmd(cmdOptions...)
@@ -133,7 +137,7 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 			Required:    true,
 			Destination: &configPath,
 		},
-		&cli.StringFlag{
+		&cli.StringSliceFlag{
 			Name:        "credential-config",
 			Usage:       "credential config file path",
 			Required:    false,
@@ -155,17 +159,14 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 		logger.Infof("load conf from %s", configPath)
 
 		// 授权信息
-		if credentialConfigPath != "" {
-			if err := credConf.Load(file.NewSource(file.WithPath(credentialConfigPath))); err != nil {
-				return err
-			}
-
-			if err := config.G.ReadCred(credConf.Get("credentials").Bytes()); err != nil {
+		if len(credentialConfigPath.Value()) > 0 {
+			credConf, err := options.NewMultiCredConf(credentialConfigPath.Value())
+			if err != nil {
 				logger.Errorf("config not valid, err: %s, exited", err)
 				os.Exit(1)
 			}
+			multiCredConf = credConf
 
-			logger.Infof("load credential conf from %s, len=%d", credentialConfigPath, len(config.G.Credentials))
 		}
 		return nil
 	}
@@ -173,14 +174,14 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	srv := micro.NewService(micro.Server(mhttp.NewServer()))
 	opts := []micro.Option{
 		micro.Name(service),
-		micro.Version(version),
+		micro.Version(versionTag),
 		micro.Cmd(microCmd),
 	}
 
 	// 配置文件, 日志这里才设置完成
 	srv.Init(opts...)
 
-	return srv, conf, credConf
+	return srv, conf, multiCredConf
 }
 
 // initHTTPService 初始化 gin Http 配置
@@ -244,8 +245,26 @@ func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
 	return etcdRegistry, nil
 }
 
+// checkVersion refer to https://github.com/urfave/cli/blob/main/help.go#L318 but use os.args check
+func checkVersion() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+	arg := os.Args[1]
+	for _, name := range cli.VersionFlag.Names() {
+		if arg == "-"+name || arg == "--"+name {
+			return true
+		}
+	}
+	return false
+}
+
 // Run create a pid
 func (c *WebConsoleManager) Run() error {
+	if checkVersion() {
+		return nil
+	}
+
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(c.ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -266,33 +285,14 @@ func (c *WebConsoleManager) Run() error {
 		return podCleanUpMgr.Run()
 	})
 
-	if credentialConfigPath != "" {
-		w, _ := c.credConf.Watch("credentials")
-
+	if c.multiCredConf != nil {
 		c.microService.Init(micro.AfterStop(func() error {
-			logger.Infof("receive interput, stop watch %s", credentialConfigPath)
-			w.Stop()
+			c.multiCredConf.Stop()
 			return nil
 		}))
 
 		eg.Go(func() error {
-			for {
-				value, err := w.Next()
-				if err != nil {
-					if err.Error() == source.ErrWatcherStopped.Error() {
-						return nil
-					}
-					return err
-				}
-				// watch 会传入 null 空值
-				if string(value.Bytes()) == "null" {
-					continue
-				}
-				if err := config.G.ReadCred(value.Bytes()); err != nil {
-					logger.Errorf("reload credential error, %s", err)
-				}
-				logger.Infof("reload credential conf from %s, len=%d", credentialConfigPath, len(config.G.Credentials))
-			}
+			return c.multiCredConf.Watch()
 		})
 	}
 

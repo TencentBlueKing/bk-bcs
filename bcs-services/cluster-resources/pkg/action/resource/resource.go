@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -47,23 +48,23 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 	}
 }
 
-// List ...
-func (m *ResMgr) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*structpb.Struct, error) {
+// List 请求某类资源（指定命名空间）下的所有资源列表，按指定 format 格式化后返回
+func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1.ListOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, opts)
+	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, format, opts)
 }
 
-// Get ...
-func (m *ResMgr) Get(ctx context.Context, namespace, name string, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
+// Get 请求某个资源详情，按指定 Format 格式化后返回
+func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
 	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format, opts)
 }
 
-// Create ...
+// Create 创建 k8s 资源，支持以 manifest / formData 格式创建
 func (m *ResMgr) Create(
 	ctx context.Context, rawData *structpb.Struct, format string, isNSScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
@@ -75,13 +76,15 @@ func (m *ResMgr) Create(
 	if err != nil {
 		return nil, err
 	}
-	if err := m.checkAccess(ctx, "", manifest); err != nil {
+	if err = m.checkAccess(ctx, "", manifest); err != nil {
 		return nil, err
 	}
+	// apiVersion 以 manifest 中的为准，不强制要求 preferred
+	m.GroupVersion = mapx.GetStr(manifest, "apiVersion")
 	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
-// Update ...
+// Update 更新 k8s 资源，支持以 manifest / formData 格式更新
 func (m *ResMgr) Update(
 	ctx context.Context, namespace, name string, rawData *structpb.Struct, format string, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
@@ -93,13 +96,15 @@ func (m *ResMgr) Update(
 	if err != nil {
 		return nil, err
 	}
-	if err := m.checkAccess(ctx, namespace, manifest); err != nil {
+	if err = m.checkAccess(ctx, namespace, manifest); err != nil {
 		return nil, err
 	}
+	// apiVersion 以 manifest 中的为准，不强制要求 preferred
+	m.GroupVersion = mapx.GetStr(manifest, "apiVersion")
 	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
 }
 
-// Delete ...
+// Delete 删除某个 k8s 资源
 func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1.DeleteOptions) error {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return err
@@ -119,14 +124,14 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	}
 	// 不允许的资源类型，直接抛出错误
 	if !slice.StringInSlice(m.Kind, cluster.SharedClusterAccessibleResKinds) {
-		return errorx.New(errcode.NoPerm, "该请求资源类型在共享集群中不可用")
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "该请求资源类型在共享集群中不可用"))
 	}
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
-		namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
+		namespace = mapx.GetStr(manifest, "metadata.namespace")
 	}
 	if !cli.IsProjNSinSharedCluster(ctx, m.ClusterID, namespace) {
-		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
 	}
 	return nil
 }

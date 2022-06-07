@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
@@ -132,7 +133,7 @@ func (p *CleanUpManager) CleanUserPod() error {
 
 // 清理用户下的相关集群pod
 func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePodMap map[string]*types.TimestampPodContext) error {
-	k8sClient, err := GetK8SClientByClusterId(clusterId)
+	k8sClient, err := k8sclient.GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return err
 	}
@@ -141,6 +142,8 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 	if err != nil {
 		return err
 	}
+
+	metrics.CollectPodCount(clusterId, namespace, float64(len(podList.Items)))
 
 	// 过期时间
 	now := time.Now()
@@ -169,13 +172,10 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 		}
 
 		// 删除pod
-		start := time.Now()
 		if err := k8sClient.CoreV1().Pods(namespace).Delete(p.ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
-			metrics.CollectPodDeleteDurations(namespace, pod.Name, metrics.ErrStatus, pod.Name, start)
 			logger.Errorf("delete pod(%s) failed, err: %s", pod.Name, err)
 			continue
 		}
-		metrics.CollectPodDeleteDurations(namespace, pod.Name, metrics.SucStatus, pod.Name, start)
 
 		logger.Infof("delete pod %s done", pod.Name)
 	}

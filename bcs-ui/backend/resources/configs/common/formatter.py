@@ -16,6 +16,6 @@ from backend.resources.utils.format import ResourceDefaultFormatter
 
 
 class ConfigurationFormatter(ResourceDefaultFormatter):
-    """ 配置类 资源通用格式化器 """
+    """配置类 资源通用格式化器"""
 
     pass

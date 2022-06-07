@@ -1,12 +1,12 @@
 <template>
     <section class="create-form-cluster">
-        <bk-form :label-width="100" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
+        <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
             <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                 <bk-input class="w640" v-model="basicInfo.clusterName"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
                 <bcs-select :loading="templateLoading" class="w640" v-model="basicInfo.provider" :clearable="false">
-                    <bcs-option v-for="item in templateList"
+                    <bcs-option v-for="item in availableTemplateList"
                         :key="item.cloudID"
                         :id="item.cloudID"
                         :name="item.name">
@@ -37,11 +37,11 @@
                 </div>
             </bk-form-item>
             <bk-form-item :label="$t('选择Master')" property="ipList" error-display-type="normal" required>
-                <bk-button class="mb10" @click="handleShowIpSelector">
+                <bk-button @click="handleShowIpSelector">
                     <i class="bcs-icon bcs-icon-plus" style="position: relative;top: -1px;"></i>
                     {{$t('选择服务器')}}
                 </bk-button>
-                <bk-table class="ip-list" :data="basicInfo.ipList" v-if="basicInfo.ipList.length">
+                <bk-table class="ip-list mt10" :data="basicInfo.ipList" v-if="basicInfo.ipList.length">
                     <bk-table-column type="index" :label="$t('序列')" width="60"></bk-table-column>
                     <bk-table-column :label="$t('内网IP')" prop="bk_host_innerip"></bk-table-column>
                     <bk-table-column :label="$t('机房')" prop="idc_name"></bk-table-column>
@@ -89,6 +89,7 @@
     import IpSelector from '@/components/ip-selector/selector-dialog.vue'
     import useGoHome from '@/common/use-gohome'
     import KeyValue from '@/components/key-value.vue'
+    import useFormLabel from '@/common/use-form-label'
 
     export default defineComponent({
         name: 'CreateFormCluster',
@@ -118,6 +119,9 @@
                     ipList: []
                 })
             const templateList = ref<any[]>([])
+            const availableTemplateList = computed(() => {
+                return templateList.value.filter(item => !item?.confInfo?.disableCreateCluster)
+            })
             const versionList = computed(() => {
                 const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider)
                 return cloud?.clusterManagement.availableVersion || []
@@ -270,7 +274,6 @@
             const handleGetTemplateList = async () => {
                 templateLoading.value = true
                 templateList.value = await $store.dispatch('clustermanager/fetchCloudList')
-                basicInfo.value.provider = templateList.value[0]?.cloudID || ''
                 templateLoading.value = false
             }
             const handleRemoveServer = async (row) => {
@@ -280,15 +283,18 @@
                     basicInfo.value.ipList.splice(index, 1)
                 }
             }
+            const { labelWidth, initFormLabelWidth } = useFormLabel()
             onMounted(() => {
                 handleGetTemplateList()
+                initFormLabelWidth(basicFormRef.value)
             })
             return {
+                labelWidth,
                 keyAdvice,
                 templateLoading,
                 expanded,
                 loading,
-                templateList,
+                availableTemplateList,
                 versionList,
                 basicFormRef,
                 basicInfo,

@@ -77,7 +77,7 @@ func TestValidateSubscribeParams(t *testing.T) {
 	// kind 与 crd 中定义不一致
 	err = validateSubscribeParams(ctx, &req)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Kind")
+	assert.Contains(t, err.Error(), "kind")
 
 	req.Kind = "CronTab"
 	req.Namespace = ""
@@ -137,7 +137,7 @@ func TestSubscribeCMInSharedCluster(t *testing.T) {
 
 	err = h.Subscribe(ctx, &req, &mockSubscribeStream{})
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "命名空间不属于指定项目")
+	assert.Contains(t, err.Error(), "不属于指定项目")
 
 	// 在共享集群项目命名空间中创建 configmap 确保存在事件
 	cmManifest, _ := example.LoadDemoManifest("config/simple_configmap", "")

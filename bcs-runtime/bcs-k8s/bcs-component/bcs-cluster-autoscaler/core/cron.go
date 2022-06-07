@@ -28,16 +28,6 @@ import (
 
 const TIME_LAYOUT = "2006-01-02 15:04:05"
 
-// TimeRange allow user to define a crontab regular
-type TimeRange struct {
-	// 存放 crontab 语句，如 "* 1-3 * * *"
-	Schedule string
-	// 指定时区，如 "Asia/Shanghai"
-	Zone string
-	// 期望节点数
-	DesiredNum int
-}
-
 // doCron set the minSize of nodegroups according to the rules
 func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
@@ -49,7 +39,12 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	}
 
 	nodegroups := context.CloudProvider.NodeGroups()
-	for _, ng := range nodegroups {
+	for _, group := range nodegroups {
+		ng, ok := group.(*bcs.NodeGroup)
+		if !ok {
+			return errors.NewAutoscalerError(errors.InternalError,
+				"Cannot transform cloudprovider to BCSProvider, should run in BCS environment")
+		}
 		minSize := ng.MinSize()
 		maxSize := ng.MaxSize()
 		targetSize, err := ng.TargetSize()
@@ -57,16 +52,25 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 			return errors.NewAutoscalerError(errors.ApiCallError,
 				"failed to get target size of nodegroup %v: %v", ng.Id(), err)
 		}
+		timeRanges, err := ng.TimeRanges()
+		if err != nil {
+			return errors.NewAutoscalerError(errors.ApiCallError,
+				"failed to get time ranges of nodegroup %v: %v", ng.Id(), err)
+		}
+		if len(timeRanges) == 0 {
+			klog.V(4).Infof("CronMode: there is no timerange definition for nodegroup %s", ng.Id())
+			continue
+		}
 
 		// get desired num
-		desired, err := getDesiredNumForNodeGroupWithTime(ng, currentTime)
+		desired, err := getDesiredNumForNodeGroupWithTime(ng, currentTime, timeRanges)
 		if err != nil {
 			return errors.NewAutoscalerError(errors.InternalError,
 				"failed to get desiredNum for node group %s in cron mode: %v", ng.Id(), err)
 		}
 		switch {
 		case desired < 0:
-			klog.V(4).Infof("CronMode: for nodegroup %v, now is not in the time ranges", ng.Id())
+			klog.V(4).Infof("CronMode: for nodegroup %v, now %v is not in any time ranges", ng.Id(), currentTime)
 			continue
 		case desired > maxSize:
 			klog.V(4).Infof("CronMode: for nodegroup %v, desiredNum %d is larger than MaxSize %d",
@@ -92,7 +96,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 			continue
 		}
 		info := nodegroupset.ScaleUpInfo{
-			Group:       ng,
+			Group:       group,
 			CurrentSize: targetSize,
 			NewSize:     desired,
 			MaxSize:     maxSize,
@@ -107,28 +111,18 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 	return nil
 }
 
-func getDesiredNumForNodeGroupWithTime(ng cloudprovider.NodeGroup, currentTime time.Time) (int, error) {
+func getDesiredNumForNodeGroupWithTime(ng cloudprovider.NodeGroup,
+	currentTime time.Time, timeRanges []*bcs.TimeRange) (int, error) {
 	max := -1
-	// TODO: get timeranges from nodegroup
-	timeranges := []TimeRange{
-		{
-			Schedule:   "* 14-16 * * *",
-			Zone:       "Asia/Shanghai",
-			DesiredNum: 2,
-		},
-		{
-			Schedule:   "* 7-9 * * *",
-			Zone:       "Asia/Shanghai",
-			DesiredNum: 3,
-		},
-	}
-	for _, t := range timeranges {
+	for _, t := range timeRanges {
 		_, finalMatch, err := getFinalMatchAndMisMatch(t.Schedule, currentTime, t.Zone)
 		if err != nil {
 			klog.Errorf("CronMode: failed to get match for timerange \"%v\": %v", t, err)
 			return max, err
 		}
 		if finalMatch == nil {
+			klog.V(4).Infof("CronMode: Nodegroup %v, now %v is not in time range \"%v\"",
+				ng.Id(), currentTime, t.Schedule)
 			continue
 		}
 		if max < t.DesiredNum {
@@ -163,7 +157,7 @@ func getFinalMatchAndMisMatch(schedule string, currentTime time.Time, zone strin
 		match = t
 		break
 	}
-	if currentTime.Sub(misMatch).Minutes() <= 1 && match.Sub(currentTime).Minutes() <= 1 {
+	if currentTime.Sub(misMatch).Minutes() <= 1 {
 		return &misMatch, &match, nil
 	}
 

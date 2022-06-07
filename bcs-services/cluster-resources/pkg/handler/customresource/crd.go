@@ -21,11 +21,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -45,7 +49,23 @@ func (h *Handler) ListCRD(
 	if err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.GenListResRespData(ret, res.CRD)
+
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, ret, res.CRD, req.Format)
+	if err != nil {
+		return err
+	}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(respData)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, false),
+	).ToPbStruct()
 	return err
 }
 
@@ -58,10 +78,16 @@ func (h *Handler) GetCRD(
 		return err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared && !cli.IsSharedClusterEnabledCRD(req.Name) {
-		return errorx.New(errcode.NoPerm, "共享集群中不支持查看 CRD %s 信息", req.Name)
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "共享集群中不支持查看 CRD %s 信息"), req.Name)
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		ctx, req.ClusterID, res.CRD, "", "", req.Name, req.Format, metav1.GetOptions{},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormUpdate, false),
+	).ToPbStruct()
 	return err
 }

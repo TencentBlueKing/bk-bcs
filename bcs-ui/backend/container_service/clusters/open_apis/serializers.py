@@ -20,7 +20,7 @@ from backend.templatesets.var_mgmt.serializers import RE_KEY
 
 
 class VariablesSLZ(serializers.Serializer):
-    """ 命名空间变量 """
+    """命名空间变量"""
 
     id = serializers.IntegerField(required=False)
     key = serializers.RegexField(RE_KEY, max_length=64)
@@ -28,13 +28,13 @@ class VariablesSLZ(serializers.Serializer):
 
 
 class NamespaceCommonSLZ(serializers.Serializer):
-    """ 命名空间公用属性 """
+    """命名空间公用属性"""
 
     labels = serializers.JSONField(default=dict)
     annotations = serializers.JSONField(default=dict)
 
     def validate(self, attrs):
-        """ 检查 labels，annotations 类型与键值 """
+        """检查 labels，annotations 类型与键值"""
         labels, annotations = attrs['labels'], attrs['annotations']
         if not (isinstance(labels, dict) and isinstance(annotations, dict)):
             raise ValidationError('创建或更新命名空间时，labels，annotations 值类型需为 Dict')
@@ -46,11 +46,11 @@ class NamespaceCommonSLZ(serializers.Serializer):
 
 
 class UpdateNamespaceSLZ(NamespaceCommonSLZ):
-    """ 更新命名空间 """
+    """更新命名空间"""
 
 
 class CreateNamespaceSLZ(NamespaceCommonSLZ):
-    """ 创建命名空间 """
+    """创建命名空间"""
 
     name = serializers.RegexField(r'[a-z0-9]([-a-z0-9]*[a-z0-9])?', min_length=2, max_length=63)
     variables = serializers.ListField(child=VariablesSLZ(), default=list)

@@ -15,6 +15,7 @@ package clusterops
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -28,6 +29,11 @@ import (
 	k8scorecliset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+)
+
+var (
+	// ErrServerNotInited error for server not init
+	ErrServerNotInit = errors.New("server not init")
 )
 
 // K8SOperator operator of k8s
@@ -48,12 +54,12 @@ func NewK8SOperator(opt *options.ClusterManagerOptions, model store.ClusterManag
 func NewKubeClient(kubeConfig string) (k8scorecliset.Interface, error) {
 	data, err := base64.StdEncoding.DecodeString(kubeConfig)
 	if err != nil {
-		return nil, fmt.Errorf("decode kube config failed: %w", err)
+		return nil, fmt.Errorf("decode kube config failed: %v", err)
 	}
 
 	config, err := clientcmd.RESTConfigFromKubeConfig(data)
 	if err != nil {
-		return nil, fmt.Errorf("build rest config failed: %w", err)
+		return nil, fmt.Errorf("build rest config failed: %v", err)
 	}
 
 	config.Burst = 200
@@ -110,6 +116,8 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 		cfg.TLSClientConfig = rest.TLSClientConfig{
 			Insecure: false,
 			CAData:   []byte(cred.CaCertData),
+			CertData: []byte(cred.ClientCert),
+			KeyData:  []byte(cred.ClientKey),
 		}
 		cfg.BearerToken = cred.UserToken
 		cliset, err := k8scorecliset.NewForConfig(cfg)

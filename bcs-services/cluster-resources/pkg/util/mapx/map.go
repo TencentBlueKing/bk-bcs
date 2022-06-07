@@ -61,6 +61,26 @@ func Get(obj map[string]interface{}, paths interface{}, _default interface{}) in
 	return ret
 }
 
+// GetBool 获取 Bool 类型快捷方法，默认值为 false
+func GetBool(obj map[string]interface{}, paths interface{}) bool {
+	return Get(obj, paths, false).(bool)
+}
+
+// GetInt64 获取 int64 类型快捷方法，默认值为 int64(0)
+func GetInt64(obj map[string]interface{}, paths interface{}) int64 {
+	return Get(obj, paths, int64(0)).(int64)
+}
+
+// GetStr 获取 string 类型快捷方法，默认值为 ""
+func GetStr(obj map[string]interface{}, paths interface{}) string {
+	return Get(obj, paths, "").(string)
+}
+
+// GetList 获取 []interface{} 类型快捷方法，默认值为 []interface{}{}
+func GetList(obj map[string]interface{}, paths interface{}) []interface{} {
+	return Get(obj, paths, []interface{}{}).([]interface{})
+}
+
 // SetItems 对嵌套 Map 进行赋值
 // paths 参数支持 []string 类型，如 []string{"metadata", "namespace"}
 // 或 string 类型（以 '.' 为分隔符），如 "spec.template.spec.containers"

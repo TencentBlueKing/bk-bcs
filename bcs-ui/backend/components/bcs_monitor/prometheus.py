@@ -33,6 +33,9 @@ DISK_FSTYPE = "ext[234]|btrfs|xfs|zfs"
 # 磁盘统计 允许的挂载目录
 DISK_MOUNTPOINT = "/|/data"
 
+# IP来源
+PROVIDER = "Prometheus"
+
 
 def query_range(query, start, end, step, project_id=None):
     """范围请求API"""
@@ -477,7 +480,7 @@ def get_container_disk_read(cluster_id, namespace, pod_name, container_name, sta
 
     prom_query = f"""
         sum by(container_name) (container_fs_reads_bytes_total{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{container_name}"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)
@@ -489,7 +492,7 @@ def get_container_disk_write(cluster_id, namespace, pod_name, container_name, st
 
     prom_query = f"""
         sum by(container_name) (container_fs_writes_bytes_total{{cluster_id="{cluster_id}", namespace=~"{ namespace }", pod_name=~"{pod_name}",
-        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true", id=~"{container_name}"}})
+        container_name=~"{ container_name }", container_name!="", container_name!="POD", BcsNetworkContainer!="true"}})
         """  # noqa
 
     resp = query_range(prom_query, start, end, step)

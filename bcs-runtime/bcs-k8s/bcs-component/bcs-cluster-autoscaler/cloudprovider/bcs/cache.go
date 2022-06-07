@@ -51,7 +51,8 @@ const (
 // CreationType is the type of node creation
 type CreationType string
 
-func newNodeGroupCache(getNodes GetNodes) *NodeGroupCache {
+// NewNodeGroupCache news node group cache
+func NewNodeGroupCache(getNodes GetNodes) *NodeGroupCache {
 	registry := &NodeGroupCache{
 		registeredGroups:       make([]*NodeGroup, 0),
 		instanceToGroup:        make(map[InstanceRef]*NodeGroup),
@@ -144,7 +145,8 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 			if instance.NodeGroupID != groupID {
 				continue
 			}
-			ref := InstanceRef{Name: instance.NodeID}
+			// ref := InstanceRef{Name: instance.NodeID}
+			ref := InstanceRef{IP: instance.InnerIP}
 			newCache[ref] = group
 			newTypeCache[ref] = CreationType(CreationTypeAuto)
 		}
@@ -184,11 +186,16 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 func (m *NodeGroupCache) SetNodeGroupMinSize(groupID string, num int) error {
 	m.cacheMutex.Lock()
 	defer m.cacheMutex.Unlock()
+	changed := false
 	for i, ng := range m.registeredGroups {
 		if ng.nodeGroupID == groupID {
 			m.registeredGroups[i].minSize = num
+			changed = true
 			break
 		}
+	}
+	if !changed {
+		return fmt.Errorf("Cannot find the nodegroup %s in cache", groupID)
 	}
 	return nil
 }

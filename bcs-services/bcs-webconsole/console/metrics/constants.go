@@ -22,5 +22,5 @@ const (
 	// SucStatus for failure status
 	SucStatus = "success"
 
-	bcsWebSocketHandlerPath = "/ws/projects/:projectId/clusters/:clusterId/"
+	httpRequestDurationIgnoreKey = "http_request_duration_ignore"
 )

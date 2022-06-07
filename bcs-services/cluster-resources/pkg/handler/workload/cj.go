@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -28,9 +30,15 @@ import (
 func (h *Handler) ListCJ(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultCJGroupVersion, res.CJ).List(
-		ctx, req.Namespace, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.CJ).List(
+		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, true),
+	).ToPbStruct()
 	return err
 }
 
@@ -38,9 +46,15 @@ func (h *Handler) ListCJ(
 func (h *Handler) GetCJ(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.CJ).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormUpdate, true),
+	).ToPbStruct()
 	return err
 }
 
@@ -48,7 +62,7 @@ func (h *Handler) GetCJ(
 func (h *Handler) CreateCJ(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.CJ).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -58,7 +72,7 @@ func (h *Handler) CreateCJ(
 func (h *Handler) UpdateCJ(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.CJ).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -68,7 +82,7 @@ func (h *Handler) UpdateCJ(
 func (h *Handler) DeleteCJ(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, res.DefaultCJGroupVersion, res.CJ).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", res.CJ).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

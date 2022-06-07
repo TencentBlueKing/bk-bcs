@@ -31,7 +31,7 @@ func TestPV(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("storage/simple_persistent_volume", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -45,26 +45,26 @@ func TestPV(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "PersistentVolumeList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "PersistentVolumeList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.capacity.storage", "2Gi")
 	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
-	updateReq := handler.GenResUpdateReq(updateManifest, resName.(string))
+	updateReq := handler.GenResUpdateReq(updateManifest, resName)
 	err = h.UpdatePV(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetPV(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "PersistentVolume", mapx.Get(respData, "manifest.kind", ""))
-	assert.Equal(t, "2Gi", mapx.Get(respData, "manifest.spec.capacity.storage", 0))
+	assert.Equal(t, "PersistentVolume", mapx.GetStr(respData, "manifest.kind"))
+	assert.Equal(t, "2Gi", mapx.GetStr(respData, "manifest.spec.capacity.storage"))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeletePV(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }

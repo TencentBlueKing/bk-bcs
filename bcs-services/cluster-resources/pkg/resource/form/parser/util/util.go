@@ -15,6 +15,7 @@
 package util
 
 import (
+	"math"
 	"strconv"
 	"strings"
 )
@@ -66,6 +67,23 @@ func ConvertMemoryUnit(raw string) int {
 		raw = strings.Replace(raw, "G", "", 1)
 		val, _ := strconv.Atoi(raw)
 		return val * 1024
+	}
+	return 0
+}
+
+// ConvertStorageUnit 将 resource 中定义的 Storage 配置统一为 Gi 为单位
+// 注意：最小为 1Gi，即小于 1Gi 的，都会变成 1Gi
+func ConvertStorageUnit(raw string) int {
+	if strings.Contains(raw, "M") {
+		raw = strings.Replace(raw, "Mi", "", 1)
+		raw = strings.Replace(raw, "M", "", 1)
+		val, _ := strconv.ParseFloat(raw, 64)
+		return int(math.Ceil(val / 1024))
+	} else if strings.Contains(raw, "G") {
+		raw = strings.Replace(raw, "Gi", "", 1)
+		raw = strings.Replace(raw, "G", "", 1)
+		val, _ := strconv.Atoi(raw)
+		return val
 	}
 	return 0
 }

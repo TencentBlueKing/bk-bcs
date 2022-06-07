@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class Endpoints(BaseAPI):
     def get(self, request, project_id, cluster_id, namespace, name):
-        """ 获取项目下所有的endpoints """
+        """获取项目下所有的endpoints"""
         if get_cluster_type(cluster_id) == ClusterType.SHARED:
             return APIResponse({"code": 400, "message": _("无法查看共享集群资源")})
 

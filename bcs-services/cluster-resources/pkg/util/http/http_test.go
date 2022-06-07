@@ -31,3 +31,15 @@ func TestCustomHeaderMatcher(t *testing.T) {
 	ret, _ = http.CustomHeaderMatcher("Content-Type")
 	assert.Equal(t, "grpcgateway-Content-Type", ret)
 }
+
+func TestWSHeaderForwarder(t *testing.T) {
+	// 允许转发的 Header Key
+	assert.True(t, http.WSHeaderForwarder("Origin"))
+	assert.True(t, http.WSHeaderForwarder("referer"))
+	assert.True(t, http.WSHeaderForwarder("Authorization"))
+	assert.True(t, http.WSHeaderForwarder("cookie"))
+
+	// 暂不被转发的 Header Key
+	assert.False(t, http.WSHeaderForwarder("Connection"))
+	assert.False(t, http.WSHeaderForwarder("User-Agent"))
+}

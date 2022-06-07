@@ -36,6 +36,7 @@
                                                 active: isSharedCluster,
                                                 disable: !firstShareCluster
                                             }]"
+                                        v-if="$INTERNAL"
                                         @click="handleGotoShareCluster"
                                     >{{$t('共享集群')}}<span class="beta">beta</span>
                                     </li>
@@ -44,14 +45,31 @@
                         </bcs-popover>
                     </div>
                     <div class="nav-right">
-                        <bcs-popover theme="light navigation-message" style="margin-right: 14px;" offset="0, 20" placement="bottom" :arrow="false">
-                            <div class="header-user">
-                                <i id="siteHelp" class="bcs-icon bcs-icon-help-2"></i>
+                        <!-- <bcs-popover theme="light navigation-message" class="mr10" offset="0, 20" placement="bottom" :arrow="false">
+                            <div class="flag-box">
+                                <i :class="['bcs-icon', curLang.icon]"></i>
+                            </div>
+                            <template slot="content">
+                                <ul class="bcs-navigation-admin">
+                                    <li v-for="(item, index) in langs" :key="index"
+                                        :class="['nav-item', { active: activeLangId === item.id }]"
+                                        @click="handleChangeLang(item)"
+                                    >
+                                        <i :class="['bcs-icon mr5', item.icon]"></i>
+                                        {{item.name}}
+                                    </li>
+                                </ul>
+                            </template>
+                        </bcs-popover> -->
+                        <bcs-popover theme="light navigation-message" class="mr5" offset="0, 20" placement="bottom" :arrow="false">
+                            <div class="flag-box">
+                                <i id="siteHelp" class="bcs-icon bcs-icon-help-document-fill"></i>
                             </div>
                             <template slot="content">
                                 <ul class="bcs-navigation-admin">
                                     <li class="nav-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
                                     <li class="nav-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
+                                    <li class="nav-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
                                 </ul>
                             </template>
                         </bcs-popover>
@@ -75,7 +93,14 @@
                 <slot></slot>
             </template>
         </bcs-navigation>
-        <system-log v-model="showSystemLog"></system-log>
+        <system-log v-model="showSystemLog" @show-feature="handleShowFeatures"></system-log>
+        <bcs-dialog v-model="showFeatures"
+            class="version-feature-dialog"
+            :title="$t('产品功能特性')"
+            :show-footer="false"
+            width="480">
+            <BcsMd :code="featureMd"></BcsMd>
+        </bcs-dialog>
     </div>
 </template>
 <script>
@@ -84,18 +109,39 @@
     import useGoHome from '@/common/use-gohome'
     import { bus } from '@/common/bus'
     import systemLog from '@/components/system-log/index.vue'
+    import BcsMd from '@/components/bcs-md/index.vue'
+    import featureMd from '../../static/features.md'
 
     export default {
         name: "Navigation",
         components: {
-            systemLog
+            systemLog,
+            BcsMd
         },
         data () {
             return {
-                showSystemLog: false
+                showSystemLog: false,
+                activeLangId: this.$i18n.locale,
+                langs: [
+                    {
+                        icon: 'bcs-icon-lang-en',
+                        name: 'English',
+                        id: 'en-US'
+                    },
+                    {
+                        icon: 'bcs-icon-lang-ch',
+                        name: '中文',
+                        id: "zh-CN"
+                    }
+                ],
+                showFeatures: false,
+                featureMd
             }
         },
         computed: {
+            curLang () {
+                return this.langs.find(item => item.id === this.activeLangId)
+            },
             user () {
                 return this.$store.state.user
             },
@@ -219,6 +265,16 @@
                 this.$store.commit('updateViewMode', 'cluster')
                 this.$store.commit('cluster/forceUpdateClusterList', this.$store.state.cluster.allClusterList)
                 this.$store.dispatch('getFeatureFlag')
+            },
+            handleChangeLang (item) {
+                document.cookie = `blueking_language=${item.id};`
+                window.location.reload()
+                // this.activeLangId = item.id
+                // this.$i18n.locale = this.activeLangId
+                // locale.getCurLang().bk.lang = this.activeLangId
+            },
+            handleShowFeatures () {
+                this.showFeatures = true
             }
         }
     }
@@ -253,6 +309,13 @@
     align-items:center;
     padding:0 20px;
     list-style:none;
+    .bcs-icon {
+        font-size: 18px;
+    }
+    &.active {
+        color:#3A84FF;
+        background-color:#F0F1F5;
+    }
     &:hover {
         color:#3A84FF;
         cursor:pointer;
@@ -405,7 +468,25 @@
             }
             &:hover {
                 cursor:pointer;
-                color:#D3D9E4;
+                color:#3a84ff;
+            }
+        }
+        /deep/ .flag-box {
+            align-items: center;
+            border-radius: 50%;
+            color: #979ba5;
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 16px;
+            height: 32px;
+            justify-content: center;
+            position: relative;
+            transition: background .15s;
+            width: 32px;
+            &:hover {
+                background: #f0f1f5;
+                color: #3a84ff;
+                z-index: 1;
             }
         }
     }
@@ -449,5 +530,8 @@
     height: 200px;
     visibility: initial;
     transition: all .5s;
+}
+/deep/ .bcs-md-preview {
+    padding: 0 24px 24px 24px;
 }
 </style>

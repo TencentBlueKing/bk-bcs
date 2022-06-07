@@ -18,7 +18,7 @@ $(SWAGGEROBJ):$(PROTO)
 
 %.pb.go: %.proto
 	protoc -I../../third_party --proto_path=. --go_out=plugins=grpc:. --validate_out=lang=go:. $<
-	sed -i '' 's/json:"-"/json:"-" bson:"-"/g' clustermanager.pb.go
+	sed -i "" 's/json:"-"/json:"-" bson:"-"/g' clustermanager.pb.go
 
 %.pb.gw.go: %.proto
 	protoc -I../../third_party --proto_path=. --micro_out=. \

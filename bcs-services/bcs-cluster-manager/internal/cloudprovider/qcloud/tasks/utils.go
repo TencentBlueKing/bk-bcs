@@ -158,7 +158,9 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 		}
 
 		if node == nil {
-			err := cloudprovider.GetStorageModel().CreateNode(ctx, node)
+			n.ClusterID = opt.ClusterID
+			n.Status = common.StatusRunning
+			err = cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)
 			}
@@ -196,6 +198,41 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+// updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
+func updateNodeGroupCloudNodeGroupID(nodeGroupID string, cloudNodeGroupID string) error {
+	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.CloudNodeGroupID = cloudNodeGroupID
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateNodeGroupDesiredSize set nodegroup desired size
+func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
+	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	if group.AutoScaling == nil {
+		group.AutoScaling = &cmproto.AutoScalingGroup{}
+	}
+	group.AutoScaling.DesiredSize = desiredSize
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
 	}
 
 	return nil

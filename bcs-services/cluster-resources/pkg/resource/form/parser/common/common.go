@@ -19,15 +19,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseAPIVersionKind 解析 apiVersion && kind
-func ParseAPIVersionKind(manifest map[string]interface{}) (string, string) {
-	return mapx.Get(manifest, "apiVersion", "").(string), mapx.Get(manifest, "kind", "").(string)
-}
-
 // ParseMetadata ...
 func ParseMetadata(manifest map[string]interface{}, metadata *model.Metadata) {
-	metadata.Name = mapx.Get(manifest, "metadata.name", "").(string)
-	metadata.Namespace = mapx.Get(manifest, "metadata.namespace", "").(string)
+	metadata.APIVersion = mapx.GetStr(manifest, "apiVersion")
+	metadata.Kind = mapx.GetStr(manifest, "kind")
+	metadata.Name = mapx.GetStr(manifest, "metadata.name")
+	metadata.Namespace = mapx.GetStr(manifest, "metadata.namespace")
 	ParseLabels(manifest, &metadata.Labels)
 	ParseAnnotations(manifest, &metadata.Annotations)
 }

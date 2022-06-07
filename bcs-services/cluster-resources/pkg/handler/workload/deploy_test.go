@@ -35,7 +35,7 @@ func TestDeploy(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -49,26 +49,35 @@ func TestDeploy(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "DeploymentList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "DeploymentList", mapx.GetStr(respData, "manifest.kind"))
+
+	// List SelectItems Format
+	listReq.Format = action.SelectItemsFormat
+	err = h.ListDeploy(ctx, &listReq, &listResp)
+	assert.Nil(t, err)
+
+	respData = listResp.Data.AsMap()
+	selectItems := mapx.GetList(respData, "selectItems")
+	assert.True(t, len(selectItems) > 0)
 
 	// Update
 	_ = mapx.SetItems(manifest, "spec.replicas", 5)
 	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
-	updateReq := handler.GenResUpdateReq(updateManifest, resName.(string))
+	updateReq := handler.GenResUpdateReq(updateManifest, resName)
 	err = h.UpdateDeploy(ctx, &updateReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 
 	// Get
-	getReq, getResp := handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetDeploy(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "Deployment", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "Deployment", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, float64(5), mapx.Get(respData, "manifest.spec.replicas", 0))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
@@ -120,11 +129,28 @@ var deployManifest4FormTest = map[string]interface{}{
 	},
 }
 
+func TestDeployWithUnavailableAPIVersion(t *testing.T) {
+	h := New()
+	ctx := handler.NewInjectedContext("", "", "")
+
+	// List
+	listReq, listResp := handler.GenResListReq(), clusterRes.CommonResp{}
+	listReq.ApiVersion = "deprecated/v1beta1"
+	err := h.ListDeploy(ctx, &listReq, &listResp)
+	assert.NotNil(t, err)
+
+	// Get
+	getReq, getResp := handler.GenResGetReq("resName"), clusterRes.CommonResp{}
+	getReq.ApiVersion = "deprecated/v1"
+	err = h.GetDeploy(ctx, &getReq, &getResp)
+	assert.NotNil(t, err)
+}
+
 func TestDeployWithForm(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	resName := mapx.Get(deployManifest4FormTest, "metadata.name", "")
+	resName := mapx.GetStr(deployManifest4FormTest, "metadata.name")
 
 	// Create by form data
 	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(deployManifest4FormTest))
@@ -144,7 +170,7 @@ func TestDeployWithForm(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
-		Name:      resName.(string),
+		Name:      resName,
 		RawData:   formData,
 		Format:    action.FormDataFormat,
 	}
@@ -156,7 +182,7 @@ func TestDeployWithForm(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
-		Name:      resName.(string),
+		Name:      resName,
 		Format:    action.FormDataFormat,
 	}
 	getResp := clusterRes.CommonResp{}
@@ -164,16 +190,16 @@ func TestDeployWithForm(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Get Manifest
-	getReq, getResp = handler.GenResGetReq(resName.(string)), clusterRes.CommonResp{}
+	getReq, getResp = handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetDeploy(ctx, &getReq, &getResp)
 	assert.Nil(t, err)
 
 	respData := getResp.Data.AsMap()
-	assert.Equal(t, "Deployment", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "Deployment", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, float64(3), mapx.Get(respData, "manifest.spec.replicas", 0))
 
 	// Delete
-	deleteReq := handler.GenResDeleteReq(resName.(string))
+	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
 }
@@ -187,7 +213,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 	// 设置为共享集群项目属命名空间
 	err = mapx.SetItems(manifest, "metadata.namespace", envs.TestSharedClusterNS)
 	assert.Nil(t, err)
@@ -208,6 +234,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
+		Format:    action.ManifestFormat,
 	}
 	err = h.ListDeploy(ctx, &listReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -217,7 +244,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
-		Name:      resName.(string),
+		Name:      resName,
 		RawData:   createManifest,
 		Format:    action.ManifestFormat,
 	}
@@ -229,7 +256,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
-		Name:      resName.(string),
+		Name:      resName,
 		Format:    action.ManifestFormat,
 	}
 	err = h.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
@@ -240,7 +267,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestSharedClusterNS,
-		Name:      resName.(string),
+		Name:      resName,
 	}
 	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.Nil(t, err)
@@ -251,7 +278,7 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
-	resName := mapx.Get(manifest, "metadata.name", "")
+	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
 	createManifest, _ := pbstruct.Map2pbStruct(manifest)
@@ -278,7 +305,7 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestNamespace,
-		Name:      resName.(string),
+		Name:      resName,
 		RawData:   createManifest,
 		Format:    action.ManifestFormat,
 	}
@@ -290,7 +317,7 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestNamespace,
-		Name:      resName.(string),
+		Name:      resName,
 	}
 	err = h.GetDeploy(ctx, &getReq, &clusterRes.CommonResp{})
 	assert.NotNil(t, err)
@@ -300,7 +327,7 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestSharedClusterID,
 		Namespace: envs.TestNamespace,
-		Name:      resName.(string),
+		Name:      resName,
 	}
 	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})
 	assert.NotNil(t, err)

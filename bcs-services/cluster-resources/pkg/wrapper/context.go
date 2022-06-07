@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -41,21 +42,17 @@ import (
 func NewContextInjectWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-			// 1. 获取或生成 UUID，并作为 requestID 注入到 context
-			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, uuid.New().String())
+			md, ok := metadata.FromContext(ctx)
+			if !ok {
+				return errorx.New(errcode.General, "failed to get micro's metadata")
+			}
+			// 1. 获取或生成 request id 注入到 context
+			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, getOrCreateReqID(md))
 
-			var username string
-			if canExemptAuth(req) {
-				username = envs.AnonymousUsername
-			} else {
-				// 2. 从 GoMicro Metadata（headers）中获取 jwtToken，转换为 username
-				md, ok := metadata.FromContext(ctx)
-				if !ok {
-					return errorx.New(errcode.Unauth, "failed to get micro's metadata")
-				}
-
-				username, err = parseUsername(md)
-				if err != nil {
+			username := envs.AnonymousUsername
+			// 2. 从 Metadata（headers）中获取 jwtToken，转换为 username
+			if !canExemptAuth(req) {
+				if username, err = parseUsername(md); err != nil {
 					return err
 				}
 			}
@@ -71,10 +68,21 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 				ctx = context.WithValue(ctx, ctxkey.ClusterKey, clusterInfo)
 			}
 
+			// 4. 解析语言版本信息
+			ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.GetLangFromCookies(md))
+
 			// 实际执行业务逻辑，获取返回结果
 			return fn(ctx, req, rsp)
 		}
 	}
+}
+
+// 尝试读取 X-Request-Id，若不存在则随机生成
+func getOrCreateReqID(md metadata.Metadata) string {
+	if reqID, ok := md.Get("x-request-id"); ok {
+		return reqID
+	}
+	return uuid.New().String()
 }
 
 // NoAuthEndpoints 不需要用户身份认证的方法
@@ -154,6 +162,7 @@ var NoInjectProjClusterEndpoints = []string{
 	// Example & Tmpl API 不需要 Info 注入
 	"Resource.GetK8SResTemplate",
 	"Resource.GetResFormSchema",
+	"Resource.GetFormSupportedAPIVersions",
 }
 
 // 需要注入项目 & 集群信息
@@ -169,7 +178,7 @@ func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project
 	}
 	projInfo, err := project.GetProjectInfo(ctx, projectID.(string))
 	if err != nil {
-		return nil, nil, errorx.New(errcode.General, "获取项目 %s 信息失败：%v", projectID, err)
+		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取项目 %s 信息失败：%v"), projectID, err)
 	}
 	clusterID, err := goAttr.GetValue(req.Body(), "ClusterID")
 	if err != nil {
@@ -177,11 +186,11 @@ func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project
 	}
 	clusterInfo, err := cluster.GetClusterInfo(ctx, clusterID.(string))
 	if err != nil {
-		return nil, nil, errorx.New(errcode.General, "获取集群 %s 信息失败：%v", clusterID, err)
+		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取集群 %s 信息失败：%v"), clusterID, err)
 	}
 	// 若集群类型非共享集群，则需确认集群的项目 ID 与请求参数中的一致
 	if !slice.StringInSlice(clusterInfo.Type, cluster.SharedClusterTypes) && clusterInfo.ProjID != projInfo.ID {
-		return nil, nil, errorx.New(errcode.ValidateErr, "集群 %s 不属于指定项目!", clusterID)
+		return nil, nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "集群 %s 不属于指定项目!"), clusterID)
 	}
 	return projInfo, clusterInfo, nil
 }

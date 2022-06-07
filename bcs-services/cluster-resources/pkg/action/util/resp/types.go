@@ -14,8 +14,10 @@
 
 package resp
 
-// GetRespDataBuilder 接收不同类型的参数，转换成 Retrieve 请求的响应数据
-type GetRespDataBuilder interface {
-	// Do 构建 Retrieve API RespData
-	Do() (map[string]interface{}, error)
+// DataBuilder 接收不同类型的参数，转换成 List/Retrieve 请求的响应数据
+type DataBuilder interface {
+	// BuildList 构建 List API RespData
+	BuildList() (map[string]interface{}, error)
+	// Build 构建 Retrieve API RespData
+	Build() (map[string]interface{}, error)
 }

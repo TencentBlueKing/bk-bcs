@@ -50,6 +50,7 @@ var (
 	}
 )
 
+// Project ...
 type Project struct {
 	CreateTime  string `json:"createTime" bson:"createTime"`
 	UpdateTime  string `json:"updateTime" bson:"updateTime"`
@@ -176,6 +177,7 @@ func (m *ModelProject) UpdateProject(ctx context.Context, project *Project) erro
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": project})
 }
 
+// DeleteProject delete project record
 func (m *ModelProject) DeleteProject(ctx context.Context, projectID string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
@@ -193,6 +195,7 @@ func (m *ModelProject) DeleteProject(ctx context.Context, projectID string) erro
 	return nil
 }
 
+// ListProjects query project list
 func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Condition, pagination *page.Pagination) (
 	[]Project, int64, error) {
 	projectList := make([]Project, 0)
@@ -228,6 +231,7 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 	return projectList, total, nil
 }
 
+// ListProjectByIDs query project by project ids
 func (m *ModelProject) ListProjectByIDs(
 	ctx context.Context,
 	ids []string,

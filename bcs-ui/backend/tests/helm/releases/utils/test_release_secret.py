@@ -90,10 +90,6 @@ class TestRecordReleases:
         assert len(releases) == 1
         assert releases[0]["name"] == FAKE_NAME
 
-    def test_get_values_content(self, client):
-        value_content = client._get_values_content(release_list[-1])
-        assert "replica: 3" in value_content
-
     def test_record(self, client):
         with patch(
             "backend.helm.releases.utils.release_secret.list_namespaced_releases",

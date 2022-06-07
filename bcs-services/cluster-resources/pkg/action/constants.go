@@ -15,8 +15,12 @@
 package action
 
 const (
+	// DefaultFormat 默认格式，不指定则认为是 Manifest
+	DefaultFormat = ""
 	// ManifestFormat Manifest 格式
 	ManifestFormat = "manifest"
 	// FormDataFormat 表单数据格式
 	FormDataFormat = "formData"
+	// SelectItemsFormat 下拉框数据格式
+	SelectItemsFormat = "selectItems"
 )

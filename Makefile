@@ -49,9 +49,10 @@ bcs-runtime: bcs-k8s bcs-mesos
 
 bcs-k8s: bcs-component bcs-network
 
-bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
+bcs-component:k8s-driver \
 	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent
+	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent \
+	general-pod-autoscaler cluster-autoscaler
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -60,7 +61,11 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
-	user-manager cluster-manager tools alert-manager k8s-watch kube-agent
+	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager
+
+bcs-scenarios: kourse
+
+kourse: gamedeployment gamestatefulset hook-operator
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -131,7 +136,7 @@ dns:
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-storage ${PACKAGEPATH}/bcs-services
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-storage/bcs-storage ./bcs-services/bcs-storage/storage.go
+	cd ./bcs-services/bcs-storage && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-storage/bcs-storage ./storage.go
 
 loadbalance:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
@@ -228,21 +233,6 @@ sd-prometheus:pre
 k8s-driver:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-k8s-driver && go mod tidy -go=1.16 && go mod tidy -go=1.17 && make k8s-driver
 
-gamestatefulset:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-gamestatefulset-operator ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-gamestatefulset-operator && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
-
-gamedeployment:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-gamedeployment-operator ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
-
-hook-operator:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-hook-operator ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-hook-operator && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/bcs-hook-operator ./cmd/hook-operator/main.go
-
 federated-apiserver:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-federated-apiserver ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
@@ -294,8 +284,13 @@ user-manager:pre
 
 webconsole:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webconsole
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webconsole ${PACKAGEPATH}/bcs-servicesf
-	cd bcs-services/bcs-webconsole/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webconsole/bcs-webconsole ./main.go
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-webconsole ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-webconsole/ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webconsole/bcs-webconsole ./main.go
+
+monitor:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-monitor
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-monitor ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-monitor/ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-monitor/bcs-monitor ./cmd/bcs-monitor
 
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -321,6 +316,16 @@ mcs-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mcs-agent ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-mcs && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mcs-agent/bcs-mcs-agent ./cmd/mcs-agent/main.go
+
+general-pod-autoscaler:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-general-pod-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/bcs-general-pod-autoscaler ./cmd/gpa/main.go
+
+cluster-autoscaler:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cluster-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler ./main.go
 
 # network plugins section
 networkpolicy:pre
@@ -376,7 +381,6 @@ cluster-manager:pre
 	cp -R ${BCS_SERVICES_PATH}/bcs-cluster-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-cluster-manager/api/clustermanager/clustermanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui/clustermanager.swagger.json
 	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
-	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/cidr-migration-tool ./cidrmigrationtool/main.go
 
 alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger
@@ -398,30 +402,37 @@ apiserver-proxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-apiserver-proxy/* ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
 	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/bcs-apiserver-proxy ./main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
 
 apiserver-proxy-tools:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
 	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
 
+
+data-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-data-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-data-manager ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger
+	cp -R ${BCS_SERVICES_PATH}/bcs-data-manager/third_party/swagger-ui/* ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/
+	cp ${BCS_SERVICES_PATH}/bcs-data-manager/proto/bcs-data-manager/bcs-data-manager.swagger.json  ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/bcs-data-manager.swagger.json
+	cd bcs-services/bcs-data-manager/ && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-data-manager/bcs-data-manager ./main.go
+
 test: test-bcs-runtime
 
 test-bcs-runtime: test-bcs-k8s
 
-test-bcs-k8s: test-bcs-component test-bcs-service
-
-test-bcs-component: test-gamedeployment  test-gamestatefulset test-hook-operator
+test-bcs-k8s: test-bcs-service
 
 test-bcs-service: test-user-manager
-
-test-gamedeployment:
-	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator
-
-test-gamestatefulset:
-	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamestatefulset-operator
-
-test-hook-operator:
-	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-hook-operator
 
 test-user-manager:
 	@./scripts/test.sh ${BCS_SERVICES_PATH}/bcs-user-manager
 
+gamedeployment:
+	make gamedeployment -f bcs-scenarios/kourse/Makefile
+
+gamestatefulset:
+	make gamestatefulset -f bcs-scenarios/kourse/Makefile
+
+hook-operator:
+	make hook-operator -f bcs-scenarios/kourse/Makefile

@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class AppQueryService:
-    """ 业务查询相关服务 """
+    """业务查询相关服务"""
 
     def __init__(
         self,
@@ -53,13 +53,13 @@ class AppQueryService:
         self.bk_supplier_account = bk_supplier_account
 
     def _fetch_count(self) -> int:
-        """ 查询指定条件下业务数量，用于后续并发查询用 """
+        """查询指定条件下业务数量，用于后续并发查询用"""
         page = PageData(start=constants.DEFAULT_START_AT, limit=constants.LIMIT_FOR_COUNT)
         resp_data = self.cc_client.search_business(page, ['bk_biz_id'], self.condition, self.bk_supplier_account)
         return resp_data['count']
 
     def fetch_all(self) -> List[Dict]:
-        """ 并发查询 CMDB，获取符合条件的全量业务信息 """
+        """并发查询 CMDB，获取符合条件的全量业务信息"""
         total = self._fetch_count()
         tasks = []
         for start in range(constants.DEFAULT_START_AT, total, constants.CMDB_MAX_LIMIT):
@@ -83,7 +83,7 @@ class AppQueryService:
         return [app for r in results for app in r.ret['info']]
 
     def get(self, bk_biz_id: int) -> Dict:
-        """ 获取单个业务信息 """
+        """获取单个业务信息"""
         resp_data = self.cc_client.search_business(
             PageData(),
             fields=self.fields,
@@ -96,16 +96,14 @@ class AppQueryService:
 
 
 def fetch_has_maintain_perm_apps(username: str) -> List[Dict]:
-    """ 获取有运维权限的业务信息 """
-    username_regex_info = '^{username},|,{username},|,{username}$|^{username}$'.format(username=username)
-    regex_map = {'$regex': username_regex_info}
+    """获取有运维权限的业务信息"""
     # NOTE: CMDB 建议查询方式: 以 admin 用户身份跳过资源查询权限，然后CMDB接口根据传递的 condition 中用户，返回过滤的业务
-    maintainers_resp = AppQueryService(settings.ADMIN_USERNAME, condition={'bk_biz_maintainer': regex_map}).fetch_all()
+    maintainers_resp = AppQueryService(settings.ADMIN_USERNAME, condition={'bk_biz_maintainer': username}).fetch_all()
     return [{'id': item['bk_biz_id'], 'name': item['bk_biz_name']} for item in maintainers_resp]
 
 
 def get_application_name(bk_biz_id: int) -> str:
-    """ 通过业务ID，获取业务名称 """
+    """通过业务ID，获取业务名称"""
     try:
         # 直接使用 admin 用户身份查询业务名称
         app_info = AppQueryService(settings.ADMIN_USERNAME).get(bk_biz_id)
@@ -115,7 +113,7 @@ def get_application_name(bk_biz_id: int) -> str:
 
 
 def get_app_maintainers(username: str, bk_biz_id: int) -> List[str]:
-    """ 获取业务下的所有运维 """
+    """获取业务下的所有运维"""
     try:
         app_info = AppQueryService(username).get(bk_biz_id)
     except BaseCompUtilError:

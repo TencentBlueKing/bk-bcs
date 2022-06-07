@@ -80,7 +80,7 @@ func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovid
 
 	cloudProvider, err := BuildBcsCloudProvider(cache, client, do, rl)
 	if err != nil {
-		klog.Fatalf("Failed to create tenc cloud Provider: %v", err)
+		klog.Fatalf("Failed to create bcs cloud Provider: %v", err)
 	}
 	return cloudProvider
 }
@@ -137,7 +137,8 @@ func (cloud *Provider) NodeGroups() []cloudprovider.NodeGroup {
 
 // NodeGroupForNode returns the node group for the given node.
 func (cloud *Provider) NodeGroupForNode(node *apiv1.Node) (cloudprovider.NodeGroup, error) {
-	ref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+	// ref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+	ref, err := InstanceRefFromInnerIP(node.Status.Addresses)
 	if err != nil {
 		return nil, err
 	}
@@ -184,11 +185,6 @@ func (cloud *Provider) Refresh() error {
 	if cloud.NodeGroupCache == nil {
 		klog.Errorf("Refresh cloud manager is nil")
 		return fmt.Errorf("Refresh cloud manager is nil")
-	}
-
-	if cloud.NodeGroupCache == nil {
-		klog.Errorf("Refresh cloud manager groups is nil")
-		return fmt.Errorf("Refresh cloud manager groups is nil")
 	}
 
 	return cloud.NodeGroupCache.regenerateCache()

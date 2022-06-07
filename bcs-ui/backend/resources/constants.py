@@ -225,7 +225,7 @@ class NodeConditionType(str, StructuredEnum):
 
 
 class ResourceScope(str, StructuredEnum):
-    """ 资源维度 命名空间/集群 """
+    """资源维度 命名空间/集群"""
 
     Namespaced = 'Namespaced'
     Cluster = 'Cluster'
@@ -241,3 +241,7 @@ NATIVE_CLUSTER_SCOPE_RES_KINDS = [
     K8sResourceKind.StorageClass.value,
     K8sResourceKind.CustomResourceDefinition.value,
 ]
+
+# K8S 集群 master 角色对应的 KEY
+# 参考rancher中定义nodeRoleMaster="node-role.kubernetes.io/master"
+NODE_ROLE_MASTER_KEYS = ["node-role.kubernetes.io/master", "node-role.kubernetes.io/control-plane"]

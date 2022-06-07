@@ -22,6 +22,7 @@ from backend.components.base import ComponentAuth
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.helm.app.models import App
+from backend.helm.app.utils import yaml_dump
 from backend.helm.helm.bcs_variable import collect_system_variable
 from backend.helm.helm.constants import TEMPORARY_APP_ID
 from backend.helm.helm.models.chart import Chart, ChartRelease, ChartVersion, ChartVersionSnapshot
@@ -167,7 +168,7 @@ class RecordReleases:
         if not value_content:
             value_content = release["chart"]["values"]
         # json转换为yaml
-        return yaml.dump(value_content)
+        return yaml_dump(value_content)
 
     def _get_system_variables(self, namespace_id: int) -> Dict:
         """获取系统变量"""

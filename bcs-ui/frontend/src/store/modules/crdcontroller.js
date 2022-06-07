@@ -11,6 +11,13 @@
 
 import http from '@/api'
 import { json2Query } from '@/common/util'
+import {
+    clusterTools,
+    clusterToolsInstalledDetail,
+    clusterToolsInstall,
+    clusterToolsUpgrade,
+    clusterToolsUninstall
+} from '@/api/base'
 
 export default {
     namespaced: true,
@@ -39,46 +46,34 @@ export default {
         }
     },
     actions: {
-        /**
-         * 获取组件库
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId, clusterId
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getCrdControllersByCluster (context, { projectId, clusterId }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crd_controllers/`
-            return http.get(url, {}, config)
+        // 获取组件库
+        async clusterTools (ctx, params) {
+            const data = await clusterTools(params).catch(_ => ([]))
+            return data
         },
 
-        /**
-         * 获取组件库状态
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId, clusterId
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getCrdcontrollerStatus (context, { projectId, clusterId, crdcontrollerId }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crd_controllers/${crdcontrollerId}/instances/-/detail/`
-            return http.get(url, {}, config)
+        // 组件启用
+        async clusterToolsInstall (ctx, params) {
+            const result = await clusterToolsInstall(params).then(() => true).catch(() => false)
+            return result
         },
 
-        /**
-         * 启用组件
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId, clusterId, name
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        enableCrdController (context, { projectId, clusterId, id, data }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crd_controllers/${id}/instances/`
-            return http.post(url, data, config)
+        // 组件更新
+        async clusterToolsUpgrade (ctx, params) {
+            const data = await clusterToolsUpgrade(params).then(() => true).catch(() => false)
+            return data
+        },
+
+        // 组件库详情
+        async clusterToolsInstalledDetail (ctx, params) {
+            const data = await clusterToolsInstalledDetail(params).catch(() => ({}))
+            return data
+        },
+
+        // 组件卸载
+        async clusterToolsUninstall (ctx, params) {
+            const result = await clusterToolsUninstall(params).then(() => true).catch(() => false)
+            return result
         },
 
         /**
@@ -146,20 +141,6 @@ export default {
         },
 
         /**
-         * 查询单个crd (通用)
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId, crdKind, crdId
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        getCommonCrdInstanceDetail (context, { projectId, crdId, clusterId }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crd_controllers/${crdId}/instances/-/detail/`
-            return http.get(url, {}, config)
-        },
-
-        /**
          * 获取版本列表
          */
         getChartVersionsList (context, { projectId, chartName }, config = {}) {
@@ -220,21 +201,6 @@ export default {
         deleteCrdInstance (context, { projectId, clusterId, crdKind, crdId }, config = {}) {
             const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crds/${crdKind}/custom_objects/`
             return http.delete(url, { data: { id: crdId } }, config)
-        },
-
-        /**
-         * 更新单个crd
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId, clusterId, crdId
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-        // clusters/(?P<cluster_id>[\w\-]+)/crd_controllers/(?P<crd_ctr_id>\d+)/instances/-/
-        updateCommonCrdInstance (context, { projectId, clusterId, crdId, data }, config = {}) {
-            const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crd_controllers/${crdId}/instances/-/`
-            return http.put(url, data, config)
         }
     }
 }

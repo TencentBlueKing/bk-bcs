@@ -31,17 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -51,6 +40,21 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/envx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/runtimex"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // HelmManager describe the helm-service manager instance
@@ -95,6 +99,7 @@ func NewHelmManager(opt *options.HelmManagerOptions) *HelmManager {
 
 // Init helm manager server
 func (hm *HelmManager) Init() error {
+	hm.getServerAddress()
 	for _, f := range []func() error{
 		hm.initTLSConfig,
 		hm.initModel,
@@ -105,6 +110,7 @@ func (hm *HelmManager) Init() error {
 		hm.initMicro,
 		hm.initHTTPService,
 		hm.initMetric,
+		hm.initJWTClient,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -184,6 +190,7 @@ func (hm *HelmManager) initPlatform() error {
 
 	hm.platform = bkrepo.New(repo.Config{
 		URL:      hm.opt.Repo.URL,
+		OciURL:   hm.opt.Repo.OciURL,
 		AuthType: "Platform",
 		Username: hm.opt.Repo.Username,
 		Password: password,
@@ -194,10 +201,15 @@ func (hm *HelmManager) initPlatform() error {
 
 // initReleaseHandler init a new release.Handler, for handling operations to helm-client
 func (hm *HelmManager) initReleaseHandler() error {
-	token, err := encrypt.DesDecryptFromBase([]byte(hm.opt.Release.Token))
-	if err != nil {
-		blog.Errorf("init release handler decode token failed: %s", err.Error())
-		return err
+	token := hm.opt.Release.Token
+	if token != "" && hm.opt.Release.Encrypted {
+		realToken, err := encrypt.DesDecryptFromBase([]byte(token))
+		if err != nil {
+			blog.Errorf("init release handler decode token failed: %s", err.Error())
+			return err
+		}
+
+		token = string(realToken)
 	}
 
 	template, err := os.ReadFile(hm.opt.Release.KubeConfigTemplate)
@@ -291,6 +303,9 @@ func (hm *HelmManager) initMicro() error {
 			hm.discovery.Stop()
 			return nil
 		}),
+		microSvc.WrapHandler(
+			wrapper.NewInjectContextWrapper,
+		),
 	)
 	svc.Init()
 
@@ -307,9 +322,10 @@ func (hm *HelmManager) initMicro() error {
 
 func (hm *HelmManager) initHTTPService() error {
 	rmMux := ggRuntime.NewServeMux(
-		ggRuntime.WithIncomingHeaderMatcher(CustomMatcher),
+		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
 		ggRuntime.WithDisablePathLengthFallback(),
+		ggRuntime.WithProtoErrorHandler(runtimex.CustomHTTPError),
 	)
 
 	grpcDialOpts := make([]grpc.DialOption, 0)
@@ -411,14 +427,20 @@ func (hm *HelmManager) initTLSConfig() error {
 	return nil
 }
 
-// CustomMatcher for http header
-func CustomMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	default:
-		return ggRuntime.DefaultHeaderMatcher(key)
+func (hm *HelmManager) initJWTClient() error {
+	conf := auth.JWTClientConfig{
+		Enable:         hm.opt.JWT.Enable,
+		PublicKey:      hm.opt.JWT.PublicKey,
+		PublicKeyFile:  hm.opt.JWT.PublicKeyFile,
+		PrivateKey:     hm.opt.JWT.PrivateKey,
+		PrivateKeyFile: hm.opt.JWT.PrivateKeyFile,
+		ExemptClients:  hm.opt.ExemptClients.ClientIDs,
 	}
+	if _, err := auth.NewJWTClient(conf); err != nil {
+		blog.Error("init jwt client error, %s", err.Error())
+		return err
+	}
+	return nil
 }
 
 func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
@@ -445,4 +467,13 @@ func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
 	}
 
 	return r, nil
+}
+
+func (hm *HelmManager) getServerAddress() error {
+	// 通过环境变量获取LocalIP，这里是用的是podIP
+	if hm.opt.UseLocalIP && envx.LocalIP != "" {
+		hm.opt.Address = envx.LocalIP
+		hm.opt.InsecureAddress = envx.LocalIP
+	}
+	return nil
 }

@@ -22,11 +22,15 @@ import (
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -41,7 +45,23 @@ func (h *Handler) ListPo(
 	if err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.GenListResRespData(ret, res.Po)
+
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, ret, res.Po, req.Format)
+	if err != nil {
+		return err
+	}
+	respData, err := respDataBuilder.BuildList()
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(respData)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, true),
+	).ToPbStruct()
 	return err
 }
 
@@ -49,9 +69,15 @@ func (h *Handler) ListPo(
 func (h *Handler) GetPo(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Po).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Po).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormUpdate, true),
+	).ToPbStruct()
 	return err
 }
 
@@ -91,7 +117,9 @@ func (h *Handler) ListPoPVC(
 	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.PVC)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.PVC,
+	)
 	return err
 }
 
@@ -102,7 +130,9 @@ func (h *Handler) ListPoCM(
 	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.CM)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.CM,
+	)
 	return err
 }
 
@@ -113,7 +143,9 @@ func (h *Handler) ListPoSecret(
 	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
-	resp.Data, err = respUtil.BuildListPodRelatedResResp(ctx, req.ClusterID, req.Namespace, req.Name, res.Secret)
+	resp.Data, err = respUtil.BuildListPodRelatedResResp(
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.Secret,
+	)
 	return err
 }
 
@@ -133,12 +165,20 @@ func (h *Handler) ReschedulePo(
 	// 检查 Pod 配置，必须有父级资源且不为 Job 才可以重新调度
 	ownerReferences, err := mapx.GetItems(podManifest, "metadata.ownerReferences")
 	if err != nil {
-		return errorx.New(errcode.Unsupported, "Pod %s/%s 不存在父级资源，不允许重新调度", req.Namespace, req.Name)
+		return errorx.New(
+			errcode.Unsupported,
+			i18n.GetMsg(ctx, "Pod %s/%s 不存在父级资源，不允许重新调度"),
+			req.Namespace, req.Name,
+		)
 	}
 	// 检查确保父级资源不为 Job
 	for _, ref := range ownerReferences.([]interface{}) {
 		if ref.(map[string]interface{})["kind"].(string) == res.Job {
-			return errorx.New(errcode.Unsupported, "Pod %s/%s 父级资源存在 Job，不允许重新调度", req.Namespace, req.Name)
+			return errorx.New(
+				errcode.Unsupported,
+				i18n.GetMsg(ctx, "Pod %s/%s 父级资源存在 Job，不允许重新调度"),
+				req.Namespace, req.Name,
+			)
 		}
 	}
 

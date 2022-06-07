@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
@@ -32,6 +33,7 @@ import (
 
 var (
 	showVersion  = flag.Bool("version", false, "show version info only")
+	checkService = flag.Bool("checkService", false, "check dependency service status (redis, clusterManager...)")
 	confFilePath = flag.String("conf", conf.DefaultConfPath, "config file path")
 )
 
@@ -59,14 +61,23 @@ func Start() {
 	logger.Info(fmt.Sprintf("ConfigFilePath: %s", *confFilePath))
 	logger.Info(fmt.Sprintf("VersionBuildInfo: {%s}", version.GetVersion()))
 
+	// 若指定了只检查依赖服务，则检查通过后以零值退出，否则以非零值退出
+	if *checkService {
+		NewDependencyServiceChecker(crConf).DoAndExit()
+	}
+
 	// 初始化 Redis 客户端
 	redis.InitRedisClient(&crConf.Redis)
+	// 初始化 I18N 相关配置
+	if err = i18n.InitMsgMap(); err != nil {
+		panic(errorx.New(errcode.General, "init i18n message map failed: %v", err))
+	}
 
 	crSvc := newClusterResourcesService(crConf)
-	if err := crSvc.Init(); err != nil {
+	if err = crSvc.Init(); err != nil {
 		panic(errorx.New(errcode.General, "init cluster resources svc failed: %v", err))
 	}
-	if err := crSvc.Run(); err != nil {
+	if err = crSvc.Run(); err != nil {
 		panic(errorx.New(errcode.General, "run cluster resources svc failed: %v", err))
 	}
 }

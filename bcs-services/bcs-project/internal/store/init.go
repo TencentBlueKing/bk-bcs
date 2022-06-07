@@ -71,6 +71,7 @@ func NewMongo(conf *config.MongoConfig) *mongo.DB {
 	return db
 }
 
+// GetMongo get mongo client
 func GetMongo() *mongo.DB {
 	return mongoDB
 }
