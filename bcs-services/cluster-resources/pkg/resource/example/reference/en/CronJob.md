@@ -26,13 +26,13 @@ CronJob is generally used to perform scheduled tasks, such as data synchronizati
 - Month (1 - 12)
 - Day of the week (0 - 6) (Sunday to Monday; on some systems, 7 is also Sunday)
 
-| Input                   | Cron Expression   | Description                         |
-| ---------------------- | ------------- | ---------------------------- |
-| @yearly (or @annually) | 0 0 1 1 \*    | run every year at midnight on January 1st |
-| @monthly               | 0 0 1 \* \*   | Runs at midnight on the first day of every month     |
-| @weekly                | 0 0 \* \* 0   | run weekly on Sunday at midnight       |
-| @daily (or @midnight)  | 0 0 \* \* \*  | run once a day at midnight             |
-| @hourly                | 0 \* \* \* \* | run at the start of every hour             |
+| Input                   | Cron Expression   | Description                                   |
+| ---------------------- | ------------- |----------------------------------------------------|
+| @yearly (or @annually) | 0 0 1 1 \*    | run every year at midnight on January 1st          |
+| @monthly               | 0 0 1 \* \*   | Runs at midnight on the first day of every month   |
+| @weekly                | 0 0 \* \* 0   | run weekly on Sunday at midnight                   |
+| @daily (or @midnight)  | 0 0 \* \* \*  | run once a day at midnight                         |
+| @hourly                | 0 \* \* \* \* | run at the start of every hour                     |
 
 For example, the following line states that the task must start at midnight every Friday and at midnight on the 13th of every month:
 
