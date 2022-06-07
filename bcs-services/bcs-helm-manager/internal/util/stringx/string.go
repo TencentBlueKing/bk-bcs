@@ -28,16 +28,16 @@ func JoinString(str ...string) string {
 	return strings.Join(strList, ",")
 }
 
-// JoinStringBySeperator 通过分割符拼装字符串
-func JoinStringBySeperator(strList []string, seperator string, addSep bool) string {
+// JoinStringBySeparator 通过分割符拼装字符串
+func JoinStringBySeparator(strList []string, separator string, addSep bool) string {
 	// 如果分隔符为空，则以 \n---\n 分割
-	if seperator == "" {
-		seperator = "\n---\n"
+	if separator == "" {
+		separator = "\n---\n"
 	}
 	// NOTE: 前面追加一个，以便于分割
-	joinedStr := strings.Join(strList, seperator)
+	joinedStr := strings.Join(strList, separator)
 	if addSep {
-		return seperator + joinedStr
+		return separator + joinedStr
 	}
 	return joinedStr
 }
@@ -52,13 +52,13 @@ func Errs2String(errs []error) string {
 }
 
 // SplitYaml 分割 yaml 为数组 string
-// seperator 为空时，设置为以 "---\n" 分割
-func SplitYaml2Array(yamlStr string, seperator string) []string {
-	if seperator == "" {
-		seperator = "---\n"
+// separator 为空时，设置为以 "---\n" 分割
+func SplitYaml2Array(yamlStr string, separator string) []string {
+	if separator == "" {
+		separator = "---\n"
 	}
 	var splitedStrArr []string
-	for _, s := range strings.Split(yamlStr, seperator) {
+	for _, s := range strings.Split(yamlStr, separator) {
 		// 当为空或\n时，忽略
 		if s == "" || s == "\n" {
 			continue

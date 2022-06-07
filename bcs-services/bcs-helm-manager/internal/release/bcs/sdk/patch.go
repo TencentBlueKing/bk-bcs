@@ -78,7 +78,7 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 		}
 		yList = append(yList, string(y))
 	}
-	yl := stringx.JoinStringBySeperator(yList, "", true)
+	yl := stringx.JoinStringBySeparator(yList, "", true)
 	// 写回数据
 	buf := new(bytes.Buffer)
 	buf.WriteString(yl)
