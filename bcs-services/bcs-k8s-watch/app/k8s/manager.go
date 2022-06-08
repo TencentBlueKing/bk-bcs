@@ -85,7 +85,14 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 
 	// init k8s normal resource watchers
 	for name, resourceObjType := range resources.WatcherConfigList {
-		watcher := NewWatcher(resourceObjType.Client, mgr.watchResource.Namespace, name, resourceObjType.ResourceName, resourceObjType.ObjType, mgr.writer, mgr.watchers, resourceObjType.Namespaced) // nolint
+		labelSelector := ""
+		// get labelSelector for the resourceType
+		if val, ok := mgr.watchResource.LabelSelectors[name]; ok {
+			labelSelector = val
+		}
+		watcher := NewWatcher(resourceObjType.Client, mgr.watchResource.Namespace, name,
+			resourceObjType.ResourceName, resourceObjType.ObjType, mgr.writer, mgr.watchers,
+			resourceObjType.Namespaced, labelSelector)
 		mgr.watchers[name] = watcher
 	}
 
@@ -176,8 +183,14 @@ func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourc
 		stopChan := make(chan struct{})
 		mgr.writer.Handlers[obj.Spec.Names.Kind].Run(stopChan)
 
+		labelSelector := ""
+		// get labelSelector for the resourceType
+		if val, ok := mgr.watchResource.LabelSelectors[obj.Spec.Names.Kind]; ok {
+			labelSelector = val
+		}
 		// init and run watcher
-		watcher := NewWatcher(&crdClient, mgr.watchResource.Namespace, obj.Spec.Names.Kind, obj.Spec.Names.Plural, runtimeObject, mgr.writer, mgr.watchers, namespaced) // nolint
+		watcher := NewWatcher(&crdClient, mgr.watchResource.Namespace, obj.Spec.Names.Kind, obj.Spec.Names.Plural,
+			runtimeObject, mgr.writer, mgr.watchers, namespaced, labelSelector)
 		watcher.stopChan = stopChan
 		mgr.crdWatchers[obj.Spec.Names.Kind] = watcher
 		glog.Infof("watcher manager, start list-watcher[%+v]", obj.Spec.Names.Kind)
