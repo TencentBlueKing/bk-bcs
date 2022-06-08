@@ -9,7 +9,7 @@ replace (
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220608030042-3606c580a7d1
 	github.com/TencentBlueKing/gopkg v1.0.8
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/alicebob/miniredis v2.5.0+incompatible
