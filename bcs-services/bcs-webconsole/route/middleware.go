@@ -32,9 +32,11 @@ import (
 )
 
 var (
+	// UnauthorizedError
 	UnauthorizedError = errors.New("用户未登入")
 )
 
+// RequestIdGenerator
 func RequestIdGenerator() string {
 	uid := uuid.New().String()
 	requestId := strings.Replace(uid, "-", "", -1)
@@ -124,6 +126,7 @@ func APIAuthRequired() gin.HandlerFunc {
 	}
 }
 
+// EnvToken
 type EnvToken struct {
 	Username string
 }
@@ -156,6 +159,7 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	return false
 }
 
+// BCSJWTDecode BCS 网关 JWT 解码
 func BCSJWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 	if config.G.BCS.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
@@ -180,11 +184,13 @@ func BCSJWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 	return claims, nil
 }
 
+// APIGWApp
 type APIGWApp struct {
 	AppCode  string `json:"app_code"`
 	Verified bool   `json:"verified"`
 }
 
+// APIGWUser
 type APIGWUser struct {
 	Username string `json:"username"`
 	Verified bool   `json:"verified"`
@@ -197,10 +203,12 @@ type APIGWToken struct {
 	*jwt.StandardClaims
 }
 
+// String
 func (a *APIGWToken) String() string {
 	return fmt.Sprintf("<%s, %v>", a.App.AppCode, a.App.Verified)
 }
 
+// BKAPIGWJWTDecode 蓝鲸网关 JWT 解码
 func BKAPIGWJWTDecode(jwtToken string) (*APIGWToken, error) {
 	if config.G.BKAPIGW.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
@@ -301,6 +309,7 @@ func MustGetAuthContext(c *gin.Context) *AuthContext {
 	return authCtx
 }
 
+// GetProjectIdOrCode
 func GetProjectIdOrCode(c *gin.Context) string {
 	if c.Param("projectId") != "" {
 		return c.Param("projectId")
@@ -308,6 +317,7 @@ func GetProjectIdOrCode(c *gin.Context) string {
 	return ""
 }
 
+// GetClusterId
 func GetClusterId(c *gin.Context) string {
 	if c.Param("clusterId") != "" {
 		return c.Param("clusterId")
@@ -315,6 +325,7 @@ func GetClusterId(c *gin.Context) string {
 	return ""
 }
 
+// GetSessionId
 func GetSessionId(c *gin.Context) string {
 	if c.Param("sessionId") != "" {
 		return c.Param("sessionId")
