@@ -50,9 +50,4 @@ DEFAULT_VALUES_FILE_NAME = 'values.yaml'
 
 
 # Harbor chart仓库项目名称
-DEFAULT_CHART_REPO_PROJECT_NAME = "chartrepo"
-
-try:
-    from .constants_ext import DEFAULT_CHART_REPO_PROJECT_NAME  # noqa
-except ImportError as e:
-    logger.debug("Load extension failed: %s", e)
+DEFAULT_CHART_REPO_PROJECT_NAME = ""
