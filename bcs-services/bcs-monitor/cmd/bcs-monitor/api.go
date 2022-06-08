@@ -21,7 +21,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
 )
 
 // APIServerCmd
@@ -48,12 +50,14 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 		return errors.Wrap(err, "apiserver")
 	}
 
+	sd, err := discovery.NewServiceDiscovery(ctx, "bcs-monitor-api", version.BcsVersion, httpAddress)
+	if err != nil {
+		return err
+	}
+
 	// 启动 apiserver
-	g.Add(func() error {
-		return server.Run()
-	}, func(err error) {
-		server.Close()
-	})
+	g.Add(server.Run, func(err error) { server.Close() })
+	g.Add(sd.Run, func(error) {})
 
 	return nil
 }

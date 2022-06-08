@@ -16,12 +16,14 @@ package main
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/query"
 )
 
@@ -54,8 +56,14 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 		return errors.Wrap(err, "query")
 	}
 
+	sd, err := discovery.NewServiceDiscovery(ctx, "bcs-monitor-query", version.BcsVersion, httpAddress)
+	if err != nil {
+		return err
+	}
+
 	g.Add(queryServer.RunGetStore, queryServer.ShutDownGetStore)
 	g.Add(queryServer.RunHttp, queryServer.ShutDownHttp)
+	g.Add(sd.Run, func(error) {})
 
 	return err
 }
