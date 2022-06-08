@@ -127,6 +127,7 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 	}
 }
 
+// AddEvent handles add event.
 func (mgr *WatcherManager) AddEvent(obj interface{}) {
 	crdObj, ok := obj.(*apiextensionsV1beta1.CustomResourceDefinition)
 	if !ok {
@@ -144,10 +145,12 @@ func (mgr *WatcherManager) AddEvent(obj interface{}) {
 
 }
 
+// UpdateEvent handles update event.
 func (mgr *WatcherManager) UpdateEvent(oldObj, newObj interface{}) {
 	return
 }
 
+// DeleteEvent handles delete event.
 func (mgr *WatcherManager) DeleteEvent(obj interface{}) {
 	crdObj, ok := obj.(*apiextensionsV1beta1.CustomResourceDefinition)
 	if !ok {

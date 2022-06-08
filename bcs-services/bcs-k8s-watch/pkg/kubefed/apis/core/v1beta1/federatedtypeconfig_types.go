@@ -119,6 +119,7 @@ type FederatedTypeConfigStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:path=federatedtypeconfigs,shortName=ftc
 // +kubebuilder:subresource:status
+// FederatedTypeConfig is the Schema for the federatedtypeconfigs API
 type FederatedTypeConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -142,6 +143,7 @@ func init() {
 	SchemeBuilder.Register(&FederatedTypeConfig{}, &FederatedTypeConfigList{})
 }
 
+// SetFederatedTypeConfigDefaults sets default values for a FederatedTypeConfig.
 func SetFederatedTypeConfigDefaults(obj *FederatedTypeConfig) {
 	// TODO(marun) will name always be populated?
 	nameParts := strings.SplitN(obj.Name, ".", 2)
@@ -170,6 +172,7 @@ func setStringDefault(value *string, defaultValue string) {
 
 // PluralName computes the plural name from the kind by
 // lowercasing and suffixing with 's' or `es`.
+// PluralName is used to compute the plural name of the target type.
 func PluralName(kind string) string {
 	lowerKind := strings.ToLower(kind)
 	if strings.HasSuffix(lowerKind, "s") || strings.HasSuffix(lowerKind, "x") ||
@@ -184,10 +187,12 @@ func PluralName(kind string) string {
 	return fmt.Sprintf("%ss", lowerKind)
 }
 
+// GetObjectMeta returns the ObjectMeta for the given object.
 func (f *FederatedTypeConfig) GetObjectMeta() metav1.ObjectMeta {
 	return f.ObjectMeta
 }
 
+// GetTargetType returns the target type.
 func (f *FederatedTypeConfig) GetTargetType() metav1.APIResource {
 	return apiResourceToMeta(f.Spec.TargetType, f.GetNamespaced())
 }
@@ -195,18 +200,22 @@ func (f *FederatedTypeConfig) GetTargetType() metav1.APIResource {
 // TODO(font): This method should be removed from the interface in favor of
 // checking the namespaced property of the appropriate APIResource (TargetType,
 // FederatedType) depending on context.
+// GetNamespaced returns true if the target type is namespaced.
 func (f *FederatedTypeConfig) GetNamespaced() bool {
 	return f.Spec.TargetType.Namespaced()
 }
 
+// GetPropagationEnabled returns whether propagation is enabled for the
 func (f *FederatedTypeConfig) GetPropagationEnabled() bool {
 	return f.Spec.Propagation == PropagationEnabled
 }
 
+// GetFederatedType returns the federated type.
 func (f *FederatedTypeConfig) GetFederatedType() metav1.APIResource {
 	return apiResourceToMeta(f.Spec.FederatedType, f.GetFederatedNamespaced())
 }
 
+// GetStatusType returns the status type for this federated type.
 func (f *FederatedTypeConfig) GetStatusType() *metav1.APIResource {
 	if f.Spec.StatusType == nil {
 		return nil
@@ -215,6 +224,7 @@ func (f *FederatedTypeConfig) GetStatusType() *metav1.APIResource {
 	return &metaAPIResource
 }
 
+// GetStatusEnabled returns true if the status controller is enabled.
 func (f *FederatedTypeConfig) GetStatusEnabled() bool {
 	return f.Spec.StatusCollection != nil &&
 		*f.Spec.StatusCollection == StatusCollectionEnabled &&
@@ -225,6 +235,7 @@ func (f *FederatedTypeConfig) GetStatusEnabled() bool {
 // special-case handling for namespaces, in favor of checking the namespaced
 // property of the appropriate APIResource (TargetType, FederatedType)
 // depending on context.
+// GetFederatedNamespaced returns true if the federated type is namespaced.
 func (f *FederatedTypeConfig) GetFederatedNamespaced() bool {
 	// Special-case the scope of federated namespace since it will
 	// hopefully be the only instance of the scope of a federated
@@ -238,10 +249,12 @@ func (f *FederatedTypeConfig) GetFederatedNamespaced() bool {
 	return f.GetNamespaced()
 }
 
+// IsNamespace returns true if the FederatedTypeConfig is for a namespace.
 func (f *FederatedTypeConfig) IsNamespace() bool {
 	return f.Name == common.NamespaceName
 }
 
+// Namespaced returns true if the resource is namespaced.
 func (a *APIResource) Namespaced() bool {
 	return a.Scope == apiextv1b1.NamespaceScoped
 }

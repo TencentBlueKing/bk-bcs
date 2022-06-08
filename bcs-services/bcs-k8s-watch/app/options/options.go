@@ -107,15 +107,18 @@ func NewWatchOptions() *WatchConfig {
 	return &WatchConfig{}
 }
 
+// FileConfig the file config
 type FilterConfig struct {
 	APIResourceException []APIResourceException `json:"apiResourceException"`
 }
 
+// APIResourceException api resource exception
 type APIResourceException struct {
 	GroupVersion  string   `json:"groupVersion"`
 	ResourceKinds []string `json:"resourceKinds"`
 }
 
+// ParseFilter parse filter config from file
 func (wc *WatchConfig) ParseFilter() *FilterConfig {
 	filter := &FilterConfig{}
 	bytes, err := ioutil.ReadFile(wc.FilterConfigPath)

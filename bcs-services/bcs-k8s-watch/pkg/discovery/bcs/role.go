@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
+// Role int
 type Role int
 
 const (
@@ -25,6 +26,7 @@ const (
 	RoleSlave
 )
 
+// ActionType int
 type ActionType int
 
 const (
@@ -33,12 +35,14 @@ const (
 	ActionTypeMakeSlave
 )
 
+// RoleState interface
 type RoleState interface {
 	OnMakeNobody(elector *LeaderElector)
 	OnMakeLeader(elector *LeaderElector)
 	OnMakeSlave(elector *LeaderElector)
 }
 
+// NewRoleState return role state
 func NewRoleState(role Role) RoleState {
 	switch role {
 	case RoleNobody:
@@ -53,17 +57,20 @@ func NewRoleState(role Role) RoleState {
 
 //
 // State transition for Nobody State
-//
+// NobodyState
 type NobodyState struct{}
 
+// OnMakeNobody for nobody state
 func (s NobodyState) OnMakeNobody(elector *LeaderElector) {}
 
+// OnMakeLeader for nobody state
 func (s NobodyState) OnMakeLeader(elector *LeaderElector) {
 	elector.SetRole(RoleLeader)
 	blog.Info("Role changed: nobody -> leader")
 	go elector.callbacks.OnStartedLeading(elector.StopChan)
 }
 
+// OnMakeSlave for nobody state
 func (s NobodyState) OnMakeSlave(elector *LeaderElector) {
 	elector.SetRole(RoleSlave)
 	blog.Info("Role changed: nobody -> slave")
@@ -72,16 +79,19 @@ func (s NobodyState) OnMakeSlave(elector *LeaderElector) {
 
 //
 // State transition for Leader State
-//
+// LeaderState
 type LeaderState struct{}
 
+// OnMakeNobody for leader state
 func (s LeaderState) OnMakeNobody(elector *LeaderElector) {
 	blog.Info("Role changed: leader -> nobody")
 	s.stopLeading(elector, RoleNobody)
 }
 
+// OnMakeLeader for leader state
 func (s LeaderState) OnMakeLeader(elector *LeaderElector) {}
 
+// OnMakeSlave for leader state
 func (s LeaderState) OnMakeSlave(elector *LeaderElector) {
 	blog.Info("Role changed: leader -> slave")
 	s.stopLeading(elector, RoleSlave)
@@ -100,18 +110,21 @@ func (s LeaderState) stopLeading(elector *LeaderElector, targetRole Role) {
 
 //
 // State transition for Slave State
-//
+// SlaveState
 type SlaveState struct{}
 
+// OnMakeNobody for slave state
 func (s SlaveState) OnMakeNobody(elector *LeaderElector) {
 	elector.SetRole(RoleNobody)
 	blog.Info("Role changed: slave -> nobody")
 }
 
+// OnMakeLeader for slave state
 func (s SlaveState) OnMakeLeader(elector *LeaderElector) {
 	elector.SetRole(RoleLeader)
 	blog.Info("Role changed: slave -> leader")
 	go elector.callbacks.OnStartedLeading(elector.StopChan)
 }
 
+// OnMakeSlave for slave state
 func (s SlaveState) OnMakeSlave(elector *LeaderElector) {}

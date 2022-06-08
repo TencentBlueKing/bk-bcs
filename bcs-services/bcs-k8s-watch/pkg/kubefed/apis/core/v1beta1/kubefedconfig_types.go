@@ -36,6 +36,7 @@ type KubeFedConfigSpec struct {
 	SyncController *SyncControllerConfig `json:"syncController,omitempty"`
 }
 
+// DurationConfig defines the duration of the KubeFed control plane.
 type DurationConfig struct {
 	// Time to wait before reconciling on a healthy cluster.
 	// +optional
@@ -44,6 +45,8 @@ type DurationConfig struct {
 	// +optional
 	UnavailableDelay *metav1.Duration `json:"unavailableDelay,omitempty"`
 }
+
+// LeaderElectConfig defines the leader election configuration of the KubeFed control plane.
 type LeaderElectConfig struct {
 	// The duration that non-leader candidates will wait after observing a leadership
 	// renewal until attempting to acquire leadership of a led but unrenewed leader
@@ -67,6 +70,7 @@ type LeaderElectConfig struct {
 	ResourceLock *ResourceLockType `json:"resourceLock,omitempty"`
 }
 
+// ResourceLockType string
 type ResourceLockType string
 
 const (
@@ -74,11 +78,13 @@ const (
 	EndpointsResourceLock  ResourceLockType = "endpoints"
 )
 
+// FeatureGatesConfig defines the feature gates of the KubeFed control plane.
 type FeatureGatesConfig struct {
 	Name          string            `json:"name"`
 	Configuration ConfigurationMode `json:"configuration"`
 }
 
+// ConfigurationMode string
 type ConfigurationMode string
 
 const (
@@ -86,6 +92,7 @@ const (
 	ConfigurationDisabled ConfigurationMode = "Disabled"
 )
 
+// ClusterHealthCheckConfig defines the cluster health check configuration of the KubeFed control plane.
 type ClusterHealthCheckConfig struct {
 	// How often to monitor the cluster health.
 	// +optional
@@ -101,6 +108,7 @@ type ClusterHealthCheckConfig struct {
 	Timeout *metav1.Duration `json:"timeout,omitempty"`
 }
 
+// SyncControllerConfig defines the sync controller configuration of the KubeFed control plane.
 type SyncControllerConfig struct {
 	// Whether to adopt pre-existing resources in member clusters. Defaults to
 	// "Enabled".
@@ -108,6 +116,7 @@ type SyncControllerConfig struct {
 	AdoptResources *ResourceAdoption `json:"adoptResources,omitempty"`
 }
 
+// ResourceAdoption string
 type ResourceAdoption string
 
 const (
