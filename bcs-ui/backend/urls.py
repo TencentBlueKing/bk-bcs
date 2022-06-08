@@ -82,6 +82,12 @@ urlpatterns = [
         include("backend.container_service.observability.log_stream.urls"),
     ),
     re_path(r"^api/helm/projects/(?P<project_id>\w{32})/", include("backend.helm.urls")),
+    # helm相关
+    url(r"^api/helm_chart/projects/(?P<project_id>\w{32})/", include("backend.helm.helm.chart_url")),
+    url(
+        r"^api/helm_release/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/",
+        include("backend.helm.app.release_url"),
+    ),
     path(r"change_log/", include("backend.change_log.urls")),
     # 组件库
     path(

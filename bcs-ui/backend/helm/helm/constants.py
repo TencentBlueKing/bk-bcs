@@ -49,9 +49,6 @@ RESOURCE_NAME_REGEX = r'^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
 DEFAULT_VALUES_FILE_NAME = 'values.yaml'
 
 
-# public repo name
-PUBLIC_REPO_NAME = "public-repo"
-
 # Harbor chart仓库项目名称
 DEFAULT_CHART_REPO_PROJECT_NAME = "chartrepo"
 
