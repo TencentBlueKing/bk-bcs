@@ -23,11 +23,11 @@ import (
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
 
+	bcsapiProj "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	bcsapiProj "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/discovery"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
