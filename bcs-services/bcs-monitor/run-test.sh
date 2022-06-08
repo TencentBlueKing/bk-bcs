@@ -13,9 +13,11 @@ function prometheus() {
 }
 
 function api() {
+    set -ex
     ./bin/bcs-monitor api \
-        --config ./etc/config_dev.yaml \
-        --http-address 0.0.0.0:11902
+        --http-address 0.0.0.0:11902 \
+        --advertise-address clb:11902 \
+        --config ./etc/config_dev.yaml
 }
 
 function query {

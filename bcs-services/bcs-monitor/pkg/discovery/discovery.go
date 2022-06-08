@@ -35,18 +35,18 @@ type serviceDiscovery struct {
 }
 
 // NewServiceDiscovery
-func NewServiceDiscovery(ctx context.Context, name, version, Bindaddr, advertiseAddr string) (*serviceDiscovery, error) {
-	server := server.NewServer(
+func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr string) (*serviceDiscovery, error) {
+	svr := server.NewServer(
 		server.Advertise(advertiseAddr),
-		server.Address(Bindaddr),
+		server.Address(bindaddr),
 		server.Name(name+serverNameSuffix),
 		server.Version(version),
 		server.Context(ctx),
 	)
 
-	srv := micro.NewService(micro.Server(server))
+	service := micro.NewService(micro.Server(svr))
 
-	sd := &serviceDiscovery{srv: srv, ctx: ctx}
+	sd := &serviceDiscovery{srv: service, ctx: ctx}
 	if err := sd.init(); err != nil {
 		return nil, err
 	}

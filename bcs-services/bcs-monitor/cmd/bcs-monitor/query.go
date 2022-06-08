@@ -58,7 +58,7 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 		return errors.Wrap(err, "query")
 	}
 
-	sdName := fmt.Sprintf("%s-%s", appName, QueryCmd().Name())
+	sdName := fmt.Sprintf("%s-%s", appName, "query")
 	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress)
 	if err != nil {
 		return err

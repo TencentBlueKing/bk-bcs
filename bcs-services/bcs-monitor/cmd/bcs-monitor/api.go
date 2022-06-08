@@ -52,7 +52,7 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 		return errors.Wrap(err, "apiserver")
 	}
 
-	sdName := fmt.Sprintf("%s-%s", appName, APIServerCmd().Name())
+	sdName := fmt.Sprintf("%s-%s", appName, "api")
 	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress)
 	if err != nil {
 		return err
