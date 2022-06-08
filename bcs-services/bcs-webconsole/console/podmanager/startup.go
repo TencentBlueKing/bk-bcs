@@ -356,11 +356,11 @@ func GetNamespace() string {
 
 // makeSlugName 规范化名称
 // 符合k8s规则 https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#rfc-1035-label-names
-// 返回格式{hash[12]}-{slugname[32]}
+// 返回格式{hash[8]}-{slugname[20]}
 func makeSlugName(username string) string {
 	h := sha1.New()
 	h.Write([]byte(username))
-	hashId := hex.EncodeToString(h.Sum(nil))[:12]
+	hashId := hex.EncodeToString(h.Sum(nil))[:8]
 
 	// 有些命名非k8s规范, slug 处理
 	slug.CustomSub = map[string]string{
@@ -369,8 +369,8 @@ func makeSlugName(username string) string {
 	slug.Lowercase = true
 
 	username = slug.Make(username)
-	if len(username) > 32 {
-		username = username[:32]
+	if len(username) > 20 {
+		username = username[:20]
 	}
 	return fmt.Sprintf("%s-%s", hashId, username)
 }
