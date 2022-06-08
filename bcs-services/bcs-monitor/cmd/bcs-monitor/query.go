@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
@@ -42,6 +43,7 @@ func QueryCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:10902", "API listen http ip")
+	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
 	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "the store list that api connect")
 
 	return cmd
@@ -56,7 +58,8 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 		return errors.Wrap(err, "query")
 	}
 
-	sd, err := discovery.NewServiceDiscovery(ctx, "bcs-monitor-query", version.BcsVersion, httpAddress)
+	sdName := fmt.Sprintf("%s-%s", appName, QueryCmd().Name())
+	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress)
 	if err != nil {
 		return err
 	}

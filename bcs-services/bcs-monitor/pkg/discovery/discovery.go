@@ -26,25 +26,27 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
+const serverNameSuffix = ".bkbcs.tencent.com"
+
 // serviceDiscovery
 type serviceDiscovery struct {
-	ctx  context.Context
-	srv  micro.Service
-	addr string
+	ctx context.Context
+	srv micro.Service
 }
 
 // NewServiceDiscovery
-func NewServiceDiscovery(ctx context.Context, name, version string, addr string) (*serviceDiscovery, error) {
+func NewServiceDiscovery(ctx context.Context, name, version, Bindaddr, advertiseAddr string) (*serviceDiscovery, error) {
 	server := server.NewServer(
-		server.Advertise(addr),
-		server.Name(name),
+		server.Advertise(advertiseAddr),
+		server.Address(Bindaddr),
+		server.Name(name+serverNameSuffix),
 		server.Version(version),
 		server.Context(ctx),
 	)
 
 	srv := micro.NewService(micro.Server(server))
 
-	sd := &serviceDiscovery{srv: srv, ctx: ctx, addr: addr}
+	sd := &serviceDiscovery{srv: srv, ctx: ctx}
 	if err := sd.init(); err != nil {
 		return nil, err
 	}

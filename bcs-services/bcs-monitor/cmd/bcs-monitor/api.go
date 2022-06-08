@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/oklog/run"
@@ -38,6 +39,7 @@ func APIServerCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:8089", "API listen http ip")
+	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
 
 	return cmd
 }
@@ -50,7 +52,8 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 		return errors.Wrap(err, "apiserver")
 	}
 
-	sd, err := discovery.NewServiceDiscovery(ctx, "bcs-monitor-api", version.BcsVersion, httpAddress)
+	sdName := fmt.Sprintf("%s-%s", appName, APIServerCmd().Name())
+	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress)
 	if err != nil {
 		return err
 	}
