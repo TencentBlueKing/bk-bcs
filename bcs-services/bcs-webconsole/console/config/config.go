@@ -38,8 +38,10 @@ type Configurations struct {
 	Web         *WebConf                   `yaml:"web"`
 }
 
-// ReadFrom : read from file
-func (c *Configurations) Init() error {
+// newConfigurations 新增配置
+func newConfigurations() (*Configurations, error) {
+	c := &Configurations{}
+
 	c.Base = &BaseConf{}
 	c.Base.Init()
 
@@ -77,8 +79,16 @@ func (c *Configurations) Init() error {
 
 	c.Credentials = map[string][]*Credential{}
 
-	c.Web = &WebConf{}
-	c.Web.Init()
+	c.Web = defaultWebConf()
+
+	return c, nil
+}
+
+// init 初始化
+func (c *Configurations) init() error {
+	if err := c.Web.init(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -89,13 +99,22 @@ func (c *Configurations) IsDevMode() bool {
 }
 
 // G : Global Configurations
-var G = &Configurations{}
+var G *Configurations
 
 // 初始化
 func init() {
-	G.Init()
+	g, err := newConfigurations()
+	if err != nil {
+		panic(err)
+	}
+	if err := g.init(); err != nil {
+		panic(err)
+	}
+
+	G = g
 }
 
+// ReadCred
 func (c *Configurations) ReadCred(name string, content []byte) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
@@ -152,6 +171,11 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if err != nil {
 		return err
 	}
+
+	if err := c.init(); err != nil {
+		return err
+	}
+
 	c.Logging.InitBlog()
 	c.Base.InitManagers()
 
