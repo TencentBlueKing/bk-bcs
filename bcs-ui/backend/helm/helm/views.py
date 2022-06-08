@@ -27,6 +27,7 @@ from backend.apps.whitelist import enabled_force_sync_chart_repo
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components import bk_repo
 from backend.helm.app.models import App
+from backend.helm.toolkit import chart_versions as chart_version_tools
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.views import ActionSerializerMixin, FilterByProjectMixin, with_code_wrapper
@@ -35,14 +36,7 @@ from . import serializers
 from .constants import DEFAULT_CHART_REPO_PROJECT_NAME
 from .models.chart import Chart, ChartVersion, ChartVersionSnapshot
 from .models.repo import Repository
-from .serializers import (
-    ChartVersionSLZ,
-    ChartVersionTinySLZ,
-    ChartWithVersionRepoSLZ,
-    MinimalRepoSLZ,
-    RepositorySyncSLZ,
-    RepoSLZ,
-)
+from .serializers import ChartVersionSLZ, ChartVersionTinySLZ, ChartWithVersionRepoSLZ, RepositorySyncSLZ, RepoSLZ
 from .tasks import sync_helm_repo
 from .utils import chart as chart_utils
 from .utils import chart_versions
@@ -369,15 +363,15 @@ class ChartVersionsViewSet(viewsets.ViewSet):
         _, username, password = self._get_repo(project_id, project_code, is_public_repo)
         # 获取chart版本
         client = bk_repo.BkRepoClient(username=username, password=password)
-        helm_project_name, helm_repo_name = chart_versions.get_helm_project_and_repo_name(
+        helm_project_name, helm_repo_name = chart_version_tools.get_helm_project_and_repo_name(
             request.project.project_code, is_public_repo=is_public_repo
         )
         versions = client.get_chart_versions(helm_project_name, helm_repo_name, chart_name)
-        versions = chart_versions.VersionListSLZ(data=versions, many=True)
+        versions = chart_version_tools.VersionListSLZ(data=versions, many=True)
         versions.is_valid(raise_exception=True)
         versions = versions.validated_data
 
-        versions = chart_versions.sort_version_list(versions)
+        versions = chart_version_tools.sort_version_list(versions)
 
         return Response(versions)
 
@@ -398,7 +392,7 @@ class ChartVersionsViewSet(viewsets.ViewSet):
         repo, username, password = self._get_repo(project_id, project_code, is_public_repo)
         # 获取chart版本详情
         client = bk_repo.BkRepoClient(username=username, password=password)
-        helm_project_name, helm_repo_name = chart_versions.get_helm_project_and_repo_name(
+        helm_project_name, helm_repo_name = chart_version_tools.get_helm_project_and_repo_name(
             request.project.project_code, is_public_repo=is_public_repo
         )
         detail = client.get_chart_version_detail(helm_project_name, helm_repo_name, chart_name, version)
