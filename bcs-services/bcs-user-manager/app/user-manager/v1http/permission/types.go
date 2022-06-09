@@ -33,6 +33,13 @@ func (ct ClusterType) String() string {
 	return string(ct)
 }
 
+var (
+	// Single 独立集群
+	Single ClusterType = "single"
+	// Shared 共享集群
+	Shared ClusterType = "shared"
+)
+
 // UserInfo userID/name
 type UserInfo struct {
 	UserID   uint

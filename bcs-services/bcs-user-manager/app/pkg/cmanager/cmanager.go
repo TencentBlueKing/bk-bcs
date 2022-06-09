@@ -44,6 +44,8 @@ const (
 	CacheClusterProjectKeyPrefix = "cached_cluster_manager"
 	// CacheClusterBusinessKeyPrefix key prefix for cluster business id
 	CacheClusterBusinessKeyPrefix = "cached_cluster_manager_cluster_business"
+	// CacheClusterSharedKeyPrefix key prefix for cluster shared
+	CacheClusterSharedKeyPrefix = "cached_cluster_manager_shared"
 )
 
 // Options for init clusterManager
@@ -97,6 +99,48 @@ type ClusterManagerClient struct {
 	cache     *cache.Cache
 	ctx       context.Context
 	cancel    context.CancelFunc
+}
+
+// CheckSharedClusterByClusterID check cluster is shared cluster by clusterID
+func (cm *ClusterManagerClient) CheckSharedClusterByClusterID(clusterID string) (bool, error) {
+	if cm == nil {
+		return false, errServerNotInit
+	}
+
+	cacheName := func(id string) string {
+		return fmt.Sprintf("%s_%v", CacheClusterSharedKeyPrefix, id)
+	}
+	val, ok := cm.cache.Get(cacheName(clusterID))
+	if ok && val != nil {
+		if shared, ok1 := val.(bool); ok1 {
+			return shared, nil
+		}
+	}
+	blog.V(3).Infof("CheckSharedClusterByClusterID miss clusterID cache")
+
+	cli, err := cm.getClusterManagerClient()
+	if err != nil {
+		blog.Errorf("CheckSharedClusterByClusterID failed: %v", err)
+		return false, err
+	}
+	resp, err := cli.GetCluster(context.Background(), &bcsapicm.GetClusterReq{ClusterID: clusterID})
+	if err != nil {
+		blog.Errorf("CheckSharedClusterByClusterID failed: %v", err.Error())
+		return false, err
+	}
+
+	if !resp.Result {
+		blog.Errorf("CheckSharedClusterByClusterID failed: %v", resp.Message)
+		return false, err
+	}
+	shared := resp.Data.IsShared
+
+	err = cm.cache.Add(cacheName(clusterID), shared, cache.DefaultExpiration)
+	if err != nil {
+		blog.Errorf("CheckSharedClusterByClusterID set cache by cacheName[%s] failed: %v", cacheName(clusterID), err)
+	}
+
+	return shared, nil
 }
 
 // GetProjectIDByClusterID get projectID by clusterID

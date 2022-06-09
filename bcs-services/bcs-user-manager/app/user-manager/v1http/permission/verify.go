@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/parser"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -46,7 +47,8 @@ const (
 )
 
 // NewPermVerifyClient verify permission client
-func NewPermVerifyClient(swi bool, iam iam.PermClient, clusterCli *cmanager.ClusterManagerClient) *PermVerifyClient {
+func NewPermVerifyClient(swi bool, iam iam.PermClient,
+	clusterCli *cmanager.ClusterManagerClient) *PermVerifyClient {
 	return &PermVerifyClient{
 		PermSwitch:    swi,
 		PermClient:    iam,
@@ -61,7 +63,15 @@ type PermVerifyClient struct {
 	ClusterClient *cmanager.ClusterManagerClient
 }
 
-// VerifyClusterPermission verify cluster permission
+func returnClusterType(resource ClusterResource) ClusterType {
+	if resource.ProjectID == "" {
+		return Single
+	}
+
+	return Shared
+}
+
+// VerifyClusterPermission verify cluster permission: single and shared cluster
 func (cli *PermVerifyClient) VerifyClusterPermission(user UserInfo, action string, resource ClusterResource) (bool, string) {
 	if cli == nil {
 		return false, ErrServerNotInited.Error()
@@ -230,7 +240,10 @@ func (cli *PermVerifyClient) checkResourceType(resource ClusterResource, req *pa
 }
 
 func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, action string, resource ClusterResource) (bool, error) {
+
 	actionID := ""
+	// get cluster type
+	clusterType := returnClusterType(resource)
 
 	// not namespace permission
 	switch action {
@@ -253,6 +266,21 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 	if err != nil {
 		return false, fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
 	}
+	// if clusterType is shared, need to check namespace belong to project
+	if clusterType == Shared {
+		exist, err := cli.checkNamespaceInProjectCluster(projectID, resource.ClusterID, resource.Namespace)
+		if err != nil {
+			return false, err
+		}
+		if !exist {
+			blog.Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] not exist "+
+				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+			return false, nil
+		}
+		blog.Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] exist "+
+			"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+	}
+
 	nameSpaceID, _ := utils.CalIAMNamespaceID(resource.ClusterID, resource.Namespace)
 
 	req := iam.PermissionRequest{
@@ -279,12 +307,26 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 	return allow, nil
 }
 
+func (cli *PermVerifyClient) checkNamespaceInProjectCluster(projectID, clusterID string, namespace string) (bool, error) {
+	// 获取共享集群所在项目的命名空间列表，检查是否属于该项目
+	namespaceList, err := passcc.GetCCClient().GetProjectSharedNamespaces(projectID, clusterID)
+	if err != nil {
+		blog.Errorf("checkNamespaceInProjectCluster failed: %v", err)
+		return false, err
+	}
+
+	return utils.StringInSlice(namespace, namespaceList), nil
+}
+
 func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action string, resource ClusterResource) (bool, error) {
 
 	var (
 		actionID              = ""
 		isClusterResourcePerm = false
+		clusterType           ClusterType
 	)
+	// get cluster type
+	clusterType = returnClusterType(resource)
 
 	// namespace permission
 	switch action {
@@ -303,6 +345,11 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 		}
 	default:
 		return false, fmt.Errorf("invalid action[%s]", action)
+	}
+
+	if clusterType == Shared && actionID != namespace.NameSpaceScopedView.String() {
+		return false, fmt.Errorf("verifyUserNamespacePermission shared cluster[%s] not support %s permission %s",
+			resource.ClusterID, namespaceScopedType, actionID)
 	}
 
 	projectID, err := cli.getProjectIDFromResource(resource)
@@ -328,6 +375,20 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 			},
 		}
 	} else {
+		// if clusterType is shared, need to check namespace belong to project
+		if clusterType == Shared {
+			exist, err := cli.checkNamespaceInProjectCluster(projectID, resource.ClusterID, resource.Namespace)
+			if err != nil {
+				return false, err
+			}
+			if !exist {
+				blog.Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] not exist "+
+					"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+				return false, nil
+			}
+			blog.Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] exist "+
+				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+		}
 		nameSpaceID, _ := utils.CalIAMNamespaceID(resource.ClusterID, resource.Namespace)
 		rn1 = iam.ResourceNode{
 			System:    iam.SystemIDBKBCS,
@@ -375,6 +436,10 @@ func (cli *PermVerifyClient) getProjectIDFromResource(resource ClusterResource) 
 
 func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, action string, resource ClusterResource) (bool, error) {
 	actionID := ""
+	clusterType := returnClusterType(resource)
+	if clusterType == Shared {
+		return false, fmt.Errorf("shared cluster[%s] not support %s permission", resource.ClusterID, clusterScopedType)
+	}
 
 	// cluster scoped permission
 	switch action {

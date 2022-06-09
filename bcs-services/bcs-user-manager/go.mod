@@ -3,13 +3,13 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220330034851-506f1b2d3d70
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220428123458-9d6b3227c7ad
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	golang.org/x/net => golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
-	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
+	//k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
+	//k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
 )
 
 require (
@@ -30,6 +30,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	k8s.io/apimachinery v0.23.1
+	k8s.io/api v0.23.1
 )
 
 require (
@@ -52,7 +53,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.1.4 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.9.5 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
-	github.com/parnurzeal/gorequest v0.2.16 // indirect
+	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect

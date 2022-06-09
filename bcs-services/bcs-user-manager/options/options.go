@@ -45,6 +45,17 @@ type UserManagerOptions struct {
 	IAMConfig        IAMConfig            `json:"iam_config"`
 	PermissionSwitch bool                 `json:"permission_switch"`
 	Cmdb             CmdbConfig           `json:"cmdb"`
+	CommunityEdition bool                 `json:"community_edition"`
+	PassCC           PassCCConfig         `json:"passcc"`
+}
+
+// PassCCConfig pass-cc config
+type PassCCConfig struct {
+	AuthServer string `json:"auth_server"`
+	PassServer string `json:"pass_server"`
+	AppCode    string `json:"app_code"`
+	AppSecret  string `json:"app_secret"`
+	Enable     bool   `json:"enable"`
 }
 
 // ClusterManagerConfig cluster-manager config
