@@ -16,10 +16,14 @@ local core = require("apisix.core")
 
 _M = {}
 
+-- return upstream itself without etcd packed values, but 
 function _M.get_upstream_by_name(resource_id)
     local upstreams = core.config.fetch_created_obj("/upstreams")
     if upstreams and upstreams:get(resource_id) then
-        return upstreams:get(resource_id).value
+        local upstream = upstreams:get(resource_id)
+        local tmp_upstream = upstream.value
+        tmp_upstream.modifiedIndex = upstream.modifiedIndex
+        return tmp_upstream
     end
     
     local services = core.config.fetch_created_obj("/services")
