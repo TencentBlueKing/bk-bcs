@@ -83,7 +83,7 @@ func TestBCSProjectPerm_CanDeleteProject(t *testing.T) {
 
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	// projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanEditProject("liming", projectID)
+	allow, url, err := cli.CanDeleteProject("liming", projectID)
 	if err != nil {
 		t.Fatal(err)
 	}
