@@ -179,6 +179,11 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
         end
         core.response.exit(401, "Bad Bkapi JWT token")
     end
+    -- situation that anonymous requests from bkapigw will carry a token with all fields unverified, fallback to bcs token auth
+    if jwt_obj.payload.app and not jwt_obj.payload.app.verified and jwt_obj.payload.user and not jwt_obj.payload.user.verified then
+        core.log.warn("Neither app nor user has been verified, jwt obj: " .. core.json.encode(jwt_obj))
+        return TokenAuthentication:fetch_credential(conf, ctx)
+    end
     local redis_key = jwt_obj.payload.app.app_code
     local credential = {token_type = TOKEN_TYPE_APIGW}
     credential["user_token"] = {
@@ -189,7 +194,7 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
         redis_key = redis_key .. "," .. jwt_obj.payload.user.username
     end
     credential["redis_key"] = redis_key
-
+    core.request.set_header(ctx, "X-Bkapi-JWT", nil)
     return credential
 end
 
