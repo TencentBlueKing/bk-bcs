@@ -510,8 +510,10 @@ func apisixRouteConversion(svc *register.Service, route *register.Route, metrics
 		bcsAuth, authPlugin := apisixBKBCSAuthConversion(route.Plugin.AuthOption)
 		r.Plugins[bcsAuth] = authPlugin
 	}
-	r.Plugins["file-logger"] = map[string]interface{}{
-		"path": "/usr/local/apisix/logs/access.log",
+	if route.Plugin != nil && route.Plugin.FileLoggerOption != nil {
+		r.Plugins["file-logger"] = map[string]interface{}{
+			"path": route.Plugin.FileLoggerOption.Path,
+		}
 	}
 	reqID, reqPlugin := apisixRequestIDPlugin()
 	r.Plugins[reqID] = reqPlugin
