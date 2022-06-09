@@ -73,11 +73,12 @@ type Watcher struct {
 	sharedWatchers     map[string]WatcherInterface
 	stopChan           chan struct{}
 	namespace          string
+	labelSelector      string
 }
 
 // NewWatcher creates a new watcher of target type resource.
 func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string, objType runtime.Object,
-	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool) *Watcher {
+	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool, labelSelector string) *Watcher {
 
 	watcher := &Watcher{
 		resourceType:       resourceType,
@@ -86,10 +87,23 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 		resourceNamespaced: resourceNamespaced,
 		queue:              queue.New(),
 		namespace:          namespace,
+		labelSelector:      labelSelector,
 	}
+
+	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", resourceType, resourceName, namespace, labelSelector)
 
 	// build list watch.
 	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
+
+	// if with labelSelector, use label selector to filter resource.
+	if watcher.labelSelector != "" {
+		// apply the specified selector as a filter.
+		optionsModifier := func(options *metav1.ListOptions) {
+			options.LabelSelector = watcher.labelSelector
+		}
+
+		listWatch = cache.NewFilteredListWatchFromClient(*client, resourceName, namespace, optionsModifier)
+	}
 
 	// register event handler.
 	eventHandler := cache.ResourceEventHandlerFuncs{

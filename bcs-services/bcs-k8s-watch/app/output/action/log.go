@@ -19,11 +19,13 @@ import (
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
+// LogAction struct
 type LogAction struct {
 	Name      string
 	ClusterID string
 }
 
+// Add add action
 func (logAction *LogAction) Add(syncData *SyncData) {
 	jsonString, err := jsoniter.Marshal(syncData.Data)
 	if err != nil {
@@ -32,6 +34,7 @@ func (logAction *LogAction) Add(syncData *SyncData) {
 	glog.Infof("Add Cluster: %s - data: %s", logAction.ClusterID, string(jsonString))
 }
 
+// Delete delete action
 func (logAction *LogAction) Delete(syncData *SyncData) {
 	jsonString, err := jsoniter.Marshal(syncData.Data)
 	if err != nil {
@@ -40,6 +43,7 @@ func (logAction *LogAction) Delete(syncData *SyncData) {
 	glog.Infof("Delete Cluster: %s - data: %s", logAction.ClusterID, string(jsonString))
 }
 
+// Update update action
 func (logAction *LogAction) Update(syncData *SyncData) {
 	jsonString, err := jsoniter.Marshal(syncData.Data)
 	if err != nil {

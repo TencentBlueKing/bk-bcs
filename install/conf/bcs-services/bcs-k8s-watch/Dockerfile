@@ -18,6 +18,8 @@ RUN chmod +x /data/bcs/bcs-k8s-watch/container-start.sh
 ENV watchDisableNetService=false
 # 关闭crd资源的数据上报，默认关闭
 ENV watchDisableCrd=false
+# 默认不添加labelSelector
+ENV watchLabelSelectors="{}"
 
 ENV TZ="Asia/Shanghai"
 RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone

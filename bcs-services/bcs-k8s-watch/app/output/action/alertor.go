@@ -25,12 +25,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 )
 
+// Alertor struct
 type Alertor struct {
 	ClusterID string
 	Module    string
 	ModuleIP  string
 }
 
+// NewAlertor create a new Alertor
 func NewAlertor(clusterID, moduleIP string, zkHosts string, tls options.TLS) (*Alertor, error) {
 	var alertor = &Alertor{
 		ClusterID: clusterID,
@@ -53,6 +55,7 @@ func NewAlertor(clusterID, moduleIP string, zkHosts string, tls options.TLS) (*A
 	return alertor, err
 }
 
+// DoAlarm do alarm
 func (alertor *Alertor) DoAlarm(syncData *SyncData) {
 	healthInfo := alertor.genHealthInfo(syncData)
 	// do alarm
@@ -61,6 +64,7 @@ func (alertor *Alertor) DoAlarm(syncData *SyncData) {
 	}
 }
 
+// genHealthInfo generate health info
 func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 	data := syncData.Data
 	event, ok := data.(*v1.Event)
@@ -88,6 +92,7 @@ func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 
 }
 
+// sendAlarm send alarm
 func (alertor *Alertor) sendAlarm(healthInfo *api.HealthInfo) bool {
 	healthInfo.Module = alertor.Module
 	healthInfo.IP = alertor.ModuleIP
