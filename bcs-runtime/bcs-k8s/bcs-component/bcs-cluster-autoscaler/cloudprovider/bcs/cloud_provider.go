@@ -137,7 +137,8 @@ func (cloud *Provider) NodeGroups() []cloudprovider.NodeGroup {
 
 // NodeGroupForNode returns the node group for the given node.
 func (cloud *Provider) NodeGroupForNode(node *apiv1.Node) (cloudprovider.NodeGroup, error) {
-	ref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+	// ref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+	ref, err := InstanceRefFromInnerIP(node.Status.Addresses)
 	if err != nil {
 		return nil, err
 	}

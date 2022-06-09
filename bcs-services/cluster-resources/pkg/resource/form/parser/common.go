@@ -15,15 +15,18 @@
 package parser
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 // GetResParseFunc 获取资源对应 Parser
-func GetResParseFunc(kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
+func GetResParseFunc(ctx context.Context, kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
 	parseFunc, exists := Kind2ParseFuncMap[kind]
 	if !exists {
-		return nil, errorx.New(errcode.Unsupported, "当前资源类型 %s 不支持表单化", kind)
+		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), kind)
 	}
 	return parseFunc, nil
 }

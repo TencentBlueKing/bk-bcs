@@ -143,12 +143,23 @@ func getClusterMaxNum(clusterType string, env string, model store.ClusterManager
 	return clusterNumIDs[len(clusterNumIDs)-1] + 1, nil
 }
 
-// getAllMasterIPs get cluster masterIPs
-func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
+// getClusterList get all cm clusters
+func getClusterList(model store.ClusterManagerModel) ([]proto.Cluster, error) {
 	clusterStatus := []string{common.StatusInitialization, common.StatusRunning, common.StatusDeleting}
 	condStatus := operator.NewLeafCondition(operator.In, operator.M{"status": clusterStatus})
 
 	clusterList, err := model.ListCluster(context.Background(), condStatus, &storeopt.ListOption{All: true})
+	if err != nil {
+		blog.Errorf("getClusterList failed: %v", err)
+		return nil, err
+	}
+
+	return clusterList, nil
+}
+
+// getAllMasterIPs get cluster masterIPs
+func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
+	clusterList, err := getClusterList(model)
 	if err != nil {
 		blog.Errorf("getAllIPList ListCluster failed: %v", err)
 		return nil

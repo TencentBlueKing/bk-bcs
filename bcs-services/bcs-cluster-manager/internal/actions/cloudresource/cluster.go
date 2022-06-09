@@ -15,6 +15,7 @@ package cloudresource
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -37,7 +38,7 @@ type ListCloudClusterAction struct {
 	clusterList []*cmproto.CloudClusterInfo
 }
 
-// NewGetCloudRegionsAction create list action for cloud regions
+// NewListCloudClusterAction create list action for cloud regions
 func NewListCloudClusterAction(model store.ClusterManagerModel) *ListCloudClusterAction {
 	return &ListCloudClusterAction{
 		model: model,
@@ -92,7 +93,8 @@ func (la *ListCloudClusterAction) validate() error {
 	if err != nil {
 		return err
 	}
-	err = validate.ImportCloudAccountValidate(&cmproto.Account{
+
+	err = validate.ListCloudRegionClusterValidate(la.req, &cmproto.Account{
 		SecretID:  la.account.Account.SecretID,
 		SecretKey: la.account.Account.SecretKey,
 	})

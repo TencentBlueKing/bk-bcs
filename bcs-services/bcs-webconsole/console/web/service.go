@@ -30,10 +30,12 @@ type service struct {
 	opts *route.Options
 }
 
+// NewRouteRegistrar
 func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
+// RegisterRoute
 func (s service) RegisterRoute(router gin.IRoutes) {
 	web := router.Use(route.WebAuthRequired())
 
@@ -53,6 +55,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/metrics", metrics.PromMetricHandler())
 }
 
+// IndexPageHandler index 页面
 func (s *service) IndexPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
@@ -92,6 +95,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", data)
 }
 
+// MgrPageHandler 多集群页面
 func (s *service) MgrPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 
@@ -145,10 +149,12 @@ func (s *service) ClusterGatePageHandler(c *gin.Context) {
 
 }
 
+// HealthyHandler
 func (s *service) HealthyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
+// ReadyHandler
 func (s *service) ReadyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }

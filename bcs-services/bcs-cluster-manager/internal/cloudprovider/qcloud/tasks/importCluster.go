@@ -60,7 +60,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	clusterID := step.Params["ClusterID"]
 	cloudID := step.Params["CloudID"]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID)
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -121,7 +121,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	clusterID := step.Params["ClusterID"]
 	cloudID := step.Params["CloudID"]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID)
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -301,7 +301,7 @@ func getClusterInstancesByClusterID(data *cloudprovider.CloudDependBasicInfo) ([
 		return nil, nil, err
 	}
 
-	instancesList, err := tkeCli.QueryTkeClusterAllInstances(data.Cluster.SystemID)
+	instancesList, err := tkeCli.QueryTkeClusterAllInstances(data.Cluster.SystemID, nil)
 	if err != nil {
 		return nil, nil, err
 	}

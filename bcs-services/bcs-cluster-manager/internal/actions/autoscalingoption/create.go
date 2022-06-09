@@ -51,7 +51,7 @@ func (ca *CreateAction) generateClusterAutoScalingOption() *cmproto.ClusterAutoS
 	return &cmproto.ClusterAutoScalingOption{
 		ClusterID:                     ca.req.ClusterID,
 		ProjectID:                     ca.cluster.ProjectID,
-		IsScaleDwonEnable:             ca.req.IsScaleDwonEnable,
+		IsScaleDownEnable:             ca.req.IsScaleDownEnable,
 		Expander:                      ca.req.Expander,
 		MaxEmptyBulkDelete:            ca.req.MaxEmptyBulkDelete,
 		ScaleDownDelay:                ca.req.ScaleDownDelay,

@@ -13,6 +13,7 @@
 
 package metric
 
+// NewMetricController metric controller
 func NewMetricController(conf Config, healthFunc HealthFunc, metrics ...*MetricContructor) error {
 	return newMetricHandler(conf, healthFunc, metrics...)
 }
@@ -30,6 +31,7 @@ const (
 	UnknownRole        RoleType    = "unknown"
 )
 
+// Config xxx
 type Config struct {
 	// name of your module
 	ModuleName string
@@ -54,8 +56,10 @@ type Config struct {
 	SvrKeyPwd   string
 }
 
+// HealthFunc xxx
 type HealthFunc func() HealthMeta
 
+// HealthMeta xxx
 type HealthMeta struct {
 	// the running role of your module when you are running with Master_Slave_Mode.
 	// must be not empty. if you set with an empty value, an error will be occurred.
@@ -68,6 +72,7 @@ type HealthMeta struct {
 	Message string `json:"message"`
 }
 
+// MetricMeta xxx
 type MetricMeta struct {
 	// metric's name
 	Name string
@@ -77,13 +82,19 @@ type MetricMeta struct {
 	ConstLables map[string]string
 }
 
+// GetMetaFunc xxx
 type GetMetaFunc func() *MetricMeta
+
+// GetResultFunc xxx
 type GetResultFunc func() (*MetricResult, error)
+
+// MetricContructor xxx
 type MetricContructor struct {
 	GetMeta   GetMetaFunc
 	GetResult GetResultFunc
 }
 
+// MetricResult xxx
 type MetricResult struct {
 	Value *FloatOrString
 	// variable labels means that this labels value can be changed with each call.

@@ -46,30 +46,41 @@ type wsMessage struct {
 // RemoteStreamConn 流式处理器
 type RemoteStreamConn struct {
 	ctx           context.Context
+	once          sync.Once
 	wsConn        *websocket.Conn
 	bindMgr       *ConsoleManager
 	resizeMsgChan chan *TerminalSize
 	inputMsgChan  <-chan wsMessage
 	outputMsgChan chan []byte
-	once          sync.Once
+	hideBanner    bool
 }
 
 // NewRemoteStreamConn :
-func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize) *RemoteStreamConn {
+func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize, hideBanner bool) *RemoteStreamConn {
 	conn := &RemoteStreamConn{
 		ctx:           ctx,
 		wsConn:        wsConn,
 		bindMgr:       mgr,
 		resizeMsgChan: make(chan *TerminalSize, 1), // 放入初始宽高
 		outputMsgChan: make(chan []byte),
+		hideBanner:    hideBanner,
 	}
 
 	// 初始化命令行宽和高
-	conn.resizeMsgChan <- initTerminalSize
+	if initTerminalSize != nil {
+		conn.resizeMsgChan <- initTerminalSize
+	} else {
+		// 前端没有指定长宽高, 使用默认值
+		conn.resizeMsgChan <- &TerminalSize{
+			Rows: DefaultRows,
+			Cols: DefaultCols,
+		}
+	}
 
 	return conn
 }
 
+// ReadInputMsg
 func (r *RemoteStreamConn) ReadInputMsg() <-chan wsMessage {
 	inputMsgChan := make(chan wsMessage)
 	go func() {
@@ -168,6 +179,7 @@ func (r *RemoteStreamConn) Next() *remotecommand.TerminalSize {
 	}
 }
 
+// Close
 func (r *RemoteStreamConn) Close() {
 	r.once.Do(func() {
 		close(r.outputMsgChan)
@@ -175,6 +187,7 @@ func (r *RemoteStreamConn) Close() {
 	})
 }
 
+// Run
 func (r *RemoteStreamConn) Run() error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()
@@ -193,7 +206,7 @@ func (r *RemoteStreamConn) Run() error {
 				return nil
 			}
 			// 收到首个字节才发送 hello 信息
-			if notSendMsg {
+			if notSendMsg && !r.hideBanner {
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 				notSendMsg = false
 			}
@@ -275,12 +288,11 @@ func PreparedGuideMessage(ctx context.Context, ws *websocket.Conn, guideMessages
 
 // GracefulCloseWebSocket : 优雅停止 websocket 连接
 func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected bool, errMsg error) {
-	if err := ws.WriteControl(
-		websocket.CloseMessage,
-		websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error()),
-		time.Now().Add(time.Second*5), // 最迟 5 秒
-	); err != nil {
+	closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, errMsg.Error())
+	deadline := time.Now().Add(time.Second * 5) // 最迟 5 秒
+	if err := ws.WriteControl(websocket.CloseMessage, closeMsg, deadline); err != nil {
 		logger.Warnf("gracefully close websocket [%s] error: %s", errMsg, err)
+		return
 	}
 
 	// 如果没有建立双向连接前, 需要ReadMessage才能正常结束

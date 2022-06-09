@@ -279,8 +279,7 @@ func initContextWithPortalSession(c *gin.Context, authCtx *AuthContext) bool {
 		return false
 	}
 
-	store := sessions.NewRedisStore("open-session", "open-session")
-	podCtx, err := store.Get(c.Request.Context(), sessionId)
+	podCtx, err := sessions.NewStore().OpenAPIScope().Get(c.Request.Context(), sessionId)
 	if err != nil {
 		return false
 	}
@@ -319,6 +318,9 @@ func GetClusterId(c *gin.Context) string {
 func GetSessionId(c *gin.Context) string {
 	if c.Param("sessionId") != "" {
 		return c.Param("sessionId")
+	}
+	if c.Query("session_id") != "" {
+		return c.Query("session_id")
 	}
 	return ""
 }

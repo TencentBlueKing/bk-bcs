@@ -41,18 +41,25 @@ func NewMockStore() store.Server {
 	return mockStore
 }
 
+func (m *MockStore) GetProjectList(ctx context.Context, req *datamanager.GetAllProjectListRequest) ([]*datamanager.Project, int64, error) {
+	projectList := make([]*datamanager.Project, 0)
+	m.On("GetProjectList").Return(projectList, int64(len(projectList)), nil)
+	args := m.Called()
+	return args.Get(0).([]*datamanager.Project), args.Get(1).(int64), args.Error(2)
+}
+
 func (m *MockStore) GetProjectInfo(ctx context.Context, req *datamanager.GetProjectInfoRequest) (*datamanager.Project, error) {
 	var project *datamanager.Project
-	testProject := req.GetProjectID()
+	testProject := req.GetProject()
 	m.On("GetProjectInfo", "testProject").Return(project, nil)
 	m.On("GetProjectInfo", "testErr").Return(project, fmt.Errorf("get project err"))
 	args := m.Called(testProject)
 	return args.Get(0).(*datamanager.Project), args.Error(1)
 }
 
-func (m *MockStore) GetClusterInfoList(ctx context.Context, req *datamanager.GetClusterInfoListRequest) ([]*datamanager.Cluster, int64, error) {
+func (m *MockStore) GetClusterInfoList(ctx context.Context, req *datamanager.GetClusterListRequest) ([]*datamanager.Cluster, int64, error) {
 	var clusterList []*datamanager.Cluster
-	testProject := req.GetProjectID()
+	testProject := req.GetProject()
 	m.On("GetClusterInfoList", "testProject").Return(clusterList, int64(len(clusterList)), nil)
 	m.On("GetClusterInfoList", "testErr").Return(clusterList, int64(0), fmt.Errorf("get cluster list err"))
 	args := m.Called(testProject)

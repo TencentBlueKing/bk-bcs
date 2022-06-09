@@ -23,4 +23,6 @@ const (
 	ProjectMgrServiceName = "project.bkbcs.tencent.com"
 	// ClusterMgrServiceName 集群管理服务名
 	ClusterMgrServiceName = "clustermanager.bkbcs.tencent.com"
+	// LangCookieName 语言版本 Cookie 名称
+	LangCookieName = "blueking_language"
 )

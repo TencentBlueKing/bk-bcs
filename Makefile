@@ -49,10 +49,10 @@ bcs-runtime: bcs-k8s bcs-mesos
 
 bcs-k8s: bcs-component bcs-network
 
-bcs-component:k8s-driver gamestatefulset gamedeployment hook-operator \
+bcs-component:k8s-driver \
 	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
 	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent \
-	general-pod-autoscaler
+	general-pod-autoscaler cluster-autoscaler
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -62,6 +62,10 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager
+
+bcs-scenarios: kourse
+
+kourse: gamedeployment gamestatefulset hook-operator
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -229,21 +233,6 @@ sd-prometheus:pre
 k8s-driver:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-k8s-driver && go mod tidy -go=1.16 && go mod tidy -go=1.17 && make k8s-driver
 
-gamestatefulset:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-gamestatefulset-operator ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-gamestatefulset-operator && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
-
-gamedeployment:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-gamedeployment-operator ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
-
-hook-operator:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-hook-operator ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-hook-operator && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-hook-operator/bcs-hook-operator ./cmd/hook-operator/main.go
-
 federated-apiserver:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-federated-apiserver ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
@@ -332,6 +321,11 @@ general-pod-autoscaler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-general-pod-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/bcs-general-pod-autoscaler ./cmd/gpa/main.go
+
+cluster-autoscaler:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cluster-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler ./main.go
 
 # network plugins section
 networkpolicy:pre
@@ -427,21 +421,18 @@ test: test-bcs-runtime
 
 test-bcs-runtime: test-bcs-k8s
 
-test-bcs-k8s: test-bcs-component test-bcs-service
-
-test-bcs-component: test-gamedeployment  test-gamestatefulset test-hook-operator
+test-bcs-k8s: test-bcs-service
 
 test-bcs-service: test-user-manager
-
-test-gamedeployment:
-	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamedeployment-operator
-
-test-gamestatefulset:
-	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-gamestatefulset-operator
-
-test-hook-operator:
-	@./scripts/test.sh ${BCS_COMPONENT_PATH}/bcs-hook-operator
 
 test-user-manager:
 	@./scripts/test.sh ${BCS_SERVICES_PATH}/bcs-user-manager
 
+gamedeployment:
+	make gamedeployment -f bcs-scenarios/kourse/Makefile
+
+gamestatefulset:
+	make gamestatefulset -f bcs-scenarios/kourse/Makefile
+
+hook-operator:
+	make hook-operator -f bcs-scenarios/kourse/Makefile

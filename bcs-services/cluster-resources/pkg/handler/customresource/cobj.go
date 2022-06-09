@@ -22,7 +22,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -38,7 +41,7 @@ func (h *Handler) ListCObj(
 	if err != nil {
 		return err
 	}
-	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
 		return err
 	}
 	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
@@ -48,6 +51,12 @@ func (h *Handler) ListCObj(
 	resp.Data, err = respUtil.BuildListAPIResp(
 		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.Format, metav1.ListOptions{},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, false),
+	).ToPbStruct()
 	return err
 }
 
@@ -59,7 +68,7 @@ func (h *Handler) GetCObj(
 	if err != nil {
 		return err
 	}
-	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
 		return err
 	}
 	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
@@ -69,6 +78,12 @@ func (h *Handler) GetCObj(
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
 		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Format, metav1.GetOptions{},
 	)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormUpdate, false),
+	).ToPbStruct()
 	return err
 }
 
@@ -92,7 +107,7 @@ func (h *Handler) CreateCObj(
 	}
 	namespace := mapx.GetStr(manifest, "metadata.namespace")
 
-	if err = validateNSParam(crdInfo, namespace); err != nil {
+	if err = validateNSParam(ctx, crdInfo, namespace); err != nil {
 		return err
 	}
 	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, namespace); err != nil {
@@ -123,7 +138,7 @@ func (h *Handler) UpdateCObj(
 	if err != nil {
 		return err
 	}
-	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
 		return err
 	}
 	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
@@ -143,7 +158,7 @@ func (h *Handler) DeleteCObj(
 	if err != nil {
 		return err
 	}
-	if err = validateNSParam(crdInfo, req.Namespace); err != nil {
+	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
 		return err
 	}
 	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
@@ -156,9 +171,9 @@ func (h *Handler) DeleteCObj(
 }
 
 // 校验 CObj 相关请求中命名空间参数，若 CRD 中定义为集群维度，则不需要，否则需要指定命名空间
-func validateNSParam(crdInfo map[string]interface{}, namespace string) error {
+func validateNSParam(ctx context.Context, crdInfo map[string]interface{}, namespace string) error {
 	if namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
-		return errorx.New(errcode.ValidateErr, "查看/操作自定义资源 %s 需要指定命名空间", crdInfo["name"])
+		return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "查看/操作自定义资源 %s 需要指定命名空间"), crdInfo["name"])
 	}
 	return nil
 }

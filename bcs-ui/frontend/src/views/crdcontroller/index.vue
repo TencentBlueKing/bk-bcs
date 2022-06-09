@@ -612,7 +612,7 @@
                                 clusterId: this.searchScope
                             }
                         })
-                    } else if (crdcontroller.name === 'bcs-polaris-operator') {
+                    } else if (crdcontroller.chart_name === 'bcs-polaris-operator') {
                         this.$router.push({
                             name: 'crdcontrollerPolarisInstances',
                             params: {

@@ -477,6 +477,8 @@ func (m *HealthzReq) validate(all bool) error {
 
 	// no validation rules for RaiseErr
 
+	// no validation rules for Token
+
 	if len(errors) > 0 {
 		return HealthzReqMultiError(errors)
 	}
@@ -956,7 +958,7 @@ func (m *ResListReq) validate(all bool) error {
 	if _, ok := _ResListReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResListReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest selectItems]",
+			reason: "value must be in list [ manifest selectItems]",
 		}
 		if !all {
 			return err
@@ -1045,6 +1047,7 @@ var _ResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 var _ResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResListReq_Format_InLookup = map[string]struct{}{
+	"":            {},
 	"manifest":    {},
 	"selectItems": {},
 }
@@ -1151,7 +1154,7 @@ func (m *ResGetReq) validate(all bool) error {
 	if _, ok := _ResGetReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResGetReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -1242,6 +1245,7 @@ var _ResGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 var _ResGetReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
 var _ResGetReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -1322,7 +1326,7 @@ func (m *ResCreateReq) validate(all bool) error {
 	if _, ok := _ResCreateReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResCreateReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -1409,6 +1413,7 @@ var _ interface {
 var _ResCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _ResCreateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -1533,7 +1538,7 @@ func (m *ResUpdateReq) validate(all bool) error {
 	if _, ok := _ResUpdateReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := ResUpdateReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -1624,6 +1629,7 @@ var _ResUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 var _ResUpdateReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
 var _ResUpdateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -1900,7 +1906,7 @@ func (m *PodResListReq) validate(all bool) error {
 	if _, ok := _PodResListReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := PodResListReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest selectItems]",
+			reason: "value must be in list [ manifest selectItems]",
 		}
 		if !all {
 			return err
@@ -1990,6 +1996,7 @@ var _PodResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 var _PodResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _PodResListReq_Format_InLookup = map[string]struct{}{
+	"":            {},
 	"manifest":    {},
 	"selectItems": {},
 }
@@ -2600,7 +2607,7 @@ func (m *CObjListReq) validate(all bool) error {
 	if _, ok := _CObjListReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := CObjListReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest selectItems]",
+			reason: "value must be in list [ manifest selectItems]",
 		}
 		if !all {
 			return err
@@ -2689,6 +2696,7 @@ var _CObjListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 var _CObjListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _CObjListReq_Format_InLookup = map[string]struct{}{
+	"":            {},
 	"manifest":    {},
 	"selectItems": {},
 }
@@ -2784,7 +2792,7 @@ func (m *CObjGetReq) validate(all bool) error {
 	if _, ok := _CObjGetReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := CObjGetReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -2873,6 +2881,7 @@ var _CObjGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 var _CObjGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _CObjGetReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -2964,7 +2973,7 @@ func (m *CObjCreateReq) validate(all bool) error {
 	if _, ok := _CObjCreateReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := CObjCreateReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -3052,6 +3061,7 @@ var _ interface {
 var _CObjCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 var _CObjCreateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -3176,7 +3186,7 @@ func (m *CObjUpdateReq) validate(all bool) error {
 	if _, ok := _CObjUpdateReq_Format_InLookup[m.GetFormat()]; !ok {
 		err := CObjUpdateReqValidationError{
 			field:  "Format",
-			reason: "value must be in list [manifest formData]",
+			reason: "value must be in list [ manifest formData]",
 		}
 		if !all {
 			return err
@@ -3266,6 +3276,7 @@ var _CObjUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 var _CObjUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _CObjUpdateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
 	"manifest": {},
 	"formData": {},
 }
@@ -3490,6 +3501,35 @@ func (m *CommonResp) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return CommonRespValidationError{
 				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonRespValidationError{
+				field:  "WebAnnotations",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4389,6 +4429,17 @@ func (m *GetResFormSchemaReq) validate(all bool) error {
 		err := GetResFormSchemaReqValidationError{
 			field:  "Kind",
 			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 64 {
+		err := GetResFormSchemaReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 64 runes",
 		}
 		if !all {
 			return err

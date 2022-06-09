@@ -32,6 +32,7 @@ type PropagatedVersionStatus struct {
 	ClusterVersions []ClusterObjectVersion `json:"clusterVersions,omitempty"`
 }
 
+// ClusterObjectVersion is the version of a cluster object.
 type ClusterObjectVersion struct {
 	// The name of the cluster the version is for.
 	ClusterName string `json:"clusterName"`

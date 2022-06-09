@@ -74,6 +74,7 @@ func NewWebConsoleManager(opt *options.WebConsoleManagerOption) *WebConsoleManag
 	}
 }
 
+// Init 初始化
 func (c *WebConsoleManager) Init() error {
 	// 初始化服务注册, 配置文件等
 	microService, microConfig, multiCredConf := c.initMicroService()

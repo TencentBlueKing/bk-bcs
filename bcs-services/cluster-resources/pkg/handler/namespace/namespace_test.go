@@ -37,7 +37,7 @@ func TestNS(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "NamespaceList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "NamespaceList", mapx.GetStr(respData, "manifest.kind"))
 }
 
 func TestNSInSharedCluster(t *testing.T) {
@@ -60,7 +60,7 @@ func TestNSInSharedCluster(t *testing.T) {
 	// 确保列出来的，都是共享集群中，属于项目的命名空间
 	respData := listResp.Data.AsMap()
 	for _, ns := range respData["manifest"].(map[string]interface{})["items"].([]interface{}) {
-		name := mapx.Get(ns.(map[string]interface{}), "metadata.name", "")
-		assert.True(t, strings.Contains(name.(string), envs.TestProjectCode))
+		name := mapx.GetStr(ns.(map[string]interface{}), "metadata.name")
+		assert.True(t, strings.Contains(name, envs.TestProjectCode))
 	}
 }

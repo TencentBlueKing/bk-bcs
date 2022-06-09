@@ -149,6 +149,7 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 				BucketTime:  bucketTime,
 				Dimension:   opts.Dimension,
 				ProjectID:   opts.ProjectID,
+				BusinessID:  opts.BusinessID,
 				ClusterID:   opts.ClusterID,
 				ClusterType: opts.ClusterType,
 				Namespace:   opts.Namespace,
@@ -164,6 +165,9 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 		return err
 	}
 	m.preAggregate(retNamespace, metrics)
+	if retNamespace.BusinessID == "" {
+		retNamespace.BusinessID = opts.BusinessID
+	}
 	retNamespace.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retNamespace.Metrics = append(retNamespace.Metrics, metrics)
 	return m.DB.Table(m.TableName).

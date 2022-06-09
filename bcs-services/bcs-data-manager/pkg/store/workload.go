@@ -168,6 +168,7 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 				BucketTime:   bucketTime,
 				Dimension:    opts.Dimension,
 				ProjectID:    opts.ProjectID,
+				BusinessID:   opts.BusinessID,
 				ClusterID:    opts.ClusterID,
 				ClusterType:  opts.ClusterType,
 				Namespace:    opts.Namespace,
@@ -187,6 +188,9 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 	}
 	m.PreAggregateMax(retWorkload, metrics)
 	m.PreAggregateMin(retWorkload, metrics)
+	if retWorkload.BusinessID == "" {
+		retWorkload.BusinessID = opts.BusinessID
+	}
 	retWorkload.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retWorkload.Metrics = append(retWorkload.Metrics, metrics)
 	return m.DB.Table(m.TableName).

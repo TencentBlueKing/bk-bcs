@@ -41,12 +41,13 @@ type Producer struct {
 	ctx             context.Context
 	cancel          context.CancelFunc
 	resourceGetter  common.GetterInterface
+	concurrency     int
 }
 
 // NewProducer new producer
 func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *cron.Cron,
 	cmClient cmanager.ClusterManagerClient, k8sStorageCli, mesosStorageCli bcsapi.Storage,
-	getter common.GetterInterface) *Producer {
+	getter common.GetterInterface, concurrency int) *Producer {
 	ctx, cancel := context.WithCancel(rootCtx)
 	return &Producer{
 		msgQueue:        msgQueue,
@@ -57,6 +58,7 @@ func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *
 		ctx:             ctx,
 		cancel:          cancel,
 		resourceGetter:  getter,
+		concurrency:     concurrency,
 	}
 }
 
@@ -180,7 +182,8 @@ func (p *Producer) ProjectProducer(dimension string) {
 	}
 	for _, project := range projectList {
 		opts := types.JobCommonOpts{
-			ProjectID:   project,
+			ProjectID:   project.ProjectID,
+			BusinessID:  project.BusinessID,
 			CurrentTime: jobTime,
 			Dimension:   dimension,
 			ObjectType:  types.ProjectType,
@@ -218,6 +221,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 	for _, cluster := range clusterList {
 		opts := types.JobCommonOpts{
 			ProjectID:   cluster.ProjectID,
+			BusinessID:  cluster.BusinessID,
 			ClusterID:   cluster.ClusterID,
 			ClusterType: cluster.ClusterType,
 			CurrentTime: jobTime,
@@ -259,6 +263,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 		opts := types.JobCommonOpts{
 			ClusterID:   namespace.ClusterID,
 			ProjectID:   namespace.ProjectID,
+			BusinessID:  namespace.BusinessID,
 			ClusterType: namespace.ClusterType,
 			Namespace:   namespace.Name,
 			CurrentTime: jobTime,
@@ -302,7 +307,8 @@ func (p *Producer) WorkloadProducer(dimension string) {
 			totalWorkload = totalWorkload + count
 		}
 	}()
-	chPool := make(chan struct{}, 100)
+	chPool := make(chan struct{}, p.concurrency)
+	blog.Infof("[producer] concurrency:%d", p.concurrency)
 	wg := sync.WaitGroup{}
 	for key := range clusterList {
 		chPool <- struct{}{}
@@ -334,6 +340,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 			for _, workload := range workloadList {
 				opts := types.JobCommonOpts{
 					ProjectID:    workload.ProjectID,
+					BusinessID:   workload.BusinessID,
 					ClusterID:    workload.ClusterID,
 					ClusterType:  workload.ClusterType,
 					Namespace:    workload.Namespace,

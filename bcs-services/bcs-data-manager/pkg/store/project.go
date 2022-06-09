@@ -54,6 +54,15 @@ var (
 			},
 		},
 		{
+			Name: types.ProjectTableName + "_get_idx2",
+			Key: bson.D{
+				bson.E{Key: BusinessIDKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
 			Key: bson.D{
 				bson.E{Key: BucketTimeKey, Value: 1},
 			},
@@ -77,6 +86,13 @@ var (
 			},
 			Name: MetricTimeKey + "_1",
 		},
+		{
+			Key: bson.D{
+				bson.E{Key: BusinessIDKey, Value: 1},
+			},
+			Name:       BusinessIDKey + "_1",
+			Background: true,
+		},
 	}
 )
 
@@ -94,6 +110,68 @@ func NewModelProject(db drivers.DB) *ModelProject {
 	}}
 }
 
+// GetProjectList get project list
+func (m *ModelProject) GetProjectList(ctx context.Context,
+	req *bcsdatamanager.GetAllProjectListRequest) ([]*bcsdatamanager.Project, int64, error) {
+	err := ensureTable(ctx, &m.Public)
+	var total int64
+	if err != nil {
+		return nil, total, err
+	}
+	dimension := req.Dimension
+	if dimension == "" {
+		dimension = types.DimensionDay
+	}
+	cond := make([]*operator.Condition, 0)
+	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+		DimensionKey: dimension,
+	}),
+		operator.NewLeafCondition(operator.Gte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+		}))
+	conds := operator.NewBranchCondition(operator.And, cond...)
+	tempProjectList := make([]map[string]string, 0)
+	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ProjectIDKey: 1, "_id": 0}).
+		WithSort(map[string]interface{}{ProjectIDKey: 1}).All(ctx, &tempProjectList)
+	if err != nil {
+		blog.Errorf("get project id list error")
+		return nil, total, err
+	}
+	projectList := distinctSlice("project_id", &tempProjectList)
+	if len(projectList) == 0 {
+		return nil, total, nil
+	}
+	total = int64(len(projectList))
+	page := int(req.Page)
+	size := int(req.Size)
+	if size == 0 {
+		size = DefaultSize
+	}
+	endIndex := (page + 1) * size
+	startIndex := page * size
+	if startIndex >= len(projectList) {
+		return nil, total, nil
+	}
+	if endIndex >= len(projectList) {
+		endIndex = len(projectList)
+	}
+	chooseProject := projectList[startIndex:endIndex]
+	response := make([]*bcsdatamanager.Project, 0)
+	for _, project := range chooseProject {
+		projectRequest := &bcsdatamanager.GetProjectInfoRequest{
+			Project:   project,
+			Dimension: dimension,
+		}
+		projectInfo, err := m.GetProjectInfo(ctx, projectRequest)
+		if err != nil {
+			blog.Errorf("get project[%s] info err:%v", project, err)
+		} else {
+			response = append(response, projectInfo)
+		}
+	}
+	return response, total, nil
+}
+
 // GetProjectInfo get project info data
 func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	request *bcsdatamanager.GetProjectInfoRequest) (*bcsdatamanager.Project, error) {
@@ -105,19 +183,37 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	if dimension == "" {
 		dimension = types.DimensionDay
 	}
-	projectMetricsMap := make([]map[string]*types.ProjectMetrics, 0)
+	projectMetricsMap := make([]*types.ProjectData, 0)
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
-	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
-		ProjectIDKey: request.ProjectID,
-		DimensionKey: dimension,
-		MetricTimeKey: map[string]interface{}{
-			"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
-		},
-	}})
+	if request.Project != "" {
+		pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
+			ProjectIDKey: request.Project,
+			DimensionKey: dimension,
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			},
+		}})
+	} else if request.Business != "" {
+		pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
+			BusinessIDKey: request.Business,
+			DimensionKey:  dimension,
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			},
+		}})
+	}
+
 	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":     0,
-		"metrics": 1,
+		"_id":         0,
+		"project_id":  1,
+		"business_id": 1,
+		"metrics":     1,
+	}}, map[string]interface{}{"$group": map[string]interface{}{
+		"_id":         nil,
+		"project_id":  map[string]interface{}{"$first": "$project_id"},
+		"business_id": map[string]interface{}{"$max": "$business_id"},
+		"metrics":     map[string]interface{}{"$push": "$metrics"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &projectMetricsMap)
 	if err != nil {
@@ -128,12 +224,14 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 		return &bcsdatamanager.Project{}, nil
 	}
 	projectMetrics := make([]*types.ProjectMetrics, 0)
+	projectID := projectMetricsMap[0].ProjectID
+	businessID := projectMetricsMap[0].BusinessID
 	for _, metrics := range projectMetricsMap {
-		projectMetrics = append(projectMetrics, metrics["metrics"])
+		projectMetrics = append(projectMetrics, metrics.Metrics...)
 	}
 	startTime := projectMetrics[len(projectMetrics)-1].Time.Time().String()
 	endTime := projectMetrics[0].Time.Time().String()
-	return m.generateProjectResponse(projectMetrics, request.ProjectID, dimension, startTime, endTime), nil
+	return m.generateProjectResponse(projectMetrics, projectID, businessID, dimension, startTime, endTime), nil
 }
 
 // InsertProjectInfo insert project info data
@@ -165,6 +263,7 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.Pro
 				BucketTime: bucketTime,
 				Dimension:  opts.Dimension,
 				ProjectID:  opts.ProjectID,
+				BusinessID: opts.BusinessID,
 				Metrics:    newMetrics,
 			}
 			m.preAggregate(newProjectBucket, metrics)
@@ -177,10 +276,13 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.Pro
 		return err
 	}
 	m.preAggregate(retProject, metrics)
+	if retProject.BusinessID == "" {
+		retProject.BusinessID = opts.BusinessID
+	}
 	retProject.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retProject.Metrics = append(retProject.Metrics, metrics)
 	return m.DB.Table(m.TableName).
-		Update(ctx, cond, operator.M{"$set": bson.M{"update_time": time.Now()}, "$push": bson.M{"metrics": metrics}})
+		Update(ctx, cond, operator.M{"$set": retProject})
 }
 
 // GetRawProjectInfo get raw project info data
@@ -210,14 +312,15 @@ func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *types.JobCom
 	return retProject, nil
 }
 
-func (m *ModelProject) generateProjectResponse(metricSlice []*types.ProjectMetrics, projectID, dimension,
-	startTime, endTime string) *bcsdatamanager.Project {
+func (m *ModelProject) generateProjectResponse(metricSlice []*types.ProjectMetrics,
+	projectID, businessID, dimension, startTime, endTime string) *bcsdatamanager.Project {
 	response := &bcsdatamanager.Project{
-		ProjectID: projectID,
-		Dimension: dimension,
-		StartTime: startTime,
-		EndTime:   endTime,
-		Metrics:   nil,
+		ProjectID:  projectID,
+		BusinessID: businessID,
+		Dimension:  dimension,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		Metrics:    nil,
 	}
 	responseMetrics := make([]*bcsdatamanager.ProjectMetrics, 0)
 	for _, metric := range metricSlice {

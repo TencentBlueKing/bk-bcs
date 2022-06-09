@@ -1,0 +1,13 @@
+{
+  "kind": "Endpoints",
+  "class": "networks",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_endpoints",
+      "alias": "Endpoints Simple Demo",
+      "description": "A simple endpoints demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

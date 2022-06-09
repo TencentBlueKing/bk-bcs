@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -47,7 +48,7 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 	}
 }
 
-// List 请求某类资源（指定命名空间）下的所有资源列表，按指定 Format 格式化后返回
+// List 请求某类资源（指定命名空间）下的所有资源列表，按指定 format 格式化后返回
 func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1.ListOptions) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
@@ -63,7 +64,7 @@ func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts m
 	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format, opts)
 }
 
-// Create 创建 k8s 资源，支持以 Manifest / FormData 方式创建
+// Create 创建 k8s 资源，支持以 manifest / formData 格式创建
 func (m *ResMgr) Create(
 	ctx context.Context, rawData *structpb.Struct, format string, isNSScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
@@ -83,7 +84,7 @@ func (m *ResMgr) Create(
 	return resp.BuildCreateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, manifest, isNSScoped, opts)
 }
 
-// Update 更新 k8s 资源，支持以 Manifest / FormData 方式更新
+// Update 更新 k8s 资源，支持以 manifest / formData 格式更新
 func (m *ResMgr) Update(
 	ctx context.Context, namespace, name string, rawData *structpb.Struct, format string, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
@@ -123,14 +124,14 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	}
 	// 不允许的资源类型，直接抛出错误
 	if !slice.StringInSlice(m.Kind, cluster.SharedClusterAccessibleResKinds) {
-		return errorx.New(errcode.NoPerm, "该请求资源类型在共享集群中不可用")
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "该请求资源类型在共享集群中不可用"))
 	}
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
 		namespace = mapx.GetStr(manifest, "metadata.namespace")
 	}
 	if !cli.IsProjNSinSharedCluster(ctx, m.ClusterID, namespace) {
-		return errorx.New(errcode.NoPerm, "命名空间 %s 在该共享集群中不属于指定项目", namespace)
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
 	}
 	return nil
 }

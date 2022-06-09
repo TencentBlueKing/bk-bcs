@@ -3526,7 +3526,7 @@ type ResourceService interface {
 	FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取指定资源表单 Schema
 	GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error)
-	GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type resourceService struct {
@@ -3635,9 +3635,9 @@ func (c *resourceService) GetResFormSchema(ctx context.Context, in *GetResFormSc
 	return out, nil
 }
 
-func (c *resourceService) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonListResp, error) {
+func (c *resourceService) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Resource.GetFormSupportedAPIVersions", in)
-	out := new(CommonListResp)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -3658,7 +3658,7 @@ type ResourceHandler interface {
 	FormDataRenderPreview(context.Context, *FormRenderPreviewReq, *CommonResp) error
 	// 获取指定资源表单 Schema
 	GetResFormSchema(context.Context, *GetResFormSchemaReq, *CommonResp) error
-	GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq, *CommonListResp) error
+	GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq, *CommonResp) error
 }
 
 func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...server.HandlerOption) error {
@@ -3668,7 +3668,7 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error
 		FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error
 		GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error
-		GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonListResp) error
+		GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonResp) error
 	}
 	type Resource struct {
 		resource
@@ -3776,6 +3776,6 @@ func (h *resourceHandler) GetResFormSchema(ctx context.Context, in *GetResFormSc
 	return h.ResourceHandler.GetResFormSchema(ctx, in, out)
 }
 
-func (h *resourceHandler) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonListResp) error {
+func (h *resourceHandler) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonResp) error {
 	return h.ResourceHandler.GetFormSupportedAPIVersions(ctx, in, out)
 }

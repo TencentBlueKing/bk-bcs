@@ -18,6 +18,7 @@ import (
 	"fmt"
 )
 
+// MetaData struct
 type MetaData struct {
 	Module     string            `json:"module"`
 	IP         string            `json:"ip"`
@@ -26,6 +27,7 @@ type MetaData struct {
 	Labels     map[string]string `json:"label"`
 }
 
+// Valid xxx
 func (m MetaData) Valid() error {
 	var errs []error
 	if len(m.Module) == 0 {
@@ -47,6 +49,7 @@ func (m MetaData) Valid() error {
 	return nil
 }
 
+// HealthInfo health info
 type HealthInfo struct {
 	RunMode    RunModeType `json:"runMode"`
 	Module     string      `json:"module"`

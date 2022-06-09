@@ -213,6 +213,7 @@ func ClusterPermMatrix() []*PolicyResourceType {
 	return permMatrix
 }
 
+// GetClusterResType get cluster type
 func GetClusterResType(env string) string {
 	switch env {
 	case "prod":

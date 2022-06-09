@@ -255,10 +255,12 @@
             return protocol + "://" + window.location.host + ws_url
         }
 
-        function ws_connect(ws_url) {
+        function ws_connect(raw_ws_url) {
             // 初始化就指定rows & cols
-            ws_url = ws_url + '&rows=' + term.rows + '&cols=' + term.cols
-            ws = new WebSocket(ws_url);
+            ws_url = new URL(raw_ws_url);
+            ws_url.searchParams.set("rows", term.rows)
+            ws_url.searchParams.set("cols", term.cols)
+            ws = new WebSocket(ws_url.toString());
 
             // term handler
             term.onData(function (data) {

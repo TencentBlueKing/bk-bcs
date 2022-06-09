@@ -93,6 +93,7 @@ crGlobal:
     appSecret: "your_app_secret"
     bkApiGWHost: "http://bkapigw.com"
     bkPaaSHost: "http://bkpaas.com"
+    healthzToken: ""
 
   # BCS API 网关配置
   bcsApiGW:
