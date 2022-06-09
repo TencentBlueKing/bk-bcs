@@ -242,7 +242,7 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 		Container: podCtx.ContainerName,
 		Stdin:     true,
 		Stdout:    true,
-		Stderr:    true,
+		Stderr:    false, // kubectl 默认 stderr 未设置, virtual-kubelet 节点 stderr 和 tty 不能同时为 true
 		TTY:       true,
 	}, scheme.ParameterCodec)
 
