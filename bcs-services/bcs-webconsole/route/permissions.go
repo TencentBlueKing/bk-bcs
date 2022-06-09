@@ -68,6 +68,7 @@ func PermissionRequired() gin.HandlerFunc {
 	}
 }
 
+// ValidateProjectCluster
 func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 	projectId := GetProjectIdOrCode(c)
 	if projectId == "" {
@@ -145,7 +146,11 @@ func CredentialRequired() gin.HandlerFunc {
 			return
 		}
 
-		if !config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeProjectCode, authCtx.ProjectCode) {
+		// 校验项目 or 集群权限
+		switch {
+		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeProjectCode, authCtx.ProjectCode):
+		case config.G.ValidateCred(config.CredentialAppCode, bkAppCode, config.ScopeClusterId, authCtx.ClusterId): // 校验集群权限
+		default:
 			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 				Code:      types.ApiErrorCode,
 				Message:   fmt.Sprintf("app %s have no permission, %s, %s", bkAppCode, authCtx.BindProject, authCtx.BindCluster),
@@ -155,6 +160,5 @@ func CredentialRequired() gin.HandlerFunc {
 		}
 
 		c.Next()
-
 	}
 }
