@@ -30,7 +30,10 @@ keyContent=`cat ${apiGatewayKey} | sed ':label;N;s/\n/\\n/g;b label'`
 curl -vv http://127.0.0.1:8000/apisix/admin/ssl/bkbcs \
   -H"X-API-KEY: ${adminToken}" -X PUT -d "{\"cert\":\"${certContent}\",\"key\":\"${keyContent}\",\"snis\":[\"${ingressHostPattern}\", \"bcs-api-gateway\", \"bcs-api-gateway.${namespace}\", \"bcs-api-gateway.${namespace}.svc\", \"bcs-api-gateway.${namespace}.svc.cluster.local\"]}"
 
-curl -vv -X PUT -H "X-API-KEY: ${adminToken}" 127.0.0.1:8000/apisix/admin/routes/kube-agent-tunnel -d "{\"name\":\"kube-agent-tunnel\",\"uri\":\"/clusters/*\",\"service_id\":\"clustermanager-http\",\"service_protocol\":\"http\",\"enable_websocket\":true,\"plugins\":{\"bkbcs-auth\":{\"token\":\"${gatewayToken}\",\"keepalive\":60,\"timeout\":1,\"module\":\"kubeagent\",\"bkbcs_auth_endpoints\":\"https://usermanager.bkbcs.tencent.com\"},\"request-id\":{\"include_in_response\":true,\"header_name\":\"X-Request-Id\"},\"bcs-dynamic-route\":{\"grayscale_clusterid_pattern\":\"${grayscale_clusterid_pattern}\",\"grayscale_clustermanager_address\":\"${grayscale_clustermanager_address}\",\"grayscale_gateway_token\":\"${gatewayToken}\"}}}"
+# env to be added: redisHost, redisPort, redisPassword, redisDatabase
+curl -vv -X PUT -H "X-API-KEY: ${adminToken}" 127.0.0.1:8000/apisix/admin/routes/kube-agent-tunnel -d "{\"name\":\"kube-agent-tunnel\",\"uri\":\"/clusters/*\",\"service_id\":\"clustermanager-http\",\"service_protocol\":\"http\",\"enable_websocket\":true,\"plugins\":{\"file-logger\":{\"path\":\"/usr/local/apisix/logs/access.log\"},\"bkbcs-auth\":{\"redis_database\":${redisDatabase},\"redis_port\":${redisPort},\"redis_host\":\"${redisHost}\",\"redis_password\":\"${redisPassword}\",\"token\":\"${gatewayToken}\",\"keepalive\":60,\"timeout\":1,\"module\":\"kubeagent\",\"bkbcs_auth_endpoints\":\"https://usermanager.bkbcs.tencent.com\"},\"request-id\":{\"include_in_response\":true,\"header_name\":\"X-Request-Id\"},\"bcs-dynamic-route\":{\"grayscale_clusterid_pattern\":\"${grayscale_clusterid_pattern}\",\"grayscale_clustermanager_address\":\"${grayscale_clustermanager_address}\",\"grayscale_gateway_token\":\"${gatewayToken}\"}}}"
+
+curl -vv -X PUT -H "X-API-KEY: ${adminToken}" http://127.0.0.1:8000/apisix/admin/plugin_metadata/file-logger -d "${fileLoggerFormat}"
 
 #signal trap
 echo "waiting for container exit signal~"

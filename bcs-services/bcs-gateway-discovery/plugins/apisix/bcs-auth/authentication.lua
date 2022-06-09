@@ -23,6 +23,10 @@ local RUN_ON_CE = "ce" -- 表示社区版
 local TOKEN_TYPE_APIGW = "apigw"
 local TOKEN_TYPE_BCS = "bcs"
 
+local bcs_token_user_map_cache = core.lrucache.new({
+    ttl = 300,
+    count = 1000,
+  })
 
 ------------ LoginTicketAuthentication start ------------
 local LoginTicketAuthentication = {}
@@ -53,6 +57,9 @@ function LoginTicketAuthentication:fetch_credential(conf, ctx)
 
 end
 
+function LoginTicketAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
+    return {username = credential.username, usertype = "user"}
+end
 
 function LoginTicketAuthentication:get_jwt(credential, conf)
     return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:session_id:", true, bklogin.get_username_for_ticket)
@@ -80,6 +87,9 @@ function LoginTokenAuthentication:fetch_credential(conf, ctx)
     return {user_token = bk_token}
 end
 
+function LoginTokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
+    return {username = bklogin.get_username_for_token(credential, conf.bk_login_host), usertype = "user"}
+end
 
 function LoginTokenAuthentication:get_jwt(credential, conf)
     return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:session_id:", true, bklogin.get_username_for_token)
@@ -106,6 +116,29 @@ function TokenAuthentication:fetch_credential(conf, ctx)
     return {user_token = m[1], token_type = TOKEN_TYPE_BCS}
 end
 
+local function get_username_by_TokenAuthentication_jwt(jwt_str)
+    local jwt_obj = resty_jwt:load_jwt(jwt_str)
+    if not jwt_obj then
+        core.log.error("load jwt from apigw jwt token failed, jwt token:"..jwt_str)
+        return nil, ""
+    end
+    return jwt_obj.payload, nil
+end
+
+function TokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
+    local payload = bcs_token_user_map_cache(credential.user_token, nil, get_username_by_TokenAuthentication_jwt, jwt_str)
+    if not payload or not payload.sub_type then
+      core.log.warn("no username can be found for token " .. req.user_token .. ",payload: " .. core.json.encode(payload, true))
+    end
+    local retV = {}
+    retV["usertype"] = payload.sub_type
+    if payload.username and #payload.username > 0 then
+        retV["username"] = payload.username
+    else
+        retV["username"] = payload.client_id
+    end
+    return retV
+end
 
 function TokenAuthentication:get_jwt(credential, conf)
     return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:token:", false)
@@ -165,6 +198,16 @@ function APIGWAuthentication.get_userinfo(credential, useless)
 end
 
 
+function APIGWAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
+    if credential.token_type == TOKEN_TYPE_BCS then
+        return TokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
+    end
+    if credential.user_token.username then
+        return {username = credential.user_token.username, usertype = "user"}
+    end
+    return {username = credential.user_token.bk_app_code, usertype = "bk_app"}
+end
+
 function APIGWAuthentication:get_jwt(credential, conf)
     if not credential or not credential.user_token then
         return nil
@@ -206,8 +249,24 @@ function _M:authenticate(conf, ctx)
     if not credential or not credential.user_token then
         return nil
     end
-
-    return self.backend:get_jwt(credential, conf)
+    local jwt_str = self.backend:get_jwt(credential, conf)
+    -- 向上下文注入用户信息
+    if jwt_str then
+        local userinfo = self.backend:injected_user_info(credential, jwt_str, conf, ctx)
+        if not userinfo then
+            core.log.error("generate userinfo failed with credential " .. core.json.encode(credential) .. ", jwt: " .. jwt_str)
+            return jwt_str
+        end
+        ctx.var["bcs_usertype"] = userinfo.usertype
+        ctx.var["bcs_username"] = userinfo.username
+        core.ctx.register_var("bcs_username", function(ctx)
+            return ctx.var.bcs_username
+        end)
+        core.ctx.register_var("bcs_usertype", function(ctx)
+            return ctx.var.bcs_usertype
+        end)
+    end
+    return jwt_str
 end
 
 
