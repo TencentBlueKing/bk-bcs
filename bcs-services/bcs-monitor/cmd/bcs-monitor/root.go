@@ -31,14 +31,15 @@ import (
 
 var (
 	// Used for flags.
-	cfgFile      string
-	logLevel     string
-	certCfgFiles []string
-	httpAddress  string
-	appName      = "bcs-monitor"
+	cfgFile          string
+	logLevel         string
+	certCfgFiles     []string
+	httpAddress      string
+	advertiseAddress string
+	appName          = "bcs-monitor"
 
 	rootCmd = &cobra.Command{
-		Use:   "bcs-monitor",
+		Use:   appName,
 		Short: "A unified metrics and log server for bcs-monitor",
 	}
 )

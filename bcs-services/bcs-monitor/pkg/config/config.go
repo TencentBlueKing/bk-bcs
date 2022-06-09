@@ -29,6 +29,7 @@ const (
 
 // Configuration 配置
 type Configuration struct {
+	Viper       *viper.Viper
 	mtx         sync.Mutex
 	Base        *BaseConf                  `yaml:"base_conf"`
 	Redis       *RedisConf                 `yaml:"redis"`
@@ -149,5 +150,6 @@ func (c *Configuration) ReadFromViper(v *viper.Viper) error {
 	if err != nil {
 		return err
 	}
+	c.Viper = v
 	return c.ReadFrom(content)
 }

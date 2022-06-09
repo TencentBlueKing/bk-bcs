@@ -15,6 +15,7 @@ package config
 
 import (
 	"time"
+	_ "time/tzdata"
 )
 
 const (
