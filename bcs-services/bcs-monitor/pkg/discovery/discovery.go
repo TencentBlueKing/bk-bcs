@@ -37,12 +37,16 @@ type serviceDiscovery struct {
 // NewServiceDiscovery
 func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr string) (*serviceDiscovery, error) {
 	svr := server.NewServer(
-		server.Advertise(advertiseAddr),
-		server.Address(bindaddr),
 		server.Name(name+serverNameSuffix),
 		server.Version(version),
 		server.Context(ctx),
 	)
+
+	if advertiseAddr != "" {
+		svr.Init(server.Advertise(advertiseAddr))
+	} else {
+		svr.Init(server.Advertise(bindaddr))
+	}
 
 	service := micro.NewService(micro.Server(svr))
 
