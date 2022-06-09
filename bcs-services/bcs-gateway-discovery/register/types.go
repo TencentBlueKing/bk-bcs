@@ -89,8 +89,9 @@ func (s *Service) Valid() error {
 
 //Plugins holder for all gateway plugins
 type Plugins struct {
-	HeadOption *HeaderOption
-	AuthOption *BCSAuthOption
+	HeadOption       *HeaderOption
+	AuthOption       *BCSAuthOption
+	FileLoggerOption *FileLoggerOption
 }
 
 //HeaderOption for proxy rules that change http header
@@ -103,12 +104,21 @@ type HeaderOption struct {
 	Replace map[string]string
 }
 
+// FileLoggerOption for file-logger plugin in apisix
+type FileLoggerOption struct {
+	Path string
+}
+
 //BCSAuthOption for bkbcs-auth plugin
 type BCSAuthOption struct {
 	Name          string
 	AuthEndpoints string
 	AuthToken     string
 	Module        string
+	RedisHost     *string
+	RedisPassword *string
+	RedisPort     *int
+	RedisDatabase *int
 }
 
 //Backend inner data structure for application instance

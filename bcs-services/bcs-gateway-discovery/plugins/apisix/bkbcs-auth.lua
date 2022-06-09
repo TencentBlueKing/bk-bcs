@@ -10,9 +10,15 @@
 --
 
 local BKUserCli = require("apisix.plugins.bkbcs-auth.bkbcs")
+local bcs_jwt = require("apisix.plugins.bcs-auth.jwt")
+local resty_jwt = require("resty.jwt")
 local core = require("apisix.core")
 local ngx = ngx
 local attr = {}
+local token_user_map_cache = core.lrucache.new({
+  ttl = 300,
+  count = 1000,
+})
 
 local schema = {
   type = "object",
@@ -56,6 +62,10 @@ local schema = {
       maxnum = 60,
       default = 60,
     },
+    redis_host = {type = "string", description = "redis for bcs-auth plugin: host"},
+    redis_port = {type = "integer", default = 6379, description = "redis for bcs-auth plugin: port"},
+    redis_password = {type = "string", description = "redis for bcs-auth plugin: password"},
+    redis_database = {type = "integer", default = 0, description = "redis for bcs-auth plugin: database num"},
   },
   required = {"bkbcs_auth_endpoints", "module"},
   additionalProperties = false,
@@ -86,6 +96,19 @@ function _M.check_schema(conf)
   return true, nil
 end
 
+local function get_username_from_redis(token, conf, ctx)
+  local jwt_str = bcs_jwt:get_jwt_from_redis({user_token = token}, conf, "bcs_auth:token:", false)
+  if not jwt_str then
+    return nil, ""
+  end
+  local jwt_obj = resty_jwt:load_jwt(jwt_str)
+  if not jwt_obj then
+    core.log.error("load jwt from jwt token failed, jwt token:"..jwt_str)
+    return nil, ""
+  end
+  return jwt_obj.payload
+end
+
 -- * rewrite stage: authentication before request to Service
 function _M.rewrite(conf, apictx)
   if conf == nil then
@@ -112,6 +135,23 @@ function _M.rewrite(conf, apictx)
   if err then
     core.log.error("construct auth request for [", ngx.req.get_method(), "]", ngx.var.uri, ", err:", err)
     return 400, {code = 400, result = false, message = "Bad Request: " .. err}
+  end
+  local payload, err = token_user_map_cache(req.user_token, nil, get_username_from_redis, req.user_token, conf, ctx)
+  if not payload or not payload.sub_type then
+    core.log.warn("no username can be found for token " .. req.user_token .. ",payload: " .. core.json.encode(payload, true))
+  else
+    apictx.var["bcs_usertype"] = payload.sub_type
+    if payload.username and #payload.username > 0 then
+      apictx.var["bcs_username"] = payload.username
+    else
+      apictx.var["bcs_username"] = payload.client_id
+    end
+    core.ctx.register_var("bcs_username", function(ctx)
+      return ctx.var.bcs_username
+    end)
+    core.ctx.register_var("bcs_usertype", function(ctx)
+      return ctx.var.bcs_usertype
+    end)
   end
   -- init success, try to anthentication
   local ok, err = userc:authentication(conf, req)

@@ -43,6 +43,13 @@ type EtcdRegistry struct {
 	Key         string `json:"etcd_key" value:"" usage:"etcd registry tls key file"`
 }
 
+type Redis struct {
+	RedisHost     string `json:"redis_host" value:"" usage:"redis host"`
+	RedisPassword string `json:"redis_password" value:"" usage:"redis password"`
+	RedisPort     int    `json:"redis_port" value:"6379" usage:"redis port"`
+	RedisDatabase int    `json:"redis_database" value:"0" usage:"redis database"`
+}
+
 //ServerOptions command flags for gateway-discovery
 type ServerOptions struct {
 	conf.FileConfig
@@ -60,8 +67,10 @@ type ServerOptions struct {
 	Modules               string `json:"modules" value:"storage,mesosdriver,detection,usermanager,kubeagent" usage:"new standard moduels that discovery serve for" mapstructure:"modules"`
 	AuthToken             string `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
 	GatewayMetricsEnabled bool   `json:"gateway_metrics_enabled" value:"true" usage:"gateway(apisix) routes metrics plugins option"`
+	AccessLogFile         string `json:"access_log_file" value:"/usr/local/apisix/logs/access.log" usage:"access log file for apisix file-logger"`
 
-	Etcd EtcdRegistry `json:"etcdRegistry"`
+	Etcd  EtcdRegistry `json:"etcdRegistry"`
+	Redis Redis        `json:"redis"`
 }
 
 //Valid check if necessary parameter is setting correctly
