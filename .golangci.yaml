@@ -1,0 +1,37 @@
+run:
+  timeout: 1m
+
+issues:
+  exclude-use-default: false
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    # 仅保留 should have comment or be unexported
+    - linters:
+        - revive
+      text: "should be of the form|consider calling this"
+
+linters:
+  disable-all: true
+  enable:
+    # enable by default
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    # custom
+    - revive
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+        arguments:
+          - checkPrivateReceivers
+          - sayRepetitiveInsteadOfStutters
