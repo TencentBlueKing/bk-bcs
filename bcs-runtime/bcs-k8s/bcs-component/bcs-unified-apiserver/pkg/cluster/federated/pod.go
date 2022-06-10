@@ -140,6 +140,10 @@ func (p *PodStor) ListByStor(ctx context.Context, namespace string, opts metav1.
 	}
 
 	podList.ListMeta.Continue = continueStr
+	remain := pag.Total - pag.Offset
+	if int64(len(podList.Items)) == opts.Limit && remain > 0 {
+		podList.ListMeta.RemainingItemCount = &remain
+	}
 
 	return podList, nil
 }
