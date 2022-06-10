@@ -20,16 +20,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/pkg/controllers/manifest"
 	clusternet "github.com/clusternet/clusternet/pkg/generated/clientset/versioned"
 	informers "github.com/clusternet/clusternet/pkg/generated/informers/externalversions"
 	"k8s.io/apiserver/pkg/server"
+	k8sinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/controller-manager/pkg/clientbuilder"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/pkg/controllers/manifest"
 )
 
 const (
@@ -61,14 +63,16 @@ var (
 
 func init() {
 	flag.StringVar(&kubeConfig, "kubeconfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
-	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
+	flag.StringVar(&masterURL, "master", "",
+		"The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
 	flag.BoolVar(&leaderElect, "leader-elect", true, "Enable leader election")
 	flag.StringVar(&lockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&lockName, "leader-elect-name", "bcs-clusternet-controller", "The resourcelock name")
-	flag.StringVar(&lockComponentName, "leader-elect-componentname", "bcs-clusternet-controller", "The component name for event resource")
-	flag.DurationVar(&leaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
-	flag.DurationVar(&renewDeadline, "leader-elect-renew-deadline", 10*time.Second, "The leader-elect RenewDeadline")
-	flag.DurationVar(&retryPeriod, "leader-elect-retry-period", 3*time.Second, "The leader-elect RetryPeriod")
+	flag.StringVar(&lockComponentName, "leader-elect-componentname",
+		"bcs-clusternet-controller", "The component name for event resource")
+	flag.DurationVar(&leaseDuration, "leader-elect-lease-duration", 35*time.Second, "The leader-elect LeaseDuration")
+	flag.DurationVar(&renewDeadline, "leader-elect-renew-deadline", 25*time.Second, "The leader-elect RenewDeadline")
+	flag.DurationVar(&retryPeriod, "leader-elect-retry-period", 15*time.Second, "The leader-elect RetryPeriod")
 	flag.StringVar(&address, "address", "0.0.0.0", "http server address")
 	flag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
 	flag.Int64Var(&resyncPeriod, "resync-period", defaultResyncPeriod, "Time period in seconds for resync.")
@@ -76,6 +80,8 @@ func init() {
 }
 
 func main() {
+	klog.InitFlags(nil)
+	defer klog.Flush()
 	flag.Parse()
 
 	if !leaderElect {
@@ -141,11 +147,17 @@ func run() {
 	clusternetClient := clusternet.NewForConfigOrDie(rootClientBuilder.ConfigOrDie("bcs-clusternet-controller-client"))
 	clusternetInformerFactory := informers.NewSharedInformerFactory(clusternetClient, resyncDuration)
 
-	manifestController, err := manifest.NewController(clusternetClient, clusternetInformerFactory.Apps().V1alpha1().Manifests())
+	kubeClient := kubernetes.NewForConfigOrDie(rootClientBuilder.ConfigOrDie("bcs-clusternet-controller-client"))
+	kubeInformerFactory := k8sinformers.NewSharedInformerFactory(kubeClient, resyncDuration)
+
+	manifestController, err := manifest.NewController(
+		clusternetClient, clusternetInformerFactory.Apps().V1alpha1().Manifests(),
+		kubeInformerFactory.Core().V1().Namespaces())
 	if err != nil {
 		klog.Fatalf("error create manifest controller : %s", err.Error())
 	}
 	clusternetInformerFactory.Start(stopCh)
+	kubeInformerFactory.Start(stopCh)
 	manifestController.Run(1, stopCh)
 }
 
