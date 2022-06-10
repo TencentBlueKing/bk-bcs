@@ -24,7 +24,7 @@ import (
 // 子模块前缀
 const (
 	APIServicePrefix   = "/api"
-	QueryServicePrefix = "/prom"
+	QueryServicePrefix = "/query"
 )
 
 // Configuration 配置
