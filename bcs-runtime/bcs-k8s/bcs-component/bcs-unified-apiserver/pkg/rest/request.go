@@ -36,6 +36,7 @@ const (
 // 未实现的方法Err, 抛到上层处理
 var (
 	ErrNotImplemented = errors.New("NotImplementedError")
+	ErrRequestDenied  = errors.New("Request Denied")
 	ErrInit           = errors.New("InitError")
 )
 
