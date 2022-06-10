@@ -403,6 +403,8 @@ func generateClusterNodePool(nodePool *CreateNodePoolInput) *tke.CreateClusterNo
 	req.NodePoolOs = nodePool.NodePoolOs
 	req.OsCustomizeType = nodePool.OsCustomizeType
 	req.Tags = generateTag(nodePool.Tags)
+	req.ContainerRuntime = nodePool.ContainerRuntime
+	req.RuntimeVersion = nodePool.RuntimeVersion
 	return req
 }
 

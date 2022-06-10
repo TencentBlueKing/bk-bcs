@@ -6197,12 +6197,10 @@
           }
         },
         "taints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerTaint"
-          },
-          "description": "新实例初始化的污点信息",
-          "title": "taints"
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "nodeOS": {
           "type": "string",
@@ -6234,6 +6232,16 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "containerRuntime": {
+          "type": "string",
+          "description": "容器运行时",
+          "title": "containerRuntime"
+        },
+        "runtimeVersion": {
+          "type": "string",
+          "description": "运行时版本",
+          "title": "runtimeVersion"
         }
       },
       "description": "创建节点组请求",
@@ -7881,8 +7889,7 @@
           "title": "internetChargeType"
         },
         "internetMaxBandwidth": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "description": "公网出带宽上限，单位：Mbps。默认值：0Mbps。",
           "title": "internetMaxBandwidth"
         },
@@ -9106,12 +9113,10 @@
           }
         },
         "taints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerTaint"
-          },
-          "description": "新实例初始化的污点信息",
-          "title": "taints"
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "nodeOS": {
           "type": "string",
@@ -9165,6 +9170,16 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "containerRuntime": {
+          "type": "string",
+          "description": "容器运行时",
+          "title": "containerRuntime"
+        },
+        "runtimeVersion": {
+          "type": "string",
+          "description": "运行时版本",
+          "title": "runtimeVersion"
         }
       },
       "description": "节点组，对蓝鲸、腾讯云、AWS弹性伸缩能力封装",
@@ -11230,12 +11245,10 @@
           }
         },
         "taints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerTaint"
-          },
-          "description": "新实例初始化的污点信息",
-          "title": "taints"
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "tags": {
           "type": "object",
