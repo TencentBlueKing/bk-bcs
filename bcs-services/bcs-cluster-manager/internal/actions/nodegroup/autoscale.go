@@ -114,7 +114,7 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	cmOption.Region = ua.group.Region
 
 	// set nodegroup to updating
-	ua.group.Status = common.StatusUpdating
+	ua.group.Status = common.StatusNodeGroupUpdating
 	ua.group.EnableAutoscale = true
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Errorf("update nodegroup %s status to updating failed, err %s", ua.group.NodeGroupID, err.Error())
@@ -282,7 +282,7 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	cmOption.Region = ua.group.Region
 
 	// set nodegroup to updating
-	ua.group.Status = common.StatusUpdating
+	ua.group.Status = common.StatusNodeGroupUpdating
 	ua.group.EnableAutoscale = false
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Errorf("update nodegroup %s status to updating failed, err %s", ua.group.NodeGroupID, err.Error())
