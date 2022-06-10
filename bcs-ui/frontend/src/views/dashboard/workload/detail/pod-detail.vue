@@ -22,12 +22,14 @@
                 </div>
                 <div class="btns">
                     <bk-button theme="primary" @click="handleShowYamlPanel">To YAML</bk-button>
-                    <bk-button theme="primary"
-                        v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
-                        @click="handleUpdateResource">{{$t('更新')}}</bk-button>
-                    <bk-button theme="danger"
-                        v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
-                        @click="handleDeleteResource">{{$t('删除')}}</bk-button>
+                    <template v-if="!hiddenOperate">
+                        <bk-button theme="primary"
+                            v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
+                            @click="handleUpdateResource">{{$t('更新')}}</bk-button>
+                        <bk-button theme="danger"
+                            v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
+                            @click="handleDeleteResource">{{$t('删除')}}</bk-button>
+                    </template>
                 </div>
             </div>
             <div class="workload-main-info">
@@ -283,6 +285,11 @@
                 type: String,
                 default: '',
                 required: true
+            },
+            // 是否隐藏 更新 和 删除操作（兼容集群管理应用详情）
+            hiddenOperate: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
