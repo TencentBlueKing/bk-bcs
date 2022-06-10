@@ -55,6 +55,14 @@ func (c *Configuration) init() error {
 		return err
 	}
 
+	if err := c.BCS.InitJWTPubKey(); err != nil {
+		return err
+	}
+
+	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -83,6 +91,17 @@ func newConfiguration() (*Configuration, error) {
 	c.Web = defaultWebConf()
 
 	c.Credentials = map[string][]*Credential{}
+
+	c.BKAPIGW = &BKAPIGWConf{}
+	c.BKAPIGW.Init()
+
+	// BCS Config
+	c.BCS = &BCSConf{}
+	c.BCS.Init()
+
+	c.BCSEnvConf = []*BCSConf{}
+	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
+
 	return c, nil
 }
 

@@ -21,7 +21,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 
-	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -78,13 +77,13 @@ func initContextWithDevEnv(c *rest.Context) bool {
 	return false
 }
 
-// BCSJWTDecode BCS JWT 解析
-func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
+// BCSJWTDecode BCS 网关 JWT 解码
+func BCSJWTDecode(jwtToken string) (*rest.UserClaimsInfo, error) {
 	if config.G.BCS.JWTPubKeyObj == nil {
 		return nil, errors.New("jwt public key not set")
 	}
 
-	token, err := jwt.ParseWithClaims(jwtToken, &bcsJwt.UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(jwtToken, &rest.UserClaimsInfo{}, func(token *jwt.Token) (interface{}, error) {
 		return config.G.BCS.JWTPubKeyObj, nil
 	})
 	if err != nil {
@@ -95,7 +94,7 @@ func BCSJWTDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 		return nil, errors.New("jwt token not valid")
 	}
 
-	claims, ok := token.Claims.(*bcsJwt.UserClaimsInfo)
+	claims, ok := token.Claims.(*rest.UserClaimsInfo)
 	if !ok {
 		return nil, errors.New("jwt token not bcs issuer")
 
