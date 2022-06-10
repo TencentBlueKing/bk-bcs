@@ -12,58 +12,40 @@
 
 package qcloud
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-)
-
 func getMaxPrivateIPNumPerENI(cores, mem int) int {
-	if cores == 1 && mem == 1 {
+	if cores <= 1 && mem <= 1 {
 		return 2
 	}
-	if cores == 1 && mem > 1 {
+	if cores <= 1 && mem > 1 {
 		return 6
 	}
-	if cores == 2 {
+	if cores <= 2 {
 		return 10
 	}
-	if cores == 4 && mem < 16 {
+	if cores <= 4 && mem < 16 {
 		return 10
 	}
-	if cores == 4 && mem > 16 {
+	if cores <= 4 && mem >= 16 {
 		return 20
 	}
-	if cores >= 8 && cores <= 12 {
+	if cores <= 8 {
 		return 20
 	}
-	if cores > 12 {
-		return 30
-	}
-	blog.Warnf("get max private ip num per eni failed with cores %d and mem %d, use 2 default", cores, mem)
-	return 2
+	return 30
 }
 
 func getMaxENINumPerCVM(cores, mem int) int {
-	if cores == 1 && mem == 1 {
+	if cores <= 1 {
 		return 2
 	}
-	if cores == 1 && mem > 1 {
-		return 2
-	}
-	if cores == 2 {
-		return 2
-	}
-	if cores == 4 && mem < 16 {
+	if cores <= 2 {
 		return 4
 	}
-	if cores == 4 && mem > 16 {
+	if cores <= 4 {
 		return 4
 	}
-	if cores >= 8 && cores <= 12 {
+	if cores <= 10 {
 		return 6
 	}
-	if cores > 12 {
-		return 8
-	}
-	blog.Warnf("get max eni num per cvm failed with cores %d and mem %d, use 2 default", cores, mem)
-	return 2
+	return 8
 }
