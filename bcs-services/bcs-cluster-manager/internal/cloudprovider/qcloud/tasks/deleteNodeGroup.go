@@ -16,6 +16,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -85,13 +86,32 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}
-	err = tkeCli.DeleteClusterNodePool(cluster.SystemID, []string{group.CloudNodeGroupID}, keepInstance)
-	if err != nil {
-		blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call DeleteClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+	found := true
+	if group.CloudNodeGroupID != "" {
+		_, err := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
+		if err != nil {
+			if strings.Contains(err.Error(), "NotFound") || strings.Contains(err.Error(), "not found") {
+				blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
+					taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
+				found = false
+			} else {
+				blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
+					taskID, nodeGroupID, taskID, stepName, err.Error())
+				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, err.Error())
+				_ = state.UpdateStepFailure(start, stepName, retErr)
+				return retErr
+			}
+		}
+	}
+	if found {
+		err = tkeCli.DeleteClusterNodePool(cluster.SystemID, []string{group.CloudNodeGroupID}, keepInstance)
+		if err != nil {
+			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in task %s step %s failed, %s",
+				taskID, nodeGroupID, taskID, stepName, err.Error())
+			retErr := fmt.Errorf("call DeleteClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
 	}
 	blog.Infof("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool successful", taskID)
 

@@ -148,16 +148,11 @@ const (
 	// StatusDeleteNodeGroupFailed xxx
 	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"
 	// StatusCreateNodeGroupCreating xxx
-	StatusCreateNodeGroupCreating = "INITIALIZATION"
-	// StatusDeleteNodeGroupFailed xxx
+	StatusCreateNodeGroupCreating = "CREATING"
+	// StatusCreateNodeGroupFailed xxx
 	StatusCreateNodeGroupFailed = "CREATE-FAILURE"
-
-	//StatusFailed status failed
-	StatusFailed = "FAILURE"
-	//StatusCreating node status creating for scaling up
-	StatusCreating = "CREATING"
-	//StatusUpdating nodegroup updating status
-	StatusUpdating = "UPDATING"
+	// StatusNodeGroupUpdating xxx
+	StatusNodeGroupUpdating = "UPDATING"
 )
 
 const (
