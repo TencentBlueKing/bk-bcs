@@ -14,7 +14,7 @@ replace (
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220329091816-5b868e90d386
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220428123458-9d6b3227c7ad
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220126063353-25e53b7ae285
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/coreos/etcd v3.3.18+incompatible
