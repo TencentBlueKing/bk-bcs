@@ -88,7 +88,7 @@
             <div class="example-item">
                 <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
                 <div class="code-wrapper">
-                    <ace :show-gutter="false" lang="yaml" :height="320"
+                    <ace :show-gutter="false" lang="yaml" :height="370"
                         v-full-screen="{ tools: ['copy'], content: demoConfigExample }"
                         read-only :value="demoConfigExample" width="100%">
                     </ace>
@@ -97,7 +97,7 @@
             <div class="example-item">
                 <div class="title">{{$t('BCS API使用示例')}}:</div>
                 <div class="code-wrapper">
-                    <ace :show-gutter="false" :height="80"
+                    <ace :show-gutter="false" :height="120"
                         v-full-screen="{ tools: ['copy'], content: bcsApiExample }"
                         read-only :value="bcsApiExample" width="100%">
                     </ace>
@@ -172,8 +172,6 @@
     import { copyText } from '@/common/util'
     import * as ace from '@/components/ace-editor'
     import fullScreen from '@/directives/full-screen'
-    import yamljs from 'js-yaml'
-    import demoConfig from './demo-config'
 
     export default defineComponent({
         components: { StatusIcon, ace },
@@ -181,7 +179,7 @@
             'full-screen': fullScreen
         },
         setup (props, ctx) {
-            const { $router, $i18n, $store, $bkMessage } = ctx.root
+            const { $router, $i18n, $store, $bkMessage, $route } = ctx.root
             const goBack = () => {
                 $router.back()
             }
@@ -190,14 +188,46 @@
                 return $store.state.user
             })
             // 使用案例
+            const projectID = computed(() => {
+                const list = $store.state.sideMenu.onlineProjectList || []
+                const projectCode = $route.params.projectCode
+                // eslint-disable-next-line camelcase
+                return list.find(item => item.project_code === projectCode)?.project_id
+            })
             const kubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get node')
-            const demoConfigExample = ref(yamljs.dump(demoConfig)
+            const demoConfig = `apiVersion: v1
+kind: Config
+clusters:
+  - cluster:
+    # 独立集群使用的server地址
+    server: '\${bcs_api_host}/clusters/\${cluster_id}/'
+    # 共享集群使用的server地址，\${cluster_id}为共享集群ID
+    # server: '\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/'
+    name: '\${cluster_id}'
+contexts:
+  - context:
+      cluster: '\${cluster_id}'
+      user: '\${username}'
+    name: BCS
+current-context: BCS
+users:
+  - name: '\${username}'
+    user:
+      token: '\${token}'`
+            const demoConfigExample = ref(demoConfig
                 .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
-                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
-            const bcsApiExample = ref('curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/clusters/${cluster_id}/version"'
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
+                .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value))
+            const apiExample = `# 独享集群调用bcs api示例
+curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/clusters/\${cluster_id}/version"
+# 共享集群调用bcs api示例，\${cluster_id}为共享集群ID
+curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/clusters/projects/\${projectID}/\${cluster_id}/version"
+`
+            const bcsApiExample = ref(apiExample
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
-                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST))
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
+                .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value))
             
             const timeList = ref([
                 {

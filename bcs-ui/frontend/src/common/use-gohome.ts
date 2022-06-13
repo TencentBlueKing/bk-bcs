@@ -11,7 +11,7 @@ export default function useGoHome () {
     })
     // 当前集群（执行调整首页之前，需要先更新当前集群信息）
     const cluster = computed(() => {
-        return store.state.cluster.curCluster
+        return store.state.cluster.curCluster || {}
     })
     const goHome = ($route) => {
         if (viewMode.value === 'dashboard' && $route.name !== 'dashboard') {
