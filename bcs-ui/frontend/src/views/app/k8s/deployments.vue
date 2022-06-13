@@ -60,7 +60,9 @@
                     name: String(instance.id) === '0' ? 'deploymentsInstanceDetail2' : 'deploymentsInstanceDetail',
                     params,
                     query: {
-                        cluster_id: instance.cluster_id
+                        cluster_id: instance.cluster_id,
+                        name: params.instanceName,
+                        namespace: params.instanceNamespace
                     }
                 })
             }

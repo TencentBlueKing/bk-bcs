@@ -10,7 +10,7 @@
     </div>
 </template>
 <script lang="ts">
-    import { defineComponent } from '@vue/composition-api'
+    import { defineComponent, toRefs } from '@vue/composition-api'
 
     export default defineComponent({
         name: 'DetailTopNav',
@@ -21,10 +21,11 @@
             }
         },
         setup (props, ctx) {
-            const { $router, $store } = ctx.root
-
+            const { titles } = toRefs(props)
             const handleBack = () => {
-                $router.push({ name: $store.getters.curNavName })
+                const index = titles.value.length - 2
+                if (!titles.value[index]) return
+                routeHop(titles.value[index], index)
             }
 
             const routeHop = (item, index) => {

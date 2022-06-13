@@ -24,7 +24,7 @@
     top: 0;
     display: flex;
     flex-direction: column;
-    z-index: 101;
+    z-index: 200;
     width: 270px;
     height: 345px;
     border: 1px solid #dcdee5;

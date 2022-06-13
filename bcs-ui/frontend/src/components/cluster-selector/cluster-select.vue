@@ -13,7 +13,7 @@
     </bcs-select>
 </template>
 <script>
-    import { computed, defineComponent, ref } from '@vue/composition-api'
+    import { computed, defineComponent, ref, watch, toRefs } from '@vue/composition-api'
     import { BCS_CLUSTER } from '@/common/constant'
     import useDefaultClusterId from '@/views/node/use-default-clusterId'
 
@@ -39,6 +39,11 @@
         },
         setup (props, ctx) {
             const { $store } = ctx.root
+            const { value } = toRefs(props)
+            
+            watch(value, (v) => {
+                localValue.value = v
+            })
 
             const clusterList = computed(() => {
                 return $store.state.cluster.clusterList || []
