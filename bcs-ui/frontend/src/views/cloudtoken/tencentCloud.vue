@@ -14,6 +14,11 @@
             v-bkloading="{ isLoading: loading }"
             @page-change="pageChange"
             @page-limit-change="pageSizeChange">
+            <bcs-table-column label="ID" width="220">
+                <template #default="{ row }">
+                    {{ row.account.accountID }}
+                </template>
+            </bcs-table-column>
             <bcs-table-column :label="$t('名称')">
                 <template #default="{ row }">
                     {{ row.account.accountName }}

@@ -69,7 +69,7 @@ const router = new VueRouter({
             ]
         },
         {
-            path: '/api_key',
+            path: '/:projectCode/api-key',
             name: 'token',
             component: userToken
         },
