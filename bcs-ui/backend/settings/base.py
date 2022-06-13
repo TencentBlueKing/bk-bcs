@@ -507,7 +507,7 @@ CLUSTER_TOOLS_REPO_PREFIX = os.environ.get('CLUSTER_TOOLS_REPO_PREFIX')
 SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
 
 # 首选域名列表
-PREFERRED_DOMAINS = [domain.strip() for domain in os.environ.get('PREFERRED_DOMAINS', '').split(',') if domain]
+PREFERRED_DOMAINS = os.environ.get('PREFERRED_DOMAINS', '')
 
 try:
     from .base_ext import *  # noqa
