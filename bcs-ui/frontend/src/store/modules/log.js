@@ -1,4 +1,4 @@
-import { podContainersList, podLogs, downloadLogsURL, realTimeLogStreamURL } from '@/api/base'
+import { podContainersList, podLogs, podLogsDownloadURL, podLogsStreamURL } from '@/api/base'
 import request, { parseUrl } from '@/api/request'
 
 export default {
@@ -15,11 +15,11 @@ export default {
         },
         // 下载日志
         async downloadLogs (context, params) {
-            window.open(`${parseUrl(downloadLogsURL, params)}`)
+            window.open(`${parseUrl(podLogsDownloadURL, params)}`)
         },
         // 实时日志
         async realTimeLogStream (context, params) {
-            const source = new EventSource(parseUrl(realTimeLogStreamURL, params), { withCredentials: true })
+            const source = new EventSource(parseUrl(podLogsStreamURL, params), { withCredentials: true })
             return source
         },
         async previousLogList (context, url) {

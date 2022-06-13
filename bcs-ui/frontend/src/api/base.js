@@ -8,11 +8,8 @@ export const namespaceList = request('get', '/api/dashboard/projects/$projectId/
 export const LOG_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`
 export const podContainersList = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/containers`)
 export const podLogs = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs`)
-export const downloadLogsURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`
-export const realTimeLogStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`
-// export const stdLogs = request('get', '/api/logs/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/pods/$podId/stdlogs/')
-// export const stdLogsDownload = request('get', '/api/logs/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/pods/$podId/stdlogs/download/')
-// export const stdLogsSession = request('post', '/api/logs/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/pods/$podId/stdlogs/sessions/')
+export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`
+export const podLogsStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`
 
 // dashbord
 export const dashbordList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/')// 注意：HPA类型没有子分类$category
@@ -90,9 +87,6 @@ export const userPerms = request('post', '/api/iam/user_perms/')
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
 
 export default {
-    // stdLogs,
-    // stdLogsDownload,
-    // stdLogsSession,
     dashbordList,
     projectFeatureFlag,
     getBizMaintainers,
