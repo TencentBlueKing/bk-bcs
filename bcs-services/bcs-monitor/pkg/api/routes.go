@@ -78,12 +78,14 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 	engine.Use(requestIdMiddleware, cors.Default())
 
 	// openapi 文档
+	// 访问 swagger/index.html, swagger/doc.json
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	engine.GET("/-/healthy", HealthyHandler)
 	engine.GET("/-/ready", ReadyHandler)
 
 	// 注册 HTTP 请求
-	registerRoutes(engine.Group(config.APIServicePrefix))
+	registerRoutes(engine.Group(""))
+	registerRoutes(engine.Group(config.G.Web.RoutePrefix))
 	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
 }
 
