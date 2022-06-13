@@ -78,5 +78,13 @@
     "app_secret": "${bcsCmdbAppSecret}",
     "bk_user_name": "${bcsCmdbBKUsername}",
     "host": "${bcsCmdbHost}"
+  },
+  "community_edition": ${bcsCommunityEdition},
+  "passcc": {
+    "auth_server": "${bcsPassAuthServer}",
+    "pass_server": "${bcsPassCCServer}",
+    "app_code": "${bcsPassAppCode}",
+    "app_secret": "${bcsPassAppSecret}",
+    "enable": ${bcsPassCCEnable}
   }
 }
