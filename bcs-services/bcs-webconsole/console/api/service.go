@@ -252,7 +252,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 // makeWebConsoleURL webconsole 页面访问地址
 func makeWebConsoleURL(sessionId string, podCtx *types.PodContext) string {
 	u := *config.G.Web.BaseURL
-	u.Path = path.Join(u.Path, "/portal/container/")
+	u.Path = path.Join(u.Path, "/portal/container/") + "/"
 
 	query := url.Values{}
 	query.Set("session_id", sessionId)
