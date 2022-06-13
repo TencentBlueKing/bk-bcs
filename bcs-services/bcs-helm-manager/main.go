@@ -96,6 +96,14 @@ func parseFlags() {
 	// exempt clients
 	flag.String("exemptclients_clientids", "", "exempt client ids")
 
+	// project service config
+	flag.String("projectservice_host", "", "project service host")
+
+	// app config, in order to access other service
+	flag.String("app_code", "", "blueking app code")
+	flag.String("app_secret", "", "blueking app secret")
+	flag.String("app_token", "", "token for access other service")
+
 	// config file path
 	flag.String("conf", "", "config file path")
 	flag.Parse()

@@ -65,8 +65,6 @@ data:
       labels:
         #@overlay/match missing_ok=True
         io.tencent.bcs.controller.type: #@ service_kind
-        #@overlay/match missing_ok=True
-        io.tencent.bcs.controller.name: #@ service_name
     
     #@ deployment = overlay.subset({"kind": "Deployment"})
     #@ daemonset = overlay.subset({"kind": "DaemonSet"})
@@ -111,8 +109,6 @@ data:
       labels:
         #@overlay/match missing_ok=True
         io.tencent.bcs.controller.type: #@ deployment_kind
-        #@overlay/match missing_ok=True
-        io.tencent.bcs.controller.name: #@ deployment_name
     spec:
       #@overlay/match missing_ok=True
       template:
@@ -122,8 +118,6 @@ data:
           labels:
             #@overlay/match missing_ok=True
             io.tencent.bcs.controller.type: #@ deployment_kind
-            #@overlay/match missing_ok=True
-            io.tencent.bcs.controller.name: #@ deployment_name
     
     #@overlay/match by=overlay.subset({"kind": "DaemonSet"}),expects="0+"
     ---
@@ -132,8 +126,6 @@ data:
       labels:
         #@overlay/match missing_ok=True
         io.tencent.bcs.controller.type: #@ daemonset_kind
-        #@overlay/match missing_ok=True
-        io.tencent.bcs.controller.name: #@ daemonset_name
     spec:
       #@overlay/match missing_ok=True
       template:
@@ -143,8 +135,6 @@ data:
           labels:
             #@overlay/match missing_ok=True
             io.tencent.bcs.controller.type: #@ daemonset_kind
-            #@overlay/match missing_ok=True
-            io.tencent.bcs.controller.name: #@ daemonset_name
     
     #@overlay/match by=overlay.subset({"kind": "StatefulSet"}),expects="0+"
     ---
@@ -153,8 +143,6 @@ data:
       labels:
         #@overlay/match missing_ok=True
         io.tencent.bcs.controller.type: #@ sts_kind
-        #@overlay/match missing_ok=True
-        io.tencent.bcs.controller.name: #@ sts_name
     spec:
       #@overlay/match missing_ok=True
       template:
@@ -164,8 +152,6 @@ data:
           labels:
             #@overlay/match missing_ok=True
             io.tencent.bcs.controller.type: #@ sts_kind
-            #@overlay/match missing_ok=True
-            io.tencent.bcs.controller.name: #@ sts_name
     
     #@overlay/match by=overlay.subset({"kind": "Job"}),expects="0+"
     ---
@@ -174,8 +160,6 @@ data:
       labels:
         #@overlay/match missing_ok=True
         io.tencent.bcs.controller.type: #@ job_kind
-        #@overlay/match missing_ok=True
-        io.tencent.bcs.controller.name: #@ job_name
     spec:
       #@overlay/match missing_ok=True
       template:
@@ -185,5 +169,3 @@ data:
           labels:
             #@overlay/match missing_ok=True
             io.tencent.bcs.controller.type: #@ job_kind
-            #@overlay/match missing_ok=True
-            io.tencent.bcs.controller.name: #@ job_name

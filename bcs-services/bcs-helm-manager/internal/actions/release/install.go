@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
@@ -118,7 +119,12 @@ func (i *InstallReleaseAction) install() error {
 			Content: []byte(v),
 		})
 	}
-
+	// 获取项目 32 位长度ID
+	patchProjectID, err := project.GetProjectIDByCode(username, projectID)
+	if err != nil {
+		blog.Errorf("get project id error, projectCode: %s, err: %s", projectID, err.Error())
+		patchProjectID = ""
+	}
 	// 执行install操作
 	result, err := i.releaseHandler.Cluster(clusterID).Install(
 		i.ctx,
@@ -132,12 +138,12 @@ func (i *InstallReleaseAction) install() error {
 			Args:   i.req.GetArgs(),
 			Values: vls,
 			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: "",
+				common.PTKProjectID: patchProjectID,
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
 				common.PTKCreator:   username,
 				common.PTKUpdator:   username,
-				common.PTKVersion:   "",
+				common.PTKVersion:   chartVersion,
 				common.PTKName:      "",
 			},
 			VarTemplateValues: i.req.GetBcsSysVar(),

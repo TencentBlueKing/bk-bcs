@@ -40,3 +40,18 @@ func TestJoinString(t *testing.T) {
 	joinedStr := JoinString(str1, str2)
 	assert.Equal(t, "str1,str2", joinedStr)
 }
+
+func TestJoinStringBySeparator(t *testing.T) {
+	// 不带分割符
+	srcList := []string{"a", "b", "c"}
+	joinedStr := JoinStringBySeparator(srcList, "", true)
+	assert.Equal(t, "\n---\na\n---\nb\n---\nc", joinedStr)
+	// 带有分隔符
+	srcList = []string{"a", "b", "c"}
+	joinedStr = JoinStringBySeparator(srcList, "yyy", false)
+	assert.Equal(t, "ayyybyyyc", joinedStr)
+	// 带有分隔符并左侧追加
+	srcList = []string{"a", "b", "c"}
+	joinedStr = JoinStringBySeparator(srcList, "yyy", true)
+	assert.Equal(t, "yyyayyybyyyc", joinedStr)
+}
