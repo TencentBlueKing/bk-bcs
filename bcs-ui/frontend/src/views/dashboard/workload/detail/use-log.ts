@@ -28,7 +28,7 @@ export default function useLog () {
         }
     })
     const handleGetContainer = async (podId: string, namespace: string) => {
-        const data = await $store.dispatch('dashboard/listContainers', {
+        const data = await $store.dispatch('log/podContainersList', {
             $podId: podId,
             $namespaceId: namespace
         })

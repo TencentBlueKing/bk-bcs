@@ -5,9 +5,11 @@ export const projectFeatureFlag = request('get', '/api/projects/$projectId/clust
 export const namespaceList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/')
 
 // log
-export const stdLogs = request('get', '/api/logs/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/pods/$podId/stdlogs/')
-export const stdLogsDownload = request('get', '/api/logs/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/pods/$podId/stdlogs/download/')
-export const stdLogsSession = request('post', '/api/logs/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/pods/$podId/stdlogs/sessions/')
+export const LOG_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`
+export const podContainersList = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/containers`)
+export const podLogs = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs`)
+export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`
+export const podLogsStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`
 
 // dashbord
 export const dashbordList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/')// 注意：HPA类型没有子分类$category
@@ -96,9 +98,6 @@ export const clusterToolsUninstall = request('delete', '/api/cluster_tools/proje
 export const clusterToolsInstalledDetail = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/installed_detail/')
 
 export default {
-    stdLogs,
-    stdLogsDownload,
-    stdLogsSession,
     dashbordList,
     projectFeatureFlag,
     getBizMaintainers,

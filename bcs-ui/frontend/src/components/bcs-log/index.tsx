@@ -2,7 +2,6 @@
 import { defineComponent, reactive, toRefs, ref, watch, onBeforeUnmount } from '@vue/composition-api'
 import LogHeader from './layout/log-header'
 import LogContent, { ILogData } from './layout/log-content'
-import LogWebsocket from './common/websocket'
 import './style/log.scss'
 
 interface IState {
@@ -73,19 +72,19 @@ export default defineComponent({
 
         const getParams = () => {
             return {
-                projectId: props.projectId,
-                clusterId: props.clusterId,
-                namespaceId: props.namespaceId,
-                podId: props.podId,
-                containerName: state.container,
+                $projectId: props.projectId,
+                $clusterId: props.clusterId,
+                $namespaceId: props.namespaceId,
+                $podId: props.podId,
+                container_name: state.container,
                 previous: state.showLastContainer
             }
         }
-        const handleGetLog = async (last?: boolean) => {
+        const handleGetLog = async () => {
             if (!state.container || state.contentLoading) return
 
             state.contentLoading = true
-            const { data } = await $store.dispatch('log/getLogList', getParams())
+            const data = await $store.dispatch('log/podLogs', getParams())
             state.log = data.logs
             state.previous = data.previous
             state.contentLoading = false
@@ -108,7 +107,7 @@ export default defineComponent({
             if (!state.previous || state.loading) return
 
             state.loading = true
-            const { data } = await $store.dispatch('log/previousLogList', state.previous)
+            const data = await $store.dispatch('log/previousLogList', state.previous)
             state.log.splice(0, 0, ...data.logs)
             setTimeout(() => {
                 contentRef.value?.scrollIntoIndex(data.logs.length - state.step)
@@ -123,33 +122,39 @@ export default defineComponent({
         }
 
         const handleDownload = () => {
-            $store.dispatch('log/downloadLog', getParams())
+            $store.dispatch('log/downloadLogs', {
+                ...getParams(),
+                $containerName: state.container
+            })
         }
 
         const handleTimeStampChange = (show: boolean) => {
             // 是否显示时间戳
             state.showTimeStamp = show
         }
-        let logWebsocket: LogWebsocket | null = null
+        let logSSR: EventSource | null = null
         // 实时日志功能
         const handleRealTimeLog = async (realTime: boolean) => {
             if (realTime) {
                 state.contentLoading = true
-                const data = await $store.dispatch('log/stdLogsSession', {
+                logSSR = await $store.dispatch('log/realTimeLogStream', {
                     $clusterId: props.clusterId,
                     $namespaceId: props.namespaceId,
                     $podId: props.podId,
-                    container_name: state.container
+                    $containerName: state.container,
+                    $startedAt: state.log[state.log.length - 1]?.time
                 })
                 state.contentLoading = false
-                logWebsocket = new LogWebsocket(data.ws_url)
-                logWebsocket.ws.onmessage = (event: MessageEvent) => {
+                logSSR?.addEventListener('open', () => {
+                    console.log('open ssr')
+                })
+                logSSR?.addEventListener('message', (event: MessageEvent) => {
                     try {
-                        const { streams = [] } = JSON.parse(event.data)
-                        state.log.push(...streams)
+                        const data: ILogData = JSON.parse(event.data)
+                        state.log.push(data)
                         setTimeout(() => {
                             contentRef.value?.scrollIntoIndex()
-                            const ids = streams.map((item: ILogData) => item.time)
+                            const ids = [data.time]
                             contentRef.value?.setHoverIds(ids)
                             // 关闭hover效果
                             setTimeout(() => {
@@ -159,9 +164,9 @@ export default defineComponent({
                     } catch (err) {
                         console.log(err)
                     }
-                }
+                })
             } else {
-                logWebsocket && logWebsocket.ws.close()
+                logSSR?.close()
             }
         }
 
@@ -173,11 +178,11 @@ export default defineComponent({
 
         const handleToggleLast = async (v: boolean) => {
             state.showLastContainer = v
-            handleGetLog(v)
+            handleGetLog()
         }
 
         onBeforeUnmount(() => {
-            logWebsocket && logWebsocket.ws.close()
+            logSSR?.close()
         })
 
         return {

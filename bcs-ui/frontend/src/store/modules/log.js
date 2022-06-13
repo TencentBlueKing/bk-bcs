@@ -1,34 +1,29 @@
-import http from '@/api'
-import { stdLogsSession } from '@/api/base'
+import { podContainersList, podLogs, podLogsDownloadURL, podLogsStreamURL } from '@/api/base'
+import request, { parseUrl } from '@/api/request'
 
 export default {
     namespaced: true,
     actions: {
-        async getLogList (context, { projectId, clusterId, namespaceId, podId, containerName, previous }) {
-            const data = await http.get(
-                `${DEVOPS_BCS_API_URL}/api/logs/projects/${projectId}/clusters/${clusterId}/namespaces/${namespaceId}/pods/${podId}/stdlogs/?container_name=${containerName}&previous=${!!previous}`,
-                {}
-            ).catch(_ => {
-                return {
-                    data: {
-                        logs: []
-                    }
-                }
-            })
+        async podContainersList (context, params) {
+            const data = await podContainersList(params).catch(() => [])
             return data
         },
-
+        // 获取POD日志
+        async podLogs (context, params) {
+            const data = await podLogs(params).catch(() => ({ logs: [] }))
+            return data
+        },
+        // 下载日志
+        async downloadLogs (context, params) {
+            window.open(`${parseUrl(podLogsDownloadURL, params)}`)
+        },
+        // 实时日志
+        async realTimeLogStream (context, params) {
+            const source = new EventSource(parseUrl(podLogsStreamURL, params), { withCredentials: true })
+            return source
+        },
         async previousLogList (context, url) {
-            const data = await http.get(`${DEVOPS_BCS_API_URL}/${url}`).catch(_ => ({ data: { logs: [] } }))
-            return data
-        },
-
-        async downloadLog (context, { projectId, clusterId, namespaceId, podId, containerName, previous }) {
-            window.open(`${DEVOPS_BCS_API_URL}/api/logs/projects/${projectId}/clusters/${clusterId}/namespaces/${namespaceId}/pods/${podId}/stdlogs/download/?container_name=${containerName}&previous=${!!previous}`)
-        },
-
-        async stdLogsSession (context, params) {
-            const data = await stdLogsSession(params).catch(() => ({}))
+            const data = await request('get', `${url}`)().catch(() => ({ logs: [] }))
             return data
         }
     }
