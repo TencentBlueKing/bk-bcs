@@ -6876,6 +6876,12 @@ spec:
                       type: object
                   type: object
                 type: array
+              withoutReadiness:
+                default: false
+                description: WithoutReadiness indicates whether the readinessgate
+                  for inplace update should be injected to GameDeployment's pods.
+                  Defaults to false (readinessgate will be injected to pods)
+                type: boolean
             required:
             - selector
             - serviceName

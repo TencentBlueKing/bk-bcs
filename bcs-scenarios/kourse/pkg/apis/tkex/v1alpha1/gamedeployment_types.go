@@ -89,6 +89,12 @@ type GameDeploymentSpec struct {
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	// +kubebuilder:default=0
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
+
+	// WithoutReadiness indicates whether the readinessgate for inplace update should be
+	// injected to GameDeployment's pods.
+	// Defaults to false (readinessgate will be injected to pods)
+	// +kubebuilder:default=false
+	WithoutReadiness bool `json:"withoutReadiness,omitempty"`
 }
 
 // GameDeploymentPodIndexRange defines the range of pod index
