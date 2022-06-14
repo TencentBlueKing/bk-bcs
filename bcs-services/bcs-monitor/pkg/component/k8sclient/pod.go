@@ -121,9 +121,6 @@ func (l *LogWithPreviousLink) MakePreviousLink(projectId, clusterId, namespace, 
 	query.Set("previous", strconv.FormatBool(opt.Previous))
 
 	u.RawQuery = query.Encode()
-	// 去掉域名, 让前端动态组装
-	u.Scheme = ""
-	u.Host = ""
 
 	l.Previous = u.String()
 
@@ -213,6 +210,11 @@ func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *L
 	logs := strings.Split(string(result), "\n")
 	logList := make([]*Log, 0, len(logs))
 	for _, logStr := range logs {
+		// 最新的日志有可能返回空行
+		if logStr == "" {
+			continue
+		}
+
 		log, err := parseLog(logStr)
 		if err != nil {
 			continue
