@@ -82,7 +82,7 @@ func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *types.
 				ClusterType:  workloadList[key].ClusterType,
 				Namespace:    workloadList[key].Namespace,
 				WorkloadType: workloadList[key].WorkloadType,
-				Name:         workloadList[key].Name,
+				WorkloadName: workloadList[key].Name,
 			}
 			err := p.store.InsertPublicInfo(ctx, workloadPublic, workloadOpts)
 			if err != nil {

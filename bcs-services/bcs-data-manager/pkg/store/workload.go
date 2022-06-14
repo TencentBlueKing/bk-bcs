@@ -152,7 +152,7 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 		NamespaceKey:    opts.Namespace,
 		DimensionKey:    opts.Dimension,
 		WorkloadTypeKey: opts.WorkloadType,
-		WorkloadNameKey: opts.Name,
+		WorkloadNameKey: opts.WorkloadName,
 		BucketTimeKey:   bucketTime,
 	})
 	retWorkload := &types.WorkloadData{}
@@ -173,11 +173,11 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 				ClusterType:  opts.ClusterType,
 				Namespace:    opts.Namespace,
 				WorkloadType: opts.WorkloadType,
-				Name:         opts.Name,
+				Name:         opts.WorkloadName,
 				Metrics:      newMetrics,
 			}
-			m.PreAggregateMax(newWorkloadBucket, metrics)
-			m.PreAggregateMin(newWorkloadBucket, metrics)
+			m.preAggregateMax(newWorkloadBucket, metrics)
+			m.preAggregateMin(newWorkloadBucket, metrics)
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{newWorkloadBucket})
 			if err != nil {
 				return err
@@ -186,8 +186,8 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 		}
 		return err
 	}
-	m.PreAggregateMax(retWorkload, metrics)
-	m.PreAggregateMin(retWorkload, metrics)
+	m.preAggregateMax(retWorkload, metrics)
+	m.preAggregateMin(retWorkload, metrics)
 	if retWorkload.BusinessID == "" {
 		retWorkload.BusinessID = opts.BusinessID
 	}
@@ -358,9 +358,11 @@ func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCom
 		return 0, err
 	}
 	cond := m.generateCond(opts, bucket)
-	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
-		MetricTimeKey: primitive.NewDateTimeFromTime(after),
-	}))
+	if !after.IsZero() {
+		cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(after),
+		}))
+	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	retWorkload := make([]*types.WorkloadData, 0)
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retWorkload)
@@ -410,7 +412,7 @@ func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetr
 }
 
 // pre aggregate max value before update
-func (m *ModelWorkload) PreAggregateMax(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
+func (m *ModelWorkload) preAggregateMax(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MaxInstanceTime != nil && newMetric.MaxInstanceTime != nil {
 		data.MaxInstanceTime = getMax(data.MaxInstanceTime, newMetric.MaxInstanceTime)
 	} else if newMetric.MaxInstanceTime != nil {
@@ -442,8 +444,8 @@ func (m *ModelWorkload) PreAggregateMax(data *types.WorkloadData, newMetric *typ
 	}
 }
 
-// pre aggragate min value before update
-func (m *ModelWorkload) PreAggregateMin(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
+// pre aggregate min value before update
+func (m *ModelWorkload) preAggregateMin(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MinInstanceTime != nil && newMetric.MinInstanceTime != nil {
 		data.MinInstanceTime = getMin(data.MinInstanceTime, newMetric.MinInstanceTime)
 	} else if newMetric.MinInstanceTime != nil {
@@ -517,9 +519,9 @@ func (m *ModelWorkload) generateCond(opts *types.JobCommonOpts, bucket string) [
 			WorkloadTypeKey: opts.WorkloadType,
 		}))
 	}
-	if opts.Name != "" {
+	if opts.WorkloadName != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
-			WorkloadNameKey: opts.Name,
+			WorkloadNameKey: opts.WorkloadName,
 		}))
 	}
 	if bucket != "" {

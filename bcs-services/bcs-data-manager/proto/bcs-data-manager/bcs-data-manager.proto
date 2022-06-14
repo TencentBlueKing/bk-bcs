@@ -99,6 +99,24 @@ service DataManager {
       summary : "查询workload"
     };
   }
+  rpc GetPodAutoscalerList(GetPodAutoscalerListRequest) returns (GetPodAutoscalerListResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/podautoscalers"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询podAutoscaler列表"
+      summary : "查询podAutoscaler列表"
+    };
+  }
+  rpc GetPodAutoscaler(GetPodAutoscalerRequest) returns (GetPodAutoscalerResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/podautoscaler"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询某个podAutoscaler"
+      summary : "查询某个podAutoscaler"
+    };
+  }
 }
 
 
@@ -863,6 +881,10 @@ message ClusterMetrics {
     title: "memoryRequest",
     description: "内存请求量"
   }];
+  string CACount = 26 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CACount",
+    description: "ca触发次数"
+  }];
 }
 
 message NodeQuantile {
@@ -1217,3 +1239,248 @@ message WorkloadMetrics {
     description: "最大实例数及所在时间段"
   }];
 }
+
+message GetPodAutoscalerListRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetPodAutoscalerListRequest"
+      description : "查询PodAutoscaler列表请求"
+      required : []
+    }
+  };
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "namespace",
+      description : "命名空间名字"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadType = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadType",
+      description : "模块类型"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string workloadName = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "workloadName",
+      description : "模块名称"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  uint32 page = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页数"
+    },
+    (validate.rules) .uint32.gte = 0
+  ];
+  uint32 size = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "页面大小"
+    },
+    (validate.rules) .uint32.lte = 10
+  ];
+  string business = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "business",
+      description : "业务ID"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string project = 9 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "project",
+      description : "project ID"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string podAutoscalerType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podAutoscalerType",
+    description: "podAutoscaler类型"
+  }];
+}
+
+message GetPodAutoscalerListResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetPodAutoscalerListResponse"
+      description : "查询podAutoscaler列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  repeated PodAutoscaler data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "podAutoscaler列表信息"
+    }];
+}
+
+
+message GetPodAutoscalerRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetPodAutoscalerRequest"
+      description : "查询某个PodAutoscaler请求"
+      required : []
+    }
+  };
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string =
+    {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string namespace = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "namespace",
+      description : "命名空间名字"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  string podAutoscalerType = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podAutoscalerType",
+    description: "podAutoscaler类型"
+  }];
+  string podAutoscalerName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podAutoscalerName",
+    description: "podAutoscaler名称"
+  }];
+}
+
+message GetPodAutoscalerResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetPodAutoscalerResponse"
+      description : "查询podAutoscaler返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  PodAutoscaler data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "podAutoscaler信息"
+    }];
+}
+
+message PodAutoscaler {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PodAutoscaler"
+      description : "记录podAutoscaler资源信息"
+    }
+  };
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目id"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群id"
+  }];
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间名字"
+  }];
+  string workloadType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadType",
+    description: "模块类型"
+  }];
+  string workloadName = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "workloadName",
+    description: "模块名称"
+  }];
+  string dimension = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dimension",
+    description: "时间维度"
+  }];
+  string startTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime",
+    description: "开始时间"
+  }];
+  string endTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime",
+    description: "结束时间"
+  }];
+  string businessID = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "业务id"
+  }];
+  string podAutoscalerType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podAutoscalerType",
+    description: "podAutoscaler类型"
+  }];
+  string podAutoscalerName = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podAutoscalerName",
+    description: "podAutoscaler名称"
+  }];
+  repeated PodAutoscalerMetrics metrics = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "metrics",
+    description: "podAutoscaler指标"
+  }];
+}
+
+
+message PodAutoscalerMetrics {
+  string time = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "time",
+    description: "数据时间"
+  }];
+  string TotalSuccessfulRescale = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "TotalSuccessfulRescale",
+    description: "过去30min/1hour/1day内PodAutoscaler触发次数"
+  }];
+}
+
