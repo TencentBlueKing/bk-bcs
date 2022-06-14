@@ -88,7 +88,8 @@ export default function useSubscribe (data: Ref<ISubscribeData>, ctx: SetupConte
     const projectId = computed(() => $route.params.projectId)
     const clusterId = computed(() => $route.params.clusterId)
     const subscribeURL = computed(() => {
-        return `ws://${window.BCS_API_HOST}${crPrefix}/projects/${projectId.value}/clusters/${clusterId.value}/subscribe`
+        const host = window.BCS_API_HOST.replace(/(^\w+:|^)\/\//, '')
+        return `ws://${host}${crPrefix}/projects/${projectId.value}/clusters/${clusterId.value}/subscribe`
     })
 
     // 订阅事件处理

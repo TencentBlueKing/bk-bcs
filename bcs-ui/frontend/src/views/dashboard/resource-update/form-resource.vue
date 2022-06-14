@@ -30,9 +30,9 @@
                     request
                 }"
                 form-type="vertical"
-                v-if="!showDiff">
+                v-show="!showDiff">
             </BKForm>
-            <div class="code-diff" v-bkloading="{ isLoading: diffLoading }" v-else>
+            <div class="code-diff" v-bkloading="{ isLoading: diffLoading }" v-if="showDiff">
                 <div class="top-operate">
                     <span class="title">
                         {{ resourceName }}
