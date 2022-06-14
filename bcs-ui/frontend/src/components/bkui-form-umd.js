@@ -556,7 +556,7 @@
     return true;
   }
   function orderProperties(properties, order) {
-    if (!Array.isArray(order)) {
+    if (!Array.isArray(order) || !order.length) {
       return properties;
     }
 
@@ -1470,7 +1470,6 @@
         return {};
       }
     },
-    // 全量Schema
     rules: {
       type: Object,
       default: function _default() {
@@ -1483,12 +1482,10 @@
         return {};
       }
     },
-    validator: {
-      type: Object,
-      default: function _default() {
-        return {};
-      }
-    },
+    // validator: {
+    //   type: Object,
+    //   default: () => ({}),
+    // },
     width: {
       type: [String, Number],
       default: '100%'
@@ -1595,6 +1592,18 @@
           //   labelKey: 'label',
           // }, // 也可以是对像形式
 
+        };
+      }
+    },
+    // 初始化状态
+    defaultState: {
+      type: Object,
+      default: function _default() {
+        return {
+          visible: true,
+          disabled: false,
+          readonly: false,
+          error: false
         };
       }
     }
@@ -1805,7 +1814,8 @@
       value: function getSibling(lastProp) {
         var _this$parent;
 
-        var id = this.id.replace(Path.getPathLastProp(this.id) || '', lastProp);
+        var reg = new RegExp("".concat(Path.getPathLastProp(this.id) || '', "$"));
+        var id = this.id.replace(reg, lastProp);
         return (_this$parent = this.parent) === null || _this$parent === void 0 ? void 0 : _this$parent.children.find(function (node) {
           return node.id === id;
         });
@@ -2022,7 +2032,9 @@
 
   var reactionRegister = function reactionRegister(path) {
     var reactions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    var instance = widgetTree.widgetMap[path].instance;
+
+    var _ref3 = widgetTree.widgetMap[path] || {},
+        instance = _ref3.instance;
 
     if (reactions && Array.isArray(reactions)) {
       reactions.forEach(function (reaction) {
@@ -9305,8 +9317,11 @@
 
     if (isExpression(validator)) {
       valid = executeExpression(validator, instance);
-    } else if (validator.constructor === Function) {
-      valid = validator(instance);
+    } else if (typeof validator === 'function') {
+      valid = validator(instance); // eslint-disable-next-line no-eval
+    } else if (eval(validator) instanceof RegExp) {
+      // eslint-disable-next-line no-eval
+      valid = new RegExp(eval(validator)).test(instance.value);
     }
 
     return {
@@ -9347,7 +9362,11 @@
 
     var customRules = (_instance$schema = instance.schema) === null || _instance$schema === void 0 ? void 0 : _instance$schema[OWN_RULE_PROPERTY]; // 自定义规则校验
 
-    if (!customRules) return true;
+    if (!customRules) {
+      instance.setState('error', false);
+      instance.setErrorTips('');
+      return true;
+    }
     var isError = false;
     var errorMsg = '';
 
@@ -9507,12 +9526,12 @@
         loading: false,
         datasource: Schema.resolveDefaultDatasource(this.schema),
         formItemProps: {},
-        state: {
+        state: Object.assign({
           visible: true,
           disabled: false,
           readonly: false,
           error: false
-        },
+        }, this.defaultState),
         errorTips: ''
       };
     },
@@ -10209,12 +10228,19 @@
 
   var NoTitleArray = Vue__default["default"].extend({
     name: 'NoTitleArray',
-    props: props,
+    props: _objectSpread2(_objectSpread2({}, props), {}, {
+      disabled: {
+        type: Boolean,
+        default: false
+      }
+    }),
     mounted: function mounted() {
+      var _this$value;
+
       var _this$schema$minItems = this.schema.minItems,
           minItems = _this$schema$minItems === void 0 ? 0 : _this$schema$minItems; // 补全minItems项
 
-      if (this.value.length < minItems) {
+      if (((_this$value = this.value) === null || _this$value === void 0 ? void 0 : _this$value.length) < minItems) {
         var data = Schema.getSchemaDefaultValue(this.schema.items);
         var remainData = new Array(minItems - this.value.length).fill(data);
         this.$emit('input', [].concat(_toConsumableArray(this.value), _toConsumableArray(remainData)));
@@ -10222,10 +10248,12 @@
     },
     methods: {
       handleAddItem: function handleAddItem() {
+        if (this.disabled) return;
         var data = Schema.getSchemaDefaultValue(this.schema.items);
         this.$emit('input', [].concat(_toConsumableArray(this.value), [data]));
       },
       handleRemoveItem: function handleRemoveItem(index) {
+        if (this.disabled) return;
         var value = JSON.parse(JSON.stringify(this.value));
         value.splice(index, 1);
         this.$emit('input', value);
@@ -10242,17 +10270,21 @@
     render: function render(h) {
       var _this$schema,
           _this$schema$items,
-          _this = this;
+          _this$schema2,
+          _this$schema2$items,
+          _this = this,
+          _this$value2;
 
       var labelBtnStyle = {
         'font-size': '16px',
         color: '#979ba5',
-        cursor: 'pointer'
+        cursor: this.disabled ? 'not-allowed' : 'pointer'
       };
-      var props = (_this$schema = this.schema) === null || _this$schema === void 0 ? void 0 : (_this$schema$items = _this$schema.items) === null || _this$schema$items === void 0 ? void 0 : _this$schema$items.properties; // props为空时，表示只有一个项
+      var properties = (_this$schema = this.schema) === null || _this$schema === void 0 ? void 0 : (_this$schema$items = _this$schema.items) === null || _this$schema$items === void 0 ? void 0 : _this$schema$items.properties;
+      var props = orderProperties(Object.keys(properties || {}), (_this$schema2 = this.schema) === null || _this$schema2 === void 0 ? void 0 : (_this$schema2$items = _this$schema2.items) === null || _this$schema2$items === void 0 ? void 0 : _this$schema2$items['ui:order']); // props为空时，表示只有一个项
 
-      var keysLen = Object.keys(props || {}).length;
-      var defaultCols = props ? new Array(keysLen).fill('1fr').concat('24px').join(' ') : '1fr 24px';
+      var keysLen = Object.keys(properties || {}).length;
+      var defaultCols = properties ? new Array(keysLen).fill('1fr').concat('24px').join(' ') : '1fr 24px';
 
       var defaultContainerLayout = _objectSpread2({}, this.layout.container || {
         display: 'grid',
@@ -10292,7 +10324,10 @@
             schema: schema,
             required: required,
             path: path,
-            layout: layout
+            layout: layout,
+            defaultState: {
+              disabled: _this.disabled
+            }
           }),
           on: {
             input: function input(data) {
@@ -10302,8 +10337,8 @@
         });
       };
 
-      return h("div", [this.value.map(function (_, index) {
-        var _this$schema2;
+      return h("div", [(_this$value2 = this.value) === null || _this$value2 === void 0 ? void 0 : _this$value2.map(function (_, index) {
+        var _this$schema4;
 
         var groupPath = Path.getCurPath(_this.path, "".concat(index));
         return h(FieldGroupWrap, helper([{}, {
@@ -10315,8 +10350,10 @@
           })
         }, {
           "class": "mb10"
-        }]), [props ? Object.keys(props).map(function (prop) {
-          var schemaItem = props[prop];
+        }]), [props !== null && props !== void 0 && props.length ? props.map(function (prop) {
+          var _this$schema3, _this$schema3$items;
+
+          var schemaItem = (_this$schema3 = _this.schema) === null || _this$schema3 === void 0 ? void 0 : (_this$schema3$items = _this$schema3.items) === null || _this$schema3$items === void 0 ? void 0 : _this$schema3$items.properties[prop];
           var curPath = Path.getCurPath(_this.path, "".concat(index, ".").concat(prop));
           var lastProp = curPath.split('.').pop();
           var layoutConfig = Layout.findLayoutByProp(lastProp, _this.layout.group || []) || {};
@@ -10328,7 +10365,7 @@
           });
         }) : renderSchemaField({
           path: Path.getCurPath(_this.path, index),
-          schema: dealSchema(((_this$schema2 = _this.schema) === null || _this$schema2 === void 0 ? void 0 : _this$schema2.items) || {}),
+          schema: dealSchema(((_this$schema4 = _this.schema) === null || _this$schema4 === void 0 ? void 0 : _this$schema4.items) || {}),
           layout: {},
           required: false
         }), h("span", {
@@ -10439,11 +10476,17 @@
       border: {
         type: Boolean,
         default: false
+      },
+      defaultActiveName: {
+        type: Array,
+        default: function _default() {
+          return [];
+        }
       }
     }),
     data: function data() {
       return {
-        activeName: []
+        activeName: this.defaultActiveName
       };
     },
     render: function render(h) {
@@ -10767,6 +10810,7 @@
   }
 
   Vue__default["default"].use(bkMagic__namespace);
+  Vue__default["default"].config.devtools = "production" === 'development';
 
   exports["default"] = createForm;
   exports.events = events;

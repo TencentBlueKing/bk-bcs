@@ -19,28 +19,71 @@
             </div>
             <DashboardTopActions />
         </div>
-        <BKForm v-model="schemaFormData"
-            ref="bkuiFormRef"
-            class="form-resource-content"
-            :schema="formSchema.schema"
-            :layout="formSchema.layout"
-            :rules="formSchema.rules"
-            :context="context"
-            :http-adapter="{
-                request
-            }"
-            form-type="vertical"
-        ></BKForm>
+        <div class="form-resource-content" ref="editorWrapperRef">
+            <BKForm v-model="schemaFormData"
+                ref="bkuiFormRef"
+                :schema="formSchema.schema"
+                :layout="formSchema.layout"
+                :rules="formSchema.rules"
+                :context="context"
+                :http-adapter="{
+                    request
+                }"
+                form-type="vertical"
+                v-if="!showDiff">
+            </BKForm>
+            <div class="code-diff" v-bkloading="{ isLoading: diffLoading }" v-else>
+                <div class="top-operate">
+                    <span class="title">
+                        {{ resourceName }}
+                        <span class="insert ml15">+{{ diffStat.insert }}</span>
+                        <span class="delete ml15">-{{ diffStat.delete }}</span>
+                    </span>
+                </div>
+                <ResourceEditor
+                    key="diff"
+                    :value="detail"
+                    :original="original"
+                    :height="height"
+                    :options="{
+                        renderLineHighlight: 'none'
+                    }"
+                    diff-editor
+                    readonly
+                    @diff-stat="handleDiffStatChange">
+                </ResourceEditor>
+            </div>
+        </div>
+        
         <div class="footer">
-            <bk-button class="btn mr15">{{$t('下一步')}}</bk-button>
-            <bk-button class="btn"
-                theme="primary"
-                :loading="loading"
-                @click="handleSaveFormData">
-                {{isEdit ? $t('更新') : $t('创建')}}
-            </bk-button>
-            <bk-button class="btn ml15">{{$t('显示差异')}}</bk-button>
-            <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+            <template v-if="isEdit">
+                <bk-button class="btn"
+                    theme="primary"
+                    v-if="!showDiff"
+                    @click="handleShowDiff">
+                    {{$t('下一步')}}
+                </bk-button>
+                <span v-bk-tooltips.top="{ disabled: !disableUpdate, content: $t('内容未变更') }" v-else>
+                    <bk-button class="btn"
+                        theme="primary"
+                        :loading="loading"
+                        :disabled="disableUpdate"
+                        @click="handleSaveFormData">
+                        {{$t('更新')}}
+                    </bk-button>
+                </span>
+                <bk-button class="btn ml15" @click="handleToggleDiff">{{showDiff ? $t('继续编辑') : $t('显示差异')}}</bk-button>
+                <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+            </template>
+            <template v-else>
+                <bk-button class="btn"
+                    theme="primary"
+                    :loading="loading"
+                    @click="handleSaveFormData">
+                    {{$t('创建')}}
+                </bk-button>
+                <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+            </template>
         </div>
     </div>
 </template>
@@ -51,6 +94,7 @@
     import SwitchButton from './switch-mode.vue'
     import { CUR_SELECT_NAMESPACE } from '@/common/constant'
     import { CR_API_URL } from '@/api/base'
+    import ResourceEditor from '@/views/dashboard/resource-update/resource-editor.vue'
 
     const BKForm = createForm({
         namespace: 'bcs',
@@ -63,7 +107,8 @@
         components: {
             BKForm,
             DashboardTopActions,
-            SwitchButton
+            SwitchButton,
+            ResourceEditor
         },
         props: {
             // 命名空间（更新的时候需要--crd类型编辑是可能没有，创建的时候为空）
@@ -114,7 +159,13 @@
                 schemaFormData: this.formData,
                 formSchema: {},
                 isLoading: false,
-                loading: false
+                loading: false,
+                diffStat: {},
+                detail: {},
+                original: {},
+                showDiff: false,
+                diffLoading: false,
+                height: 600
             }
         },
         computed: {
@@ -134,6 +185,21 @@
             title () {
                 const prefix = this.isEdit ? this.$t('更新') : this.$t('创建')
                 return `${prefix} ${this.kind}`
+            },
+            resourceName () {
+                return this.detail?.metadata?.name || ''
+            },
+            disableUpdate () {
+                return !Object.keys(this.diffStat).some(key => this.diffStat[key])
+            }
+        },
+        watch: {
+            async showDiff (show) {
+                if (show) {
+                    this.diffLoading = true
+                    this.detail = await this.handleGetManifestByFormData(this.schemaFormData)
+                    this.diffLoading = false
+                }
             }
         },
         async created () {
@@ -144,7 +210,37 @@
             ])
             this.isLoading = false
         },
+        mounted () {
+            this.handleSetHeight()
+        },
         methods: {
+            handleSetHeight  () {
+                const bounding = this.$refs.editorWrapperRef?.getBoundingClientRect()
+                this.height = bounding ? bounding.height - 80 : 600
+            },
+            handleShowDiff () {
+                const valid = this.$refs.bkuiFormRef?.validateForm()
+                if (!valid) return
+
+                this.showDiff = true
+            },
+            handleToggleDiff () {
+                if (!this.showDiff) {
+                    this.handleShowDiff()
+                } else {
+                    this.showDiff = false
+                }
+            },
+            handleDiffStatChange (stat) {
+                this.diffStat = stat
+            },
+            async handleGetManifestByFormData (formData) {
+                const data = await this.$store.dispatch('dashboard/renderManifestPreview', {
+                    kind: this.kind,
+                    formData
+                })
+                return data
+            },
             async handleGetDetail () {
                 if (!this.isEdit || (this.formData && Object.keys(this.formData).length)) return
 
@@ -167,6 +263,7 @@
                     })
                 }
                 this.schemaFormData = res.data.formData
+                this.original = await this.handleGetManifestByFormData(res.data.formData)
             },
             async handleGetFormSchemaData () {
                 this.formSchema = await this.$store.dispatch('dashboard/getFormSchema', {
@@ -213,9 +310,6 @@
             },
             // 保存数据
             async handleSaveFormData () {
-                const valid = this.$refs.bkuiFormRef?.validateForm()
-                if (!valid) return
-
                 this.loading = true
                 if (this.isEdit) {
                     await this.handleUpdateFormResource()
@@ -226,9 +320,6 @@
             },
             // 更新表单资源
             async handleUpdateFormResource () {
-                const valid = this.$refs.bkuiFormRef?.validateForm()
-                if (!valid) return
-
                 this.$bkInfo({
                     type: 'warning',
                     clsName: 'custom-info-confirm',
@@ -275,6 +366,8 @@
             },
             // 创建表单资源
             async handleCreateFormResource () {
+                const valid = this.$refs.bkuiFormRef?.validateForm()
+                if (!valid) return
                 let result = false
                 if (this.type === 'crd') {
                     result = await this.$store.dispatch('dashboard/customResourceCreate', {
@@ -343,7 +436,33 @@
     .form-resource-content {
         padding: 20px;
         max-height: calc(100vh - 172px);
+        height: 100%;
         overflow: auto;
+    }
+    .code-diff {
+        width: 100%;
+        position: relative;
+        .top-operate {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #2e2e2e;
+            height: 40px;
+            padding: 0 10px 0 16px;
+            color: #c4c6cc;
+            .title {
+                font-size: 14px;
+            }
+        }
+        .status-wrapper.diff {
+            height: 20%;
+        }
+        .insert {
+            color: #5e8a48;
+        }
+        .delete {
+            color: #e66565;
+        }
     }
     .footer {
         position: fixed;
