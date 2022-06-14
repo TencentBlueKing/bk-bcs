@@ -289,6 +289,7 @@
             }
 
             const handleGetPodsData = async () => {
+                if (!clusterId.value) return
                 // 获取工作负载下对应的pod数据
                 const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {}
                 const labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
@@ -298,6 +299,7 @@
 
                 const data = await $store.dispatch('dashboard/listWorkloadPods', {
                     $namespaceId: props.namespace,
+                    $clusterId: clusterId.value,
                     label_selector: labelSelector,
                     owner_kind: props.kind,
                     owner_name: props.name
@@ -374,7 +376,6 @@
 
             // 刷新Pod状态
             const handleRefreshPodsStatus = async () => {
-                if (!clusterId.value) return
                 workloadPods.value = await handleGetPodsData()
             }
             const { start, stop } = useInterval(handleRefreshPodsStatus, 8000)
