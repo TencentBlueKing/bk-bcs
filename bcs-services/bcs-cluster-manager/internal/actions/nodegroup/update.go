@@ -170,6 +170,8 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
 		}
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
+		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
+		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
 	}
 	group.Labels = ua.req.Labels
 	group.Taints = ua.req.Taints

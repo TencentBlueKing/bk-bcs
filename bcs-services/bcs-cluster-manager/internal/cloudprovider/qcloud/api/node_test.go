@@ -14,6 +14,7 @@
 package api
 
 import (
+	"os"
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -24,15 +25,15 @@ import (
 var nodeManager = &NodeManager{}
 
 var defaultCommonOption = &cloudprovider.CommonOption{
-	Key:    "xxx",
-	Secret: "xxx",
+	Key:    os.Getenv(TencentCloudSecretIDEnv),
+	Secret: os.Getenv(TencentCloudSecretKeyEnv),
 }
 
 func TestNodeManager_GetCVMImageIDByImageName(t *testing.T) {
 	imageName1 := "Tencent tlinux xxx"
 	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName1, &cloudprovider.CommonOption{
-		Secret: "xxx",
-		Key:    "xxx",
+		Key:    os.Getenv(TencentCloudSecretIDEnv),
+		Secret: os.Getenv(TencentCloudSecretKeyEnv),
 		Region: regions.Nanjing,
 	})
 	if err != nil {
@@ -110,8 +111,8 @@ func TestNodeManager_ListNodesByInstance(t *testing.T) {
 
 func TestGetZoneInfoByRegion(t *testing.T) {
 	cli, err := GetCVMClient(&cloudprovider.CommonOption{
-		Secret: "xxx",
-		Key:    "xxx",
+		Key:    os.Getenv(TencentCloudSecretIDEnv),
+		Secret: os.Getenv(TencentCloudSecretKeyEnv),
 		Region: regions.Nanjing,
 	})
 	if err != nil {
@@ -131,8 +132,8 @@ func TestDescribeInstanceTypeConfigs(t *testing.T) {
 		{Name: "zone", Values: []string{"ap-guangzhou-3"}},
 	}
 	instanceTypeConfigs, err := nodeManager.DescribeInstanceTypeConfigs(filters, &cloudprovider.CommonOption{
-		Key:    "xxx",
-		Secret: "xxx",
+		Key:    os.Getenv(TencentCloudSecretIDEnv),
+		Secret: os.Getenv(TencentCloudSecretKeyEnv),
 		Region: regions.Guangzhou,
 	})
 	if err != nil {
@@ -144,8 +145,8 @@ func TestDescribeInstanceTypeConfigs(t *testing.T) {
 
 func TestListNodeInstanceType(t *testing.T) {
 	instanceTypeConfigs, err := nodeManager.ListNodeInstanceType("", "", 4, 0, &cloudprovider.CommonOption{
-		Key:    "xxx",
-		Secret: "xxx",
+		Key:    os.Getenv(TencentCloudSecretIDEnv),
+		Secret: os.Getenv(TencentCloudSecretKeyEnv),
 		Region: regions.Guangzhou,
 	})
 	if err != nil {
