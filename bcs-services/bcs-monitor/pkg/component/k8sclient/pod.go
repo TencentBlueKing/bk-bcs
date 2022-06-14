@@ -210,6 +210,11 @@ func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *L
 	logs := strings.Split(string(result), "\n")
 	logList := make([]*Log, 0, len(logs))
 	for _, logStr := range logs {
+		// 最新的日志有可能返回空行
+		if logStr == "" {
+			continue
+		}
+
 		log, err := parseLog(logStr)
 		if err != nil {
 			continue
