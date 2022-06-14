@@ -131,17 +131,24 @@ class BkRepoClient(BkApiClient):
             raise BkRepoCreateProjectError(f"create project error, {resp.get('message')}")
         return resp
 
-    def create_repo(self, project_code: str, repo_type: str = "HELM", is_public: bool = False) -> Dict:
+    def create_repo(
+        self,
+        project_code: str,
+        repo_name: Optional[str] = None,
+        repo_type: Optional[str] = "HELM",
+        is_public: Optional[bool] = False,
+    ) -> Dict:
         """创建仓库
 
         :param project_code: BCS项目code
+        :param repo_name: 仓库名称，如果为空时，则使用项目 Code
         :param repo_type: 仓库类型，支持DOCKER, HELM, OCI
         :param is_public: 是否允许公开
         :return: 返回仓库
         """
         data = {
             "projectId": project_code,
-            "name": project_code,
+            "name": repo_name if repo_name else project_code,
             "type": repo_type,
             "category": "LOCAL",
             "public": is_public,  # 容器服务项目自己的仓库
