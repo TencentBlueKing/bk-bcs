@@ -168,7 +168,7 @@ func (ca *CreateAction) save() error {
 		blog.Errorf("store nodegroup %+v information to DB failed, %s", group, err.Error())
 		return err
 	}
-	ca.group = group
+	ca.group = removeSensitiveInfo(group)
 	ca.resp.Data.NodeGroup = group
 	blog.Infof("create nodegroup %s information for Cluster %s to DB successfully", group, ca.cluster.ClusterID)
 
