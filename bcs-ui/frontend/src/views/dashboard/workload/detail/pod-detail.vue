@@ -409,7 +409,7 @@
             // 容器操作
             // 1. 跳转WebConsole
             const projectId = computed(() => $route.params.projectId)
-            const clusterId = computed(() => $store.state.curClusterId)
+            const clusterId = computed(() => $store.state.curClusterId || $route.query.cluster_id)
             const terminalWins = new Map()
             const handleShowTerminal = (row) => {
                 const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`
