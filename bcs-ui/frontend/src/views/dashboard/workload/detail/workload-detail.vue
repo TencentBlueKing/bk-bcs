@@ -312,7 +312,7 @@
             }
 
             const projectId = computed(() => $route.params.projectId)
-            const clusterId = computed(() => $store.state.curClusterId)
+            const clusterId = computed(() => $store.state.curClusterId || $route.query.cluster_id)
             // 重新调度
             const rescheduleStatusMap = ref({})
             const handleReschedule = async (row) => {
@@ -374,6 +374,7 @@
 
             // 刷新Pod状态
             const handleRefreshPodsStatus = async () => {
+                if (!clusterId.value) return
                 workloadPods.value = await handleGetPodsData()
             }
             const { start, stop } = useInterval(handleRefreshPodsStatus, 8000)
