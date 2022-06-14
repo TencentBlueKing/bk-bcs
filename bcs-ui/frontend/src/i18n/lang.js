@@ -1886,7 +1886,6 @@ export default {
     '最少选择三个服务器': ['Choose at least three servers'],
     '设置污点': ['Set Taint'],
     '影响': ['Effect'],
-    '确认删除资源 {kind}: {name}': ['Confirm delete resource {type}: {name}'],
     '请输入值': ['Please enter value'],
     '请输入参数': ['Please enter parameters'],
     'Helm配置选项': ['Helm configuration options'],
@@ -2811,5 +2810,20 @@ export default {
         "Uninstall"
     ],
     "变更中...": ['changing'],
-    "确定卸载": ['Confirm Uninstall']
+    "确定卸载": ['Confirm Uninstall'],
+    "切换为表单模式将不会保留 Yaml 模式下的修改内容！": [
+        "Switching to form mode will not retain the modification content in YAML mode!"
+    ],
+    "切换为 YAML 模式": [
+        "Switch to YAML mode"
+    ],
+    "确认切换为表单模式？": [
+        "Confirm that switching to form mode?"
+    ],
+    "将执行 Replace 操作，若多人同时编辑可能存在冲突": [
+        "The replace operation will be performed. If multiple people edit at the same time, there may be conflicts"
+    ],
+    "确认资源更新": [
+        "Confirm resource update"
+    ]
 }

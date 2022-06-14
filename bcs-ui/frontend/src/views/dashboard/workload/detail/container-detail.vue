@@ -3,15 +3,15 @@
         <div class="workload-detail-info" v-bkloading="{ isLoading }">
             <div class="workload-info-basic">
                 <div class="basic-left">
-                    <span class="name mr20">{{ detail && detail.container_name }}</span>
+                    <span class="name mr20">{{ detail && detail.containerName }}</span>
                     <div class="basic-wrapper">
                         <div class="basic-item">
                             <span class="label">{{ $t('主机IP') }}</span>
-                            <span class="value">{{ detail && detail.host_ip || '--' }}</span>
+                            <span class="value">{{ detail && detail.hostIP || '--' }}</span>
                         </div>
                         <div class="basic-item">
                             <span class="label">{{ $t('容器IP') }}</span>
-                            <span class="value">{{ detail && detail.container_ip || '--' }}</span>
+                            <span class="value">{{ detail && detail.containerIP || '--' }}</span>
                         </div>
                     </div>
                 </div>
@@ -19,11 +19,11 @@
             <div class="workload-main-info">
                 <div class="info-item">
                     <span class="label">{{ $t('主机名称') }}</span>
-                    <span class="value" v-bk-overflow-tips>{{ detail && detail.host_name }}</span>
+                    <span class="value" v-bk-overflow-tips>{{ detail && detail.hostName }}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">{{ $t('容器ID') }}</span>
-                    <span class="value" v-bk-overflow-tips>{{ detail && detail.container_id }}</span>
+                    <span class="value" v-bk-overflow-tips>{{ detail && detail.containerID }}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">{{ $t('镜像') }}</span>
@@ -31,7 +31,7 @@
                 </div>
                 <div class="info-item">
                     <span class="label">{{ $t('网络模式') }}</span>
-                    <span class="value">{{ detail && detail.network_mode }}</span>
+                    <span class="value">{{ detail && detail.networkMode }}</span>
                 </div>
             </div>
         </div>
@@ -81,8 +81,8 @@
                 </bcs-tab-panel>
                 <bcs-tab-panel name="volumes" :label="$t('挂载卷')">
                     <bk-table :data="volumes">
-                        <bk-table-column label="Host Path" prop="host_path"></bk-table-column>
-                        <bk-table-column label="Mount Path" prop="mount_path"></bk-table-column>
+                        <bk-table-column label="Host Path" prop="name"></bk-table-column>
+                        <bk-table-column label="Mount Path" prop="mountPath"></bk-table-column>
                         <bk-table-column label="ReadOnly" prop="readonly">
                             <template #default="{ row }">
                                 {{ row.readonly }}
@@ -184,7 +184,6 @@
             // 图表指标参数
             const params = computed(() => {
                 return {
-                    // container_ids: [id.value],
                     namespace: namespace.value,
                     pod_name: pod.value,
                     container_name: name.value,

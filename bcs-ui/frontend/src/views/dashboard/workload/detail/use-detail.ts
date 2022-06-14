@@ -4,8 +4,8 @@ import yamljs from 'js-yaml'
 
 export interface IWorkloadDetail {
     manifest: any;
-    manifest_ext: any;
-    web_annotations?: any;
+    manifestExt: any;
+    webAnnotations?: any;
 }
 
 export interface IDetailOptions {
@@ -42,7 +42,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
     // metadata 数据
     const metadata = computed(() => detail.value?.manifest?.metadata || {})
     // manifestExt 数据
-    const manifestExt = computed(() => detail.value?.manifest_ext || {})
+    const manifestExt = computed(() => detail.value?.manifestExt || {})
     // yaml数据
     const yaml = computed(() => {
         return yamljs.dump(detail.value?.manifest || {})
@@ -72,7 +72,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
             $type: type
         })
         detail.value = res.data
-        webAnnotations.value = res.web_annotations
+        webAnnotations.value = res.webAnnotations
         isLoading.value = false
         return detail.value
     }
@@ -84,19 +84,36 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
     // 更新资源
     const handleUpdateResource = () => {
         const kind = detail.value?.manifest?.kind
+        const editMode = detail.value?.manifestExt?.editMode
         const { namespace, category, name, type } = options
-        $router.push({
-            name: 'dashboardResourceUpdate',
-            params: {
-                namespace,
-                name
-            },
-            query: {
-                type,
-                category,
-                kind
-            }
-        })
+        if (editMode === 'form') {
+            $router.push({
+                name: 'dashboardFormResourceUpdate',
+                params: {
+                    namespace,
+                    name
+                },
+                query: {
+                    type,
+                    category,
+                    kind,
+                    formUpdate: webAnnotations.value?.featureFlag?.FORM_UPDATE
+                }
+            })
+        } else {
+            $router.push({
+                name: 'dashboardResourceUpdate',
+                params: {
+                    namespace,
+                    name
+                },
+                query: {
+                    type,
+                    category,
+                    kind
+                }
+            })
+        }
     }
 
     // 删除资源
@@ -107,7 +124,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
             type: 'warning',
             clsName: 'custom-info-confirm',
             title: $i18n.t('确认删除当前资源'),
-            subTitle: $i18n.t('确认删除资源 {kind}: {name}', { kind, name }),
+            subTitle: `${kind} ${name}`,
             defaultInfo: true,
             confirmFn: async (vm) => {
                 const result = await $store.dispatch('dashboard/resourceDelete', {

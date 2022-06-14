@@ -1,7 +1,5 @@
 import { defineComponent, computed, ref, watch, onMounted } from '@vue/composition-api'
 import DashboardTopActions from './common/dashboard-top-actions'
-// import useCluster from './common/use-cluster'
-import useInterval from './common/use-interval'
 import useNamespace from './common/use-namespace'
 import usePage from './common/use-page'
 import useSearch from './common/use-search'
@@ -56,22 +54,20 @@ export default defineComponent({
 
         // 处理额外字段
         const handleExtCol = (row: any, key: string) => {
-            const ext = namespaceData.value.manifest_ext[row.metadata?.uid] || {}
+            const ext = namespaceData.value.manifestExt[row.metadata?.uid] || {}
             return ext[key] || '--'
         }
 
         // 订阅事件
-        const { initParams, handleSubscribe } = useSubscribe(namespaceData, ctx)
-        const { start, stop } = useInterval(handleSubscribe, 5000)
+        const { handleSubscribe } = useSubscribe(namespaceData, ctx)
 
         watch(resourceVersion, (newVersion, oldVersion) => {
             if (newVersion && newVersion !== oldVersion) {
-                stop()
-                initParams({
+                const params = {
                     kind: 'Namespace',
-                    resource_version: resourceVersion.value
-                })
-                resourceVersion.value && start()
+                    resourceVersion: resourceVersion.value
+                }
+                handleSubscribe(params)
             }
         })
 

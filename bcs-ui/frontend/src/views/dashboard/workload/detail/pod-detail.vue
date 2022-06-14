@@ -89,15 +89,15 @@
                         <bk-table-column :label="$t('操作')" width="200" :resizable="false" :show-overflow-tooltip="false">
                             <template #default="{ row }">
                                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
-                                <bk-popover placement="bottom" theme="light dropdown" :arrow="false" v-if="row.container_id && $INTERNAL && !isSharedCluster">
+                                <bk-popover placement="bottom" theme="light dropdown" :arrow="false" v-if="row.containerID && $INTERNAL && !isSharedCluster">
                                     <bk-button style="cursor: default;" text class="ml10">{{ $t('日志检索') }}</bk-button>
                                     <div slot="content">
                                         <ul>
-                                            <a :href="logLinks[row.container_id] && logLinks[row.container_id].std_log_link"
+                                            <a :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_link"
                                                 target="_blank" class="dropdown-item">
                                                 {{ $t('标准输出检索') }}
                                             </a>
-                                            <a :href="logLinks[row.container_id] && logLinks[row.container_id].file_log_link"
+                                            <a :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_link"
                                                 target="_blank" class="dropdown-item">
                                                 {{ $t('文件日志检索') }}
                                             </a>
@@ -254,7 +254,7 @@
 
     export interface IDetail {
         manifest: any;
-        manifest_ext: any;
+        manifestExt: any;
     }
 
     export interface IStorage {
@@ -333,9 +333,10 @@
                     $podId: name.value,
                     $namespaceId: namespace.value
                 })
-                if ($INTERNAL && container.value.length) {
+                const containerIDs = container.value.map(item => item.containerID).filter(id => !!id)
+                if ($INTERNAL && containerIDs.length) {
                     logLinks.value = await $store.dispatch('dashboard/logLinks', {
-                        container_ids: container.value.map(item => item.container_id).join(',')
+                        container_ids: containerIDs.join(',')
                     })
                 }
                 containerLoading.value = false
@@ -382,9 +383,9 @@
                 }
                 storageLoading.value = false
             }
-            // 获取存储manifest_ext的字段
+            // 获取存储manifestExt的字段
             const handleGetExtData = (uid, type, prop) => {
-                return storage.value[type]?.manifest_ext?.[uid]?.[prop] || ''
+                return storage.value[type]?.manifestExt?.[uid]?.[prop] || ''
             }
 
             // 跳转容器详情
@@ -413,17 +414,17 @@
             const terminalWins = new Map()
             const handleShowTerminal = (row) => {
                 const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`
-                if (terminalWins.has(row.container_id)) {
-                    const win = terminalWins.get(row.container_id)
+                if (terminalWins.has(row.containerID)) {
+                    const win = terminalWins.get(row.containerID)
                     if (!win.closed) {
-                        terminalWins.get(row.container_id).focus()
+                        terminalWins.get(row.containerID).focus()
                     } else {
                         const win = window.open(url, '_blank')
-                        terminalWins.set(row.container_id, win)
+                        terminalWins.set(row.containerID, win)
                     }
                 } else {
                     const win = window.open(url, '_blank')
-                    terminalWins.set(row.container_id, win)
+                    terminalWins.set(row.containerID, win)
                 }
             }
             // 2. 日志检索
