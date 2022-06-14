@@ -172,15 +172,27 @@
                 if (code === this.curProjectCode) return
 
                 const item = this.onlineProjectList.find(item => item.project_code === code)
-                const route = this.$router.resolve({
-                    name: item?.kind === 2 ? 'clusterMain' : this.$route.name,
-                    params: {
-                        projectCode: code,
-                        // eslint-disable-next-line camelcase
-                        projectId: item?.project_id
-                    }
-                })
-                location.href = route.href
+                if (item?.kind !== this.curProject.kind) {
+                    // 切换不同项目时刷新界面
+                    const route = this.$router.resolve({
+                        name: 'clusterMain',
+                        params: {
+                            projectCode: code,
+                            // eslint-disable-next-line camelcase
+                            projectId: item?.project_id
+                        }
+                    })
+                    location.href = route.href
+                } else {
+                    this.$router.push({
+                        name: 'clusterMain',
+                        params: {
+                            projectCode: code,
+                            // eslint-disable-next-line camelcase
+                            projectId: item?.project_id
+                        }
+                    })
+                }
             },
             handleGotoUserToken () {
                 if (this.$route.name === 'token') return
