@@ -40,7 +40,7 @@ def create_bkrepo_project_and_depot(project: FancyDict, username: str):
         logger.error("创建制品库的项目失败: %s", e)
     # 创建镜像仓库
     try:
-        client.create_repo(f"{project.project_code}-docker", repo_type="DOCKER")
+        client.create_repo(project.project_code, repo_name=f"{project.project_code}-docker", repo_type="DOCKER")
     except bk_repo.BkRepoCreateRepoError as e:
         logger.error("创建制品库的镜像仓库失败: %s", e)
 
