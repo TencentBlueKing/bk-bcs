@@ -490,7 +490,7 @@ class AppStatusView(AppMixin, AccessTokenMixin, viewsets.ReadOnlyModelViewSet, P
                 f.flush()
 
                 data = collect_resource_status(
-                    kubeconfig=f.name, app=app, project_code=project_code, cluster_id= app.cluster_id, bin_path=bin_path
+                    kubeconfig=f.name, app=app, project_code=project_code, cluster_id=app.cluster_id, bin_path=bin_path
                 )
         except DashboardExecutionError as e:
             message = "get helm app status failed, error_no: {error_no}\n{output}".format(
