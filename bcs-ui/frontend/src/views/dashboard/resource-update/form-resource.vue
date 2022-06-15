@@ -145,6 +145,7 @@
                 type: String,
                 default: ''
             },
+            // yaml模式回退到表单模式还原的数据
             formData: {
                 type: Object,
                 default: () => ({})
@@ -204,6 +205,10 @@
         },
         async created () {
             this.isLoading = true
+            if (this.formData && !!Object.keys(this.formData).length) {
+                // 从yaml模式切换到表单模式，初始化原始数据
+                this.original = await this.handleGetManifestByFormData(this.formData)
+            }
             await Promise.all([
                 this.handleGetFormSchemaData(),
                 this.handleGetDetail()
