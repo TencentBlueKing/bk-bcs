@@ -232,11 +232,11 @@ type GameStatefulSetSpec struct {
 	// +kubebuilder:default=10
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,8,opt,name=revisionHistoryLimit"`
 
-	// WithoutReadiness indicates whether the readinessgate for inplace update should be
+	// DisableReadinessGate indicates whether the readinessgate for inplace update should be
 	// injected to GameStatefulSet's pods.
 	// Defaults to false (readinessgate will be injected to pods)
 	// +kubebuilder:default=false
-	WithoutReadiness bool `json:"withoutReadiness,omitempty"`
+	DisableReadinessGate bool `json:"disableReadinessGate,omitempty"`
 }
 
 // GameStatefulSetPreDeleteUpdateStrategy defines the predelete strategy of GameStatefulSet
