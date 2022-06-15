@@ -41,6 +41,7 @@ func main() {
 	leader := becomeLeader(ctx, opts)
 	go workAsProducer(ctx, dataManager, leader, opts)
 	<-ctx.Done()
+	dataManager.WaitForConsumerDone()
 }
 
 func becomeLeader(ctx context.Context, opt *cmd.DataManagerOptions) sync.Leader {
