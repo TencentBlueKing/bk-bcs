@@ -103,7 +103,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 			}
 		}
 	}
-	if found {
+	if found && group.CloudNodeGroupID != "" {
 		err = tkeCli.DeleteClusterNodePool(cluster.SystemID, []string{group.CloudNodeGroupID}, keepInstance)
 		if err != nil {
 			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in task %s step %s failed, %s",
