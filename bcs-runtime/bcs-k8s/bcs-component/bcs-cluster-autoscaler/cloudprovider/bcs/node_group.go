@@ -361,7 +361,8 @@ func (group *NodeGroup) getNodeTemplate() (*nodeTemplate, error) {
 		InstanceType: nodeGroup.LaunchTemplate.InstanceType,
 		Region:       nodeGroup.Region,
 		Resources:    resources,
-		Label:        nodeGroup.Labels,
+		Label:        nodeGroup.NodeTemplate.Labels,
+		Taint:        nodeGroup.NodeTemplate.Taints,
 	}, nil
 }
 
