@@ -72,6 +72,12 @@ spec:
             description: GameStatefulSetSpec A StatefulSetSpec is the specification
               of a StatefulSet.
             properties:
+              disableReadinessGate:
+                default: false
+                description: DisableReadinessGate indicates whether the readinessgate
+                  for inplace update should be injected to GameStatefulSet's pods.
+                  Defaults to false (readinessgate will be injected to pods)
+                type: boolean
               podManagementPolicy:
                 default: OrderedReady
                 description: podManagementPolicy controls how pods are created during

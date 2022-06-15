@@ -231,6 +231,12 @@ type GameStatefulSetSpec struct {
 	// StatefulSetSpec version. The default value is 10.
 	// +kubebuilder:default=10
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,8,opt,name=revisionHistoryLimit"`
+
+	// DisableReadinessGate indicates whether the readinessgate for inplace update should be
+	// injected to GameStatefulSet's pods.
+	// Defaults to false (readinessgate will be injected to pods)
+	// +kubebuilder:default=false
+	DisableReadinessGate bool `json:"disableReadinessGate,omitempty"`
 }
 
 // GameStatefulSetPreDeleteUpdateStrategy defines the predelete strategy of GameStatefulSet

@@ -64,6 +64,12 @@ spec:
           spec:
             description: GameDeploymentSpec defines the spec of GameDeployment
             properties:
+              disableReadinessGate:
+                default: false
+                description: DisableReadinessGate indicates whether the readinessgate
+                  for inplace update should be injected to GameDeployment's pods.
+                  Defaults to false (readinessgate will be injected to pods)
+                type: boolean
               minReadySeconds:
                 default: 0
                 description: Minimum number of seconds for which a newly created pod
