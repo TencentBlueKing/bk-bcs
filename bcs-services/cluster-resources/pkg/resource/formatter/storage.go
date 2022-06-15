@@ -27,6 +27,8 @@ var PVAccessMode2ShortMap = map[string]string{
 	"ReadWriteMany": "RWX",
 }
 
+const defaultSCAnnoKey = "storageclass.kubernetes.io/is-default-class"
+
 // FormatStorageRes ...
 func FormatStorageRes(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
@@ -54,6 +56,13 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 func FormatPVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
 	ret["accessModes"] = parseShortAccessModes(manifest)
+	return ret
+}
+
+// FormatSC ...
+func FormatSC(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatStorageRes(manifest)
+	ret["isDefault"] = mapx.GetStr(manifest, []string{"metadata", "annotations", defaultSCAnnoKey}) == "true"
 	return ret
 }
 

@@ -64,3 +64,20 @@ var lightPVCManifest = map[string]interface{}{
 func TestFormatPVC(t *testing.T) {
 	assert.Equal(t, []string{"RWO"}, FormatPVC(lightPVCManifest)["accessModes"])
 }
+
+var lightSCManifest = map[string]interface{}{
+	"metadata": map[string]interface{}{
+		"creationTimestamp": "2022-01-01T10:00:00Z",
+		"name":              "storage-class-test",
+		"namespace":         "default",
+		"annotations": map[string]interface{}{
+			"storageclass.kubernetes.io/is-default-class": "true",
+		},
+	},
+	"provisioner": "k8s.io/minikube-hostpath",
+}
+
+func TestFormatSC(t *testing.T) {
+	ret := FormatSC(lightSCManifest)
+	assert.Equal(t, true, ret["isDefault"])
+}
