@@ -365,8 +365,8 @@
                                         <i class="biz-status-icon bcs-icon bcs-icon-check-circle biz-success-text f13" v-else></i>
                                     </td>
                                     <td>
-                                        <template v-if="resource.link">
-                                            <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="goResourceInfo(resource.link)">{{resource.name}}</a>
+                                        <template v-if="kindRouteMap[resource.kind]">
+                                            <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="goResourceInfo(resource)">{{resource.name}}</a>
                                         </template>
                                         <template v-else>
                                             {{resource.name}}
@@ -512,7 +512,13 @@
                 selectLists: [],
                 isCheckAll: false, // 表格全选状态
                 timeOutFlag: false,
-                webAnnotationsPerms: {}
+                webAnnotationsPerms: {},
+                kindRouteMap: {
+                    'Deployment': 'deploymentsInstanceDetail2',
+                    'Daemonset': 'daemonsetInstanceDetail2',
+                    'Statefulset': 'statefulsetInstanceDetail2',
+                    'Job': 'jobInstanceDetail2'
+                }
             }
         },
         computed: {
@@ -619,16 +625,29 @@
 
             /**
              * 查看资源详情
-             * @param  {string} link 资源链接
              */
-            goResourceInfo (link) {
-                const clusterId = this.curApp.cluster_id
+            goResourceInfo (resource) {
+                // const clusterId = this.curApp.cluster_id
                 if (this.isSharedCluster) {
                     const route = this.$router.resolve({ name: 'dashboardWorkload' })
                     window.open(route.href)
                 } else {
-                    const url = `${window.location.origin}${link}&cluster_id=${clusterId}`
-                    window.open(url)
+                    const routeName = this.kindRouteMap[resource.kind]
+                    const route = this.$router.resolve({
+                        name: routeName,
+                        params: {
+                            instanceName: resource.name,
+                            instanceNamespace: resource.namespace,
+                            instanceCategory: 'deployments'
+                        },
+                        query: {
+                            cluster_id: resource.cluster_id,
+                            name: resource.name,
+                            namespace: resource.namespace
+                        }
+                    })
+                    console.log(route)
+                    window.open(route.href)
                 }
             },
 
@@ -664,7 +683,8 @@
                         const metedata = {
                             name: resource.name,
                             kind: resource.kind,
-                            link: resource.link,
+                            cluster_id: resource.cluster_id,
+                            namespace: resource.namespace,
                             isOpened: false,
                             pods: {
                                 desired: resource.status_sumary.desired_pods, // 期望数
