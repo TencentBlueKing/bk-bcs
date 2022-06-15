@@ -2,11 +2,9 @@ import http from '@/api'
 import { json2Query } from '@/common/util'
 import router from '@/router'
 import store from '@/store'
-// import { crPrefix } from '@/api/base'
 
 const methodsWithoutData = ['get', 'head', 'options', 'delete']
 const defaultConfig = { needRes: false }
-const prefixData = []
 
 export const parseUrl = (url, params = {}) => {
     // 全局URL变量替换
@@ -21,8 +19,7 @@ export const parseUrl = (url, params = {}) => {
             variableData[key] = params[key]
         }
     })
-    let newUrl = `${/(http|https):\/\/([\w.]+\/?)\S*/.test(url) || prefixData.some(prefix => url.indexOf(prefix) === 0)
-        ? url : `${DEVOPS_BCS_API_URL}${url}`}`
+    let newUrl = `${/(http|https):\/\/([\w.]+\/?)\S*/.test(url) ? url : `${DEVOPS_BCS_API_URL}${url}`}`
     Object.keys(variableData).forEach(key => {
         if (!variableData[key]) {
             // console.warn(`路由变量未配置${key}`)

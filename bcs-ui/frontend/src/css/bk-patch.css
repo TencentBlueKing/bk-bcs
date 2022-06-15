@@ -508,6 +508,7 @@
 }
 
 .bk-dropdown-menu {
+    height: 32px !important;
     .bk-dropdown-list {
         overflow: auto;
 
@@ -1327,7 +1328,7 @@
 
 .bk-form-radio {
     & + .bk-form-radio {
-        margin-left: 40px;
+        margin-left: 30px;
     }
 }
 

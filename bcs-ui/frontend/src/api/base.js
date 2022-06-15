@@ -2,7 +2,6 @@ import { request } from './request'
 
 // app
 export const projectFeatureFlag = request('get', '/api/projects/$projectId/clusters/$clusterId/feature_flags/')
-export const namespaceList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/')
 
 // log
 export const LOG_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`
@@ -12,28 +11,35 @@ export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$
 export const podLogsStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`
 
 // dashbord
-export const dashbordList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/')// 注意：HPA类型没有子分类$category
-export const dashbordListWithoutNamespace = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/$type/$category/') // PersistentVolume, StorageClass资源暂不支持命名空间
-export const retrieveDetail = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name/')
-export const retrieveContainerDetail = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/$category/$name/containers/$containerName/')
 export const podMetric = request('post', '/api/metrics/projects/$projectId/clusters/$clusterId/pods/$metric/')
 export const containerMetric = request('post', '/api/metrics/projects/$projectId/clusters/$clusterId/pods/$podId/containers/$metric/')
-export const listWorkloadPods = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/')
-export const listStoragePods = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/$type/')
-export const listContainers = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/containers/')
-export const fetchContainerEnvInfo = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/containers/$containerName/env_info/')
-export const resourceCreate = request('post', '/api/dashboard/projects/$projectId/clusters/$clusterId/$type/$category/')
-export const resourceUpdate = request('put', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name/')
-export const resourceDelete = request('delete', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name/')
-export const exampleManifests = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/examples/manifests/')
-export const subscribeList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/subscribe/')
-export const crdList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/')// 获取CRD列表
-export const customResourceList = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/') // 自定义资源
-export const retrieveCustomResourceDetail = request('get', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/$name/') // 自定义资源详情
-export const customResourceCreate = request('post', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/') // 自定义资源创建
-export const customResourceUpdate = request('put', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/$name/') // 自定义资源更新
-export const customResourceDelete = request('delete', '/api/dashboard/projects/$projectId/clusters/$clusterId/crds/v2/$crd/$category/$name/') // 自定义资源删除
-export const reschedulePod = request('put', '/api/dashboard/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/reschedule/') // pod重新调度
+
+// cluster resource
+// todo
+export const crPrefix = `/bcsapi/v4/clusterresources/v1`
+export const CR_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${crPrefix}`
+export const namespaceList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces`)
+export const dashbordList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category`)// 注意：HPA类型没有子分类$category
+export const formSchema = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/form_schema`)
+export const dashbordListWithoutNamespace = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/$type/$category`) // PersistentVolume, StorageClass资源暂不支持命名空间
+export const retrieveDetail = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name`)
+export const retrieveContainerDetail = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/$category/$name/containers/$containerName`)
+export const listWorkloadPods = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods`)
+export const listStoragePods = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/$type`)
+export const listContainers = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/containers`)
+export const fetchContainerEnvInfo = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/containers/$containerName/env_info`)
+export const resourceCreate = request('post', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/$type/$category`)
+export const resourceUpdate = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name`)
+export const resourceDelete = request('delete', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name`)
+export const exampleManifests = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/examples/manifests`)
+export const crdList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds`)// 获取CRD列表
+export const customResourceList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crd/$category`) // 自定义资源
+export const retrieveCustomResourceDetail = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crd/$category/$name`) // 自定义资源详情
+export const customResourceCreate = request('post', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crd/$category`) // 自定义资源创建
+export const customResourceUpdate = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crd/$category/$name`) // 自定义资源更新
+export const customResourceDelete = request('delete', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crd/$category/$name`) // 自定义资源删除
+export const reschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/reschedule`) // pod重新调度
+export const renderManifestPreview = request('post', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/render_manifest_preview`)
 
 // apply hosts
 export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/')
@@ -118,7 +124,6 @@ export default {
     exampleManifests,
     getNodeTaints,
     setNodeTaints,
-    subscribeList,
     namespaceList,
     createProject,
     crdList,

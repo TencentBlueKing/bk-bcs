@@ -9,7 +9,7 @@ import { ISubscribeData } from './use-subscribe'
 export default function useTableData (ctx: SetupContext) {
     const isLoading = ref(false)
     const data = ref<ISubscribeData>({
-        manifest_ext: {},
+        manifestExt: {},
         manifest: {}
     })
     const webAnnotations = ref<any>({})
@@ -31,7 +31,7 @@ export default function useTableData (ctx: SetupContext) {
         isLoading.value = true
         const res = await fetchList(type, category, namespaceId)
         data.value = res.data
-        webAnnotations.value = res.web_annotations || {}
+        webAnnotations.value = res.webAnnotations || {}
         isLoading.value = false
         return res.data
     }
@@ -50,7 +50,7 @@ export default function useTableData (ctx: SetupContext) {
             namespace
         })
         data.value = res.data
-        webAnnotations.value = res.web_annotations || {}
+        webAnnotations.value = res.webAnnotations || {}
         isLoading.value = false
         return res.data
     }
