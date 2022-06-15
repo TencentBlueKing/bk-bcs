@@ -23,9 +23,24 @@
                         <span>{{ row.volumeBindingMode || 'Immediate' }}</span>
                     </template>
                 </bk-table-column>
+                <bk-table-column label="Parameters">
+                    <template #default="{ row }">
+                        <span>{{ handleParseObjToArr(row, 'parameters') || '--' }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="MountOptions">
+                    <template #default="{ row }">
+                        <span>{{ (row.mountOptions || []).join(', ') || '--' }}</span>
+                    </template>
+                </bk-table-column>
                 <bk-table-column label="AllowVolumeExpansion">
                     <template #default="{ row }">
                         <span>{{ row.allowVolumeExpansion || 'false' }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="IsDefaultClass">
+                    <template #default="{ row }">
+                        <span>{{ handleGetExtData(row.metadata.uid, 'isDefault') }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
@@ -33,12 +48,6 @@
                         <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">{{ handleGetExtData(row.metadata.uid, 'age') }}</span>
                     </template>
                 </bk-table-column>
-                <!-- <bk-table-column :label="$t('操作')" :resizable="false" width="150">
-                    <template #default="{ row }">
-                        <bk-button text @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-                        <bk-button class="ml10" text @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
-                    </template>
-                </bk-table-column> -->
             </bk-table>
         </template>
     </BaseLayout>
@@ -48,6 +57,16 @@
     import BaseLayout from '@/views/dashboard/common/base-layout'
 
     export default defineComponent({
-        components: { BaseLayout }
+        components: { BaseLayout },
+        setup () {
+            const handleParseObjToArr = (row, prop) => {
+                return Object.keys(row[prop] || {}).map(key => {
+                    return `${key}=${row[prop][key]}`
+                }).join(', ')
+            }
+            return {
+                handleParseObjToArr
+            }
+        }
     })
 </script>

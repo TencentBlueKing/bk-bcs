@@ -75,7 +75,7 @@ const router = new VueRouter({
             component: userToken
         },
         {
-            path: '/projectManage',
+            path: '/project/manage',
             name: 'projectManage',
             component: ProjectManage
         },
