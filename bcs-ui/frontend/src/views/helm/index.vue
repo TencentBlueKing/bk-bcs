@@ -518,6 +518,12 @@
                     'Daemonset': 'daemonsetInstanceDetail2',
                     'Statefulset': 'statefulsetInstanceDetail2',
                     'Job': 'jobInstanceDetail2'
+                },
+                categoryMap: {
+                    'Deployment': 'deployment',
+                    'Daemonset': 'daemonset',
+                    'Statefulset': 'statefulset',
+                    'Job': 'job'
                 }
             }
         },
@@ -638,7 +644,7 @@
                         params: {
                             instanceName: resource.name,
                             instanceNamespace: resource.namespace,
-                            instanceCategory: 'deployments'
+                            instanceCategory: this.categoryMap[resource.kind]
                         },
                         query: {
                             cluster_id: resource.cluster_id,
