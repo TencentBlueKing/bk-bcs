@@ -43,7 +43,7 @@ var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[st
 	// storage
 	resource.PV:  FormatPV,
 	resource.PVC: FormatPVC,
-	resource.SC:  FormatStorageRes,
+	resource.SC:  FormatSC,
 
 	// rbac
 	resource.SA: FormatSA,
