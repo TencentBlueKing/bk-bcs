@@ -10,7 +10,7 @@ type NodeGroup struct {
 	AutoScaling          *AutoScalingGroup    `protobuf:"bytes,6,opt,name=autoScaling,proto3" json:"autoScaling,omitempty"`
 	LaunchTemplate       *LaunchConfiguration `protobuf:"bytes,7,opt,name=launchTemplate,proto3" json:"launchTemplate,omitempty"`
 	Labels               map[string]string    `protobuf:"bytes,8,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Taints               []*Taint             `protobuf:"bytes,9,rep,name=taints,proto3" json:"taints,omitempty"`
+	Taints               map[string]string    `protobuf:"bytes,9,rep,name=taints,proto3" json:"taints,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	NodeOS               string               `protobuf:"bytes,10,opt,name=nodeOS,proto3" json:"nodeOS,omitempty"`
 	Creator              string               `protobuf:"bytes,11,opt,name=creator,proto3" json:"creator,omitempty"`
 	Updater              string               `protobuf:"bytes,12,opt,name=updater,proto3" json:"updater,omitempty"`
@@ -19,6 +19,7 @@ type NodeGroup struct {
 	ProjectID            string               `protobuf:"bytes,15,opt,name=projectID,proto3" json:"projectID,omitempty"`
 	Provider             string               `protobuf:"bytes,16,opt,name=provider,proto3" json:"provider,omitempty"`
 	Status               string               `protobuf:"bytes,17,opt,name=status,proto3" json:"status,omitempty"`
+	NodeTemplate         *NodeTemplate        `protobuf:"bytes,18,opt,name=nodeTemplate,proto3" json:"nodeTemplate,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-" bson:"-"`
 	XXX_unrecognized     []byte               `json:"-" bson:"-"`
 	XXX_sizecache        int32                `json:"-" bson:"-"`
@@ -68,6 +69,35 @@ type LaunchConfiguration struct {
 	XXX_sizecache         int32               `json:"-" bson:"-"`
 }
 
+// NodeTemplate for kubernetes cluster node common setting
+type NodeTemplate struct {
+	NodeTemplateID       string            `protobuf:"bytes,1,opt,name=nodeTemplateID,proto3" json:"nodeTemplateID,omitempty"`
+	Name                 string            `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ProjectID            string            `protobuf:"bytes,3,opt,name=projectID,proto3" json:"projectID,omitempty"`
+	Labels               map[string]string `protobuf:"bytes,4,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Taints               []*Taint          `protobuf:"bytes,5,rep,name=taints,proto3" json:"taints,omitempty"`
+	DockerGraphPath      string            `protobuf:"bytes,6,opt,name=dockerGraphPath,proto3" json:"dockerGraphPath,omitempty"`
+	MountTarget          string            `protobuf:"bytes,7,opt,name=mountTarget,proto3" json:"mountTarget,omitempty"`
+	UserScript           string            `protobuf:"bytes,8,opt,name=userScript,proto3" json:"userScript,omitempty"`
+	UnSchedulable        uint32            `protobuf:"varint,9,opt,name=unSchedulable,proto3" json:"unSchedulable,omitempty"`
+	DataDisks            []*DataDisk       `protobuf:"bytes,10,rep,name=dataDisks,proto3" json:"dataDisks,omitempty"`
+	ExtraArgs            map[string]string `protobuf:"bytes,11,rep,name=extraArgs,proto3" json:"extraArgs,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	PreStartUserScript   string            `protobuf:"bytes,12,opt,name=preStartUserScript,proto3" json:"preStartUserScript,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-" bson:"-"`
+	XXX_unrecognized     []byte            `json:"-" bson:"-"`
+	XXX_sizecache        int32             `json:"-" bson:"-"`
+}
+
+// Taint for node taints
+type Taint struct {
+	Key                  string   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value                string   `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Effect               string   `protobuf:"bytes,3,opt,name=effect,proto3" json:"effect,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
+	XXX_unrecognized     []byte   `json:"-" bson:"-"`
+	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
 // DataDisk 数据盘定义
 type DataDisk struct {
 	DiskType             string   `protobuf:"bytes,1,opt,name=diskType,proto3" json:"diskType,omitempty"`
@@ -80,7 +110,7 @@ type DataDisk struct {
 // InternetAccessible 公网带宽设置
 type InternetAccessible struct {
 	InternetChargeType   string   `protobuf:"bytes,1,opt,name=internetChargeType,proto3" json:"internetChargeType,omitempty"`
-	InternetMaxBandwidth uint32   `protobuf:"bytes,2,opt,name=internetMaxBandwidth,proto3" json:"internetMaxBandwidth,omitempty"`
+	InternetMaxBandwidth string   `protobuf:"bytes,2,opt,name=internetMaxBandwidth,proto3" json:"internetMaxBandwidth,omitempty"`
 	PublicIPAssigned     bool     `protobuf:"varint,3,opt,name=publicIPAssigned,proto3" json:"publicIPAssigned,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
@@ -265,11 +295,4 @@ type TimeRange struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`
-}
-
-// Taint 污点
-type Taint struct {
-	Key    string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Value  string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	Effect string `protobuf:"bytes,3,opt,name=effect,proto3" json:"effect,omitempty"`
 }
