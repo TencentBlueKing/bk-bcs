@@ -130,9 +130,9 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, 
 	req.ClusterId = &clusterID
 	req.NodePoolId = &group.CloudNodeGroupID
 	req.Name = &group.Name
-	req.Labels = api.MapToCloudLabels(group.Labels)
 	if group.NodeTemplate != nil {
 		req.Taints = api.MapToCloudTaints(group.NodeTemplate.Taints)
+		req.Labels = api.MapToCloudLabels(group.NodeTemplate.Labels)
 	}
 	req.Tags = api.MapToCloudTags(group.Tags)
 	req.EnableAutoscale = common.BoolPtr(false)

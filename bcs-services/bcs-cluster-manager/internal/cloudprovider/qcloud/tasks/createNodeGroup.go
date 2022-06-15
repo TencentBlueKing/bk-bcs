@@ -95,7 +95,6 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		// 不开启腾讯云 CA 组件，因为需要部署 BCS 自己的 CA 组件
 		EnableAutoscale:  common.BoolPtr(false),
 		Name:             &group.Name,
-		Labels:           api.MapToLabels(group.Labels),
 		Tags:             api.MapToTags(group.Tags),
 		ContainerRuntime: &group.ContainerRuntime,
 		RuntimeVersion:   &group.RuntimeVersion,
@@ -105,6 +104,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 	if group.NodeTemplate != nil {
 		nodePool.Taints = api.MapToTaints(group.NodeTemplate.Taints)
+		nodePool.Labels = api.MapToLabels(group.NodeTemplate.Labels)
 	}
 	if nodePool.AutoScalingGroupPara != nil && nodePool.AutoScalingGroupPara.VpcID == nil {
 		nodePool.AutoScalingGroupPara.VpcID = &cluster.VpcID
