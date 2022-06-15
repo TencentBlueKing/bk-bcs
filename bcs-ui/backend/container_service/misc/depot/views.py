@@ -109,11 +109,9 @@ class AvailableImagesViewSet(BaseImagesViewSet):
 class BaseImageTagsViewSet(SystemViewSet):
     def list_image_tags(self, access_token: str, image_path: str) -> Dict:
         page = PageData()
-        # 前端传递的路径格式为/项目名/仓库名/镜像，需要转换为 镜像
-        repo_list = image_path.split("/", 3)
-        project_name = repo_list[1]
-        repo_name = repo_list[2]
-        image_name = repo_list[3]
+        # 前端传递的路径格式为(/)项目名/仓库名/镜像，需要转换为 镜像
+        # 为防止出现前端可能带或不带斜线的不一致情况，主动去掉左侧的斜线
+        project_name, repo_name, image_name = f"{image_path.lstrip('/')}".split("/", 2)
         client = BkRepoClient(access_token)
         return client.list_image_tags(project_name, repo_name, image_name, page)
 
@@ -121,7 +119,7 @@ class BaseImageTagsViewSet(SystemViewSet):
 class AvailableTagsViewSet(BaseImageTagsViewSet):
     def get(self, request, project_id):
         params = self.params_validate(AvailableTagSLZ)
-        resp_data = self.list_image_tags(params["repo"])
+        resp_data = self.list_image_tags(request.user.token.access_token, params["repo"])
         # 转换为前端需要的数据
         data = [
             {"value": f"{settings.BK_REPO_DOMAIN}/{params['repo']}:{i['tag']}", "text": i["tag"]}
@@ -130,13 +128,13 @@ class AvailableTagsViewSet(BaseImageTagsViewSet):
         return Response(data)
 
 
-class ImageDetailViewSet(SystemViewSet):
+class ImageDetailViewSet(BaseImageTagsViewSet):
     def get(self, request, project_id):
         params = self.params_validate(ImageDetailSLZ)
         # 前端传递的格式为/项目名/仓库名/镜像，需要转换为 镜像
-        resp_data = self.list_image_tags(params["image_repo"])
+        resp_data = self.list_image_tags(request.user.token.access_token, params["image_repo"])
         tags = [
-            {"tag": i["tag"], "size": f"{i['size']} MB", "modified": i["lastModifiedDate"]}
+            {"tag": i["tag"], "size": f"{round(i['size']/1024/1024, 2)} MB", "modified": i["lastModifiedDate"]}
             for i in resp_data["records"]
         ]
         latest_tag = resp_data["records"][-1]

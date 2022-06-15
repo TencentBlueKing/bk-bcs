@@ -13,17 +13,14 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import base64
-import json
 import logging
 import os
 import tempfile
 from datetime import datetime, timedelta
 
-import yaml
 from django.conf import settings
 from django.core.cache import cache
 from django.db import IntegrityError
-from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from jinja2 import Template
@@ -32,25 +29,23 @@ from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components import paas_cc
+from backend.components import bk_repo, paas_cc
 from backend.components.base import ComponentAuth
-from backend.components.bcs import k8s
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.misc.bke_client.client import BCSClusterCredentialsNotFound, BCSClusterNotFound
 from backend.helm.app.repo import get_or_create_private_repo
-from backend.helm.app.serializers import FilterNamespacesSLZ
+from backend.helm.app.serializers import FilterNamespacesSLZ, ReleaseParamsSLZ
 from backend.helm.app.utils import get_helm_dashboard_path
 from backend.helm.authtoken.authentication import TokenAuthentication
+from backend.helm.helm.constants import RELEASE_VERSION_PREFIX
 from backend.helm.helm.models.chart import ChartVersion
-from backend.helm.helm.providers.repo_provider import add_plain_repo, add_platform_public_repos, add_repo
-from backend.helm.helm.serializers import ChartVersionSLZ
+from backend.helm.helm.serializers import ChartVersionDetailSLZ, ChartVersionSLZ
 from backend.helm.permissions import check_cluster_perm
 from backend.helm.releases.utils.release_secret import RecordReleases
-from backend.helm.toolkit.diff import parser
+from backend.helm.toolkit import chart_versions
 from backend.iam.permissions.decorators import response_perms
 from backend.iam.permissions.resources.namespace import NamespaceRequest, calc_iam_ns_id
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
@@ -64,7 +59,6 @@ from backend.utils.views import AccessTokenMixin, ActionSerializerMixin, AppMixi
 
 from .models import App
 from .serializers import (
-    AppCreatePreviewDiffWithClusterSLZ,
     AppCreatePreviewSLZ,
     AppDetailSLZ,
     AppPreviewSLZ,
@@ -78,9 +72,6 @@ from .serializers import (
     AppUpgradeByAPISLZ,
     AppUpgradeSLZ,
     AppUpgradeVersionsSLZ,
-    ClusterHelmInitSLZ,
-    ClusterImportSLZ,
-    ClusterKubeConfigSLZ,
     NamespaceSLZ,
     ReleaseListSLZ,
     SyncDict2YamlToolSLZ,
@@ -368,11 +359,6 @@ class AppCreatePreviewView(AccessTokenMixin, ProjectMixin, viewsets.ModelViewSet
 
 
 @with_code_wrapper
-class AppCreatePreviewDiffWithClusterView(AccessTokenMixin, ProjectMixin, viewsets.ModelViewSet):
-    serializer_class = AppCreatePreviewDiffWithClusterSLZ
-
-
-@with_code_wrapper
 class AppUpdateChartVersionView(AppMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = ChartVersionSLZ
     lookup_url_kwarg = "update_chart_version_id"
@@ -429,65 +415,6 @@ def render_bcs_agent_template(token, bcs_cluster_id, namespace, access_token, pr
 
 
 @with_code_wrapper
-class ClusterImporterView(AccessTokenMixin, viewsets.ReadOnlyModelViewSet):
-    serializer_class = ClusterImportSLZ
-
-    @property
-    def bcs_agent_namespace(self):
-        return "kube-system"
-
-    def create(self, request, project_id, *args, **kwargs):
-        serializer = ClusterImportSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        cluster_id = serializer.data["cluster_id"]
-
-        check_cluster_perm(user=request.user, project_id=project_id, cluster_id=cluster_id, request=request)
-
-        bcs_client = bcs_utils_client.get_bcs_client(
-            project_id=project_id, cluster_id=cluster_id, access_token=self.access_token
-        )
-        bcs_cluster_info = bcs_client.get_or_register_bcs_cluster()
-        if not bcs_cluster_info["result"]:
-            return Response(data=bcs_cluster_info)
-
-        bcs_cluster_info = bcs_cluster_info["data"]
-        content = render_bcs_agent_template(
-            token=bcs_cluster_info["token"],
-            bcs_cluster_id=bcs_cluster_info["bcs_cluster_id"],
-            namespace=self.bcs_agent_namespace,
-            access_token=self.access_token,
-            project_id=project_id,
-            cluster_id=cluster_id,
-        )
-
-        response = HttpResponse(content=content, content_type='text/plain; charset=UTF-8')
-        response['Content-Disposition'] = 'attachment; filename="bcs-agent-%s.yaml"' % cluster_id
-        return response
-
-
-@with_code_wrapper
-class ClusterKubeConfigView(AccessTokenMixin, viewsets.ReadOnlyModelViewSet):
-    serializer_class = ClusterKubeConfigSLZ
-
-    def create(self, request, project_id, *args, **kwargs):
-        serializer = ClusterKubeConfigSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        cluster_id = serializer.data["cluster_id"]
-
-        check_cluster_perm(user=request.user, project_id=project_id, cluster_id=cluster_id, request=request)
-
-        kubeconfig = bcs_utils_client.get_kubectl_config_context(
-            access_token=self.access_token, project_id=project_id, cluster_id=cluster_id
-        )
-
-        response = HttpResponse(content=kubeconfig, content_type='text/plain; charset=UTF-8')
-        response['Content-Disposition'] = 'attachment; filename="bcs-%s-kubeconfig.yaml"' % cluster_id
-        return response
-
-
-@with_code_wrapper
 class SyncDict2YamlToolView(viewsets.ModelViewSet):
     serializer_class = SyncDict2YamlToolSLZ
 
@@ -495,190 +422,6 @@ class SyncDict2YamlToolView(viewsets.ModelViewSet):
 @with_code_wrapper
 class SyncYaml2DictToolView(viewsets.ModelViewSet):
     serializer_class = SyncYaml2DictToolSLZ
-
-
-@with_code_wrapper
-class ClusterHelmInitView(ClusterImporterView):
-    serializer_class = ClusterHelmInitSLZ
-
-    def get_or_add_public_repos(self, project_id):
-        if not settings.HELM_HAS_ABILITY_SUPPLY_CHART_REPO_SERVICE:
-            return []
-
-        # 1. add/get plain public repo for project
-        public_repos = add_platform_public_repos(target_project_id=project_id)
-        return public_repos
-
-    def get_or_add_private_repos(self, project_id, user):
-        project = paas_cc.get_project(access_token=self.access_token, project_id=project_id)
-        if settings.HELM_HAS_ABILITY_SUPPLY_CHART_REPO_SERVICE:
-            # 2. add/get private repo for project
-            private_repo = add_repo(
-                target_project_id=project_id,
-                name=project["data"]["english_name"],
-                provider_name="chartmuseum",
-                url="http://localhost/",  # merely provide schema
-                user=user,
-            )
-        else:
-            repo_auth = {
-                "type": "basic",
-                "role": "admin",
-                "credentials": {
-                    "username": settings.HELM_MERELY_REPO_USERNAME,
-                    "password": settings.HELM_MERELY_REPO_PASSWORD,
-                },
-            }
-            english_name = project['data']['english_name']
-            url = '%s/chartrepo/%s/' % (settings.HELM_REPO_DOMAIN, english_name)
-            private_repo = add_plain_repo(
-                target_project_id=project_id, name=english_name, url=url, repo_auth=repo_auth
-            )
-        return [private_repo]
-
-    def retrieve(self, request, project_id, *args, **kwargs):
-        parameter = dict(request.GET.items())
-        serializer = ClusterKubeConfigSLZ(data=parameter)
-        serializer.is_valid(raise_exception=True)
-
-        cluster_id = serializer.data["cluster_id"]
-
-        check_cluster_perm(user=request.user, project_id=project_id, cluster_id=cluster_id, request=request)
-
-        if settings.HELM_HAS_ABILITY_SUPPLY_CHART_REPO_SERVICE:
-            bcs_client = bcs_utils_client.get_bcs_client(
-                project_id=project_id, cluster_id=cluster_id, access_token=self.access_token
-            )
-
-            bcs_cluster_info = bcs_client.get_cluster()
-            if bcs_cluster_info is None or not bcs_cluster_info.get("bcs_cluster_id"):
-                result = {"code": 17602, "message": "cluster does not regist to bcs yet.", "initialized": False}
-                return Response(result)
-
-        serializer = self.serializer_class(
-            {
-                "public_repos": self.get_or_add_public_repos(project_id),
-                "private_repos": self.get_or_add_private_repos(project_id, request.user),
-                "initialized": True,
-            }
-        )
-        return Response(data=serializer.data)
-
-    def create(self, request, project_id, *args, **kwargs):
-        serializer = ClusterKubeConfigSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        cluster_id = serializer.data["cluster_id"]
-
-        check_cluster_perm(user=request.user, project_id=project_id, cluster_id=cluster_id, request=request)
-
-        # 检查是否有 node, 没有node时，bcs-agent无法启动
-        nodes_info = paas_cc.get_node_list(self.access_token, project_id, cluster_id)
-        if not nodes_info["data"]["results"]:
-            return Response(data={"code": 40032, "message": _("集群下没有Node节点，无法启用，请先添加")})
-        data = helm_init(self.access_token, project_id, cluster_id, self.bcs_agent_namespace)
-
-        return Response(data=data)
-
-
-def helm_init(access_token, project_id, cluster_id, bcs_agent_namespace):
-    if not settings.HELM_NEED_REGIST_TO_BKE_WHEN_INIT:
-        data = {
-            "code": 0,
-            "initialized": True,
-            "detail": "HELM_NEED_REGIST_TO_BKE_WHEN_INIT set",
-            "message": "ok",
-        }
-        return data
-
-    # 1. do registering to bcs
-    # need to be re-entrant
-    bcs_client = bcs_utils_client.get_bcs_client(
-        project_id=project_id, cluster_id=cluster_id, access_token=access_token
-    )
-    bcs_cluster_info = bcs_client.get_or_register_bcs_cluster()
-    if not bcs_cluster_info.get("result"):
-        data = {"code": 10601, "message": "failed to regist to bcs.", "data": bcs_cluster_info}
-        return Response(data=data)
-
-    bcs_cluster_info = bcs_cluster_info["data"]
-    content = render_bcs_agent_template(
-        token=bcs_cluster_info["token"],
-        bcs_cluster_id=bcs_cluster_info["bcs_cluster_id"],
-        namespace="kube-system",  # namespace for bcs agent
-        access_token=access_token,
-        project_id=project_id,
-        cluster_id=cluster_id,
-    )
-    resources = parser.parse(content, bcs_agent_namespace).values()
-
-    # 2. apply bcs agent deploy resource to target cluster
-    # need to be re-entrant
-    client = k8s.K8SClient(access_token, project_id, cluster_id, env=None)
-
-    errors = []
-    for item in resources:
-        if item.kind != "Secret":
-            continue
-
-        data = yaml.load(item.content)
-        result = client.create_secret(bcs_agent_namespace, data)
-        if result["code"] == 0:
-            continue
-        if not (result["code"] == 4001 and "exists" in result["message"]):
-            errors.append("create_secret, %s" % json.dumps(result))
-            logger.error("ClusterHelmInitView client.create_secret, %s", json.dumps(result))
-
-    for item in resources:
-        if item.kind != "ServiceAccount":
-            continue
-
-        data = yaml.load(item.content)
-        result = client.create_serviceaccounts(bcs_agent_namespace, data)
-        if result["code"] == 0:
-            continue
-        if not (result["code"] == 4001 and "exists" in result["message"]):
-            errors.append("create_serviceaccounts, %s" % json.dumps(result))
-            logger.error("ClusterHelmInitView client.create_serviceaccounts, %s", json.dumps(result))
-
-    for item in resources:
-        if item.kind != "ClusterRoleBinding":
-            continue
-
-        data = yaml.load(item.content)
-        result = client.create_clusterrolebindings(bcs_agent_namespace, data)
-        if result["code"] == 0:
-            continue
-        if not (result["code"] == 4001 and "exists" in result["message"]):
-            errors.append("create_clusterrolebindings, %s" % json.dumps(result))
-            logger.error("ClusterHelmInitView client.create_clusterrolebindings, %s", json.dumps(result))
-
-    for item in resources:
-        if item.kind != "Deployment":
-            continue
-
-        data = yaml.load(item.content)
-        result = client.create_deployment(bcs_agent_namespace, data)
-        if result["code"] == 0:
-            continue
-        if not (result["code"] == 4001 and "exists" in result["message"]):
-            errors.append("create_deployment, %s" % json.dumps(result))
-            logger.error("ClusterHelmInitView client.create_deployment, %s", json.dumps(result))
-
-    # step3 and step4 has been moved to enable container service
-    # 3. add plain public repo for project
-    # public_repos = self.get_or_add_public_repos(project_id)
-
-    # 4. add private repo for project
-    # private_repos = self.get_or_add_private_repos(project_id, request.user)
-
-    data = {
-        "code": 0 if not bool(errors) else 400,
-        "initialized": not bool(errors),
-        "detail": errors,
-        "message": "\n\n".join(errors),
-    }
-    return data
 
 
 @with_code_wrapper
@@ -747,7 +490,7 @@ class AppStatusView(AppMixin, AccessTokenMixin, viewsets.ReadOnlyModelViewSet, P
                 f.flush()
 
                 data = collect_resource_status(
-                    kubeconfig=f.name, app=app, project_code=project_code, bin_path=bin_path
+                    kubeconfig=f.name, app=app, project_code=project_code, cluster_id=app.cluster_id, bin_path=bin_path
                 )
         except DashboardExecutionError as e:
             message = "get helm app status failed, error_no: {error_no}\n{output}".format(
@@ -882,22 +625,6 @@ class ContainerRegistryDomainView(AccessTokenMixin, ProjectMixin, viewsets.ViewS
 
 
 @with_code_wrapper
-class ClearAppInjectDataView(AccessTokenMixin, ProjectMixin, viewsets.ModelViewSet):
-    serializer_class = Serializer
-    queryset = App.objects.all()
-    lookup_url_kwarg = "app_id"
-
-    def update(self, request, project_id, app_id, *args, **kwargs):
-        app = self.queryset.get(project_id=project_id, id=app_id)
-
-        check_cluster_perm(user=request.user, project_id=app.project_id, cluster_id=app.cluster_id, request=request)
-
-        app.inject_configs = None
-        app.save(update_fields=["inject_configs"])
-        return Response(data={"code": 0, "message": "ok"})
-
-
-@with_code_wrapper
 class AppTransiningView(AppViewBase):
     def retrieve(self, request, *args, **kwargs):
         app_id = self.request.parser_context["kwargs"]["app_id"]
@@ -919,3 +646,81 @@ class AppTransiningView(AppViewBase):
             "data": data,
         }
         return Response(response)
+
+
+class ReleaseVersionViewSet(viewsets.ViewSet):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
+    def _get_app(self, project_id: str, cluster_id: str, namespace: str, release_name: str) -> App:
+        """查询 app 记录
+
+        :param project_id: 项目 ID
+        :param cluster_id: 集群 ID
+        :param namespace: 命名空间名称
+        :param release_name: 部署后的release的名称
+        """
+        try:
+            return App.objects.get(
+                project_id=project_id,
+                cluster_id=cluster_id,
+                name=release_name,
+                namespace=namespace,
+            )
+        except App.DoesNotExist:
+            raise ValidationError(
+                f"App not exist, project: {project_id}, cluster_id: {cluster_id},"
+                f"namespace: {namespace}, release_name: {release_name}"
+            )
+
+    def list_versions(self, request, project_id, cluster_id, namespace, release_name):
+        app = self._get_app(project_id, cluster_id, namespace, release_name)
+        repo = app.release.repository
+        username, password = repo.username_password
+
+        # 获取chart版本
+        chart_name = app.chart.name
+        client = bk_repo.BkRepoClient(username=username, password=password)
+        helm_project_name, helm_repo_name = chart_versions.get_helm_project_and_repo_name(
+            request.project.project_code, repo_name=repo.name
+        )
+        versions = client.get_chart_versions(helm_project_name, helm_repo_name, chart_name)
+        versions = chart_versions.ReleaseVersionListSLZ(data=versions, many=True)
+        versions.is_valid(raise_exception=True)
+        versions = versions.validated_data
+        # 以created逆序
+        versions = chart_versions.sort_version_list(versions)
+
+        # 因为values.yaml内容可以变更，实例化后的release的版本的values和仓库中的版本可能不一致
+        # 因此，添加release的版本信息，用以前端展示relese的版本及详情，格式是: (release-version) version
+        release_version = [{"version": f"{RELEASE_VERSION_PREFIX} {app.version}", "name": chart_name}]
+        versions = release_version + versions
+
+        return Response(versions)
+
+    def update_or_create_version(self, request, project_id, cluster_id, namespace, release_name):
+        slz = ReleaseParamsSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+        version = slz.validated_data["version"]
+
+        app = self._get_app(project_id, cluster_id, namespace, release_name)
+        # 查询版本详情
+        repo = app.release.repository
+        username, password = repo.username_password
+        helm_project_name, helm_repo_name = chart_versions.get_helm_project_and_repo_name(
+            request.project.project_code, repo_name=repo.name
+        )
+        detail = chart_versions.get_chart_version(
+            helm_project_name, helm_repo_name, app.chart.name, version, username, password
+        )
+        # 更新或创建chart版本
+        chart_version, _ = chart_versions.update_or_create_chart_version(app.chart, detail)
+
+        return Response(ChartVersionDetailSLZ(chart_version).data)
+
+    def query_release_version_detail(self, request, project_id, cluster_id, namespace, release_name):
+        """查询 release 使用的版本详情"""
+        app = self._get_app(project_id, cluster_id, namespace, release_name)
+        chart_version_snapshot = app.release.chartVersionSnapshot
+        chart_version = chart_versions.release_snapshot_to_version(chart_version_snapshot, app.chart)
+
+        return Response(ChartVersionDetailSLZ(chart_version).data)

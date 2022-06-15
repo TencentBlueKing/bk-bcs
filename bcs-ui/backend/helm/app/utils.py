@@ -280,7 +280,7 @@ def extract_state_info_from_dashboard_overview(overview_status, kind, namespace,
     return dict()
 
 
-def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
+def collect_resource_status(kubeconfig, app, project_code, cluster_id, bin_path=settings.DASHBOARD_CTL_BIN):
     """
     dashboard_client = make_dashboard_ctl_client(
         kubeconfig=kubeconfig
@@ -353,17 +353,6 @@ def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DAS
                     raise
         """
 
-        if status:
-            link = resource_link(
-                kind=kind,
-                project_code=project_code,
-                name=name,
-                namespace=namespace,
-                release_name=release_name,
-            )
-        else:
-            link = None
-
         key = "{kind}/{namespace}/{name}".format(
             name=name,
             namespace=namespace,
@@ -373,9 +362,9 @@ def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DAS
             "namespace": namespace,
             "name": name,
             "kind": kind,
+            "cluster_id": cluster_id,
             "status": status,
             "status_sumary": status_sumary(status, app),
-            "link": link,
         }
     return result
 

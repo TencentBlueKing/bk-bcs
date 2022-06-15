@@ -377,9 +377,11 @@ DOCKER_REPO_DOMAIN = os.environ.get("DOCKER_REPO_DOMAIN", "")
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
 BK_REPO_AUTHORIZATION = f"Platform {os.environ.get('BK_REPO_TOKEN', '')}"
 # 设置蓝鲸制品库的公共项目和仓库名称，默认为bcs-shared
-BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs-shared-project")
-BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "image-repo")
-BK_REPO_SHARED_CHART_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_CHART_DEPOT_NAME", "chart-repo")
+BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "blueking")
+BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "public-cr")
+BK_REPO_SHARED_CHART_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_CHART_DEPOT_NAME", "public-charts")
+# BCS db中存储的Chart共享仓库的名称
+BCS_SHARED_CHART_REPO_NAME = os.environ.get("BCS_SHARED_CHART_REPO_NAME", "public-repo")
 
 # 集群管理的代理
 CLUSTER_MANAGER_DOMAIN = BCS_APIGW_DOMAIN["prod"]

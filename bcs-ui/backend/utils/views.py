@@ -430,6 +430,7 @@ class VueTemplateView(APIView):
             "SUPPORT_MESOS": str2bool(settings.SUPPORT_MESOS),
             "CONTAINER_ORCHESTRATION": "",  # 前端路由, 默认地址不变
             "BCS_API_HOST": settings.BCS_API_HOST,
+            "PREFERRED_DOMAINS": settings.PREFERRED_DOMAINS,
         }
 
         # mesos 需要修改 API 和静态资源路径
