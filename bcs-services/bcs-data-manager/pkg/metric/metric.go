@@ -14,9 +14,13 @@ package metric
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"strconv"
+	"time"
+
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 // Server metric interface
@@ -69,57 +73,57 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (string, []*bcsdatamanager.NodeQuantile, error) {
 	var minUsageNode string
 	nodeQuantie := make([]*bcsdatamanager.NodeQuantile, 0)
-	//start := time.Now()
-	//cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
-	//	ClusterID: opts.ClusterID,
-	//})
-	//if err != nil {
-	//	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "GetCluster",
-	//		"GET", err, start)
-	//	return minUsageNode, nodeQuantie, err
-	//}
-	//prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
-	//	"GET", err, start)
-	//queryCond := fmt.Sprintf(ClusterCondition, opts.ClusterID)
-	//
-	//for key := range cluster.Data.Master {
-	//	queryCond = fmt.Sprintf("%s,instance!=\"%s:9100\"", queryCond, cluster.Data.Master[key].InnerIP)
-	//}
-	//nodeCPUQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
-	//nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCPUQuery, opts.CurrentTime)
-	//if err != nil {
-	//	return minUsageNode, nodeQuantie, err
-	//}
-	//var minUsage float64
-	//for key := range nodeCpuUsageList.Data.Result {
-	//	usage, ok := nodeCpuUsageList.Data.Result[key].Value[1].(string)
-	//	if ok {
-	//		nodeUsage, err := strconv.ParseFloat(usage, 64)
-	//		if err != nil {
-	//			continue
-	//		}
-	//		if nodeUsage < minUsage {
-	//			minUsage = nodeUsage
-	//			minUsageNode = nodeCpuUsageList.Data.Result[key].Metric["node"]
-	//		}
-	//	}
-	//}
+	start := time.Now()
+	cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
+		ClusterID: opts.ClusterID,
+	})
+	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "GetCluster",
+			"GET", err, start)
+		return minUsageNode, nodeQuantie, err
+	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+		"GET", err, start)
+	queryCond := fmt.Sprintf(ClusterCondition, opts.ClusterID)
 
-	//nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
-	//	"0.5", nodeCPUQuery), opts.CurrentTime)
-	//if err != nil {
-	//	return minUsageNode, nodeQuantie, err
-	//}
-	//if len(nodeQuantieResponse.Data.Result) != 0 {
-	//	nodeQuantileCPU, ok := nodeQuantieResponse.Data.Result[0].Value[1].(string)
-	//	if ok {
-	//		quantile := &bcsdatamanager.NodeQuantile{
-	//			Percentage:   "50",
-	//			NodeCPUUsage: nodeQuantileCPU,
-	//		}
-	//		nodeQuantie = append(nodeQuantie, quantile)
-	//	}
-	//}
+	for key := range cluster.Data.Master {
+		queryCond = fmt.Sprintf("%s,instance!=\"%s:9100\"", queryCond, cluster.Data.Master[key].InnerIP)
+	}
+	nodeCPUQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
+	nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCPUQuery, opts.CurrentTime)
+	if err != nil {
+		return minUsageNode, nodeQuantie, err
+	}
+	var minUsage float64
+	for key := range nodeCpuUsageList.Data.Result {
+		usage, ok := nodeCpuUsageList.Data.Result[key].Value[1].(string)
+		if ok {
+			nodeUsage, err := strconv.ParseFloat(usage, 64)
+			if err != nil {
+				continue
+			}
+			if nodeUsage < minUsage {
+				minUsage = nodeUsage
+				minUsageNode = nodeCpuUsageList.Data.Result[key].Metric["node"]
+			}
+		}
+	}
+
+	nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
+		"0.5", nodeCPUQuery), opts.CurrentTime)
+	if err != nil {
+		return minUsageNode, nodeQuantie, err
+	}
+	if len(nodeQuantieResponse.Data.Result) != 0 {
+		nodeQuantileCPU, ok := nodeQuantieResponse.Data.Result[0].Value[1].(string)
+		if ok {
+			quantile := &bcsdatamanager.NodeQuantile{
+				Percentage:   "50",
+				NodeCPUUsage: nodeQuantileCPU,
+			}
+			nodeQuantie = append(nodeQuantie, quantile)
+		}
+	}
 	return minUsageNode, nodeQuantie, nil
 }
 
