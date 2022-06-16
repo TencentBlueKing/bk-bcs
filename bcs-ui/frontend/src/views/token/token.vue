@@ -222,7 +222,7 @@ users:
             const apiExample = `# 独享集群调用bcs api示例
 curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/clusters/\${cluster_id}/version"
 # 共享集群调用bcs api示例，\${cluster_id}为共享集群ID
-curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/clusters/projects/\${projectID}/\${cluster_id}/version"
+curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/version"
 `
             const bcsApiExample = ref(apiExample
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')

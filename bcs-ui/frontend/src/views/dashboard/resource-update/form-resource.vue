@@ -3,7 +3,7 @@
         <bcs-popconfirm
             class="switch-button-pop"
             :title="$t('确认切换为 YAML 模式？')"
-            :content="$t('切换至 Yaml 模式并提交更改后，将无法再次使用表单模式进行编辑！')"
+            :content="$t('切换至 YAML 模式并提交更改后，将无法再次使用表单模式进行编辑！')"
             width="280"
             trigger="click"
             @confirm="handleSwitchMode">

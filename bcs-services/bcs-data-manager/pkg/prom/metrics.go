@@ -99,12 +99,6 @@ var (
 		Name:      "consumer_concurrency",
 		Help:      "concurrency for consumer",
 	}, []string{"instance"})
-
-	waitingJobCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: BkBcsDataManager,
-		Name:      "waiting_job_count",
-		Help:      "count of job waiting in channel",
-	}, []string{"clusterID", "instance"})
 )
 
 func init() {
@@ -118,7 +112,6 @@ func init() {
 	prometheus.MustRegister(produceJobTotal)
 	prometheus.MustRegister(produceJobLatency)
 	prometheus.MustRegister(consumerConcurrency)
-	prometheus.MustRegister(waitingJobCount)
 	InstanceIP = os.Getenv("localIp")
 }
 
@@ -178,9 +171,4 @@ func ReportProduceJobTotalMetric(jobType, dimension string, err error) {
 // ReportConsumeConcurrency report consume concurrency
 func ReportConsumeConcurrency(concurrency int) {
 	consumerConcurrency.WithLabelValues(InstanceIP).Set(float64(concurrency))
-}
-
-// ReportWaitingJobCount report waiting job count
-func ReportWaitingJobCount(clusterID string, count int) {
-	waitingJobCount.WithLabelValues(clusterID, InstanceIP).Set(float64(count))
 }

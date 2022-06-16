@@ -509,7 +509,7 @@ export default defineComponent({
                                     <ul class="bk-dropdown-list">
                                         <li onClick={this.handleCreateFormResource}><a href="javascript:;">{this.$t('表单模式')}</a></li>
                                         <li onClick={this.handleCreateResource}>
-                                            <a href="javascript:;">{this.$t('Yaml模式')}</a>
+                                            <a href="javascript:;">{this.$t('YAML模式')}</a>
                                         </li>
                                     </ul>
                                 )
