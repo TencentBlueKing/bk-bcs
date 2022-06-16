@@ -31,7 +31,7 @@ type HostPathVolume struct {
 // CMVolume ...
 type CMVolume struct {
 	Name        string      `structs:"name"`
-	DefaultMode int64       `structs:"defaultMode"`
+	DefaultMode string      `structs:"defaultMode"`
 	CMName      string      `structs:"cmName"`
 	Items       []KeyToPath `structs:"items"`
 }
@@ -39,7 +39,7 @@ type CMVolume struct {
 // SecretVolume ...
 type SecretVolume struct {
 	Name        string      `structs:"name"`
-	DefaultMode int64       `structs:"defaultMode"`
+	DefaultMode string      `structs:"defaultMode"`
 	SecretName  string      `structs:"secretName"`
 	Items       []KeyToPath `structs:"items"`
 }

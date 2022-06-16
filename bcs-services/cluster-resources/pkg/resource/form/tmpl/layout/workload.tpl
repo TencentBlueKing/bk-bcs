@@ -8,6 +8,8 @@
                   - [ "labels" ]
                 prop: selector
           prop: podAffinity
+          container:
+            grid-template-columns: "1fr 1fr 1fr 100px"
       - - group:
             - [ "priority", "weight" ]
             - [ "selector" ]

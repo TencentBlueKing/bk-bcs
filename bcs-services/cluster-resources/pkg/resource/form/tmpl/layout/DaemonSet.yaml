@@ -1,10 +1,10 @@
 {{ include "common.metadata" . }}
 - - group:
       - - container:
-            grid-template-columns: "1fr 70px 1fr"
+            grid-template-columns: "1fr 1fr 70px"
           group:
             - [ "updateStrategy" ]
-            - [ "maxUnavailable", "muaUnit", "minReadySecs" ]
+            - [ "minReadySecs", "maxUnavailable", "muaUnit" ]
           prop: replicas
       {{- include "workload.affinity" . | nindent 6 }}
       {{- include "workload.networking" . | indent 6 }}

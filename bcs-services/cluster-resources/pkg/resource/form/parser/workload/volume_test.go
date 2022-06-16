@@ -97,7 +97,7 @@ var exceptedVolume = model.WorkloadVolume{
 	ConfigMap: []model.CMVolume{
 		{
 			Name:        "cm",
-			DefaultMode: int64(420),
+			DefaultMode: "420",
 			CMName:      "kube-root-ca.crt",
 			Items: []model.KeyToPath{
 				{
@@ -110,7 +110,7 @@ var exceptedVolume = model.WorkloadVolume{
 	Secret: []model.SecretVolume{
 		{
 			Name:        "secret",
-			DefaultMode: int64(420),
+			DefaultMode: "420",
 			SecretName:  "ssh-auth-test",
 			Items:       []model.KeyToPath{},
 		},

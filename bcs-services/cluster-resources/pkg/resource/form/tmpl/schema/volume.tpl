@@ -11,6 +11,7 @@ pvc:
         ui:rules:
           - required
           - maxLength64
+          - nameRegex
       pvcName:
         title: PersistentVolumeClaim
         type: string
@@ -58,6 +59,7 @@ hostPath:
         ui:rules:
           - required
           - maxLength128
+          - nameRegex
       path:
         title: {{ i18n "路径或节点" .lang }}
         type: string
@@ -109,10 +111,11 @@ configMap:
         ui:rules:
           - required
           - maxLength128
+          - nameRegex
       defaultMode:
         title: {{ i18n "默认模式" .lang }}
         type: string
-        default: 0644
+        default: "0644"
         description: {{ i18n "八进制数字（0000-0777）或十进制数字（0-511）" .lang }}
         ui:rules:
           - numberRegex
@@ -186,10 +189,11 @@ secret:
         ui:rules:
           - required
           - maxLength128
+          - nameRegex
       defaultMode:
         title: {{ i18n "默认模式" .lang }}
         type: string
-        default: 0644
+        default: "0644"
         description: {{ i18n "八进制数字（0000-0777）或十进制数字（0-511）" .lang }}
         ui:rules:
           - numberRegex
@@ -260,6 +264,7 @@ emptyDir:
         ui:rules:
           - required
           - maxLength128
+          - nameRegex
   ui:component:
     name: noTitleArray
   ui:props:
@@ -279,6 +284,7 @@ nfs:
         ui:rules:
           - required
           - maxLength128
+          - nameRegex
       path:
         title: {{ i18n "路径" .lang }}
         type: string

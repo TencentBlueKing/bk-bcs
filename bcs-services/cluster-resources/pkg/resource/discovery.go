@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -250,6 +251,18 @@ func GetGroupVersionResource(
 		return cli.getPreferredResource(kind)
 	}
 	return res, nil
+}
+
+// GetResPreferredVersion 获取某类资源在集群中的 Preferred 版本
+func GetResPreferredVersion(ctx context.Context, clusterID, kind string) (string, error) {
+	resInfo, err := GetGroupVersionResource(ctx, NewClusterConfig(clusterID), kind, "")
+	if err != nil {
+		return "", errorx.New(errcode.General, i18n.GetMsg(ctx, "获取资源 APIVersion 信息失败：%v"), err)
+	}
+	if resInfo.Group != "" {
+		return resInfo.Group + "/" + resInfo.Version, nil
+	}
+	return resInfo.Version, nil
 }
 
 // NewRedisCacheClient4Conf 根据 Conf 创建 RedisCacheClient

@@ -29,7 +29,7 @@ import (
 func (h *Handler) GetResFormSchema(
 	ctx context.Context, req *clusterRes.GetResFormSchemaReq, resp *clusterRes.CommonResp,
 ) error {
-	schema, err := renderer.NewSchemaRenderer(ctx, req.Kind, req.Namespace).Render()
+	schema, err := renderer.NewSchemaRenderer(ctx, req.ClusterID, req.Kind, req.Namespace).Render()
 	if err != nil {
 		return err
 	}
@@ -45,9 +45,7 @@ func (h *Handler) GetFormSupportedAPIVersions(
 	if !ok {
 		return errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), req.Kind)
 	}
-	versions := []map[string]interface{}{
-		{"label": "Preferred Version", "value": ""},
-	}
+	versions := []map[string]interface{}{}
 	for _, ver := range supportedAPIVersions {
 		versions = append(versions, map[string]interface{}{"label": ver, "value": ver})
 	}

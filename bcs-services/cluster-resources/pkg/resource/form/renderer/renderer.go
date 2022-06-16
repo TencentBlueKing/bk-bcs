@@ -75,17 +75,12 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 }
 
 // 获取资源对应 APIVersion 并更新 Renderer 配置
-func (r *ManifestRenderer) setAPIVersion() error {
+func (r *ManifestRenderer) setAPIVersion() (err error) {
 	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
 	r.apiVersion = mapx.GetStr(r.formData, "metadata.apiVersion")
 	if r.apiVersion == "" {
-		resInfo, err := res.GetGroupVersionResource(r.ctx, res.NewClusterConfig(r.clusterID), r.kind, "")
-		if err != nil {
-			return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "获取资源 APIVersion 信息失败：%v"), err)
-		}
-		r.apiVersion = resInfo.Version
-		if resInfo.Group != "" {
-			r.apiVersion = resInfo.Group + "/" + resInfo.Version
+		if r.apiVersion, err = res.GetResPreferredVersion(r.ctx, r.clusterID, r.kind); err != nil {
+			return err
 		}
 		if err = mapx.SetItems(r.formData, "metadata.apiVersion", r.apiVersion); err != nil {
 			return err
@@ -161,13 +156,14 @@ const (
 
 // SchemaRenderer 渲染并加载表单 Schema 模板
 type SchemaRenderer struct {
-	ctx    context.Context
-	kind   string
-	values map[string]interface{}
+	ctx       context.Context
+	clusterID string
+	kind      string
+	values    map[string]interface{}
 }
 
 // NewSchemaRenderer ...
-func NewSchemaRenderer(ctx context.Context, kind, namespace string) *SchemaRenderer {
+func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace string) *SchemaRenderer {
 	// 若没有指定命名空间，则使用 default
 	if namespace == "" {
 		namespace = "default"
@@ -175,8 +171,9 @@ func NewSchemaRenderer(ctx context.Context, kind, namespace string) *SchemaRende
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
 	return &SchemaRenderer{
-		ctx:  ctx,
-		kind: kind,
+		ctx:       ctx,
+		clusterID: clusterID,
+		kind:      kind,
 		values: map[string]interface{}{
 			"kind":      kind,
 			"namespace": namespace,
@@ -189,9 +186,21 @@ func NewSchemaRenderer(ctx context.Context, kind, namespace string) *SchemaRende
 // Render ...
 func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 	// 1. 检查指定资源类型是否支持表单化
-	if _, ok := FormRenderSupportedResAPIVersion[r.kind]; !ok {
+	supportedAPIVersions, ok := FormRenderSupportedResAPIVersion[r.kind]
+	if !ok {
 		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(r.ctx, "资源类型 `%s` 不支持表单化"), r.kind)
 	}
+
+	// 2. 预设 apiVersion，默认值为集群该类型资源的 PreferredVersion
+	apiVersion, err := res.GetResPreferredVersion(r.ctx, r.clusterID, r.kind)
+	if err != nil {
+		return nil, err
+	}
+	// 若 PreferredVersion 不支持表单化，则渲染为支持表单化的首个 apiVersion
+	if !slice.StringInSlice(apiVersion, supportedAPIVersions) {
+		apiVersion = supportedAPIVersions[0]
+	}
+	r.values["apiVersion"] = apiVersion
 
 	// 表单模板 Schema 包含原始 Schema + Layout 信息，两者格式不同，因此分别加载
 	schema := map[string]interface{}{}

@@ -210,7 +210,7 @@ serviceAccountName: {{ .saName }}
 
 {{- define "workload.volume" -}}
 {{- range .pvc }}
-- name: {{ .name }}
+- name: {{ .name | quote }}
   persistentVolumeClaim:
     claimName: {{ .pvcName }}
     {{- if .readOnly }}
@@ -218,13 +218,13 @@ serviceAccountName: {{ .saName }}
     {{- end }}
 {{- end }}
 {{- range .hostPath }}
-- name: {{ .name }}
+- name: {{ .name | quote }}
   hostPath:
     path: {{ .path | quote }}
     type: {{ .type }}
 {{- end }}
 {{- range .configMap }}
-- name: {{ .name }}
+- name: {{ .name | quote }}
   configMap:
     defaultMode: {{ .defaultMode }}
     name: {{ .cmName }}
@@ -237,7 +237,7 @@ serviceAccountName: {{ .saName }}
     {{- end }}
 {{- end }}
 {{- range .secret }}
-- name: {{ .name }}
+- name: {{ .name | quote }}
   secret:
     defaultMode: {{ .defaultMode }}
     secretName: {{ .secretName }}
@@ -250,11 +250,11 @@ serviceAccountName: {{ .saName }}
     {{- end }}
 {{- end }}
 {{- range .emptyDir }}
-- name: {{ .name }}
+- name: {{ .name | quote }}
   emptyDir: {}
 {{- end }}
 {{- range .nfs }}
-- name: {{ .name }}
+- name: {{ .name | quote }}
   nfs:
     path: {{ .path | quote }}
     server: {{ .server | quote }}

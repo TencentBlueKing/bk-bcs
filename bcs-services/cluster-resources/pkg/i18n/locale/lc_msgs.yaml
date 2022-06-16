@@ -237,6 +237,8 @@
   en: RollingUpdate
 - msgID: 重新创建
   en: Recreate
+- msgID: 删除
+  en: OnDelete
 - msgID: 最大调度 Pod 数量
   en: MaxSurge
 - msgID: 单位
