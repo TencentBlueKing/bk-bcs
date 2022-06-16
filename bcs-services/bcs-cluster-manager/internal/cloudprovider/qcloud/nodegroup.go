@@ -108,7 +108,6 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	}
 
 	// modify node pool
-	// 节点池必须在 asg 前更新，因为 nodePool NodeOs 参数会覆盖 asg imageID
 	if err := tkeCli.ModifyClusterNodePool(ng.generateModifyClusterNodePoolInput(group, cluster.SystemID)); err != nil {
 		return err
 	}
@@ -131,13 +130,18 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, 
 	req.ClusterId = &clusterID
 	req.NodePoolId = &group.CloudNodeGroupID
 	req.Name = &group.Name
-	req.Labels = api.MapToCloudLabels(group.Labels)
-	req.Taints = api.MapToCloudTaints(group.Taints)
+	if group.NodeTemplate != nil {
+		req.Taints = api.MapToCloudTaints(group.NodeTemplate.Taints)
+		req.Labels = api.MapToCloudLabels(group.NodeTemplate.Labels)
+	}
 	req.Tags = api.MapToCloudTags(group.Tags)
 	req.EnableAutoscale = common.BoolPtr(false)
 	// MaxNodesNum/MinNodesNum 通过 asg 修改，这里不用修改
 	if group.NodeTemplate != nil {
 		req.Unschedulable = common.Int64Ptr(int64(group.NodeTemplate.UnSchedulable))
+	}
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
+		req.OsName = &group.LaunchTemplate.ImageInfo.ImageID
 	}
 	return req
 }
@@ -187,9 +191,10 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGr
 		MonitorService:  &as.RunMonitorServiceEnabled{Enabled: common.BoolPtr(group.LaunchTemplate.IsMonitorService)},
 	}
 	req.InstanceChargeType = common.StringPtr(group.LaunchTemplate.InstanceChargeType)
+	bw, _ := strconv.Atoi(group.LaunchTemplate.InternetAccess.InternetMaxBandwidth)
 	req.InternetAccessible = &as.InternetAccessible{
 		InternetChargeType:      common.StringPtr(group.LaunchTemplate.InternetAccess.InternetChargeType),
-		InternetMaxBandwidthOut: common.Uint64Ptr(uint64(group.LaunchTemplate.InternetAccess.InternetMaxBandwidth)),
+		InternetMaxBandwidthOut: common.Uint64Ptr(uint64(bw)),
 		PublicIpAssigned:        common.BoolPtr(group.LaunchTemplate.InternetAccess.PublicIPAssigned),
 	}
 	req.LoginSettings = &as.LoginSettings{Password: common.StringPtr(group.LaunchTemplate.InitLoginPassword)}

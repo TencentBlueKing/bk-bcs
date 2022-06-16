@@ -15,6 +15,7 @@ package api
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -27,8 +28,8 @@ import (
 
 func getClient(region string) *TkeClient {
 	cli, _ := NewTkeClient(&cloudprovider.CommonOption{
-		Key:    "xxx",
-		Secret: "xxx",
+		Key:    os.Getenv(TencentCloudSecretIDEnv),
+		Secret: os.Getenv(TencentCloudSecretKeyEnv),
 		Region: region,
 	})
 

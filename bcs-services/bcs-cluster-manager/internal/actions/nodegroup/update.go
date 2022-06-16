@@ -120,6 +120,12 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		if ua.req.LaunchTemplate.ImageInfo != nil {
 			group.LaunchTemplate.ImageInfo = ua.req.LaunchTemplate.ImageInfo
 		}
+		if ua.req.LaunchTemplate.SystemDisk != nil {
+			group.LaunchTemplate.SystemDisk = ua.req.LaunchTemplate.SystemDisk
+		}
+		if ua.req.LaunchTemplate.DataDisks != nil {
+			group.LaunchTemplate.DataDisks = ua.req.LaunchTemplate.DataDisks
+		}
 		group.LaunchTemplate.IsMonitorService = ua.req.LaunchTemplate.IsMonitorService
 		group.LaunchTemplate.IsSecurityService = ua.req.LaunchTemplate.IsSecurityService
 	}
@@ -164,6 +170,8 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
 		}
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
+		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
+		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
 	}
 	group.Labels = ua.req.Labels
 	group.Taints = ua.req.Taints
@@ -234,7 +242,7 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 }
 
 func (ua *UpdateAction) setNodeGroupUpdating() error {
-	ua.group.Status = common.StatusUpdating
+	ua.group.Status = common.StatusNodeGroupUpdating
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Infof("update nodegroup %s failed, %v", ua.group.NodeGroupID, err)
 		return err

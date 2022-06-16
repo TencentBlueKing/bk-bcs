@@ -2308,7 +2308,7 @@ message NodeGroup {
     title: "labels", 
     description: "新实例初始化label信息"
   }];
-  repeated Taint taints = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  map<string, string> taints = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taints", 
     description: "新实例初始化的污点信息"
   }];
@@ -2349,6 +2349,14 @@ message NodeGroup {
   map<string, string> tags = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "tags", 
     description: "新实例初始化的资源标签信息"
+  }];
+  string containerRuntime = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "containerRuntime",
+    description: "容器运行时"
+  }];
+  string runtimeVersion = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "runtimeVersion",
+    description: "运行时版本"
   }];
 }
 
@@ -2474,7 +2482,7 @@ message InternetAccessible {
         "TRAFFIC_POSTPAID_BY_HOUR：流量按小时后付费，BANDWIDTH_POSTPAID_BY_HOUR：带宽按小时后付费，"
         "BANDWIDTH_PACKAGE：带宽包用户"
   }];
-  uint32 internetMaxBandwidth = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string internetMaxBandwidth = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "internetMaxBandwidth", 
     description: "公网出带宽上限，单位：Mbps。默认值：0Mbps。"
   }];
@@ -6421,7 +6429,7 @@ message CreateNodeGroupRequest {
     title: "labels", 
     description: "新实例初始化label信息"
   }];
-  repeated Taint taints = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  map<string, string> taints = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taints", 
     description: "新实例初始化的污点信息"
   }];
@@ -6450,6 +6458,14 @@ message CreateNodeGroupRequest {
   map<string, string> tags = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "tags", 
     description: "新实例初始化的资源标签信息"
+  }];
+  string containerRuntime = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "containerRuntime",
+    description: "容器运行时"
+  }];
+  string runtimeVersion = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "runtimeVersion",
+    description: "运行时版本"
   }];
 }
 
@@ -6532,7 +6548,7 @@ message UpdateNodeGroupRequest {
     title: "labels", 
     description: "新实例初始化label信息"
   }];
-  repeated Taint taints = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  map<string, string> taints = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taints", 
     description: "新实例初始化的污点信息"
   }];

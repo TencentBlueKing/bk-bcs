@@ -64,7 +64,16 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+	// remove sensitive password in response
+	group = removeSensitiveInfo(group)
 	resp.Data = group
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func removeSensitiveInfo(group *cmproto.NodeGroup) *cmproto.NodeGroup {
+	if group != nil && group.LaunchTemplate != nil {
+		group.LaunchTemplate.InitLoginPassword = ""
+	}
+	return group
 }

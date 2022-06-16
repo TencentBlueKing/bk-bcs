@@ -14,6 +14,7 @@
 package api
 
 import (
+	"os"
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -22,8 +23,8 @@ import (
 
 func getVpcClient(region string) *VPCClient {
 	cli, err := NewVPCClient(&cloudprovider.CommonOption{
-		Key:    "xxx",
-		Secret: "xxx",
+		Key:    os.Getenv(TencentCloudSecretIDEnv),
+		Secret: os.Getenv(TencentCloudSecretKeyEnv),
 		Region: region,
 	})
 	if err != nil {
