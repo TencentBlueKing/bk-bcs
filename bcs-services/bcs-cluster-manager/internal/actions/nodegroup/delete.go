@@ -195,7 +195,7 @@ func (da *DeleteAction) Handle(
 		blog.Infof("delete nodeGroup task successfully for %s", da.group.NodeGroupID)
 	}
 
-	resp.Data.NodeGroup = da.group
+	resp.Data.NodeGroup = removeSensitiveInfo(da.group)
 	resp.Data.Task = task
 
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
