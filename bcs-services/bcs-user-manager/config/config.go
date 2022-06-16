@@ -21,6 +21,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
+var userManagerConfig *UserMgrConfig
+
+// SetGlobalConfig global config
+func SetGlobalConfig(config *UserMgrConfig) {
+	userManagerConfig = config
+}
+
+// GetGlobalConfig global config
+func GetGlobalConfig() *UserMgrConfig {
+	return userManagerConfig
+}
+
 //CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile     string
@@ -59,6 +71,8 @@ type UserMgrConfig struct {
 	EtcdConfig    registry.CMDOptions
 
 	PermissionSwitch bool
+	CommunityEdition bool
+	PassConfig       options.PassCCConfig
 }
 
 var (

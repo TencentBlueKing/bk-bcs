@@ -27,6 +27,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/clientutil"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 )
 
@@ -84,14 +85,66 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts metav1.ListOp
 			return nil, err
 		}
 		for _, item := range result.Items {
-			if item.Annotations == nil {
-				item.Annotations = map[string]string{ClusterIdLabel: k}
-			} else {
-				item.Annotations[ClusterIdLabel] = k
-			}
+			item = p.FillClusterId(item, k)
 			podList.Items = append(podList.Items, item)
 		}
 	}
+	return podList, nil
+}
+
+// FillClusterId 按规范补全下当前Pod所在集群ID
+func (p *PodStor) FillClusterId(item v1.Pod, clusterId string) v1.Pod {
+	// 按规范补全下当前Pod所在集群ID
+	if item.Annotations == nil {
+		item.Annotations = map[string]string{ClusterIdLabel: clusterId}
+	} else {
+		item.Annotations[ClusterIdLabel] = clusterId
+	}
+	return item
+}
+
+// ListByStor 从 BCS Storage 中获取, 提高聚合查询效率, 支持分页
+func (p *PodStor) ListByStor(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
+	typeMata := metav1.TypeMeta{APIVersion: "v1", Kind: "PodList"}
+	listMeta := metav1.ListMeta{
+		SelfLink:        p.selfLink(namespace, ""),
+		ResourceVersion: "0",
+	}
+
+	podList := &v1.PodList{
+		TypeMeta: typeMata,
+		ListMeta: listMeta,
+		Items:    []v1.Pod{},
+	}
+
+	// 默认Limit, 参考的kubectl
+	if opts.Limit == 0 {
+		opts.Limit = 500
+	}
+
+	offset := bcs.ContinueToOffset(opts.Continue, opts.Limit)
+	resources, pag, err := bcs.ListPodResources(ctx, p.members, namespace, opts.Limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	continueStr, err := bcs.PaginationToContinue(pag, int64(len(resources)))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, res := range resources {
+		item := *res.Data
+		item = p.FillClusterId(item, res.ClusterId)
+		podList.Items = append(podList.Items, item)
+	}
+
+	podList.ListMeta.Continue = continueStr
+	remain := pag.Total - pag.Offset
+	if int64(len(podList.Items)) == opts.Limit && remain > 0 {
+		podList.ListMeta.RemainingItemCount = &remain
+	}
+
 	return podList, nil
 }
 
@@ -102,7 +155,7 @@ func (p *PodStor) selfLink(namespace, name string) string {
 	return fmt.Sprintf("/api/v1/namespaces/%s/pods/%s", namespace, name)
 }
 
-// ListAsTable 查询Pod列表, kubectl格式返回
+// ListAsTable 查询Pod列表, kubectl格式返回, 不支持分页，调试使用
 func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{

@@ -24,11 +24,12 @@ import (
 // 子模块前缀
 const (
 	APIServicePrefix   = "/api"
-	QueryServicePrefix = "/prom"
+	QueryServicePrefix = "/query"
 )
 
 // Configuration 配置
 type Configuration struct {
+	Viper       *viper.Viper
 	mtx         sync.Mutex
 	Base        *BaseConf                  `yaml:"base_conf"`
 	Redis       *RedisConf                 `yaml:"redis"`
@@ -51,6 +52,14 @@ func (c *Configuration) init() error {
 	}
 
 	if err := c.Logging.init(); err != nil {
+		return err
+	}
+
+	if err := c.BCS.InitJWTPubKey(); err != nil {
+		return err
+	}
+
+	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
 		return err
 	}
 
@@ -82,6 +91,17 @@ func newConfiguration() (*Configuration, error) {
 	c.Web = defaultWebConf()
 
 	c.Credentials = map[string][]*Credential{}
+
+	c.BKAPIGW = &BKAPIGWConf{}
+	c.BKAPIGW.Init()
+
+	// BCS Config
+	c.BCS = &BCSConf{}
+	c.BCS.Init()
+
+	c.BCSEnvConf = []*BCSConf{}
+	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
+
 	return c, nil
 }
 
@@ -149,5 +169,6 @@ func (c *Configuration) ReadFromViper(v *viper.Viper) error {
 	if err != nil {
 		return err
 	}
+	c.Viper = v
 	return c.ReadFrom(content)
 }

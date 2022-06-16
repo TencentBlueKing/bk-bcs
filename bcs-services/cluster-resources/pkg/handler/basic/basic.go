@@ -21,7 +21,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -72,17 +75,22 @@ func (h *Handler) Version(
 
 // Healthz 服务健康信息
 func (h *Handler) Healthz(
-	_ context.Context,
+	ctx context.Context,
 	req *clusterRes.HealthzReq,
 	resp *clusterRes.HealthzResp,
 ) error {
+	// 如果没有配置 HealthzToken 则不进行检查
+	if conf.G.Basic.HealthzToken != "" && conf.G.Basic.HealthzToken != req.Token {
+		return errorx.New(errcode.NoPerm, "Healthz Token Incorrect!")
+	}
+
 	// 服务是否健康标志
 	allOK := true
 
 	// 检查 redis 状态
-	ret, err := redis.GetDefaultClient().Ping(context.TODO()).Result() // nolint:contextcheck
+	ret, err := redis.GetDefaultClient().Ping(ctx).Result()
 	if ret != "PONG" || err != nil {
-		resp.Redis = genHealthzStatus(false, "Ping Failed")
+		resp.Redis = genHealthzStatus(false, "Redis Ping Failed")
 		allOK = false
 	} else {
 		resp.Redis = genHealthzStatus(true, "")

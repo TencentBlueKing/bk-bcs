@@ -139,7 +139,9 @@ class HelmDeployer:
         if repo_url == PUBLIC_REPO_URL:  # 平台公共仓库不需要auth信息
             return
 
-        repository = models.Repository.objects.filter(url__startswith=repo_url).first()
+        repository = models.Repository.objects.filter(
+            url__startswith=repo_url, project_id=self.helm_args.project_id
+        ).first()
         if not repository:  # 非平台chart repo url，由用户决定--username xxx --password xxx
             return
 

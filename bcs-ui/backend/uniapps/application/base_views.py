@@ -17,7 +17,6 @@ import json
 import logging
 from datetime import datetime
 
-import yaml
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import views
 from rest_framework.exceptions import ValidationError
@@ -36,6 +35,7 @@ from backend.templatesets.legacy_apps.instance.models import InstanceConfig, Ins
 from backend.utils.basic import getitems
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
+from backend.helm.app.utils import ruamel_yaml_dump
 
 from .common_views.serializers import BaseNotTemplateInstanceParamsSLZ
 from .constants import FUNC_MAP, NOT_TMPL_SOURCE_TYPE, OWENER_REFERENCE_MAP
@@ -603,7 +603,7 @@ class BaseAPI(views.APIView):
 
     def json2yaml(self, conf):
         """json转yaml"""
-        yaml_profile = yaml.safe_dump(conf)
+        yaml_profile = ruamel_yaml_dump(conf)
         return yaml_profile
 
     def get_category_info(self, request, project_id, cluster_id, project_kind, inst_name, namespace, category):

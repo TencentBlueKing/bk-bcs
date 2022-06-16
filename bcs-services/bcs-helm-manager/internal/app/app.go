@@ -43,6 +43,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
@@ -111,6 +112,7 @@ func (hm *HelmManager) Init() error {
 		hm.initHTTPService,
 		hm.initMetric,
 		hm.initJWTClient,
+		hm.InitComponentConfig,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -475,5 +477,12 @@ func (hm *HelmManager) getServerAddress() error {
 		hm.opt.Address = envx.LocalIP
 		hm.opt.InsecureAddress = envx.LocalIP
 	}
+	return nil
+}
+
+func (hm *HelmManager) InitComponentConfig() error {
+	c := project.ProjectClient{Host: hm.opt.ProjectService.Host, Token: hm.opt.App.Token}
+	project.NewClient(c)
+	blog.Infof("init project client successfully")
 	return nil
 }

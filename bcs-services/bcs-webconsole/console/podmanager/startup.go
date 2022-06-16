@@ -15,6 +15,8 @@ package podmanager
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -23,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/gosimple/slug"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
@@ -34,12 +37,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// StartupManager
 type StartupManager struct {
 	ctx       context.Context
 	clusterId string // 这里是 Pod 所在集群
 	k8sClient *kubernetes.Clientset
 }
 
+// NewStartupManager
 func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
 	mgr := &StartupManager{
 		ctx:       ctx,
@@ -349,8 +354,30 @@ func GetNamespace() string {
 	return fmt.Sprintf("%s-%s", Namespace, config.G.Base.RunEnv)
 }
 
+// makeSlugName 规范化名称
+// 符合k8s规则 https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#rfc-1035-label-names
+// 返回格式{hash[8]}-{slugname[20]}
+func makeSlugName(username string) string {
+	h := sha1.New()
+	h.Write([]byte(username))
+	hashId := hex.EncodeToString(h.Sum(nil))[:8]
+
+	// 有些命名非k8s规范, slug 处理
+	slug.CustomSub = map[string]string{
+		"_": "-",
+	}
+	slug.Lowercase = true
+
+	username = slug.Make(username)
+	if len(username) > 20 {
+		username = username[:20]
+	}
+	return fmt.Sprintf("%s-%s", hashId, username)
+}
+
 // 获取configMap名称
 func getConfigMapName(clusterID, username string) string {
+	username = makeSlugName(username)
 	cmName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
 	cmName = strings.ToLower(cmName)
 
@@ -359,6 +386,7 @@ func getConfigMapName(clusterID, username string) string {
 
 // 获取pod名称
 func GetPodName(clusterID, username string) string {
+	username = makeSlugName(username)
 	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
 	podName = strings.ToLower(podName)
 
@@ -391,6 +419,7 @@ func IsPodReady(pod *v1.Pod) (string, bool) {
 	return "", true
 }
 
+// IsContainerReady 容器是否 Ready 检查
 func IsContainerReady(container *v1.ContainerStatus) (string, bool) {
 	if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
 		reason := container.State.Waiting.Reason

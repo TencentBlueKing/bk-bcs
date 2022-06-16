@@ -38,9 +38,9 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as v1.0.398
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.398
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.417
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.376
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.374
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.417
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc v1.0.374
 	go.mongodb.org/mongo-driver v1.5.3
 	google.golang.org/genproto v0.0.0-20210402141018-6c239bbf2bb1

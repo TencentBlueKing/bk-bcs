@@ -36,6 +36,7 @@
     var MIRROR_HOST = '{{ MIRROR_HOST }}'
     var BKMONITOR_URL = '{{ BKMONITOR_URL }}'
     var BCS_API_HOST = '{{ BCS_API_HOST }}'
+    var PREFERRED_DOMAINS = '{{ PREFERRED_DOMAINS }}'
 
     document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
     // 加载配置文件
@@ -46,8 +47,6 @@
 </script>
 <script src="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/lib.bundle.js"></script>
 {% if REGION == "ieod" %}
-<script src="http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js"></script>
-<script src="{{ PAAS_HOST }}/static_api/v3/analysis_pro.js" charset="utf-8"></script>
 <script>
     try {
         if (window.RUN_ENV === 'prod') {

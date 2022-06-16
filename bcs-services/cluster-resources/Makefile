@@ -31,7 +31,7 @@ proto:
 	mv ./proto/cluster-resources/cluster-resources.swagger.json ./swagger/data/
 
 tidy:
-	go mod tidy
+	go mod tidy -compat=1.17
 
 # build executable binary locally for develop
 build: tidy

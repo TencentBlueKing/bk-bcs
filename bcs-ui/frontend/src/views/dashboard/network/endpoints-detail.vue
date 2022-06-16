@@ -67,7 +67,7 @@
                 type: Object,
                 default: () => ({})
             },
-            // 当前行对应的manifest_ext数据
+            // 当前行对应的manifestExt数据
             extData: {
                 type: Object,
                 default: () => ({})

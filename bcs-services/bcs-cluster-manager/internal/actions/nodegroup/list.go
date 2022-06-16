@@ -15,6 +15,7 @@ package nodegroup
 import (
 	"context"
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -66,7 +67,7 @@ func (la *ListAction) listNodeGroup() error {
 		return err
 	}
 	for i := range groups {
-		la.groupList = append(la.groupList, &groups[i])
+		la.groupList = append(la.groupList, removeSensitiveInfo(&groups[i]))
 	}
 	return nil
 }
@@ -182,6 +183,9 @@ func (la *ListNodesAction) listNodesInGroup() error {
 		return err
 	}
 	la.resp.Data = nodes
+	for i := range la.resp.Data {
+		la.resp.Data[i].Passwd = ""
+	}
 	return nil
 }
 

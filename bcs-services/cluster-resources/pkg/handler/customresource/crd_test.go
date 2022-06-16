@@ -42,7 +42,7 @@ func TestCRD(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinitionList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "CustomResourceDefinitionList", mapx.GetStr(respData, "manifest.kind"))
 
 	// Get
 	getReq, getResp := handler.GenResGetReq(handler.CRDName4Test), clusterRes.CommonResp{}
@@ -50,8 +50,8 @@ func TestCRD(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData = getResp.Data.AsMap()
-	assert.Equal(t, "CustomResourceDefinition", mapx.Get(respData, "manifest.kind", ""))
-	assert.Equal(t, "Namespaced", mapx.Get(respData, "manifest.spec.scope", ""))
+	assert.Equal(t, "CustomResourceDefinition", mapx.GetStr(respData, "manifest.kind"))
+	assert.Equal(t, "Namespaced", mapx.GetStr(respData, "manifest.spec.scope"))
 }
 
 func TestCRDInSharedCluster(t *testing.T) {

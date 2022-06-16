@@ -17,16 +17,19 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-
 	cmdtpl "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
 )
 
 const (
 	resourceFilename = "resource.yaml"
+	labelKey         = "io.tencent.bcs.controller.name"
 )
 
 func replacePatchTplKey(keys map[string]string, data []byte) []byte {
@@ -58,7 +61,28 @@ type patcher struct {
 
 // Run implements the post-render Run method, do the render
 func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
-	return p.do(renderedManifests)
+	// 处理 yaml 转换 json，添加指定的 key 和 value
+	splitedStrArr := stringx.SplitYaml2Array(renderedManifests.String(), "")
+	var yList []string
+	for _, s := range splitedStrArr {
+		j, err := stringx.Yaml2Json(s)
+		if err != nil {
+			return nil, err
+		}
+		// 向 metadata.labels 中注入 `io.tencent.bcs.controller.name`
+		// 向 spec.template.metadata.labels 中注入 `io.tencent.bcs.controller.name`
+		j = inject4MetadataLabels(j)
+		y, err := stringx.Json2Yaml(j)
+		if err != nil {
+			return nil, err
+		}
+		yList = append(yList, string(y))
+	}
+	yl := stringx.JoinStringBySeparator(yList, "", true)
+	// 写回数据
+	buf := new(bytes.Buffer)
+	buf.WriteString(yl)
+	return p.do(buf)
 }
 
 func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {
@@ -80,4 +104,25 @@ func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {
 		return nil, fmt.Errorf("no data output from patcher")
 	}
 	return bytes.NewBuffer(out.Files[0].Bytes()), nil
+}
+
+// 兼容逻辑，目的是向metadata注入label
+func inject4MetadataLabels(j map[interface{}]interface{}) map[interface{}]interface{} {
+	// 限制下面几个注入指定的 key:val
+	kinds := []string{"Deployment", "DaemonSet", "Job", "DaemonSet"}
+	// 允许metadata中label注入的资源类型
+	for _, kind := range kinds {
+		if j["kind"] != kind {
+			continue
+		}
+		// 断言格式
+		name, _ := mapx.GetItems(j, []string{"metadata", "name"})
+		mapx.SetItems(j, []string{"metadata", "labels", labelKey}, name)
+		mapx.SetItems(j, []string{"spec", "template", "metadata", "labels", labelKey}, name)
+	}
+	if j["kind"] == "Service" {
+		name, _ := mapx.GetItems(j, []string{"metadata", "name"})
+		mapx.SetItems(j, []string{"metadata", "labels", labelKey}, name)
+	}
+	return j
 }

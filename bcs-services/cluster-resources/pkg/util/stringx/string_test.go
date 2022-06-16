@@ -25,7 +25,7 @@ import (
 func TestSplit(t *testing.T) {
 	// 空字符串的情况
 	ret := stringx.Split("")
-	assert.Equal(t, []string{""}, ret)
+	assert.Equal(t, []string{}, ret)
 
 	// 正常情况，分隔符为 ","
 	ret = stringx.Split("str1,str2,str3")
@@ -38,6 +38,10 @@ func TestSplit(t *testing.T) {
 	// 混合分隔符的情况
 	ret = stringx.Split("str7;str8,str9 str0")
 	assert.Equal(t, []string{"str7", "str8", "str9", "str0"}, ret)
+
+	// 连续分隔符的情况
+	ret = stringx.Split("str1; str2,;str3  str4;, str5")
+	assert.Equal(t, []string{"str1", "str2", "str3", "str4", "str5"}, ret)
 }
 
 func TestPartition(t *testing.T) {

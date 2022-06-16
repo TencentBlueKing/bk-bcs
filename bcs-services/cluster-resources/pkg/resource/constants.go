@@ -104,3 +104,15 @@ const (
 	// ClusterScope 集群维度
 	ClusterScope = "Cluster"
 )
+
+const (
+	// EditModeLabelKey 资源被编辑的模式，表单为 form，Key 不存在或 Manifest 则为 Yaml 模式
+	EditModeLabelKey = "io.tencent.bcs.editFormat"
+)
+
+const (
+	// EditModeForm 资源编辑模式 - 表单
+	EditModeForm = "form"
+	// EditModeYaml 资源编辑模式 - Yaml
+	EditModeYaml = "yaml"
+)

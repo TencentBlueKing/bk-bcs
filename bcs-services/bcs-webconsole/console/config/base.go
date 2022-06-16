@@ -14,6 +14,7 @@ package config
 
 import (
 	"time"
+	_ "time/tzdata"
 )
 
 const (
@@ -22,6 +23,7 @@ const (
 	ProdEnv = "prod"
 )
 
+// BaseConf
 type BaseConf struct {
 	AppCode      string              `yaml:"app_code"`
 	AppSecret    string              `yaml:"app_secret"`
@@ -35,6 +37,7 @@ type BaseConf struct {
 	Location     *time.Location      `yaml:"-"`
 }
 
+// Init
 func (c *BaseConf) Init() error {
 	var err error
 	c.AppCode = ""

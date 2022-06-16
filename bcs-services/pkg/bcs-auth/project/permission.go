@@ -110,14 +110,14 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 }
 
 // CanDeleteProject check user deleteProject perm
-func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string, clusterID string) (bool, string, error) {
+func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string, error) {
 	if bpp == nil {
 		return false, "", utils.ErrServerNotInited
 	}
 
 	// related actions
 	resources := []utils.ResourceAction{
-		{Resource: clusterID, Action: ProjectDelete.String()},
+		{Resource: projectID, Action: ProjectDelete.String()},
 		{Resource: projectID, Action: ProjectView.String()},
 	}
 

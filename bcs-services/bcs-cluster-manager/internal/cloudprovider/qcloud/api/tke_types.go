@@ -15,6 +15,7 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -692,6 +693,12 @@ type CreateNodePoolInput struct {
 	// Taints互斥
 	Taints []*Taint `json:"Taints,omitempty" name:"Taints"`
 
+	// 节点池纬度运行时类型及版本
+	ContainerRuntime *string `json:"ContainerRuntime,omitempty" name:"ContainerRuntime"`
+
+	// 运行时版本
+	RuntimeVersion *string `json:"RuntimeVersion,omitempty" name:"RuntimeVersion"`
+
 	// 节点池os
 	NodePoolOs *string `json:"NodePoolOs,omitempty" name:"NodePoolOs"`
 
@@ -916,7 +923,7 @@ type LaunchConfiguration struct {
 	SystemDisk *SystemDisk `json:"SystemDisk,omitempty" name:"SystemDisk"`
 
 	// 实例数据盘配置信息。若不指定该参数，则默认不购买数据盘，最多支持指定11块数据盘。
-	DataDisks []*DataDisk `json:"DataDisks,omitempty" name:"DataDisks"`
+	DataDisks []*LaunchConfigureDataDisk `json:"DataDisks,omitempty" name:"DataDisks"`
 
 	// 公网带宽相关信息设置。若不指定该参数，则默认公网带宽为0Mbps。
 	InternetAccessible *InternetAccessible `json:"InternetAccessible,omitempty" name:"InternetAccessible"`
@@ -984,6 +991,18 @@ type SystemDisk struct {
 	DiskType *string `json:"DiskType,omitempty" name:"DiskType"`
 
 	// 系统盘大小，单位：GB。默认值为 50
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	DiskSize *uint64 `json:"DiskSize,omitempty" name:"DiskSize"`
+}
+
+// LaunchConfigureDataDisk 数据盘配置信息。
+type LaunchConfigureDataDisk struct {
+
+	// 数据盘类型。数据盘类型限制详见[云硬盘类型](https://cloud.tencent.com/document/product/362/2353)。取值范围：<br><li>LOCAL_BASIC：本地硬盘<br><li>LOCAL_SSD：本地SSD硬盘<br><li>CLOUD_BASIC：普通云硬盘<br><li>CLOUD_PREMIUM：高性能云硬盘<br><li>CLOUD_SSD：SSD云硬盘<br><li>CLOUD_HSSD：增强型SSD云硬盘<br><li>CLOUD_TSSD：极速型SSD云硬盘<br><br>默认取值与系统盘类型（SystemDisk.DiskType）保持一致。
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	DiskType *string `json:"DiskType,omitempty" name:"DiskType"`
+
+	// 数据盘大小，单位：GB。最小调整步长为10G，不同数据盘类型取值范围不同，具体限制详见：[CVM实例配置](https://cloud.tencent.com/document/product/213/2177)。默认值为0，表示不购买数据盘。更多限制详见产品文档。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	DiskSize *uint64 `json:"DiskSize,omitempty" name:"DiskSize"`
 }

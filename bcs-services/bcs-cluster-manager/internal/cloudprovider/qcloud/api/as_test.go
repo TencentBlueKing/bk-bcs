@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -28,10 +29,15 @@ import (
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
+const (
+	TencentCloudSecretIDEnv  = "TENCENTCLOUD_SECRET_ID"
+	TencentCloudSecretKeyEnv = "TENCENTCLOUD_SECRET_KEY"
+)
+
 func getASClient(region string) *ASClient {
 	cli, err := NewASClient(&cloudprovider.CommonOption{
-		Key:    "xxx",
-		Secret: "xxx",
+		Key:    os.Getenv(TencentCloudSecretIDEnv),
+		Secret: os.Getenv(TencentCloudSecretKeyEnv),
 		Region: region,
 	})
 	if err != nil {

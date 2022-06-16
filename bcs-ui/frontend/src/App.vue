@@ -49,6 +49,13 @@
                 return this.$store.state.sideMenu.onlineProjectList
             }
         },
+        beforeCreate () {
+            const allowDomains = (window.PREFERRED_DOMAINS || '').split(',')
+            const item = allowDomains.find(item => item.trim() === location.hostname)
+            if (!item && allowDomains[0]) {
+                window.location.href = `//${allowDomains[0]}${location.pathname}`
+            }
+        },
         created () {
             // 异步权限弹窗
             bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName }) => {

@@ -24,9 +24,8 @@ nginx_config:
             grpc_ssl_server_name on;
             grpc_ssl_certificate ${clientCertFile};
             grpc_ssl_certificate_key ${clientUnencryptKeyFile};
-  error_log: "/data/bcs/logs/bcs/apisix-error.log"
   http:
-    access_log: "/data/bcs/logs/bcs/apisix-access.log"
+    enable_access_log: false
     keepalive_timeout: 3600s
     lua_shared_dict:
       prometheus-metrics: ${prometheusMemory}

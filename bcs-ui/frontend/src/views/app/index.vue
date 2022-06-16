@@ -1,7 +1,15 @@
 <template>
     <keep-alive>
         <app-exception v-if="isError" type="404"></app-exception>
-        <component v-else :is="componentName" :cur-project="curProject"></component>
+        <component v-else
+            :is="componentName"
+            :cur-project="curProject"
+            :category="category"
+            :namespace="namespace"
+            :name="name"
+            :kind="kind"
+            :hidden-operate="true"
+        ></component>
     </keep-alive>
     <!-- <router-view v-else :key="$route.path"></router-view> -->
 </template>
@@ -11,10 +19,10 @@
         /* webpackChunkName: 'app-list' */'./k8s/deployments'
     )
     const deploymentsInstanceDetail = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/deployments-instance'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const deploymentsInstanceDetail2 = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/deployments-instance2'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const deploymentsContainerDetail = () => import(
         /* webpackChunkName: 'app-container' */'./k8s/deployments-container'
@@ -29,10 +37,10 @@
         /* webpackChunkName: 'app-list' */'./k8s/daemonset'
     )
     const daemonsetInstanceDetail = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/daemonset-instance'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const daemonsetInstanceDetail2 = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/daemonset-instance2'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const daemonsetContainerDetail = () => import(
         /* webpackChunkName: 'app-container' */'./k8s/daemonset-container'
@@ -48,10 +56,10 @@
         /* webpackChunkName: 'app-list' */'./k8s/job'
     )
     const jobInstanceDetail = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/job-instance'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const jobInstanceDetail2 = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/job-instance2'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const jobContainerDetail = () => import(
         /* webpackChunkName: 'app-container' */'./k8s/job-container'
@@ -67,10 +75,10 @@
         /* webpackChunkName: 'app-list' */'./k8s/statefulset'
     )
     const statefulsetInstanceDetail = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/statefulset-instance'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const statefulsetInstanceDetail2 = () => import(
-        /* webpackChunkName: 'app-instance' */'./k8s/statefulset-instance2'
+        /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue'
     )
     const statefulsetContainerDetail = () => import(
         /* webpackChunkName: 'app-container' */'./k8s/statefulset-container'
@@ -174,6 +182,38 @@
             },
             curProjectId () {
                 return this.$store.state.curProjectId
+            },
+            category () {
+                const categoryMap = {
+                    deploymentsInstanceDetail: 'deployments',
+                    deploymentsInstanceDetail2: 'deployments',
+                    daemonsetInstanceDetail: 'daemonsets',
+                    daemonsetInstanceDetail2: 'daemonsets',
+                    statefulsetInstanceDetail: 'statefulsets',
+                    statefulsetInstanceDetail2: 'statefulsets',
+                    jobInstanceDetail: 'jobs',
+                    jobInstanceDetail2: 'jobs'
+                }
+                return categoryMap[this.$route.name]
+            },
+            namespace () {
+                return this.$route.query?.namespace
+            },
+            name () {
+                return this.$route.query?.name
+            },
+            kind () {
+                const kindMap = {
+                    deploymentsInstanceDetail: 'Deployment',
+                    deploymentsInstanceDetail2: 'Deployment',
+                    daemonsetInstanceDetail: 'DaemonSet',
+                    daemonsetInstanceDetail2: 'DaemonSet',
+                    statefulsetInstanceDetail: 'StatefulSet',
+                    statefulsetInstanceDetail2: 'StatefulSet',
+                    jobInstanceDetail: 'Job',
+                    jobInstanceDetail2: 'Job'
+                }
+                return kindMap[this.$route.name]
             }
         },
         mounted () {

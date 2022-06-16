@@ -44,6 +44,8 @@ const (
 	CacheClusterProjectKeyPrefix = "cached_cluster_manager"
 	// CacheClusterBusinessKeyPrefix key prefix for cluster business id
 	CacheClusterBusinessKeyPrefix = "cached_cluster_manager_cluster_business"
+	// CacheClusterSharedKeyPrefix key prefix for cluster shared
+	CacheClusterSharedKeyPrefix = "cached_cluster_manager_shared"
 )
 
 // Options for init clusterManager

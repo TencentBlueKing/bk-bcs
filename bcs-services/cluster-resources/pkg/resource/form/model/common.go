@@ -16,6 +16,8 @@ package model
 
 // Metadata ...
 type Metadata struct {
+	APIVersion  string       `structs:"apiVersion"`
+	Kind        string       `structs:"kind"`
 	Name        string       `structs:"name"`
 	Namespace   string       `structs:"namespace"`
 	Labels      []Label      `structs:"labels"`

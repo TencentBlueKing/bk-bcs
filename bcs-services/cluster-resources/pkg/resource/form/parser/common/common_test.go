@@ -37,16 +37,12 @@ var lightDeployManifest = map[string]interface{}{
 	},
 }
 
-func TestParseAPIVersionKind(t *testing.T) {
-	apiVersion, kind := ParseAPIVersionKind(lightDeployManifest)
-	assert.Equal(t, "apps/v1", apiVersion)
-	assert.Equal(t, "Deployment", kind)
-}
-
 func TestParseMetadata(t *testing.T) {
 	expectedMetadata := model.Metadata{
-		Name:      "deployment-test-12345",
-		Namespace: "default",
+		APIVersion: "apps/v1",
+		Kind:       "Deployment",
+		Name:       "deployment-test-12345",
+		Namespace:  "default",
 		Labels: []model.Label{
 			{Key: "app", Value: "busybox"},
 		},

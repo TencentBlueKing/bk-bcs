@@ -70,11 +70,11 @@ export default function detailBasicList (options: IDetailBasicOptions) {
             }, {
                 label: 'Active',
                 valueKeys: ['active'],
-                dataBasicKey: 'manifest_ext'
+                dataBasicKey: 'manifestExt'
             }, {
                 label: 'Last Schedule',
                 valueKeys: ['lastSchedule'],
-                dataBasicKey: 'manifest_ext',
+                dataBasicKey: 'manifestExt',
                 delimiter: ' / ',
                 defaultValue: 0
             }
@@ -87,7 +87,7 @@ export default function detailBasicList (options: IDetailBasicOptions) {
             }, {
                 label: 'Duration',
                 valueKeys: ['duration'],
-                dataBasicKey: 'manifest_ext'
+                dataBasicKey: 'manifestExt'
             }
         ]
     }

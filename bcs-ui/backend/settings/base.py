@@ -506,6 +506,9 @@ CLUSTER_TOOLS_REPO_PREFIX = os.environ.get('CLUSTER_TOOLS_REPO_PREFIX')
 # 是否支持使用 Mesos 服务
 SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
 
+# 首选域名列表
+PREFERRED_DOMAINS = os.environ.get('PREFERRED_DOMAINS', '')
+
 try:
     from .base_ext import *  # noqa
 except ImportError as e:

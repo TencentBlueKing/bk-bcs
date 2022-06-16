@@ -510,6 +510,11 @@ func apisixRouteConversion(svc *register.Service, route *register.Route, metrics
 		bcsAuth, authPlugin := apisixBKBCSAuthConversion(route.Plugin.AuthOption)
 		r.Plugins[bcsAuth] = authPlugin
 	}
+	if route.Plugin != nil && route.Plugin.FileLoggerOption != nil {
+		r.Plugins["file-logger"] = map[string]interface{}{
+			"path": route.Plugin.FileLoggerOption.Path,
+		}
+	}
 	reqID, reqPlugin := apisixRequestIDPlugin()
 	r.Plugins[reqID] = reqPlugin
 	//setting route path, end with * means wildcard
@@ -572,6 +577,18 @@ func apisixBKBCSAuthConversion(option *register.BCSAuthOption) (string, map[stri
 	auth["module"] = option.Module
 	auth["keepalive"] = float64(60)
 	auth["timeout"] = float64(10)
+	if option.RedisHost != nil {
+		auth["redis_host"] = option.RedisHost
+	}
+	if option.RedisPassword != nil {
+		auth["redis_password"] = option.RedisPassword
+	}
+	if option.RedisPort != nil {
+		auth["redis_port"] = option.RedisPort
+	}
+	if option.RedisDatabase != nil {
+		auth["redis_database"] = option.RedisDatabase
+	}
 	return option.Name, auth
 }
 

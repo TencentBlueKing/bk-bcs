@@ -71,6 +71,8 @@ type MicroHandler func(module string, svc *registry.Service) (*register.Service,
 //NewAdapter create service data conversion
 func NewAdapter(option *ServerOptions) *Adapter {
 	adp := &Adapter{
+		opt:           option,
+		redis:         option.Redis,
 		admintoken:    option.AuthToken,
 		handlers:      make(map[string]Handler),
 		microHandlers: make(map[string]MicroHandler),
@@ -84,6 +86,8 @@ func NewAdapter(option *ServerOptions) *Adapter {
 //Adapter uses for converting bkbcs service discovery
 // information to inner register data structures
 type Adapter struct {
+	opt           *ServerOptions
+	redis         Redis
 	admintoken    string
 	handlers      map[string]Handler
 	microHandlers map[string]MicroHandler
@@ -131,8 +135,15 @@ func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*regis
 		Paths:       []string{requestPath},
 		PathRewrite: false,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -193,8 +204,15 @@ func (adp *Adapter) microStandarModule(module string, svc *registry.Service) (*r
 		Paths:       []string{gatewayPath},
 		PathRewrite: true,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -322,8 +340,15 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 		Service: name,
 		Labels:  labels,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -367,8 +392,15 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 		Service:     module,
 		Labels:      labels,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -436,8 +468,15 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 		PathRewrite: true,
 		Service:     name,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -518,8 +557,15 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 		Paths:       []string{"/bcsapi/v4/detection/"},
 		PathRewrite: true,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -604,8 +650,15 @@ func (adp *Adapter) microMesosDriver(module string, svc *registry.Service) (*reg
 			defaultClusterIDKey: upcaseID,
 		},
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -645,8 +698,15 @@ func (adp *Adapter) microStorage(module string, svc *registry.Service) (*registe
 		Service:     module,
 		Labels:      labels,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -776,8 +836,15 @@ func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) 
 		Paths:       []string{"/bcsapi/v4/detection/"},
 		PathRewrite: true,
 		Plugin: &register.Plugins{
+			FileLoggerOption: &register.FileLoggerOption{
+				Path: adp.opt.AccessLogFile,
+			},
 			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
+				Name:          defaultPluginName,
+				RedisHost:     strPtr(adp.redis.RedisHost),
+				RedisPassword: strPtr(adp.redis.RedisPassword),
+				RedisPort:     intPtr(adp.redis.RedisPort),
+				RedisDatabase: intPtr(adp.redis.RedisDatabase),
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -792,4 +859,14 @@ func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) 
 	bcks := adp.constructUpstreamTarget(svc.Nodes)
 	regSvc.Backends = append(regSvc.Backends, bcks...)
 	return regSvc, nil
+}
+
+func intPtr(num int) *int {
+	var p int = num
+	return &p
+}
+
+func strPtr(str string) *string {
+	var p string = str
+	return &p
 }

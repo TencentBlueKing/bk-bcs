@@ -6,15 +6,12 @@ import store from '@/store'
 const methodsWithoutData = ['get', 'head', 'options', 'delete']
 const defaultConfig = { needRes: false }
 
-export const request = (method, url) => (params = {}, config = {}) => {
-    const reqMethod = method.toLowerCase()
-    const reqConfig = Object.assign({}, defaultConfig, config)
-
+export const parseUrl = (url, params = {}) => {
     // 全局URL变量替换
+    const currentRoute = router.currentRoute
     const variableData = {
-        '$projectId': router.currentRoute.params.projectId,
-        '$clusterId': store.state.curClusterId || ''
-        // '$namespace': ''
+        '$projectId': currentRoute.params.projectId,
+        '$clusterId': store.state.curClusterId || currentRoute.query.cluster_id || currentRoute.params.cluster_id
     }
     Object.keys(params).forEach(key => {
         // 自定义url变量
@@ -22,18 +19,25 @@ export const request = (method, url) => (params = {}, config = {}) => {
             variableData[key] = params[key]
         }
     })
-    let newUrl = `${DEVOPS_BCS_API_URL}${url}`
+    let newUrl = `${/(http|https):\/\/([\w.]+\/?)\S*/.test(url) ? url : `${DEVOPS_BCS_API_URL}${url}`}`
     Object.keys(variableData).forEach(key => {
         if (!variableData[key]) {
             // console.warn(`路由变量未配置${key}`)
             // 去除后面的路径符号
-            newUrl = newUrl.replace(new RegExp(`\\${key}/`, 'g'), '')
+            newUrl = newUrl.replace(`/${key}`, '')
         } else {
             newUrl = newUrl.replace(new RegExp(`\\${key}`, 'g'), variableData[key])
         }
         delete params[key]
     })
+    return newUrl
+}
 
+export const request = (method, url) => (params = {}, config = {}) => {
+    const reqMethod = method.toLowerCase()
+    const reqConfig = Object.assign({}, defaultConfig, config)
+
+    let newUrl = parseUrl(url, params)
     let req = null
     if (methodsWithoutData.includes(reqMethod)) {
         const query = json2Query(params, '')

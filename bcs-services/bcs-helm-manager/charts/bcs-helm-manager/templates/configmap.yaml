@@ -68,6 +68,14 @@ data:
       "exemptclients": {
           clientids: "test"
       },
+      "app": {
+        "code": "",
+        "secret": "",
+        "token": ""
+      },
+      "projectservice": {
+          "host": ""
+      },
       "debug": false,
       "address": "{{ .Values.helmmanager.service.address }}",
       "insecureaddress": "{{ .Values.helmmanager.service.insecureaddress }}",

@@ -151,3 +151,11 @@ func TestGetGroupVersionResource(t *testing.T) {
 	_, err = GetGroupVersionResource(context.TODO(), clusterConf, "NotExistsKind", "v1")
 	assert.NotNil(t, err)
 }
+
+func TestGetResPreferredVersion(t *testing.T) {
+	apiVersion, _ := GetResPreferredVersion(context.TODO(), testClusterID, Deploy)
+	assert.Equal(t, apiVersion, "apps/v1")
+
+	apiVersion, _ = GetResPreferredVersion(context.TODO(), testClusterID, Po)
+	assert.Equal(t, apiVersion, "v1")
+}

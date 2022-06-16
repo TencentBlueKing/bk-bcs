@@ -27,6 +27,7 @@ const (
 	ExternalMode = "external" // 平台集群, 外部模式, 需要设置 AdminClusterId
 )
 
+// WebConsoleConf webconsole 配置
 type WebConsoleConf struct {
 	AdminClusterId      string     `yaml:"admin_cluster_id"`
 	Mode                string     `yaml:"mode"`           // internal , external
@@ -36,15 +37,18 @@ type WebConsoleConf struct {
 	GuideDocLink        string     `yaml:"guide_doc_link"` // 使用文档链接
 }
 
+// Version kubectld 版本
 type Version struct {
 	Tag      string
 	MajorVer *version.Version
 }
 
+// String
 func (v *Version) String() string {
 	return fmt.Sprintf("%s<%s>", v.Tag, v.MajorVer.String())
 }
 
+// Init
 func (c *WebConsoleConf) Init() error {
 	// only for development
 	c.KubectldImage = ""
@@ -64,6 +68,7 @@ func (c *WebConsoleConf) IsExternalMode() bool {
 	return c.Mode == ExternalMode
 }
 
+// InitTagPatterns 初始化 tag
 func (c *WebConsoleConf) InitTagPatterns() error {
 	c.KubectldTagPatterns = []*Version{}
 	for _, tag := range c.KubectldTags {

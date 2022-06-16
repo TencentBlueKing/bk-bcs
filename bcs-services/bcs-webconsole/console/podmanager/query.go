@@ -259,13 +259,15 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 	return podCtx, err
 }
 
+// OpenQuery openapi 参数
 type OpenQuery struct {
-	ContainerId   string `json:"container_id"`
 	Operator      string `json:"operator" binding:"required"`
 	Command       string `json:"command"`
+	ContainerId   string `json:"container_id"`
 	Namespace     string `json:"namespace"`
 	PodName       string `json:"pod_name"`
 	ContainerName string `json:"container_name"`
+	WSAcquire     bool   `json:"ws_acquire"` // 是否返回 websocket_url
 }
 
 // QueryOpenPodCtx openapi鉴权模式

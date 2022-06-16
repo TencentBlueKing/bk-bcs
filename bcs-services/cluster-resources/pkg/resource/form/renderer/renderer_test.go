@@ -20,7 +20,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
@@ -29,7 +31,7 @@ import (
 )
 
 var deployManifest4RenderTest = map[string]interface{}{
-	"apiVersion": "apps/v1",
+	"apiVersion": "",
 	"kind":       "Deployment",
 	"metadata": map[string]interface{}{
 		"name":      "deployment-test-" + stringx.Rand(example.RandomSuffixLength, example.SuffixCharset),
@@ -80,14 +82,42 @@ func TestNewManifestRenderer(t *testing.T) {
 	manifest, err := NewManifestRenderer(context.TODO(), formData, envs.TestClusterID, res.Deploy).Render()
 	assert.Nil(t, err)
 
-	assert.Equal(t, "busybox", mapx.Get(manifest, "metadata.labels.app", ""))
+	assert.Equal(t, "busybox", mapx.GetStr(manifest, "metadata.labels.app"))
 	assert.Equal(t, 2, mapx.Get(manifest, "spec.replicas", 0))
-	assert.Equal(t, "busybox", mapx.Get(manifest, "spec.selector.matchLabels.app", ""))
+	assert.Equal(t, "busybox", mapx.GetStr(manifest, "spec.selector.matchLabels.app"))
+
+	// 注入信息检查
+	assert.Equal(t, "apps/v1", mapx.GetStr(manifest, "apiVersion"))
+
+	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "labels", res.EditModeLabelKey}))
+
+	paths := []string{"spec", "selector", "matchLabels", res.EditModeLabelKey}
+	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, paths))
+
+	paths = []string{"spec", "template", "metadata", "labels", res.EditModeLabelKey}
+	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, paths))
 }
 
 func TestSchemaRenderer(t *testing.T) {
+	assert.Nil(t, i18n.InitMsgMap())
+
+	// 默认版本（中文）
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(kind).Render()
+		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default").Render()
+		assert.Nil(t, err)
+	}
+
+	// 英文版本
+	ctx := context.WithValue(context.TODO(), ctxkey.LangKey, i18n.EN)
+	for kind := range FormRenderSupportedResAPIVersion {
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default").Render()
+		assert.Nil(t, err)
+	}
+
+	// 中文版本
+	ctx = context.WithValue(context.TODO(), ctxkey.LangKey, i18n.ZH)
+	for kind := range FormRenderSupportedResAPIVersion {
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default").Render()
 		assert.Nil(t, err)
 	}
 }

@@ -15,6 +15,8 @@
 package workload
 
 import (
+	"strconv"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
@@ -26,15 +28,16 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 			v, _ := vol.(map[string]interface{})
 			if _, ok := v["configMap"]; ok {
 				volume.ConfigMap = append(volume.ConfigMap, model.CMVolume{
-					Name:        v["name"].(string),
-					DefaultMode: mapx.GetInt64(v, "configMap.defaultMode"),
+					Name: v["name"].(string),
+					// 支持前端表单填写八进制（0000-0777）/十进制（0-511），因此转为字符串
+					DefaultMode: strconv.FormatInt(mapx.GetInt64(v, "configMap.defaultMode"), 10),
 					CMName:      mapx.GetStr(v, "configMap.name"),
 					Items:       parseVolumeItems(v, "configMap.items"),
 				})
 			} else if _, ok := v["secret"]; ok {
 				volume.Secret = append(volume.Secret, model.SecretVolume{
 					Name:        v["name"].(string),
-					DefaultMode: mapx.GetInt64(v, "secret.defaultMode"),
+					DefaultMode: strconv.FormatInt(mapx.GetInt64(v, "secret.defaultMode"), 10),
 					SecretName:  mapx.GetStr(v, "secret.secretName"),
 					Items:       parseVolumeItems(v, "secret.items"),
 				})

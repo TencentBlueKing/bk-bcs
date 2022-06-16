@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from typing import List, Tuple
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -26,6 +27,7 @@ from backend.apps.whitelist import enabled_force_sync_chart_repo
 from backend.bcs_web.viewsets import SystemViewSet
 from backend.components import bk_repo
 from backend.helm.app.models import App
+from backend.helm.toolkit import chart_versions as chart_version_tools
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.views import ActionSerializerMixin, FilterByProjectMixin, with_code_wrapper
@@ -34,18 +36,7 @@ from . import serializers
 from .constants import DEFAULT_CHART_REPO_PROJECT_NAME
 from .models.chart import Chart, ChartVersion, ChartVersionSnapshot
 from .models.repo import Repository
-from .providers.repo_provider import add_plain_repo, add_repo
-from .serializers import (
-    ChartDetailSLZ,
-    ChartSLZ,
-    ChartVersionSLZ,
-    ChartVersionTinySLZ,
-    ChartWithVersionRepoSLZ,
-    CreateRepoSLZ,
-    MinimalRepoSLZ,
-    RepositorySyncSLZ,
-    RepoSLZ,
-)
+from .serializers import ChartVersionSLZ, ChartVersionTinySLZ, ChartWithVersionRepoSLZ, RepositorySyncSLZ, RepoSLZ
 from .tasks import sync_helm_repo
 from .utils import chart as chart_utils
 from .utils import chart_versions
@@ -83,7 +74,6 @@ class ChartViewSet(SystemViewSet):
         return Response(data)
 
     def retrieve(self, request, project_id, chart_id):
-        project_id = request.project.project_id
         try:
             chart = Chart.objects.get(id=chart_id)
         except Chart.DoesNotExist:
@@ -134,49 +124,6 @@ class RepositoryView(FilterByProjectMixin, viewsets.ModelViewSet):
         """List all repositories"""
         serializer = RepoSLZ(self.get_queryset(), many=True)
         return Response({'count': self.get_queryset().count(), 'results': serializer.data})
-
-    def list_minimal(self, request, *args, **kwargs):
-        """List all repositories minimally"""
-        serializer = MinimalRepoSLZ(self.get_queryset(), many=True)
-        return Response({'count': self.get_queryset().count(), 'results': serializer.data})
-
-    def retrieve(self, request, project_id, *args, **kwargs):
-        """Retrieve certain Chart Repository"""
-        repo_id = kwargs.get('repo_id')
-        serializer = RepoSLZ(self.queryset.get(project_id=project_id, id=repo_id))
-        return Response(data=serializer.data)
-
-    def destroy(self, request, project_id, *args, **kwargs):
-        """Destroy Chart Repository"""
-        repo_id = kwargs.get('repo_id')
-        try:
-            self.queryset.get(project_id=project_id, id=repo_id).delete()
-        except Exception as e:
-            raise error_codes.CheckFailed.f("Delete Chart Repo failed: {}".format(e))
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@with_code_wrapper
-class RepositoryCreateView(FilterByProjectMixin, viewsets.ViewSet):
-    """Viewset for creating helm chart repository management"""
-
-    serializer_class = CreateRepoSLZ
-
-    def create(self, request, project_id, *args, **kwargs):
-        """Create Repository (support all kind of repo create)"""
-        serializer = CreateRepoSLZ(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        data = serializer.data
-        new_chart_repo = add_repo(
-            project_id,
-            provider_name=data.get('provider'),
-            user=self.request.user,
-            name=data["name"],
-            url=data.get("url"),
-        )
-
-        return Response(status=status.HTTP_201_CREATED, data=RepoSLZ(new_chart_repo).data)
 
 
 @with_code_wrapper
@@ -385,3 +332,72 @@ class HelmChartVersionsViewSet(SystemViewSet):
         """获取仓库的项目名称"""
         # 兼容Harbor项目地址及bk repo项目地址, 其中harbor项目地址固定，bk repo地址项目地址为bcs project code
         return DEFAULT_CHART_REPO_PROJECT_NAME or project_code
+
+
+class ChartVersionsViewSet(viewsets.ViewSet):
+    renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+
+    def _get_repo(self, project_id: str, project_code: str, is_public_repo: bool) -> Tuple:
+        """获取仓库信息
+        :param project_id: 项目 ID
+        :param project_code: 项目编码，同仓库名称
+        :param is_public_repo: 是否为公共仓库，True表示为公共仓库
+        """
+        # 获取repo
+        repo_name = settings.BCS_SHARED_CHART_REPO_NAME if is_public_repo else project_code
+        try:
+            repo = Repository.objects.get(project_id=project_id, name=repo_name)
+        except Repository.DoesNotExist:
+            raise ValidationError(f"repo not exist, project: {project_id}, repo_name: {repo_name}")
+        # 获取repo对应的username和password
+        username, password = repo.username_password
+
+        return (repo, username, password)
+
+    def list_versions(self, request, project_id, chart_name):
+        slz = serializers.ChartParamsSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        is_public_repo = slz.validated_data["is_public_repo"]
+
+        project_code = request.project.project_code
+        _, username, password = self._get_repo(project_id, project_code, is_public_repo)
+        # 获取chart版本
+        client = bk_repo.BkRepoClient(username=username, password=password)
+        helm_project_name, helm_repo_name = chart_version_tools.get_helm_project_and_repo_name(
+            request.project.project_code, is_public_repo=is_public_repo
+        )
+        versions = client.get_chart_versions(helm_project_name, helm_repo_name, chart_name)
+        versions = chart_version_tools.VersionListSLZ(data=versions, many=True)
+        versions.is_valid(raise_exception=True)
+        versions = versions.validated_data
+
+        versions = chart_version_tools.sort_version_list(versions)
+
+        return Response(versions)
+
+    def _get_chart(self, repo, chart_name):
+        """获取chart"""
+        try:
+            return Chart.objects.get(repository=repo, name=chart_name)
+        except Chart.DoesNotExist:
+            raise ValidationError(f"chart not exist, project: {repo.project_id}, repo_name: {repo.name}")
+
+    def update_or_create_version(self, request, project_id, chart_name, version):
+        """获取版本详情"""
+        slz = serializers.ChartParamsSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+        is_public_repo = slz.validated_data["is_public_repo"]
+
+        project_code = request.project.project_code
+        repo, username, password = self._get_repo(project_id, project_code, is_public_repo)
+        # 获取chart版本详情
+        client = bk_repo.BkRepoClient(username=username, password=password)
+        helm_project_name, helm_repo_name = chart_version_tools.get_helm_project_and_repo_name(
+            request.project.project_code, is_public_repo=is_public_repo
+        )
+        detail = client.get_chart_version_detail(helm_project_name, helm_repo_name, chart_name, version)
+
+        # 创建或更新，类似helm repo update
+        chart_version, _ = ChartVersion.update_or_create_version(self._get_chart(repo, chart_name), detail)
+        data = serializers.ChartVersionDetailSLZ(chart_version).data
+        return Response(data)

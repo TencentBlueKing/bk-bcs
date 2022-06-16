@@ -22,7 +22,6 @@ import {
     resourceCreate,
     resourceUpdate,
     exampleManifests,
-    subscribeList,
     namespaceList,
     customResourceList,
     retrieveCustomResourceDetail,
@@ -32,7 +31,9 @@ import {
     reschedulePod,
     logLinks,
     dashbordListWithoutNamespace,
-    crdList
+    crdList,
+    formSchema,
+    renderManifestPreview
 } from '@/api/base'
 
 export default {
@@ -47,7 +48,7 @@ export default {
             const res = await dashbordList(params, { needRes: true }).catch(() => ({
                 data: {
                     manifest: {},
-                    manifest_ext: {}
+                    manifestExt: {}
                 }
             }))
             return res
@@ -58,30 +59,30 @@ export default {
             const res = await dashbordListWithoutNamespace(params, { needRes: true }).catch(() => ({
                 data: {
                     manifest: {},
-                    manifest_ext: {}
+                    manifestExt: {}
                 }
             }))
             return res
         },
 
         // 订阅接口
-        async subscribeList (context, params, config = { needRes: true }) {
-            if (!context.rootState?.curClusterId) return { events: [], latest_rv: null }
-            const res = await subscribeList(params, config).catch((err) => {
-                if (err.code === 4005005) { // resourceVersion 重载当前窗口（也可以在每个界面重新调用获取列表详情的接口，目前这样快速处理）
-                    location.reload()
-                }
-                return {
-                    data: { events: [], latest_rv: null }
-                }
-            })
-            return res.data
-        },
+        // async subscribeList (context, params, config = { needRes: true }) {
+        //     if (!context.rootState?.curClusterId) return { events: [], latest_rv: null }
+        //     const res = await subscribeList(params, config).catch((err) => {
+        //         if (err.code === 4005005) { // resourceVersion 重载当前窗口（也可以在每个界面重新调用获取列表详情的接口，目前这样快速处理）
+        //             location.reload()
+        //         }
+        //         return {
+        //             data: { events: [], latest_rv: null }
+        //         }
+        //     })
+        //     return res.data
+        // },
         // 获取命名空间
         async getNamespaceList (context, params, config = {}) {
             const data = await namespaceList(params).catch(() => ({
                 manifest: {},
-                manifest_ext: {}
+                manifestExt: {}
             }))
             return data
         },
@@ -97,7 +98,7 @@ export default {
             const res = await retrieveDetail(params, { needRes: true }).catch(() => ({
                 data: {
                     manifest: {},
-                    manifest_ext: {}
+                    manifestExt: {}
                 }
             }))
             return res
@@ -143,7 +144,7 @@ export default {
         async listWorkloadPods (context, params, config = {}) {
             const data = await listWorkloadPods(params, config = {}).catch(() => ({
                 manifest: {},
-                manifest_ext: {}
+                manifestExt: {}
             }))
             return data
         },
@@ -154,7 +155,7 @@ export default {
         async listStoragePods (context, params, config = {}) {
             const data = await listStoragePods(params, config = {}).catch(() => ({
                 manifest: {},
-                manifest_ext: {}
+                manifestExt: {}
             }))
             return data
         },
@@ -195,7 +196,7 @@ export default {
         },
         // 资源删除
         async resourceDelete (context, params, config = {}) {
-            const data = await resourceDelete(params, config = {}).catch(() => false)
+            const data = await resourceDelete(params, config = {}).then(() => true).catch(() => false)
             return data
         },
         // 资源创建
@@ -224,7 +225,7 @@ export default {
             const res = await crdList({}, { needRes: true }).catch(() => ({
                 data: {
                     manifest: {},
-                    manifest_ext: {}
+                    manifestExt: {}
                 }
             }))
             return res
@@ -234,7 +235,7 @@ export default {
             const res = await customResourceList(params, { needRes: true }).catch(() => ({
                 data: {
                     manifest: {},
-                    manifest_ext: {}
+                    manifestExt: {}
                 }
             }))
             return res
@@ -244,7 +245,7 @@ export default {
             const res = retrieveCustomResourceDetail(params, { needRes: true }).catch(() => ({
                 data: {
                     manifest: {},
-                    manifest_ext: {}
+                    manifestExt: {}
                 }
             }))
             return res
@@ -272,6 +273,16 @@ export default {
         // 容器日志链接
         async logLinks (context, params) {
             const data = await logLinks(params).catch(() => ({}))
+            return data
+        },
+        // 获取表单化配置
+        async getFormSchema (context, params) {
+            const data = await formSchema(params).catch(() => ({}))
+            return data
+        },
+        // 表单数据转manifest
+        async renderManifestPreview (context, params) {
+            const data = await renderManifestPreview(params).catch(() => ({}))
             return data
         }
     }

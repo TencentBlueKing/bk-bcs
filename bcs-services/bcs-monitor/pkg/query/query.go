@@ -16,6 +16,7 @@ package query
 import (
 	"context"
 	"math"
+	"path"
 	"strconv"
 	"time"
 
@@ -43,6 +44,8 @@ import (
 	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/tracing/client"
 	"github.com/thanos-io/thanos/pkg/ui"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 // QueryAPI promql api 服务, 封装 thaons 的API使用
@@ -174,7 +177,8 @@ func NewQueryAPI(
 		tenantAuthMiddleware, _ := NewTenantAuthMiddleware(ctx, ins)
 
 		// 启动一个ui界面
-		ui.NewQueryUI(kitLogger, endpoints, "", "", "").Register(router, ins)
+		prefix := path.Join(config.G.Web.RoutePrefix, config.QueryServicePrefix)
+		ui.NewQueryUI(kitLogger, endpoints, prefix, "", "").Register(router, ins)
 
 		api := v1.NewQueryAPI(
 			kitLogger,

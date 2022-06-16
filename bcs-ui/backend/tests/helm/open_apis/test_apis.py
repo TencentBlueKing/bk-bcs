@@ -12,8 +12,8 @@
 # specific language governing permissions and limitations under the License.
 #
 import pytest
+from django.conf import settings
 
-from backend.helm.helm.constants import PUBLIC_REPO_NAME
 from backend.helm.helm.models.repo import Repository, RepositoryAuth
 
 pytestmark = pytest.mark.django_db
@@ -35,7 +35,7 @@ def create_db_records(project_id):
         RepositoryAuth.objects.create(type="basic", credentials=cred, repo=repo_obj)
 
     # 添加公共仓库
-    _create(PUBLIC_REPO_NAME, f"{FAKE_REPO_DOMAIN}{FAKE_SHARED_REPO_PATH}")
+    _create(settings.BCS_SHARED_CHART_REPO_NAME, f"{FAKE_REPO_DOMAIN}{FAKE_SHARED_REPO_PATH}")
     # 添加项目仓库
     _create(FAKE_NAME, f"{FAKE_REPO_DOMAIN}{FAKE_DEDICATED_REPO_PATH}")
 

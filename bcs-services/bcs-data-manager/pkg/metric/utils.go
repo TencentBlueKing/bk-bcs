@@ -65,17 +65,17 @@ const (
 )
 
 const (
-	DeploymentPodCondition = "cluster_id=\"%s\", namespace=\"%s\",image!=\"\",pod=~\"%s-[0-9a-z]*-[0-9a-z]*$\"," +
+	DeploymentPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*-[0-9a-z]*$\"," +
 		"container_name!=\"POD\""
-	OtherPodCondition = "cluster_id=\"%s\", namespace=\"%s\",image!=\"\",pod=~\"%s-[0-9a-z]*$\"," +
+	OtherPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*$\"," +
 		"container_name!=\"POD\""
-	MesosPodCondition = "cluster_id=\"%s\", namespace=\"%s\",image!=\"\",name=~\".*.%s.%s.%s.*\"," +
+	MesosPodCondition = "cluster_id=\"%s\", namespace=\"%s\",name=~\".*.%s.%s.%s.*\"," +
 		"container_name!=\"POD\""
 	PodSumCondition       = "pod"
 	MesosPodSumCondition  = "name"
-	NamespaceCondition    = "cluster_id=\"%s\", namespace=\"%s\",image!=\"\""
+	NamespaceCondition    = "cluster_id=\"%s\", namespace=\"%s\""
 	NamespaceSumCondition = "namespace"
-	ClusterCondition      = "cluster_id=\"%s\",image!=\"\""
+	ClusterCondition      = "cluster_id=\"%s\""
 	ClusterSumCondition   = "cluster_id"
 )
 

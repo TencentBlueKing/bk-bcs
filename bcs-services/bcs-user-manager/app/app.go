@@ -37,6 +37,9 @@ func Run(op *options.UserManagerOptions) {
 		blog.Errorf("error parse config: %s", err.Error())
 		os.Exit(1)
 	}
+	// set userManager global config
+	config.SetGlobalConfig(conf)
+
 	if conf.ClientCert.IsSSL {
 		cliTLS, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile, conf.ClientCert.CertPasswd)
 		if err != nil {
@@ -90,6 +93,8 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.TKE = op.TKE
 	userMgrConfig.PeerToken = op.PeerToken
 	userMgrConfig.PermissionSwitch = op.PermissionSwitch
+	userMgrConfig.CommunityEdition = op.CommunityEdition
+	userMgrConfig.PassConfig = op.PassCC
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))

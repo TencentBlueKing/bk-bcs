@@ -60,6 +60,12 @@ func AbortWithWithForbiddenError(c *Context, err error) {
 	c.AbortWithStatusJSON(http.StatusForbidden, result)
 }
 
+// AbortWithJSONError 目前的UI规范, 返回200状态码, 通过里面的code判断请求成功与否
+func AbortWithJSONError(c *Context, err error) {
+	result := Result{Code: 1400, Message: err.Error(), RequestId: c.RequestId}
+	c.AbortWithStatusJSON(http.StatusOK, result)
+}
+
 // APIResponse 正常返回
 func APIResponse(c *Context, data interface{}) {
 	result := Result{Code: 0, Message: "OK", RequestId: c.RequestId, Data: data}
@@ -108,7 +114,7 @@ func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 		}
 		result, err := handler(restContext)
 		if err != nil {
-			AbortWithBadRequestError(restContext, err)
+			AbortWithJSONError(restContext, err)
 			return
 		}
 

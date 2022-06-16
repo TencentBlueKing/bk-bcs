@@ -28,6 +28,7 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 // CreateCloudNodeGroupTask create cloud node group task
@@ -92,12 +93,18 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		LaunchConfigurePara:      generateLaunchConfigurePara(group.LaunchTemplate, group.NodeTemplate),
 		InstanceAdvancedSettings: generateInstanceAdvanceSettings(group.NodeTemplate),
 		// 不开启腾讯云 CA 组件，因为需要部署 BCS 自己的 CA 组件
-		EnableAutoscale: common.BoolPtr(false),
-		Name:            &group.Name,
-		NodePoolOs:      &group.NodeOS,
-		Labels:          api.MapToLabels(group.Labels),
-		Taints:          api.MapToTaints(group.Taints),
-		Tags:            api.MapToTags(group.Tags),
+		EnableAutoscale:  common.BoolPtr(false),
+		Name:             &group.Name,
+		Tags:             api.MapToTags(group.Tags),
+		ContainerRuntime: &group.ContainerRuntime,
+		RuntimeVersion:   &group.RuntimeVersion,
+	}
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
+		nodePool.NodePoolOs = &group.LaunchTemplate.ImageInfo.ImageID
+	}
+	if group.NodeTemplate != nil {
+		nodePool.Taints = api.MapToTaints(group.NodeTemplate.Taints)
+		nodePool.Labels = api.MapToLabels(group.NodeTemplate.Labels)
 	}
 	if nodePool.AutoScalingGroupPara != nil && nodePool.AutoScalingGroupPara.VpcID == nil {
 		nodePool.AutoScalingGroupPara.VpcID = &cluster.VpcID
@@ -208,6 +215,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	defer cancel()
 	asgID := ""
 	ascID := ""
+	cloudNodeGroup := &tke.NodePool{}
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
 		np, err := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
@@ -218,6 +226,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		if np == nil {
 			return nil
 		}
+		cloudNodeGroup = np
 		asgID = *np.AutoscalingGroupId
 		ascID = *np.LaunchConfigurationId
 		switch {
@@ -236,17 +245,6 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return err
 	}
 
-	// update image id
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
-		ascReq := as.NewModifyLaunchConfigurationAttributesRequest()
-		ascReq.LaunchConfigurationId = &ascID
-		ascReq.ImageId = &group.LaunchTemplate.ImageInfo.ImageID
-		if err := asCli.ModifyLaunchConfigurationAttributes(ascReq); err != nil {
-			blog.Errorf("taskID[%s] ModifyLaunchConfigurationAttributes[%s] failed: %v", taskID, ascID, err)
-			return err
-		}
-	}
-
 	// get asg info
 	asgArr, err := asCli.DescribeAutoScalingGroups(asgID)
 	if err != nil {
@@ -261,7 +259,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return err
 	}
 
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group, asgArr, ascArr[0]))
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group, cloudNodeGroup, asgArr, ascArr[0]))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -283,7 +281,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingGroup, asc *as.LaunchConfiguration) *proto.NodeGroup {
+func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup, asc *as.LaunchConfiguration) *proto.NodeGroup {
 	// asg
 	if asg.AutoScalingGroupId != nil {
 		group.AutoScaling.AutoScalingID = *asg.AutoScalingGroupId
@@ -348,7 +346,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingG
 			group.LaunchTemplate.InternetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
 		}
 		if asc.InternetAccessible.InternetMaxBandwidthOut != nil {
-			group.LaunchTemplate.InternetAccess.InternetMaxBandwidth = uint32(*asc.InternetAccessible.InternetMaxBandwidthOut)
+			group.LaunchTemplate.InternetAccess.InternetMaxBandwidth = strconv.Itoa(int(*asc.InternetAccessible.InternetMaxBandwidthOut))
 		}
 		if asc.InternetAccessible.PublicIpAssigned != nil {
 			group.LaunchTemplate.InternetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
@@ -362,6 +360,9 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, asg *as.AutoScalingG
 	}
 	if asc.ImageId != nil {
 		group.LaunchTemplate.ImageInfo = &proto.ImageInfo{ImageID: *asc.ImageId}
+		if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
+			group.LaunchTemplate.ImageInfo.ImageName = *cloudNodeGroup.NodePoolOs
+		}
 	}
 	if asc.UserData != nil {
 		group.LaunchTemplate.UserData = *asc.UserData
@@ -463,26 +464,24 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTempla
 	if template.SystemDisk != nil {
 		conf.SystemDisk = &api.SystemDisk{
 			DiskType: &template.SystemDisk.DiskType}
-		diskSize, err := strconv.Atoi(template.SystemDisk.DiskSize)
-		if err == nil && diskSize > 0 {
-			conf.SystemDisk.DiskSize = common.Uint64Ptr(uint64(diskSize))
-		}
+		diskSize, _ := strconv.Atoi(template.SystemDisk.DiskSize)
+		conf.SystemDisk.DiskSize = common.Uint64Ptr(uint64(diskSize))
 	}
 	if template.DataDisks != nil {
-		conf.DataDisks = make([]*api.DataDisk, 0)
+		conf.DataDisks = make([]*api.LaunchConfigureDataDisk, 0)
 		for _, v := range template.DataDisks {
-			disk := &api.DataDisk{DiskType: v.DiskType}
-			diskSize, err := strconv.Atoi(v.DiskSize)
-			if err != nil && diskSize > 0 {
-				disk.DiskSize = uint32(diskSize)
-			}
+			diskType := v.DiskType
+			disk := &api.LaunchConfigureDataDisk{DiskType: &diskType}
+			diskSize, _ := strconv.Atoi(v.DiskSize)
+			disk.DiskSize = common.Uint64Ptr(uint64(diskSize))
 			conf.DataDisks = append(conf.DataDisks, disk)
 		}
 	}
 	if template.InternetAccess != nil {
+		bw, _ := strconv.Atoi(template.InternetAccess.InternetMaxBandwidth)
 		conf.InternetAccessible = &api.InternetAccessible{
 			PublicIPAssigned:        common.BoolPtr(template.InternetAccess.PublicIPAssigned),
-			InternetMaxBandwidthOut: common.Uint64Ptr(uint64(template.InternetAccess.InternetMaxBandwidth)),
+			InternetMaxBandwidthOut: common.Uint64Ptr(uint64(bw)),
 		}
 		if template.InternetAccess.InternetChargeType != "" {
 			conf.InternetAccessible.InternetChargeType = common.StringPtr(template.InternetAccess.InternetChargeType)

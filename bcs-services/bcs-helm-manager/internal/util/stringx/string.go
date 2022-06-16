@@ -21,9 +21,49 @@ func SplitString(str string) []string {
 	return strings.Split(str, ",")
 }
 
-// AddString 拼接字符串
+// JoinString 拼接字符串
 func JoinString(str ...string) string {
 	var strList []string
 	strList = append(strList, str...)
 	return strings.Join(strList, ",")
+}
+
+// JoinStringBySeparator 通过分割符拼装字符串
+func JoinStringBySeparator(strList []string, separator string, addSep bool) string {
+	// 如果分隔符为空，则以 \n---\n 分割
+	if separator == "" {
+		separator = "\n---\n"
+	}
+	// NOTE: 前面追加一个，以便于分割
+	joinedStr := strings.Join(strList, separator)
+	if addSep {
+		return separator + joinedStr
+	}
+	return joinedStr
+}
+
+// Errs2String error array to string
+func Errs2String(errs []error) string {
+	var strList []string
+	for _, err := range errs {
+		strList = append(strList, err.Error())
+	}
+	return strings.Join(strList, ",")
+}
+
+// SplitYaml 分割 yaml 为数组 string
+// separator 为空时，设置为以 "---\n" 分割
+func SplitYaml2Array(yamlStr string, separator string) []string {
+	if separator == "" {
+		separator = "---\n"
+	}
+	var splitedStrArr []string
+	for _, s := range strings.Split(yamlStr, separator) {
+		// 当为空或\n时，忽略
+		if s == "" || s == "\n" {
+			continue
+		}
+		splitedStrArr = append(splitedStrArr, s)
+	}
+	return splitedStrArr
 }

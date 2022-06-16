@@ -15,13 +15,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/query"
 )
 
@@ -40,6 +43,7 @@ func QueryCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:10902", "API listen http ip")
+	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
 	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "the store list that api connect")
 
 	return cmd
@@ -54,8 +58,15 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 		return errors.Wrap(err, "query")
 	}
 
+	sdName := fmt.Sprintf("%s-%s", appName, "query")
+	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress)
+	if err != nil {
+		return err
+	}
+
 	g.Add(queryServer.RunGetStore, queryServer.ShutDownGetStore)
 	g.Add(queryServer.RunHttp, queryServer.ShutDownHttp)
+	g.Add(sd.Run, func(error) {})
 
 	return err
 }

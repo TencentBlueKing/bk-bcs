@@ -27,7 +27,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
@@ -140,6 +142,40 @@ func (u *UserManager) initPermService() error {
 	return nil
 }
 
+func (u *UserManager) initAuthService() error {
+	opts := auth.Options{
+		Server:    u.config.PassConfig.AuthServer,
+		AppCode:   u.config.PassConfig.AppCode,
+		AppSecret: u.config.PassConfig.AppSecret,
+		Enable:    u.config.PassConfig.Enable,
+	}
+
+	err := auth.SetAuthClient(opts)
+	if err != nil {
+		blog.Errorf("initAuthService failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (u *UserManager) initPassCCService() error {
+	opts := passcc.Options{
+		Server:    u.config.PassConfig.PassServer,
+		AppCode:   u.config.PassConfig.AppCode,
+		AppSecret: u.config.PassConfig.AppSecret,
+		Enable:    u.config.PassConfig.Enable,
+	}
+
+	err := passcc.SetCCClient(opts)
+	if err != nil {
+		blog.Errorf("initPassCCService failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func (u *UserManager) initClusterManager() error {
 	opts := &cmanager.Options{
 		Module:          u.config.ClusterConfig.Module,
@@ -220,6 +256,16 @@ func (u *UserManager) initEtcdRegistry() error {
 
 func (u *UserManager) initUserManagerServer() error {
 	err := u.initEtcdRegistry()
+	if err != nil {
+		return err
+	}
+
+	err = u.initAuthService()
+	if err != nil {
+		return err
+	}
+
+	err = u.initPassCCService()
 	if err != nil {
 		return err
 	}

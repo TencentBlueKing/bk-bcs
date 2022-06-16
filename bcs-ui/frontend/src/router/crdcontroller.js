@@ -10,7 +10,7 @@ const BcsPolaris = () => import(/* webpackChunkName: 'network' */'@/views/crdcon
 
 const childRoutes = [
     {
-        path: ':projectCode/crdcontroller/DbPrivilege',
+        path: ':projectCode/tools',
         name: 'dbCrdcontroller',
         component: Index,
         meta: {
@@ -19,7 +19,7 @@ const childRoutes = [
     },
 
     {
-        path: ':projectCode/crdcontroller/BcsLog',
+        path: ':projectCode/tools/log',
         name: 'logCrdcontroller',
         component: Index,
         meta: {

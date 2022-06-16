@@ -77,6 +77,13 @@
             "in": "query",
             "required": false,
             "type": "boolean"
+          },
+          {
+            "name": "token",
+            "description": "Token. Healthz API Token",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -704,6 +711,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -720,7 +734,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonListResp"
+              "$ref": "#/definitions/clusterresourcesCommonResp"
             }
           },
           "default": {
@@ -5985,6 +5999,11 @@
           "type": "object",
           "description": "资源信息",
           "title": "data"
+        },
+        "webAnnotations": {
+          "type": "object",
+          "description": "web 注解",
+          "title": "webAnnotations"
         }
       },
       "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",

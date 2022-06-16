@@ -28,9 +28,13 @@ var (
 	ExampleFileBaseDir = envx.Get(
 		"EXAMPLE_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/example",
 	)
-	// FormFileBaseDir 表单化相关文件目录
-	FormFileBaseDir = envx.Get(
-		"FORM_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form",
+	// FormTmplFileBaseDir 表单化相关文件目录
+	FormTmplFileBaseDir = envx.Get(
+		"FORM_TMPL_FILE_BASE_DIR", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/resource/form/tmpl",
+	)
+	// LocalizeFilePath 国际化配置文件
+	LocalizeFilePath = envx.Get(
+		"LOCALIZE_FILE_PATH", filepath.Dir(filepath.Dir(path.GetCurPKGPath()))+"/i18n/locale/lc_msgs.yaml",
 	)
 	// BCSApiGWAuthToken 网关 Auth Token（仅挂载环境变量模式使用，来源为 Secret）
 	BCSApiGWAuthToken = envx.Get("BCS_API_GW_AUTH_TOKEN", "")

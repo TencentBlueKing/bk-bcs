@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -39,7 +40,7 @@ func CheckNSAccess(ctx context.Context, clusterID, namespace string) error {
 	}
 
 	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
-		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
 	}
 	return nil
 }
@@ -55,7 +56,7 @@ func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error 
 	}
 
 	if !slice.StringInSlice(req.Kind, cluster.SharedClusterAccessibleResKinds) {
-		return errorx.New(errcode.NoPerm, "在共享集群中，只有指定的数类资源可以执行订阅功能")
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "在共享集群中，只有指定的数类资源可以执行订阅功能"))
 	}
 
 	// 命名空间可以直接查询，但是不属于项目的需要被过滤掉
@@ -64,7 +65,7 @@ func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error 
 	}
 
 	if !cli.IsProjNSinSharedCluster(ctx, req.ClusterID, req.Namespace) {
-		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), req.Namespace)
 	}
 	return nil
 }
@@ -80,11 +81,11 @@ func CheckCObjAccess(ctx context.Context, clusterID, crdName, namespace string) 
 	}
 
 	if !slice.StringInSlice(crdName, conf.G.SharedCluster.EnabledCRDs) {
-		return errorx.New(errcode.NoPerm, "共享集群暂时只支持查询部分自定义资源")
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "共享集群暂时只支持查询部分自定义资源"))
 	}
 
 	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
-		return errorx.New(errcode.NoPerm, "在该共享集群中，该命名空间不属于指定项目")
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
 	}
 	return nil
 }

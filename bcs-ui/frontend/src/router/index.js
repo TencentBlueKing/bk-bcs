@@ -22,6 +22,7 @@ import storageRoutes from './storage'
 import dashboardRoutes from './dashboard'
 import menuConfig from '@/store/menu'
 import cloudtokenRoutes from './cloudtoken'
+import i18n from '@/i18n/i18n-setup'
 
 const originalPush = VueRouter.prototype.push
 const originalReplace = VueRouter.prototype.replace
@@ -69,12 +70,12 @@ const router = new VueRouter({
             ]
         },
         {
-            path: '/api_key',
+            path: '/:projectCode/api-key',
             name: 'token',
             component: userToken
         },
         {
-            path: '/projectManage',
+            path: '/project/manage',
             name: 'projectManage',
             component: ProjectManage
         },
@@ -112,7 +113,24 @@ router.beforeEach(async (to, from, next) => {
     }
 
     await cancelRequest()
-    next()
+
+    // 路由切换二次确认
+    if (from.meta?.backConfirm
+        && !from.meta?.backConfirmExcludeRoutes?.includes(to.name)
+        && !to.params.skipBackConfirm) {
+        Vue.prototype.$bkInfo({
+            type: 'warning',
+            clsName: 'custom-info-confirm',
+            title: i18n.t('确认退出当前编辑状态'),
+            subTitle: i18n.t('退出后，你修改的内容将丢失'),
+            defaultInfo: true,
+            confirmFn: () => {
+                next()
+            }
+        })
+    } else {
+        next()
+    }
 })
 
 let containerEle = null

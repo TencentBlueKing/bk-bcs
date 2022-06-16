@@ -15,6 +15,13 @@ endif
 PROMU_VERSION           ?= 0.12.0
 PROMU_URL               := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
 
+# init the build information
+ifdef HASTAG
+	GITTAG=${HASTAG}
+else
+	GITTAG=$(shell git describe --always)
+endif
+
 BUILDTIME=$(shell date +%Y-%m-%dT%T%z)
 GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)

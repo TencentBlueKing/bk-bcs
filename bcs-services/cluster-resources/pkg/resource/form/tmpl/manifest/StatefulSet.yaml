@@ -1,0 +1,18 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: StatefulSet
+{{ include "common.metadata" .metadata }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
+  replicas: {{ if .spec.replicas.cnt }}{{ .spec.replicas.cnt }}{{ else }} 0 {{ end }}
+  {{- if .spec.replicas.svcName }}
+  serviceName: {{ .spec.replicas.svcName }}
+  {{- end }}
+  strategy:
+    type: {{ .spec.replicas.updateStrategy }}
+  {{- if .spec.replicas.podManPolicy }}
+  podManagementPolicy: {{ .spec.replicas.podManPolicy }}
+  {{- end }}
+  {{- include "workload.podTemplate" . | nindent 2 }}
+  {{- include "workload.stsVolumeClaimTmpl" . | indent 2 }}

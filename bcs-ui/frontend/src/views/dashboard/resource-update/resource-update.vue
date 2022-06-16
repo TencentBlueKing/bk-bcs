@@ -1,5 +1,15 @@
 <template>
     <div class="biz-content resource-content">
+        <bcs-popconfirm
+            class="switch-button-pop"
+            :title="$t('确认切换为表单模式？')"
+            :content="$t('切换为表单模式将不会保留 YAML 模式下的修改内容！')"
+            width="280"
+            trigger="click"
+            v-if="formUpdate"
+            @confirm="handleChangeMode">
+            <SwitchButton :title="$t('切换为表单模式')" />
+        </bcs-popconfirm>
         <div class="biz-top-bar">
             <span class="icon-wrapper" @click="handleCancel">
                 <i class="bcs-icon bcs-icon-arrows-left icon-back"></i>
@@ -159,6 +169,7 @@
     import EditorStatus from './editor-status.vue'
     import BcsMd from '@/components/bcs-md/index.vue'
     import { CUR_SELECT_NAMESPACE } from '@/common/constant'
+    import SwitchButton from './switch-mode.vue'
 
     export default defineComponent({
         name: 'ResourceUpdate',
@@ -166,7 +177,8 @@
             ResourceEditor,
             DashboardTopActions,
             EditorStatus,
-            BcsMd
+            BcsMd,
+            SwitchButton
         },
         props: {
             // 命名空间（更新的时候需要--crd类型编辑是可能没有，创建的时候为空）
@@ -202,22 +214,47 @@
             defaultShowExample: {
                 type: Boolean,
                 default: false
+            },
+            formData: {
+                type: Object,
+                default: () => ({})
+            },
+            formUpdate: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
             const { $i18n, $store, $bkMessage, $router, $bkInfo } = ctx.root
-            const { namespace, type, category, name, kind, crd, defaultShowExample } = toRefs(props)
+            const {
+                namespace,
+                type,
+                category,
+                name,
+                kind,
+                crd,
+                defaultShowExample,
+                formData,
+                formUpdate
+            } = toRefs(props)
             const clientHeight = document.body.clientHeight
 
             onMounted(() => {
                 document.addEventListener('keyup', handleExitFullScreen)
-                handleGetDetail()
+                if (formData.value && Object.keys(formData.value).length) {
+                    // 表单模式
+                    handleGetFormDetail()
+                } else {
+                    // manifest模式
+                    handleGetDetail()
+                }
+               
                 handleGetExample()
                 handleSetHeight()
             })
 
             const isEdit = computed(() => { // 编辑态
-                return name.value
+                return !!name.value
             })
             const title = computed(() => { // 导航title
                 const prefix = isEdit.value ? $i18n.t('更新') : $i18n.t('创建')
@@ -238,6 +275,7 @@
                 type: '',
                 message: ''
             })
+            const webAnnotations = ref<any>({})
             const subTitle = computed(() => { // 代码编辑器title
                 return detail.value?.metadata?.name || $i18n.t('资源定义')
             })
@@ -260,7 +298,7 @@
                 detail.value = data
                 editorRef.value?.setValue(Object.keys(detail.value).length ? detail.value : '')
             }
-            const handleGetDetail = async () => { // 获取详情
+            const handleGetDetail = async () => { // 获取manifest详情
                 if (!isEdit.value) return null
                 isLoading.value = true
                 let res: any = null
@@ -281,8 +319,19 @@
                 }
                 original.value = JSON.parse(JSON.stringify(res.data?.manifest || {})) // 缓存原始值
                 setDetail(res.data?.manifest)
+                webAnnotations.value = res.webAnnotations
                 isLoading.value = false
                 return detail.value
+            }
+            const handleGetFormDetail = async () => { // 获取表单模式详情
+                isLoading.value = true
+                const data = await $store.dispatch('dashboard/renderManifestPreview', {
+                    kind: kind.value,
+                    formData: formData.value
+                })
+                original.value = JSON.parse(JSON.stringify(data || {})) // 缓存原始值
+                setDetail(data)
+                isLoading.value = false
             }
             const handleEditorChange = (code) => {
                 ctx.emit('change', code)
@@ -376,7 +425,8 @@
 
                 exampleLoading.value = true
                 examples.value = await $store.dispatch('dashboard/exampleManifests', {
-                    kind: type.value === 'crd' ? 'CustomObject' : kind.value // crd类型的模板kind固定为CustomObject
+                    kind: type.value === 'crd' ? 'CustomObject' : kind.value, // crd类型的模板kind固定为CustomObject
+                    namespace: namespace.value
                 })
                 activeExample.value = examples.value?.items?.[0] || {}
                 exampleLoading.value = false
@@ -426,7 +476,8 @@
                     result = await $store.dispatch('dashboard/customResourceCreate', {
                         $crd: crd.value,
                         $category: category.value,
-                        manifest: detail.value
+                        format: 'manifest',
+                        rawData: detail.value
                     }).catch(err => {
                         editorErr.value.type = 'http'
                         editorErr.value.message = err?.response?.data?.message || err?.message
@@ -436,7 +487,8 @@
                     result = await $store.dispatch('dashboard/resourceCreate', {
                         $type: type.value,
                         $category: category.value,
-                        manifest: detail.value
+                        format: 'manifest',
+                        rawData: detail.value
                     }).catch(err => {
                         editorErr.value.type = 'http'
                         editorErr.value.message = err?.response?.data?.message || err?.message
@@ -450,7 +502,7 @@
                         message: $i18n.t('创建成功')
                     })
                     sessionStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace)
-                    $router.push({ name: $store.getters.curNavName })
+                    $router.push({ name: $store.getters.curNavName, params: { skipBackConfirm: true as any } })
                 }
             }
             const handleUpdateResource = () => {
@@ -485,7 +537,8 @@
                                 $type: type.value,
                                 $category: category.value,
                                 $name: name.value,
-                                manifest: detail.value
+                                format: 'manifest',
+                                rawData: detail.value
                             }).catch(err => {
                                 editorErr.value.type = 'http'
                                 editorErr.value.message = err?.response?.data?.message || err?.message
@@ -498,7 +551,7 @@
                                 theme: 'success',
                                 message: $i18n.t('更新成功')
                             })
-                            $router.push({ name: $store.getters.curNavName })
+                            $router.push({ name: $store.getters.curNavName, params: { skipBackConfirm: true as any } })
                         }
                     }
                 })
@@ -513,14 +566,23 @@
                 updateLoading.value = false
             }
             const handleCancel = () => { // 取消
-                $bkInfo({
-                    type: 'warning',
-                    clsName: 'custom-info-confirm',
-                    title: $i18n.t('确认退出当前编辑状态'),
-                    subTitle: $i18n.t('退出后，你修改的内容将丢失'),
-                    defaultInfo: true,
-                    confirmFn: () => {
-                        $router.push({ name: $store.getters.curNavName })
+                $router.back()
+                // $router.push({ name: $store.getters.curNavName })
+            }
+            // 切换到表单模式
+            const handleChangeMode = () => {
+                $router.push({
+                    name: 'dashboardFormResourceUpdate',
+                    params: {
+                        ...(isEdit.value ? { name: name.value } : {}),
+                        formData: formData.value as any,
+                        namespace: namespace.value
+                    },
+                    query: {
+                        type: type.value,
+                        category: category.value,
+                        kind: kind.value,
+                        formUpdate: formUpdate.value as any
                     }
                 })
             }
@@ -573,7 +635,8 @@
                 handleCreateOrUpdate,
                 handleCancel,
                 handleDiffStatChange,
-                clientHeight
+                clientHeight,
+                handleChangeMode
             }
         }
     })
@@ -582,6 +645,12 @@
 .resource-content {
     padding-bottom: 0;
     height: calc(100vh - 52px);
+    .switch-button-pop {
+        position: absolute;
+        right: 32px;
+        top: 136px;
+        z-index: 1;
+    }
     .icon-back {
         font-size: 16px;
         font-weight: bold;
