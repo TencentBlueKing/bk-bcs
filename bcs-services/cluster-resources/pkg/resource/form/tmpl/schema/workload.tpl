@@ -6,7 +6,7 @@ replicas:
     cnt:
       title: {{ i18n "副本数量" .lang }}
       type: integer
-      default: 3
+      default: 1
       ui:component:
         props:
           max: 4096
@@ -22,6 +22,41 @@ replicas:
               value: RollingUpdate
             - label: {{ i18n "重新创建" .lang }}
               value: Recreate
+      ui:reactions:
+        - target: "{{`{{`}} $widgetNode?.getSibling('maxSurge')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
+              value: ""
+        - target: "{{`{{`}} $widgetNode?.getSibling('msUnit')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
+        - target: "{{`{{`}} $widgetNode?.getSibling('maxUnavailable')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
+              value: ""
+        - target: "{{`{{`}} $widgetNode?.getSibling('muaUnit')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
     maxSurge:
       title: {{ i18n "最大调度 Pod 数量" .lang }}
       type: integer
@@ -94,8 +129,26 @@ replicas:
           datasource:
             - label: {{ i18n "滚动升级" .lang }}
               value: RollingUpdate
-            - label: {{ i18n "重新创建" .lang }}
-              value: Recreate
+            - label: {{ i18n "删除" .lang }}
+              value: OnDelete
+      ui:reactions:
+        - target: "{{`{{`}} $widgetNode?.getSibling('maxUnavailable')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
+              value: ""
+        - target: "{{`{{`}} $widgetNode?.getSibling('muaUnit')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
     maxUnavailable:
       title: {{ i18n "最大不可用数量" .lang }}
       type: integer
@@ -133,7 +186,7 @@ replicas:
     cnt:
       title: {{ i18n "副本数量" .lang }}
       type: integer
-      default: 3
+      default: 1
       ui:component:
         props:
           max: 4096

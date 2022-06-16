@@ -8,7 +8,7 @@ spec:
   replicas: {{ if .spec.replicas.cnt }}{{ .spec.replicas.cnt }}{{ else }} 0 {{ end }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}
-    {{- if or .spec.replicas.maxUnavailable .spec.replicas.maxSurge }}
+    {{- if and (eq .spec.replicas.updateStrategy "RollingUpdate") (or .spec.replicas.maxUnavailable .spec.replicas.maxSurge) }}
     rollingUpdate:
       {{- if .spec.replicas.maxUnavailable }}
       maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}

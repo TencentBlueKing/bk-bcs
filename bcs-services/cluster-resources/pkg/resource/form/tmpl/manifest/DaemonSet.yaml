@@ -7,7 +7,7 @@ spec:
       {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}
-    {{- if .spec.replicas.maxUnavailable }}
+    {{- if and (eq .spec.replicas.updateStrategy "RollingUpdate") .spec.replicas.maxUnavailable }}
     rollingUpdate:
       maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}
     {{- end }}
