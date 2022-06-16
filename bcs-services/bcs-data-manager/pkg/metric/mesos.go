@@ -24,7 +24,7 @@ func (g *MetricGetter) getMesosWorkloadMemory(opts *types.JobCommonOpts,
 	clients *types.Clients) (int64, int64, float64, error) {
 	var workloadMemoryLimit, workloadMemoryUsed int64
 	var usage float64
-	podCondition := generateMesosPodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadName)
+	podCondition := generateMesosPodCondition(opts.ClusterID, opts.Namespace, opts.Name)
 	podMemoryLimitMetric, err := clients.MonitorClient.QueryByPost(
 		fmt.Sprintf(MesosWorkloadMemoryLimit, podCondition, MesosPodSumCondition),
 		opts.CurrentTime)
@@ -49,7 +49,7 @@ func (g *MetricGetter) getMesosWorkloadCPU(opts *types.JobCommonOpts,
 	clients *types.Clients) (float64, float64, float64, error) {
 	var workloadCPURequest, workloadCPUUsed float64
 	var usage float64
-	podCondition := generateMesosPodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadName)
+	podCondition := generateMesosPodCondition(opts.ClusterID, opts.Namespace, opts.Name)
 	podCPULimitMetric, err := clients.MonitorClient.QueryByPost(
 		fmt.Sprintf(MesosWorkloadCPULimit, podCondition, MesosPodSumCondition),
 		opts.CurrentTime)

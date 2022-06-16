@@ -44,9 +44,6 @@ type GetterInterface interface {
 		k8sStorageCli bcsapi.Storage) ([]*types.WorkloadMeta, error)
 	// GetMesosWorkloadList get mesos workload list by cluster
 	GetMesosWorkloadList(cluster *types.ClusterMeta, mesosStorageCli bcsapi.Storage) ([]*types.WorkloadMeta, error)
-	//GetPodAutoscalerList get podAutoscaler list by namespace
-	GetPodAutoscalerList(podAutoscalerType string, namespace []*types.NamespaceMeta,
-		k8sStorageCli bcsapi.Storage) ([]*types.PodAutoscalerMeta, error)
 }
 
 // ResourceGetter common resource getter
@@ -357,65 +354,6 @@ func GetMesosNamespaceList(clusterMeta *types.ClusterMeta, storageCli bcsapi.Sto
 	return namespaceList
 }
 
-// GetPodAutoscalerList get podAutoscaler list by namespace
-func (g *ResourceGetter) GetPodAutoscalerList(podAutoscalerType string, namespaces []*types.NamespaceMeta,
-	k8sStorageCli bcsapi.Storage) ([]*types.PodAutoscalerMeta, error) {
-	autoscalerList := make([]*types.PodAutoscalerMeta, 0)
-	switch podAutoscalerType {
-	case types.HPAType:
-		for _, namespace := range namespaces {
-			startTime := time.Now()
-			hpaList, err := k8sStorageCli.QueryK8sHPA(namespace.ClusterID, namespace.Name)
-			if err != nil {
-				prom.ReportLibRequestMetric(prom.BkBcsStorage, "QueryK8sHPA", "GET", err, startTime)
-				blog.Errorf("get hpa list error, cluster:%s, namespace:%s, error:%",
-					namespace.ClusterID, namespace.Name, err)
-				return autoscalerList, err
-			}
-			prom.ReportLibRequestMetric(prom.BkBcsStorage, "QueryK8sHPA", "GET", err, startTime)
-			for _, hpa := range hpaList {
-				hpaMeta := &types.PodAutoscalerMeta{
-					ProjectID:          namespace.ProjectID,
-					ClusterID:          namespace.ClusterID,
-					BusinessID:         namespace.BusinessID,
-					ClusterType:        namespace.ClusterType,
-					Namespace:          namespace.Name,
-					TargetResourceType: hpa.Data.Spec.ScaleTargetRef.Kind,
-					TargetWorkloadName: hpa.Data.Spec.ScaleTargetRef.Name,
-					PodAutoscaler:      hpa.Data.Name,
-				}
-				autoscalerList = append(autoscalerList, hpaMeta)
-			}
-		}
-	case types.GPAType:
-		for _, namespace := range namespaces {
-			startTime := time.Now()
-			gpaList, err := k8sStorageCli.QueryK8sGPA(namespace.ClusterID, namespace.Name)
-			if err != nil {
-				prom.ReportLibRequestMetric(prom.BkBcsStorage, "QueryK8sGPA", "GET", err, startTime)
-				blog.Errorf("get gpa list error, cluster:%s, namespace:%s, error:%",
-					namespace.ClusterID, namespace.Name, err)
-				return autoscalerList, err
-			}
-			prom.ReportLibRequestMetric(prom.BkBcsStorage, "QueryK8sGPA", "GET", err, startTime)
-			for _, gpa := range gpaList {
-				gpaMeta := &types.PodAutoscalerMeta{
-					ProjectID:          namespace.ProjectID,
-					ClusterID:          namespace.ClusterID,
-					BusinessID:         namespace.BusinessID,
-					ClusterType:        namespace.ClusterType,
-					Namespace:          namespace.Name,
-					TargetResourceType: gpa.Data.Spec.ScaleTargetRef.Kind,
-					TargetWorkloadName: gpa.Data.Spec.ScaleTargetRef.Name,
-					PodAutoscaler:      gpa.Data.Name,
-				}
-				autoscalerList = append(autoscalerList, gpaMeta)
-			}
-		}
-	}
-	return autoscalerList, nil
-}
-
 func generateK8sWorkloadList(namespaceMeta *types.NamespaceMeta, workloadType string,
 	commonHeader storage.CommonDataHeader) *types.WorkloadMeta {
 	workloadMeta := &types.WorkloadMeta{
@@ -429,7 +367,6 @@ func generateK8sWorkloadList(namespaceMeta *types.NamespaceMeta, workloadType st
 	}
 	return workloadMeta
 }
-
 func generateMesosWorkloadList(cluster *types.ClusterMeta, workloadType string,
 	commonHeader storage.CommonDataHeader) *types.WorkloadMeta {
 	workloadMeta := &types.WorkloadMeta{

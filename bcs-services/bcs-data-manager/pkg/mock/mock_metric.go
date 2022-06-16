@@ -29,7 +29,7 @@ func NewMockMetric() metric.Server {
 }
 
 func (m *MockMetric) GetWorkloadCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (float64, float64, float64, error) {
-	testWorkload := opts.WorkloadName
+	testWorkload := opts.Name
 	m.On("GetWorkloadCPUMetrics", "testWorkload").Return(2.00, 1.0, 1.0, nil)
 	m.On("GetWorkloadCPUMetrics", "testErr").Return(0.0, 0.0, 0.0, fmt.Errorf("test err"))
 	args := m.Called(testWorkload)
@@ -37,7 +37,7 @@ func (m *MockMetric) GetWorkloadCPUMetrics(opts *types.JobCommonOpts, clients *t
 }
 
 func (m *MockMetric) GetWorkloadMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (int64, int64, float64, error) {
-	testWorkload := opts.WorkloadName
+	testWorkload := opts.Name
 	m.On("GetWorkloadMemoryMetrics", "testWorkload").Return(int64(200), int64(100), 0.5, nil)
 	m.On("GetWorkloadMemoryMetrics", "testErr").Return(int64(0), int64(0), 0.0, fmt.Errorf("test err"))
 	args := m.Called(testWorkload)

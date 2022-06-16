@@ -15,7 +15,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/cmd/printer"
@@ -61,13 +60,6 @@ var (
 		Short:   "list workload",
 		Long:    "list workload",
 		Run:     ListWorkload,
-	}
-	listPodAutoscalerCMD = &cobra.Command{
-		Use:     "podAutoscaler",
-		Aliases: []string{"podAutoscaler", "pa"},
-		Short:   "list podAutoscaler",
-		Long:    "list podAutoscaler",
-		Run:     ListPodAutoscaler,
 	}
 )
 
@@ -206,57 +198,11 @@ func ListWorkload(cmd *cobra.Command, args []string) {
 	printer.PrintWorkloadListInTable(flagOutput == outputTypeWide, rsp.Data)
 }
 
-// ListPodAutoscaler list pod autoscaler list info
-func ListPodAutoscaler(cmd *cobra.Command, args []string) {
-	req := &bcsdatamanager.GetPodAutoscalerListRequest{}
-	req.Business = flagBusinessID
-	req.Project = flagProject
-	req.ClusterID = flagCluster
-	req.Dimension = flagDimension
-	req.Page = flagPage
-	req.Size = flagSize
-	req.Namespace = flagNamespace
-	if flagAutoscalerType != "" {
-		switch flagAutoscalerType {
-		case "hpa":
-			req.PodAutoscalerType = types.HPAType
-		case "gpa":
-			req.PodAutoscalerType = types.GPAType
-		default:
-			fmt.Printf("wrong autoscaler type, use hpa/gpa")
-			os.Exit(1)
-		}
-	}
-	ctx := context.Background()
-	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
-	if err != nil {
-		fmt.Printf("init datamanger conn error:%v\n", err)
-		os.Exit(1)
-	}
-	rsp, err := client.GetPodAutoscalerList(cliCtx, req)
-	if err != nil {
-		fmt.Printf("get pod autoscaler list data err:%v\n", err)
-		os.Exit(1)
-	}
-
-	if rsp != nil && rsp.Code != 0 {
-		fmt.Printf(rsp.Message)
-		os.Exit(1)
-	}
-	fmt.Printf("total: %d\n", rsp.Total)
-	if flagOutput == outputTypeJSON {
-		printer.PrintAutoscalerListInJSON(rsp.Data)
-		return
-	}
-	printer.PrintAutoscalerListInTable(flagOutput == outputTypeWide, rsp.Data)
-}
-
 func init() {
 	listCMD.AddCommand(listProjectCMD)
 	listCMD.AddCommand(listClusterCMD)
 	listCMD.AddCommand(listNamespaceCMD)
 	listCMD.AddCommand(listWorkloadCMD)
-	listCMD.AddCommand(listPodAutoscalerCMD)
 	listCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
 	listCMD.PersistentFlags().StringVarP(

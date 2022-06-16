@@ -139,7 +139,7 @@ func (m *ModelPublic) generateCond(opts *types.JobCommonOpts) (*operator.Conditi
 			ClusterIDKey:    opts.ClusterID,
 			NamespaceKey:    opts.Namespace,
 			WorkloadTypeKey: opts.WorkloadType,
-			WorkloadNameKey: opts.WorkloadName,
+			WorkloadNameKey: opts.Name,
 			ObjectTypeKey:   types.WorkloadType,
 		}), nil
 	default:

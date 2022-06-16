@@ -98,21 +98,9 @@ func (p *Producer) InitCronList() error {
 		return err
 	}
 
-	halfHourSpec := "0-59/30 * * * * "
-	if _, err := p.cron.AddFunc(halfHourSpec, func() {
-		p.PodAutoscalerProducer(types.DimensionMinute)
-	}); err != nil {
-		return err
-	}
-
 	hourSpec := "10 * * * * "
 	if _, err := p.cron.AddFunc(hourSpec, func() {
 		p.WorkloadProducer(types.DimensionHour)
-	}); err != nil {
-		return err
-	}
-	if _, err := p.cron.AddFunc(hourSpec, func() {
-		p.PodAutoscalerProducer(types.DimensionHour)
 	}); err != nil {
 		return err
 	}
@@ -130,11 +118,6 @@ func (p *Producer) InitCronList() error {
 	daySpec := "30 0 * * *"
 	if _, err := p.cron.AddFunc(daySpec, func() {
 		p.WorkloadProducer(types.DimensionDay)
-	}); err != nil {
-		return err
-	}
-	if _, err := p.cron.AddFunc(daySpec, func() {
-		p.PodAutoscalerProducer(types.DimensionDay)
 	}); err != nil {
 		return err
 	}
@@ -362,7 +345,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 					ClusterType:  workload.ClusterType,
 					Namespace:    workload.Namespace,
 					WorkloadType: workload.ResourceType,
-					WorkloadName: workload.Name,
+					Name:         workload.Name,
 					CurrentTime:  jobTime,
 					Dimension:    dimension,
 					ObjectType:   types.WorkloadType,
@@ -381,119 +364,6 @@ func (p *Producer) WorkloadProducer(dimension string) {
 	close(countCh)
 	blog.Infof("[producer] send all workload job, count:%d, jobTime:%v, startTime:%v, "+
 		"currentTime:%v, cost:%v", totalWorkload, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
-}
-
-//PodAutoscalerProducer is the function to produce podAutoscaler data job and send to message queue
-func (p *Producer) PodAutoscalerProducer(dimension string) {
-	startTime := time.Now()
-	jobTime := utils.FormatTime(time.Now(), dimension)
-	var err error
-	defer func() {
-		prom.ReportProduceJobLatencyMetric(types.PodAutoscalerType, dimension, err, startTime)
-	}()
-	cmConn, err := p.CMClient.GetClusterManagerConn()
-	if err != nil {
-		blog.Errorf("get cm conn error:%v", err)
-		return
-	}
-	defer cmConn.Close()
-	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
-	if err != nil || clusterList == nil {
-		blog.Errorf("get clusterList error: %v", err)
-		return
-	}
-	var totalPodAutoscaler int
-	countCh := make(chan int, 200)
-	go func() {
-		for count := range countCh {
-			totalPodAutoscaler = totalPodAutoscaler + count
-		}
-	}()
-	chPool := make(chan struct{}, p.concurrency)
-	blog.Infof("[producer] concurrency:%d", p.concurrency)
-	wg := sync.WaitGroup{}
-	for key := range clusterList {
-		chPool <- struct{}{}
-		wg.Add(1)
-		go func(clusterMeta *types.ClusterMeta) {
-			hpaList := make([]*types.PodAutoscalerMeta, 0)
-			gpaList := make([]*types.PodAutoscalerMeta, 0)
-			defer func() {
-				wg.Done()
-				<-chPool
-				countCh <- len(hpaList)
-				countCh <- len(gpaList)
-			}()
-			switch clusterMeta.ClusterType {
-			case types.Kubernetes:
-				namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(clusterMeta, p.k8sStorageCli, p.mesosStorageCli)
-				if err != nil {
-					blog.Errorf("get workload list error: %v", err)
-					return
-				}
-				if hpaList, err = p.resourceGetter.GetPodAutoscalerList(types.HPAType, namespaceList,
-					p.k8sStorageCli); err != nil {
-					blog.Errorf("get hpa list error: %v", err)
-					return
-				}
-				if gpaList, err = p.resourceGetter.GetPodAutoscalerList(types.GPAType, namespaceList,
-					p.k8sStorageCli); err != nil {
-					blog.Errorf("get gpa list error: %v", err)
-					return
-				}
-			case types.Mesos:
-				return
-			}
-			for _, hpa := range hpaList {
-				opts := types.JobCommonOpts{
-					ProjectID:         hpa.ProjectID,
-					BusinessID:        hpa.BusinessID,
-					ClusterID:         hpa.ClusterID,
-					ClusterType:       hpa.ClusterType,
-					Namespace:         hpa.Namespace,
-					WorkloadType:      hpa.TargetResourceType,
-					WorkloadName:      hpa.TargetWorkloadName,
-					PodAutoscalerName: hpa.PodAutoscaler,
-					PodAutoscalerType: types.HPAType,
-					CurrentTime:       jobTime,
-					Dimension:         dimension,
-					ObjectType:        types.PodAutoscalerType,
-				}
-				if err = p.SendJob(opts); err != nil {
-					blog.Errorf("send hpa job to msg queue error, opts: %v, err: %v", opts, err)
-					return
-				}
-			}
-			for _, gpa := range gpaList {
-				opts := types.JobCommonOpts{
-					ProjectID:         gpa.ProjectID,
-					BusinessID:        gpa.BusinessID,
-					ClusterID:         gpa.ClusterID,
-					ClusterType:       gpa.ClusterType,
-					Namespace:         gpa.Namespace,
-					WorkloadType:      gpa.TargetResourceType,
-					WorkloadName:      gpa.TargetWorkloadName,
-					PodAutoscalerName: gpa.PodAutoscaler,
-					PodAutoscalerType: types.GPAType,
-					CurrentTime:       jobTime,
-					Dimension:         dimension,
-					ObjectType:        types.PodAutoscalerType,
-				}
-				if err = p.SendJob(opts); err != nil {
-					blog.Errorf("send gpa job to msg queue error, opts: %v, err: %v", opts, err)
-					return
-				}
-			}
-			blog.Infof("[producer] send podAutoscaler job success, count: %d", len(hpaList)+len(gpaList))
-		}(clusterList[key])
-	}
-	wg.Wait()
-	close(chPool)
-	time.Sleep(100 * time.Microsecond)
-	close(countCh)
-	blog.Infof("[producer] send all podAutoscaler job, count:%d, jobTime:%v, startTime:%v, "+
-		"currentTime:%v, cost:%v", totalPodAutoscaler, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
 // SendJob is the function to send data job to msg queue

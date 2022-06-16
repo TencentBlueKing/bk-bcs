@@ -15,7 +15,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/cmd/printer"
@@ -25,14 +24,13 @@ import (
 )
 
 var (
-	flagOutput         string
-	flagProject        string
-	flagBusinessID     string
-	flagCluster        string
-	flagNamespace      string
-	flagDimension      string
-	flagWorkloadType   string
-	flagAutoscalerType string
+	flagOutput       string
+	flagProject      string
+	flagBusinessID   string
+	flagCluster      string
+	flagNamespace    string
+	flagDimension    string
+	flagWorkloadType string
 
 	outputTypeJSON = "json"
 	outputTypeWide = "wide"
@@ -69,13 +67,6 @@ var (
 		Short:   "get workload",
 		Long:    "get workload",
 		Run:     GetWorkload,
-	}
-	getPodAutoscalerCMD = &cobra.Command{
-		Use:     "podAutoscaler",
-		Aliases: []string{"podAutoscaler", "pa"},
-		Short:   "get podAutoscaler",
-		Long:    "get podAutoscaler",
-		Run:     GetPodAutoscaler,
 	}
 )
 
@@ -218,60 +209,11 @@ func GetWorkload(cmd *cobra.Command, args []string) {
 	printer.PrintWorkloadInTable(flagOutput == outputTypeWide, rsp.Data)
 }
 
-// GetPodAutoscaler get workload info
-func GetPodAutoscaler(cmd *cobra.Command, args []string) {
-	req := &bcsdatamanager.GetPodAutoscalerRequest{}
-	if len(args) == 0 {
-		fmt.Printf("get pod autoscaler data need specific workload\n")
-		os.Exit(1)
-	}
-	req.Namespace = flagNamespace
-	req.ClusterID = flagCluster
-	req.Dimension = flagDimension
-	if flagAutoscalerType == "" {
-		fmt.Printf("get pod autoscaler data need specific type, use -at {gpa/hpa}\n")
-		os.Exit(1)
-	}
-	switch flagAutoscalerType {
-	case "hpa":
-		req.PodAutoscalerType = types.HPAType
-	case "gpa":
-		req.PodAutoscalerType = types.GPAType
-	default:
-		fmt.Printf("wrong autoscaler type, use hpa/gpa")
-		os.Exit(1)
-	}
-	req.PodAutoscalerName = args[0]
-	ctx := context.Background()
-	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
-	if err != nil {
-		fmt.Printf("init datamanger conn error:%v\n", err)
-		os.Exit(1)
-	}
-	rsp, err := client.GetPodAutoscaler(cliCtx, req)
-	if err != nil {
-		fmt.Printf("get pod autoscaler data err:%v\n", err)
-		os.Exit(1)
-	}
-
-	if rsp != nil && rsp.Code != 0 {
-		fmt.Printf(rsp.Message)
-		os.Exit(1)
-	}
-
-	if flagOutput == outputTypeJSON {
-		printer.PrintAutoscalerInJSON(rsp.Data)
-		return
-	}
-	printer.PrintAutoscalerInTable(flagOutput == outputTypeWide, rsp.Data)
-}
-
 func init() {
 	getCMD.AddCommand(getProjectCMD)
 	getCMD.AddCommand(getClusterCMD)
 	getCMD.AddCommand(getNamespaceCMD)
 	getCMD.AddCommand(getWorkloadCMD)
-	getCMD.AddCommand(getPodAutoscalerCMD)
 	getCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
 	getCMD.PersistentFlags().StringVarP(
@@ -286,6 +228,4 @@ func init() {
 		&flagWorkloadType, "workloadType", "t", "", "release workload type for operation")
 	getCMD.PersistentFlags().StringVarP(
 		&flagOutput, "output", "o", "", "output format, one of json|wide")
-	getCMD.PersistentFlags().StringVarP(
-		&flagAutoscalerType, "autoscalerType", "", "", "release podAutoscaler type for operation")
 }

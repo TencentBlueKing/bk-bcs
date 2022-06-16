@@ -46,14 +46,6 @@ type Server interface {
 	GetWorkloadCount(ctx context.Context, opts *types.JobCommonOpts, bucket string,
 		after time.Time) (int64, error)
 	InsertPublicInfo(ctx context.Context, metrics *types.PublicData, opts *types.JobCommonOpts) error
-	InsertPodAutoscalerInfo(ctx context.Context, metrics *types.PodAutoscalerMetrics,
-		opts *types.JobCommonOpts) error
-	GetPodAutoscalerList(ctx context.Context,
-		request *datamanager.GetPodAutoscalerListRequest) ([]*datamanager.PodAutoscaler, int64, error)
-	GetPodAutoscalerInfo(ctx context.Context,
-		request *datamanager.GetPodAutoscalerRequest) (*datamanager.PodAutoscaler, error)
-	GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts,
-		bucket string) ([]*types.PodAutoscalerData, error)
 }
 
 type server struct {
@@ -62,17 +54,15 @@ type server struct {
 	*ModelProject
 	*ModelWorkload
 	*ModelPublic
-	*ModelPodAutoscaler
 }
 
 // NewServer new db server
 func NewServer(db drivers.DB) Server {
 	return &server{
-		ModelCluster:       NewModelCluster(db),
-		ModelNamespace:     NewModelNamespace(db),
-		ModelWorkload:      NewModelWorkload(db),
-		ModelProject:       NewModelProject(db),
-		ModelPublic:        NewModelPublic(db),
-		ModelPodAutoscaler: NewModelPodAutoscaler(db),
+		ModelCluster:   NewModelCluster(db),
+		ModelNamespace: NewModelNamespace(db),
+		ModelWorkload:  NewModelWorkload(db),
+		ModelProject:   NewModelProject(db),
+		ModelPublic:    NewModelPublic(db),
 	}
 }

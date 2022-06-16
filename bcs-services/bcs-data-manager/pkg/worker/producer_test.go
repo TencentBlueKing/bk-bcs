@@ -31,7 +31,7 @@ func TestProducer_ClusterProducer(t *testing.T) {
 	storageCli := mock.NewMockStorage()
 	ctx := context.Background()
 	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter, 100)
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
 	producer.ClusterProducer(types.DimensionMinute)
 	assert.NotEqual(t, 0, queue.Length())
 	queue.CleanAll()
@@ -49,7 +49,7 @@ func TestProducer_NamespaceProducer(t *testing.T) {
 	storageCli := mock.NewMockStorage()
 	ctx := context.Background()
 	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter, 100)
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
 	producer.NamespaceProducer(types.DimensionMinute)
 	assert.NotEqual(t, 0, queue.Length())
 	queue.CleanAll()
@@ -67,7 +67,7 @@ func TestProducer_ProjectProducer(t *testing.T) {
 	storageCli := mock.NewMockStorage()
 	ctx := context.Background()
 	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter, 100)
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
 	producer.ProjectProducer(types.DimensionDay)
 	assert.NotEqual(t, 0, queue.Length())
 }
@@ -78,7 +78,7 @@ func TestProducer_PublicProducer(t *testing.T) {
 	storageCli := mock.NewMockStorage()
 	ctx := context.Background()
 	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter, 100)
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
 	producer.PublicProducer(types.DimensionDay)
 	assert.NotEqual(t, 0, queue.Length())
 	fmt.Println(queue.Length())
@@ -107,7 +107,7 @@ func TestProducer_SendJob(t *testing.T) {
 	storageCli := mock.NewMockStorage()
 	ctx := context.Background()
 	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter, 100)
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
 	opts := types.JobCommonOpts{
 		ObjectType:  types.ClusterType,
 		ProjectID:   "testProject",
@@ -127,7 +127,7 @@ func TestProducer_WorkloadProducer(t *testing.T) {
 	storageCli := mock.NewMockStorage()
 	ctx := context.Background()
 	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter, 100)
+	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter)
 	producer.WorkloadProducer(types.DimensionMinute)
 	assert.NotEqual(t, 0, queue.Length())
 	queue.CleanAll()
@@ -139,25 +139,6 @@ func TestProducer_WorkloadProducer(t *testing.T) {
 	queue.CleanAll()
 }
 
-func TestProducer_PodAutoscalerProducer(t *testing.T) {
-	cmCli := mock.NewMockCmClient()
-	queue := mock.NewMockQueue()
-	storageCli := mock.NewMockStorage()
-	ctx := context.Background()
-	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, nil, cmCli, storageCli, storageCli, getter, 100)
-	producer.PodAutoscalerProducer(types.DimensionMinute)
-	assert.NotEqual(t, 0, queue.Length())
-	fmt.Println(queue.Length())
-	queue.CleanAll()
-	producer.PodAutoscalerProducer(types.DimensionHour)
-	assert.NotEqual(t, 0, queue.Length())
-	queue.CleanAll()
-	producer.PodAutoscalerProducer(types.DimensionDay)
-	assert.NotEqual(t, 0, queue.Length())
-	queue.CleanAll()
-}
-
 func TestProducerInitCronList(t *testing.T) {
 	cmCli := mock.NewMockCmClient()
 	queue := mock.NewMockQueue()
@@ -165,7 +146,7 @@ func TestProducerInitCronList(t *testing.T) {
 	ctx := context.Background()
 	newcron := cron.New()
 	getter := common.NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
-	producer := NewProducer(ctx, queue, newcron, cmCli, storageCli, storageCli, getter, 100)
+	producer := NewProducer(ctx, queue, newcron, cmCli, storageCli, storageCli, getter)
 	err := producer.InitCronList()
 	assert.Nil(t, err)
 	assert.Equal(t, 11, len(newcron.Entries()))

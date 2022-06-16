@@ -149,7 +149,7 @@ func (m *MockStore) GetRawNamespaceInfo(ctx context.Context, opts *types.JobComm
 }
 func (m *MockStore) GetRawWorkloadInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.WorkloadData, error) {
 	var workloadData []*types.WorkloadData
-	testWl := opts.WorkloadName
+	testWl := opts.Name
 	workloadData = append(workloadData, workloadMap[opts.Dimension])
 	m.On("GetRawWorkloadInfo", "testWorkload").Return(workloadData, nil)
 	m.On("GetRawWorkloadInfo", "").Return(workloadData, nil)
@@ -240,7 +240,7 @@ func (m *MockStore) InsertNamespaceInfo(ctx context.Context, metrics *types.Name
 }
 
 func (m *MockStore) InsertWorkloadInfo(ctx context.Context, metrics *types.WorkloadMetrics, opts *types.JobCommonOpts) error {
-	testWorkload := opts.WorkloadName
+	testWorkload := opts.Name
 	m.On("InsertWorkloadInfo", "testWorkload").Return(nil)
 	m.On("InsertWorkloadInfo", "testErr").Return(fmt.Errorf("insert data err"))
 	if nil == workloadMap[opts.Dimension] {
@@ -256,7 +256,7 @@ func (m *MockStore) InsertWorkloadInfo(ctx context.Context, metrics *types.Workl
 			ClusterType:  opts.ClusterType,
 			Namespace:    opts.Namespace,
 			WorkloadType: opts.WorkloadType,
-			Name:         opts.WorkloadName,
+			Name:         opts.Name,
 			Metrics:      newMetrics,
 		}
 		workloadMap[opts.Dimension] = newWorkloadBucket

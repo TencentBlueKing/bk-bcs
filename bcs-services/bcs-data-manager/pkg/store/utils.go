@@ -45,9 +45,7 @@ const (
 	// DimensionKey key for time dimension
 	DimensionKey = "dimension"
 	// MetricTimeKey key for metric time
-	MetricTimeKey        = "metrics.time"
-	PodAutoscalerTypeKey = "pod_autoscaler_type"
-	PodAutoscalerNameKey = "pod_autoscaler_name"
+	MetricTimeKey = "metrics.time"
 )
 
 const (
@@ -135,20 +133,6 @@ func distinctSlice(key string, slice *[]map[string]string) []string {
 	for _, value := range tempResult {
 		if _, ok := temp[value]; !ok {
 			temp[value] = struct{}{}
-			result = append(result, value)
-		}
-	}
-	return result
-}
-
-func distinctPodAutoscaler(slice *[]map[string]string) []map[string]string {
-	keyMap := make(map[string]struct{})
-	result := make([]map[string]string, 0)
-	for _, value := range *slice {
-		key := value[ProjectIDKey] + value[ClusterIDKey] + value[NamespaceKey] + value[PodAutoscalerTypeKey] +
-			value[PodAutoscalerNameKey]
-		if _, ok := keyMap[key]; !ok {
-			keyMap[key] = struct{}{}
 			result = append(result, value)
 		}
 	}
