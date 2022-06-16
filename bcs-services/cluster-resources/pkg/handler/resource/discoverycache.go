@@ -34,6 +34,7 @@ func (h *Handler) InvalidateDiscoveryCache(
 	permCtx := clusterAuth.NewPermCtx(
 		ctx.Value(ctxkey.UsernameKey).(string), req.ProjectID, req.ClusterID,
 	)
+	// TODO 支持 AdminToken，如果有 AdminToken 则不检查集群管理权限
 	if allow, err := iam.NewClusterPerm(req.ProjectID).CanManage(permCtx); err != nil {
 		return err
 	} else if !allow {

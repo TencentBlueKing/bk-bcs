@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -75,6 +76,16 @@ func (c *NSClient) List(ctx context.Context, opts metav1.ListOptions) (map[strin
 		return manifest, nil
 	}
 	return manifest, nil
+}
+
+// Get ...
+func (c *NSClient) Get(
+	ctx context.Context, _, name string, opts metav1.GetOptions,
+) (*unstructured.Unstructured, error) {
+	if err := c.permValidate(ctx, action.View, name); err != nil {
+		return nil, err
+	}
+	return c.cli.Resource(c.res).Get(ctx, name, opts)
 }
 
 // Watch ...

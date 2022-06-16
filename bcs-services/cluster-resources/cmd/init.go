@@ -117,6 +117,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 	grpcServer := microGrpc.NewServer(
 		server.Name(conf.ServiceDomain),
 		microGrpc.AuthTLS(crSvc.tlsConfig),
+		microGrpc.MaxMsgSize(conf.MaxGrpcMsgSize),
 		server.Address(crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)),
 		server.Registry(crSvc.microRtr),
 		server.RegisterTTL(time.Duration(crSvc.conf.Server.RegisterTTL)*time.Second),
