@@ -17,7 +17,6 @@ import logging
 import re
 from datetime import datetime
 
-import yaml
 from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
@@ -54,6 +53,7 @@ from backend.uniapps.application.constants import FUNC_MAP, REVERSE_CATEGORY_MAP
 from backend.utils import FancyDict
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
+from backend.helm.app.utils import ruamel_yaml_dump
 
 logger = logging.getLogger(__name__)
 PIPELINE_DEFAULT_USER = settings.PIPELINE_DEFAULT_USER
@@ -1304,7 +1304,7 @@ class GetInstanceVersions(BaseAPIViews):
 class GetInstanceVersionConf(BaseAPIViews):
     def json2yaml(self, conf):
         """json转yaml"""
-        yaml_profile = yaml.safe_dump(conf)
+        yaml_profile = ruamel_yaml_dump(conf)
         return yaml_profile
 
     def get_show_version_info(self, show_version_id):

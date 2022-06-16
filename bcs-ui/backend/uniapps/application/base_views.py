@@ -17,7 +17,6 @@ import json
 import logging
 from datetime import datetime
 
-import yaml
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import views
 from rest_framework.exceptions import ValidationError
