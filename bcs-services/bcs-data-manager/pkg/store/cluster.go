@@ -64,6 +64,14 @@ var (
 			Background: true,
 		},
 		{
+			Name: types.ClusterTableName + "_list_idx3",
+			Key: bson.D{
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
 			Name: types.ClusterTableName + "_get_idx",
 			Key: bson.D{
 				bson.E{Key: DimensionKey, Value: 1},
@@ -150,15 +158,16 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 			newMetrics := make([]*types.ClusterMetrics, 0)
 			newMetrics = append(newMetrics, metrics)
 			newClusterBucket := &types.ClusterData{
-				CreateTime:  primitive.NewDateTimeFromTime(time.Now()),
-				UpdateTime:  primitive.NewDateTimeFromTime(time.Now()),
-				BucketTime:  bucketTime,
-				Dimension:   opts.Dimension,
-				ProjectID:   opts.ProjectID,
-				BusinessID:  opts.BusinessID,
-				ClusterID:   opts.ClusterID,
-				ClusterType: opts.ClusterType,
-				Metrics:     newMetrics,
+				CreateTime:   primitive.NewDateTimeFromTime(time.Now()),
+				UpdateTime:   primitive.NewDateTimeFromTime(time.Now()),
+				BucketTime:   bucketTime,
+				Dimension:    opts.Dimension,
+				ProjectID:    opts.ProjectID,
+				BusinessID:   opts.BusinessID,
+				ClusterID:    opts.ClusterID,
+				ClusterType:  opts.ClusterType,
+				Metrics:      newMetrics,
+				TotalCACount: metrics.CACount,
 			}
 			m.preAggregate(newClusterBucket, metrics)
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{newClusterBucket})
@@ -175,6 +184,7 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 		retCluster.BusinessID = opts.BusinessID
 	}
 	retCluster.Metrics = append(retCluster.Metrics, metrics)
+	retCluster.TotalCACount += metrics.CACount
 	return m.DB.Table(m.TableName).
 		Update(ctx, cond, operator.M{"$set": retCluster})
 }
@@ -373,6 +383,7 @@ func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetri
 			MaxInstanceTime:    metric.MaxInstance,
 			MinInstance:        metric.MinInstance,
 			NodeQuantile:       metric.NodeQuantile,
+			CACount:            strconv.FormatInt(metric.CACount, 10),
 		}
 		responseMetrics = append(responseMetrics, responseMetric)
 	}

@@ -88,7 +88,7 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 		Namespace:    opts.Namespace,
 		Dimension:    types.DimensionHour,
 		WorkloadType: opts.WorkloadType,
-		Name:         opts.Name,
+		WorkloadName: opts.WorkloadName,
 	}
 	bucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
 	hourMetrics, err := p.store.GetRawWorkloadInfo(ctx, hourOpts, bucket)
@@ -149,7 +149,7 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Jo
 		Namespace:    opts.Namespace,
 		Dimension:    types.DimensionMinute,
 		WorkloadType: opts.WorkloadType,
-		Name:         opts.Name,
+		WorkloadName: opts.WorkloadName,
 	}
 	bucket, _ := utils.GetBucketTime(opts.CurrentTime.Add((-1)*time.Hour), types.DimensionMinute)
 	minuteMetrics, err := p.store.GetRawWorkloadInfo(ctx, minuteOpts, bucket)

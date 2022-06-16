@@ -94,6 +94,18 @@ func NewDataManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "DataManager.GetPodAutoscalerList",
+			Path:    []string{"/datamanager/v1/podautoscalers"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "DataManager.GetPodAutoscaler",
+			Path:    []string{"/datamanager/v1/podautoscaler"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -109,6 +121,8 @@ type DataManagerService interface {
 	GetNamespaceInfo(ctx context.Context, in *GetNamespaceInfoRequest, opts ...client.CallOption) (*GetNamespaceInfoResponse, error)
 	GetWorkloadInfoList(ctx context.Context, in *GetWorkloadInfoListRequest, opts ...client.CallOption) (*GetWorkloadInfoListResponse, error)
 	GetWorkloadInfo(ctx context.Context, in *GetWorkloadInfoRequest, opts ...client.CallOption) (*GetWorkloadInfoResponse, error)
+	GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, opts ...client.CallOption) (*GetPodAutoscalerListResponse, error)
+	GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, opts ...client.CallOption) (*GetPodAutoscalerResponse, error)
 }
 
 type dataManagerService struct {
@@ -213,6 +227,26 @@ func (c *dataManagerService) GetWorkloadInfo(ctx context.Context, in *GetWorkloa
 	return out, nil
 }
 
+func (c *dataManagerService) GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, opts ...client.CallOption) (*GetPodAutoscalerListResponse, error) {
+	req := c.c.NewRequest(c.name, "DataManager.GetPodAutoscalerList", in)
+	out := new(GetPodAutoscalerListResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataManagerService) GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, opts ...client.CallOption) (*GetPodAutoscalerResponse, error) {
+	req := c.c.NewRequest(c.name, "DataManager.GetPodAutoscaler", in)
+	out := new(GetPodAutoscalerResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DataManager service
 
 type DataManagerHandler interface {
@@ -225,6 +259,8 @@ type DataManagerHandler interface {
 	GetNamespaceInfo(context.Context, *GetNamespaceInfoRequest, *GetNamespaceInfoResponse) error
 	GetWorkloadInfoList(context.Context, *GetWorkloadInfoListRequest, *GetWorkloadInfoListResponse) error
 	GetWorkloadInfo(context.Context, *GetWorkloadInfoRequest, *GetWorkloadInfoResponse) error
+	GetPodAutoscalerList(context.Context, *GetPodAutoscalerListRequest, *GetPodAutoscalerListResponse) error
+	GetPodAutoscaler(context.Context, *GetPodAutoscalerRequest, *GetPodAutoscalerResponse) error
 }
 
 func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts ...server.HandlerOption) error {
@@ -238,6 +274,8 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		GetNamespaceInfo(ctx context.Context, in *GetNamespaceInfoRequest, out *GetNamespaceInfoResponse) error
 		GetWorkloadInfoList(ctx context.Context, in *GetWorkloadInfoListRequest, out *GetWorkloadInfoListResponse) error
 		GetWorkloadInfo(ctx context.Context, in *GetWorkloadInfoRequest, out *GetWorkloadInfoResponse) error
+		GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, out *GetPodAutoscalerListResponse) error
+		GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, out *GetPodAutoscalerResponse) error
 	}
 	type DataManager struct {
 		dataManager
@@ -297,6 +335,18 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "DataManager.GetPodAutoscalerList",
+		Path:    []string{"/datamanager/v1/podautoscalers"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "DataManager.GetPodAutoscaler",
+		Path:    []string{"/datamanager/v1/podautoscaler"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&DataManager{h}, opts...))
 }
 
@@ -338,4 +388,12 @@ func (h *dataManagerHandler) GetWorkloadInfoList(ctx context.Context, in *GetWor
 
 func (h *dataManagerHandler) GetWorkloadInfo(ctx context.Context, in *GetWorkloadInfoRequest, out *GetWorkloadInfoResponse) error {
 	return h.DataManagerHandler.GetWorkloadInfo(ctx, in, out)
+}
+
+func (h *dataManagerHandler) GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, out *GetPodAutoscalerListResponse) error {
+	return h.DataManagerHandler.GetPodAutoscalerList(ctx, in, out)
+}
+
+func (h *dataManagerHandler) GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, out *GetPodAutoscalerResponse) error {
+	return h.DataManagerHandler.GetPodAutoscaler(ctx, in, out)
 }
