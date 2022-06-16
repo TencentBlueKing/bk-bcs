@@ -1275,7 +1275,7 @@ message ResListReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
-	}, (validate.rules).string = {max_len: 128}];
+	}, (validate.rules).string = {max_len: 1024}];
 	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "apiVersion"
 	}, (validate.rules).string = {max_len: 63}];
@@ -1379,7 +1379,7 @@ message PodResListReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
-	}, (validate.rules).string = {max_len: 128}];
+	}, (validate.rules).string = {max_len: 1024}];
 	string ownerName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "所属资源名称"
 	}, (validate.rules).string = {max_len: 256}];
