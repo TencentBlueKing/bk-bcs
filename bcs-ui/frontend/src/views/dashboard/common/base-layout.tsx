@@ -203,7 +203,7 @@ export default defineComponent({
             }
         })
         const additionalColumns = computed(() => { // 动态表格字段
-            return webAnnotations.value.additional_columns || []
+            return webAnnotations.value.additionalColumns || []
         })
         const tableData = computed(() => {
             const items = JSON.parse(JSON.stringify(data.value.manifest.items || []))
