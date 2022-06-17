@@ -114,7 +114,7 @@ func (a Annotations) ToPbStruct() (*spb.Struct, error) {
 	}
 	// CObj 资源会额外提供 AdditionalColumns，用于前端列表页展示
 	if a.AdditionalColumns != nil {
-		annos["additional_columns"] = a.AdditionalColumns
+		annos["additionalColumns"] = a.AdditionalColumns
 	}
 
 	// 转换成 Struct 对象指针
