@@ -57,6 +57,8 @@
   en: 'failed to render template: %v'
 - msgID: 加载模板失败：%v
   en: 'failed to load template: %v'
+- msgID: 获取容器环境变量失败，请确认容器处于 Running 状态
+  en: 'failed to get container environment variables, please make sure the container is in Running state'
 # JsonSchema 校验规则
 - msgID: 值不能为空
   en: 'value required'
