@@ -688,7 +688,7 @@
                 }
             },
             async getCvmCapacity () {
-                if (!this.formdata.zone_id || !this.formdata.region) return
+                if (!this.formdata.zone_id || !this.formdata.region || !this.$INTERNAL) return
                 this.isHostLoading = true
                 const srePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_CONFIG?.host?.BKSRE_HOST}`
                 const cvmCapacity = request('get', `${srePrefix}/bcsadmin/cvmcapacity`)
