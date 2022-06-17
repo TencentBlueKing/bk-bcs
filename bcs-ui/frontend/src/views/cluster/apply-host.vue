@@ -135,6 +135,7 @@
                 <bk-form-item ref="hostItem"
                     style="flex: 0 0 100%;"
                     label=""
+                    :label-width="1"
                     v-bkloading="{ isLoading: isHostLoading }"
                     :required="true"
                     property="cvm_type"
@@ -150,6 +151,11 @@
                             <bk-table-column :label="$t('规格')" prop="specifications" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
                             <bk-table-column label="CPU" prop="cpu" width="80"></bk-table-column>
                             <bk-table-column :label="$t('内存')" prop="mem" width="80"></bk-table-column>
+                            <bk-table-column :label="$t('可生产实例数')" prop="mem">
+                                <template #default="{ row }">
+                                    {{ cvmData[row.specifications] }}
+                                </template>
+                            </bk-table-column>
                             <bk-table-column :label="$t('备注')" prop="description" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
                         </bk-table>
                     </bk-radio-group>
@@ -170,6 +176,7 @@
 </template>
 
 <script>
+    import { request } from '@/api/request'
     export default {
         props: {
             theme: {
@@ -187,6 +194,7 @@
         },
         data () {
             return {
+                cvmData: {},
                 timer: null,
                 applyHostButton: {
                     disabled: true,
@@ -361,6 +369,15 @@
                         this.vpcList = []
                         await this.fetchZone()
                         await this.fetchVPC()
+                        await this.getCvmCapacity()
+                    }
+                }
+            },
+            'formdata.zone_id': {
+                immediate: true,
+                handler (value, old) {
+                    if (value !== old) {
+                        this.getCvmCapacity()
                     }
                 }
             },
@@ -669,6 +686,17 @@
                 } catch (e) {
                     console.error(e)
                 }
+            },
+            async getCvmCapacity () {
+                if (!this.formdata.zone_id || !this.formdata.region) return
+                this.isHostLoading = true
+                const srePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_CONFIG?.host?.BKSRE_HOST}`
+                const cvmCapacity = request('get', `${srePrefix}/bcsadmin/cvmcapacity`)
+                this.cvmData = await cvmCapacity({
+                    zone_id: this.formdata.zone_id,
+                    region_id: this.formdata.region
+                }).catch(() => ({}))
+                this.isHostLoading = false
             }
         }
     }
