@@ -99,7 +99,7 @@ func GetOrCreateNS(namespace string) error {
 	}
 	ctx := NewInjectedContext("", "", "")
 	nsCli := cli.NewNSCliByClusterID(ctx, envs.TestClusterID)
-	_, err := nsCli.Get(ctx, "", namespace, metav1.GetOptions{})
+	_, err := nsCli.Get(ctx, namespace, metav1.GetOptions{})
 	if err != nil {
 		_ = mapx.SetItems(nsManifest4Test, "metadata.name", namespace)
 		if namespace == envs.TestSharedClusterNS {
