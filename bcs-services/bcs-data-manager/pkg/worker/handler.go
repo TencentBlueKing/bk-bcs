@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/smallnest/chanx"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -36,7 +37,7 @@ type DataJobHandler struct {
 	stopCtx       context.Context
 	stopCancel    context.CancelFunc
 	jobChanList   chan chanx.UnboundedChan
-	chanMap       map[string]chanx.UnboundedChan
+	chanMap       sync.Map
 	filters       []msgqueue.Filter
 	clients       HandleClients
 	policyFactory datajob.PolicyFactoryInterface
@@ -66,7 +67,7 @@ func NewDataJobHandler(opts HandlerOptions, client HandleClients, concurrency in
 		stopCtx:       ctx,
 		stopCancel:    cancel,
 		jobChanList:   make(chan chanx.UnboundedChan, opts.ChanQueueNum),
-		chanMap:       make(map[string]chanx.UnboundedChan),
+		chanMap:       sync.Map{},
 		clients:       client,
 		policyFactory: factory,
 		concurrency:   concurrency,
@@ -92,9 +93,14 @@ func (h *DataJobHandler) Consume(sub msgqueue.MessageQueue) error {
 func (h *DataJobHandler) Stop() error {
 	h.unSub()
 	close(h.jobChanList)
-	for _, clusterChan := range h.chanMap {
-		close(clusterChan.In)
-	}
+	h.chanMap.Range(func(key, value interface{}) bool {
+		unboundedChan, ok := value.(chanx.UnboundedChan)
+		if !ok {
+			return true
+		}
+		close(unboundedChan.In)
+		return true
+	})
 	return nil
 }
 
@@ -102,12 +108,17 @@ func (h *DataJobHandler) Stop() error {
 func (h *DataJobHandler) Done() {
 	for {
 		handleEnd := true
-		for _, clusterChan := range h.chanMap {
-			if clusterChan.Len() != 0 {
-				handleEnd = false
-				break
+		h.chanMap.Range(func(key, value interface{}) bool {
+			unboundedChan, ok := value.(chanx.UnboundedChan)
+			if !ok {
+				return true
 			}
-		}
+			if unboundedChan.Len() != 0 {
+				handleEnd = false
+				return false
+			}
+			return true
+		})
 		if handleEnd {
 			break
 		}
@@ -143,24 +154,35 @@ func (h *DataJobHandler) HandleQueue(ctx context.Context, data []byte) error {
 		blog.Errorf("unmarshal job error: %v", err)
 		return fmt.Errorf("unmarshal job error: %v", err)
 	}
-	var emptyChanx chanx.UnboundedChan
 	switch dataJob.Opts.ObjectType {
 	case types.ProjectType, types.PublicType:
-		if h.chanMap["public"] == emptyChanx {
+		if _, ok := h.chanMap.Load("public"); !ok {
 			publicChan := chanx.NewUnboundedChan(100)
 			h.jobChanList <- *publicChan
-			h.chanMap["public"] = *publicChan
+			h.chanMap.Store("public", *publicChan)
 			blog.Infof("[handler] add public chan")
 		}
-		h.chanMap["public"].In <- *dataJob
+		publicCh, _ := h.chanMap.Load("public")
+		publicChan, ok := publicCh.(chanx.UnboundedChan)
+		if !ok {
+			blog.Errorf("trans publicChan to chanx.UnboundedChan error")
+			return fmt.Errorf("trans publicChan to chanx.UnboundedChan error")
+		}
+		publicChan.In <- *dataJob
 	default:
-		if h.chanMap[dataJob.Opts.ClusterID] == emptyChanx {
+		if _, ok := h.chanMap.Load(dataJob.Opts.ClusterID); !ok {
 			clusterChan := chanx.NewUnboundedChan(100)
 			h.jobChanList <- *clusterChan
-			h.chanMap[dataJob.Opts.ClusterID] = *clusterChan
+			h.chanMap.Store(dataJob.Opts.ClusterID, *clusterChan)
 			blog.Infof("[handler] add cluster chan:%s", dataJob.Opts.ClusterID)
 		}
-		h.chanMap[dataJob.Opts.ClusterID].In <- *dataJob
+		clusterCh, _ := h.chanMap.Load(dataJob.Opts.ClusterID)
+		clusterChan, ok := clusterCh.(chanx.UnboundedChan)
+		if !ok {
+			blog.Errorf("trans clusterChan to chanx.UnboundedChan error")
+			return fmt.Errorf("trans clusterChan to chanx.UnboundedChan error")
+		}
+		clusterChan.In <- *dataJob
 	}
 	return nil
 }
