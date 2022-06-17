@@ -99,7 +99,7 @@ func GetOrCreateNS(namespace string) error {
 	}
 	ctx := NewInjectedContext("", "", "")
 	nsCli := cli.NewNSCliByClusterID(ctx, envs.TestClusterID)
-	_, err := nsCli.Get(ctx, "", namespace, metav1.GetOptions{})
+	_, err := nsCli.Get(ctx, namespace, metav1.GetOptions{})
 	if err != nil {
 		_ = mapx.SetItems(nsManifest4Test, "metadata.name", namespace)
 		if namespace == envs.TestSharedClusterNS {
@@ -166,7 +166,7 @@ var CRDManifest4Test = map[string]interface{}{
 func GetOrCreateCRD() error {
 	ctx := NewInjectedContext("", "", "")
 	crdCli := cli.NewCRDCliByClusterID(ctx, envs.TestClusterID)
-	_, err := crdCli.Get(ctx, "", CRDName4Test, metav1.GetOptions{})
+	_, err := crdCli.Get(ctx, CRDName4Test, metav1.GetOptions{})
 	if err != nil {
 		// TODO 这里认为出错就是不存在，可以做进一步的细化？
 		_, err = crdCli.Create(ctx, CRDManifest4Test, false, metav1.CreateOptions{})

@@ -554,7 +554,8 @@ nodeSelect:
               format: selectItems
             url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/nodes` {{`}}`}}"
       ui:reactions:
-        - lifetime: init
+        - source: "spec.nodeSelect.type"
+          if: "{{`{{`}} $self.getValue('spec.nodeSelect.type') === 'specificNode' {{`}}`}}"
           then:
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"

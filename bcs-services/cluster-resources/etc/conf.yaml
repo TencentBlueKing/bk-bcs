@@ -94,6 +94,7 @@ crGlobal:
     bkApiGWHost: "http://bkapigw.com"
     bkPaaSHost: "http://bkpaas.com"
     healthzToken: ""
+    cacheToken: ""
 
   # BCS API 网关配置
   bcsApiGW:

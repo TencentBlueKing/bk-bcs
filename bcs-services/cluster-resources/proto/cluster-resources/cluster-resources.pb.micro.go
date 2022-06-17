@@ -3486,7 +3486,7 @@ func NewResourceEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "Resource.InvalidateDiscoveryCache",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
+			Path:    []string{"/clusterresources/v1/invalidate_discovery_cache"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
@@ -3689,7 +3689,7 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Resource.InvalidateDiscoveryCache",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"},
+		Path:    []string{"/clusterresources/v1/invalidate_discovery_cache"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",

@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -77,6 +78,18 @@ func (c *NSClient) List(ctx context.Context, opts metav1.ListOptions) (map[strin
 	return manifest, nil
 }
 
+// Get ...
+func (c *NSClient) Get(ctx context.Context, name string, opts metav1.GetOptions) (map[string]interface{}, error) {
+	if err := c.permValidate(ctx, action.View, name); err != nil {
+		return nil, err
+	}
+	ret, err := c.cli.Resource(c.res).Get(ctx, name, opts)
+	if err != nil {
+		return nil, err
+	}
+	return ret.UnstructuredContent(), nil
+}
+
 // Watch ...
 func (c *NSClient) Watch(
 	ctx context.Context, projectCode string, clusterType string, opts metav1.ListOptions,
@@ -90,7 +103,7 @@ func IsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) b
 	if namespace == "" {
 		return false
 	}
-	manifest, err := NewNSCliByClusterID(ctx, clusterID).Get(ctx, "", namespace, metav1.GetOptions{})
+	manifest, err := NewNSCliByClusterID(ctx, clusterID).Get(ctx, namespace, metav1.GetOptions{})
 	if err != nil {
 		return false
 	}
@@ -98,7 +111,7 @@ func IsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) b
 	if err != nil {
 		return false
 	}
-	return isProjNSinSharedCluster(manifest.UnstructuredContent(), projInfo.Code)
+	return isProjNSinSharedCluster(manifest, projInfo.Code)
 }
 
 // 判断某命名空间，是否属于指定项目（仅共享集群有效）

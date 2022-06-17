@@ -233,6 +233,7 @@ type BasicConf struct {
 	BKAPIGWHost  string `yaml:"bkApiGWHost" usage:"蓝鲸 API 网关 Host"` // nolint:tagliatelle
 	BKPaaSHost   string `yaml:"bkPaaSHost" usage:"蓝鲸 PaaS（esb）Host"`
 	HealthzToken string `yaml:"healthzToken" usage:"Healthz API Token"`
+	CacheToken   string `yaml:"cacheToken" usage:"刷新缓存用 Token"`
 }
 
 // BCSAPIGatewayConf 容器服务网关配置

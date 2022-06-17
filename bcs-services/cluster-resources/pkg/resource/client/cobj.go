@@ -23,9 +23,12 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
@@ -48,17 +51,17 @@ func NewCRDCliByClusterID(ctx context.Context, clusterID string) *CRDClient {
 
 // List ...
 func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[string]interface{}, error) {
-	ret, err := c.ResClient.List(ctx, "", opts)
-	if err != nil {
-		return nil, err
-	}
-	manifest := ret.UnstructuredContent()
-	// 共享集群命名空间，需要过滤出属于指定项目的
+	// 共享集群 CRD，不做权限检查，直接过滤出允许的数类
 	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared {
+		ret, err := c.ResClient.cli.Resource(c.res).List(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+		manifest := ret.UnstructuredContent()
 		crdList := []interface{}{}
 		for _, crd := range manifest["items"].([]interface{}) {
 			crdName := mapx.GetStr(crd.(map[string]interface{}), "metadata.name")
@@ -69,7 +72,38 @@ func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[stri
 		manifest["items"] = crdList
 		return manifest, nil
 	}
-	return manifest, nil
+	// 普通集群的 CRD，按集群域资源检查权限
+	ret, err := c.ResClient.List(ctx, "", opts)
+	if err != nil {
+		return nil, err
+	}
+	return ret.UnstructuredContent(), nil
+}
+
+// Get ...
+func (c *CRDClient) Get(ctx context.Context, name string, opts metav1.GetOptions) (map[string]interface{}, error) {
+	// 共享集群 CRD 获取，如果在允许的数类内，不做权限检查
+	clusterInfo, err := cluster.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if clusterInfo.Type == cluster.ClusterTypeShared {
+		if !IsSharedClusterEnabledCRD(name) {
+			return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "共享集群中不支持查看 CRD %s 信息"), name)
+		}
+
+		ret, err := c.ResClient.cli.Resource(c.res).Get(ctx, name, opts)
+		if err != nil {
+			return nil, err
+		}
+		return ret.UnstructuredContent(), nil
+	}
+	// 普通集群的 CRD，按集群域资源检查权限
+	ret, err := c.ResClient.Get(ctx, "", name, opts)
+	if err != nil {
+		return nil, err
+	}
+	return ret.UnstructuredContent(), nil
 }
 
 // Watch ...
@@ -115,19 +149,11 @@ func (w *CRDWatcher) ResultChan() <-chan watch.Event {
 
 // GetCRDInfo 获取 CRD 基础信息
 func GetCRDInfo(ctx context.Context, clusterID, crdName string) (map[string]interface{}, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	crdRes, err := res.GetGroupVersionResource(ctx, clusterConf, res.CRD, "")
+	manifest, err := NewCRDCliByClusterID(ctx, clusterID).Get(ctx, crdName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	var ret *unstructured.Unstructured
-	ret, err = NewResClient(clusterConf, crdRes).Get(ctx, "", crdName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	manifest := ret.UnstructuredContent()
 	return formatter.FormatCRD(manifest), nil
 }
 

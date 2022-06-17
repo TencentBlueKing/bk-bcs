@@ -1125,7 +1125,7 @@ service Resource {
 	// 主动使 Discover 缓存失效
 	rpc InvalidateDiscoveryCache(InvalidateDiscoveryCacheReq) returns (CommonResp) {
 		option (google.api.http) = {
-			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"
+			post: "/clusterresources/v1/invalidate_discovery_cache"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1275,7 +1275,7 @@ message ResListReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
-	}, (validate.rules).string = {max_len: 128}];
+	}, (validate.rules).string = {max_len: 2048}];
 	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "apiVersion"
 	}, (validate.rules).string = {max_len: 63}];
@@ -1379,7 +1379,7 @@ message PodResListReq {
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
 	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "标签选择器"
-	}, (validate.rules).string = {max_len: 128}];
+	}, (validate.rules).string = {max_len: 2048}];
 	string ownerName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "所属资源名称"
 	}, (validate.rules).string = {max_len: 256}];
@@ -1664,6 +1664,9 @@ message InvalidateDiscoveryCacheReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string authToken = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "AuthToken"
+	}];
 }
 
 message FormRenderPreviewReq {

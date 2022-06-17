@@ -75,8 +75,9 @@ type AnnoFunc func(*Annotations)
 }
 */
 type Annotations struct {
-	Perm        Perm
-	FeatureFlag map[FeatureFlagKey]bool
+	Perm              Perm
+	FeatureFlag       map[FeatureFlagKey]bool
+	AdditionalColumns []interface{}
 }
 
 // ToPbStruct 将 Annotations 转换成 Struct 对象指针
@@ -104,16 +105,20 @@ func (a Annotations) ToPbStruct() (*spb.Struct, error) {
 		featureFlagMap[string(ff)] = enabled
 	}
 
-	// 转换成 Struct 对象指针
-	return pbstruct.Map2pbStruct(
-		map[string]interface{}{
-			"perm": map[string]interface{}{
-				"page":  permPageMap,
-				"items": permItemsMap,
-			},
-			"featureFlag": featureFlagMap,
+	annos := map[string]interface{}{
+		"perm": map[string]interface{}{
+			"page":  permPageMap,
+			"items": permItemsMap,
 		},
-	)
+		"featureFlag": featureFlagMap,
+	}
+	// CObj 资源会额外提供 AdditionalColumns，用于前端列表页展示
+	if a.AdditionalColumns != nil {
+		annos["additionalColumns"] = a.AdditionalColumns
+	}
+
+	// 转换成 Struct 对象指针
+	return pbstruct.Map2pbStruct(annos)
 }
 
 // NewAnnos ...
@@ -155,5 +160,12 @@ func NewItemPerm(uid ResUID, objName ObjName, detail PermDetail) AnnoFunc {
 				objName: detail,
 			}
 		}
+	}
+}
+
+// NewCRDAdditionalColumns 向注解中添加 CRD 的拓展列（前端展示用）
+func NewCRDAdditionalColumns(addColumns []interface{}) AnnoFunc {
+	return func(a *Annotations) {
+		a.AdditionalColumns = addColumns
 	}
 }

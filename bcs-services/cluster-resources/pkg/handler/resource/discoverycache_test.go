@@ -17,15 +17,20 @@ package resource
 import (
 	"testing"
 
+	"github.com/TencentBlueKing/gopkg/stringx"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 func TestInvalidateDiscoveryCache(t *testing.T) {
+	conf.G.Basic.CacheToken = stringx.Random(8)
 	ctx := handler.NewInjectedContext("", "", "")
-	req := clusterRes.InvalidateDiscoveryCacheReq{ProjectID: envs.TestProjectID, ClusterID: envs.TestClusterID}
+	req := clusterRes.InvalidateDiscoveryCacheReq{
+		ProjectID: envs.TestProjectID, ClusterID: envs.TestClusterID, AuthToken: conf.G.Basic.CacheToken,
+	}
 	assert.Nil(t, New().InvalidateDiscoveryCache(ctx, &req, &clusterRes.CommonResp{}))
 }

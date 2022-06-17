@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: web
+  name: statefulset-test
   namespace: default
 spec:
   replicas: 2

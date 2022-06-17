@@ -16,6 +16,7 @@ package resource
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -36,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -117,7 +119,30 @@ func (d *RedisCacheClient) Fresh() bool {
 // ClearCache 清理缓存内容 慎用！
 func (d *RedisCacheClient) ClearCache() error {
 	log.Warn(d.ctx, "invalidate cluster %s discovery cache", d.clusterID)
-	return d.rdsCache.DeleteByPrefix(d.clusterID)
+
+	var ret []byte
+	allGroupCacheKey := genCacheKey(d.clusterID, "")
+	if err := d.rdsCache.Get(allGroupCacheKey, &ret); err != nil {
+		// 如果集群没有对应缓存，是取不到数据的，因此忽略异常
+		log.Warn(d.ctx, "failed to get all group cache: %v", err)
+		return nil
+	}
+	var allGroup map[string]interface{}
+	if err := json.Unmarshal(ret, &allGroup); err != nil {
+		return err
+	}
+	// 逐个遍历 AllGroup 中缓存的 GroupVersion 并删除
+	for _, group := range mapx.GetList(allGroup, "groups") {
+		for _, ver := range mapx.GetList(group.(map[string]interface{}), "versions") {
+			groupVersion := mapx.GetStr(ver.(map[string]interface{}), "groupVersion")
+			cacheKey := genCacheKey(d.clusterID, groupVersion)
+			if err := d.rdsCache.Delete(cacheKey); err != nil {
+				log.Warn(d.ctx, "delete cache key %s failed: %v, continue", cacheKey, err)
+			}
+		}
+	}
+	// 最后再删除 AllGroup 的缓存
+	return d.rdsCache.Delete(allGroupCacheKey)
 }
 
 // ServerGroups 获取集群中的 Group，包含 versions, preferred 信息（支持 redis 缓存）
