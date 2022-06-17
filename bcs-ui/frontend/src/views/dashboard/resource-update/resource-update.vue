@@ -524,7 +524,8 @@
                                 $crd: crd.value,
                                 $category: category.value,
                                 $name: name.value,
-                                manifest: detail.value,
+                                rawData: detail.value,
+                                format: 'manifest',
                                 namespace: namespace.value
                             }).catch(err => {
                                 editorErr.value.type = 'http'

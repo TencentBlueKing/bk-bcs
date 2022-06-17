@@ -98,7 +98,7 @@
                 })
                 if (projectData && projectData.length) {
                     // 项目存在，但是无权限
-                    $router.push({
+                    const location = $router.resolve({
                         name: '403',
                         query: {
                             actionId: 'project_view',
@@ -109,6 +109,7 @@
                             fromRoute: window.location.href
                         }
                     })
+                    window.location.href = location.href
                 } else if (projectList.value.length) {
                     // 项目不存在
                     const project = projectList.value.find(item => item.project_code === localProjectCode) || projectList.value[0]

@@ -80,7 +80,7 @@ const router = new VueRouter({
             component: ProjectManage
         },
         {
-            path: '/403',
+            path: '/exception/403',
             name: '403',
             props: (route) => ({ ...route.params, ...route.query }),
             component: Forbidden
