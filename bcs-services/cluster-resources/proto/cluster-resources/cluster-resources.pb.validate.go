@@ -933,10 +933,10 @@ func (m *ResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetLabelSelector()) > 1024 {
+	if utf8.RuneCountInString(m.GetLabelSelector()) > 2048 {
 		err := ResListReqValidationError{
 			field:  "LabelSelector",
-			reason: "value length must be at most 1024 runes",
+			reason: "value length must be at most 2048 runes",
 		}
 		if !all {
 			return err
@@ -1870,10 +1870,10 @@ func (m *PodResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetLabelSelector()) > 1024 {
+	if utf8.RuneCountInString(m.GetLabelSelector()) > 2048 {
 		err := PodResListReqValidationError{
 			field:  "LabelSelector",
-			reason: "value length must be at most 1024 runes",
+			reason: "value length must be at most 2048 runes",
 		}
 		if !all {
 			return err
