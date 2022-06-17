@@ -177,6 +177,11 @@ func TestGetList(t *testing.T) {
 	assert.Equal(t, []interface{}{}, mapx.GetList(deploySpec, "template.spec.notExistsKey"))
 }
 
+func TestGetMap(t *testing.T) {
+	assert.Equal(t, map[string]interface{}{"app": "nginx"}, mapx.GetMap(deploySpec, "selector.matchLabels"))
+	assert.Equal(t, map[string]interface{}{}, mapx.GetMap(deploySpec, "template.spec.notExistsKey"))
+}
+
 // SetItems 成功的情况
 func TestSetItemsSuccessCase(t *testing.T) {
 	// depth 1，val type int

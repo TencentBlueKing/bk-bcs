@@ -16,6 +16,7 @@ package formatter
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
@@ -27,6 +28,7 @@ func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	ret["scope"] = mapx.Get(manifest, "spec.scope", "N/A")
 	ret["kind"] = mapx.Get(manifest, "spec.names.kind", "N/A")
 	ret["apiVersion"] = parseCObjAPIVersion(manifest)
+	ret["addColumns"] = parseCRDAdditionalColumns(manifest)
 	return ret
 }
 
@@ -56,4 +58,26 @@ func parseCObjAPIVersion(manifest map[string]interface{}) string {
 		return fmt.Sprintf("%s/%s", group, version)
 	}
 	return fmt.Sprintf("%s/v1alpha1", group)
+}
+
+// parseCRDAdditionalColumns ...
+func parseCRDAdditionalColumns(manifest map[string]interface{}) (addColumns []interface{}) {
+	// CRD v1beta1 spec.additionalPrinterColumns
+	rawAddColumns := mapx.GetList(manifest, "spec.additionalPrinterColumns")
+	if len(rawAddColumns) == 0 {
+		// CRD v1 spec.versions[0].additionalPrinterColumns
+		versions := mapx.GetList(manifest, "spec.versions")
+		if len(versions) != 0 {
+			rawAddColumns = mapx.GetList(versions[0].(map[string]interface{}), "additionalPrinterColumns")
+		}
+	}
+	for _, column := range rawAddColumns {
+		col, _ := column.(map[string]interface{})
+		// 存在时间会统一处理，因此此处直接过滤掉
+		if strings.ToLower(col["name"].(string)) == "age" {
+			continue
+		}
+		addColumns = append(addColumns, col)
+	}
+	return addColumns
 }

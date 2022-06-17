@@ -81,6 +81,11 @@ func GetList(obj map[string]interface{}, paths interface{}) []interface{} {
 	return Get(obj, paths, []interface{}{}).([]interface{})
 }
 
+// GetMap 获取 map[string]interface{} 类型快捷方法，默认值为 map[string]interface{}
+func GetMap(obj map[string]interface{}, paths interface{}) map[string]interface{} {
+	return Get(obj, paths, map[string]interface{}{}).(map[string]interface{})
+}
+
 // SetItems 对嵌套 Map 进行赋值
 // paths 参数支持 []string 类型，如 []string{"metadata", "namespace"}
 // 或 string 类型（以 '.' 为分隔符），如 "spec.template.spec.containers"

@@ -161,6 +161,9 @@ func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
 	// endpoints 为 subsets ips 与 ports 的笛卡儿积
 	for _, subset := range manifest["subsets"].([]interface{}) {
 		ss, _ := subset.(map[string]interface{})
+		if _, exists := ss["addresses"]; !exists {
+			continue
+		}
 		for _, addr := range ss["addresses"].([]interface{}) {
 			for _, p := range ss["ports"].([]interface{}) {
 				addr, _ := addr.(map[string]interface{})

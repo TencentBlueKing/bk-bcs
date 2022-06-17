@@ -56,6 +56,7 @@ func (h *Handler) ListCObj(
 	}
 	resp.WebAnnotations, err = web.NewAnnos(
 		web.NewFeatureFlag(featureflag.FormCreate, false),
+		web.NewCRDAdditionalColumns(crdInfo["addColumns"].([]interface{})),
 	).ToPbStruct()
 	return err
 }
