@@ -25,6 +25,6 @@ const (
 	ClusterMgrServiceName = "clustermanager.bkbcs.tencent.com"
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
-	// MaxGrpcMsgSize 单请求/响应体最大尺寸 32MB
-	MaxGrpcMsgSize = 32 * 1024 * 1024
+	// MaxGrpcMsgSize 单请求/响应体最大尺寸 64MB
+	MaxGrpcMsgSize = 64 * 1024 * 1024
 )

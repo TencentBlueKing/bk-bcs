@@ -6088,6 +6088,10 @@
         "clusterID": {
           "type": "string",
           "title": "集群 ID"
+        },
+        "authToken": {
+          "type": "string",
+          "title": "AuthToken"
         }
       },
       "description": "主动使集群 Discovery 缓存失效",

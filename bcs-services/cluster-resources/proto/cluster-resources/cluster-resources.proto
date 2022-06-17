@@ -1664,6 +1664,9 @@ message InvalidateDiscoveryCacheReq {
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string authToken = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "AuthToken"
+	}];
 }
 
 message FormRenderPreviewReq {

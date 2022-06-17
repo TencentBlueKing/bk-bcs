@@ -90,6 +90,8 @@ var NoAuthEndpoints = []string{
 	"Basic.Version",
 	"Basic.Ping",
 	"Basic.Healthz",
+	// 清理缓存走单独的 Token 认证
+	"Resource.InvalidateDiscoveryCache",
 }
 
 // 检查当前请求是否允许免除用户认证
