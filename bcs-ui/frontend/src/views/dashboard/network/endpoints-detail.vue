@@ -31,7 +31,7 @@
                     <bk-table-column label="NodeName" prop="nodeName"></bk-table-column>
                     <bk-table-column label="TargetRef">
                         <template #default="{ row }">
-                            <span>{{ `${row.targetRef.kind}:${row.targetRef.name}` }}</span>
+                            <span>{{ row.targetRef ? `${row.targetRef.kind}:${row.targetRef.name}` : '--' }}</span>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -83,8 +83,8 @@
                 ports.value = []
                 const subsets = data.value.subsets || []
                 subsets.forEach(item => {
-                    addresses.value.push(...item.addresses)
-                    ports.value.push(...item.ports)
+                    addresses.value.push(...(item.addresses || []))
+                    ports.value.push(...(item.ports || []))
                 })
             }, { immediate: true, deep: true })
 
