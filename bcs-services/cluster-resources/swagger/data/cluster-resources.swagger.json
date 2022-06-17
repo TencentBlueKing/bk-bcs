@@ -91,6 +91,40 @@
         ]
       }
     },
+    "/clusterresources/v1/invalidate_discovery_cache": {
+      "post": {
+        "summary": "Invalidate Discovery Cache API",
+        "description": "主动使 Discovery 缓存失效",
+        "operationId": "Resource_InvalidateDiscoveryCache",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesInvalidateDiscoveryCacheReq"
+            }
+          }
+        ],
+        "tags": [
+          "Resource"
+        ]
+      }
+    },
     "/clusterresources/v1/ping": {
       "get": {
         "summary": "Ping API",
@@ -813,52 +847,6 @@
         ],
         "tags": [
           "HPA"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache": {
-      "post": {
-        "summary": "Invalidate Discovery Cache API",
-        "description": "主动使 Discovery 缓存失效",
-        "operationId": "Resource_InvalidateDiscoveryCache",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesInvalidateDiscoveryCacheReq"
-            }
-          }
-        ],
-        "tags": [
-          "Resource"
         ]
       }
     },

@@ -1125,7 +1125,7 @@ service Resource {
 	// 主动使 Discover 缓存失效
 	rpc InvalidateDiscoveryCache(InvalidateDiscoveryCacheReq) returns (CommonResp) {
 		option (google.api.http) = {
-			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/invalidate_discovery_cache"
+			post: "/clusterresources/v1/invalidate_discovery_cache"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
