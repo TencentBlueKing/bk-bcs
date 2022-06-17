@@ -369,15 +369,6 @@
                         this.vpcList = []
                         await this.fetchZone()
                         await this.fetchVPC()
-                        await this.getCvmCapacity()
-                    }
-                }
-            },
-            'formdata.zone_id': {
-                immediate: true,
-                handler (value, old) {
-                    if (value !== old) {
-                        this.getCvmCapacity()
                     }
                 }
             },
@@ -566,6 +557,7 @@
                 }
                 this.$refs.applyForm && this.$refs.applyForm.$refs.hostItem && this.$refs.applyForm.$refs.hostItem.clearError()
                 try {
+                    this.isHostLoading = true
                     const res = await this.$store.dispatch('cluster/getSCRHosts', {
                         projectId: this.projectId,
                         region: this.formdata.region,
@@ -585,6 +577,8 @@
                             description: getRow[3].replace('备注:', '')
                         }
                     })
+                    await this.getCvmCapacity()
+                    this.isHostLoading = false
                 } catch (e) {
                     this.hostTableData = []
                     console.error(e)
