@@ -41,7 +41,6 @@
                     </span>
                 </div>
                 <ResourceEditor
-                    key="diff"
                     :value="detail"
                     :original="original"
                     :height="height"
@@ -82,9 +81,30 @@
                     @click="handleSaveFormData">
                     {{$t('创建')}}
                 </bk-button>
+                <bk-button class="btn ml15" @click="handlePreview">{{$t('预览')}}</bk-button>
                 <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
             </template>
         </div>
+
+        <bcs-sideslider
+            :is-show.sync="showSideslider"
+            :title="resourceName"
+            quick-close
+            :width="800">
+            <template #content>
+                <Ace v-full-screen="{
+                         tools: ['fullscreen', 'copy'],
+                         content: previewData
+                     }"
+                    v-bkloading="{ isLoading: previewLoading }"
+                    width="100%"
+                    height="100%"
+                    lang="yaml"
+                    read-only
+                    :value="previewData">
+                </Ace>
+            </template>
+        </bcs-sideslider>
     </div>
 </template>
 <script>
@@ -95,6 +115,9 @@
     import { CUR_SELECT_NAMESPACE } from '@/common/constant'
     import { CR_API_URL } from '@/api/base'
     import ResourceEditor from '@/views/dashboard/resource-update/resource-editor.vue'
+    import fullScreen from '@/directives/full-screen'
+    import Ace from '@/components/ace-editor'
+    import yamljs from 'js-yaml'
 
     const BKForm = createForm({
         namespace: 'bcs',
@@ -108,7 +131,11 @@
             BKForm,
             DashboardTopActions,
             SwitchButton,
-            ResourceEditor
+            ResourceEditor,
+            Ace
+        },
+        directives: {
+            'full-screen': fullScreen
         },
         props: {
             // 命名空间（更新的时候需要--crd类型编辑是可能没有，创建的时候为空）
@@ -166,7 +193,10 @@
                 original: {},
                 showDiff: false,
                 diffLoading: false,
-                height: 600
+                height: 600,
+                showSideslider: false,
+                previewLoading: false,
+                previewData: ''
             }
         },
         computed: {
@@ -404,6 +434,12 @@
                     sessionStorage.setItem(CUR_SELECT_NAMESPACE, this.schemaFormData.metadata?.namespace)
                     this.$router.push({ name: this.$store.getters.curNavName, params: { skipBackConfirm: true } })
                 }
+            },
+            // 表单预览
+            async handlePreview () {
+                this.showSideslider = true
+                this.detail = await this.handleGetManifestByFormData(this.schemaFormData)
+                this.previewData = yamljs.dump(this.detail)
             }
         }
     }
@@ -417,6 +453,9 @@
     height: 100%;
     /deep/ .bk-form-radio {
         padding-left: 2px;
+    }
+    /deep/ .bk-sideslider .bk-sideslider-content {
+        height: 100%;
     }
     .switch-button-pop {
         position: absolute;
