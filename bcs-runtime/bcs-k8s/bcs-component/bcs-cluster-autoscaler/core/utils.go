@@ -293,22 +293,6 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		return false, "", nil
 	}
 
-	for _, node := range nodes {
-		// Broken nodes might have some stuff missing. Skipping.
-		if !kube_util.IsNodeReadyAndSchedulable(node) {
-			continue
-		}
-		added, id, typedErr := processNode(node)
-		if typedErr != nil {
-			return map[string]*schedulernodeinfo.NodeInfo{}, typedErr
-		}
-		// TODO: support node pool label update
-		if added && nodeInfoCache != nil {
-			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
-				nodeInfoCache[id] = nodeInfoCopy
-			}
-		}
-	}
 	for _, nodeGroup := range cloudProvider.NodeGroups() {
 		id := nodeGroup.Id()
 		seenGroups[id] = true
@@ -326,8 +310,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 			}
 		}
 
-		// No good template, trying to generate one. This is called only if there are no
-		// working nodes in the node groups. By default CA tries to use a real-world example.
+		// No good template, trying to generate one.
 		nodeInfo, err := getNodeInfoFromTemplate(nodeGroup, daemonsets, predicateChecker, ignoredTaints)
 		if err != nil {
 			if err == cloudprovider.ErrNotImplemented {
@@ -338,6 +321,24 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 			}
 		}
 		result[id] = nodeInfo
+	}
+
+	// if cannot get node template from provider, try to generate with real-world example
+	for _, node := range nodes {
+		// Broken nodes might have some stuff missing. Skipping.
+		if !kube_util.IsNodeReadyAndSchedulable(node) {
+			continue
+		}
+		added, id, typedErr := processNode(node)
+		if typedErr != nil {
+			return map[string]*schedulernodeinfo.NodeInfo{}, typedErr
+		}
+		// TODO: support node pool label update
+		if added && nodeInfoCache != nil {
+			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
+				nodeInfoCache[id] = nodeInfoCopy
+			}
+		}
 	}
 
 	// Remove invalid node groups from cache

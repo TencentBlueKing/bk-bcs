@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/smallnest/chanx"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -34,7 +36,8 @@ type DataJobHandler struct {
 	unSub         func()
 	stopCtx       context.Context
 	stopCancel    context.CancelFunc
-	jobListCh     chan msgqueue.HandlerData
+	jobChanList   chan chanx.UnboundedChan
+	chanMap       sync.Map
 	filters       []msgqueue.Filter
 	clients       HandleClients
 	policyFactory datajob.PolicyFactoryInterface
@@ -63,7 +66,8 @@ func NewDataJobHandler(opts HandlerOptions, client HandleClients, concurrency in
 	return &DataJobHandler{
 		stopCtx:       ctx,
 		stopCancel:    cancel,
-		jobListCh:     make(chan msgqueue.HandlerData, opts.ChanQueueNum),
+		jobChanList:   make(chan chanx.UnboundedChan, opts.ChanQueueNum),
+		chanMap:       sync.Map{},
 		clients:       client,
 		policyFactory: factory,
 		concurrency:   concurrency,
@@ -88,11 +92,38 @@ func (h *DataJobHandler) Consume(sub msgqueue.MessageQueue) error {
 // Stop stop handler
 func (h *DataJobHandler) Stop() error {
 	h.unSub()
-	h.stopCancel()
-	close(h.jobListCh)
-	time.Sleep(time.Second * 3)
-
+	close(h.jobChanList)
+	h.chanMap.Range(func(key, value interface{}) bool {
+		unboundedChan, ok := value.(chanx.UnboundedChan)
+		if !ok {
+			return true
+		}
+		close(unboundedChan.In)
+		return true
+	})
 	return nil
+}
+
+// Done waiting for all job in channel finished
+func (h *DataJobHandler) Done() {
+	for {
+		handleEnd := true
+		h.chanMap.Range(func(key, value interface{}) bool {
+			unboundedChan, ok := value.(chanx.UnboundedChan)
+			if !ok {
+				return true
+			}
+			if unboundedChan.Len() != 0 {
+				handleEnd = false
+				return false
+			}
+			return true
+		})
+		if handleEnd {
+			break
+		}
+	}
+	h.stopCancel()
 }
 
 // HandleQueue register queue for job callback
@@ -117,49 +148,87 @@ func (h *DataJobHandler) HandleQueue(ctx context.Context, data []byte) error {
 		blog.Errorf("Unmarshal handler data failed: %v", err)
 		return err
 	}
-	h.jobListCh <- *dataJobHandlerData
+	dataJob := &datajob.DataJob{}
+	err = json.Unmarshal(dataJobHandlerData.Body, dataJob)
+	if err != nil {
+		blog.Errorf("unmarshal job error: %v", err)
+		return fmt.Errorf("unmarshal job error: %v", err)
+	}
+	switch dataJob.Opts.ObjectType {
+	case types.ProjectType, types.PublicType:
+		if _, ok := h.chanMap.Load("public"); !ok {
+			publicChan := chanx.NewUnboundedChan(100)
+			h.jobChanList <- *publicChan
+			h.chanMap.Store("public", *publicChan)
+			blog.Infof("[handler] add public chan")
+		}
+		publicCh, _ := h.chanMap.Load("public")
+		publicChan, ok := publicCh.(chanx.UnboundedChan)
+		if !ok {
+			blog.Errorf("trans publicChan to chanx.UnboundedChan error")
+			return fmt.Errorf("trans publicChan to chanx.UnboundedChan error")
+		}
+		publicChan.In <- *dataJob
+	default:
+		if _, ok := h.chanMap.Load(dataJob.Opts.ClusterID); !ok {
+			clusterChan := chanx.NewUnboundedChan(100)
+			h.jobChanList <- *clusterChan
+			h.chanMap.Store(dataJob.Opts.ClusterID, *clusterChan)
+			blog.Infof("[handler] add cluster chan:%s", dataJob.Opts.ClusterID)
+		}
+		clusterCh, _ := h.chanMap.Load(dataJob.Opts.ClusterID)
+		clusterChan, ok := clusterCh.(chanx.UnboundedChan)
+		if !ok {
+			blog.Errorf("trans clusterChan to chanx.UnboundedChan error")
+			return fmt.Errorf("trans clusterChan to chanx.UnboundedChan error")
+		}
+		clusterChan.In <- *dataJob
+	}
 	return nil
 }
 
 func (h *DataJobHandler) handleJob() {
-	chPool := make(chan struct{}, h.concurrency)
-	var handleJobCount int64
-	for job := range h.jobListCh {
+	var clusterChanCount int
+	for clusterChan := range h.jobChanList {
 		select {
 		case <-h.stopCtx.Done():
 			blog.Info("handleJob has been stopped")
 			return
 		default:
-			handleJobCount++
+			clusterChanCount++
 		}
-		chPool <- struct{}{}
-		go func(job msgqueue.HandlerData) {
-			h.handleOneJob(job)
-			<-chPool
-		}(job)
-		prom.ReportConsumeConcurrency(len(chPool))
-		if handleJobCount%1000 == 0 {
-			blog.Infof("jobListChan length:%d", len(h.jobListCh))
-			blog.Infof("handle job count: %d", handleJobCount)
-		}
+		go h.handleOneChan(clusterChan)
+		prom.ReportConsumeConcurrency(clusterChanCount)
 	}
 }
 
-func (h *DataJobHandler) handleOneJob(job msgqueue.HandlerData) {
+func (h *DataJobHandler) handleOneChan(jobChan chanx.UnboundedChan) {
+	for job := range jobChan.Out {
+		select {
+		case <-h.stopCtx.Done():
+			blog.Info("handleJob has been stopped")
+			return
+		default:
+
+		}
+		value, ok := job.(datajob.DataJob)
+		if !ok {
+			continue
+		}
+		h.handleOneJob(value)
+		prom.ReportWaitingJobCount(value.Opts.ClusterID, jobChan.Len())
+	}
+}
+
+func (h *DataJobHandler) handleOneJob(job datajob.DataJob) {
 	start := time.Now()
 	var err error
-	dataJob := &datajob.DataJob{}
 	defer func() {
-		prom.ReportConsumeJobMetric(dataJob.Opts.ObjectType, dataJob.Opts.Dimension, err, start)
-		prom.ReportJobMetric(dataJob.Opts.ObjectType, dataJob.Opts.Dimension, err, dataJob.Opts.CurrentTime)
+		prom.ReportConsumeJobMetric(job.Opts.ObjectType, job.Opts.Dimension, err, start)
+		prom.ReportJobMetric(job.Opts.ObjectType, job.Opts.Dimension, err, job.Opts.CurrentTime)
 	}()
-	err = json.Unmarshal(job.Body, dataJob)
-	if err != nil {
-		blog.Errorf("unmarshal job error: %v", err)
-		return
-	}
-	policy := h.policyFactory.GetPolicy(dataJob.Opts.ObjectType, dataJob.Opts.Dimension)
-	dataJob.SetPolicy(policy)
+	policy := h.policyFactory.GetPolicy(job.Opts.ObjectType, job.Opts.Dimension)
+	job.SetPolicy(policy)
 	cmConn, err := h.clients.CmCli.GetClusterManagerConn()
 	if err != nil {
 		blog.Errorf("get cm conn error:%v", err)
@@ -169,6 +238,6 @@ func (h *DataJobHandler) handleOneJob(job msgqueue.HandlerData) {
 	cliWithHeader := h.clients.CmCli.NewGrpcClientWithHeader(context.Background(), cmConn)
 	client := types.NewClients(h.clients.BcsMonitorClient, h.clients.K8sStorageCli,
 		h.clients.MesosStorageCli, cliWithHeader)
-	dataJob.SetClient(client)
-	dataJob.DoPolicy(h.stopCtx)
+	job.SetClient(client)
+	job.DoPolicy(h.stopCtx)
 }

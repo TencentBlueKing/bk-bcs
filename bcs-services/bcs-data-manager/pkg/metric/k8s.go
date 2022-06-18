@@ -145,7 +145,7 @@ func (g *MetricGetter) getK8SWorkloadCPU(opts *types.JobCommonOpts,
 	clients *types.Clients) (float64, float64, float64, error) {
 	var workloadCPURequest, workloadCPUUsed float64
 	var usage float64
-	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.Name)
+	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.WorkloadName)
 	podCPURequestMetric, err := clients.MonitorClient.QueryByPost(
 		fmt.Sprintf(K8sWorkloadCPURequest, podCondition, PodSumCondition),
 		opts.CurrentTime)
@@ -175,7 +175,7 @@ func (g *MetricGetter) getK8sWorkloadMemory(opts *types.JobCommonOpts,
 	clients *types.Clients) (int64, int64, float64, error) {
 	var workloadMemoryRequest, workloadMemoryUsed int64
 	var usage float64
-	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.Name)
+	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.WorkloadName)
 	podMemoryRequestMetric, err := clients.MonitorClient.QueryByPost(
 		fmt.Sprintf(K8sWorkloadMemoryRequest, podCondition, PodSumCondition),
 		opts.CurrentTime)

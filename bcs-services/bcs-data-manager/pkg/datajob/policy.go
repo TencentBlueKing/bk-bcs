@@ -20,12 +20,13 @@ import (
 
 var (
 	// PolicyMap : type:map
-	PolicyMap    = map[string]map[string]Policy{}
-	ClusterMap   = map[string]Policy{}
-	NamespaceMap = map[string]Policy{}
-	WorkloadMap  = map[string]Policy{}
-	PublicMap    = map[string]Policy{}
-	ProjectMap   = map[string]Policy{}
+	PolicyMap        = map[string]map[string]Policy{}
+	ClusterMap       = map[string]Policy{}
+	NamespaceMap     = map[string]Policy{}
+	WorkloadMap      = map[string]Policy{}
+	PublicMap        = map[string]Policy{}
+	ProjectMap       = map[string]Policy{}
+	PodAutoscalerMap = map[string]Policy{}
 )
 
 // PolicyFactoryInterface PolicyMap interface
@@ -55,11 +56,13 @@ func (f *policyFactory) Init() {
 	f.initWorkloadMap()
 	f.initPublicMap()
 	f.initProjectMap()
+	f.initPodAutoscalerMap()
 	PolicyMap[types.ClusterType] = ClusterMap
 	PolicyMap[types.NamespaceType] = NamespaceMap
 	PolicyMap[types.WorkloadType] = WorkloadMap
 	PolicyMap[types.ProjectType] = ProjectMap
 	PolicyMap[types.PublicType] = PublicMap
+	PolicyMap[types.PodAutoscalerType] = PodAutoscalerMap
 }
 func (f *policyFactory) initClusterMap() {
 	ClusterMap[types.DimensionMinute] = NewClusterMinutePolicy(&metric.MetricGetter{}, f.store)
@@ -85,4 +88,10 @@ func (f *policyFactory) initPublicMap() {
 
 func (f *policyFactory) initProjectMap() {
 	ProjectMap[types.DimensionDay] = NewProjectDayPolicy(&metric.MetricGetter{}, f.store)
+}
+
+func (f *policyFactory) initPodAutoscalerMap() {
+	PodAutoscalerMap[types.DimensionDay] = NewPodAutoscalerDayPolicy(&metric.MetricGetter{}, f.store)
+	PodAutoscalerMap[types.DimensionHour] = NewPodAutoscalerHourPolicy(&metric.MetricGetter{}, f.store)
+	PodAutoscalerMap[types.DimensionMinute] = NewPodAutoscalerMinutePolicy(&metric.MetricGetter{}, f.store)
 }

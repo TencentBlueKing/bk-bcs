@@ -15,6 +15,7 @@ package metric
 import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"net/http"
 	"regexp"
 	"testing"
@@ -26,7 +27,7 @@ import (
 
 func newMonitor() bcsmonitor.ClientInterface {
 	opt := bcsmonitor.BcsMonitorClientOpt{
-		Schema:    "",
+		Schema:    "https",
 		Endpoint:  "",
 		UserName:  "",
 		Password:  "",
@@ -45,8 +46,8 @@ func Test_GetClusterCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:  types.ClusterType,
-		ClusterID:   "BCS-MESOS-10039",
-		ClusterType: types.Mesos,
+		ClusterID:   "BCS-K8S-15202",
+		ClusterType: types.Kubernetes,
 		Dimension:   types.DimensionMinute,
 		CurrentTime: time.Time{},
 	}
@@ -114,7 +115,7 @@ func Test_GetInstanceCount(t *testing.T) {
 		Dimension:    types.DimensionMinute,
 		Namespace:    "thanos",
 		WorkloadType: types.DeploymentType,
-		Name:         "testdeploy",
+		WorkloadName: "testdeploy",
 		CurrentTime:  time.Time{},
 	}
 	_, err = getter.GetInstanceCount(opts3, clients)
@@ -126,10 +127,10 @@ func Test_GetNamespaceCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:  types.NamespaceType,
-		ClusterID:   "BCS-MESOS-20042",
-		ClusterType: types.Mesos,
+		ClusterID:   "BCS-K8S-15202",
+		ClusterType: types.Kubernetes,
 		Dimension:   types.DimensionMinute,
-		Namespace:   "cq-loadtest",
+		Namespace:   "bcs-system",
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
@@ -160,10 +161,10 @@ func Test_GetNamespaceMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:  types.NamespaceType,
-		ClusterID:   "BCS-MESOS-20042",
-		ClusterType: types.Mesos,
+		ClusterID:   "BCS-K8S-15202",
+		ClusterType: types.Kubernetes,
 		Dimension:   types.DimensionHour,
-		Namespace:   "cq-loadtest",
+		Namespace:   "bcs-system",
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
@@ -181,12 +182,12 @@ func Test_GetWorkloadCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:   types.WorkloadType,
-		ClusterID:    "BCS-K8S-15171",
+		ClusterID:    "BCS-K8S-15202",
 		ClusterType:  types.Kubernetes,
 		Dimension:    types.DimensionMinute,
-		Namespace:    "bcs-system",
+		Namespace:    "default",
 		WorkloadType: types.DeploymentType,
-		Name:         "event-exporter",
+		WorkloadName: "event-exporter",
 		CurrentTime:  time.Time{},
 	}
 	getter := &MetricGetter{}
@@ -200,12 +201,12 @@ func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:   types.WorkloadType,
-		ClusterID:    "BCS-K8S-15091",
+		ClusterID:    "BCS-K8S-15202",
 		ClusterType:  types.Kubernetes,
 		Dimension:    types.DimensionMinute,
-		Namespace:    "mars-test",
+		Namespace:    "default",
 		WorkloadType: types.DeploymentType,
-		Name:         "mars-test-test1-micro-gateway-operator",
+		WorkloadName: "event-exporter",
 		CurrentTime:  time.Now(),
 	}
 	getter := &MetricGetter{}
@@ -214,7 +215,7 @@ func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 	assert.Nil(t, err)
 	fmt.Println(getter.GetWorkloadMemoryMetrics(opts, clients))
 	fmt.Println(getter.GetInstanceCount(opts, clients))
-	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.Name)
+	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.WorkloadName)
 	test, err := monitorCli.QueryByPost(fmt.Sprintf("sum(container_spec_memory_limit_bytes{%s})by(pod_name)", podCondition), opts.CurrentTime)
 	fmt.Println(err)
 	fmt.Println(test)
@@ -227,4 +228,58 @@ func TestPodName(t *testing.T) {
 	fmt.Println(regx2.MatchString("prometheus-operator-prometheus-node-exporter-thpmd"))
 	regx3 := regexp.MustCompile("prometheus-prometheus-operator-prometheus" + "-[0-9a-z]*$")
 	fmt.Println(regx3.MatchString("prometheus-prometheus-operator-prometheus-0"))
+}
+
+func TestHPA(t *testing.T) {
+	//query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaledUpGroup|ScaleDown\"}"
+	//query := "min_over_time(sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"}))"
+	query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"gpa-test\",namespace=\"default\",source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"
+	//query := "sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"})"
+	monitorCli := newMonitor()
+	start := time.Now().Add(-1 * time.Hour)
+	end := time.Now()
+	fmt.Println(start)
+	fmt.Println(end)
+	rsp, err := monitorCli.QueryRangeByPost(query, start, end, 30*time.Second)
+	assert.Nil(t, err)
+	assert.NotNil(t, rsp)
+	assert.NotEqual(t, 0, len(rsp.Data.Result))
+	fillSlice := fillMetrics(float64(16593460), rsp.Data.Result[0].Values, 30)
+	fmt.Println(fillSlice)
+	total := getIncreasingIntervalDifference(fillSlice)
+	assert.Equal(t, 0, total)
+}
+
+func TestGetPodAutoscalerCount(t *testing.T) {
+	monitorCli := newMonitor()
+	opts := &types.JobCommonOpts{
+		ObjectType:        types.PodAutoscalerType,
+		ClusterID:         "BCS-K8S-15202",
+		ClusterType:       types.Kubernetes,
+		Dimension:         types.DimensionMinute,
+		Namespace:         "default",
+		PodAutoscalerType: types.GPAType,
+		PodAutoscalerName: "gpa-test",
+		CurrentTime:       time.Now().Add(-44 * time.Minute),
+	}
+	getter := &MetricGetter{}
+	clients := types.NewClients(monitorCli, nil, nil, nil)
+	_, err := getter.GetPodAutoscalerCount(opts, clients)
+	assert.Nil(t, err)
+}
+
+func TestGetCACount(t *testing.T) {
+	monitorCli := newMonitor()
+	opts := &types.JobCommonOpts{
+		ObjectType:  types.ClusterType,
+		ClusterID:   "BCS-K8S-15202",
+		ClusterType: types.Kubernetes,
+		Dimension:   types.DimensionMinute,
+		CurrentTime: utils.FormatTime(time.Now().Add(-102*time.Minute), types.DimensionMinute),
+	}
+	getter := &MetricGetter{}
+	clients := types.NewClients(monitorCli, nil, nil, nil)
+	count, err := getter.GetCACount(opts, clients)
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, count)
 }

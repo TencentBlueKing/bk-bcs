@@ -23,10 +23,10 @@
                     v-for="item in additionalColumns"
                     :key="item.name"
                     :label="item.name"
-                    :prop="item.JSONPath"
+                    :prop="item.jsonPath"
                     :render-header="renderCrdHeader">
                     <template #default="{ row }">
-                        <span>{{ getJsonPathValue(row, item.JSONPath) || '--' }}</span>
+                        <span>{{ getJsonPathValue(row, item.jsonPath) || '--' }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">

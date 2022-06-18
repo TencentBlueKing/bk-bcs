@@ -102,12 +102,6 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 		ClusterID:  opts.ClusterID,
 		Dimension:  types.DimensionHour,
 	}
-	minuteOpts := &types.JobCommonOpts{
-		ObjectType: types.ClusterType,
-		ProjectID:  opts.ProjectID,
-		ClusterID:  opts.ClusterID,
-		Dimension:  types.DimensionMinute,
-	}
 	bucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
 	hourMetrics, err := p.store.GetRawClusterInfo(ctx, hourOpts, bucket)
 	if err != nil {
@@ -118,8 +112,9 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 		return
 	}
 	hourMetric := hourMetrics[0]
-	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
-	workloadCount, err := p.store.GetWorkloadCount(ctx, minuteOpts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	// 统计前一天出现过的workload总数
+	hourBucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, hourOpts, hourBucket, time.Time{})
 	if err != nil {
 		blog.Errorf("do cluster day policy failed, get cluster workload count err: %v", err)
 	}
@@ -146,6 +141,7 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 		NodeQuantile:       nodeQuantile,
 		TotalCPU:           totalCPU,
 		TotalMemory:        totalMemory,
+		CACount:            hourMetric.TotalCACount,
 	}
 	err = p.store.InsertClusterInfo(ctx, clusterMetric, opts)
 	if err != nil {
@@ -198,8 +194,9 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 		return
 	}
 	minuteMetric := minuteMetrics[0]
-	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
-	workloadCount, err := p.store.GetWorkloadCount(ctx, minuteOpts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	//统计上一个小时出现过的workload总数
+	hourBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-1*time.Hour), types.DimensionHour)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, hourBucket, opts.CurrentTime.Add(-1*time.Hour))
 	if err != nil {
 		blog.Errorf("do cluster hour policy failed, get cluster workload count err: %v", err)
 	}
@@ -226,6 +223,7 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 		NodeQuantile:       nodeQuantile,
 		TotalCPU:           totalCPU,
 		TotalMemory:        totalMemory,
+		CACount:            minuteMetric.TotalCACount,
 	}
 	err = p.store.InsertClusterInfo(ctx, clusterMetric, opts)
 	if err != nil {
@@ -267,6 +265,10 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.J
 	if err != nil {
 		blog.Errorf("do cluster minute policy failed, get cluster workload count err: %v", err)
 	}
+	caCount, err := p.MetricGetter.GetCACount(opts, clients)
+	if err != nil {
+		blog.Errorf("do cluster minute policy failed, get cluster ca count err: %v", err)
+	}
 	clusterMetric := &types.ClusterMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -282,6 +284,7 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.J
 		NodeCount:          node,
 		AvailableNodeCount: availableNode,
 		WorkloadCount:      workloadCount,
+		CACount:            caCount,
 		MinNode: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinNode",
 			MetricName: "MinNode",

@@ -147,6 +147,11 @@ func (s *Server) StopConsumer() {
 	s.consumer.Stop()
 }
 
+// WaitForConsumerDone wait for consumer finish
+func (s *Server) WaitForConsumerDone() {
+	s.consumer.Done()
+}
+
 // init server and client tls config
 func (s *Server) initTLSConfig() error {
 	if len(s.opt.ServerCert) != 0 && len(s.opt.ServerKey) != 0 && len(s.opt.ServerCa) != 0 {

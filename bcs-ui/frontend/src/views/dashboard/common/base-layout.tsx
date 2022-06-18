@@ -113,7 +113,7 @@ export default defineComponent({
             // 校验初始化的crd值是否正确
             const crd = crdData.value?.manifest?.items?.find(item => item.metadata.name === currentCrd.value)
             if (!crd) {
-                currentCrd.value = ''
+                currentCrd.value = crdList.value[0]?.metadata?.name
                 sessionStorage.removeItem(CUR_SELECT_CRD)
             }
         }
@@ -203,7 +203,7 @@ export default defineComponent({
             }
         })
         const additionalColumns = computed(() => { // 动态表格字段
-            return webAnnotations.value.additional_columns || []
+            return webAnnotations.value.additionalColumns || []
         })
         const tableData = computed(() => {
             const items = JSON.parse(JSON.stringify(data.value.manifest.items || []))

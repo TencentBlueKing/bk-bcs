@@ -245,3 +245,50 @@ func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanage
 	prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
+
+// GetPodAutoscalerList get pod autoscaler list
+func (e *BcsDataManager) GetPodAutoscalerList(ctx context.Context, req *bcsdatamanager.GetPodAutoscalerListRequest,
+	rsp *bcsdatamanager.GetPodAutoscalerListResponse) error {
+	blog.Infof("Received GetPodAutoscalerList.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
+		"workloadType: %s, workloadName: %s, podAutoscalerType:%s, page:%d, size:%d",
+		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetWorkloadType(), req.GetWorkloadName(),
+		req.GetPodAutoscalerType(), req.GetPage(), req.GetSize())
+	start := time.Now()
+	result, total, err := e.model.GetPodAutoscalerList(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("get workload info error: %v", err)
+		rsp.Code = common.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetPodAutoscalerList", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result
+	rsp.Message = common.BcsSuccessStr
+	rsp.Code = common.BcsSuccess
+	rsp.Total = uint32(total)
+	prom.ReportAPIRequestMetric("GetPodAutoscalerList", "grpc", prom.StatusOK, start)
+	return nil
+}
+
+// GetPodAutoscaler get pod autoscaler
+func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanager.GetPodAutoscalerRequest,
+	rsp *bcsdatamanager.GetPodAutoscalerResponse) error {
+	blog.Infof("Received GetPodAutoscaler.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
+		"type: %s, name: %s",
+		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetPodAutoscalerType(), req.GetPodAutoscalerName())
+	start := time.Now()
+	//TODO:
+	result, err := e.model.GetPodAutoscalerInfo(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("get podAutoscaler info error: %v", err)
+		rsp.Code = common.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetPodAutoscaler", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result
+	rsp.Message = common.BcsSuccessStr
+	rsp.Code = common.BcsSuccess
+	prom.ReportAPIRequestMetric("GetPodAutoscaler", "grpc", prom.StatusOK, start)
+	return nil
+}

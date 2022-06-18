@@ -3386,6 +3386,8 @@ func (m *ClusterMetrics) validate(all bool) error {
 
 	// no validation rules for MemoryRequest
 
+	// no validation rules for CACount
+
 	if len(errors) > 0 {
 		return ClusterMetricsMultiError(errors)
 	}
@@ -5155,3 +5157,1022 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = WorkloadMetricsValidationError{}
+
+// Validate checks the field values on GetPodAutoscalerListRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetPodAutoscalerListRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPodAutoscalerListRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPodAutoscalerListRequestMultiError, or nil if none found.
+func (m *GetPodAutoscalerListRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPodAutoscalerListRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerListRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 100 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerListRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetWorkloadType()) > 100 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "WorkloadType",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerListRequest_WorkloadType_Pattern.MatchString(m.GetWorkloadType()) {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "WorkloadType",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetWorkloadName()) > 100 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "WorkloadName",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerListRequest_WorkloadName_Pattern.MatchString(m.GetWorkloadName()) {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "WorkloadName",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _GetPodAutoscalerListRequest_Dimension_InLookup[m.GetDimension()]; !ok {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Dimension",
+			reason: "value must be in list [minute hour day ]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() < 0 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetSize() > 10 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Size",
+			reason: "value must be less than or equal to 10",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetBusiness()) > 100 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Business",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerListRequest_Business_Pattern.MatchString(m.GetBusiness()) {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Business",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetProject()) > 100 {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Project",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerListRequest_Project_Pattern.MatchString(m.GetProject()) {
+		err := GetPodAutoscalerListRequestValidationError{
+			field:  "Project",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for PodAutoscalerType
+
+	if len(errors) > 0 {
+		return GetPodAutoscalerListRequestMultiError(errors)
+	}
+	return nil
+}
+
+// GetPodAutoscalerListRequestMultiError is an error wrapping multiple
+// validation errors returned by GetPodAutoscalerListRequest.ValidateAll() if
+// the designated constraints aren't met.
+type GetPodAutoscalerListRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPodAutoscalerListRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPodAutoscalerListRequestMultiError) AllErrors() []error { return m }
+
+// GetPodAutoscalerListRequestValidationError is the validation error returned
+// by GetPodAutoscalerListRequest.Validate if the designated constraints
+// aren't met.
+type GetPodAutoscalerListRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPodAutoscalerListRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPodAutoscalerListRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPodAutoscalerListRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPodAutoscalerListRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPodAutoscalerListRequestValidationError) ErrorName() string {
+	return "GetPodAutoscalerListRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPodAutoscalerListRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPodAutoscalerListRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPodAutoscalerListRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPodAutoscalerListRequestValidationError{}
+
+var _GetPodAutoscalerListRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetPodAutoscalerListRequest_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetPodAutoscalerListRequest_WorkloadType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetPodAutoscalerListRequest_WorkloadName_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetPodAutoscalerListRequest_Dimension_InLookup = map[string]struct{}{
+	"minute": {},
+	"hour":   {},
+	"day":    {},
+	"":       {},
+}
+
+var _GetPodAutoscalerListRequest_Business_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetPodAutoscalerListRequest_Project_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GetPodAutoscalerListResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetPodAutoscalerListResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPodAutoscalerListResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPodAutoscalerListResponseMultiError, or nil if none found.
+func (m *GetPodAutoscalerListResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPodAutoscalerListResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Total
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetPodAutoscalerListResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetPodAutoscalerListResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetPodAutoscalerListResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetPodAutoscalerListResponseMultiError(errors)
+	}
+	return nil
+}
+
+// GetPodAutoscalerListResponseMultiError is an error wrapping multiple
+// validation errors returned by GetPodAutoscalerListResponse.ValidateAll() if
+// the designated constraints aren't met.
+type GetPodAutoscalerListResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPodAutoscalerListResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPodAutoscalerListResponseMultiError) AllErrors() []error { return m }
+
+// GetPodAutoscalerListResponseValidationError is the validation error returned
+// by GetPodAutoscalerListResponse.Validate if the designated constraints
+// aren't met.
+type GetPodAutoscalerListResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPodAutoscalerListResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPodAutoscalerListResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPodAutoscalerListResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPodAutoscalerListResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPodAutoscalerListResponseValidationError) ErrorName() string {
+	return "GetPodAutoscalerListResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPodAutoscalerListResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPodAutoscalerListResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPodAutoscalerListResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPodAutoscalerListResponseValidationError{}
+
+// Validate checks the field values on GetPodAutoscalerRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetPodAutoscalerRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPodAutoscalerRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPodAutoscalerRequestMultiError, or nil if none found.
+func (m *GetPodAutoscalerRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPodAutoscalerRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := GetPodAutoscalerRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := GetPodAutoscalerRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := GetPodAutoscalerRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 100 {
+		err := GetPodAutoscalerRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetPodAutoscalerRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetPodAutoscalerRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _GetPodAutoscalerRequest_Dimension_InLookup[m.GetDimension()]; !ok {
+		err := GetPodAutoscalerRequestValidationError{
+			field:  "Dimension",
+			reason: "value must be in list [minute hour day ]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for PodAutoscalerType
+
+	// no validation rules for PodAutoscalerName
+
+	if len(errors) > 0 {
+		return GetPodAutoscalerRequestMultiError(errors)
+	}
+	return nil
+}
+
+// GetPodAutoscalerRequestMultiError is an error wrapping multiple validation
+// errors returned by GetPodAutoscalerRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetPodAutoscalerRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPodAutoscalerRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPodAutoscalerRequestMultiError) AllErrors() []error { return m }
+
+// GetPodAutoscalerRequestValidationError is the validation error returned by
+// GetPodAutoscalerRequest.Validate if the designated constraints aren't met.
+type GetPodAutoscalerRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPodAutoscalerRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPodAutoscalerRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPodAutoscalerRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPodAutoscalerRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPodAutoscalerRequestValidationError) ErrorName() string {
+	return "GetPodAutoscalerRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPodAutoscalerRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPodAutoscalerRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPodAutoscalerRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPodAutoscalerRequestValidationError{}
+
+var _GetPodAutoscalerRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetPodAutoscalerRequest_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetPodAutoscalerRequest_Dimension_InLookup = map[string]struct{}{
+	"minute": {},
+	"hour":   {},
+	"day":    {},
+	"":       {},
+}
+
+// Validate checks the field values on GetPodAutoscalerResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetPodAutoscalerResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPodAutoscalerResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPodAutoscalerResponseMultiError, or nil if none found.
+func (m *GetPodAutoscalerResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPodAutoscalerResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Total
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetPodAutoscalerResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetPodAutoscalerResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetPodAutoscalerResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetPodAutoscalerResponseMultiError(errors)
+	}
+	return nil
+}
+
+// GetPodAutoscalerResponseMultiError is an error wrapping multiple validation
+// errors returned by GetPodAutoscalerResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetPodAutoscalerResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPodAutoscalerResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPodAutoscalerResponseMultiError) AllErrors() []error { return m }
+
+// GetPodAutoscalerResponseValidationError is the validation error returned by
+// GetPodAutoscalerResponse.Validate if the designated constraints aren't met.
+type GetPodAutoscalerResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPodAutoscalerResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPodAutoscalerResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPodAutoscalerResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPodAutoscalerResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPodAutoscalerResponseValidationError) ErrorName() string {
+	return "GetPodAutoscalerResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPodAutoscalerResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPodAutoscalerResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPodAutoscalerResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPodAutoscalerResponseValidationError{}
+
+// Validate checks the field values on PodAutoscaler with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *PodAutoscaler) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PodAutoscaler with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in PodAutoscalerMultiError, or
+// nil if none found.
+func (m *PodAutoscaler) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PodAutoscaler) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Namespace
+
+	// no validation rules for WorkloadType
+
+	// no validation rules for WorkloadName
+
+	// no validation rules for Dimension
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	// no validation rules for BusinessID
+
+	// no validation rules for PodAutoscalerType
+
+	// no validation rules for PodAutoscalerName
+
+	for idx, item := range m.GetMetrics() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PodAutoscalerValidationError{
+						field:  fmt.Sprintf("Metrics[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PodAutoscalerValidationError{
+						field:  fmt.Sprintf("Metrics[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PodAutoscalerValidationError{
+					field:  fmt.Sprintf("Metrics[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return PodAutoscalerMultiError(errors)
+	}
+	return nil
+}
+
+// PodAutoscalerMultiError is an error wrapping multiple validation errors
+// returned by PodAutoscaler.ValidateAll() if the designated constraints
+// aren't met.
+type PodAutoscalerMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PodAutoscalerMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PodAutoscalerMultiError) AllErrors() []error { return m }
+
+// PodAutoscalerValidationError is the validation error returned by
+// PodAutoscaler.Validate if the designated constraints aren't met.
+type PodAutoscalerValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PodAutoscalerValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PodAutoscalerValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PodAutoscalerValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PodAutoscalerValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PodAutoscalerValidationError) ErrorName() string { return "PodAutoscalerValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PodAutoscalerValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPodAutoscaler.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PodAutoscalerValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PodAutoscalerValidationError{}
+
+// Validate checks the field values on PodAutoscalerMetrics with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PodAutoscalerMetrics) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PodAutoscalerMetrics with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PodAutoscalerMetricsMultiError, or nil if none found.
+func (m *PodAutoscalerMetrics) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PodAutoscalerMetrics) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Time
+
+	// no validation rules for TotalSuccessfulRescale
+
+	if len(errors) > 0 {
+		return PodAutoscalerMetricsMultiError(errors)
+	}
+	return nil
+}
+
+// PodAutoscalerMetricsMultiError is an error wrapping multiple validation
+// errors returned by PodAutoscalerMetrics.ValidateAll() if the designated
+// constraints aren't met.
+type PodAutoscalerMetricsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PodAutoscalerMetricsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PodAutoscalerMetricsMultiError) AllErrors() []error { return m }
+
+// PodAutoscalerMetricsValidationError is the validation error returned by
+// PodAutoscalerMetrics.Validate if the designated constraints aren't met.
+type PodAutoscalerMetricsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PodAutoscalerMetricsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PodAutoscalerMetricsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PodAutoscalerMetricsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PodAutoscalerMetricsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PodAutoscalerMetricsValidationError) ErrorName() string {
+	return "PodAutoscalerMetricsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PodAutoscalerMetricsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPodAutoscalerMetrics.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PodAutoscalerMetricsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PodAutoscalerMetricsValidationError{}

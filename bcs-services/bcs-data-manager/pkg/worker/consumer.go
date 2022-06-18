@@ -14,6 +14,7 @@ package worker
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
@@ -23,6 +24,7 @@ import (
 type Consumer interface {
 	Consume(queue msgqueue.MessageQueue) error
 	Stop() error
+	Done()
 }
 
 // Consumers consumer type
@@ -69,5 +71,25 @@ func (c *Consumers) Stop() {
 		if err := c.consumers[idx].Stop(); err != nil {
 			blog.Errorf("stop consumer err:%v", err)
 		}
+	}
+}
+
+// Done wait for job finished
+func (c *Consumers) Done() {
+	blog.Info("waiting for job finished")
+	done := make(chan struct{}, 1)
+	go func() {
+		for idx := range c.consumers {
+			c.consumers[idx].Done()
+		}
+		done <- struct{}{}
+	}()
+	select {
+	case <-done:
+		blog.Infof("consumer done")
+		return
+	case <-time.After(time.Duration(3 * time.Minute)):
+		blog.Infof("wait for consumer done timeout")
+		return
 	}
 }

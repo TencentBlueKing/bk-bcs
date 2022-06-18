@@ -14,13 +14,10 @@ package metric
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"strconv"
 	"time"
-
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 // Server metric interface
@@ -37,6 +34,8 @@ type Server interface {
 	GetClusterNodeMetrics(opts *types.JobCommonOpts,
 		clients *types.Clients) (string, []*bcsdatamanager.NodeQuantile, error)
 	GetClusterNodeCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, int64, error)
+	GetPodAutoscalerCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error)
+	GetCACount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error)
 }
 
 // MetricGetter metric getter
@@ -73,57 +72,57 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (string, []*bcsdatamanager.NodeQuantile, error) {
 	var minUsageNode string
 	nodeQuantie := make([]*bcsdatamanager.NodeQuantile, 0)
-	start := time.Now()
-	cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
-		ClusterID: opts.ClusterID,
-	})
-	if err != nil {
-		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "GetCluster",
-			"GET", err, start)
-		return minUsageNode, nodeQuantie, err
-	}
-	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
-		"GET", err, start)
-	queryCond := fmt.Sprintf(ClusterCondition, opts.ClusterID)
+	//start := time.Now()
+	//cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
+	//	ClusterID: opts.ClusterID,
+	//})
+	//if err != nil {
+	//	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "GetCluster",
+	//		"GET", err, start)
+	//	return minUsageNode, nodeQuantie, err
+	//}
+	//prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+	//	"GET", err, start)
+	//queryCond := fmt.Sprintf(ClusterCondition, opts.ClusterID)
+	//
+	//for key := range cluster.Data.Master {
+	//	queryCond = fmt.Sprintf("%s,instance!=\"%s:9100\"", queryCond, cluster.Data.Master[key].InnerIP)
+	//}
+	//nodeCPUQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
+	//nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCPUQuery, opts.CurrentTime)
+	//if err != nil {
+	//	return minUsageNode, nodeQuantie, err
+	//}
+	//var minUsage float64
+	//for key := range nodeCpuUsageList.Data.Result {
+	//	usage, ok := nodeCpuUsageList.Data.Result[key].Value[1].(string)
+	//	if ok {
+	//		nodeUsage, err := strconv.ParseFloat(usage, 64)
+	//		if err != nil {
+	//			continue
+	//		}
+	//		if nodeUsage < minUsage {
+	//			minUsage = nodeUsage
+	//			minUsageNode = nodeCpuUsageList.Data.Result[key].Metric["node"]
+	//		}
+	//	}
+	//}
 
-	for key := range cluster.Data.Master {
-		queryCond = fmt.Sprintf("%s,instance!=\"%s:9100\"", queryCond, cluster.Data.Master[key].InnerIP)
-	}
-	nodeCPUQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
-	nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCPUQuery, opts.CurrentTime)
-	if err != nil {
-		return minUsageNode, nodeQuantie, err
-	}
-	var minUsage float64
-	for key := range nodeCpuUsageList.Data.Result {
-		usage, ok := nodeCpuUsageList.Data.Result[key].Value[1].(string)
-		if ok {
-			nodeUsage, err := strconv.ParseFloat(usage, 64)
-			if err != nil {
-				continue
-			}
-			if nodeUsage < minUsage {
-				minUsage = nodeUsage
-				minUsageNode = nodeCpuUsageList.Data.Result[key].Metric["node"]
-			}
-		}
-	}
-
-	nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
-		"0.5", nodeCPUQuery), opts.CurrentTime)
-	if err != nil {
-		return minUsageNode, nodeQuantie, err
-	}
-	if len(nodeQuantieResponse.Data.Result) != 0 {
-		nodeQuantileCPU, ok := nodeQuantieResponse.Data.Result[0].Value[1].(string)
-		if ok {
-			quantile := &bcsdatamanager.NodeQuantile{
-				Percentage:   "50",
-				NodeCPUUsage: nodeQuantileCPU,
-			}
-			nodeQuantie = append(nodeQuantie, quantile)
-		}
-	}
+	//nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
+	//	"0.5", nodeCPUQuery), opts.CurrentTime)
+	//if err != nil {
+	//	return minUsageNode, nodeQuantie, err
+	//}
+	//if len(nodeQuantieResponse.Data.Result) != 0 {
+	//	nodeQuantileCPU, ok := nodeQuantieResponse.Data.Result[0].Value[1].(string)
+	//	if ok {
+	//		quantile := &bcsdatamanager.NodeQuantile{
+	//			Percentage:   "50",
+	//			NodeCPUUsage: nodeQuantileCPU,
+	//		}
+	//		nodeQuantie = append(nodeQuantie, quantile)
+	//	}
+	//}
 	return minUsageNode, nodeQuantie, nil
 }
 
@@ -267,7 +266,7 @@ func (g *MetricGetter) GetInstanceCount(opts *types.JobCommonOpts, clients *type
 		query = fmt.Sprintf(WorkloadInstance,
 			fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace), podSumCondition)
 	case types.WorkloadType:
-		podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.Name)
+		podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.WorkloadName)
 		query = fmt.Sprintf(WorkloadInstance, podCondition, podSumCondition)
 	default:
 		return count, fmt.Errorf("wrong object type: %s", opts.ObjectType)
@@ -289,4 +288,95 @@ func (g *MetricGetter) GetInstanceCount(opts *types.JobCommonOpts, clients *type
 		return count, fmt.Errorf("parse result to int64 error: %v", err)
 	}
 	return count, nil
+}
+
+// GetPodAutoscalerCount get pod autoscaler count
+func (g *MetricGetter) GetPodAutoscalerCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error) {
+	var countQuery string
+	switch opts.PodAutoscalerType {
+	case types.HPAType:
+		countQuery = fmt.Sprintf(HorizontalPodAutoscalerCount, opts.ClusterID, opts.PodAutoscalerName, opts.Namespace)
+	case types.GPAType:
+		countQuery = fmt.Sprintf(GeneralPodAutoscalerCount, opts.ClusterID, opts.PodAutoscalerName, opts.Namespace)
+	}
+	startMetric, err := clients.MonitorClient.QueryByPost(countQuery, opts.CurrentTime.Add(-30*time.Minute))
+	if err != nil {
+		return 0, fmt.Errorf("query former count error:%v", err)
+	}
+	minQuery := fmt.Sprintf(MinOverTime, countQuery, "30m")
+	maxQuery := fmt.Sprintf(MaxOverTime, countQuery, "30m")
+	minMetric, err := clients.MonitorClient.QueryByPost(minQuery, opts.CurrentTime)
+	if err != nil {
+		return 0, fmt.Errorf("query min count error:%v", err)
+	}
+	minCount := GetInt64Data(minMetric)
+	currentMetric, err := clients.MonitorClient.QueryByPost(countQuery, opts.CurrentTime)
+	if err != nil {
+		return 0, fmt.Errorf("query current count error:%v", err)
+	}
+	// 区间无数据，直接返回0
+	if (len(startMetric.Data.Result) == 0 && len(currentMetric.Data.Result) == 0) || len(minMetric.Data.Result) == 0 {
+		return 0, nil
+	}
+	// 不连续区间，起点无数据时，取终点值；终点无数据时，用区间内最大值-起点值，得到变化值
+	if len(startMetric.Data.Result) == 0 {
+		return GetInt64Data(currentMetric), nil
+	} else if len(currentMetric.Data.Result) == 0 {
+		maxMetric, err := clients.MonitorClient.QueryByPost(maxQuery, opts.CurrentTime)
+		if err != nil {
+			return 0, fmt.Errorf("query max count error:%v", err)
+		}
+		return GetInt64Data(maxMetric) - GetInt64Data(startMetric), nil
+	}
+
+	// 最小值大于1，区间连续
+	if minCount > 1 {
+		return GetInt64Data(currentMetric) - GetInt64Data(startMetric), nil
+	}
+	// 最小值等于1，判断是否连续，如果不连续，metric被delete过或exporter重启过；如果连续，终点-1
+	rangeMetrics, err := clients.MonitorClient.QueryRangeByPost(countQuery, opts.CurrentTime.Add(-30*time.Minute),
+		opts.CurrentTime, 30*time.Second)
+	var rangeLength int
+	for _, result := range rangeMetrics.Data.Result {
+		rangeLength += len(result.Values)
+	}
+	if rangeLength != 61 {
+		maxMetric, err := clients.MonitorClient.QueryByPost(maxQuery, opts.CurrentTime)
+		if err != nil {
+			return 0, fmt.Errorf("query max count error:%v", err)
+		}
+		if GetInt64Data(maxMetric) > GetInt64Data(startMetric) {
+			return GetInt64Data(maxMetric) - GetInt64Data(startMetric), nil
+		}
+		return GetInt64Data(currentMetric), nil
+	}
+	return GetInt64Data(currentMetric) - 1, nil
+}
+
+// GetCACount get ca trigger times
+func (g *MetricGetter) GetCACount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error) {
+	var total int
+	upQuery := fmt.Sprintf(ClusterAutoscalerUpCount, opts.ClusterID)
+	upMetrics, err := clients.MonitorClient.QueryRangeByPost(upQuery, opts.CurrentTime.Add(-10*time.Minute),
+		opts.CurrentTime, 30*time.Second)
+	firstTimestamp := float64(opts.CurrentTime.Add(-10 * time.Minute).Unix())
+	if err != nil {
+		return 0, fmt.Errorf("query cluster autoscaler up count error:%v", err)
+	}
+	if len(upMetrics.Data.Result) > 0 {
+		fillUpMetrics := fillMetrics(firstTimestamp, upMetrics.Data.Result[0].Values, 30)
+		total += getIncreasingIntervalDifference(fillUpMetrics)
+	}
+
+	downQuery := fmt.Sprintf(ClusterAutoscalerDownCount, opts.ClusterID)
+	downMetrics, err := clients.MonitorClient.QueryRangeByPost(downQuery, opts.CurrentTime.Add(-10*time.Minute),
+		opts.CurrentTime, 30*time.Second)
+	if err != nil {
+		return 0, fmt.Errorf("query cluster autoscaler down count error:%v", err)
+	}
+	if len(downMetrics.Data.Result) > 0 {
+		fillDownMetrics := fillMetrics(firstTimestamp, downMetrics.Data.Result[0].Values, 30)
+		total += getIncreasingIntervalDifference(fillDownMetrics)
+	}
+	return int64(total), nil
 }

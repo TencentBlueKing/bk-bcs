@@ -246,11 +246,12 @@ func (c *BcsMonitorClient) QueryRange(promql string, startTime, endTime time.Tim
 	queryString = c.setQuery(queryString, "step", step.String())
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, QueryRangePath, queryString)
 	url = c.addAppMessage(url)
+	header := c.defaultHeader.Clone()
 	start := time.Now()
 	defer func() {
 		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "QueryRange", "GET", err, start)
 	}()
-	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
+	rsp, err := c.requestClient.DoRequest(url, "GET", header, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -275,14 +276,14 @@ func (c *BcsMonitorClient) QueryRangeByPost(promql string, startTime, endTime ti
 	queryString = c.setQuery(queryString, "end", fmt.Sprintf("%d", endTime.Unix()))
 	queryString = c.setQuery(queryString, "step", step.String())
 	url := fmt.Sprintf("%s%s", c.completeEndpoint, QueryRangePath)
-	header := c.defaultHeader
+	header := c.defaultHeader.Clone()
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
 	url = c.addAppMessage(url)
 	start := time.Now()
 	defer func() {
 		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "QueryRangeByPost", "POST", err, start)
 	}()
-	rsp, err := c.requestClient.DoRequest(url, "POST", c.defaultHeader, []byte(queryString))
+	rsp, err := c.requestClient.DoRequest(url, "POST", header, []byte(queryString))
 	if err != nil {
 		return nil, err
 	}
@@ -308,13 +309,14 @@ func (c *BcsMonitorClient) Series(selectors []string, startTime, endTime time.Ti
 	if !endTime.IsZero() {
 		queryString = c.setQuery(queryString, "end", fmt.Sprintf("%d", endTime.Unix()))
 	}
+	header := c.defaultHeader.Clone()
 	url := fmt.Sprintf("%s%s?%s", c.completeEndpoint, SeriesPath, queryString)
 	url = c.addAppMessage(url)
 	start := time.Now()
 	defer func() {
 		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "Series", "GET", err, start)
 	}()
-	rsp, err := c.requestClient.DoRequest(url, "GET", c.defaultHeader, nil)
+	rsp, err := c.requestClient.DoRequest(url, "GET", header, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +344,7 @@ func (c *BcsMonitorClient) SeriesByPost(selectors []string, startTime, endTime t
 		queryString = c.setQuery(queryString, "end", fmt.Sprintf("%d", endTime.Unix()))
 	}
 	url := fmt.Sprintf("%s%s", c.completeEndpoint, SeriesPath)
-	header := c.defaultHeader
+	header := c.defaultHeader.Clone()
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
 	url = c.addAppMessage(url)
 	start := time.Now()
