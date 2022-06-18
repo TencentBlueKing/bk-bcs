@@ -124,7 +124,7 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	}
 	// 不允许的资源类型，直接抛出错误
 	if !slice.StringInSlice(m.Kind, cluster.SharedClusterAccessibleResKinds) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "该请求资源类型在共享集群中不可用"))
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "该请求资源类型 %s 在共享集群中不可用"), m.Kind)
 	}
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {

@@ -163,8 +163,8 @@ func NewItemPerm(uid ResUID, objName ObjName, detail PermDetail) AnnoFunc {
 	}
 }
 
-// NewCRDAdditionalColumns 向注解中添加 CRD 的拓展列（前端展示用）
-func NewCRDAdditionalColumns(addColumns []interface{}) AnnoFunc {
+// NewAdditionalColumns 向注解中添加 CRD 的拓展列（前端展示用）
+func NewAdditionalColumns(addColumns []interface{}) AnnoFunc {
 	return func(a *Annotations) {
 		a.AdditionalColumns = addColumns
 	}

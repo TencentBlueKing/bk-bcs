@@ -1,6 +1,6 @@
 # Golang 错误信息
-- msgID: 该请求资源类型在共享集群中不可用
-  en: 'current resource unavailable in shared cluster'
+- msgID: 该请求资源类型 %s 在共享集群中不可用
+  en: 'current resource %s unavailable in shared cluster'
 - msgID: 命名空间 %s 在该共享集群中不属于指定项目
   en: 'namespace %s not belong to project in this shared cluster'
 - msgID: 在共享集群中，只有指定的数类资源可以执行订阅功能

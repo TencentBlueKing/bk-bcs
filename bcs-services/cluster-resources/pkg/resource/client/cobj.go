@@ -51,7 +51,7 @@ func NewCRDCliByClusterID(ctx context.Context, clusterID string) *CRDClient {
 
 // List ...
 func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[string]interface{}, error) {
-	// 共享集群 CRD，不做权限检查，直接过滤出允许的数类
+	// 共享集群 CRD 不做权限检查，直接过滤出允许的数类
 	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err

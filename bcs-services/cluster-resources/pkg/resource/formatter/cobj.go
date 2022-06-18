@@ -77,6 +77,11 @@ func parseCRDAdditionalColumns(manifest map[string]interface{}) (addColumns []in
 		if strings.ToLower(col["name"].(string)) == "age" {
 			continue
 		}
+		// BCS 不同版本 CRD jsonPath 参数 Key 值不一致，有 jsonPath, JSONPath 等多个版本
+		// 前端统一使用 jsonPath，因此这里做一次检查，若 jsonPath 不存在，则赋予 JSONPath 的值
+		if _, exists := col["jsonPath"]; !exists {
+			col["jsonPath"] = col["JSONPath"]
+		}
 		addColumns = append(addColumns, col)
 	}
 	return addColumns

@@ -123,7 +123,7 @@ func (d *RedisCacheClient) ClearCache() error {
 	var ret []byte
 	allGroupCacheKey := genCacheKey(d.clusterID, "")
 	if err := d.rdsCache.Get(allGroupCacheKey, &ret); err != nil {
-		// 如果集群没有对应缓存，是取不到数据的，因此忽略异常
+		// 如果集群没有对应缓存，是取不到数据的，也不需要清理，因此忽略异常
 		log.Warn(d.ctx, "failed to get all group cache: %v", err)
 		return nil
 	}
