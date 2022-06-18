@@ -149,7 +149,7 @@
                 return this.$store.state.sideMenu.onlineProjectList
             },
             curProjectCode () {
-                return this.$store.state.curProjectCode
+                return this.$store.state.curProjectCode || this.$route.params.projectCode
             },
             curCluster () {
                 const cluster = this.$store.state.cluster.curCluster

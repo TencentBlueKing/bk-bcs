@@ -11,10 +11,10 @@ export const request = (method, url) => (params = {}, config = {}) => {
     const reqConfig = Object.assign({}, defaultConfig, config)
 
     // 全局URL变量替换
+    const currentRoute = router.currentRoute
     const variableData = {
-        '$projectId': router.currentRoute.params.projectId,
-        '$clusterId': store.state.curClusterId || ''
-        // '$namespace': ''
+        '$projectId': currentRoute.params.projectId,
+        '$clusterId': store.state.curClusterId || currentRoute.query.cluster_id || currentRoute.params.cluster_id
     }
     Object.keys(params).forEach(key => {
         // 自定义url变量

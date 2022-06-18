@@ -15,12 +15,14 @@
                 </div>
                 <div class="btns">
                     <bk-button theme="primary" @click="handleShowYamlPanel">To YAML</bk-button>
-                    <bk-button theme="primary"
-                        v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
-                        @click="handleUpdateResource">{{$t('更新')}}</bk-button>
-                    <bk-button theme="danger"
-                        v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
-                        @click="handleDeleteResource">{{$t('删除')}}</bk-button>
+                    <template v-if="!hiddenOperate">
+                        <bk-button theme="primary"
+                            v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
+                            @click="handleUpdateResource">{{$t('更新')}}</bk-button>
+                        <bk-button theme="danger"
+                            v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
+                            @click="handleDeleteResource">{{$t('删除')}}</bk-button>
+                    </template>
                 </div>
             </div>
             <div class="workload-main-info">
@@ -110,6 +112,19 @@
                                     text @click="handleReschedule(row)">{{ $t('重新调度') }}</bk-button>
                             </template>
                         </bk-table-column>
+                    </bk-table>
+                </bcs-tab-panel>
+                <bcs-tab-panel name="event" :label="$t('事件')" v-if="category !== 'cronjobs'">
+                    <bk-table :data="events"
+                        v-bkloading="{ isLoading: eventLoading }"
+                        :pagination="pagination"
+                        @page-change="handlePageChange"
+                        @page-limit-change="handlePageLimitChange">
+                        <bk-table-column :label="$t('时间')" prop="eventTime" width="200"></bk-table-column>
+                        <bk-table-column :label="$t('组件')" prop="component" width="100"></bk-table-column>
+                        <bk-table-column :label="$t('对象')" prop="extraInfo.name" width="200"></bk-table-column>
+                        <bk-table-column :label="$t('级别')" prop="level" width="100"></bk-table-column>
+                        <bk-table-column :label="$t('事件内容')" prop="describe" min-width="300"></bk-table-column>
                     </bk-table>
                 </bcs-tab-panel>
                 <bcs-tab-panel name="label" :label="$t('标签')">
@@ -203,6 +218,11 @@
                 type: String,
                 default: '',
                 required: true
+            },
+            // 是否隐藏 更新 和 删除操作（兼容集群管理应用详情）
+            hiddenOperate: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
@@ -269,6 +289,7 @@
             }
 
             const handleGetPodsData = async () => {
+                if (!clusterId.value) return
                 // 获取工作负载下对应的pod数据
                 const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {}
                 const labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
@@ -278,6 +299,7 @@
 
                 const data = await $store.dispatch('dashboard/listWorkloadPods', {
                     $namespaceId: props.namespace,
+                    $clusterId: clusterId.value,
                     label_selector: labelSelector,
                     owner_kind: props.kind,
                     owner_name: props.name
@@ -292,7 +314,7 @@
             }
 
             const projectId = computed(() => $route.params.projectId)
-            const clusterId = computed(() => $store.state.curClusterId)
+            const clusterId = computed(() => $store.state.curClusterId || $route.query.cluster_id)
             // 重新调度
             const rescheduleStatusMap = ref({})
             const handleReschedule = async (row) => {
@@ -307,6 +329,50 @@
                 })
                 rescheduleStatusMap.value[row.metadata.name] = false
             }
+            // 事件列表
+            const events = ref([])
+            const eventLoading = ref(false)
+            const categoryMap = {
+                deployments: 'deployment',
+                daemonsets: 'daemonset',
+                statefulsets: 'statefulset',
+                jobs: 'job'
+            } // 兼容老接口 category 类型
+            const pagination = ref({
+                current: 1,
+                count: 0,
+                limit: 10
+            })
+            const handleGetEventList = async () => {
+                // cronjobs 不支持事件查询
+                if (props.category === 'cronjobs') return
+
+                eventLoading.value = true
+                const params = {
+                    projectId: projectId.value,
+                    instanceId: 0,
+                    cluster_id: clusterId.value,
+                    offset: (pagination.value.current - 1) * pagination.value.limit,
+                    limit: pagination.value.limit,
+                    name: props.name,
+                    namespace: props.namespace,
+                    category: categoryMap[props.category]
+                }
+                const { data } = await $store.dispatch('app/getEventList', params)
+                    .catch(() => ({ data: { data: [], total: 0 } }))
+                pagination.value.count = data.total
+                events.value = data.data
+                eventLoading.value = false
+            }
+            const handlePageChange = (page) => {
+                pagination.value.current = page
+                handleGetEventList()
+            }
+            const handlePageLimitChange = (limit) => {
+                pagination.value.current = 1
+                pagination.value.limit = limit
+                handleGetEventList()
+            }
 
             // 刷新Pod状态
             const handleRefreshPodsStatus = async () => {
@@ -317,6 +383,7 @@
                 // 详情接口前置
                 await handleGetDetail()
                 await handleGetWorkloadPods()
+                handleGetEventList()
                 // 开启轮询
                 start()
             })
@@ -342,6 +409,11 @@
                 rescheduleStatusMap,
                 projectId,
                 clusterId,
+                events,
+                eventLoading,
+                pagination,
+                handlePageChange,
+                handlePageLimitChange,
                 handleShowYamlPanel,
                 gotoPodDetail,
                 handleGetExtData,

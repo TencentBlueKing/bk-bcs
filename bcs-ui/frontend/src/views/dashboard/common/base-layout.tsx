@@ -115,7 +115,7 @@ export default defineComponent({
             // 校验初始化的crd值是否正确
             const crd = crdData.value?.manifest?.items?.find(item => item.metadata.name === currentCrd.value)
             if (!crd) {
-                currentCrd.value = ''
+                currentCrd.value = crdList.value[0]?.metadata?.name
                 sessionStorage.removeItem(CUR_SELECT_CRD)
             }
         }

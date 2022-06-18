@@ -69,17 +69,17 @@ const router = new VueRouter({
             ]
         },
         {
-            path: '/api_key',
+            path: '/:projectCode/api-key',
             name: 'token',
             component: userToken
         },
         {
-            path: '/projectManage',
+            path: '/project/manage',
             name: 'projectManage',
             component: ProjectManage
         },
         {
-            path: '/403',
+            path: '/exception/403',
             name: '403',
             props: (route) => ({ ...route.params, ...route.query }),
             component: Forbidden

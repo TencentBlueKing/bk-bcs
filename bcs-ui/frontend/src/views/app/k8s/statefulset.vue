@@ -60,7 +60,9 @@
                     name: String(instance.id) === '0' ? 'statefulsetInstanceDetail2' : 'statefulsetInstanceDetail',
                     params,
                     query: {
-                        cluster_id: instance.cluster_id
+                        cluster_id: instance.cluster_id,
+                        name: params.instanceName,
+                        namespace: params.instanceNamespace
                     }
                 })
             }

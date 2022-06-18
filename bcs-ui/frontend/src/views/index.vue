@@ -10,7 +10,7 @@
                     v-if="$route.meta.title"
                 ></ContentHeader>
                 <!-- $route.path为解决应用模块动态组件没有刷新问题 -->
-                <router-view :key="`${$route.path}${$store.state.curClusterId}`" />
+                <router-view :key="$route.path" />
             </div>
             <!-- 终端 -->
             <SideTerminal></SideTerminal>
@@ -98,7 +98,7 @@
                 })
                 if (projectData && projectData.length) {
                     // 项目存在，但是无权限
-                    $router.push({
+                    const location = $router.resolve({
                         name: '403',
                         query: {
                             actionId: 'project_view',
@@ -109,6 +109,7 @@
                             fromRoute: window.location.href
                         }
                     })
+                    window.location.href = location.href
                 } else if (projectList.value.length) {
                     // 项目不存在
                     const project = projectList.value.find(item => item.project_code === localProjectCode) || projectList.value[0]

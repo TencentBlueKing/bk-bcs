@@ -53,6 +53,11 @@
                 type: String,
                 default: '',
                 required: true
+            },
+            // 是否隐藏 更新 和 删除操作（兼容集群管理应用详情）
+            hiddenOperate: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
@@ -110,14 +115,15 @@
                     }
                 }
             }
-            // 调转pod详情
+            // 跳转pod详情
             const handleGotoPodDetail = (row) => {
                 handleNavChange({
                     name: `${subTitleMap.pods}: ${row.metadata.name}`,
                     id: 'PodDetail',
                     params: {
                         name: row.metadata.name,
-                        namespace: row.metadata.namespace
+                        namespace: row.metadata.namespace,
+                        hiddenOperate: props.hiddenOperate
                     }
                 })
             }
