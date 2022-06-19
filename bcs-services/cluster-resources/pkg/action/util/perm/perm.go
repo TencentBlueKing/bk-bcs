@@ -55,7 +55,8 @@ func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error 
 		return nil
 	}
 
-	if !slice.StringInSlice(req.Kind, cluster.SharedClusterAccessibleResKinds) {
+	if !slice.StringInSlice(req.Kind, cluster.SharedClusterEnabledNativeKinds) &&
+		!slice.StringInSlice(req.Kind, conf.G.SharedCluster.EnabledCObjKinds) {
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "在共享集群中，只有指定的数类资源可以执行订阅功能"))
 	}
 
