@@ -137,6 +137,7 @@ command:
       type: boolean
     stdinOnce:
       title: {{ i18n "仅一次" .lang }}
+      description: stdinOnce
       type: boolean
     tty:
       title: tty
@@ -325,6 +326,7 @@ properties:
             visible: true
         else:
           state:
+            value: ""
             visible: false
       - target: "{{`{{`}} $widgetNode?.getSibling('command')?.id {{`}}`}}"
         if: "{{`{{`}} $self.value === 'exec' {{`}}`}}"
@@ -333,7 +335,17 @@ properties:
             visible: true
         else:
           state:
+            value: []
             visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('port')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'exec' {{`}}`}}"
+        then:
+          state:
+            value: ""
+            visible: false
+        else:
+          state:
+            visible: true
   port:
     title: {{ i18n "端口" .lang }}
     type: integer
