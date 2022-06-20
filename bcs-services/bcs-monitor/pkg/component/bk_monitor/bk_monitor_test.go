@@ -22,6 +22,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
+
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 )
 
 func TestMarshalJSON(t *testing.T) {
@@ -49,4 +51,11 @@ func TestQueryByPromQL(t *testing.T) {
 	series, err := QueryByPromQL(ctx, host, "2", start, end, step, matchers)
 	assert.NoError(t, err)
 	assert.True(t, len(series) > 1)
+}
+
+func TestQueryClusterList(t *testing.T) {
+	ctx := context.Background()
+	result, err := QueryClusterList(ctx, "")
+	assert.NoError(t, err)
+	assert.True(t, len(result.ClusterIdList) > 1)
 }

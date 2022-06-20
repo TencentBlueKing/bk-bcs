@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 )
 
@@ -104,13 +105,13 @@ func (s *Series) ToPromSeries() (*prompb.TimeSeries, error) {
 	return promSeries, nil
 }
 
-// BKMonitorResult 蓝鲸监控返回结果
-type BKMonitorResult struct {
+// BKUnifyQueryResult 蓝鲸监控UnifyQuery返回结果
+type BKUnifyQueryResult struct {
 	Series []*Series `json:"series"`
 }
 
 // ToPromSeriesSet 转换为 prom 时序
-func (r *BKMonitorResult) ToPromSeriesSet() ([]*prompb.TimeSeries, error) {
+func (r *BKUnifyQueryResult) ToPromSeriesSet() ([]*prompb.TimeSeries, error) {
 	promSeriesSet := make([]*prompb.TimeSeries, 0, len(r.Series))
 	for _, series := range r.Series {
 		promSeries, err := series.ToPromSeries()
@@ -158,10 +159,54 @@ func QueryByPromQL(ctx context.Context, host string, bkBizId string, start, end,
 	}
 
 	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
-	result := new(BKMonitorResult)
+	result := new(BKUnifyQueryResult)
 	if err := json.Unmarshal(resp.Body(), result); err != nil {
 		return nil, err
 	}
 
 	return result.ToPromSeriesSet()
+}
+
+// BKMonitorResult 蓝鲸监控返回规范的结构体, 和components下的BKResult数据接口规范不一致, 重新定义一份
+type BKMonitorResult struct {
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Result  bool             `json:"result"`
+	Data    *GrayClusterList `json:"data"`
+}
+
+// GrayClusterList 灰度列表
+type GrayClusterList struct {
+	Enabled       bool     `json:"enable_bsc_gray_cluster"`
+	ClusterIdList []string `json:"bcs_gray_cluster_id_list"`
+}
+
+// QueryClusterList 查询已经接入蓝鲸监控的集群列表
+func QueryClusterList(ctx context.Context, host string) (*GrayClusterList, error) {
+	url := fmt.Sprintf("%s/prod/get_bcs_gray_cluster_list", host)
+
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetQueryParam("bk_app_code", config.G.Base.AppCode).
+		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	bkMonitorResult := &BKMonitorResult{}
+	if err := json.Unmarshal(resp.Body(), bkMonitorResult); err != nil {
+		return nil, err
+	}
+
+	if !bkMonitorResult.Result {
+		return nil, errors.Errorf("result = %t, shoud be true", bkMonitorResult.Result)
+	}
+
+	return bkMonitorResult.Data, nil
 }

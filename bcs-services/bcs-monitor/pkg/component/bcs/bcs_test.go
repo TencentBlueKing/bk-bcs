@@ -15,77 +15,26 @@ package bcs
 
 import (
 	"context"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 )
 
-func initConf() {
-	_, filename, _, _ := runtime.Caller(0)
-	dir, err := filepath.Abs(path.Join(path.Dir(filename), "../../../"))
-	if err != nil {
-		panic(err)
-	}
-	err = os.Chdir(dir)
-	if err != nil {
-		panic(err)
-	}
-
-	// 初始化BCS配置
-	bcsConfContentYaml, err := ioutil.ReadFile("./etc/config_dev.yaml")
-	if err != nil {
-		panic(err)
-	}
-
-	if err = config.G.ReadFrom(bcsConfContentYaml); err != nil {
-		panic(err)
-	}
-}
-
-func getTestProjectId() string {
-	projectId := os.Getenv("TEST_PROJECT_ID")
-	if projectId == "" {
-		return "project00"
-	}
-	return projectId
-}
-
-func getTestClusterId() string {
-	clusterId := os.Getenv("TEST_CLUSTER_ID")
-	if clusterId == "" {
-		return "cluster00"
-	}
-	return clusterId
-}
-
-func getTestUsername() string {
-	username := os.Getenv("TEST_USERNAME")
-	if username == "" {
-		return "user00"
-	}
-	return username
-}
-
 func TestListClusters(t *testing.T) {
-	initConf()
 	ctx := context.Background()
 
-	clusters, err := ListClusters(ctx, config.G.BCS, getTestProjectId())
+	clusters, err := ListClusters(ctx, config.G.BCS, bcstesting.GetTestProjectId())
 	assert.NoError(t, err)
 	assert.Equal(t, len(clusters), 0)
 }
 
 func TestGetCluster(t *testing.T) {
-	initConf()
 	ctx := context.Background()
 
-	cluster, err := GetCluster(ctx, config.G.BCS, getTestClusterId())
+	cluster, err := GetCluster(ctx, config.G.BCS, bcstesting.GetTestClusterId())
 	assert.NoError(t, err)
-	assert.Equal(t, cluster.ProjectId, getTestProjectId())
+	assert.Equal(t, cluster.ProjectId, bcstesting.GetTestProjectId())
 }
