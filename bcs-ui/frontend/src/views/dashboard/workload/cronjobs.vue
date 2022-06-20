@@ -43,7 +43,7 @@
                     <template slot-scope="{ row }">
                         <span>
                             {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
-                                ? $t('表单模式') : $t('YAML模式')}}
+                                ? $t('表单') : 'YAML'}}
                         </span>
                     </template>
                 </bk-table-column>

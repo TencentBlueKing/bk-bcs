@@ -312,8 +312,16 @@
                 return data?.selectItems || []
             },
             handleCancel () { // 取消
-                this.$router.back()
-                // this.$router.push({ name: this.$store.getters.curNavName })
+                this.$bkInfo({
+                    type: 'warning',
+                    clsName: 'custom-info-confirm',
+                    title: this.$t('确认退出当前编辑状态'),
+                    subTitle: this.$t('退出后，你修改的内容将丢失'),
+                    defaultInfo: true,
+                    confirmFn: () => {
+                        this.$router.push({ name: this.$store.getters.curNavName })
+                    }
+                })
             },
             // 切换Yaml模式
             async handleSwitchMode () {
@@ -394,7 +402,7 @@
                                 theme: 'success',
                                 message: this.$t('更新成功')
                             })
-                            this.$router.push({ name: this.$store.getters.curNavName, params: { skipBackConfirm: true } })
+                            this.$router.push({ name: this.$store.getters.curNavName })
                         }
                     }
                 })
@@ -432,7 +440,7 @@
                         message: this.$t('创建成功')
                     })
                     sessionStorage.setItem(CUR_SELECT_NAMESPACE, this.schemaFormData.metadata?.namespace)
-                    this.$router.push({ name: this.$store.getters.curNavName, params: { skipBackConfirm: true } })
+                    this.$router.push({ name: this.$store.getters.curNavName })
                 }
             },
             // 表单预览
