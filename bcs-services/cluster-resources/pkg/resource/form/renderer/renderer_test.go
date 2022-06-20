@@ -89,13 +89,7 @@ func TestNewManifestRenderer(t *testing.T) {
 	// 注入信息检查
 	assert.Equal(t, "apps/v1", mapx.GetStr(manifest, "apiVersion"))
 
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "labels", res.EditModeLabelKey}))
-
-	paths := []string{"spec", "selector", "matchLabels", res.EditModeLabelKey}
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, paths))
-
-	paths = []string{"spec", "template", "metadata", "labels", res.EditModeLabelKey}
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, paths))
+	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}))
 }
 
 func TestSchemaRenderer(t *testing.T) {

@@ -106,8 +106,8 @@ const (
 )
 
 const (
-	// EditModeLabelKey 资源被编辑的模式，表单为 form，Key 不存在或 Manifest 则为 Yaml 模式
-	EditModeLabelKey = "io.tencent.bcs.editFormat"
+	// EditModeAnnoKey 资源被编辑的模式，表单为 form，Key 不存在或 Manifest 则为 Yaml 模式
+	EditModeAnnoKey = "io.tencent.bcs.editFormat"
 )
 
 const (

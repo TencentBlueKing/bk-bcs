@@ -105,19 +105,19 @@ func (r *ManifestRenderer) checkRenderable() error {
 	return nil
 }
 
-// 添加 EditMode Label 标识
+// 添加 EditMode Annotations 标识
 func (r *ManifestRenderer) setEditMode() error {
-	// 若 labels 中有 editMode key，则刷新为 FormMode
-	labels := mapx.GetList(r.formData, "metadata.labels")
-	for _, label := range labels {
-		if label.(map[string]interface{})["key"] == res.EditModeLabelKey {
-			label.(map[string]interface{})["value"] = res.EditModeForm
+	// 若 annotations 中有 editMode key，则刷新为 FormMode
+	annotations := mapx.GetList(r.formData, "metadata.annotations")
+	for _, anno := range annotations {
+		if anno.(map[string]interface{})["key"] == res.EditModeAnnoKey {
+			anno.(map[string]interface{})["value"] = res.EditModeForm
 			return nil
 		}
 	}
 	// 如果没有对应的 key，则新增
-	labels = append(labels, map[string]interface{}{"key": res.EditModeLabelKey, "value": res.EditModeForm})
-	return mapx.SetItems(r.formData, "metadata.labels", labels)
+	annotations = append(annotations, map[string]interface{}{"key": res.EditModeAnnoKey, "value": res.EditModeForm})
+	return mapx.SetItems(r.formData, "metadata.annotations", annotations)
 }
 
 // 清理表单数据，如去除默认值等
