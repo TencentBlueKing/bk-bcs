@@ -502,7 +502,7 @@
                         message: $i18n.t('创建成功')
                     })
                     sessionStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace)
-                    $router.push({ name: $store.getters.curNavName, params: { skipBackConfirm: true as any } })
+                    $router.push({ name: $store.getters.curNavName })
                 }
             }
             const handleUpdateResource = () => {
@@ -552,7 +552,7 @@
                                 theme: 'success',
                                 message: $i18n.t('更新成功')
                             })
-                            $router.push({ name: $store.getters.curNavName, params: { skipBackConfirm: true as any } })
+                            $router.push({ name: $store.getters.curNavName })
                         }
                     }
                 })
@@ -567,8 +567,16 @@
                 updateLoading.value = false
             }
             const handleCancel = () => { // 取消
-                $router.back()
-                // $router.push({ name: $store.getters.curNavName })
+                $bkInfo({
+                    type: 'warning',
+                    clsName: 'custom-info-confirm',
+                    title: $i18n.t('确认退出当前编辑状态'),
+                    subTitle: $i18n.t('退出后，你修改的内容将丢失'),
+                    defaultInfo: true,
+                    confirmFn: () => {
+                        $router.push({ name: $store.getters.curNavName })
+                    }
+                })
             }
             // 切换到表单模式
             const handleChangeMode = () => {
