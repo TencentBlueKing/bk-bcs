@@ -40,7 +40,7 @@
                         <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('类型')" width="100">
+                <bk-table-column :label="$t('编辑模式')" width="100">
                     <template slot-scope="{ row }">
                         <span>
                             {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'

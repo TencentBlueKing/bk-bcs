@@ -22,7 +22,7 @@
             :position="{ top: 80 }"
             v-model="applyDialogShow"
             :close-icon="false"
-            :width="900"
+            :width="1000"
             :title="$t('申请服务器')"
             render-directive="if"
             header-position="left"
@@ -144,11 +144,26 @@
                         <bk-table :data="hostTableData" :max-height="320" :height="320" style="overflow-y: hidden;">
                             <bk-table-column label="" width="40" :resizable="false">
                                 <template slot-scope="{ row }">
-                                    <bk-radio name="host" :value="row.specifications" @change="handleRadioChange(row)"></bk-radio>
+                                    <span v-bk-tooltips="{
+                                        content: $t('当前区域CVM资源不足，请选择其它机型或联系BK助手(蓝鲸助手)'),
+                                        disabled: !((cvmData[row.specifications] || 0) < formdata.replicas)
+                                    }">
+                                        <bk-radio
+                                            name="host"
+                                            :value="row.specifications"
+                                            :disabled="(cvmData[row.specifications] || 0) < formdata.replicas"
+                                            @change="handleRadioChange(row)">
+                                        </bk-radio>
+                                    </span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('机型')" prop="model" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
                             <bk-table-column :label="$t('规格')" prop="specifications" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+                            <bk-table-column :label="$t('园区')" prop="zone" key="zone">
+                                <template>
+                                    {{ zoneName }}
+                                </template>
+                            </bk-table-column>
                             <bk-table-column label="CPU" prop="cpu" width="80"></bk-table-column>
                             <bk-table-column :label="$t('内存')" prop="mem" width="80"></bk-table-column>
                             <bk-table-column :label="$t('可生产实例数')" prop="mem">
@@ -156,7 +171,11 @@
                                     {{ cvmData[row.specifications] }}
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t('备注')" prop="description" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+                            <bk-table-column :label="$t('备注')" prop="description" :show-overflow-tooltip="{ interactive: false }">
+                                <template #default="{ row }">
+                                    {{ row.description || '--' }}
+                                </template>
+                            </bk-table-column>
                         </bk-table>
                     </bk-radio-group>
                     <span class="checked-host-tips" style="height: 30px;">
@@ -194,6 +213,7 @@
         },
         data () {
             return {
+                zoneName: '',
                 cvmData: {},
                 timer: null,
                 applyHostButton: {
@@ -578,6 +598,8 @@
                         }
                     })
                     await this.getCvmCapacity()
+                    const zone = this.zoneList.find(item => item.value === this.formdata.zone_id) || {}
+                    this.zoneName = zone.label || '--'
                     this.isHostLoading = false
                 } catch (e) {
                     this.hostTableData = []

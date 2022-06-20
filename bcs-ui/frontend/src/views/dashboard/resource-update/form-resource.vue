@@ -438,8 +438,10 @@
             // 表单预览
             async handlePreview () {
                 this.showSideslider = true
+                this.previewLoading = true
                 this.detail = await this.handleGetManifestByFormData(this.schemaFormData)
                 this.previewData = yamljs.dump(this.detail)
+                this.previewLoading = false
             }
         }
     }
