@@ -12,10 +12,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from celery import shared_task
+import logging
+
+from celery import shared_task, current_task
 from django.conf import settings
 
 from .models import App
+from .utils import is_log_cluster
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -30,6 +35,15 @@ def rollback_app(app_id, access_token, username, release_id):
 
 @shared_task
 def upgrade_app(app_id, **kwargs):
+    app = App.objects.get(id=app_id)
+    if is_log_cluster(app.cluster_id):
+        logging.Warning(
+            "upgrading app task id %s, release detail: cluster_id: %s, namespace: %s name: %s",
+            current_task.request.id,
+            app.cluster_id,
+            app.namespace,
+            app.name,
+        )
     App.objects.get(id=app_id).upgrade_app_task(**kwargs)
 
 

@@ -26,7 +26,7 @@ from rest_framework.exceptions import ValidationError
 from backend.apps.whitelist import enable_helm_v3
 from backend.bcs_web.audit_log import client
 from backend.bcs_web.audit_log.client import get_log_client_by_activity_log_id
-from backend.helm.app.utils import get_cc_app_id
+from backend.helm.app.utils import get_cc_app_id, is_log_cluster
 from backend.helm.helm.constants import DEFAULT_VALUES_FILE_NAME, KEEP_TEMPLATE_UNCHANGED, RELEASE_VERSION_PREFIX
 from backend.helm.helm.models import Chart, ChartRelease
 from backend.helm.toolkit import utils as bcs_helm_utils
@@ -347,6 +347,13 @@ class App(models.Model):
         #    raise ValidationError("helm app is on transitioning, please try a later.")
 
         self.reset_transitioning("update")
+        if is_log_cluster(self.cluster_id):
+            logger.warning(
+                "ready to update release, release detail: cluster_id: %s, namespace: %s name: %s",
+                self.cluster_id,
+                self.namespace,
+                self.name,
+            )
         sync_or_async(upgrade_app)(
             kwargs={
                 "app_id": self.id,
@@ -364,6 +371,13 @@ class App(models.Model):
                 **kwargs,
             }
         )
+        if is_log_cluster(self.cluster_id):
+            logger.warning(
+                "update release task started, release detail: cluster_id: %s, namespace: %s name: %s",
+                self.cluster_id,
+                self.namespace,
+                self.name,
+            )
         return self
 
     def upgrade_app_task(
@@ -386,6 +400,13 @@ class App(models.Model):
         # it can also use KEEP_TEMPLATE_UNCHANGED to keep app template unchanged.
 
         # operation record
+        if is_log_cluster(self.cluster_id):
+            logger.warning(
+                "enter release task, release detail: cluster_id: %s, namespace: %s name: %s",
+                self.cluster_id,
+                self.namespace,
+                self.name,
+            )
         log_client = self.record_upgrade_app(
             chart_version_id,
             answers,

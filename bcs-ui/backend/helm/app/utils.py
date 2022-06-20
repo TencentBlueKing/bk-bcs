@@ -425,3 +425,12 @@ def remove_updater_creator_from_manifest(manifest: str) -> str:
             continue
         refine_stream.write(l)
     return refine_stream.getvalue()
+
+
+# TODO: 打日志需要，待测试完成后，删除下面逻辑
+def is_log_cluster(cluster_id: str) -> bool:
+    """判断集群需要打日志"""
+    log_clusters = getattr(settings, "BCS-K8S-25595", [])
+    if cluster_id in log_clusters:
+        return True
+    return False
