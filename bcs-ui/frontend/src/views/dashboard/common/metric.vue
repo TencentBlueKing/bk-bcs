@@ -2,7 +2,12 @@
 <template>
     <div class="metric-item" v-bkloading="{ isLoading, zIndex: 10 }">
         <div class="metric-item-title">
-            <span>{{ title }}</span>
+            <span class="title">
+                {{ title }}
+                <span class="icon ml5" v-if="desc" v-bk-tooltips="desc">
+                    <i class="bcs-icon bcs-icon-info-circle-shape"></i>
+                </span>
+            </span>
             <bk-dropdown-menu trigger="click" @show="isDropdownShow = true" @hide="isDropdownShow = false">
                 <div class="dropdown-trigger-text" slot="dropdown-trigger">
                     <span class="name">{{ activeTime.name }}</span>
@@ -84,6 +89,10 @@
             // series后缀（数组时要和metric一一对应）
             suffix: {
                 type: [String, Array],
+                default: ''
+            },
+            desc: {
+                type: String,
                 default: ''
             }
         },
@@ -258,6 +267,18 @@
                     color: #3a84ff;
                 }
             }
+        }
+        .title {
+            display: flex;
+            align-items: center;
+        }
+        .icon {
+            display: inline-block;
+            font-size: 14px;
+            color: #979ba5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     }
     .vue-echarts {
