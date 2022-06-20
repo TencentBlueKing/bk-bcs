@@ -167,7 +167,7 @@ func QueryByPromQL(ctx context.Context, host string, bkBizId string, start, end,
 	return result.ToPromSeriesSet()
 }
 
-// BKMonitorResult 蓝鲸监控返回规范的结构体, 和components下的BKResult数据接口规范不一致, 重新定义一份
+// BKMonitorResult 蓝鲸监控返回的结构体, 和component下的BKResult数据接口规范不一致, 重新定义一份
 type BKMonitorResult struct {
 	Code    int              `json:"code"`
 	Message string           `json:"message"`
