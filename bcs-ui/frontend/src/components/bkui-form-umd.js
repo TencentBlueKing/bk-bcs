@@ -878,7 +878,7 @@
             }) : [];
         }
 
-        return schema.default || initializationValue(schema.type || 'any');
+        return schema.default !== undefined ? schema.default : initializationValue(schema.type || 'any');
       }
     }, {
       key: "getSchemaType",
