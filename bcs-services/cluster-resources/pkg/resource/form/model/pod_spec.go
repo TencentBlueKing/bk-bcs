@@ -103,7 +103,7 @@ type Networking struct {
 	HostNetwork           bool             `structs:"hostNetwork"`
 	HostPID               bool             `structs:"hostPID"`
 	ShareProcessNamespace bool             `structs:"shareProcessNamespace"`
-	HostName              string           `structs:"hostName"`
+	Hostname              string           `structs:"hostname"`
 	Subdomain             string           `structs:"subdomain"`
 	NameServers           []string         `structs:"nameServers"`
 	Searches              []string         `structs:"searches"`

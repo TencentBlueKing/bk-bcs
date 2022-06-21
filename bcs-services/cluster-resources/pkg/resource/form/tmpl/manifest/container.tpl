@@ -85,7 +85,7 @@ ports:
     {{- if .protocol }}
     protocol: {{ .protocol }}
     {{- end }}
-    {{- if .hostport }}
+    {{- if .hostPort }}
     hostPort: {{ .hostPort }}
     {{- end }}
   {{- else }}
@@ -95,7 +95,7 @@ ports:
 
 {{- define "container.envs" -}}
 {{- if or (matchKVInSlice .vars "type" "keyValue") (matchKVInSlice .vars "type" "podField") (matchKVInSlice .vars "type" "resource") (matchKVInSlice .vars "type" "configMapKey") (matchKVInSlice .vars "type" "secretKey") }}
-envs:
+env:
   {{- range .vars }}
   {{- if eq .type "keyValue" }}
   - name: {{ .name }}
@@ -129,7 +129,7 @@ envs:
   {{- end }}
 {{- end }}
 {{- if or (matchKVInSlice .vars "type" "configMap") (matchKVInSlice .vars "type" "secret") }}
-envForm:
+envFrom:
   {{- range .vars }}
   {{- if eq .type "configMap" }}
   - prefix: {{ .name }}

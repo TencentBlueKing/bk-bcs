@@ -31,7 +31,6 @@ replicas:
           else:
             state:
               visible: false
-              value: ""
         - target: "{{`{{`}} $widgetNode?.getSibling('msUnit')?.id {{`}}`}}"
           if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
           then:
@@ -48,7 +47,6 @@ replicas:
           else:
             state:
               visible: false
-              value: ""
         - target: "{{`{{`}} $widgetNode?.getSibling('muaUnit')?.id {{`}}`}}"
           if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
           then:
@@ -60,13 +58,17 @@ replicas:
     maxSurge:
       title: {{ i18n "最大调度 Pod 数量" .lang }}
       type: integer
+      default: 25
       ui:component:
         props:
           max: 4096
+      ui:rules:
+        - validator: "{{`{{`}} $self.getValue('spec.replicas.maxUnavailable') !== 0 || $self.value !== 0 {{`}}`}}"
+          message: {{ i18n "最大调度 Pod 数量 与最大不可用数量不可均为 0" .lang }}
     msUnit:
       title: {{ i18n "单位" .lang }}
       type: string
-      default: cnt
+      default: percent
       ui:component:
         name: select
         props:
@@ -79,13 +81,17 @@ replicas:
     maxUnavailable:
       title: {{ i18n "最大不可用数量" .lang }}
       type: integer
+      default: 25
       ui:component:
         props:
           max: 4096
+      ui:rules:
+        - validator: "{{`{{`}} $self.getValue('spec.replicas.maxSurge') !== 0 || $self.value !== 0 {{`}}`}}"
+          message: {{ i18n "最大调度 Pod 数量 与最大不可用数量不可均为 0" .lang }}
     muaUnit:
       title: {{ i18n "单位" .lang }}
       type: string
-      default: cnt
+      default: percent
       ui:component:
         name: select
         props:
@@ -98,20 +104,24 @@ replicas:
     minReadySecs:
       title: {{ i18n "最小就绪时间" .lang }}
       type: integer
+      default: 0
       ui:component:
         name: unitInput
         props:
           max: 2147483647
           unit: s
     progressDeadlineSecs:
-      default: 0
       title: {{ i18n "进程截止时间" .lang }}
       type: integer
+      default: 600
       ui:component:
         name: unitInput
         props:
           max: 2147483647
           unit: s
+      ui:rules:
+        - validator: "{{`{{`}} $self.getValue('spec.replicas.minReadySecs') < $self.value {{`}}`}}"
+          message: {{ i18n "进程截止时间必须大于最小就绪时间" .lang }}
 {{- end }}
 
 {{- define "workload.dsReplicas" }}
@@ -658,6 +668,16 @@ toleration:
                     value: PreferNoSchedule
                   - label: {{ i18n "不执行" .lang }}
                     value: NoExecute
+            ui:reactions:
+              - target: "{{`{{`}} $widgetNode?.getSibling('tolerationSecs')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'NoExecute' {{`}}`}}"
+                then:
+                  state:
+                    disabled: false
+                else:
+                  state:
+                    disabled: true
+                    value: 0
           tolerationSecs:
             default: 0
             title: {{ i18n "容忍时间" .lang }}
@@ -709,10 +729,24 @@ networking:
     hostPID:
       title: {{ i18n "主机 PID" .lang }}
       type: boolean
+      description: {{ i18n "主机 PID 与共享进程命名空间不可同时启用" .lang }}
+      ui:reactions:
+        - target: "{{`{{`}} $widgetNode?.getSibling('shareProcessNamespace')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === true {{`}}`}}"
+          then:
+            state:
+              value: false
     shareProcessNamespace:
       title: {{ i18n "共享进程命名空间" .lang }}
       type: boolean
-    hostName:
+      description: {{ i18n "主机 PID 与共享进程命名空间不可同时启用" .lang }}
+      ui:reactions:
+        - target: "{{`{{`}} $widgetNode?.getSibling('hostPID')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === true {{`}}`}}"
+          then:
+            state:
+              value: false
+    hostname:
       title: {{ i18n "主机名称" .lang }}
       type: string
       ui:rules:
@@ -731,6 +765,9 @@ networking:
           - maxLength128
       ui:component:
         name: noTitleArray
+      ui:rules:
+        - validator: "{{`{{`}} $self.getValue('spec.networking.dnsPolicy') !== 'None' || $self.value.length > 0 {{`}}`}}"
+          message: {{ i18n "至少包含一个服务器地址" .lang }}
     searches:
       title: {{ i18n "搜索域" .lang }}
       type: array
@@ -879,10 +916,12 @@ other:
             - label: Always
               value: Always
             {{- end }}
+            {{- if and (ne .kind "Deployment") (ne .kind "DaemonSet") (ne .kind "StatefulSet") }}
             - label: OnFailure
               value: OnFailure
             - label: Never
               value: Never
+            {{- end }}
     saName:
       title: {{ i18n "服务账号" .lang }}
       type: string

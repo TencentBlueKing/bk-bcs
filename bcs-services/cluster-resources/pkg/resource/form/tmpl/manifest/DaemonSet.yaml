@@ -9,7 +9,7 @@ spec:
     type: {{ .spec.replicas.updateStrategy }}
     {{- if and (eq .spec.replicas.updateStrategy "RollingUpdate") .spec.replicas.maxUnavailable }}
     rollingUpdate:
-      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}
+      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "percent" }}% {{ end }}
     {{- end }}
   {{- if .spec.replicas.minReadySecs }}
   minReadySeconds: {{ .spec.replicas.minReadySecs }}

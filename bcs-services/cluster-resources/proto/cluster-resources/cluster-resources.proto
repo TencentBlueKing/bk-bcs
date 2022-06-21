@@ -1703,6 +1703,9 @@ message GetResFormSchemaReq {
 	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 64}];
+	string action = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板使用场景（如表单创建，表单更新等）"
+	}, (validate.rules).string = {in: ["", "create", "update"]}];
 }
 
 message GetFormSupportedApiVersionsReq {

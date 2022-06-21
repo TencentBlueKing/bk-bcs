@@ -97,21 +97,21 @@ func TestSchemaRenderer(t *testing.T) {
 
 	// 默认版本（中文）
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default").Render()
+		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}
 
 	// 英文版本
 	ctx := context.WithValue(context.TODO(), ctxkey.LangKey, i18n.EN)
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default").Render()
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}
 
 	// 中文版本
 	ctx = context.WithValue(context.TODO(), ctxkey.LangKey, i18n.ZH)
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default").Render()
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}
 }

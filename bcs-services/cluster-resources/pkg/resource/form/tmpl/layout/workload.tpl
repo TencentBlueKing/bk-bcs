@@ -22,8 +22,8 @@
       - [ "dnsPolicy" ]
       - [ "hostIPC", "hostNetwork", "hostPID", "shareProcessNamespace" ]
       - [ "hostName", "subdomain" ]
-      - [ "nameServers", "searches" ]
-      - [ "dnsResolverOpts", "hostAliases" ]
+      - [ "hostAliases", "." ]
+      - [ "nameServers", "searches", "dnsResolverOpts", "dnsResolverOpts" ]
     prop: networking
 {{- end }}
 

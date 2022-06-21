@@ -163,7 +163,7 @@ type SchemaRenderer struct {
 }
 
 // NewSchemaRenderer ...
-func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace string) *SchemaRenderer {
+func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action string) *SchemaRenderer {
 	// 若没有指定命名空间，则使用 default
 	if namespace == "" {
 		namespace = "default"
@@ -179,6 +179,7 @@ func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace string) *
 			"namespace": namespace,
 			"resName":   fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix),
 			"lang":      i18n.GetLangFromContext(ctx),
+			"action":    action,
 		},
 	}
 }

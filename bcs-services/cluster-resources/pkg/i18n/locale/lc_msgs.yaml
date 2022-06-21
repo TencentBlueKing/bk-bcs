@@ -249,10 +249,14 @@
   en: Cnt
 - msgID: 最大不可用数量
   en: MaxUnavailable
+- msgID: 最大调度 Pod 数量 与最大不可用数量不可均为 0
+  en: The MaxSurge and MaxUnavailable cannot both be 0
 - msgID: 最小就绪时间
   en: MinReadySecs
 - msgID: 进程截止时间
   en: ProgressDeadlineSecs
+- msgID: 进程截止时间必须大于最小就绪时间
+  en: ProgressDeadlineSecs must be greater than MinReadySecs
 - msgID: Pod 管理策略
   en: PodManagePolicy
 - msgID: 任务管理
@@ -301,6 +305,8 @@
   en: ScheduleRules
 - msgID: 至少包含一条调度规则
   en: At least contains one scheduling rule
+- msgID: 至少包含一个服务器地址
+  en: At least contains one name server
 - msgID: 亲和性/反亲和性
   en: Affinity / Anit
 - msgID: 污点/容忍
@@ -331,6 +337,8 @@
   en: HostPID
 - msgID: 共享进程命名空间
   en: ShareProcessNamespace
+- msgID: 主机 PID 与共享进程命名空间不可同时启用
+  en: HostPID and ShareProcessNamespace cannot both be true
 - msgID: 主机名称
   en: HostName
 - msgID: 子域名
