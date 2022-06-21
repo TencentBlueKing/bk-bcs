@@ -14,10 +14,11 @@ package store
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -35,15 +36,15 @@ func TestModelProject_GetProjectInfo(t *testing.T) {
 		{
 			name: "test1",
 			req: &bcsdatamanager.GetProjectInfoRequest{
-				ProjectID: "testproject1",
-				Dimension: common.DimensionMinute,
+				Project:   "testproject1",
+				Dimension: types.DimensionMinute,
 			},
 		},
 		{
 			name: "test2",
 			req: &bcsdatamanager.GetProjectInfoRequest{
-				ProjectID: "testproject2",
-				Dimension: common.DimensionMinute,
+				Project:   "testproject2",
+				Dimension: types.DimensionMinute,
 			},
 		},
 	}
@@ -60,33 +61,33 @@ func TestModelProject_GetRawProjectInfo(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
+		opts    *types.JobCommonOpts
 		bucket  string
 		want    int
 		wantErr bool
 	}{
 		{
 			name: "test1",
-			opts: &common.JobCommonOpts{
+			opts: &types.JobCommonOpts{
 				ProjectID: "testproject1",
-				Dimension: common.DimensionMinute,
+				Dimension: types.DimensionMinute,
 			},
 			bucket: "2022-03-16 11:00:00",
 		},
 		{
 			name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType: common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType: types.ClusterType,
 				ProjectID:  "testproject1",
-				Dimension:  common.DimensionMinute,
+				Dimension:  types.DimensionMinute,
 			},
 		},
 		{
 			name: "test3",
-			opts: &common.JobCommonOpts{
-				ObjectType: common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType: types.ClusterType,
 				ProjectID:  "testproject2",
-				Dimension:  common.DimensionMinute,
+				Dimension:  types.DimensionMinute,
 			},
 		},
 	}
@@ -103,20 +104,20 @@ func TestModelProject_InsertProjectInfo(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
-		metric  *common.ProjectMetrics
+		opts    *types.JobCommonOpts
+		metric  *types.ProjectMetrics
 		wantErr bool
 	}{
 		{name: "test1",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now().AddDate(0, 0, -1), common.DimensionMinute),
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now().AddDate(0, 0, -1), types.DimensionMinute),
 			},
-			metric: &common.ProjectMetrics{
+			metric: &types.ProjectMetrics{
 				Time: primitive.NewDateTimeFromTime(
-					common.FormatTime(time.Now().AddDate(0, 0, -1), common.DimensionDay)),
+					utils.FormatTime(time.Now().AddDate(0, 0, -1), types.DimensionDay)),
 				ClustersCount:      int64(10),
 				TotalCPU:           300,
 				TotalMemory:        600,
@@ -132,15 +133,15 @@ func TestModelProject_InsertProjectInfo(t *testing.T) {
 				MaxNode:            nil,
 			}},
 		{name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now(), common.DimensionMinute),
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now(), types.DimensionMinute),
 			},
-			metric: &common.ProjectMetrics{
-				Time:               primitive.NewDateTimeFromTime(common.FormatTime(time.Now(), common.DimensionDay)),
+			metric: &types.ProjectMetrics{
+				Time:               primitive.NewDateTimeFromTime(utils.FormatTime(time.Now(), types.DimensionDay)),
 				ClustersCount:      int64(10),
 				TotalCPU:           300,
 				TotalMemory:        600,
@@ -156,15 +157,15 @@ func TestModelProject_InsertProjectInfo(t *testing.T) {
 				MaxNode:            nil,
 			}},
 		{name: "test3",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject2",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &common.ProjectMetrics{
-				Time:               primitive.NewDateTimeFromTime(common.FormatTime(time.Now(), common.DimensionDay)),
+			metric: &types.ProjectMetrics{
+				Time:               primitive.NewDateTimeFromTime(utils.FormatTime(time.Now(), types.DimensionDay)),
 				ClustersCount:      int64(10),
 				TotalCPU:           300,
 				TotalMemory:        600,

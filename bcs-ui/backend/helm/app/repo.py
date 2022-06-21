@@ -23,7 +23,6 @@ from backend.utils import FancyDict
 from backend.utils.error_codes import error_codes
 
 from ..helm.models.repo import Repository, RepositoryAuth
-from ..helm.providers.repo_provider import add_plain_repo
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +42,8 @@ def get_or_create_private_repo(user: User, project: FancyDict):
         # 创建bkrepo项目
         try:
             repo_client.create_project(project_code, project.project_name, project.description)
+            # 首先授权一下当前用户，避免权限不一致导致创建仓库异常问题
+            repo_client.set_auth(project_code, username, username)
         except bk_repo.BkRepoCreateProjectError as e:
             raise error_codes.APIError(f"create bk repo project error, {e}")
         # 创建helm repo

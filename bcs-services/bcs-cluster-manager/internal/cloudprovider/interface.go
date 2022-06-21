@@ -30,6 +30,7 @@ var (
 	nodeGroupMgrs     map[string]NodeGroupManager
 	nodeMgrs          map[string]NodeManager
 	taskMgrs          map[string]TaskManager
+	vpcMgrs           map[string]VPCManager
 	storage           store.ClusterManagerModel
 )
 
@@ -42,6 +43,7 @@ func init() {
 
 		cloudInfoMgrs = make(map[string]CloudInfoManager)
 		cloudValidateMgrs = make(map[string]CloudValidateManager)
+		vpcMgrs = make(map[string]VPCManager)
 	})
 }
 
@@ -121,6 +123,13 @@ func InitCloudValidateManager(provider string, cloudValidateMgr CloudValidateMan
 	cloudValidateMgrs[provider] = cloudValidateMgr
 }
 
+// InitVPCManager for vpc manager check
+func InitVPCManager(provider string, vpcMgr VPCManager) {
+	lock.Lock()
+	defer lock.Unlock()
+	vpcMgrs[provider] = vpcMgr
+}
+
 // GetClusterMgr get cluster manager implementation according cloud provider
 func GetClusterMgr(provider string) (ClusterManager, error) {
 	lock.RLock()
@@ -178,11 +187,25 @@ func GetCloudValidateMgr(provider string) (CloudValidateManager, error) {
 	return cloudValidate, nil
 }
 
+// GetVPCMgr get vpc according cloud provider
+func GetVPCMgr(provider string) (VPCManager, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	vpcmgr, ok := vpcMgrs[provider]
+	if !ok {
+		return nil, ErrCloudNoProvider
+	}
+
+	return vpcmgr, nil
+}
+
 // CloudInfoManager cloud interface for basic config info(region or no region)
 type CloudInfoManager interface {
 	// InitCloudClusterDefaultInfo init cloud cluster default configInfo
 	InitCloudClusterDefaultInfo(cls *proto.Cluster, opt *InitClusterConfigOption) error
-	SyncClusterCloudInfo(cls *proto.Cluster, opt *SyncClusterCloudInfoOption)  error
+	// SyncClusterCloudInfo sync cluster metadata
+	SyncClusterCloudInfo(cls *proto.Cluster, opt *SyncClusterCloudInfoOption) error
 }
 
 // NodeManager cloud interface for cvm management
@@ -191,13 +214,36 @@ type NodeManager interface {
 	GetNodeByIP(ip string, opt *GetNodeOption) (*proto.Node, error)
 	// ListNodesByIP list node by IP set
 	ListNodesByIP(ips []string, opt *ListNodesOption) ([]*proto.Node, error)
-	// GetCVMImageIDByImageName
+	// GetCVMImageIDByImageName get imageID by imageName
 	GetCVMImageIDByImageName(imageName string, opt *CommonOption) (string, error)
+	// GetCloudRegions get cloud regions
+	GetCloudRegions(opt *CommonOption) ([]*proto.RegionInfo, error)
+	// GetZoneList get zoneList by region
+	GetZoneList(opt *CommonOption) ([]*proto.ZoneInfo, error)
+	// ListNodeInstanceType get node instance type list
+	ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32, opt *CommonOption) ([]*proto.InstanceType, error)
+	// ListOsImage get osimage list
+	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
 type CloudValidateManager interface {
+	// ImportClusterValidate import cluster validate
 	ImportClusterValidate(req *proto.ImportClusterReq, opt *CommonOption) error
+	// ImportCloudAccountValidate import cloud account validate
+	ImportCloudAccountValidate(account *proto.Account) error
+	// GetCloudRegionZonesValidate get cloud region zones validate
+	GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error
+	// GetCloudRegionZonesValidate get cloud region zones validate
+	ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error
+	// ListCloudSubnetsValidate list subnets validate
+	ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error
+	// ListSecurityGroupsValidate list SecurityGroups validate
+	ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error
+	// ListInstanceTypeValidate list instance type validate
+	ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error
+	// ListCloudImageOsValidate list tke image os validate
+	ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error
 }
 
 // ClusterManager cloud interface for kubernetes cluster management
@@ -210,6 +256,8 @@ type ClusterManager interface {
 	DeleteCluster(cls *proto.Cluster, opt *DeleteClusterOption) (*proto.Task, error)
 	// GetCluster get kubernetes cluster detail information according cloudprovider
 	GetCluster(cloudID string, opt *GetClusterOption) (*proto.Cluster, error)
+	// ListCluster get cloud cluster list by region
+	ListCluster(opt *ListClusterOption) ([]*proto.CloudClusterInfo, error)
 	// CheckClusterCidrAvailable check cluster cidr if meet to add nodes
 	CheckClusterCidrAvailable(cls *proto.Cluster, opt *CheckClusterCIDROption) (bool, error)
 	// GetNodesInCluster get all nodes belong to cluster according cloudprovider
@@ -223,7 +271,7 @@ type ClusterManager interface {
 // NodeGroupManager cloud interface for nodegroup management
 type NodeGroupManager interface {
 	// CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
-	CreateNodeGroup(group *proto.NodeGroup, opt *CreateNodeGroupOption) error
+	CreateNodeGroup(group *proto.NodeGroup, opt *CreateNodeGroupOption) (*proto.Task, error)
 	// DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
 	// will be released. Task is backgroup automatic task
 	DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
@@ -232,14 +280,16 @@ type NodeGroupManager interface {
 	// GetNodesInGroup get all nodes belong to NodeGroup
 	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.Node, error)
 	// MoveNodesToGroup add cluster nodes to NodeGroup
-	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) error
+	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error
 	// CleanNodesInGroup clean specified nodes in NodeGroup,
-	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*CleanNodesResponse, error)
+	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
 	// UpdateDesiredNodes update nodegroup desired node
 	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*ScalingResponse, error)
+	// SwitchNodeGroupAutoScale switch nodegroup auto scale
+	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
 
 	// CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 	// deploy cluster-autoscaler in backgroup according cloudprovider implementation
@@ -253,24 +303,38 @@ type NodeGroupManager interface {
 	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *DeleteScalingOption) (*proto.Task, error)
 }
 
+// VPCManager cloud interface for vpc management
+type VPCManager interface {
+	// ListSubnets list vpc's subnets
+	ListSubnets(vpcID string, opt *CommonOption) ([]*proto.Subnet, error)
+	// ListSecurityGroups list security groups
+	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
+}
+
 // TaskManager backgroup back management
 type TaskManager interface {
 	Name() string
 	// GetAllTask get all register task for worker running
 	GetAllTask() map[string]interface{}
 
+
 	// specific cloud different implement
 
 	// NodeGroup taskList
-
-	// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
-	BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *TaskOptions) (*proto.Task, error)
-	// BuildScalingNodesTask when scaling nodes, we need to create background task to verify scaling status and update new nodes to local storage.
-	BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt *TaskOptions) (*proto.Task, error)
+	// BuildCreateNodeGroupTask build create nodegroup task
+	BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *CreateNodeGroupOption) (*proto.Task, error)
 	// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
 	// task to clean all nodes in nodegroup, release all resource in cloudprovider,
 	// finally delete nodes information in local storage.
 	BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
+	// BuildMoveNodesToGroupTask when move nodes to nodegroup, we need to create background task
+	BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
+	// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
+	BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
+	// BuildUpdateDesiredNodesTask update nodegroup desired node
+	BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
+	// BuildSwitchNodeGroupAutoScalingTask switch nodegroup autoscaling
+	BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
 
 	// ClusterManager taskList
 

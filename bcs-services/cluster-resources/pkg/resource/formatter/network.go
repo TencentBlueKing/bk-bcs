@@ -61,8 +61,8 @@ func FormatEP(manifest map[string]interface{}) map[string]interface{} {
 
 // 解析 Ingress Hosts
 func parseIngHosts(manifest map[string]interface{}) (hosts []string) {
-	rules := mapx.Get(manifest, "spec.rules", []interface{}{})
-	for _, r := range rules.([]interface{}) {
+	rules := mapx.GetList(manifest, "spec.rules")
+	for _, r := range rules {
 		if h, ok := r.(map[string]interface{})["host"]; ok {
 			hosts = append(hosts, h.(string))
 		}
@@ -72,8 +72,8 @@ func parseIngHosts(manifest map[string]interface{}) (hosts []string) {
 
 // 解析 Ingress Address
 func parseIngAddrs(manifest map[string]interface{}) (addrs []string) {
-	ingresses := mapx.Get(manifest, "status.loadBalancer.ingress", []interface{}{})
-	for _, ing := range ingresses.([]interface{}) {
+	ingresses := mapx.GetList(manifest, "status.loadBalancer.ingress")
+	for _, ing := range ingresses {
 		ing, _ := ing.(map[string]interface{})
 		if ip, ok := ing["ip"]; ok {
 			addrs = append(addrs, ip.(string))
@@ -94,18 +94,18 @@ func getIngDefaultPort(manifest map[string]interface{}) string {
 
 // 解析 networking.k8s.io/v1 版本 Ingress Rules
 func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
-	rawRules := mapx.Get(manifest, "spec.rules", []interface{}{})
-	for _, r := range rawRules.([]interface{}) {
+	rawRules := mapx.GetList(manifest, "spec.rules")
+	for _, r := range rawRules {
 		r, _ := r.(map[string]interface{})
-		paths := mapx.Get(r, "http.paths", []interface{}{})
-		for _, p := range paths.([]interface{}) {
+		paths := mapx.GetList(r, "http.paths")
+		for _, p := range paths {
 			p, _ := p.(map[string]interface{})
 			subRules := map[string]interface{}{
 				"host":        r["host"],
 				"path":        p["path"],
 				"pathType":    p["pathType"],
-				"serviceName": mapx.Get(p, "backend.service.name", "--"),
-				"port":        mapx.Get(p, "backend.service.port.number", "--"),
+				"serviceName": mapx.Get(p, "backend.service.name", "N/A"),
+				"port":        mapx.Get(p, "backend.service.port.number", "N/A"),
 			}
 			rules = append(rules, subRules)
 		}
@@ -115,18 +115,18 @@ func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interf
 
 // 解析 extensions/v1beta1 版本 Ingress Rules
 func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
-	rawRules := mapx.Get(manifest, "spec.rules", []interface{}{})
-	for _, r := range rawRules.([]interface{}) {
+	rawRules := mapx.GetList(manifest, "spec.rules")
+	for _, r := range rawRules {
 		r, _ := r.(map[string]interface{})
-		paths := mapx.Get(r, "http.paths", []interface{}{})
-		for _, p := range paths.([]interface{}) {
+		paths := mapx.GetList(r, "http.paths")
+		for _, p := range paths {
 			p, _ := p.(map[string]interface{})
 			subRules := map[string]interface{}{
 				"host":        r["host"],
 				"path":        p["path"],
 				"pathType":    "--",
-				"serviceName": mapx.Get(p, "backend.serviceName", "--"),
-				"port":        mapx.Get(p, "backend.servicePort", "--"),
+				"serviceName": mapx.Get(p, "backend.serviceName", "N/A"),
+				"port":        mapx.Get(p, "backend.servicePort", "N/A"),
 			}
 			rules = append(rules, subRules)
 		}
@@ -141,8 +141,8 @@ func parseSVCExternalIPs(manifest map[string]interface{}) []string {
 
 // 解析 SVC Ports
 func parseSVCPorts(manifest map[string]interface{}) (ports []string) {
-	rawPorts := mapx.Get(manifest, "spec.ports", []map[string]interface{}{})
-	for _, p := range rawPorts.([]interface{}) {
+	rawPorts := mapx.GetList(manifest, "spec.ports")
+	for _, p := range rawPorts {
 		p, _ := p.(map[string]interface{})
 		if nodePort, ok := p["nodePort"]; ok {
 			ports = append(ports, fmt.Sprintf("%d:%d/%s", p["port"], nodePort, p["protocol"]))

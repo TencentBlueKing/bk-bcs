@@ -14,17 +14,18 @@ package store
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 // Server store server interface
 type Server interface {
+	GetProjectList(ctx context.Context, req *datamanager.GetAllProjectListRequest) ([]*datamanager.Project, int64, error)
 	GetProjectInfo(ctx context.Context, req *datamanager.GetProjectInfoRequest) (*datamanager.Project, error)
-	GetClusterInfoList(ctx context.Context, req *datamanager.GetClusterInfoListRequest) ([]*datamanager.Cluster,
+	GetClusterInfoList(ctx context.Context, req *datamanager.GetClusterListRequest) ([]*datamanager.Cluster,
 		int64, error)
 	GetClusterInfo(ctx context.Context, req *datamanager.GetClusterInfoRequest) (*datamanager.Cluster, error)
 	GetNamespaceInfoList(ctx context.Context, req *datamanager.GetNamespaceInfoListRequest) ([]*datamanager.Namespace,
@@ -33,18 +34,18 @@ type Server interface {
 	GetWorkloadInfoList(ctx context.Context, req *datamanager.GetWorkloadInfoListRequest) ([]*datamanager.Workload,
 		int64, error)
 	GetWorkloadInfo(ctx context.Context, req *datamanager.GetWorkloadInfoRequest) (*datamanager.Workload, error)
-	GetRawPublicInfo(ctx context.Context, opts *common.JobCommonOpts) ([]*common.PublicData, error)
-	GetRawProjectInfo(ctx context.Context, opts *common.JobCommonOpts, bucket string) ([]*common.ProjectData, error)
-	GetRawClusterInfo(ctx context.Context, opts *common.JobCommonOpts, bucket string) ([]*common.ClusterData, error)
-	GetRawNamespaceInfo(ctx context.Context, opts *common.JobCommonOpts, bucket string) ([]*common.NamespaceData, error)
-	GetRawWorkloadInfo(ctx context.Context, opts *common.JobCommonOpts, bucket string) ([]*common.WorkloadData, error)
-	InsertProjectInfo(ctx context.Context, metrics *common.ProjectMetrics, opts *common.JobCommonOpts) error
-	InsertClusterInfo(ctx context.Context, metrics *common.ClusterMetrics, opts *common.JobCommonOpts) error
-	InsertNamespaceInfo(ctx context.Context, metrics *common.NamespaceMetrics, opts *common.JobCommonOpts) error
-	InsertWorkloadInfo(ctx context.Context, metrics *common.WorkloadMetrics, opts *common.JobCommonOpts) error
-	GetWorkloadCount(ctx context.Context, opts *common.JobCommonOpts, bucket string,
+	GetRawPublicInfo(ctx context.Context, opts *types.JobCommonOpts) ([]*types.PublicData, error)
+	GetRawProjectInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.ProjectData, error)
+	GetRawClusterInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.ClusterData, error)
+	GetRawNamespaceInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.NamespaceData, error)
+	GetRawWorkloadInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.WorkloadData, error)
+	InsertProjectInfo(ctx context.Context, metrics *types.ProjectMetrics, opts *types.JobCommonOpts) error
+	InsertClusterInfo(ctx context.Context, metrics *types.ClusterMetrics, opts *types.JobCommonOpts) error
+	InsertNamespaceInfo(ctx context.Context, metrics *types.NamespaceMetrics, opts *types.JobCommonOpts) error
+	InsertWorkloadInfo(ctx context.Context, metrics *types.WorkloadMetrics, opts *types.JobCommonOpts) error
+	GetWorkloadCount(ctx context.Context, opts *types.JobCommonOpts, bucket string,
 		after time.Time) (int64, error)
-	InsertPublicInfo(ctx context.Context, metrics *common.PublicData, opts *common.JobCommonOpts) error
+	InsertPublicInfo(ctx context.Context, metrics *types.PublicData, opts *types.JobCommonOpts) error
 }
 
 type server struct {

@@ -15,16 +15,17 @@ package store
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestModelNamespace_GetNamespaceInfo(t *testing.T) {
+func TestGetNamespaceInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -37,7 +38,7 @@ func TestModelNamespace_GetNamespaceInfo(t *testing.T) {
 			name: "test1",
 			req: &bcsdatamanager.GetNamespaceInfoRequest{
 				ClusterID: "testcluster1",
-				Dimension: common.DimensionMinute,
+				Dimension: types.DimensionMinute,
 				Namespace: "testnamespace1",
 			},
 		},
@@ -45,7 +46,7 @@ func TestModelNamespace_GetNamespaceInfo(t *testing.T) {
 			name: "test2",
 			req: &bcsdatamanager.GetNamespaceInfoRequest{
 				ClusterID: "testcluster3",
-				Dimension: common.DimensionMinute,
+				Dimension: types.DimensionMinute,
 				Namespace: "testnamespace1",
 			},
 		},
@@ -59,7 +60,7 @@ func TestModelNamespace_GetNamespaceInfo(t *testing.T) {
 	}
 }
 
-func TestModelNamespace_GetNamespaceInfoList(t *testing.T) {
+func TestGetNamespaceInfoList(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -72,14 +73,14 @@ func TestModelNamespace_GetNamespaceInfoList(t *testing.T) {
 			name: "test1",
 			req: &bcsdatamanager.GetNamespaceInfoListRequest{
 				ClusterID: "testcluster1",
-				Dimension: common.DimensionMinute,
+				Dimension: types.DimensionMinute,
 			},
 		},
 		{
 			name: "test2",
 			req: &bcsdatamanager.GetNamespaceInfoListRequest{
 				ClusterID: "testcluster3",
-				Dimension: common.DimensionMinute,
+				Dimension: types.DimensionMinute,
 			},
 		},
 	}
@@ -91,47 +92,47 @@ func TestModelNamespace_GetNamespaceInfoList(t *testing.T) {
 	}
 }
 
-func TestModelNamespace_GetRawNamespaceInfo(t *testing.T) {
+func TestGetRawNamespaceInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
+		opts    *types.JobCommonOpts
 		bucket  string
 		want    int
 		wantErr bool
 	}{
 		{
 			name: "test1",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
 				Namespace:   "testnamespace1",
 			},
 			bucket: "2022-03-16 13:00:00",
 		},
 		{
 			name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
 				Namespace:   "testnamespace1",
 			},
 		},
 		{
 			name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject2",
 				ClusterID:   "testcluster3",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
 				Namespace:   "testnamespace1",
 			},
 		},
@@ -144,28 +145,28 @@ func TestModelNamespace_GetRawNamespaceInfo(t *testing.T) {
 	}
 }
 
-func TestModelNamespace_InsertNamespaceInfo(t *testing.T) {
+func TestInsertNamespaceInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
 		name    string
-		opts    *common.JobCommonOpts
-		metric  *common.NamespaceMetrics
+		opts    *types.JobCommonOpts
+		metric  *types.NamespaceMetrics
 		wantErr bool
 	}{
 		{name: "test1",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
 				Namespace:   "testnamespace1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &common.NamespaceMetrics{
-				Time: primitive.NewDateTimeFromTime(common.FormatTime(time.Now().Add((-10)*time.Minute),
-					common.DimensionMinute)),
+			metric: &types.NamespaceMetrics{
+				Time: primitive.NewDateTimeFromTime(utils.FormatTime(time.Now().Add((-10)*time.Minute),
+					types.DimensionMinute)),
 				CPUUsage:          0.2,
 				MemoryRequest:     20,
 				MemoryUsage:       0.2,
@@ -214,17 +215,17 @@ func TestModelNamespace_InsertNamespaceInfo(t *testing.T) {
 				},
 			}},
 		{name: "test2",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject1",
 				ClusterID:   "testcluster1",
 				Namespace:   "testnamespace1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now(), common.DimensionMinute),
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now(), types.DimensionMinute),
 			},
-			metric: &common.NamespaceMetrics{
-				Time:              primitive.NewDateTimeFromTime(common.FormatTime(time.Now(), common.DimensionMinute)),
+			metric: &types.NamespaceMetrics{
+				Time:              primitive.NewDateTimeFromTime(utils.FormatTime(time.Now(), types.DimensionMinute)),
 				CPUUsage:          0.3,
 				MemoryRequest:     20,
 				MemoryUsage:       0.3,
@@ -273,18 +274,18 @@ func TestModelNamespace_InsertNamespaceInfo(t *testing.T) {
 				},
 			}},
 		{name: "test3",
-			opts: &common.JobCommonOpts{
-				ObjectType:  common.ClusterType,
+			opts: &types.JobCommonOpts{
+				ObjectType:  types.ClusterType,
 				ProjectID:   "testproject2",
 				ClusterID:   "testcluster2",
 				Namespace:   "testnamespace1",
-				ClusterType: common.Kubernetes,
-				Dimension:   common.DimensionMinute,
-				CurrentTime: common.FormatTime(time.Now().Add((-10)*time.Minute), common.DimensionMinute),
+				ClusterType: types.Kubernetes,
+				Dimension:   types.DimensionMinute,
+				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &common.NamespaceMetrics{
-				Time: primitive.NewDateTimeFromTime(common.FormatTime(time.Now().Add((-10)*time.Minute),
-					common.DimensionMinute)),
+			metric: &types.NamespaceMetrics{
+				Time: primitive.NewDateTimeFromTime(utils.FormatTime(time.Now().Add((-10)*time.Minute),
+					types.DimensionMinute)),
 				CPUUsage:          0.2,
 				MemoryRequest:     20,
 				MemoryUsage:       0.2,
@@ -340,15 +341,3 @@ func TestModelNamespace_InsertNamespaceInfo(t *testing.T) {
 		})
 	}
 }
-
-// func TestModelNamespace_generateNamespaceResponse(t *testing.T) {
-//
-// }
-//
-// func TestModelNamespace_preAggregate(t *testing.T) {
-//
-// }
-//
-// func TestNewModelNamespace(t *testing.T) {
-//
-// }

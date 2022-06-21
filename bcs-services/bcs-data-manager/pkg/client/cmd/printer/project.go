@@ -29,7 +29,7 @@ func PrintProjectInTable(wide bool, project *bcsdatamanager.Project) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"ID", "METRIC_TIME",
+		r := []string{"ID", "CC_ID", "METRIC_TIME",
 			"CLUSTER_CNT", "NODE_CNT", "TOTAL_CPU", "LOAD_CPU", "CPU_USAGE", "TOTAL_MM", "LOAD_MM", "MM_USAGE"}
 		if wide {
 			r = append(r, "AVG_CPU")
@@ -47,13 +47,13 @@ func PrintProjectInTable(wide bool, project *bcsdatamanager.Project) {
 	// table.SetBorder(false)
 	// table.SetTablePadding("")
 	// table.SetNoWhiteSpace(true)
-	table.SetAutoMergeCellsByColumnIndex([]int{0})
+	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
 	table.SetRowLine(true)
 
 	for _, metric := range project.Metrics {
 		table.Append(func() []string {
 			r := []string{
-				project.GetProjectID(), metric.GetTime(),
+				project.GetProjectID(), project.GetBusinessID(), metric.GetTime(),
 				metric.GetClustersCount(), metric.GetNodeCount(),
 				metric.GetTotalCPU(),
 				metric.GetTotalLoadCPU(),
@@ -73,6 +73,47 @@ func PrintProjectInTable(wide bool, project *bcsdatamanager.Project) {
 	table.Render()
 }
 
+// PrintProjectListInTable print project data in table format
+func PrintProjectListInTable(wide bool, projectList []*bcsdatamanager.Project) {
+	if projectList == nil {
+		return
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader(func() []string {
+		r := []string{"ID", "CC_ID", "METRIC_TIME",
+			"CLUSTER_CNT", "NODE_CNT", "TOTAL_CPU", "LOAD_CPU", "CPU_USAGE", "TOTAL_MM", "LOAD_MM", "MM_USAGE"}
+		if wide {
+			r = append(r, "AVG_CPU")
+		}
+		return r
+	}())
+	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
+	table.SetRowLine(true)
+	for _, project := range projectList {
+		for _, metric := range project.Metrics {
+			table.Append(func() []string {
+				r := []string{
+					project.GetProjectID(), project.GetBusinessID(), metric.GetTime(),
+					metric.GetClustersCount(), metric.GetNodeCount(),
+					metric.GetTotalCPU(),
+					metric.GetTotalLoadCPU(),
+					metric.GetCPUUsage(),
+					metric.GetTotalMemory(),
+					metric.GetTotalLoadMemory(),
+					metric.GetMemoryUsage(),
+				}
+
+				if wide {
+					r = append(r, metric.GetAvgLoadCPU())
+				}
+				return r
+			}())
+		}
+	}
+	table.Render()
+}
+
 // PrintProjectInJSON print chart data in json format
 func PrintProjectInJSON(project *bcsdatamanager.Project) {
 	if project == nil {
@@ -82,4 +123,16 @@ func PrintProjectInJSON(project *bcsdatamanager.Project) {
 	var data []byte
 	_ = encodeJSONWithIndent(4, project, &data)
 	fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
+}
+
+// PrintProjectListInJSON print chart data in json format
+func PrintProjectListInJSON(projectList []*bcsdatamanager.Project) {
+	if projectList == nil {
+		return
+	}
+	for _, cluster := range projectList {
+		var data []byte
+		_ = encodeJSONWithIndent(4, cluster, &data)
+		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
+	}
 }

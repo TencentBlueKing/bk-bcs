@@ -7,6 +7,7 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler => github.com/okkervil/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler v0.0.0-20220606121058-8f7f4cced839
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
@@ -26,6 +27,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler v0.0.0-20220606065950-ca46016deb4d
 	github.com/cch123/gogctuner v0.0.0-20220122185012-72c5314ae0b1
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
@@ -94,7 +96,7 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6 // indirect
+	k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29 // indirect
 	k8s.io/kubernetes v1.13.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/testing_frameworks v0.1.2 // indirect

@@ -15,13 +15,13 @@ package store
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -99,7 +99,7 @@ func Test_getPublicData(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *common.PublicData
+		want *types.PublicData
 	}{
 		// TODO: Add test cases.
 	}
@@ -114,11 +114,11 @@ func Test_getPublicData(t *testing.T) {
 
 func Test_getStartTime(t *testing.T) {
 	fmt.Println(time.Now())
-	fmt.Println(getStartTime(common.DimensionHour))
-	fmt.Println(getStartTime(common.DimensionDay))
-	fmt.Println(getStartTime(common.DimensionMinute))
-	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(common.DimensionDay)))
-	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(common.DimensionHour)))
-	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(common.DimensionMinute)))
-	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(common.DimensionDay)).Time().String())
+	fmt.Println(getStartTime(types.DimensionHour))
+	fmt.Println(getStartTime(types.DimensionDay))
+	fmt.Println(getStartTime(types.DimensionMinute))
+	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(types.DimensionDay)))
+	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(types.DimensionHour)))
+	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(types.DimensionMinute)))
+	fmt.Println(primitive.NewDateTimeFromTime(getStartTime(types.DimensionDay)).Time().String())
 }

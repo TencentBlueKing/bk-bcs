@@ -15,6 +15,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"os"
 	"strings"
 	"testing"
@@ -22,7 +23,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/service"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/cmd"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/sync"
 	"github.com/micro/go-micro/v2/sync/etcd"
@@ -37,7 +37,7 @@ func Test_becomeLeader(t *testing.T) {
 	ctx := context.Background()
 	etcdSync := etcd.NewSync(
 		sync.Nodes(strings.Split(opts.Etcd.EtcdEndpoints, ",")...),
-		sync.Prefix(common.ServiceDomain),
+		sync.Prefix(types.ServiceDomain),
 		sync.WithContext(rootCtx),
 	)
 

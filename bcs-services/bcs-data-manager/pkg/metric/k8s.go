@@ -15,11 +15,13 @@ package metric
 import (
 	"fmt"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"time"
 )
 
-func (g *MetricGetter) getK8sClusterCPUMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (float64, float64, float64, float64, error) {
+func (g *MetricGetter) getK8sClusterCPUMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (float64, float64, float64, float64, error) {
 	var totalCPU, CPURequest, CPUUsed float64
 	var usage float64
 	CPURequestMetric, err := clients.MonitorClient.QueryByPost(
@@ -53,8 +55,8 @@ func (g *MetricGetter) getK8sClusterCPUMetrics(opts *common.JobCommonOpts,
 	return totalCPU, CPURequest, CPUUsed, usage, nil
 }
 
-func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, int64, float64, error) {
+func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, int64, float64, error) {
 	var totalMemory, memoryRequest, memoryUsed int64
 	var usage float64
 	memoryRequestMetric, err := clients.MonitorClient.QueryByPost(
@@ -85,16 +87,20 @@ func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *common.JobCommonOpts,
 }
 
 // GetK8sNodeCount get k8s node count
-func (g *MetricGetter) getK8sNodeCount(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, error) {
+func (g *MetricGetter) getK8sNodeCount(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, error) {
 	var nodeCount, availableNode int64
-
+	start := time.Now()
 	nodes, err := clients.CmCli.Cli.ListNodesInCluster(clients.CmCli.Ctx, &cm.ListNodesInClusterRequest{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+			"GET", err, start)
 		return nodeCount, availableNode, fmt.Errorf("get cluster metrics error:%v", err)
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+		"GET", err, start)
 	// TODO: k8s cluster use storage get nodes
 	nodeCount = int64(len(nodes.Data))
 	for key := range nodes.Data {
@@ -105,8 +111,8 @@ func (g *MetricGetter) getK8sNodeCount(opts *common.JobCommonOpts,
 	return nodeCount, availableNode, nil
 }
 
-func (g *MetricGetter) getK8sNamespaceCPUMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (float64, float64, float64, error) {
+func (g *MetricGetter) getK8sNamespaceCPUMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (float64, float64, float64, error) {
 	var CPURequest, CPUUsed float64
 	var usage float64
 	query := fmt.Sprintf(K8sCPURequest,
@@ -135,8 +141,8 @@ func (g *MetricGetter) getK8sNamespaceCPUMetrics(opts *common.JobCommonOpts,
 	return CPURequest, CPUUsed, usage, nil
 }
 
-func (g *MetricGetter) getK8SWorkloadCPU(opts *common.JobCommonOpts,
-	clients *common.Clients) (float64, float64, float64, error) {
+func (g *MetricGetter) getK8SWorkloadCPU(opts *types.JobCommonOpts,
+	clients *types.Clients) (float64, float64, float64, error) {
 	var workloadCPURequest, workloadCPUUsed float64
 	var usage float64
 	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.Name)
@@ -165,8 +171,8 @@ func (g *MetricGetter) getK8SWorkloadCPU(opts *common.JobCommonOpts,
 	return workloadCPURequest, workloadCPUUsed, usage, nil
 }
 
-func (g *MetricGetter) getK8sWorkloadMemory(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, float64, error) {
+func (g *MetricGetter) getK8sWorkloadMemory(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, float64, error) {
 	var workloadMemoryRequest, workloadMemoryUsed int64
 	var usage float64
 	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.Name)
@@ -190,8 +196,8 @@ func (g *MetricGetter) getK8sWorkloadMemory(opts *common.JobCommonOpts,
 	return workloadMemoryRequest, workloadMemoryUsed, usage, nil
 }
 
-func (g *MetricGetter) getK8sNamespaceMemoryMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, float64, error) {
+func (g *MetricGetter) getK8sNamespaceMemoryMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, float64, error) {
 	var memoryRequest, memoryUsed int64
 	var usage float64
 	memoryRequestMetric, err := clients.MonitorClient.QueryByPost(

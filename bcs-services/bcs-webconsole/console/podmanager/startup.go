@@ -34,12 +34,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// StartupManager
 type StartupManager struct {
 	ctx       context.Context
 	clusterId string // 这里是 Pod 所在集群
 	k8sClient *kubernetes.Clientset
 }
 
+// NewStartupManager
 func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
 	mgr := &StartupManager{
 		ctx:       ctx,
@@ -391,6 +393,7 @@ func IsPodReady(pod *v1.Pod) (string, bool) {
 	return "", true
 }
 
+// IsContainerReady 容器是否 Ready 检查
 func IsContainerReady(container *v1.ContainerStatus) (string, bool) {
 	if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
 		reason := container.State.Waiting.Reason

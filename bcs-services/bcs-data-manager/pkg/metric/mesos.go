@@ -15,11 +15,13 @@ package metric
 import (
 	"fmt"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"time"
 )
 
-func (g *MetricGetter) getMesosWorkloadMemory(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, float64, error) {
+func (g *MetricGetter) getMesosWorkloadMemory(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, float64, error) {
 	var workloadMemoryLimit, workloadMemoryUsed int64
 	var usage float64
 	podCondition := generateMesosPodCondition(opts.ClusterID, opts.Namespace, opts.Name)
@@ -43,8 +45,8 @@ func (g *MetricGetter) getMesosWorkloadMemory(opts *common.JobCommonOpts,
 	return workloadMemoryLimit, workloadMemoryUsed, usage, nil
 }
 
-func (g *MetricGetter) getMesosWorkloadCPU(opts *common.JobCommonOpts,
-	clients *common.Clients) (float64, float64, float64, error) {
+func (g *MetricGetter) getMesosWorkloadCPU(opts *types.JobCommonOpts,
+	clients *types.Clients) (float64, float64, float64, error) {
 	var workloadCPURequest, workloadCPUUsed float64
 	var usage float64
 	podCondition := generateMesosPodCondition(opts.ClusterID, opts.Namespace, opts.Name)
@@ -73,8 +75,8 @@ func (g *MetricGetter) getMesosWorkloadCPU(opts *common.JobCommonOpts,
 	return workloadCPURequest, workloadCPUUsed, usage, nil
 }
 
-func (g *MetricGetter) getMesosNamespaceMemoryMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, float64, error) {
+func (g *MetricGetter) getMesosNamespaceMemoryMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, float64, error) {
 	var memoryRequest, memoryUsed int64
 	var usage float64
 	memoryLimitMetric, err := clients.MonitorClient.QueryByPost(
@@ -99,8 +101,8 @@ func (g *MetricGetter) getMesosNamespaceMemoryMetrics(opts *common.JobCommonOpts
 	return memoryRequest, memoryUsed, usage, nil
 }
 
-func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (float64, float64, float64, error) {
+func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (float64, float64, float64, error) {
 	var CPURequest, CPUUsed float64
 	var usage float64
 	query := fmt.Sprintf(MesosCPULimit,
@@ -125,16 +127,20 @@ func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *common.JobCommonOpts,
 	return CPURequest, CPUUsed, usage, nil
 }
 
-func (g *MetricGetter) getMesosNodeCount(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, error) {
+func (g *MetricGetter) getMesosNodeCount(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, error) {
 	var nodeCount, availableNode int64
-
+	start := time.Now()
 	nodes, err := clients.CmCli.Cli.ListNodesInCluster(clients.CmCli.Ctx, &cm.ListNodesInClusterRequest{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
+		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+			"GET", err, start)
 		return nodeCount, availableNode, fmt.Errorf("get cluster metrics error:%v", err)
 	}
+	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+		"GET", err, start)
 	nodeCount = int64(len(nodes.Data))
 	for key := range nodes.Data {
 		if nodes.Data[key].Status == "RUNNING" {
@@ -145,8 +151,8 @@ func (g *MetricGetter) getMesosNodeCount(opts *common.JobCommonOpts,
 }
 
 // TODO
-func (g *MetricGetter) getMesosClusterMemoryMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (int64, int64, int64, float64, error) {
+func (g *MetricGetter) getMesosClusterMemoryMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (int64, int64, int64, float64, error) {
 	var totalMemory, memoryRequest, memoryUsed int64
 	var usage float64
 	memoryLimitMetric, err := clients.MonitorClient.QueryByPost(
@@ -176,8 +182,8 @@ func (g *MetricGetter) getMesosClusterMemoryMetrics(opts *common.JobCommonOpts,
 	return totalMemory, memoryRequest, memoryUsed, usage, nil
 }
 
-func (g *MetricGetter) getMesosClusterCPUMetrics(opts *common.JobCommonOpts,
-	clients *common.Clients) (float64, float64, float64, float64, error) {
+func (g *MetricGetter) getMesosClusterCPUMetrics(opts *types.JobCommonOpts,
+	clients *types.Clients) (float64, float64, float64, float64, error) {
 	var totalCPU, CPURequest, CPUUsed float64
 	var usage float64
 	CPULimitMetric, err := clients.MonitorClient.QueryByPost(

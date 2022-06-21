@@ -40,6 +40,7 @@ type CleanUpManager struct {
 	redisClient *redis.Client
 }
 
+// NewCleanUpManager 定期清理控制
 func NewCleanUpManager(ctx context.Context) *CleanUpManager {
 	redisClient := storage.GetDefaultRedisSession().Client
 
@@ -202,11 +203,12 @@ func (p *CleanUpManager) cleanConfigMapByPod(k8sClient *kubernetes.Clientset, po
 	return nil
 }
 
+// Run
 func (p *CleanUpManager) Run() error {
 	interval := time.NewTicker(CleanUserPodInterval)
 	defer interval.Stop()
 
-	sessionCleanupMgr := sessions.NewRedisStore("cleanup", "cleanup")
+	sessionCleanupMgr := sessions.NewStore()
 
 	for {
 		select {

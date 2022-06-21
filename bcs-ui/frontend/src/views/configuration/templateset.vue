@@ -313,7 +313,7 @@
                                 <div class="content-trigger" @click="triggerHandler(item, index)">
                                     <div class="left-area">
                                         <div class="label">
-                                            <span :class="['biz-env-label mr5', { 'stag': item.environment_name !== '正式', 'prod': item.environment_name === '正式' }]">{{item.environment_name}}</span>
+                                            <span :class="['biz-env-label mr5', { 'stag': item.environment !== 'prod', 'prod': item.environment === 'prod' }]">{{item.environment === 'prod' ? $t('正式') : $t('测试')}}</span>
                                             {{item.cluster_name}}
                                         </div>
                                         <div class="checker-inner">

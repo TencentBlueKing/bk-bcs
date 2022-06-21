@@ -555,6 +555,7 @@
                     resId: this.nodeId,
                     clusterId: this.clusterId
                 }
+                if (!params.resId) return
 
                 // 1 小时
                 if (range === '1') {

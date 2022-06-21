@@ -45,6 +45,7 @@ type ServiceState struct {
 	MyPostion    int
 }
 
+// NewNodeRegister create a new NodeRegister
 func NewNodeRegister(zkServerAddresses string, baseKey string, node Node) *NodeRegister {
 	return &NodeRegister{
 		ZkServerAddresses: zkServerAddresses,
@@ -196,6 +197,7 @@ Outer:
 	return nil
 }
 
+// SendEmptyEvent send empty event to stateChan to notify other goroutine that there is no more events
 func (r *NodeRegister) SendEmptyEvent() {
 	r.StateChan <- ServiceState{
 		Nodes:        0,
@@ -204,6 +206,7 @@ func (r *NodeRegister) SendEmptyEvent() {
 	}
 }
 
+// Stop stop the node register
 func (r *NodeRegister) Stop() error {
 	err := r.zkService.Stop()
 	r.SendEmptyEvent()

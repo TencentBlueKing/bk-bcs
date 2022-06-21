@@ -145,10 +145,19 @@ const (
 	//StatusRemoveNodesFailed status remove nodes failed
 	StatusRemoveNodesFailed = "REMOVE-FAILURE"
 
+	// StatusDeleteNodeGroupFailed xxx
+	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"
+	// StatusCreateNodeGroupCreating xxx
+	StatusCreateNodeGroupCreating = "INITIALIZATION"
+	// StatusDeleteNodeGroupFailed xxx
+	StatusCreateNodeGroupFailed = "CREATE-FAILURE"
+
 	//StatusFailed status failed
 	StatusFailed = "FAILURE"
 	//StatusCreating node status creating for scaling up
 	StatusCreating = "CREATING"
+	//StatusUpdating nodegroup updating status
+	StatusUpdating = "UPDATING"
 )
 
 const (
@@ -196,7 +205,7 @@ const (
 	BcsErrClusterManagerTaskDoneErr = bcscommon.BCSErrClusterManager + 30
 	// BcsErrClusterManagerSyncCloudErr cloud config error
 	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 31
-	// BcsErrClusterManagerSyncCloudErr cloud config error
+	// BcsErrClusterManagerCheckKubeErr cloud config error
 	BcsErrClusterManagerCheckKubeErr = bcscommon.BCSErrClusterManager + 32
 )
 
@@ -215,3 +224,11 @@ var Develop = "dev"
 
 // StagClusterENV stag env
 var StagClusterENV = "stag"
+
+// ImageProvider
+const (
+	// 公共镜像
+	PublicImageProvider = "PUBLIC_IMAGE"
+	// 市场镜像
+	MarketImageProvider = "MARKET_IMAGE"
+)

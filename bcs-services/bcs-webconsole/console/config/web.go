@@ -10,16 +10,38 @@
  * limitations under the License.
  *
  */
+
 package config
 
+import (
+	"net/url"
+	"path"
+)
+
+// WebConf web 相关配置
 type WebConf struct {
-	Host        string `yaml:"host"`
-	RoutePrefix string `yaml:"route_prefix"`
+	Host        string   `yaml:"host"`
+	RoutePrefix string   `yaml:"route_prefix"`
+	BaseURL     *url.URL `yaml:"-"`
 }
 
-func (c *WebConf) Init() error {
-	c.Host = "http://127.0.0.1"
-	c.RoutePrefix = "/bcs-webconsole"
+// init 初始化
+func (c *WebConf) init() error {
+	u, err := url.Parse(c.Host)
+	if err != nil {
+		return err
+	}
+	u.Path = path.Join(u.Path, c.RoutePrefix)
 
+	c.BaseURL = u
 	return nil
+}
+
+// defaultWebConf 默认配置
+func defaultWebConf() *WebConf {
+	c := &WebConf{
+		Host:        "http://127.0.0.1:8083",
+		RoutePrefix: "/webconsole",
+	}
+	return c
 }

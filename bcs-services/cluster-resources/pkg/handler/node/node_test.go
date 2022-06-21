@@ -41,5 +41,5 @@ func TestNode(t *testing.T) {
 	assert.Nil(t, err)
 
 	respData := listResp.Data.AsMap()
-	assert.Equal(t, "NodeList", mapx.Get(respData, "manifest.kind", ""))
+	assert.Equal(t, "NodeList", mapx.GetStr(respData, "manifest.kind"))
 }

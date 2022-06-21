@@ -61,14 +61,22 @@ func (o *Options) validate() bool {
 	return true
 }
 
+// ClusterManagerClient interface for cluster manager client
+type ClusterManagerClient interface {
+	GetClusterManagerConnWithURL() (*grpc.ClientConn, error)
+	GetClusterManagerClient() (bcsCm.ClusterManagerClient, error)
+	GetClusterManagerConn() (*grpc.ClientConn, error)
+	NewGrpcClientWithHeader(ctx context.Context, conn *grpc.ClientConn) *ClusterManagerClientWithHeader
+}
+
 // NewClusterManagerClient init cluster manager and start discovery module(clustermanager)
-func NewClusterManagerClient(opts *Options) *ClusterManagerClient {
+func NewClusterManagerClient(opts *Options) ClusterManagerClient {
 	ok := opts.validate()
 	if !ok {
 		return nil
 	}
 
-	cmClient := &ClusterManagerClient{
+	cmClient := &clusterManagerClient{
 		opts: opts,
 		// Create a cache with a default expiration time of 5 minutes, and which
 		// purges expired items every 1 hour
@@ -90,7 +98,7 @@ func NewClusterManagerClient(opts *Options) *ClusterManagerClient {
 }
 
 // GetClusterManagerConnWithURL get conn with url
-func (cm *ClusterManagerClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) {
+func (cm *clusterManagerClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) {
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -121,7 +129,7 @@ func (cm *ClusterManagerClient) GetClusterManagerConnWithURL() (*grpc.ClientConn
 }
 
 // ClusterManagerClient client for clustermanager
-type ClusterManagerClient struct {
+type clusterManagerClient struct {
 	opts      *Options
 	discovery discovery.Discovery
 	cache     *cache.Cache
@@ -130,7 +138,7 @@ type ClusterManagerClient struct {
 }
 
 // GetClusterManagerClient get cm client
-func (cm *ClusterManagerClient) GetClusterManagerClient() (bcsCm.ClusterManagerClient, error) {
+func (cm *clusterManagerClient) GetClusterManagerClient() (bcsCm.ClusterManagerClient, error) {
 	if cm == nil {
 		return nil, errServerNotInit
 	}
@@ -157,7 +165,7 @@ func (cm *ClusterManagerClient) GetClusterManagerClient() (bcsCm.ClusterManagerC
 }
 
 // GetClusterManagerConn get conn
-func (cm *ClusterManagerClient) GetClusterManagerConn() (*grpc.ClientConn, error) {
+func (cm *clusterManagerClient) GetClusterManagerConn() (*grpc.ClientConn, error) {
 	if cm == nil {
 		return nil, errServerNotInit
 	}
@@ -201,7 +209,7 @@ func (cm *ClusterManagerClient) GetClusterManagerConn() (*grpc.ClientConn, error
 }
 
 // Stop stop clusterManagerClient
-func (cm *ClusterManagerClient) Stop() {
+func (cm *clusterManagerClient) Stop() {
 	if cm == nil {
 		return
 	}
@@ -217,7 +225,7 @@ type ClusterManagerClientWithHeader struct {
 }
 
 // NewGrpcClientWithHeader new client with grpc header
-func (cm *ClusterManagerClient) NewGrpcClientWithHeader(ctx context.Context,
+func (cm *clusterManagerClient) NewGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *ClusterManagerClientWithHeader {
 	header := make(map[string]string)
 	if len(cm.opts.AuthToken) != 0 {

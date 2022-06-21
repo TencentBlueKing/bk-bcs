@@ -45,7 +45,7 @@
                         </bcs-popover>
                     </div>
                     <div class="nav-right">
-                        <bcs-popover theme="light navigation-message" class="mr10" offset="0, 20" placement="bottom" :arrow="false">
+                        <!-- <bcs-popover theme="light navigation-message" class="mr10" offset="0, 20" placement="bottom" :arrow="false">
                             <div class="flag-box">
                                 <i :class="['bcs-icon', curLang.icon]"></i>
                             </div>
@@ -60,7 +60,7 @@
                                     </li>
                                 </ul>
                             </template>
-                        </bcs-popover>
+                        </bcs-popover> -->
                         <bcs-popover theme="light navigation-message" class="mr5" offset="0, 20" placement="bottom" :arrow="false">
                             <div class="flag-box">
                                 <i id="siteHelp" class="bcs-icon bcs-icon-help-document-fill"></i>

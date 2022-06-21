@@ -18,18 +18,36 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 
 
 service DataManager {
+  rpc GetAllProjectList(GetAllProjectListRequest) returns (GetAllProjectListResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/projects"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询所有的项目资源信息"
+      summary : "查询project列表"
+    };
+  }
   rpc GetProjectInfo(GetProjectInfoRequest) returns (GetProjectInfoResponse) {
     option (google.api.http) = {
-      get: "/datamanager/v1/projects/{projectID}"
+      get: "/datamanager/v1/project"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询指定projectID的项目资源信息"
       summary : "查询project"
     };
   }
-  rpc GetClusterInfoList(GetClusterInfoListRequest) returns (GetClusterInfoListResponse) {
+  rpc GetAllClusterList(GetClusterListRequest) returns (GetClusterListResponse) {
     option (google.api.http) = {
-      get: "/datamanager/v1/projects/{projectID}/cluster"
+      get: "/datamanager/v1/clusters"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询所有集群资源信息列表"
+      summary : "查询cluster list"
+    };
+  }
+  rpc GetClusterListByProject(GetClusterListRequest) returns (GetClusterListResponse) {
+    option (google.api.http) = {
+      get: "/datamanager/v1/projects/clusters"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询指定projectID的集群资源信息列表"
@@ -83,18 +101,79 @@ service DataManager {
   }
 }
 
+
+message GetAllProjectListRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetAllProjectListRequest"
+      description : "查询项目列表请求"
+      required : []
+    }
+  };
+
+  string dimension = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "dimension",
+      description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
+    },
+    (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  uint32 page = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "查询偏移量"
+    },
+    (validate.rules).uint32.gte = 0
+  ];
+  uint32 size = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "size",
+      description : "查询限制数量"
+    },
+    (validate.rules).uint32.lte = 10
+  ];
+}
+
+message GetAllProjectListResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectInfoResponse"
+      description : "查询项目信息返回"
+      required : ["code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated Project data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "项目信息"
+    }];
+  uint32 total = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+}
+
 message GetProjectInfoRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "GetProjectInfoRequest"
       description : "查询项目请求"
-      required : ["projectID"]
+      required : []
     }
   };
 
-  string projectID = 1 [
+  string project = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "projectID",
+      title : "project",
       description : "项目ID"
     },
     (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
@@ -105,6 +184,13 @@ message GetProjectInfoRequest {
       description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
     },
     (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  string business = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "business",
+      description : "业务ID"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
 }
 
@@ -131,37 +217,44 @@ message GetProjectInfoResponse {
     }];
 }
 
-message GetClusterInfoListRequest {
+message GetClusterListRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "GetClusterInfoListRequest"
+      title : "GetClusterListRequest"
       description : "查询集群列表请求"
-      required : ["projectID"]
+      required : []
     }
   };
 
-  string projectID = 1 [
+  string project = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "projectID",
+      title : "project",
       description : "项目ID"
     },
     (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
-  string dimension = 2 [
+  string business = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "business",
+      description : "业务ID"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  string dimension = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "dimension",
       description : "时间维度，minute，hour，day"
     },
     (validate.rules).string = {in: ["minute", "hour", "day", ""]}
   ];
-  uint32 page= 3 [
+  uint32 page = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "page",
       description : "查询偏移量"
     },
     (validate.rules).uint32.gte = 0
   ];
-  uint32 size= 4 [
+  uint32 size = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "size",
       description : "查询限制数量"
@@ -170,10 +263,10 @@ message GetClusterInfoListRequest {
   ];
 }
 
-message GetClusterInfoListResponse {
+message GetClusterListResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "GetClusterInfoListResponse"
+      title : "GetClusterListResponse"
       description : "查询集群列表返回"
       required : ["code", "message", "data"]
     }
@@ -271,14 +364,14 @@ message GetNamespaceInfoListRequest {
     },
     (validate.rules).string = {in: ["minute", "hour", "day", ""]}
   ];
-  uint32 page= 3 [
+  uint32 page = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "page",
       description : "页数"
     },
     (validate.rules) .uint32.gte = 0
   ];
-  uint32 size= 4 [
+  uint32 size = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "size",
       description : "页面大小"
@@ -409,14 +502,14 @@ message GetWorkloadInfoListRequest {
     },
     (validate.rules).string = {in: ["minute", "hour", "day", ""]}
   ];
-  uint32 page= 5 [
+  uint32 page = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "page",
       description : "页数"
     },
     (validate.rules) .uint32.gte = 0
   ];
-  uint32 size= 6 [
+  uint32 size = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "size",
       description : "页面大小"
@@ -535,27 +628,31 @@ message Project {
     title: "projectID",
     description: "项目id"
   }];
-  string dimension = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string businessID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "业务id"
+  }];
+  string dimension = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dimension",
     description: "时间维度"
   }];
-  string startTime = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string startTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "startTime",
     description: "开始时间"
   }];
-  string endTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string endTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "endTime",
     description: "结束时间"
   }];
-  repeated ProjectMetrics metrics = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated ProjectMetrics metrics = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "metrics",
     description: "数据列表"
   }];
-  ExtremumRecord minNode = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  ExtremumRecord minNode = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "minNode",
     description: "最小节点数及时间"
   }];
-  ExtremumRecord maxNode = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  ExtremumRecord maxNode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "maxNode",
     description: "最大节点数及时间"
   }];
@@ -674,6 +771,10 @@ message Cluster {
   ExtremumRecord maxInstance = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "maxInstance",
     description: "最大实例数及时间"
+  }];
+  string businessID = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "业务id"
   }];
 }
 
@@ -856,6 +957,10 @@ message Namespace {
       title : "MaxWorkloadUsage",
       description : "使用率最大模块及时间"
     }];
+  string businessID = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "业务id"
+  }];
 }
 
 message ResourceLimit {
@@ -1048,6 +1153,10 @@ message Workload {
       title : "MaxInstanceTime",
       description : "最大实例数及时间"
     }];
+  string businessID = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "业务id"
+  }];
 }
 
 message WorkloadMetrics {

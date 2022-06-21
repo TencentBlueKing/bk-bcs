@@ -20,6 +20,7 @@ import (
 	crAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	criam "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	iamPerm "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
@@ -34,7 +35,7 @@ func Validate(ctx context.Context, res, action, projectID, clusterID, namespace 
 	if allow, err := canAction(p, pCtx, action); err != nil {
 		return err
 	} else if !allow {
-		return errorx.New(errcode.NoIAMPerm, "无指定操作权限")
+		return errorx.New(errcode.NoIAMPerm, i18n.GetMsg(ctx, "无指定操作权限"))
 	}
 	return nil
 }

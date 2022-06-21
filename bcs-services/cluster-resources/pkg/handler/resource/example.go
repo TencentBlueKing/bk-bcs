@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -28,16 +29,16 @@ import (
 
 // GetK8SResTemplate ...
 func (h *Handler) GetK8SResTemplate(
-	_ context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	if !slice.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
-		return errorx.New(errcode.Unsupported, "资源类型 %s 暂无参考示例", req.Kind)
+		return errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 暂无参考示例"), req.Kind)
 	}
-	conf, err := example.LoadResConf(req.Kind)
+	conf, err := example.LoadResConf(ctx, req.Kind)
 	if err != nil {
 		return err
 	}
-	conf["references"], err = example.LoadResRefs(req.Kind)
+	conf["references"], err = example.LoadResRefs(ctx, req.Kind)
 	if err != nil {
 		return err
 	}

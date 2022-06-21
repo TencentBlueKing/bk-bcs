@@ -47,6 +47,9 @@ SECRET_KEY = "jllc(^rzpe8_udv)oadny2j3ym#qd^x^3ns11_8kq(1rf8qpd2"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# 社区版本
+COMMUNITY_EDITION = 'ce'
+
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
@@ -77,6 +80,7 @@ INSTALLED_APPS = [
     # 模板集功能模块
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
     "backend.change_log",
+    "backend.container_service.cluster_tools.apps.ClusterToolsConfig",
     "django_prometheus",
 ]
 
@@ -341,7 +345,6 @@ KUBECTL_BIN_MAP = {
     "1.20.13": "/bin/kubectl-v1.20.13",
 }
 KUBECFG = "/root/.kube/config"  # kubectl config path, ex: ~/.kube/config
-FORCE_APPLY_CLUSTER_ID = ""  # 强制将资源应用该集群，仅用于开发测试目的, 比如 localkube
 KUBECTL_MAX_VISIBLE_LEVEL = 2
 HELM_INSECURE_SKIP_TLS_VERIFY = False
 
@@ -467,8 +470,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # 访问 bcs-api 服务需要的token
 BCS_APIGW_TOKEN = os.environ.get("BCS_APIGW_TOKEN", "")
-# 直连新版bcs api的地址
-BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_API_GATEWAY_PROD_DOMAIN", "")}
+# 直连新版bcs api的地址, 必须 https 协议
+BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_APIGW_PROD_DOMAIN", "")}
 
 # cluster manager的代理配置
 CLUSTER_MANAGER_PROXY = {
@@ -496,6 +499,9 @@ PROM_QUERY_STORE = os.environ.get('BKAPP_PROM_QUERY_STORE', 'BK_MONITOR')
 BK_MONITOR_QUERY_HOST = os.environ.get(
     'BKAPP_BK_MONITOR_QUERY_URL', 'http://bk-monitor-unify-query-http.default.svc.cluster.local:10205'
 )
+
+# 组件库的 Chart 仓库前缀
+CLUSTER_TOOLS_REPO_PREFIX = os.environ.get('CLUSTER_TOOLS_REPO_PREFIX')
 
 # 是否支持使用 Mesos 服务
 SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")

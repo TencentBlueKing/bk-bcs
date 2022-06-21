@@ -14,29 +14,30 @@ package datajob
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ClusterDayPolicy day policy
+// ClusterDayPolicy cluster day policy
 type ClusterDayPolicy struct {
 	MetricGetter metric.Server
 	store        store.Server
 }
 
-// ClusterHourPolicy hour policy
+// ClusterHourPolicy cluster hour policy
 type ClusterHourPolicy struct {
 	MetricGetter metric.Server
 	store        store.Server
 }
 
-// ClusterMinutePolicy minute policy
+// ClusterMinutePolicy cluster minute policy
 type ClusterMinutePolicy struct {
 	MetricGetter metric.Server
 	store        store.Server
@@ -66,8 +67,8 @@ func NewClusterMinutePolicy(getter metric.Server, store store.Server) *ClusterMi
 	}
 }
 
-// ImplementPolicy day policy implement
-func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+// ImplementPolicy day policy implement, calculate every day
+func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
 	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
@@ -95,13 +96,19 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		avgLoadCPU = CPUUsed / float64(availableNode)
 		avgLoadMemory = memoryUsed / availableNode
 	}
-	hourOpts := &common.JobCommonOpts{
-		ObjectType: common.ClusterType,
+	hourOpts := &types.JobCommonOpts{
+		ObjectType: types.ClusterType,
 		ProjectID:  opts.ProjectID,
 		ClusterID:  opts.ClusterID,
-		Dimension:  common.DimensionHour,
+		Dimension:  types.DimensionHour,
 	}
-	bucket, _ := common.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), common.DimensionHour)
+	minuteOpts := &types.JobCommonOpts{
+		ObjectType: types.ClusterType,
+		ProjectID:  opts.ProjectID,
+		ClusterID:  opts.ClusterID,
+		Dimension:  types.DimensionMinute,
+	}
+	bucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
 	hourMetrics, err := p.store.GetRawClusterInfo(ctx, hourOpts, bucket)
 	if err != nil {
 		blog.Errorf("do cluster day policy failed, get cluster metrics err:%v", err)
@@ -111,14 +118,14 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 		return
 	}
 	hourMetric := hourMetrics[0]
-	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
-	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, minuteOpts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
 	if err != nil {
 		blog.Errorf("do cluster day policy failed, get cluster workload count err: %v", err)
 	}
-	clusterMetric := &common.ClusterMetrics{
-		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
-		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
+	clusterMetric := &types.ClusterMetrics{
+		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
+		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
 		TotalLoadCPU:       CPUUsed,
 		CPUUsage:           cpuUsage,
 		TotalLoadMemory:    memoryUsed,
@@ -146,8 +153,8 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *common.Job
 	}
 }
 
-// ImplementPolicy hour policy implement
-func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
+// ImplementPolicy hour policy implement, calculate every hour
+func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
 	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
@@ -175,13 +182,13 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		avgLoadCPU = CPUUsed / float64(availableNode)
 		avgLoadMemory = memoryUsed / availableNode
 	}
-	minuteOpts := &common.JobCommonOpts{
-		ObjectType: common.ClusterType,
+	minuteOpts := &types.JobCommonOpts{
+		ObjectType: types.ClusterType,
 		ProjectID:  opts.ProjectID,
 		ClusterID:  opts.ClusterID,
-		Dimension:  common.DimensionMinute,
+		Dimension:  types.DimensionMinute,
 	}
-	bucket, _ := common.GetBucketTime(opts.CurrentTime.Add((-1)*time.Hour), common.DimensionMinute)
+	bucket, _ := utils.GetBucketTime(opts.CurrentTime.Add((-1)*time.Hour), types.DimensionMinute)
 	minuteMetrics, err := p.store.GetRawClusterInfo(ctx, minuteOpts, bucket)
 	if err != nil {
 		blog.Errorf("do cluster hour policy failed, get cluster metrics err:%v", err)
@@ -191,14 +198,14 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 		return
 	}
 	minuteMetric := minuteMetrics[0]
-	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
-	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
+	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
+	workloadCount, err := p.store.GetWorkloadCount(ctx, minuteOpts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
 	if err != nil {
 		blog.Errorf("do cluster hour policy failed, get cluster workload count err: %v", err)
 	}
-	clusterMetric := &common.ClusterMetrics{
-		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
-		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
+	clusterMetric := &types.ClusterMetrics{
+		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
+		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
 		TotalLoadCPU:       CPUUsed,
 		CPUUsage:           cpuUsage,
 		TotalLoadMemory:    memoryUsed,
@@ -226,9 +233,9 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *common.Jo
 	}
 }
 
-// ImplementPolicy minute policy implement
-func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts,
-	clients *common.Clients) {
+// ImplementPolicy minute policy implement, calculate every 10 min
+func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
+	clients *types.Clients) {
 	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
@@ -255,14 +262,14 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.
 		avgLoadCPU = CPUUsed / float64(availableNode)
 		avgLoadMemory = memoryUsed / availableNode
 	}
-	minuteBucket, _ := common.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), common.DimensionMinute)
+	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
 	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
 	if err != nil {
 		blog.Errorf("do cluster minute policy failed, get cluster workload count err: %v", err)
 	}
-	clusterMetric := &common.ClusterMetrics{
-		Index:              common.GetIndex(opts.CurrentTime, opts.Dimension),
-		Time:               primitive.NewDateTimeFromTime(common.FormatTime(opts.CurrentTime, opts.Dimension)),
+	clusterMetric := &types.ClusterMetrics{
+		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
+		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
 		TotalLoadCPU:       CPUUsed,
 		CPUUsage:           cpuUsage,
 		TotalLoadMemory:    memoryUsed,
@@ -279,25 +286,25 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *common.
 			Name:       "MinNode",
 			MetricName: "MinNode",
 			Value:      float64(node),
-			Period:     common.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
 		},
 		MaxNode: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxNode",
 			MetricName: "MaxNode",
 			Value:      float64(node),
-			Period:     common.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
 		},
 		MinInstance: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinInstance",
 			MetricName: "MinInstance",
 			Value:      float64(instanceCount),
-			Period:     common.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
 		},
 		MaxInstance: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxInstance",
 			MetricName: "MaxInstance",
 			Value:      float64(instanceCount),
-			Period:     common.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
 		},
 		MinUsageNode: minUsageNode,
 		NodeQuantile: nodeQuantile,

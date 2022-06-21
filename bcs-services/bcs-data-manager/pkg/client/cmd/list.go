@@ -13,6 +13,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -23,13 +24,21 @@ import (
 )
 
 var (
-	flagPage uint32
-	flagSize uint32
+	flagPage    uint32
+	flagSize    uint32
+	allClusters bool
 
 	listCMD = &cobra.Command{
 		Use:   "list",
 		Short: "list",
 		Long:  "list metrics",
+	}
+	listProjectCMD = &cobra.Command{
+		Use:     "project",
+		Aliases: []string{"project", "p"},
+		Short:   "list project",
+		Long:    "list project",
+		Run:     ListProject,
 	}
 	listClusterCMD = &cobra.Command{
 		Use:     "cluster",
@@ -54,15 +63,56 @@ var (
 	}
 )
 
-// ListCluster list cluster info
-func ListCluster(cmd *cobra.Command, args []string) {
-	req := &bcsdatamanager.GetClusterInfoListRequest{}
-	req.ProjectID = flagProject
+// ListProject list projects
+func ListProject(cmd *cobra.Command, args []string) {
+	req := &bcsdatamanager.GetAllProjectListRequest{}
 	req.Dimension = flagDimension
 	req.Page = flagPage
 	req.Size = flagSize
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetClusterInfoList(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetAllProjectList(cliCtx, req)
+	if err != nil {
+		fmt.Printf("get project list data err:%v\n", err)
+		os.Exit(1)
+	}
+
+	if rsp != nil && rsp.Code != 0 {
+		fmt.Printf(rsp.Message)
+		os.Exit(1)
+	}
+	fmt.Printf("total: %d\n", rsp.Total)
+	if flagOutput == outputTypeJSON {
+		printer.PrintProjectListInJSON(rsp.Data)
+		return
+	}
+	printer.PrintProjectListInTable(flagOutput == outputTypeWide, rsp.Data)
+}
+
+// ListCluster list cluster info
+func ListCluster(cmd *cobra.Command, args []string) {
+	req := &bcsdatamanager.GetClusterListRequest{}
+	req.Project = flagProject
+	req.Business = flagBusinessID
+	req.Dimension = flagDimension
+	req.Page = flagPage
+	req.Size = flagSize
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp := &bcsdatamanager.GetClusterListResponse{}
+	if allClusters {
+		rsp, err = client.GetAllClusterList(cliCtx, req)
+	} else {
+		rsp, err = client.GetClusterListByProject(cliCtx, req)
+	}
 	if err != nil {
 		fmt.Printf("get cluster list data err:%v\n", err)
 		os.Exit(1)
@@ -87,8 +137,13 @@ func ListNamespace(cmd *cobra.Command, args []string) {
 	req.Dimension = flagDimension
 	req.Page = flagPage
 	req.Size = flagSize
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetNamespaceInfoList(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetNamespaceInfoList(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get namespace list data err:%v\n", err)
 		os.Exit(1)
@@ -119,8 +174,13 @@ func ListWorkload(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	req.WorkloadType = flagWorkloadType
-	client := pkg.NewClientWithConfiguration()
-	rsp, err := client.GetWorkloadInfoList(req)
+	ctx := context.Background()
+	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+	if err != nil {
+		fmt.Printf("init datamanger conn error:%v\n", err)
+		os.Exit(1)
+	}
+	rsp, err := client.GetWorkloadInfoList(cliCtx, req)
 	if err != nil {
 		fmt.Printf("get workload list data err:%v\n", err)
 		os.Exit(1)
@@ -139,15 +199,20 @@ func ListWorkload(cmd *cobra.Command, args []string) {
 }
 
 func init() {
+	listCMD.AddCommand(listProjectCMD)
 	listCMD.AddCommand(listClusterCMD)
 	listCMD.AddCommand(listNamespaceCMD)
 	listCMD.AddCommand(listWorkloadCMD)
 	listCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
 	listCMD.PersistentFlags().StringVarP(
+		&flagBusinessID, "business", "", "", "business id for operation")
+	listCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace for operation")
 	listCMD.PersistentFlags().StringVarP(
 		&flagCluster, "cluster", "", "", "release cluster id for operation")
+	listCMD.PersistentFlags().BoolVarP(
+		&allClusters, "all-clusters", "", false, "If true, get all clusters")
 	listCMD.PersistentFlags().StringVarP(
 		&flagWorkloadType, "workloadType", "t", "", "release workload type for operation, Deployment, ")
 	listCMD.PersistentFlags().StringVarP(

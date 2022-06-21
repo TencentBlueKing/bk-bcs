@@ -33,6 +33,9 @@ DISK_FSTYPE = "ext[234]|btrfs|xfs|zfs"
 # 磁盘统计 允许的挂载目录
 DISK_MOUNTPOINT = "/|/data"
 
+# IP来源
+PROVIDER = "Prometheus"
+
 
 def query_range(query, start, end, step, project_id=None):
     """范围请求API"""

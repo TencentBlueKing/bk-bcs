@@ -22,6 +22,7 @@ import (
 	tkexGSClientSet "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
 	webhookClientSet "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
+	tkexGPAClientSet "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 	kubefedClientSet "github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
 	extensionsClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -58,6 +59,7 @@ const (
 	TkexV1alpha1GroupVersion = "tkex.tencent.com/v1alpha1"
 	TkexGameDeploymentName   = "gamedeployments.tkex.tencent.com"
 	TkexGameStatefulSetName  = "gamestatefulsets.tkex.tencent.com"
+	TkexGPAName              = "generalpodautoscalers.autoscaling.tkex.tencent.com"
 
 	KubefedTypesV1Beta1GroupVersion            = "types.kubefed.io/v1beta1"
 	KubefedCoreV1Alpha1GroupVersion            = "core.kubefed.io/v1alpha1"
@@ -210,9 +212,15 @@ func initTkexClient(restConfig *rest.Config) (map[string]rest.Interface, error) 
 		return nil, err
 	}
 
+	tkexGPAClient, err := tkexGPAClientSet.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	tkexClientList := map[string]rest.Interface{
 		TkexGameDeploymentName:  tkexGDClient.TkexV1alpha1().RESTClient(),
 		TkexGameStatefulSetName: tkexGSClient.TkexV1alpha1().RESTClient(),
+		TkexGPAName:             tkexGPAClient.AutoscalingV1alpha1().RESTClient(),
 	}
 	return tkexClientList, nil
 }

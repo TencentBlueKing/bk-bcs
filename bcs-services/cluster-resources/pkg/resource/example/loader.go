@@ -15,6 +15,7 @@
 package example
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -22,6 +23,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -52,8 +54,9 @@ const (
 )
 
 // LoadResConf 加载指定资源类型模板配置信息
-func LoadResConf(kind string) (map[string]interface{}, error) {
-	filepath := fmt.Sprintf("%s/%s.json", ResConfDIR, kind)
+func LoadResConf(ctx context.Context, kind string) (map[string]interface{}, error) {
+	lang := i18n.GetLangFromContext(ctx)
+	filepath := fmt.Sprintf("%s/%s/%s.json", ResConfDIR, lang, kind)
 	conf := map[string]interface{}{}
 
 	content, err := ioutil.ReadFile(filepath)
@@ -65,8 +68,9 @@ func LoadResConf(kind string) (map[string]interface{}, error) {
 }
 
 // LoadResRefs 加载指定资源类型的参考资料（Markdown 格式字符串）
-func LoadResRefs(kind string) (string, error) {
-	filepath := fmt.Sprintf("%s/%s.md", ResRefsDIR, kind)
+func LoadResRefs(ctx context.Context, kind string) (string, error) {
+	lang := i18n.GetLangFromContext(ctx)
+	filepath := fmt.Sprintf("%s/%s/%s.md", ResRefsDIR, lang, kind)
 	content, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return "", err
@@ -90,7 +94,7 @@ func LoadDemoManifest(path, namespace string) (map[string]interface{}, error) {
 
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
-	rawName := mapx.Get(manifest, "metadata.name", "")
+	rawName := mapx.GetStr(manifest, "metadata.name")
 	if err = mapx.SetItems(manifest, "metadata.name", fmt.Sprintf("%s-%s", rawName, randSuffix)); err != nil {
 		return manifest, err
 	}

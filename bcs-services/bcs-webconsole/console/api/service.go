@@ -25,22 +25,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/shlex"
+	"github.com/pkg/errors"
 )
 
 type service struct {
 	opts *route.Options
 }
 
+// NewRouteRegistrar
 func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
+// RegisterRoute
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
@@ -59,9 +63,10 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		metrics.RequestCollect("CreateClusterPortalSession"), route.CredentialRequired(), s.CreateClusterPortalSession)
 
 	// websocket协议, session鉴权
-	api.GET("/ws/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
+	api.GET("/ws/sessions/:sessionId/", metrics.RequestCollect("BCSWebSocket"), s.BCSWebSocketHandler)
 }
 
+// ListClusters 集群列表
 func (s *service) ListClusters(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
@@ -122,27 +127,17 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 
-	store := sessions.NewRedisStore(projectId, clusterId)
-	sessionId, err := store.Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
 		return
 	}
 
-	query := url.Values{}
-	query.Set("session_id", sessionId)
-	if consoleQuery.Lang != "" {
-		query.Set("lang", consoleQuery.Lang)
-	}
-
-	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?%s",
-		projectId, clusterId, query.Encode()))
-
 	data := types.APIResponse{
 		Data: map[string]string{
 			"session_id": sessionId,
-			"ws_url":     wsUrl,
+			"ws_url":     makeWebSocketURL(sessionId, consoleQuery.Lang, false),
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -151,9 +146,8 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+// CreatePortalSession
 func (s *service) CreatePortalSession(c *gin.Context) {
-	sessionId := c.Query("session_id")
-
 	authCtx := route.MustGetAuthContext(c)
 	if authCtx.BindSession == nil {
 		msg := i18n.GetMessage("sessin_id不正确")
@@ -163,21 +157,17 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 
 	podCtx := authCtx.BindSession
 
-	newStore := sessions.NewRedisStore(podCtx.ProjectId, podCtx.ClusterId)
-	NewSessionId, err := newStore.Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
 		return
 	}
 
-	wsUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/ws/projects/%s/clusters/%s/?session_id=%s",
-		podCtx.ProjectId, podCtx.ClusterId, NewSessionId))
-
 	data := types.APIResponse{
 		Data: map[string]string{
 			"session_id": sessionId,
-			"ws_url":     wsUrl,
+			"ws_url":     makeWebSocketURL(sessionId, "", false),
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -186,6 +176,7 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+// CreateContainerPortalSession 创建 webconsole url api
 func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
@@ -224,28 +215,32 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		podCtx.Commands = commands
 	}
 
-	store := sessions.NewRedisStore("open-session", "open-session")
-
-	sessionId, err := store.Set(c.Request.Context(), podCtx)
+	sessionId, err := sessions.NewStore().OpenAPIScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
 		msg := i18n.GetMessage("获取session失败{}", err)
 		APIError(c, msg)
 		return
 	}
 
-	webConsoleUrl := path.Join(s.opts.RoutePrefix, "/portal/container/") + "/"
+	data := map[string]string{
+		"session_id":      sessionId,
+		"web_console_url": makeWebConsoleURL(sessionId, podCtx),
+	}
 
-	query := url.Values{}
-	query.Set("session_id", sessionId)
-	query.Set("container_name", podCtx.ContainerName)
+	// 这里直接置换新的session_id
+	if consoleQuery.WSAcquire {
+		wsSessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
+		if err != nil {
+			msg := i18n.GetMessage("获取session失败{}", err)
+			APIError(c, msg)
+			return
+		}
 
-	webConsoleUrl = fmt.Sprintf("%s%s?%s", config.G.Web.Host, webConsoleUrl, query.Encode())
+		data["ws_url"] = makeWebSocketURL(wsSessionId, "", true)
+	}
 
 	respData := types.APIResponse{
-		Data: map[string]string{
-			"session_id":      sessionId,
-			"web_console_url": webConsoleUrl,
-		},
+		Data:      data,
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
 		RequestID: authCtx.RequestId,
@@ -254,7 +249,51 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	c.JSON(http.StatusOK, respData)
 }
 
+// makeWebConsoleURL webconsole 页面访问地址
+func makeWebConsoleURL(sessionId string, podCtx *types.PodContext) string {
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, "/portal/container/")
+
+	query := url.Values{}
+	query.Set("session_id", sessionId)
+	query.Set("container_name", podCtx.ContainerName)
+
+	u.RawQuery = query.Encode()
+
+	return u.String()
+}
+
+// makeWebSocketURL http 转换为 ws 协议链接
+func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
+	u := *config.G.Web.BaseURL
+	u.Path = path.Join(u.Path, "/ws/sessions/", sessionId) + "/"
+
+	query := url.Values{}
+	if lang != "" {
+		query.Set("lang", lang)
+	}
+
+	u.RawQuery = query.Encode()
+
+	// https 协议 转换为 wss
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
+
+	// 去掉前缀, web 使用
+	if !withScheme {
+		u.Scheme = ""
+		u.Host = ""
+	}
+
+	return u.String()
+}
+
+// CreateClusterPortalSession 集群级别的 webconsole openapi
 func (s *service) CreateClusterPortalSession(c *gin.Context) {
+	rest.AbortWithBadRequestError(c, errors.New("Not implemented"))
 }
 
 // APIError 简易的错误返回

@@ -14,11 +14,10 @@ package common
 
 import (
 	"context"
-	"testing"
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/mock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestGetClusterIDList(t *testing.T) {
@@ -35,9 +34,24 @@ func TestGetNamespaceList(t *testing.T) {
 	cmCli := mock.NewMockCm()
 	storageCli := mock.NewMockStorage()
 	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
-	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli)
+	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli, storageCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 4, len(namespaceList))
+}
+
+func TestGetNamespaceListByCluster(t *testing.T) {
+	ctx := context.Background()
+	cmCli := mock.NewMockCm()
+	storageCli := mock.NewMockStorage()
+	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
+	clusterList, err := getter.GetClusterIDList(ctx, cmCli)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 2, len(clusterList))
+	for _, cluster := range clusterList {
+		namespaceList, err := getter.GetNamespaceListByCluster(cluster, storageCli, storageCli)
+		assert.Equal(t, nil, err)
+		assert.NotEqual(t, 0, len(namespaceList))
+	}
 }
 
 func TestGetProjectIDList(t *testing.T) {
@@ -50,47 +64,23 @@ func TestGetProjectIDList(t *testing.T) {
 }
 
 func TestGetWorkloadList(t *testing.T) {
-	ctx := context.Background()
-	storageCli := &mock.MockStorage{}
-	cmCli := mock.NewMockCm()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"})
-	workloadList, err := getter.GetWorkloadList(ctx, cmCli, storageCli)
+	storageCli := mock.NewMockStorage()
+	getter := NewGetter(true, []string{"BCS-K8S-15091"})
+	k8sNamespace := []*types.NamespaceMeta{{
+		ProjectID:   "",
+		ClusterID:   "BCS-K8S-15091",
+		ClusterType: types.Kubernetes,
+		Name:        "bcs-system",
+	}}
+	workloadList, err := getter.GetK8sWorkloadList(k8sNamespace, storageCli)
 	assert.Equal(t, nil, err)
-	assert.Equal(t, 6, len(workloadList))
-}
-
-func TestFormatTimeIgnoreMin(t *testing.T) {
-	original := "2022-03-08 22:00:00"
-	local := time.Local
-	originalTime, _ := time.ParseInLocation(HourTimeFormat, original, local)
-	result := formatTimeIgnoreMin(originalTime)
-	assert.Equal(t, "2022-03-08 22:00:00 +0800 CST", result.String())
-}
-
-func TestFormatTimeIgnoreSec(t *testing.T) {
-	original := "2022-03-08 22:11:00"
-	local := time.Local
-	originalTime, _ := time.ParseInLocation(MinuteTimeFormat, original, local)
-	result := formatTimeIgnoreSec(originalTime)
-	assert.Equal(t, "2022-03-08 22:11:00 +0800 CST", result.String())
-}
-
-func TestFormatTimeIgnoreHour(t *testing.T) {
-	original := "2022-03-08"
-	local := time.Local
-	originalTime, _ := time.ParseInLocation(DayTimeFormat, original, local)
-	result := formatTimeIgnoreHour(originalTime)
-	assert.Equal(t, "2022-03-08 00:00:00 +0800 CST", result.String())
-}
-
-func TestGetIndex(t *testing.T) {
-	origin := "2022-03-08 22:11:00"
-	local := time.Local
-	originalTime, _ := time.ParseInLocation(MinuteTimeFormat, origin, local)
-	day := GetIndex(originalTime, "day")
-	hour := GetIndex(originalTime, "hour")
-	minute := GetIndex(originalTime, "minute")
-	assert.Equal(t, 8, day)
-	assert.Equal(t, 22, hour)
-	assert.Equal(t, 11, minute)
+	assert.Equal(t, 1, len(workloadList))
+	mesosCluster := &types.ClusterMeta{
+		ProjectID:   "",
+		ClusterID:   "BCS-MESOS-10039",
+		ClusterType: types.Mesos,
+	}
+	mesosWorkloadList, err := getter.GetMesosWorkloadList(mesosCluster, storageCli)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(mesosWorkloadList))
 }

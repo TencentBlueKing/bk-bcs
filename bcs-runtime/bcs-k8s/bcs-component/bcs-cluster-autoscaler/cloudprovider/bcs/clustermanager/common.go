@@ -16,6 +16,7 @@ package clustermanager
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -36,9 +37,12 @@ type Client struct {
 
 // WithoutTLSClient init a non-tls client
 func WithoutTLSClient(header http.Header, url string) *Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	c := &Client{
 		header:     nil,
-		HttpClient: &http.Client{},
+		HttpClient: &http.Client{Transport: tr},
 	}
 	c.baseURL = url
 	c.header = header
@@ -238,7 +242,7 @@ func (c *Client) WithContext(ctx context.Context) *Client {
 
 // Do finishes the http request
 func (c *Client) Do() ([]byte, error) {
-	klog.V(4).Infof("Query %v, header: %+v, body: %+v", c.URL.String(), c.Request.Header, c.Request.Body)
+	//klog.V(4).Infof("Query %v, header: %+v, body: %+v", c.URL.String(), c.Request.Header, c.Request.Body)
 	resp, err := c.HttpClient.Do(c.Request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish this request: %v", err)

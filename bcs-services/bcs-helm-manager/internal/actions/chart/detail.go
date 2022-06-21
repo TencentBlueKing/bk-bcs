@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
@@ -68,13 +69,13 @@ func (g *GetChartDetailAction) getDetail() error {
 	repoName := g.req.GetRepository()
 	chartName := g.req.GetName()
 	version := g.req.GetVersion()
-	opName := g.req.GetOperator()
+	username := auth.GetUserFromCtx(g.ctx)
 
 	repository, err := g.model.GetRepository(g.ctx, projectID, repoName)
 	if err != nil {
 		blog.Errorf("get chart detail failed, %s, "+
 			"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, version, opName)
+			err.Error(), projectID, repoName, chartName, version, username)
 		g.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -94,7 +95,7 @@ func (g *GetChartDetailAction) getDetail() error {
 	if err != nil {
 		blog.Errorf("get chart detail failed, %s, "+
 			"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, version, opName)
+			err.Error(), projectID, repoName, chartName, version, username)
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
 		return nil
 	}
@@ -120,7 +121,7 @@ func (g *GetChartDetailAction) getDetail() error {
 	g.setResp(common.ErrHelmManagerSuccess, "ok", r)
 	blog.Infof("get chart detail successfully, "+
 		"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-		projectID, repoName, chartName, version, opName)
+		projectID, repoName, chartName, version, username)
 	return nil
 }
 

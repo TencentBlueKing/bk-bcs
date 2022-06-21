@@ -17,8 +17,9 @@ import (
 	"fmt"
 	"plugin"
 	"time"
-
+	
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
+	
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/pluginManager/config"
 	bcsplugin "github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/pluginManager/plugin"
 )
@@ -55,7 +56,6 @@ func NewDynamicPlugin(dir string, conf *config.PluginConfig) (bcsplugin.Plugin, 
 }
 
 func (p *dynamicPlugin) initPlugin() error {
-
 	pluginPath := fmt.Sprintf("%s/bin/%s/%s.so", p.currentDir, p.name, p.name)
 	outPlugin, err := plugin.Open(pluginPath)
 	if err != nil {

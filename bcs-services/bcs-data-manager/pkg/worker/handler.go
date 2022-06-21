@@ -16,6 +16,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -23,7 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 )
@@ -51,7 +52,7 @@ type HandleClients struct {
 	BcsMonitorClient bcsmonitor.ClientInterface
 	K8sStorageCli    bcsapi.Storage
 	MesosStorageCli  bcsapi.Storage
-	CmCli            *cmanager.ClusterManagerClient
+	CmCli            cmanager.ClusterManagerClient
 }
 
 // NewDataJobHandler create dataJob handler object
@@ -71,7 +72,7 @@ func NewDataJobHandler(opts HandlerOptions, client HandleClients, concurrency in
 
 // Consume consume data
 func (h *DataJobHandler) Consume(sub msgqueue.MessageQueue) error {
-	unSub, err := sub.Subscribe(msgqueue.HandlerWrap("data-job-handler", h.HandleQueue), h.filters, common.DataJobQueue)
+	unSub, err := sub.Subscribe(msgqueue.HandlerWrap("data-job-handler", h.HandleQueue), h.filters, types.DataJobQueue)
 	if err != nil {
 		blog.Errorf("subscribe err :%v", err)
 		return fmt.Errorf("subscribe err :%v", err)
@@ -136,6 +137,7 @@ func (h *DataJobHandler) handleJob() {
 			h.handleOneJob(job)
 			<-chPool
 		}(job)
+		prom.ReportConsumeConcurrency(len(chPool))
 		if handleJobCount%1000 == 0 {
 			blog.Infof("jobListChan length:%d", len(h.jobListCh))
 			blog.Infof("handle job count: %d", handleJobCount)
@@ -144,8 +146,14 @@ func (h *DataJobHandler) handleJob() {
 }
 
 func (h *DataJobHandler) handleOneJob(job msgqueue.HandlerData) {
+	start := time.Now()
+	var err error
 	dataJob := &datajob.DataJob{}
-	err := json.Unmarshal(job.Body, dataJob)
+	defer func() {
+		prom.ReportConsumeJobMetric(dataJob.Opts.ObjectType, dataJob.Opts.Dimension, err, start)
+		prom.ReportJobMetric(dataJob.Opts.ObjectType, dataJob.Opts.Dimension, err, dataJob.Opts.CurrentTime)
+	}()
+	err = json.Unmarshal(job.Body, dataJob)
 	if err != nil {
 		blog.Errorf("unmarshal job error: %v", err)
 		return
@@ -159,7 +167,7 @@ func (h *DataJobHandler) handleOneJob(job msgqueue.HandlerData) {
 	}
 	defer cmConn.Close()
 	cliWithHeader := h.clients.CmCli.NewGrpcClientWithHeader(context.Background(), cmConn)
-	client := common.NewClients(h.clients.BcsMonitorClient, h.clients.K8sStorageCli,
+	client := types.NewClients(h.clients.BcsMonitorClient, h.clients.K8sStorageCli,
 		h.clients.MesosStorageCli, cliWithHeader)
 	dataJob.SetClient(client)
 	dataJob.DoPolicy(h.stopCtx)

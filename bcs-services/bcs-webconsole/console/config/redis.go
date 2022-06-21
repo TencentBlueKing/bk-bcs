@@ -10,8 +10,10 @@
  * limitations under the License.
  *
  */
+
 package config
 
+// RedisConf
 type RedisConf struct {
 	Host           string `yaml:"host"`
 	Port           int    `yaml:"port"`
@@ -24,6 +26,7 @@ type RedisConf struct {
 	WriteTimeout   int    `yaml:"write_timeout"`
 }
 
+// Init
 func (c *RedisConf) Init() error {
 	// only for development
 	c.Host = "127.0.0.1"

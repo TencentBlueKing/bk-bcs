@@ -14,10 +14,11 @@ package datajob
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 )
@@ -37,12 +38,12 @@ func NewPublicDayPolicy(getter metric.Server, store store.Server) *PublicDayPoli
 }
 
 // ImplementPolicy PublicDayPolicy implement
-func (p *PublicDayPolicy) ImplementPolicy(ctx context.Context, opts *common.JobCommonOpts, clients *common.Clients) {
-	bucket, _ := common.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), common.DimensionDay)
+func (p *PublicDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
+	bucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionDay)
 	p.insertWorkloadPublic(ctx, opts, bucket)
 }
 
-func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *common.JobCommonOpts, bucket string) {
+func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *types.JobCommonOpts, bucket string) {
 	workloadList, err := p.store.GetRawWorkloadInfo(ctx, opts, bucket)
 	if err != nil {
 		blog.Errorf("do day public policy error:%v", err)
@@ -60,22 +61,22 @@ func (p *PublicDayPolicy) insertWorkloadPublic(ctx context.Context, opts *common
 			maxMemory := workloadList[key].MaxMemoryTime.Value
 			suggestCPU := maxCPUUsage * maxCPU * 2
 			suggestMemory := maxMemoryUsage * maxMemory * 2
-			workloadPublicMetric := &common.WorkloadPublicMetrics{
+			workloadPublicMetric := &types.WorkloadPublicMetrics{
 				SuggestCPU:    suggestCPU,
 				SuggestMemory: suggestMemory,
 			}
-			workloadPublic := &common.PublicData{
+			workloadPublic := &types.PublicData{
 				WorkloadName: workloadList[key].Name,
 				WorkloadType: workloadList[key].WorkloadType,
-				ObjectType:   common.WorkloadType,
+				ObjectType:   types.WorkloadType,
 				ClusterID:    workloadList[key].ClusterID,
 				Namespace:    workloadList[key].Namespace,
 				ClusterType:  workloadList[key].ClusterType,
 				ProjectID:    workloadList[key].ProjectID,
 				Metrics:      workloadPublicMetric,
 			}
-			workloadOpts := &common.JobCommonOpts{
-				ObjectType:   common.WorkloadType,
+			workloadOpts := &types.JobCommonOpts{
+				ObjectType:   types.WorkloadType,
 				ProjectID:    workloadList[key].ProjectID,
 				ClusterID:    workloadList[key].ClusterID,
 				ClusterType:  workloadList[key].ClusterType,

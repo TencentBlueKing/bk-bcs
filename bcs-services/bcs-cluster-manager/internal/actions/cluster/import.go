@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -40,7 +41,6 @@ type ImportAction struct {
 	ctx     context.Context
 	model   store.ClusterManagerModel
 	locker  lock.DistributedLock
-	project *cmproto.Project
 	cloud   *cmproto.Cloud
 	task    *cmproto.Task
 	cluster *cmproto.Cluster
@@ -87,7 +87,8 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 			}
 			return Cloud
 		}(),
-		IsShared: ia.req.IsShared,
+		IsShared:       ia.req.IsShared,
+		CloudAccountID: ia.req.AccountID,
 	}
 
 	return cls
@@ -129,7 +130,10 @@ func (ia *ImportAction) syncClusterCloudConfig(cls *cmproto.Cluster) error {
 			ia.cloud.CloudProvider, ia.req.ClusterID, err.Error())
 		return err
 	}
-	cmOption, err := cloudprovider.GetCredential(ia.project, ia.cloud)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ia.cloud,
+		AccountID: ia.req.AccountID,
+	})
 	if err != nil {
 		blog.Errorf("get credential for cloudprovider %s/%s cluster %s failed, %s",
 			ia.cloud.CloudID, ia.cloud.CloudProvider, ia.req.ClusterID, err.Error())
@@ -195,9 +199,9 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	}
 
 	// get cluster cloud and project info
-	err := ia.getCloudProjectInfo(ctx, req)
+	err := ia.getCloudInfo(ctx, req)
 	if err != nil {
-		blog.Errorf("get cluster %s relative Cloud/Project %s failed, %s", req.ClusterID, req.ProjectID, err.Error())
+		blog.Errorf("get cluster %s relative Cloud failed, %s", req.ClusterID, err.Error())
 		ia.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -264,10 +268,13 @@ func (ia *ImportAction) importClusterTask(ctx context.Context, cls *cmproto.Clus
 	}
 
 	// first, get cloud credentialInfo from project; second, get from cloud provider when failed to obtain
-	coption, err := cloudprovider.GetCredential(ia.project, ia.cloud)
+	coption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ia.cloud,
+		AccountID: ia.req.AccountID,
+	})
 	if err != nil {
-		blog.Errorf("Get Credential failed from Project %s and Cloud %s: %s",
-			ia.project.ProjectID, ia.cloud.CloudID, err.Error())
+		blog.Errorf("Get Credential failed from Cloud %s: %s",
+			ia.cloud.CloudID, err.Error())
 		ia.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err
 	}
@@ -307,20 +314,13 @@ func (ia *ImportAction) importClusterTask(ctx context.Context, cls *cmproto.Clus
 	return nil
 }
 
-func (ia *ImportAction) getCloudProjectInfo(ctx context.Context, req *cmproto.ImportClusterReq) error {
+func (ia *ImportAction) getCloudInfo(ctx context.Context, req *cmproto.ImportClusterReq) error {
 	cloud, err := ia.model.GetCloud(ctx, req.Provider)
 	if err != nil {
 		blog.Errorf("get cluster %s relative Cloud %s failed, %s", req.ClusterID, req.Provider, err.Error())
 		return err
 	}
 	ia.cloud = cloud
-
-	project, err := ia.model.GetProject(ctx, req.ProjectID)
-	if err != nil {
-		blog.Errorf("get cluster %s relative Project %s failed, %s", req.ClusterID, req.ProjectID, err.Error())
-		return err
-	}
-	ia.project = project
 
 	return nil
 }
@@ -341,7 +341,7 @@ func (ia *ImportAction) generateClusterID(cls *cmproto.Cluster) error {
 }
 
 // commonValidate importCluster common validate
-func commonValidate(req *cmproto.ImportClusterReq) error {
+func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 	if req.GetEngineType() == "" {
 		req.EngineType = common.ClusterEngineTypeK8s
 	}
@@ -363,13 +363,54 @@ func commonValidate(req *cmproto.ImportClusterReq) error {
 	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
 		return fmt.Errorf("ImportCluster CommonValidate CloudMode cloudID&kubeConfig empty")
 	}
+	err := ia.checkCloudModeValidate(req.CloudMode)
+	if err != nil {
+		return fmt.Errorf("ImportCluster CommonValidate failed: %v", err)
+	}
+
+	if len(req.AccountID) > 0 {
+		_, err := ia.model.GetCloudAccount(ia.ctx, ia.cloud.CloudID, req.AccountID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ia *ImportAction) checkCloudModeValidate(mode *cmproto.ImportCloudMode) error {
+	clusterList, err := getClusterList(ia.model)
+	if err != nil {
+		return err
+	}
+
+	var (
+		kubeRet   string
+		clusterID string
+	)
+	if mode.KubeConfig != "" {
+		kubeRet = base64.StdEncoding.EncodeToString([]byte(ia.req.CloudMode.KubeConfig))
+		for _, cls := range clusterList {
+			if strings.EqualFold(cls.KubeConfig, kubeRet) {
+				return fmt.Errorf("cluster[%s] already import kubeconfig", cls.ClusterID)
+			}
+		}
+	}
+	if mode.CloudID != "" {
+		clusterID = mode.CloudID
+		for _, cls := range clusterList {
+			if strings.EqualFold(cls.SystemID, clusterID) {
+				return fmt.Errorf("cluster[%s] already import cloudID", cls.ClusterID)
+			}
+		}
+	}
 
 	return nil
 }
 
 func (ia *ImportAction) validate() error {
 	// common validate
-	if err := commonValidate(ia.req); err != nil {
+	if err := ia.commonValidate(ia.req); err != nil {
 		return err
 	}
 	// cloud validate
@@ -378,9 +419,12 @@ func (ia *ImportAction) validate() error {
 		return err
 	}
 	// first, get cloud credentialInfo from project; second, get from cloud provider when failed to obtain
-	cOption, err := cloudprovider.GetCredential(ia.project, ia.cloud)
+	cOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ia.cloud,
+		AccountID: ia.req.AccountID,
+	})
 	if err != nil {
-		blog.Errorf("Get Credential failed from Project %s and Cloud %s: %s", ia.project.ProjectID,
+		blog.Errorf("Get Credential failed from Cloud %s: %s",
 			ia.cloud.CloudID, err.Error())
 		return err
 	}

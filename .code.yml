@@ -59,4 +59,3 @@ source:
       ".*/pkg/mod/.*",
       ".*/bmsf-configuration/.*"
     ]
-    

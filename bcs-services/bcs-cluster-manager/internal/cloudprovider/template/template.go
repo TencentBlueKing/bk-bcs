@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
@@ -29,14 +30,14 @@ const (
 	etcdServer = "etcdServer"
 
 	createCluster = "create_cluster"
-	addNodes = "add_nodes"
+	addNodes      = "add_nodes"
 
 	// defaultPolicy default cpu_manager policy
 	defaultPolicy = "none"
 	staticPolicy  = "static"
 
 	// bk-sops template vars prefix
-	prefix = "CM"
+	prefix   = "CM"
 	template = "template"
 )
 
@@ -82,6 +83,36 @@ type ExtraInfo struct {
 	NodeOperator   string
 	BusinessID     string
 	Operator       string
+}
+
+// BkSopsStepAction build bksops step action
+type BkSopsStepAction struct {
+	TaskName string
+	Actions  []string
+	Plugins  map[string]*proto.BKOpsPlugin
+}
+
+// BuildBkSopsStepAction build sops step action
+func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster *proto.Cluster, info ExtraInfo) error {
+	for _, name := range sopStep.Actions {
+		plugin, ok := sopStep.Plugins[name]
+		if ok {
+			pluginName := plugin.Params["template_name"]
+			if pluginName == "" {
+				pluginName = utils.RandomString(8)
+			}
+
+			stepName := cloudprovider.BKSOPTask + "-" + pluginName
+			step, err := GenerateBKopsStep(sopStep.TaskName, stepName, cluster, plugin, info)
+			if err != nil {
+				return fmt.Errorf("BuildBkSopsStepAction step failed: %v", err)
+			}
+			task.Steps[stepName] = step
+			task.StepSequence = append(task.StepSequence, stepName)
+		}
+	}
+
+	return nil
 }
 
 // GenerateBKopsStep generate common bk-sops step

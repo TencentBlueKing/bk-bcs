@@ -15,8 +15,11 @@
 package resp
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -24,21 +27,22 @@ import (
 )
 
 // NewRespDataBuilder 根据 Format 类型，生成不同的 Retrieve 请求响应数据生成器
-func NewRespDataBuilder(manifest map[string]interface{}, kind, format string) (DataBuilder, error) {
+func NewRespDataBuilder(ctx context.Context, manifest map[string]interface{}, kind, format string) (DataBuilder, error) {
 	switch format {
-	case action.ManifestFormat:
-		return &ManifestRespBuilder{manifest: manifest, kind: kind}, nil
+	case action.DefaultFormat, action.ManifestFormat:
+		return &ManifestRespBuilder{ctx: ctx, manifest: manifest, kind: kind}, nil
 	case action.FormDataFormat:
-		return &FormDataRespBuilder{manifest: manifest, kind: kind}, nil
+		return &FormDataRespBuilder{ctx: ctx, manifest: manifest, kind: kind}, nil
 	case action.SelectItemsFormat:
-		return &SelectItemsRespBuilder{manifest: manifest, kind: kind}, nil
+		return &SelectItemsRespBuilder{ctx: ctx, manifest: manifest, kind: kind}, nil
 	default:
-		return nil, errorx.New(errcode.Unsupported, "不受支持的生成器格式：%s", format)
+		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "不受支持的生成器格式：%s"), format)
 	}
 }
 
 // ManifestRespBuilder 提供 manifest && manifestExt
 type ManifestRespBuilder struct {
+	ctx      context.Context
 	manifest map[string]interface{}
 	kind     string
 }
@@ -65,6 +69,7 @@ func (b *ManifestRespBuilder) Build() (map[string]interface{}, error) {
 
 // FormDataRespBuilder 表单数据转 Manifest
 type FormDataRespBuilder struct {
+	ctx      context.Context
 	manifest map[string]interface{}
 	kind     string
 }
@@ -76,7 +81,7 @@ func (b *FormDataRespBuilder) BuildList() (map[string]interface{}, error) {
 
 // Build ...
 func (b *FormDataRespBuilder) Build() (map[string]interface{}, error) {
-	parseFunc, err := parser.GetResParseFunc(b.kind)
+	parseFunc, err := parser.GetResParseFunc(b.ctx, b.kind)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +92,7 @@ func (b *FormDataRespBuilder) Build() (map[string]interface{}, error) {
 
 // SelectItemsRespBuilder 下拉框数据生成器
 type SelectItemsRespBuilder struct {
+	ctx      context.Context
 	manifest map[string]interface{}
 	kind     string
 }
@@ -96,7 +102,7 @@ func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
 	// 取每个 K8S 资源的名称，作为下拉框选项
 	selectItems := []interface{}{}
 	for _, item := range mapx.GetList(b.manifest, "items") {
-		name := mapx.Get(item.(map[string]interface{}), "metadata.name", "--")
+		name := mapx.GetStr(item.(map[string]interface{}), "metadata.name")
 		selectItems = append(selectItems, map[string]interface{}{
 			"label": name, "value": name,
 		})

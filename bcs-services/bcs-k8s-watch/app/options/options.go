@@ -79,9 +79,10 @@ type K8sConfig struct {
 // WatchResource 指定监听的资源
 type WatchResource struct {
 	//监听指定的namespace，暂时支持一个
-	Namespace         string `json:"namespace"`
-	DisableCRD        bool   `json:"disable_crd"`
-	DisableNetservice bool   `json:"disable_netservice"`
+	Namespace         string            `json:"namespace"`
+	DisableCRD        bool              `json:"disable_crd"`
+	DisableNetservice bool              `json:"disable_netservice"`
+	LabelSelectors    map[string]string `json:"label_selectors"` // map[resourceType]LabelSelector
 }
 
 // WatchConfig k8s-watch config
@@ -106,15 +107,18 @@ func NewWatchOptions() *WatchConfig {
 	return &WatchConfig{}
 }
 
+// FileConfig the file config
 type FilterConfig struct {
 	APIResourceException []APIResourceException `json:"apiResourceException"`
 }
 
+// APIResourceException api resource exception
 type APIResourceException struct {
 	GroupVersion  string   `json:"groupVersion"`
 	ResourceKinds []string `json:"resourceKinds"`
 }
 
+// ParseFilter parse filter config from file
 func (wc *WatchConfig) ParseFilter() *FilterConfig {
 	filter := &FilterConfig{}
 	bytes, err := ioutil.ReadFile(wc.FilterConfigPath)

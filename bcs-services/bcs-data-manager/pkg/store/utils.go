@@ -14,13 +14,13 @@ package store
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 )
 
 const (
@@ -32,6 +32,8 @@ const (
 	ObjectTypeKey = "object_type"
 	// ProjectIDKey key for project id
 	ProjectIDKey = "project_id"
+	// BusinessIDKey key for business id
+	BusinessIDKey = "business_id"
 	// ClusterIDKey key for cluster id
 	ClusterIDKey = "cluster_id"
 	// NamespaceKey key for namespace
@@ -109,11 +111,11 @@ func ensure(ctx context.Context, db drivers.DB, tableName string, indexes []driv
 
 func getStartTime(dimension string) time.Time {
 	switch dimension {
-	case common.DimensionDay:
+	case types.DimensionDay:
 		return time.Now().AddDate(0, 0, -14)
-	case common.DimensionHour:
+	case types.DimensionHour:
 		return time.Now().Add((-48) * time.Hour)
-	case common.DimensionMinute:
+	case types.DimensionMinute:
 		return time.Now().Add((-60) * time.Minute)
 	default:
 		return time.Now()
@@ -137,9 +139,9 @@ func distinctSlice(key string, slice *[]map[string]string) []string {
 	return result
 }
 
-func getPublicData(ctx context.Context, db drivers.DB, cond *operator.Condition) *common.PublicData {
-	result := &common.PublicData{}
-	err := db.Table(common.DataTableNamePrefix+common.PublicTableName).Find(cond).One(ctx, result)
+func getPublicData(ctx context.Context, db drivers.DB, cond *operator.Condition) *types.PublicData {
+	result := &types.PublicData{}
+	err := db.Table(types.DataTableNamePrefix+types.PublicTableName).Find(cond).One(ctx, result)
 	if err != nil {
 		blog.Errorf("get public data error: %v", err)
 	}

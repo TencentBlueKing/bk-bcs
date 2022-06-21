@@ -14,7 +14,7 @@ import sys
 
 from ..base import *  # noqa
 
-REGION = 'ce'
+EDITION = COMMUNITY_EDITION
 
 # ******************************** Django 原始配置 ********************************
 APP_ID = os.environ.get('BKPAAS_APP_ID')
@@ -158,7 +158,8 @@ DEVOPS_CI_API_HOST = os.environ.get('DEVOPS_CI_API_URL')
 
 # 容器服务 API 地址
 DEVOPS_BCS_API_URL = os.environ.get('BKAPP_BCS_UI_API_URL')
-DEVOPS_ARTIFACTORY_HOST = os.environ.get('BKAPP_ARTIFACTORY_ADDR')
+# TODO 统一 DEVOPS_ARTIFACTORY_HOST 和 DOCKER_REPO_DOMAIN
+DEVOPS_ARTIFACTORY_HOST = os.environ.get('DOCKER_REPO_DOMAIN')
 
 # TODO 旧蓝鲸网关地址, 先废弃置空
 BCS_API_PRE_URL = ''
@@ -173,6 +174,7 @@ LOGIN_URL = f"{BK_PAAS_HOST}/login/"
 
 # APIGW API 访问地址
 APIGW_HOST = os.environ.get('BK_APIGW_URL', 'http://apigw.example.com')
+APIGW_URL_TMPL = os.environ.get('bkApiUrlTmpl', 'http://bkapi.example.com/api/{api_name}')
 
 # paas-cc 服务，后续接入 cmdb
 BK_CC_HOST = os.environ.get('BKAPP_CC_URL', 'http://bcs-cc.example.com')
@@ -200,17 +202,20 @@ CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 # ******************************** IAM & SSM 配置 ********************************
 BK_SSM_HOST = os.environ.get('BKAPP_SSM_URL')
 
-# BCS IAM MIGRATION相关，用于初始资源数据到权限中心
+# BCS IAM 配置信息
 BK_IAM_HOST = os.environ.get('BKAPP_IAM_URL', 'http://bkiam.example.com')
 BK_IAM_SYSTEM_ID = APP_ID
 BK_IAM_MIGRATION_APP_NAME = 'bcs_iam_migration'
 BK_IAM_INNER_HOST = BK_IAM_HOST
-BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/o/bk_bcs_app/apis/iam')
 # 参数说明 https://github.com/TencentBlueKing/iam-python-sdk/blob/master/docs/usage.md#22-config
-BK_IAM_USE_APIGATEWAY = False
-BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', None)
+# 如果通过网关访问, BK_IAM_APIGATEWAY_URL 将替代 BK_IAM_HOST
+BK_IAM_USE_APIGATEWAY = True
+BK_IAM_APIGATEWAY_URL = os.environ.get('BK_IAM_APIGATEWAY_URL', f"{APIGW_URL_TMPL.format(api_name='bk-iam')}/prod")
 # 权限中心前端地址
 BK_IAM_APP_URL = os.environ.get('BKAPP_IAM_APP_URL', f"{BK_PAAS_HOST}/o/bk_iam")
+# 注册到权限中心的资源地址
+BK_IAM_RESOURCE_API_HOST = os.environ.get('BK_IAM_RESOURCE_API_HOST', '')
+BK_IAM_PROVIDER_PATH_PREFIX = os.environ.get('BK_IAM_PROVIDER_PATH_PREFIX', '/bcsapi/v4/iam-provider')
 
 # ******************************** Helm 配置 ********************************
 # kubectl 只有1.12版本
@@ -364,17 +369,19 @@ BCS_CC_OPER_PROJECT_NAMESPACES = "/projects/{project_id}/clusters/null/namespace
 BCS_CC_OPER_PROJECT_NAMESPACE = "/projects/{project_id}/clusters/null/namespaces/{namespace_id}/"
 
 # 容器化部署版本，暂不需要提供 APIGW API，默认 PUBLIC KEY 设置为空值
-BCS_APP_APIGW_PUBLIC_KEY = None
+BCS_APP_APIGW_PUBLIC_KEY = os.environ.get("BCS_APP_APIGW_PUBLIC_KEY", "")
 
 # 蓝鲸制品库域名，支持镜像仓库和chart仓库
 BK_REPO_DOMAIN = os.environ.get("BK_REPO_DOMAIN", "")
 DOCKER_REPO_DOMAIN = os.environ.get("DOCKER_REPO_DOMAIN", "")
 HELM_REPO_DOMAIN = os.environ.get('HELM_REPO_DOMAIN')
-BK_REPO_AUTHORIZATION = os.environ.get("BK_REPO_AUTHORIZATION", "")
+BK_REPO_AUTHORIZATION = f"Platform {os.environ.get('BK_REPO_TOKEN', '')}"
 # 设置蓝鲸制品库的公共项目和仓库名称，默认为bcs-shared
-BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "bcs-shared-project")
-BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "image-repo")
-BK_REPO_SHARED_CHART_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_CHART_DEPOT_NAME", "chart-repo")
+BK_REPO_SHARED_PROJECT_NAME = os.environ.get("BK_REPO_SHARED_PROJECT_NAME", "blueking")
+BK_REPO_SHARED_IMAGE_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_IMAGE_DEPOT_NAME", "public-cr")
+BK_REPO_SHARED_CHART_DEPOT_NAME = os.environ.get("BK_REPO_SHARED_CHART_DEPOT_NAME", "public-charts")
+# BCS db中存储的Chart共享仓库的名称
+BCS_SHARED_CHART_REPO_NAME = os.environ.get("BCS_SHARED_CHART_REPO_NAME", "public-repo")
 
 # 集群管理的代理
 CLUSTER_MANAGER_DOMAIN = BCS_APIGW_DOMAIN["prod"]

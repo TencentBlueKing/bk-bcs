@@ -25,7 +25,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-
+	
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -38,6 +38,7 @@ import (
 	master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/remote/alertmanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/sched/client"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/sched/misc"
@@ -48,7 +49,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/util"
-
+	
 	"github.com/andygrunwald/megos"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -300,21 +301,16 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 
 	frameworkID, err := store.FetchFrameworkID()
 	if err != nil {
-		if strings.ToLower(err.Error()) != "zk: node does not exist" && !strings.Contains(err.Error(), "not found") {
-			blog.Error("Fetch framework id failed: %s", err.Error())
-			return nil, err
-		}
-
-		blog.Warn("Fetch framework id failed: %s, will create a new framework", err.Error())
+		blog.Errorf("fetch framework id from zk failed(ignore the error for now, we'll create it below), " +
+			"err: %s", err.Error())
 		frameworkID = ""
 	}
-	blog.Info("fetch frameworkId %s from DB", frameworkID)
 	if frameworkID != "" {
+		blog.Infof("fetch framework id success: %s", frameworkID)
 		fw.Id = &mesos.FrameworkID{
 			Value: proto.String(frameworkID),
 		}
 	}
-
 	return fw, nil
 }
 
@@ -994,8 +990,27 @@ func (s *Scheduler) subscribe() error {
 	blog.Info("client for mesos master streamID:%s", s.client.StreamID)
 	s.currMesosResp = resp
 	go s.handleEvents(resp)
+	
+	return s.checkFrameworkId()
+}
 
-	return nil
+func (s *Scheduler) checkFrameworkId() error {
+	checkTicker := time.NewTicker(6 * time.Second)
+	checkTimeout := time.NewTimer(60 * time.Second)
+	defer checkTicker.Stop()
+	defer checkTimeout.Stop()
+	for {
+		select {
+		case <-checkTicker.C:
+			if s.framework.Id != nil {
+				blog.Infof("Check framework id is existed, value: %s", s.framework.Id.GetValue())
+				return nil
+			}
+			blog.Warnf("Check framework id not exist.")
+		case <-checkTimeout.C:
+			return fmt.Errorf("check framework id timeout")
+		}
+	}
 }
 
 // main loop of a scheduler module

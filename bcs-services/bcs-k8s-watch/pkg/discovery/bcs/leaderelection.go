@@ -40,6 +40,7 @@ type LeaderCallbacks struct {
 	OnStoppedLeading func()
 }
 
+// NewLeaderElector creates a new LeaderElector
 func NewLeaderElector(nreg *register.NodeRegister, callbacks *LeaderCallbacks) *LeaderElector {
 	return &LeaderElector{
 		nreg:      nreg,
@@ -52,6 +53,7 @@ func NewLeaderElector(nreg *register.NodeRegister, callbacks *LeaderCallbacks) *
 	}
 }
 
+// IsLeader returns if the current node is leader
 func (le *LeaderElector) IsLeader() bool {
 	return le.role == RoleLeader
 }
@@ -67,6 +69,7 @@ func (le *LeaderElector) getActionType(state register.ServiceState) ActionType {
 	}
 }
 
+// SetRole set the role of the current node
 func (le *LeaderElector) SetRole(role Role) {
 	le.role = role
 }

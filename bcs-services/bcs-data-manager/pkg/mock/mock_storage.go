@@ -91,32 +91,45 @@ func (m *MockStorage) QueryK8SDeployment(cluster, namespace string) ([]*storage.
 	json.Unmarshal(rawDeploy, basicRsp)
 	var deployRsp []*storage.Deployment
 	json.Unmarshal(basicRsp.Data, &deployRsp)
-	m.On("QueryK8SDeployment", "BCS-K8S-15091").Return(deployRsp, nil)
+	m.On("QueryK8SDeployment", "BCS-K8S-15091", "bcs-system").Return(deployRsp, nil)
+	m.On("QueryK8SDeployment", "BCS-K8S-15091", "dfdfdfdfdf").Return([]*storage.Deployment{}, nil)
 	args := m.Called(cluster, namespace)
 	return args.Get(0).([]*storage.Deployment), args.Error(1)
 }
 
 // QueryK8SDaemonSet QueryK8SDaemonset query all daemonset in specified cluster
 func (m *MockStorage) QueryK8SDaemonSet(cluster, namespace string) ([]*storage.DaemonSet, error) {
+	var daemonSetRsp []*storage.DaemonSet
+	m.On("QueryK8SDaemonSet", "BCS-K8S-15091", "bcs-system").Return(daemonSetRsp, nil)
+	m.On("QueryK8SDaemonSet", "BCS-K8S-15091", "dfdfdfdfdf").Return(daemonSetRsp, nil)
 	args := m.Called(cluster, namespace)
 	return args.Get(0).([]*storage.DaemonSet), args.Error(1)
 }
 
 // QueryK8SStatefulSet query all statefulset in specified cluster
 func (m *MockStorage) QueryK8SStatefulSet(cluster, namespace string) ([]*storage.StatefulSet, error) {
+	var statefulSet []*storage.StatefulSet
+	m.On("QueryK8SStatefulSet", "BCS-K8S-15091", "bcs-system").Return(statefulSet, nil)
+	m.On("QueryK8SStatefulSet", "BCS-K8S-15091", "dfdfdfdfdf").Return(statefulSet, nil)
 	args := m.Called(cluster, namespace)
 	return args.Get(0).([]*storage.StatefulSet), args.Error(1)
 }
 
 // QueryK8SGameDeployment query all gamedeployment in specified cluster
 func (m *MockStorage) QueryK8SGameDeployment(cluster, namespace string) ([]*storage.GameDeployment, error) {
-	args := m.Called(cluster)
+	var gd []*storage.GameDeployment
+	m.On("QueryK8SGameDeployment", "BCS-K8S-15091", "bcs-system").Return(gd, nil)
+	m.On("QueryK8SGameDeployment", "BCS-K8S-15091", "dfdfdfdfdf").Return(gd, nil)
+	args := m.Called(cluster, namespace)
 	return args.Get(0).([]*storage.GameDeployment), args.Error(1)
 }
 
 // QueryK8SGameStatefulSet query all gamestatefulset in specified cluster
 func (m *MockStorage) QueryK8SGameStatefulSet(cluster, namespace string) ([]*storage.GameStatefulSet, error) {
-	args := m.Called(cluster)
+	var gs []*storage.GameStatefulSet
+	m.On("QueryK8SGameStatefulSet", "BCS-K8S-15091", "bcs-system").Return(gs, nil)
+	m.On("QueryK8SGameStatefulSet", "BCS-K8S-15091", "dfdfdfdfdf").Return(gs, nil)
+	args := m.Called(cluster, namespace)
 	return args.Get(0).([]*storage.GameStatefulSet), args.Error(1)
 }
 
@@ -131,7 +144,7 @@ func (m *MockStorage) QueryMesosNamespace(cluster string) ([]*storage.MesosNames
 	rawMesosNs := []byte("{\"result\":true,\"code\":0,\"message\":\"success\",\"data\":[\"marstest\",\"bcs-system\"]}")
 	basicRsp := &bcsapi.BasicResponse{}
 	json.Unmarshal(rawMesosNs, basicRsp)
-	var mesosNsRsp []*storage.Namespace
+	var mesosNsRsp []*storage.MesosNamespace
 	json.Unmarshal(basicRsp.Data, &mesosNsRsp)
 	m.On("QueryMesosNamespace", "BCS-MESOS-10039").Return(mesosNsRsp, nil)
 	args := m.Called(cluster)
@@ -140,6 +153,8 @@ func (m *MockStorage) QueryMesosNamespace(cluster string) ([]*storage.MesosNames
 
 // QueryMesosDeployment query all deployment in specified cluster
 func (m *MockStorage) QueryMesosDeployment(cluster string) ([]*storage.MesosDeployment, error) {
+	var deployRsp []*storage.MesosDeployment
+	m.On("QueryMesosDeployment", "BCS-MESOS-10039").Return(deployRsp, nil)
 	args := m.Called(cluster)
 	return args.Get(0).([]*storage.MesosDeployment), args.Error(1)
 }

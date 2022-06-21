@@ -19,6 +19,7 @@ type BCSCCConf struct {
 	Stage string `yaml:"stage"`
 }
 
+// Init
 func (c *BCSCCConf) Init() error {
 	// only for development
 	c.Host = ""

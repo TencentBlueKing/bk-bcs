@@ -15,21 +15,28 @@ package cloudprovider
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"math/rand"
+	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
 	// BKSOPTask bk-sops common job
 	BKSOPTask = "bksopsjob"
 	// TaskID inject taskID into ctx
-	TaskID    = "taskID"
+	TaskID = "taskID"
 )
 
 // GetTaskIDFromContext
@@ -46,35 +53,70 @@ func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
 	return context.WithValue(ctx, TaskID, taskID)
 }
 
-// GetCredential get specified credential information according Project configuration, if Project conf is nil, try Cloud.
-// @return CommonOption: option can be nil if no credential conf in project and cloud or when cloudprovider don't support authentication
-func GetCredential(project *proto.Project, cloud *proto.Cloud) (*CommonOption, error) {
-	if project == nil {
-		return nil, fmt.Errorf("lost Project information")
+// CredentialData dependency data
+type CredentialData struct {
+	// Cloud cloud
+	Cloud *proto.Cloud
+	// Cluster cluster
+	AccountID string
+}
+
+// GetCredential get specified credential information according Cloud configuration, if Cloud conf is nil, try Cluster Account.
+// @return CommonOption: option can be nil if no credential conf in cloud or cluster account or when cloudprovider don't support authentication
+// GetCredential get cloud credential by cloud or cluster
+func GetCredential(data *CredentialData) (*CommonOption, error) {
+	if data.Cloud == nil && data.AccountID == "" {
+		return nil, fmt.Errorf("lost cloud/account information")
 	}
-	if cloud == nil {
-		return nil, fmt.Errorf("lost cloud information")
-	}
+
 	option := &CommonOption{}
-	if len(project.Credentials) != 0 {
-		if cred, ok := project.Credentials[cloud.CloudID]; ok {
-			option.Key = cred.Key
-			option.Secret = cred.Secret
+	// get credential from cloud
+	if data.Cloud.CloudCredential != nil {
+		option.Key = data.Cloud.CloudCredential.Key
+		option.Secret = data.Cloud.CloudCredential.Secret
+	}
+
+	// if credential not exist cloud, get from cluster account
+	if len(option.Key) == 0 && data.AccountID != "" {
+		// try to get credential in cluster
+		account, err := GetStorageModel().GetCloudAccount(context.Background(), data.Cloud.CloudID, data.AccountID)
+		if err != nil {
+			return nil, fmt.Errorf("GetCloudAccount failed: %v", err)
 		}
+		option.Key = account.Account.SecretID
+		option.Secret = account.Account.SecretKey
 	}
-	if len(option.Key) == 0 && cloud.CloudCredential != nil {
-		// try to get credential in cloud
-		option.Key = cloud.CloudCredential.Key
-		option.Secret = cloud.CloudCredential.Secret
-	}
+
 	// set cloud basic confInfo
 	option.CommonConf = CloudConf{
-		CloudInternalEnable: cloud.ConfInfo.CloudInternalEnable,
-		CloudDomain:         cloud.ConfInfo.CloudDomain,
-		MachineDomain:       cloud.ConfInfo.MachineDomain,
+		CloudInternalEnable: data.Cloud.ConfInfo.CloudInternalEnable,
+		CloudDomain:         data.Cloud.ConfInfo.CloudDomain,
+		MachineDomain:       data.Cloud.ConfInfo.MachineDomain,
+	}
+
+	// check cloud credential info
+	err := checkCloudCredentialValidate(data.Cloud, option)
+	if err != nil {
+		return nil, fmt.Errorf("checkCloudCredentialValidate %s failed: %v", data.Cloud.CloudProvider, err)
 	}
 
 	return option, nil
+}
+
+func checkCloudCredentialValidate(cloud *proto.Cloud, option *CommonOption) error {
+	validate, err := GetCloudValidateMgr(cloud.CloudProvider)
+	if err != nil {
+		return err
+	}
+	err = validate.ImportCloudAccountValidate(&proto.Account{
+		SecretID:  option.Key,
+		SecretKey: option.Secret,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetCredentialByCloudID get credentialInfo by cloudID
@@ -89,68 +131,6 @@ func GetCredentialByCloudID(cloudID string) (*CommonOption, error) {
 	option.Secret = cloud.CloudCredential.Secret
 
 	return option, nil
-}
-
-const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const (
-	letterIdxBits = 6                    // 6 bits to represent a letter index
-	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
-)
-
-var src = rand.NewSource(time.Now().UnixNano())
-
-// RandomString get n length random string.
-// implementation comes from
-// https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go .
-func RandomString(n int) string {
-	b := make([]byte, n)
-	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = src.Int63(), letterIdxMax
-		}
-		if idx := int(cache & letterIdxMask); idx < len(letters) {
-			b[i] = letters[idx]
-			i--
-		}
-		cache >>= letterIdxBits
-		remain--
-	}
-	return string(b)
-}
-
-var (
-	nums        = "0123456789"
-	lower       = "abcdefghijklmnopqrstuvwxyz"
-	upper       = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	specialChar = "@#+_-[]{}"
-)
-
-func getLenRandomString(str string, length int) string {
-	bytes := []byte(str)
-
-	result := []byte{}
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < length; i++ {
-		result = append(result, bytes[r.Intn(len(str))])
-	}
-	return string(result)
-}
-
-// BuildInstancePwd build instance init passwd
-func BuildInstancePwd() string {
-	randomStr := []string{lower, upper, nums, specialChar}
-
-	totalRandomList := ""
-	for i := range randomStr {
-		totalRandomList += getLenRandomString(randomStr[i], 3)
-	}
-
-	byteRandom := []byte(totalRandomList)
-	rand.Seed(time.Now().Unix())
-	rand.Shuffle(len(byteRandom), func(i, j int) { byteRandom[i], byteRandom[j] = byteRandom[j], byteRandom[i] })
-
-	return "Bcs#" + string(byteRandom)
 }
 
 // TaskType taskType
@@ -172,6 +152,27 @@ var (
 	AddNodesToCluster TaskType = "AddNodesToCluster"
 	// RemoveNodesFromCluster task
 	RemoveNodesFromCluster TaskType = "RemoveNodesFromCluster"
+
+	// CreateNodeGroup task
+	CreateNodeGroup TaskType = "CreateNodeGroup"
+	// UpdateNodeGroup task
+	UpdateNodeGroup TaskType = "UpdateNodeGroup"
+	// DeleteNodeGroup task
+	DeleteNodeGroup TaskType = "DeleteNodeGroup"
+	// MoveNodesToNodeGroup task
+	MoveNodesToNodeGroup TaskType = "MoveNodesToNodeGroup"
+
+	// SwitchNodeGroupAutoScaling task
+	SwitchNodeGroupAutoScaling TaskType = "SwitchNodeGroupAutoScaling"
+
+	// UpdateNodeGroupDesiredNode task
+	UpdateNodeGroupDesiredNode TaskType = "UpdateNodeGroupDesiredNode"
+
+	// ApplyInstanceMachinesTask apply instance subTask
+	ApplyInstanceMachinesTask TaskType = "ApplyInstanceMachinesTask"
+
+	// CleanNodeGroupNodes task
+	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
 )
 
 // GetTaskType getTaskType by cloud
@@ -182,34 +183,48 @@ func GetTaskType(cloud string, taskName TaskType) string {
 // CloudDependBasicInfo cloud depend cluster info
 type CloudDependBasicInfo struct {
 	// Cluster info
-	Cluster  *proto.Cluster
+	Cluster *proto.Cluster
 	// Cloud info
-	Cloud    *proto.Cloud
-	// Project info
-	Project  *proto.Project
+	Cloud *proto.Cloud
+	// NodeGroup info
+	NodeGroup *proto.NodeGroup
 	// CmOption option
 	CmOption *CommonOption
 }
 
-// GetClusterDependBasicInfo get cluster and cloud depend info
-func GetClusterDependBasicInfo(clusterID string, cloudID string) (*CloudDependBasicInfo, error) {
-	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+// GetClusterDependBasicInfo get cluster/cloud/nodeGroup depend info, nodeGroup may be nil.
+// only get metadata, try not to change it
+func GetClusterDependBasicInfo(clusterID string, cloudID string, nodeGroupID string) (*CloudDependBasicInfo, error) {
+	var (
+		cluster   *proto.Cluster
+		cloud     *proto.Cloud
+		nodeGroup *proto.NodeGroup
+		err       error
+	)
+
+	cloud, cluster, err = actions.GetCloudAndCluster(GetStorageModel(), cloudID, clusterID)
 	if err != nil {
 		return nil, err
 	}
 
-	cloud, project, err := actions.GetProjectAndCloud(GetStorageModel(), cluster.ProjectID, cloudID)
-	if err != nil {
-		return nil, err
-	}
-
-	cmOption, err := GetCredential(project, cloud)
+	// cloud credential info
+	cmOption, err := GetCredential(&CredentialData{
+		Cloud:     cloud,
+		AccountID: cluster.CloudAccountID,
+	})
 	if err != nil {
 		return nil, err
 	}
 	cmOption.Region = cluster.Region
 
-	return &CloudDependBasicInfo{cluster, cloud, project, cmOption}, nil
+	if len(nodeGroupID) > 0 {
+		nodeGroup, err = actions.GetNodeGroupByGroupID(GetStorageModel(), nodeGroupID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &CloudDependBasicInfo{cluster, cloud, nodeGroup, cmOption}, nil
 }
 
 // UpdateClusterStatus set cluster status
@@ -243,11 +258,11 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 	// first import cluster need to auto generate clusterCredential info, subsequently kube-agent report to update
 	// currently, bcs only support token auth, kubeConfigList length greater 0, get zeroth kubeConfig
 	var (
-		server = ""
+		server     = ""
 		caCertData = ""
-		token = ""
+		token      = ""
 		clientCert = ""
-		clientKey = ""
+		clientKey  = ""
 	)
 	if len(config.Clusters) > 0 {
 		server = config.Clusters[0].Cluster.Server
@@ -265,18 +280,145 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 
 	now := time.Now().Format(time.RFC3339)
 	err := GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
-		ServerKey:            clusterID,
-		ClusterID:            clusterID,
-		ClientModule:         modules.BCSModuleKubeagent,
-		ServerAddress:        server,
-		CaCertData:           caCertData,
-		UserToken:            token,
-		ConnectMode:          modules.BCSConnectModeDirect,
-		CreateTime:           now,
-		UpdateTime:           now,
-		ClientKey:            clientKey,
-		ClientCert:           clientCert,
+		ServerKey:     clusterID,
+		ClusterID:     clusterID,
+		ClientModule:  modules.BCSModuleKubeagent,
+		ServerAddress: server,
+		CaCertData:    caCertData,
+		UserToken:     token,
+		ConnectMode:   modules.BCSConnectModeDirect,
+		CreateTime:    now,
+		UpdateTime:    now,
+		ClientKey:     clientKey,
+		ClientCert:    clientCert,
 	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ListNodesInClusterNodePool list nodeGroup nodes
+func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, error) {
+	condM := make(operator.M)
+	condM["nodegroupid"] = nodePoolID
+	condM["clusterid"] = clusterID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	nodes, err := GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("ListNodesInClusterNodePool NodeGroup %s all Nodes failed, %s", nodePoolID, err.Error())
+		return nil, err
+	}
+
+	//sum running & creating nodes, these status are ready to serve workload
+	var (
+		goodNodes []*proto.Node
+	)
+	for _, node := range nodes {
+		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization {
+			goodNodes = append(goodNodes, node)
+		}
+	}
+
+	return goodNodes, nil
+}
+
+// GetNodesNumWhenApplyInstanceTask get nodeNum
+func GetNodesNumWhenApplyInstanceTask(clusterID, nodeGroupID, taskType, status string, steps []string) (int, error) {
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"clusterid":   clusterID,
+		"tasktype":    taskType,
+		"nodegroupid": nodeGroupID,
+		"status":      status,
+	})
+	taskList, err := GetStorageModel().ListTask(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("GetNodesNumWhenApplyInstanceTask failed: %v", err)
+		return 0, err
+	}
+
+	currentScalingNodes := 0
+	for i := range taskList {
+		if utils.StringInSlice(taskList[i].CurrentStep, steps) {
+			desiredNodes := taskList[i].CommonParams[ScalingKey.String()]
+			nodeNum, err := strconv.Atoi(desiredNodes)
+			if err != nil {
+				blog.Errorf("GetNodesNumWhenApplyInstanceTask strconv desiredNodes failed: %v", err)
+				continue
+			}
+			currentScalingNodes += nodeNum
+		}
+	}
+
+	return currentScalingNodes, nil
+}
+
+// UpdateNodeGroupDesiredSize when scaleOutNodes failed
+func UpdateNodeGroupDesiredSize(groupID string, nodeNum int, scaleOut bool) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), groupID)
+	if err != nil {
+		blog.Errorf("updateNodeGroupDesiredSize failed when CA scale nodes: %v", err)
+		return err
+	}
+
+	if scaleOut {
+		if group.AutoScaling.DesiredSize >= uint32(nodeNum) {
+			group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize - uint32(nodeNum)
+		} else {
+			group.AutoScaling.DesiredSize = 0
+			blog.Warnf("updateNodeGroupDesiredSize abnormal, desiredSize[%v] scaleNodesNum[%v]",
+				group.AutoScaling.DesiredSize, nodeNum)
+		}
+	} else {
+		group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize + uint32(nodeNum)
+	}
+
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		blog.Errorf("updateNodeGroupDesiredSize failed when CA scale nodes: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// SaveNodeInfoToDB save node to DB
+func SaveNodeInfoToDB(node *proto.Node) error {
+	instanceID := node.NodeID
+
+	oldNode, err := GetStorageModel().GetNode(context.Background(), instanceID)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return fmt.Errorf("saveNodeInfoToDB getNode[%s] failed: %v", node.NodeID, err)
+	}
+
+	if oldNode == nil {
+		err = GetStorageModel().CreateNode(context.Background(), node)
+		if err != nil {
+			return fmt.Errorf("saveNodeInfoToDB createNode[%s] failed: %v", node.NodeID, err)
+		}
+
+		return nil
+	}
+
+	err = GetStorageModel().UpdateNode(context.Background(), node)
+	if err != nil {
+		return fmt.Errorf("saveNodeInfoToDB updateNode[%s] failed: %v", node.NodeID, err)
+	}
+
+	return nil
+}
+
+// UpdateNodeStatusByInstanceID update node status
+func UpdateNodeStatusByInstanceID(instanceID, status string) error {
+	node, err := GetStorageModel().GetNode(context.Background(), instanceID)
+	if err != nil {
+		return err
+	}
+
+	node.Status = status
+
+	err = GetStorageModel().UpdateNode(context.Background(), node)
 	if err != nil {
 		return err
 	}

@@ -22,4 +22,9 @@ import (
 // Kind2ParseFuncMap 各资源类型对应 ParseFunc
 var Kind2ParseFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
 	res.Deploy: workload.ParseDeploy,
+	res.DS:     workload.ParseDS,
+	res.STS:    workload.ParseSTS,
+	res.CJ:     workload.ParseCJ,
+	res.Job:    workload.ParseJob,
+	res.Po:     workload.ParsePo,
 }

@@ -57,11 +57,13 @@ class ListApiRespBuilder:
 
     def build(self) -> Dict:
         """组装 Dashboard Api 响应内容"""
-        result = {
-            'manifest': self.resources,
-            'manifest_ext': {
-                item['metadata']['uid']: self.formatter.format_dict(item) for item in self.resources['items']
-            },
+        result = {'manifest': {}, 'manifest_ext': {}}
+        if not self.resources:
+            return result
+
+        result['manifest'] = self.resources
+        result['manifest_ext'] = {
+            item['metadata']['uid']: self.formatter.format_dict(item) for item in self.resources['items']
         }
         return result
 

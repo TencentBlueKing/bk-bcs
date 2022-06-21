@@ -35,7 +35,12 @@ local clustermanager_tunnel_path = "/clustermanager/clusters/"
 local last_sync_time
 local last_sync_status
 local credential_global_cache = ngx_shared[plugin_name]
-local credential_worker_cache = core.lrucache.new({ttl = 30, count = 5000})
+local credential_worker_cache = core.lrucache.new({
+    ttl = 30,
+    count = 5000,
+    serial_creating = true,
+    invalid_stale = true,
+})
 local attr = {}
 
 local schema = {
@@ -198,11 +203,13 @@ local function periodly_sync_cluster_credentials_in_master()
             type = "roundrobin",
             scheme = "https",
         }
-        if cluster_credential["clientCert"] and cluster_credential["clientKey"] then
+        if cluster_credential["clientCert"] and type(cluster_credential["clientCert"]) == "string" and #(cluster_credential["clientCert"])>0
+            and cluster_credential["clientKey"] and type(cluster_credential["clientKey"]) == "string" and #(cluster_credential["clientKey"])>0 then
             upstream["tls"] = {
                 client_cert = cluster_credential["clientCert"], 
                 client_key = cluster_credential["clientKey"],
             }
+            upstream["pass_host"] = "node"
         end
         local upstream_nodes = {}
         local addresses = stringx.split(cluster_credential["serverAddress"], ",")

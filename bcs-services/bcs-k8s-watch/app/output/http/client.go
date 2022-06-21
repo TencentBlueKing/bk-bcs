@@ -90,6 +90,7 @@ var WatchKindSet = map[string]struct{}{
 	"ExportService": {},
 }
 
+// StorageClient is http client for storage services.
 type StorageClient struct {
 	HTTPClientConfig *bcs.HTTPClientConfig
 	ClusterID        string
@@ -98,6 +99,7 @@ type StorageClient struct {
 	ResourceName     string
 }
 
+// StorageResponse is response of storage services.
 type StorageResponse struct {
 	Result  bool        `json:"result"`
 	Code    int64       `json:"code"`
@@ -105,6 +107,7 @@ type StorageResponse struct {
 	Data    interface{} `json:"data"`
 }
 
+// StorageRequestBody is request body of storage services.
 type StorageRequestBody struct {
 	Data interface{} `json:"data"`
 }
@@ -137,6 +140,7 @@ func (client *StorageClient) GetURL() (string, string) {
 	return fmt.Sprintf(ClusterScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.ResourceType, client.ResourceName), HandlerGetClusterName
 }
 
+// GetBody get body
 func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
 	if client.ResourceType != "Event" {
 		body := StorageRequestBody{
@@ -183,6 +187,7 @@ func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
 
 }
 
+// NewRequest new request
 func (client *StorageClient) NewRequest() (*gorequest.SuperAgent, error) {
 	request := gorequest.New()
 
@@ -203,6 +208,7 @@ func (client *StorageClient) NewRequest() (*gorequest.SuperAgent, error) {
 	return request, nil
 }
 
+// GET get
 func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 	start := time.Now()
 	status := metrics.SucStatus
@@ -238,6 +244,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 	return
 }
 
+// DELETE delete
 func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 	start := time.Now()
 	status := metrics.SucStatus
@@ -273,6 +280,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 	return
 }
 
+// PUT put
 func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse, err error) {
 	start := time.Now()
 	status := metrics.SucStatus
@@ -358,6 +366,7 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 	return
 }
 
+// ListNamespaceResource list namespace resource
 func (client *StorageClient) ListNamespaceResource() (data []interface{}, err error) {
 	const (
 		handlerName = HandlerListNamespaceName
@@ -411,6 +420,7 @@ func (client *StorageClient) ListNamespaceResource() (data []interface{}, err er
 	return
 }
 
+// ListClusterResource list cluster resource
 func (client *StorageClient) ListClusterResource() (data []interface{}, err error) {
 	const (
 		handlerName = HandlerListClusterName

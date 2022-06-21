@@ -18,10 +18,42 @@ import (
 	"fmt"
 	"time"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
+
+// GetTaskStateAndCurrentStep get task and task current step
+func GetTaskStateAndCurrentStep(taskID, stepName string) (*TaskState, *proto.Step, error) {
+	task, err := GetStorageModel().GetTask(context.Background(), taskID)
+	if err != nil {
+		blog.Errorf("task[%s] get detail task information from storage failed, %s. task retry",
+			taskID, err.Error())
+		return nil, nil, err
+	}
+	if task.CommonParams == nil {
+		task.CommonParams = make(map[string]string)
+	}
+
+	state := &TaskState{Task: task, JobResult: NewJobSyncResult(task)}
+	if state.IsTerminated() {
+		blog.Errorf("task[%s] is terminated, step %s skip", taskID, stepName)
+		return nil, nil, fmt.Errorf("task %s terminated", taskID)
+	}
+	step, err := state.IsReadyToStep(stepName)
+	if err != nil {
+		blog.Errorf("task[%s] not turn to run step %s, err %s", taskID, stepName, err.Error())
+		return nil, nil, err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("task[%s]: current step[%s] successful and skip", taskID, stepName)
+		return state, nil, nil
+	}
+	blog.Infof("task[%s]: run step %s, system: %s, old state: %s, params %v",
+		taskID, stepName, step.System, step.Status, step.Params)
+
+	return state, step, nil
+}
 
 // TaskState handle task state
 type TaskState struct {

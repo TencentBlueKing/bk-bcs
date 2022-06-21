@@ -106,7 +106,7 @@ func isProjNSinSharedCluster(manifest map[string]interface{}, projectCode string
 	// 规则：属于项目的命名空间满足以下两点，但这里只需要检查 annotations 即可
 	//   1. 命名(name) 以 ieg-{project_code}- 开头
 	//   2. annotations 中包含 io.tencent.bcs.projectcode: {project_code}
-	return mapx.Get(manifest, []string{"metadata", "annotations", ProjCodeAnnoKey}, "") == projectCode
+	return mapx.GetStr(manifest, []string{"metadata", "annotations", ProjCodeAnnoKey}) == projectCode
 }
 
 // NSWatcher ...

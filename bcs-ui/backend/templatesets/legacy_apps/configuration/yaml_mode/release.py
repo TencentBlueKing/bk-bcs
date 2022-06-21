@@ -16,6 +16,7 @@ import datetime
 from dataclasses import dataclass
 
 import jinja2
+import yaml
 from rest_framework.exceptions import ParseError
 
 from backend.helm.app import bcs_info_injector
@@ -109,7 +110,7 @@ class ReleaseDataProcessor:
         except Exception as e:
             raise ParseError(f"inject failed: {e}")
 
-    def release_data(self):
+    def release_data(self, is_preview=False):
         inject_configs = self._get_inject_configs()
         bcs_variables = self._get_bcs_variables()
 
@@ -118,7 +119,11 @@ class ReleaseDataProcessor:
 
         for res_files in self.template_files:
             for f in res_files["files"]:
-                f["content"] = self._inject(f["content"], inject_configs, bcs_variables)
+                content = self._inject(f["content"], inject_configs, bcs_variables)
+                # NOTE: 多转换一次，目的去掉yaml key 上的双引号
+                if is_preview:
+                    content = yaml.dump(yaml.load(content))
+                f["content"] = content
         return ReleaseData(
             self.project_id, self.namespace_info, self.show_version, self.template_files, self.template_variables
         )

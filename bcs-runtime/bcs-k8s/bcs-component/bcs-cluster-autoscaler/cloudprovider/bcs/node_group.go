@@ -56,6 +56,7 @@ type NodeGroup struct {
 
 // TimeRange defines crontab regular
 type TimeRange struct {
+	Name       string
 	Schedule   string
 	Zone       string
 	DesiredNum int
@@ -158,7 +159,8 @@ func (group *NodeGroup) DecreaseTargetSize(delta int) error {
 func (group *NodeGroup) Belongs(node *apiv1.Node) (bool, error) {
 	ip := getIP(node)
 	if len(ip) == 0 {
-		qcloudref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+		// qcloudref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+		qcloudref, err := InstanceRefFromInnerIP(node.Status.Addresses)
 		if err != nil {
 			return false, err
 		}
@@ -234,19 +236,19 @@ func (group *NodeGroup) DeleteNodes(nodes []*apiv1.Node) error {
 	if len(ips) < maxRecordsReturnedByAPI {
 		klog.Infof("DeleteInstances len(%d)", len(ips))
 		return group.deleteInstances(ips)
-	} else {
-		for i := 0; i < len(ips); i = i + maxRecordsReturnedByAPI {
-			klog.Infof("page DeleteInstances i %d, len(%d)", i, len(ips))
-			idx := math.Min(float64(i+maxRecordsReturnedByAPI), float64(len(ips)))
-			err := group.deleteInstances(ips[i:int(idx)])
-			if err != nil {
-				return err
-			}
-			time.Sleep(intervalTimeDetach)
-			klog.Infof("page DeleteInstances i %d, len(%d) done", i, len(ips))
-		}
-		return nil
 	}
+	for i := 0; i < len(ips); i = i + maxRecordsReturnedByAPI {
+		klog.Infof("page DeleteInstances i %d, len(%d)", i, len(ips))
+		idx := math.Min(float64(i+maxRecordsReturnedByAPI), float64(len(ips)))
+		err := group.deleteInstances(ips[i:int(idx)])
+		if err != nil {
+			return err
+		}
+		time.Sleep(intervalTimeDetach)
+		klog.Infof("page DeleteInstances i %d, len(%d) done", i, len(ips))
+	}
+	return nil
+
 }
 
 // Id returns node group id.
@@ -413,6 +415,7 @@ func (group *NodeGroup) TimeRanges() ([]*TimeRange, error) {
 	}
 	for _, t := range pc.TimeRanges {
 		result = append(result, &TimeRange{
+			Name:       t.Name,
 			Schedule:   t.Schedule,
 			Zone:       t.Zone,
 			DesiredNum: int(t.DesiredNum),

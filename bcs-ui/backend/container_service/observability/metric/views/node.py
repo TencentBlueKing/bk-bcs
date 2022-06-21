@@ -68,7 +68,7 @@ class NodeMetricViewSet(SystemViewSet):
         if node_ip not in node_ip_list:
             raise error_codes.ValidateError(_('IP {} 不合法或不属于当前集群').format(node_ip))
 
-        response_data = {'provider': 'Prometheus'}
+        response_data = {'provider': prom.PROVIDER}
         for info in prom.get_node_info(cluster_id, node_ip, bk_biz_id=request.project.cc_app_id).get('result') or []:
             for k, v in info['metric'].items():
                 if k in constants.NODE_UNAME_METRIC:
