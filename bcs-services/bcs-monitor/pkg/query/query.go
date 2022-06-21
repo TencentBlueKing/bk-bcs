@@ -68,6 +68,7 @@ func NewQueryAPI(
 	kitLogger gokit.Logger,
 	httpAddr string,
 	storeList []string,
+	httpSDURLs []string,
 	g *run.Group,
 ) (*QueryAPI, error) {
 
