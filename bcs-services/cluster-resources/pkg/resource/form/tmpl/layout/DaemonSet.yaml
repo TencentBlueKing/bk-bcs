@@ -11,5 +11,5 @@
       {{- include "workload.security" . | indent 6 }}
       {{- include "workload.other" . | indent 6 }}
     prop: spec
-{{- include "workload.volume" . }}
 {{- include "container.containerGroup" . }}
+{{- include "workload.volume" . }}

@@ -404,7 +404,7 @@ var exceptedNetworking = model.Networking{
 	HostNetwork:           false,
 	HostPID:               false,
 	ShareProcessNamespace: false,
-	HostName:              "vm-12345",
+	Hostname:              "vm-12345",
 	Subdomain:             "blueking",
 	NameServers: []string{
 		"1.1.1.1",

@@ -240,7 +240,7 @@ func ParseNetworking(podSpec map[string]interface{}, networking *model.Networkin
 	networking.HostNetwork = mapx.GetBool(podSpec, "hostNetwork")
 	networking.HostPID = mapx.GetBool(podSpec, "hostPID")
 	networking.ShareProcessNamespace = mapx.GetBool(podSpec, "shareProcessNamespace")
-	networking.HostName = mapx.GetStr(podSpec, "hostname")
+	networking.Hostname = mapx.GetStr(podSpec, "hostname")
 	networking.Subdomain = mapx.GetStr(podSpec, "subdomain")
 	for _, ns := range mapx.GetList(podSpec, "dnsConfig.nameservers") {
 		networking.NameServers = append(networking.NameServers, ns.(string))

@@ -15,6 +15,9 @@ metadata:
       ui:component:
         name: select
         props:
+          {{- if eq .action "update" }}
+          disabled: true
+          {{- end }}
           placeholder: " "
           clearable: false
           remoteConfig:
@@ -30,6 +33,11 @@ metadata:
       title: {{ i18n "名称" .lang }}
       type: string
       default: {{ .resName }}
+      {{- if eq .action "update" }}
+      ui:component:
+        props:
+          disabled: true
+      {{- end }}
       ui:rules:
         - required
         - maxLength128
@@ -41,6 +49,9 @@ metadata:
       ui:component:
         name: select
         props:
+          {{- if eq .action "update" }}
+          disabled: true
+          {{- end }}
           clearable: false
           searchable: true
           remoteConfig:
@@ -79,6 +90,10 @@ metadata:
         type: object
       ui:component:
         name: noTitleArray
+        {{- if eq .action "update" }}
+        props:
+          disabled: true
+        {{- end }}
     annotations:
       title: {{ i18n "注解" .lang }}
       type: array

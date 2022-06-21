@@ -22,9 +22,9 @@ import (
 
 func TestWebAnnotations(t *testing.T) {
 	addColumns := []interface{}{
-		map[string]interface{}{"name": "Replicas", "type": "integer", "JSONPath": ".spec.replicas"},
-		map[string]interface{}{"name": "Ready_Replicas", "type": "integer", "JSONPath": ".status.readyReplicas"},
-		map[string]interface{}{"name": "Current_Replicas", "type": "integer", "JSONPath": ".status.currentReplicas"},
+		map[string]interface{}{"name": "Replicas", "type": "integer", "jsonPath": ".spec.replicas"},
+		map[string]interface{}{"name": "Ready", "type": "integer", "jsonPath": ".status.readyReplicas"},
+		map[string]interface{}{"name": "Current", "type": "integer", "jsonPath": ".status.currentReplicas"},
 	}
 	exceptAnnos := Annotations{
 		Perm: Perm{
@@ -49,7 +49,7 @@ func TestWebAnnotations(t *testing.T) {
 		NewItemPerm("ed8250cc", "editBtn", PermDetail{true, "", ""}),
 		NewFeatureFlag("pvc", false),
 		NewFeatureFlag("hpa", true),
-		NewCRDAdditionalColumns(addColumns),
+		NewAdditionalColumns(addColumns),
 	)
 	assert.Equal(t, exceptAnnos, actualAnnos)
 

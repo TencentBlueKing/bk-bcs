@@ -134,7 +134,7 @@ hostPID: {{ .hostPID }}
 shareProcessNamespace: {{ .shareProcessNamespace }}
 {{- end }}
 {{- if .hostname }}
-hostname: {{ .hostname }}
+hostname: {{ .hostname | quote }}
 {{- end }}
 {{- if .subdomain }}
 subdomain: {{ .subdomain | quote }}

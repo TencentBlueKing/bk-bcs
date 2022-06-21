@@ -89,13 +89,7 @@ func TestNewManifestRenderer(t *testing.T) {
 	// 注入信息检查
 	assert.Equal(t, "apps/v1", mapx.GetStr(manifest, "apiVersion"))
 
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "labels", res.EditModeLabelKey}))
-
-	paths := []string{"spec", "selector", "matchLabels", res.EditModeLabelKey}
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, paths))
-
-	paths = []string{"spec", "template", "metadata", "labels", res.EditModeLabelKey}
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, paths))
+	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}))
 }
 
 func TestSchemaRenderer(t *testing.T) {
@@ -103,21 +97,21 @@ func TestSchemaRenderer(t *testing.T) {
 
 	// 默认版本（中文）
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default").Render()
+		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}
 
 	// 英文版本
 	ctx := context.WithValue(context.TODO(), ctxkey.LangKey, i18n.EN)
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default").Render()
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}
 
 	// 中文版本
 	ctx = context.WithValue(context.TODO(), ctxkey.LangKey, i18n.ZH)
 	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default").Render()
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}
 }

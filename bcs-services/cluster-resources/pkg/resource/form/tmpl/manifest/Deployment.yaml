@@ -8,13 +8,17 @@ spec:
   replicas: {{ if .spec.replicas.cnt }}{{ .spec.replicas.cnt }}{{ else }} 0 {{ end }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}
-    {{- if and (eq .spec.replicas.updateStrategy "RollingUpdate") (or .spec.replicas.maxUnavailable .spec.replicas.maxSurge) }}
+    {{- if eq .spec.replicas.updateStrategy "RollingUpdate" }}
     rollingUpdate:
       {{- if .spec.replicas.maxUnavailable }}
-      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "cnt" }}% {{ end }}
+      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "percent" }}% {{ end }}
+      {{- else }}
+      maxUnavailable: 0
       {{- end }}
       {{- if .spec.replicas.maxSurge }}
-      maxSurge: {{ .spec.replicas.maxSurge }}{{ if eq .spec.replicas.msUnit "cnt" }}% {{ end }}
+      maxSurge: {{ .spec.replicas.maxSurge }}{{ if eq .spec.replicas.msUnit "percent" }}% {{ end }}
+      {{- else }}
+      maxSurge: 0
       {{- end }}
     {{- end }}
   {{- if .spec.replicas.minReadySecs }}

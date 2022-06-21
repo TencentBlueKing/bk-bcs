@@ -45,13 +45,13 @@ type DummyTransformer struct {
 
 // ToManifest 转换成 Manifest
 func (t *DummyTransformer) ToManifest() (map[string]interface{}, error) {
-	// 若原始配置中没有 labels，则默认新建
-	if labels, _ := mapx.GetItems(t.manifest, "metadata.labels"); labels == nil {
-		_ = mapx.SetItems(t.manifest, "metadata.labels", map[string]interface{}{})
-	}
-	// 使用原生 Manifest 作为创建 / 更新配置的，添加 EditMode == yaml 的标识
-	if err := mapx.SetItems(t.manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeYaml); err != nil {
-		return nil, err
+	// 使用原生 Manifest 作为创建 / 更新配置时，检查 editMode，如果值不为空，则设置为 yaml，
+	// 避免出现使用 yaml 模式后依然使用表单进行编辑导致的表单未支持字段配置丢失的情况
+	paths := []string{"metadata", "annotations", res.EditModeAnnoKey}
+	if editMode := mapx.GetStr(t.manifest, paths); editMode != "" {
+		if err := mapx.SetItems(t.manifest, paths, res.EditModeYaml); err != nil {
+			return nil, err
+		}
 	}
 	return t.manifest, nil
 }

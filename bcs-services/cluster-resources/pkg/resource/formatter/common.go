@@ -27,7 +27,7 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := map[string]interface{}{
 		"age":        timex.CalcAge(rawCreateTime.(string)),
 		"createTime": createTime,
-		"editMode":   mapx.Get(manifest, []string{"metadata", "labels", res.EditModeLabelKey}, res.EditModeYaml),
+		"editMode":   mapx.Get(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}, res.EditModeYaml),
 	}
 	return ret
 }

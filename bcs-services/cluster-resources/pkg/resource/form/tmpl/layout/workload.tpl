@@ -1,6 +1,10 @@
 {{- define "workload.affinity" -}}
 - - group:
       - - group:
+            - [ "priority", "weight" ]
+            - [ "selector" ]
+          prop: nodeAffinity
+      - - group:
             - [ "type", "priority", "namespaces", "weight" ]
             - [ "topologyKey" ]
             - - group:
@@ -10,10 +14,6 @@
           prop: podAffinity
           container:
             grid-template-columns: "1fr 1fr 1fr 100px"
-      - - group:
-            - [ "priority", "weight" ]
-            - [ "selector" ]
-          prop: nodeAffinity
     prop: affinity
 {{- end }}
 
@@ -21,9 +21,9 @@
 - - group:
       - [ "dnsPolicy" ]
       - [ "hostIPC", "hostNetwork", "hostPID", "shareProcessNamespace" ]
-      - [ "hostName", "subdomain" ]
-      - [ "nameServers", "searches" ]
-      - [ "dnsResolverOpts", "hostAliases" ]
+      - [ "hostname", "subdomain" ]
+      - [ "hostAliases", "." ]
+      - [ "nameServers", "searches", "dnsResolverOpts", "dnsResolverOpts" ]
     prop: networking
 {{- end }}
 

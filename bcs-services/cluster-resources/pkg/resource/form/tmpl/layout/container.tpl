@@ -69,13 +69,13 @@
       - - group:
             # 请求路径（path）占三列宽度
             - [ "type", "port", "path", "path", "path" ]
-            - [ "initialDelaySecs", "periodSecs", "timeoutSecs", "successThreshold", "failureThreshold" ]
             - [ "command" ]
+            - [ "initialDelaySecs", "periodSecs", "timeoutSecs", "successThreshold", "failureThreshold" ]
           prop: readinessProbe
       - - group:
             - [ "type", "port", "path", "path", "path" ]
-            - [ "initialDelaySecs", "periodSecs", "timeoutSecs", "successThreshold", "failureThreshold" ]
             - [ "command" ]
+            - [ "initialDelaySecs", "periodSecs", "timeoutSecs", "successThreshold", "failureThreshold" ]
           prop: livenessProbe
     prop: healthz
 {{- end }}

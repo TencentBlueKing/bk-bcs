@@ -29,7 +29,7 @@ import (
 func (h *Handler) GetResFormSchema(
 	ctx context.Context, req *clusterRes.GetResFormSchemaReq, resp *clusterRes.CommonResp,
 ) error {
-	schema, err := renderer.NewSchemaRenderer(ctx, req.ClusterID, req.Kind, req.Namespace).Render()
+	schema, err := renderer.NewSchemaRenderer(ctx, req.ClusterID, req.Kind, req.Namespace, req.Action).Render()
 	if err != nil {
 		return err
 	}

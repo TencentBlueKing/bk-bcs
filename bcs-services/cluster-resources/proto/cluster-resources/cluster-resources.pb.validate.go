@@ -4449,6 +4449,17 @@ func (m *GetResFormSchemaReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _GetResFormSchemaReq_Action_InLookup[m.GetAction()]; !ok {
+		err := GetResFormSchemaReqValidationError{
+			field:  "Action",
+			reason: "value must be in list [ create update]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return GetResFormSchemaReqMultiError(errors)
 	}
@@ -4529,6 +4540,12 @@ var _ interface {
 } = GetResFormSchemaReqValidationError{}
 
 var _GetResFormSchemaReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _GetResFormSchemaReq_Action_InLookup = map[string]struct{}{
+	"":       {},
+	"create": {},
+	"update": {},
+}
 
 // Validate checks the field values on GetFormSupportedApiVersionsReq with the
 // rules defined in the proto definition for this message. If any rules are

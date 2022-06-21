@@ -130,9 +130,14 @@ func genEnvFromEnvVar(envFrom map[string]interface{}) model.EnvVar {
 func parseContainerHealthz(raw map[string]interface{}, healthz *model.ContainerHealthz) {
 	if readinessProbe, ok := raw["readinessProbe"]; ok {
 		parseProbe(readinessProbe.(map[string]interface{}), &healthz.ReadinessProbe)
+	} else {
+		// 默认不启用探针，会预设初始的延时，成功失败阈值等
+		setDefaultProbe(&healthz.ReadinessProbe)
 	}
 	if livenessProbe, ok := raw["livenessProbe"]; ok {
 		parseProbe(livenessProbe.(map[string]interface{}), &healthz.LivenessProbe)
+	} else {
+		setDefaultProbe(&healthz.LivenessProbe)
 	}
 }
 
@@ -155,6 +160,16 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 			probe.Command = append(probe.Command, command.(string))
 		}
 	}
+}
+
+// 预设探针默认值，但是不会启用
+func setDefaultProbe(probe *model.Probe) {
+	probe.Type = ProbeTypeNoUse
+	probe.PeriodSecs = 10
+	probe.InitialDelaySecs = 0
+	probe.TimeoutSecs = 1
+	probe.SuccessThreshold = 1
+	probe.FailureThreshold = 3
 }
 
 func parseContainerRes(raw map[string]interface{}, res *model.ContainerRes) {

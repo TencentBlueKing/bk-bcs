@@ -121,6 +121,9 @@ func (c *ResClient) Delete(ctx context.Context, namespace, name string, opts met
 
 // Watch 获取某类资源 watcher
 func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error) {
+	if err := c.permValidate(ctx, action.List, namespace); err != nil {
+		return nil, err
+	}
 	return c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
 }
 
