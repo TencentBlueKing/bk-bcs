@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import datetime
 import json
+import logging
 import subprocess
 
 from django.conf import settings
@@ -23,7 +24,7 @@ from rest_framework.exceptions import ParseError
 from ruamel.yaml.error import YAMLFutureWarning
 
 from backend.components import paas_cc
-from backend.helm.app.utils import remove_updater_creator_from_manifest
+from backend.helm.app.utils import remove_updater_creator_from_manifest, is_log_cluster
 from backend.helm.helm.bcs_variable import collect_system_variable, get_valuefile_with_bcs_variable_injected
 from backend.helm.helm.constants import DEFAULT_VALUES_FILE_NAME, KEEP_TEMPLATE_UNCHANGED, RESOURCE_NAME_REGEX
 from backend.helm.helm.models import ChartVersion
@@ -43,6 +44,8 @@ from backend.utils.tempfile import save_to_temporary_dir
 
 from . import bcs_info_injector, utils
 from .models import App
+
+logger = logging.getLogger(__name__)
 
 
 def preview_parse(manifest, namespace):
@@ -385,6 +388,8 @@ class AppUpgradeSLZ(AppBaseSLZ):
     cmd_flags = serializers.JSONField(required=False, default=[])
 
     def update(self, instance, validated_data):
+        if is_log_cluster(ns_info['cluster_id']):
+            logger.warning("start to update helm release")
         ns_info = self.get_ns_info_by_id(instance.namespace_id)
 
         perm_ctx = NamespaceScopedPermCtx(
@@ -402,6 +407,8 @@ class AppUpgradeSLZ(AppBaseSLZ):
             namespace_id=instance.namespace_id,
         )
 
+        if is_log_cluster(ns_info['cluster_id']):
+            logger.warning("update helm release, release detail: cluster_id: %s, namespace: %s name: %s", ns_info["cluster_id"], ns_info["name"], instance.name)
         return instance.upgrade_app(
             access_token=self.access_token,
             chart_version_id=validated_data["upgrade_verion"],

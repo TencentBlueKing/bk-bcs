@@ -19,6 +19,7 @@ import traceback
 from dataclasses import dataclass
 
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from celery import current_task
 
 from backend.kube_core.toolkit.kubectl.exceptions import KubectlError, KubectlExecutionError
 from backend.utils import client as bcs_client
@@ -28,7 +29,7 @@ from backend.utils.client import make_kubectl_client, make_kubectl_client_from_k
 from ..helm.bcs_variable import get_valuefile_with_bcs_variable_injected
 from ..toolkit import utils as bcs_helm_utils
 from ..toolkit.kubehelm.exceptions import HelmError, HelmExecutionError
-from .utils import get_cc_app_id
+from .utils import get_cc_app_id, is_log_cluster
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +100,14 @@ class AppDeployer:
     def run_with_helm(self, operation):
         # NOTE: 兼容先前
         if operation in [ChartOperations.INSTALL.value, ChartOperations.UPGRADE.value]:
+            if is_log_cluster(self.app.cluster_id):
+                logger.warning(
+                    "start to exec task, task_id: %s release detail: cluster_id: %s, namespace: %s name: %s",
+                    current_task.request.id,
+                    self.app.cluster_id,
+                    self.app.namespace,
+                    self.app.name,
+                )
             content = self.app.render_app(
                 access_token=self.access_token,
                 username=self.app.updator,
@@ -156,6 +165,14 @@ class AppDeployer:
         transitioning_result = True
         try:
             if operation in [ChartOperations.INSTALL.value, ChartOperations.UPGRADE.value]:
+                if is_log_cluster(self.app.cluster_id):
+                    logger.warning(
+                        "helm release task started, task_id: %s release detail: cluster_id: %s, namespace: %s name: %s",
+                        current_task.request.id,
+                        self.app.cluster_id,
+                        self.app.namespace,
+                        self.app.name,
+                    )
                 project_id = self.app.project_id
                 namespace = self.app.namespace
                 bcs_inject_data = bcs_helm_utils.BCSInjectData(
@@ -197,10 +214,10 @@ class AppDeployer:
             transitioning_message = (
                 "helm command execute failed.\n" "Error code: {error_no}\nOutput:\n{output}"
             ).format(error_no=e.error_no, output=e.output)
-            logger.warn(transitioning_message)
+            logger.warn("helm operate error, %s", transitioning_message)
         except HelmError as e:
             err_msg = str(e)
-            logger.warn(err_msg)
+            logger.warn("helm operate error, %s", err_msg)
             # TODO: 现阶段针对删除release找不到的情况，认为是正常的
             if "not found" in err_msg and operation == ChartOperations.UNINSTALL.value:
                 transitioning_result = True
@@ -211,12 +228,20 @@ class AppDeployer:
         except Exception as e:
             err_msg = str(e)
             transitioning_result = False
-            logger.warning(err_msg)
+            logger.warning("helm operate error, %s", err_msg)
             transitioning_message = self.collect_transitioning_error_message(e)
         else:
             transitioning_result = True
             transitioning_message = "app success %s" % operation
 
+        if is_log_cluster(self.app.cluster_id):
+            logger.warning(
+                "helm release task finished, task_id: %s release detail: cluster_id: %s, namespace: %s name: %s",
+                current_task.request.id,
+                self.app.cluster_id,
+                self.app.namespace,
+                self.app.name,
+            )
         self.app.set_transitioning(transitioning_result, transitioning_message)
 
     def run_with_kubectl(self, operation):

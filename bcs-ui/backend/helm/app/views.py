@@ -135,7 +135,7 @@ class AppView(ActionSerializerMixin, AppViewBase):
         cluster_id = params.get('cluster_id')
         namespace = params.get("namespace")
         # TODO: 先写入db中，防止前端通过ID，获取数据失败；后续通过helm服务提供API
-        if cluster_id:
+        if cluster_id and namespace:
             try:
                 ctx_cluster = CtxCluster.create(
                     id=cluster_id, token=request.user.token.access_token, project_id=project_id
