@@ -303,7 +303,8 @@
             async handleGetFormSchemaData () {
                 this.formSchema = await this.$store.dispatch('dashboard/getFormSchema', {
                     kind: this.kind,
-                    namespace: this.namespace
+                    namespace: this.namespace,
+                    action: this.isEdit ? 'update' : 'create'
                 })
             },
             async request (url, config) {
