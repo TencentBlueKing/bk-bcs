@@ -60,6 +60,8 @@
 - msgID: 获取容器环境变量失败，请确认容器处于 Running 状态
   en: 'failed to get container environment variables, please make sure the container is in Running state'
 # JsonSchema 校验规则
+- msgID: 值不能为零
+  en: 'no zero value required'
 - msgID: 值不能为空
   en: 'value required'
 - msgID: 仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾
@@ -76,6 +78,18 @@
   en: "only letters, numbers, '-', '_' and '/' are supported and must start and end with alphanumeric"
 - msgID: 需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字
   en: "must start and end with alphanumeric, can contain '-', '_', '.' and alphanumeric"
+- msgID: 至少包含一条命令
+  en: At least contains one command
+- msgID: 最大调度 Pod 数量 与最大不可用数量不可均为 0
+  en: The MaxSurge and MaxUnavailable cannot both be 0
+- msgID: 进程截止时间必须大于最小就绪时间
+  en: ProgressDeadlineSecs must be greater than MinReadySecs
+- msgID: 至少包含一条调度规则
+  en: At least contains one scheduling rule
+- msgID: 至少包含一个服务器地址
+  en: At least contains one name server
+- msgID: 主机 PID 与共享进程命名空间不可同时启用
+  en: HostPID and ShareProcessNamespace cannot both be true
 # JsonSchema 标题，描述等
 - msgID: Pod 规则
   en: Pod Rules
@@ -101,8 +115,6 @@
   en: Node Rules
 - msgID: 基本信息
   en: Metadata
-- msgID: 不同集群版本，同一资源 Preferred Version 可能不同；如 Deployment 在 1.12 版本集群中 Preferred Version 为 extensions/v1beta1，而在更高版本中则为 apps/v1
-  en: Different cluster versions may have different preferred version for the same resource; for example, in k8s 1.12 cluster, the preferred version of Deployment is extensions/v1beta1, and in later versions it is apps/v1
 - msgID: 名称
   en: Name
 - msgID: 标签
@@ -249,14 +261,10 @@
   en: Cnt
 - msgID: 最大不可用数量
   en: MaxUnavailable
-- msgID: 最大调度 Pod 数量 与最大不可用数量不可均为 0
-  en: The MaxSurge and MaxUnavailable cannot both be 0
 - msgID: 最小就绪时间
   en: MinReadySecs
 - msgID: 进程截止时间
   en: ProgressDeadlineSecs
-- msgID: 进程截止时间必须大于最小就绪时间
-  en: ProgressDeadlineSecs must be greater than MinReadySecs
 - msgID: Pod 管理策略
   en: PodManagePolicy
 - msgID: 任务管理
@@ -303,10 +311,6 @@
   en: NodeName
 - msgID: 调度规则
   en: ScheduleRules
-- msgID: 至少包含一条调度规则
-  en: At least contains one scheduling rule
-- msgID: 至少包含一个服务器地址
-  en: At least contains one name server
 - msgID: 亲和性/反亲和性
   en: Affinity / Anit
 - msgID: 污点/容忍
@@ -337,8 +341,6 @@
   en: HostPID
 - msgID: 共享进程命名空间
   en: ShareProcessNamespace
-- msgID: 主机 PID 与共享进程命名空间不可同时启用
-  en: HostPID and ShareProcessNamespace cannot both be true
 - msgID: 主机名称
   en: HostName
 - msgID: 子域名

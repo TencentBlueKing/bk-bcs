@@ -307,11 +307,14 @@ properties:
   type:
     title: {{ i18n "检查类型" .lang }}
     type: string
+    default: noUse
     ui:component:
       name: select
       props:
         clearable: false
         datasource:
+          - label: No Use
+            value: noUse
           - label: httpGet
             value: httpGet
           - label: tcpSocket
@@ -338,10 +341,50 @@ properties:
             value: []
             visible: false
       - target: "{{`{{`}} $widgetNode?.getSibling('port')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'exec' {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'exec' || $self.value === 'noUse' {{`}}`}}"
         then:
           state:
-            value: ""
+            value: 0
+            visible: false
+        else:
+          state:
+            visible: true
+      - target: "{{`{{`}} $widgetNode?.getSibling('initialDelaySecs')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
+        then:
+          state:
+            visible: false
+        else:
+          state:
+            visible: true
+      - target: "{{`{{`}} $widgetNode?.getSibling('periodSecs')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
+        then:
+          state:
+            visible: false
+        else:
+          state:
+            visible: true
+      - target: "{{`{{`}} $widgetNode?.getSibling('timeoutSecs')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
+        then:
+          state:
+            visible: false
+        else:
+          state:
+            visible: true
+      - target: "{{`{{`}} $widgetNode?.getSibling('successThreshold')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
+        then:
+          state:
+            visible: false
+        else:
+          state:
+            visible: true
+      - target: "{{`{{`}} $widgetNode?.getSibling('failureThreshold')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
+        then:
+          state:
             visible: false
         else:
           state:
@@ -352,47 +395,16 @@ properties:
     ui:component:
       props:
         max: 65535
+    ui:rules:
+      - validator: "{{`{{`}} ($widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' && $widgetNode?.getSibling('type')?.instance?.value !== 'tcpSocket') || ($self.value !== '' && $self.value !== 0) {{`}}`}}"
+        message: {{ i18n "值不能为零" .lang }}
   path:
     title: {{ i18n "请求路径" .lang }}
     type: string
     ui:rules:
       - maxLength250
-  initialDelaySecs:
-    title: {{ i18n "初始延时" .lang }}
-    type: integer
-    ui:component:
-      name: unitInput
-      props:
-        max: 86400
-        unit: s
-  periodSecs:
-    title: {{ i18n "检查间隔" .lang }}
-    type: integer
-    ui:component:
-      name: unitInput
-      props:
-        max: 86400
-        unit: s
-  timeoutSecs:
-    title: {{ i18n "超时时间" .lang }}
-    type: integer
-    ui:component:
-      name: unitInput
-      props:
-        max: 86400
-        unit: s
-  successThreshold:
-    title: {{ i18n "成功阈值" .lang }}
-    type: integer
-    ui:component:
-      props:
-        max: 2048
-  failureThreshold:
-    title: {{ i18n "失败阈值" .lang }}
-    type: integer
-    ui:component:
-      props:
-        max: 2048
+      - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' || $self.value !== '' {{`}}`}}"
+        message: {{ i18n "值不能为空" .lang }}
   command:
     items:
       title: {{ i18n "命令" .lang }}
@@ -404,6 +416,50 @@ properties:
     type: array
     ui:component:
       name: noTitleArray
+    ui:rules:
+      - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'exec' || $self.value.length > 0 {{`}}`}}"
+        message: {{ i18n "至少包含一条命令" .lang }}
+  initialDelaySecs:
+    title: {{ i18n "初始延时" .lang }}
+    type: integer
+    default: 0
+    ui:component:
+      name: unitInput
+      props:
+        max: 86400
+        unit: s
+  periodSecs:
+    title: {{ i18n "检查间隔" .lang }}
+    type: integer
+    default: 10
+    ui:component:
+      name: unitInput
+      props:
+        max: 86400
+        unit: s
+  timeoutSecs:
+    title: {{ i18n "超时时间" .lang }}
+    type: integer
+    default: 1
+    ui:component:
+      name: unitInput
+      props:
+        max: 86400
+        unit: s
+  successThreshold:
+    title: {{ i18n "成功阈值" .lang }}
+    type: integer
+    default: 1
+    ui:component:
+      props:
+        max: 2048
+  failureThreshold:
+    title: {{ i18n "失败阈值" .lang }}
+    type: integer
+    default: 3
+    ui:component:
+      props:
+        max: 2048
 {{- end }}
 
 {{- define "container.resource" }}

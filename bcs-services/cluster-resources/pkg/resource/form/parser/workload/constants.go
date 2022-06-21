@@ -52,6 +52,8 @@ const (
 )
 
 const (
+	// ProbeTypeNoUse 不启用探针
+	ProbeTypeNoUse = "noUse"
 	// ProbeTypeHTTPGet ...
 	ProbeTypeHTTPGet = "httpGet"
 	// ProbeTypeTCPSocket ...

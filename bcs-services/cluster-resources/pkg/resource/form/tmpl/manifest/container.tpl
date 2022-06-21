@@ -9,11 +9,11 @@ containers:
     {{- include "container.command" .command | indent 4 }}
     {{- include "container.service" .service | nindent 4 }}
     {{- include "container.envs" .envs | indent 4 }}
-    {{- if .healthz.readinessProbe }}
+    {{- if and .healthz.readinessProbe (ne .healthz.readinessProbe.type "noUse") }}
     readinessProbe:
       {{- include "container.probe" .healthz.readinessProbe | indent 6 }}
     {{- end }}
-    {{- if .healthz.livenessProbe }}
+    {{- if and .healthz.livenessProbe (ne .healthz.livenessProbe.type "noUse") }}
     livenessProbe:
       {{- include "container.probe" .healthz.livenessProbe | indent 6 }}
     {{- end }}
