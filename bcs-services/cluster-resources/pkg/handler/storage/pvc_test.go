@@ -47,13 +47,6 @@ func TestPVC(t *testing.T) {
 	respData := listResp.Data.AsMap()
 	assert.Equal(t, "PersistentVolumeClaimList", mapx.GetStr(respData, "manifest.kind"))
 
-	// Update
-	_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{"tKey": "tVal"})
-	updateManifest, _ := pbstruct.Map2pbStruct(manifest)
-	updateReq := handler.GenResUpdateReq(updateManifest, resName)
-	err = h.UpdatePVC(ctx, &updateReq, &clusterRes.CommonResp{})
-	assert.Nil(t, err)
-
 	// Get
 	getReq, getResp := handler.GenResGetReq(resName), clusterRes.CommonResp{}
 	err = h.GetPVC(ctx, &getReq, &getResp)
@@ -61,7 +54,6 @@ func TestPVC(t *testing.T) {
 
 	respData = getResp.Data.AsMap()
 	assert.Equal(t, "PersistentVolumeClaim", mapx.GetStr(respData, "manifest.kind"))
-	assert.Equal(t, "tVal", mapx.GetStr(respData, "manifest.metadata.annotations.tKey"))
 
 	// Delete
 	deleteReq := handler.GenResDeleteReq(resName)

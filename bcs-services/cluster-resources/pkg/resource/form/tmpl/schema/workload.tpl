@@ -162,13 +162,14 @@ replicas:
     maxUnavailable:
       title: {{ i18n "最大不可用数量" .lang }}
       type: integer
+      default: 25
       ui:component:
         props:
           max: 4096
     muaUnit:
-      default: percent
       title: {{ i18n "单位" .lang }}
       type: string
+      default: percent
       ui:component:
         name: select
         props:
@@ -181,6 +182,7 @@ replicas:
     minReadySecs:
       title: {{ i18n "最小就绪时间" .lang }}
       type: integer
+      default: 0
       ui:component:
         name: unitInput
         props:
@@ -549,6 +551,7 @@ nodeSelect:
               visible: true
           else:
             state:
+              value: []
               visible: false
           target: spec.nodeSelect.selector
     nodeName:
