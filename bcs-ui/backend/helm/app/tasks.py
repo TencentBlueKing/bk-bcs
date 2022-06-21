@@ -37,7 +37,7 @@ def rollback_app(app_id, access_token, username, release_id):
 def upgrade_app(app_id, **kwargs):
     app = App.objects.get(id=app_id)
     if is_log_cluster(app.cluster_id):
-        logging.Warning(
+        logging.warning(
             "upgrading app task id %s, release detail: cluster_id: %s, namespace: %s name: %s",
             current_task.request.id,
             app.cluster_id,

@@ -388,10 +388,9 @@ class AppUpgradeSLZ(AppBaseSLZ):
     cmd_flags = serializers.JSONField(required=False, default=[])
 
     def update(self, instance, validated_data):
+        ns_info = self.get_ns_info_by_id(instance.namespace_id)
         if is_log_cluster(ns_info['cluster_id']):
             logger.warning("start to update helm release")
-        ns_info = self.get_ns_info_by_id(instance.namespace_id)
-
         perm_ctx = NamespaceScopedPermCtx(
             username=self.context["request"].user.username,
             project_id=instance.project_id,
@@ -408,7 +407,12 @@ class AppUpgradeSLZ(AppBaseSLZ):
         )
 
         if is_log_cluster(ns_info['cluster_id']):
-            logger.warning("update helm release, release detail: cluster_id: %s, namespace: %s name: %s", ns_info["cluster_id"], ns_info["name"], instance.name)
+            logger.warning(
+                "update helm release, release detail: cluster_id: %s, namespace: %s name: %s",
+                ns_info["cluster_id"],
+                ns_info["name"],
+                instance.name,
+            )
         return instance.upgrade_app(
             access_token=self.access_token,
             chart_version_id=validated_data["upgrade_verion"],
