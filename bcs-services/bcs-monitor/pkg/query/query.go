@@ -178,7 +178,11 @@ func NewQueryAPI(
 		tenantAuthMiddleware, _ := NewTenantAuthMiddleware(ctx, ins)
 
 		// 启动一个ui界面
-		prefix := path.Join(config.G.Web.RoutePrefix, config.QueryServicePrefix)
+		var prefix = ""
+		if !config.G.IsDevMode() {
+			// 正式环境, 接入到网关后面
+			prefix = path.Join(config.G.Web.RoutePrefix, config.QueryServicePrefix)
+		}
 		ui.NewQueryUI(kitLogger, endpoints, prefix, "", "").Register(router, ins)
 
 		api := v1.NewQueryAPI(
