@@ -3,7 +3,7 @@
       - - container:
             grid-template-columns: "1fr 70px 1fr 70px"
           group:
-            - [ "cnt" ]
+            - [ "cnt", "." ]
             - [ "updateStrategy" ]
             - [ "maxSurge", "msUnit", "maxUnavailable", "muaUnit" ]
             - [ "minReadySecs", "progressDeadlineSecs" ]

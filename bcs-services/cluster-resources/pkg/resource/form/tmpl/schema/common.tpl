@@ -15,7 +15,7 @@ metadata:
       ui:component:
         name: select
         props:
-          {{- if (eq .action "update") }}
+          {{- if eq .action "update" }}
           disabled: true
           {{- end }}
           placeholder: " "
@@ -33,7 +33,7 @@ metadata:
       title: {{ i18n "名称" .lang }}
       type: string
       default: {{ .resName }}
-      {{- if (eq .action "update") }}
+      {{- if eq .action "update" }}
       ui:component:
         props:
           disabled: true
@@ -49,7 +49,7 @@ metadata:
       ui:component:
         name: select
         props:
-          {{- if (eq .action "update") }}
+          {{- if eq .action "update" }}
           disabled: true
           {{- end }}
           clearable: false
@@ -90,7 +90,7 @@ metadata:
         type: object
       ui:component:
         name: noTitleArray
-        {{- if (eq .action "update") }}
+        {{- if eq .action "update" }}
         props:
           disabled: true
         {{- end }}
@@ -111,10 +111,6 @@ metadata:
         type: object
       ui:component:
         name: noTitleArray
-        {{- if (eq .action "update") }}
-        props:
-          disabled: true
-        {{- end }}
   ui:group:
     props:
       border: true

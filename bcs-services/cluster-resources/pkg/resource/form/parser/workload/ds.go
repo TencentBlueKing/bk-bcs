@@ -49,8 +49,8 @@ func ParseDSSpec(manifest map[string]interface{}, spec *model.DSSpec) {
 // ParseDSReplicas ...
 func ParseDSReplicas(manifest map[string]interface{}, replicas *model.DSReplicas) {
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", "RollingUpdate").(string)
-	maxUnavailable, err := mapx.GetItems(manifest, "spec.strategy.rollingUpdate.maxUnavailable")
-	if err == nil {
+	replicas.MaxUnavailable, replicas.MUAUnit = 25, util.UnitPercent
+	if maxUnavailable, err := mapx.GetItems(manifest, "spec.strategy.rollingUpdate.maxUnavailable"); err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
 	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")
