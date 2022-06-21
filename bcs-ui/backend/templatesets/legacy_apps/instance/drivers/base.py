@@ -205,7 +205,7 @@ class SchedulerBase(object):
                 logger.warning("try to rollback, %s, %s", s, s[1:])
                 handler(*s[1:])
             else:
-                logging.warning("have not rollback handler, %s, %s, will ignore", s, s[1:])
+                logger.warning("have not rollback handler, %s, %s, will ignore", s, s[1:])
 
 
 class SchedulerPlugin(object):

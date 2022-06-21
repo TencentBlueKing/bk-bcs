@@ -214,10 +214,10 @@ class AppDeployer:
             transitioning_message = (
                 "helm command execute failed.\n" "Error code: {error_no}\nOutput:\n{output}"
             ).format(error_no=e.error_no, output=e.output)
-            logger.warn("helm operate error, %s", transitioning_message)
+            logger.warning("helm operate error, %s", transitioning_message)
         except HelmError as e:
             err_msg = str(e)
-            logger.warn("helm operate error, %s", err_msg)
+            logger.warning("helm operate error, %s", err_msg)
             # TODO: 现阶段针对删除release找不到的情况，认为是正常的
             if "not found" in err_msg and operation == ChartOperations.UNINSTALL.value:
                 transitioning_result = True
@@ -295,10 +295,10 @@ class AppDeployer:
             transitioning_message = (
                 "kubectl command execute failed.\n" "Error code: {error_no}\nOutput:\n{output}"
             ).format(error_no=e.error_no, output=e.output)
-            logger.warn(transitioning_message)
+            logger.warning(transitioning_message)
         except KubectlError as e:
             transitioning_result = False
-            logger.warn(e.message)
+            logger.warning(e.message)
             transitioning_message = e.message
         except Exception as e:
             transitioning_result = False
