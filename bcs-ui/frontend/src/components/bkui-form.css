@@ -11,8 +11,12 @@
   height: 100%;
 }
 
-.bk-schema-form .bk-form-item .bk-select{
-  background: #fff;
+.bk-schema-form .bk-form-item .bk-select {
+  background-color: #fff;
+}
+
+.bk-schema-form .bk-form-item .bk-select.is-disabled {
+  background-color: #fafbfd;
 }
 
 .bk-schema-form .bk-schema-form-group.normal {
