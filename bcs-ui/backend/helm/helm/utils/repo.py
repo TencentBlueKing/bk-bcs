@@ -61,7 +61,7 @@ def download_icon_data(url, auths):
                 if resp.status_code != 401:
                     break
     except Exception as e:
-        logger.warn("Download icon fail: [url=%s, error=%s]", url, e)
+        logger.warning("Download icon fail: [url=%s, error=%s]", url, e)
         return False, None
 
     if resp.status_code != 200:
