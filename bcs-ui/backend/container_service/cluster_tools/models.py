@@ -109,6 +109,7 @@ class InstalledTool(BaseModel):
 
     def on_upgrade(self, operator: str, chart_url: str, values: Optional[str] = None):
         """更新中的状态流转"""
+        self.extra_options = self.tool.extra_options
         self.updator = operator
         self.chart_url = chart_url
         self.status = ToolStatus.PENDING
