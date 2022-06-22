@@ -165,6 +165,8 @@ var NoInjectProjClusterEndpoints = []string{
 	"Resource.GetK8SResTemplate",
 	"Resource.GetResFormSchema",
 	"Resource.GetFormSupportedAPIVersions",
+	// 清理缓存无需获取 Info 信息
+	"Resource.InvalidateDiscoveryCache",
 }
 
 // 需要注入项目 & 集群信息
