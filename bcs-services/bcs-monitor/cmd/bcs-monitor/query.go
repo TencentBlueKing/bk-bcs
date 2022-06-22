@@ -68,8 +68,7 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 		return err
 	}
 
-	g.Add(queryServer.RunGetStore, queryServer.ShutDownGetStore)
-	g.Add(queryServer.RunHttp, queryServer.ShutDownHttp)
+	g.Add(queryServer.Run, queryServer.Close)
 	g.Add(sd.Run, func(error) {})
 
 	return err
