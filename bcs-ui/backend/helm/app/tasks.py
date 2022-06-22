@@ -18,7 +18,6 @@ from celery import shared_task, current_task
 from django.conf import settings
 
 from .models import App
-from .utils import is_log_cluster
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +35,14 @@ def rollback_app(app_id, access_token, username, release_id):
 @shared_task
 def upgrade_app(app_id, **kwargs):
     app = App.objects.get(id=app_id)
-    if is_log_cluster(app.cluster_id):
-        logger.warning(
-            "upgrading app task id %s, release detail: cluster_id: %s, namespace: %s name: %s",
-            current_task.request.id,
-            app.cluster_id,
-            app.namespace,
-            app.name,
-        )
-    App.objects.get(id=app_id).upgrade_app_task(**kwargs)
+    logger.info(
+        "upgrading app task id %s, release detail: cluster_id: %s, namespace: %s name: %s",
+        current_task.request.id,
+        app.cluster_id,
+        app.namespace,
+        app.name,
+    )
+    app.upgrade_app_task(**kwargs)
 
 
 @shared_task
