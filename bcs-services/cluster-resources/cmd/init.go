@@ -252,11 +252,16 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 
-	grpcDialconf := make([]grpc.DialOption, 0)
+	grpcDialOpts := []grpc.DialOption{
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(conf.MaxGrpcMsgSize),
+			grpc.MaxCallSendMsgSize(conf.MaxGrpcMsgSize),
+		),
+	}
 	if crSvc.tlsConfig != nil && crSvc.clientTLSConfig != nil {
-		grpcDialconf = append(grpcDialconf, grpc.WithTransportCredentials(grpcCreds.NewTLS(crSvc.clientTLSConfig)))
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCreds.NewTLS(crSvc.clientTLSConfig)))
 	} else {
-		grpcDialconf = append(grpcDialconf, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
 
 	// 循环注册各个 rpc service
@@ -274,7 +279,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		clusterRes.RegisterCustomResGwFromEndpoint,
 		clusterRes.RegisterResourceGwFromEndpoint,
 	} {
-		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialconf)
+		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialOpts)
 		if err != nil {
 			log.Error(crSvc.ctx, "register http service failed: %v", err)
 			return errorx.New(errcode.General, "register http service failed: %v", err)
