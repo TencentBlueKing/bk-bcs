@@ -22,15 +22,19 @@ import (
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
+	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/route"
+	httpdiscovery "github.com/prometheus/prometheus/discovery/http"
+	"github.com/prometheus/prometheus/discovery/targetgroup"
 	"github.com/prometheus/prometheus/promql"
 	v1 "github.com/thanos-io/thanos/pkg/api/query"
 	"github.com/thanos-io/thanos/pkg/compact/downsample"
 	"github.com/thanos-io/thanos/pkg/component"
+	"github.com/thanos-io/thanos/pkg/discovery/cache"
 	"github.com/thanos-io/thanos/pkg/discovery/dns"
 	"github.com/thanos-io/thanos/pkg/extgrpc"
 	"github.com/thanos-io/thanos/pkg/extprom"
@@ -138,6 +142,49 @@ func NewQueryAPI(
 		})
 	}
 
+	// Run File Service Discovery and update the store set when the files are modified.
+	httpSD, err := httpdiscovery.NewDiscovery(nil, kitLogger)
+	if err != nil {
+		return nil, err
+	}
+	httpSDCache := cache.New()
+
+	{
+		ctxRun, cancelRun := context.WithCancel(context.Background())
+		httpSDUpdates := make(chan []*targetgroup.Group)
+
+		g.Add(func() error {
+			httpSD.Run(ctxRun, httpSDUpdates)
+			return nil
+		}, func(error) {
+			cancelRun()
+		})
+
+		ctxUpdate, cancelUpdate := context.WithCancel(context.Background())
+		g.Add(func() error {
+			for {
+				select {
+				case update := <-httpSDUpdates:
+					// Discoverers sometimes send nil updates so need to check for it to avoid panics.
+					if update == nil {
+						continue
+					}
+					httpSDCache.Update(update)
+					endpoints.Update(ctxUpdate)
+
+					if err := dnsStoreProvider.Resolve(ctxUpdate, append(httpSDCache.Addresses(), storeList...)); err != nil {
+						level.Error(kitLogger).Log("msg", "failed to resolve addresses for storeAPIs", "err", err)
+					}
+
+				case <-ctxUpdate.Done():
+					return nil
+				}
+			}
+		}, func(error) {
+			cancelUpdate()
+		})
+	}
+
 	// Periodically update the addresses from static flags and file SD by resolving them using DNS SD if necessary.
 	{
 		ctx, cancel := context.WithCancel(context.Background())
@@ -145,7 +192,7 @@ func NewQueryAPI(
 			return runutil.Repeat(time.Second*30, ctx.Done(), func() error {
 				resolveCtx, resolveCancel := context.WithTimeout(ctx, time.Second*30)
 				defer resolveCancel()
-				if err := dnsStoreProvider.Resolve(resolveCtx, storeList); err != nil {
+				if err := dnsStoreProvider.Resolve(resolveCtx, append(httpSDCache.Addresses(), storeList...)); err != nil {
 					logger.Errorw("failed to resolve addresses for storeAPIs", "err", err)
 				}
 				return nil
