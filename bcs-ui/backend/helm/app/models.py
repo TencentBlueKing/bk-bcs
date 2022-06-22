@@ -425,6 +425,13 @@ class App(models.Model):
                 self, chart_version_id, answers, customs, valuefile=valuefile, valuefile_name=valuefile_name
             )
         except Exception as e:
+            logger.error(
+                "update release error, cluster_id: %s, namespace: %s, name: %s, error: %s",
+                self.cluster_id,
+                self.namespace,
+                self.name,
+                e,
+            )
             transitioning_result = False
             transitioning_message = f"update release failed, {e}"
             self.set_transitioning(transitioning_result, transitioning_message)
