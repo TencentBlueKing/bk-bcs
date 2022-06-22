@@ -419,9 +419,17 @@ class App(models.Model):
             **kwargs,
         )
 
-        self.release = ChartRelease.objects.make_upgrade_release(
-            self, chart_version_id, answers, customs, valuefile=valuefile, valuefile_name=valuefile_name
-        )
+        # NOTE: 这里会匹配更新的版本，可能会导致 `ChartVersion matching query does not exist` 异常
+        try:
+            self.release = ChartRelease.objects.make_upgrade_release(
+                self, chart_version_id, answers, customs, valuefile=valuefile, valuefile_name=valuefile_name
+            )
+        except Exception as e:
+            transitioning_result = False
+            transitioning_message = f"update release failed, {e}"
+            self.set_transitioning(transitioning_result, transitioning_message)
+            return self
+
         self.version = self.release.chartVersionSnapshot.version
         self.updator = updator
         self.cmd_flags = json.dumps(kwargs.get("cmd_flags") or [])
