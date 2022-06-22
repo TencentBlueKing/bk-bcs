@@ -13,36 +13,13 @@
 
 package config
 
-import "time"
+import (
+	httpdiscovery "github.com/prometheus/prometheus/discovery/http"
+	"github.com/prometheus/prometheus/discovery/targetgroup"
+)
 
-// StoreProvider :
-type StoreProvider string
-
-// StoreConf :
-type StoreConf struct {
-	Type     StoreProvider `yaml:"type"`
-	GRPCPort int           `yaml:"grpc_port"`
-	Config   interface{}   `yaml:"config,omitempty"`
-}
-
-// StoreGWConf
-type StoreGWConf struct {
-	HTTP *EndpointConfig `yaml:"http" mapstructure:"http"`
-	GRPC *EndpointConfig `yaml:"grpc" mapstructure:"grpc"`
-}
-
-// Init
-func (s *StoreGWConf) Init() error {
-
-	s.HTTP = &EndpointConfig{
-		Address:     "127.0.0.1:10212",
-		GracePeriod: time.Minute * 2,
-	}
-
-	s.GRPC = &EndpointConfig{
-		Address:     "127.0.0.1:10213",
-		GracePeriod: time.Minute * 2,
-	}
-
-	return nil
+// QueryStore 配置
+type QueryStoreConf struct {
+	StaticConfigs []*targetgroup.Group      `yaml:"static_configs,omitempty"`
+	HTTPSDConfigs []*httpdiscovery.SDConfig `yaml:"http_sd_configs,omitempty"`
 }

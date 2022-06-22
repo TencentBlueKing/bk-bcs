@@ -43,6 +43,7 @@ type Configuration struct {
 	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
 	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
 	Web         *WebConf                   `yaml:"web"`
+	QueryStore  *QueryStoreConf            `yaml:"query_store_conf"`
 }
 
 // init 初始化
@@ -101,6 +102,8 @@ func newConfiguration() (*Configuration, error) {
 
 	c.BCSEnvConf = []*BCSConf{}
 	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
+
+	c.QueryStore = &QueryStoreConf{}
 
 	return c, nil
 }

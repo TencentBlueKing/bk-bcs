@@ -15,8 +15,12 @@ package query
 
 import (
 	"context"
+	"fmt"
+	"net/url"
+	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/go-kit/log/level"
@@ -24,6 +28,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	promconfig "github.com/prometheus/common/config"
+	"github.com/prometheus/common/model"
 	httpdiscovery "github.com/prometheus/prometheus/discovery/http"
 	"github.com/prometheus/prometheus/discovery/targetgroup"
 	"github.com/thanos-io/thanos/pkg/discovery/cache"
@@ -36,7 +42,10 @@ import (
 
 // DiscoveryClient 支持的服务发现, 包含静态配置, http-sd， 命令行和配置文件来源
 type DiscoveryClient struct {
-	endpoints *query.EndpointSet
+	endpoints        *query.EndpointSet
+	dnsStoreProvider *dns.Provider
+	storeCacheMap    map[string]*cache.Cache
+	mtx              sync.RWMutex
 }
 
 // NewDiscoveryClient
@@ -66,6 +75,12 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 		unhealthyStoreTimeout,
 	)
 
+	client := &DiscoveryClient{
+		endpoints:        endpoints,
+		dnsStoreProvider: dnsStoreProvider,
+		storeCacheMap:    map[string]*cache.Cache{},
+	}
+
 	// Periodically update the store set with the addresses we see in our cluster.
 	{
 		ctx, cancel := context.WithCancel(context.Background())
@@ -80,47 +95,27 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 		})
 	}
 
+	cmdStore := parseStaticStore(storeList)
+	client.addStaticDiscovery("cmd", cmdStore)
+	client.addStaticDiscovery("conf", config.G.QueryStore.StaticConfigs)
+
 	// Run File Service Discovery and update the store set when the files are modified.
-	httpSD, err := httpdiscovery.NewDiscovery(nil, kitLogger)
+	httpSDConfs, err := parseHttpSDURLs(httpSDURLs)
 	if err != nil {
 		return nil, err
 	}
-	httpSDCache := cache.New()
 
-	{
-		ctxRun, cancelRun := context.WithCancel(context.Background())
-		httpSDUpdates := make(chan []*targetgroup.Group)
+	for _, conf := range httpSDConfs {
 
-		g.Add(func() error {
-			httpSD.Run(ctxRun, httpSDUpdates)
-			return nil
-		}, func(error) {
-			cancelRun()
-		})
+		if err := client.addHTTPDiscovery(ctx, kitLogger, conf, g); err != nil {
+			return nil, err
+		}
+	}
 
-		ctxUpdate, cancelUpdate := context.WithCancel(context.Background())
-		g.Add(func() error {
-			for {
-				select {
-				case update := <-httpSDUpdates:
-					// Discoverers sometimes send nil updates so need to check for it to avoid panics.
-					if update == nil {
-						continue
-					}
-					httpSDCache.Update(update)
-					endpoints.Update(ctxUpdate)
-
-					if err := dnsStoreProvider.Resolve(ctxUpdate, append(httpSDCache.Addresses(), storeList...)); err != nil {
-						level.Error(kitLogger).Log("msg", "failed to resolve addresses for storeAPIs", "err", err)
-					}
-
-				case <-ctxUpdate.Done():
-					return nil
-				}
-			}
-		}, func(error) {
-			cancelUpdate()
-		})
+	for _, conf := range config.G.QueryStore.HTTPSDConfigs {
+		if err := client.addHTTPDiscovery(ctx, kitLogger, conf, g); err != nil {
+			return nil, err
+		}
 	}
 
 	// Periodically update the addresses from static flags and file SD by resolving them using DNS SD if necessary.
@@ -130,7 +125,7 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 			return runutil.Repeat(time.Second*30, ctx.Done(), func() error {
 				resolveCtx, resolveCancel := context.WithTimeout(ctx, time.Second*30)
 				defer resolveCancel()
-				if err := dnsStoreProvider.Resolve(resolveCtx, append(httpSDCache.Addresses(), storeList...)); err != nil {
+				if err := dnsStoreProvider.Resolve(resolveCtx, client.Addresses()); err != nil {
 					logger.Errorw("failed to resolve addresses for storeAPIs", "err", err)
 				}
 				return nil
@@ -140,12 +135,134 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 		})
 	}
 
-	client := &DiscoveryClient{endpoints: endpoints}
-
 	return client, nil
+}
+
+func (c *DiscoveryClient) addStaticDiscovery(name string, tgs []*targetgroup.Group) error {
+	httpSDCache := cache.New()
+
+	c.mtx.Lock()
+	c.storeCacheMap[name] = httpSDCache
+	c.mtx.Unlock()
+
+	httpSDCache.Update(tgs)
+	return nil
+}
+
+func (c *DiscoveryClient) addHTTPDiscovery(ctx context.Context, kitLogger gokit.Logger, conf *httpdiscovery.SDConfig, g *run.Group) error {
+	// Run File Service Discovery and update the store set when the files are modified.
+	httpSD, err := httpdiscovery.NewDiscovery(conf, kitLogger)
+	if err != nil {
+		return err
+	}
+
+	httpSDCache := cache.New()
+
+	c.mtx.Lock()
+	name := fmt.Sprintf("%s:%s", conf.Name(), conf.URL)
+	c.storeCacheMap[name] = httpSDCache
+	c.mtx.Unlock()
+
+	ctxRun, cancelRun := context.WithCancel(context.Background())
+	httpSDUpdates := make(chan []*targetgroup.Group)
+
+	g.Add(func() error {
+		httpSD.Run(ctxRun, httpSDUpdates)
+		return nil
+	}, func(error) {
+		cancelRun()
+	})
+
+	ctxUpdate, cancelUpdate := context.WithCancel(context.Background())
+	g.Add(func() error {
+		for {
+			select {
+			case update := <-httpSDUpdates:
+				// Discoverers sometimes send nil updates so need to check for it to avoid panics.
+				if update == nil {
+					continue
+				}
+				httpSDCache.Update(update)
+
+				c.endpoints.Update(ctxUpdate)
+				if err := c.dnsStoreProvider.Resolve(ctx, c.Addresses()); err != nil {
+					level.Error(kitLogger).Log("msg", "failed to resolve addresses for storeAPIs", "err", err)
+				}
+
+			case <-ctxUpdate.Done():
+				return nil
+			}
+		}
+	}, func(error) {
+		cancelUpdate()
+	})
+
+	return nil
+}
+
+func (c *DiscoveryClient) Addresses() []string {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	addresses := []string{}
+	for _, c := range c.storeCacheMap {
+		addresses = append(addresses, c.Addresses()...)
+	}
+	return addresses
 }
 
 // Endpoints 返回 EndpointSet
 func (c *DiscoveryClient) Endpoints() *query.EndpointSet {
 	return c.endpoints
+}
+
+// parseStaticStore 解析静态IP配置, 命令行来源
+func parseStaticStore(storeList []string) []*targetgroup.Group {
+	tgs := make([]*targetgroup.Group, 0, len(storeList))
+	for _, store := range storeList {
+		tgs = append(tgs, &targetgroup.Group{
+			Targets: []model.LabelSet{
+				{model.AddressLabel: model.LabelValue(store)},
+			},
+		})
+	}
+	return tgs
+}
+
+// parseHttpSDURLs 解析url配置, 命令行来源
+func parseHttpSDURLs(httpSDURLs []string) ([]*httpdiscovery.SDConfig, error) {
+	confs := make([]*httpdiscovery.SDConfig, 0, len(httpSDURLs))
+	for _, rawURL := range httpSDURLs {
+		u, err := url.Parse(rawURL)
+		if err != nil {
+			return nil, err
+		}
+
+		username := u.User.Username()
+		pwd, ok := u.User.Password()
+
+		// 清理掉鉴权信息
+		u.User = nil
+		conf := &httpdiscovery.SDConfig{
+			HTTPClientConfig: promconfig.HTTPClientConfig{
+				FollowRedirects: true,
+				EnableHTTP2:     true,
+			},
+			RefreshInterval: model.Duration(time.Second * 10),
+			URL:             u.String(),
+		}
+
+		if ok {
+			if username == "bearer_token" {
+				conf.HTTPClientConfig.BearerToken = promconfig.Secret(pwd)
+			} else {
+				conf.HTTPClientConfig.BasicAuth = &promconfig.BasicAuth{
+					Username: username,
+					Password: promconfig.Secret(pwd),
+				}
+			}
+		}
+
+		confs = append(confs, conf)
+	}
+	return confs, nil
 }
