@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework.response import Response
 
-from backend.bcs_web.apis.views import BaseAPIViewSet
+from backend.bcs_web.apis.views import BaseAPIViewSet, NoAccessTokenBaseAPIViewSet
 from backend.container_service.clusters.base.utils import get_clusters
 from backend.resources.utils.dynamic.discovery import DiscovererCache
 
@@ -25,7 +25,8 @@ class ClusterViewSet(BaseAPIViewSet):
         return Response(clusters)
 
 
-class ClusterDiscovererCacheViewSet(BaseAPIViewSet):
+class ClusterDiscovererCacheViewSet(NoAccessTokenBaseAPIViewSet):
+    # NOTE: 集群缓存失效接口，不建议普通流程调用
     def invalidate(self, request, project_id_or_code, cluster_id):
         """主动使集群缓存信息失效"""
         # 缓存集群信息的KEY
