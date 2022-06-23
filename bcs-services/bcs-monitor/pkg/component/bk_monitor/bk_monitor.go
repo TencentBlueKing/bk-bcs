@@ -183,7 +183,7 @@ type GrayClusterList struct {
 
 // QueryClusterList 查询已经接入蓝鲸监控的集群列表
 func QueryClusterList(ctx context.Context, host string) (*GrayClusterList, error) {
-	url := fmt.Sprintf("%s/prod/get_bcs_gray_cluster_list", host)
+	url := fmt.Sprintf("%s/get_bcs_gray_cluster_list", host)
 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
