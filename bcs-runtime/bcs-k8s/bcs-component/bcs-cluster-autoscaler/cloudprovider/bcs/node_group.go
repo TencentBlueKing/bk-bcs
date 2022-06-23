@@ -358,13 +358,18 @@ func (group *NodeGroup) getNodeTemplate() (*nodeTemplate, error) {
 		return nil, fmt.Errorf("node group scaling info is not set")
 	}
 	resources := convertResource(nodeGroup.LaunchTemplate)
-	return &nodeTemplate{
+	template := &nodeTemplate{
 		InstanceType: nodeGroup.LaunchTemplate.InstanceType,
 		Region:       nodeGroup.Region,
 		Resources:    resources,
-		Label:        nodeGroup.NodeTemplate.Labels,
-		Taint:        nodeGroup.NodeTemplate.Taints,
-	}, nil
+		Label:        nodeGroup.Labels,
+	}
+	if nodeGroup.NodeTemplate != nil {
+		template.Label = cloudprovider.JoinStringMaps(template.Label,
+			nodeGroup.NodeTemplate.Labels)
+		template.Taint = nodeGroup.NodeTemplate.Taints
+	}
+	return template, nil
 }
 
 func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.Node, error) {
