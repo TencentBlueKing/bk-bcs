@@ -15,6 +15,7 @@ package storegw
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/go-kit/log"
@@ -33,10 +34,16 @@ type StoreGW struct {
 	reg             *prometheus.Registry
 	stop            func()
 	GRPCAdvertiseIP string
+	portRange       *PortRange
 }
 
 // NewStoreGW
-func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, confs []*config.StoreConf) (*StoreGW, error) {
+func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, grpcAdvertisePortRangeStr string, confs []*config.StoreConf) (*StoreGW, error) {
+	portRange, err := NewPortRange(grpcAdvertisePortRangeStr)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 
 	gw := &StoreGW{
@@ -46,6 +53,7 @@ func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry
 		logger:          logger,
 		reg:             reg,
 		GRPCAdvertiseIP: gprcAdvertiseIP,
+		portRange:       portRange,
 		stores:          map[string]*Store{},
 	}
 
@@ -56,7 +64,14 @@ func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry
 func (s *StoreGW) Run() error {
 	for idx, conf := range s.confs {
 		logger := log.With(s.logger, "provider", conf.Type, "id", idx)
-		store, err := NewStore(s.ctx, logger, s.reg, s.GRPCAdvertiseIP, conf)
+		port, err := s.portRange.AllocatePort(int64(idx))
+		if err != nil {
+			return err
+		}
+
+		address := fmt.Sprintf("%s:%d", s.GRPCAdvertiseIP, port)
+
+		store, err := NewStore(s.ctx, logger, s.reg, address, conf)
 		if err != nil {
 			return err
 		}

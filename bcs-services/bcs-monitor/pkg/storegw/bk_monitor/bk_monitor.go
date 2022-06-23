@@ -27,6 +27,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
@@ -36,13 +37,15 @@ import (
 
 // Config 配置
 type Config struct {
-	Host string `yaml:"host"`
+	URL         string `yaml:"url"`          // unify-query 访问地址
+	MetadataURL string `yaml:"metadata_url"` // 元数据地址, 目前只包含白名单
 }
 
 // BKMonitorStore implements the store node API on top of the Prometheus remote read API.
 type BKMonitorStore struct {
-	config *Config
-	Base   *url.URL
+	config      *Config
+	baseURL     *url.URL
+	metadataURL *url.URL
 }
 
 // NewBKMonitorStore
@@ -52,26 +55,49 @@ func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
 		return nil, errors.Wrap(err, "parsing bkmonitor stor config")
 	}
 
-	baseURL, err := url.Parse(config.Host)
+	baseURL, err := url.Parse(config.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	store := &BKMonitorStore{config: &config, Base: baseURL}
+	metadataURL, err := url.Parse(config.MetadataURL)
+	if err != nil {
+		return nil, err
+	}
+
+	store := &BKMonitorStore{
+		config:      &config,
+		baseURL:     baseURL,
+		metadataURL: metadataURL,
+	}
 	return store, nil
 }
 
 // Info 返回元数据信息
-func (s *BKMonitorStore) Info(context.Context, *storepb.InfoRequest) (*storepb.InfoResponse, error) {
+func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*storepb.InfoResponse, error) {
 	labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR"})
 
 	zset := labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)}
+
+	// 默认配置
+	lsets := []labelpb.ZLabelSet{zset}
+
+	clusterList, err := bkmonitor_client.QueryClusterList(ctx, s.config.MetadataURL)
+	if err != nil {
+		klog.Errorf("query bk_monitor cluster list error, %s", err)
+	} else if clusterList.Enabled {
+		lsets = make([]labelpb.ZLabelSet, 0, len(clusterList.ClusterIdList))
+		for _, clusterId := range clusterList.ClusterIdList {
+			labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterId})
+			lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
+		}
+	}
 
 	res := &storepb.InfoResponse{
 		StoreType: component.Store.ToProto(),
 		MinTime:   math.MinInt64,
 		MaxTime:   math.MaxInt64,
-		LabelSets: []labelpb.ZLabelSet{zset},
+		LabelSets: lsets,
 	}
 	return res, nil
 }
@@ -146,7 +172,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.Host, cluster.BKBizID, start, end, r.Step, newMatchers)
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, r.Step, newMatchers)
 	if err != nil {
 		return err
 	}

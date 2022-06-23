@@ -16,13 +16,17 @@ package component
 import (
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -34,13 +38,52 @@ var (
 	globalClient *resty.Client
 )
 
+func restyToCurl(c *resty.Client, r *resty.Response) error {
+	headers := ""
+	for key, values := range r.Request.Header {
+		for _, value := range values {
+			headers += fmt.Sprintf(" -H %q", fmt.Sprintf("%s: %s", key, value))
+		}
+	}
+
+	reqMsg := fmt.Sprintf("curl -X %s %s%s", r.Request.Method, r.Request.URL, headers)
+	if r.Request.Body != nil {
+		switch body := r.Request.Body.(type) {
+		case []byte:
+			reqMsg += fmt.Sprintf(" -d %q", body)
+		case string:
+			reqMsg += fmt.Sprintf(" -d %q", body)
+		case io.Reader:
+			reqMsg += fmt.Sprintf(" -d %q (io.Reader)", body)
+		default:
+			prtBodyBytes, err := json.Marshal(body)
+			if err != nil {
+				klog.Errorf("marshal json, %s", err)
+			} else {
+				reqMsg += fmt.Sprintf(" -d '%s'", prtBodyBytes)
+			}
+		}
+	}
+
+	klog.Infof("REQ: %s", reqMsg)
+
+	respMsg := fmt.Sprintf("[%s] %s %s", r.Status(), r.Time(), r.Body())
+	if len(respMsg) > 1024 {
+		respMsg = respMsg[:1024] + fmt.Sprintf("...(Total %s)", humanize.Bytes(uint64(len(respMsg))))
+	}
+	klog.Infof("RESP: %s", respMsg)
+
+	return nil
+}
+
 // GetClient
 func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {
 			globalClient = resty.New().SetTimeout(timeout)
-			globalClient = globalClient.SetDebug(true)
+			globalClient = globalClient.SetDebug(false) // 更多详情, 可以开启为 true
 			globalClient.SetDebugBodyLimit(1024)
+			globalClient.OnAfterResponse(restyToCurl)
 			globalClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 		})
 	}

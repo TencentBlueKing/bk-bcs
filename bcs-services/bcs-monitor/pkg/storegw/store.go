@@ -15,7 +15,6 @@ package storegw
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -67,7 +66,7 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 }
 
 // NewStore
-func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, conf *config.StoreConf) (*Store, error) {
+func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, address string, conf *config.StoreConf) (*Store, error) {
 	storeSvr, err := GetStoreSvr(logger, reg, conf)
 	if err != nil {
 		return nil, err
@@ -79,7 +78,6 @@ func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, 
 	_reg := prometheus.NewRegistry()
 
 	grpcProbe := prober.NewGRPC()
-	address := fmt.Sprintf("%s:%d", gprcAdvertiseIP, conf.GRPCPort)
 
 	g := grpcserver.New(logger, _reg, nil, nil, nil, component.Store, grpcProbe,
 		grpcserver.WithServer(store.RegisterStoreServer(storeSvr)),

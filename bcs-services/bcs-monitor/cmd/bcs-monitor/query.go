@@ -28,7 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/query"
 )
 
-var storeList []string
+var (
+	storeList  []string
+	httpSDURLs []string
+)
 
 // QueryCmd
 func QueryCmd() *cobra.Command {
@@ -44,7 +47,8 @@ func QueryCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:10902", "API listen http ip")
 	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
-	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "the store list that api connect")
+	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "Addresses of statically configured store endpoints")
+	cmd.Flags().StringArrayVar(&httpSDURLs, "store.http-sd-url", []string{}, "HTTP-based service discovery provides store endpoints")
 
 	return cmd
 }
@@ -53,7 +57,7 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
 
 	logger.Infow("listening for requests and metrics", "service", "query", "address", httpAddress)
-	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, storeList, g)
+	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, storeList, httpSDURLs, g)
 	if err != nil {
 		return errors.Wrap(err, "query")
 	}
@@ -64,8 +68,7 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 		return err
 	}
 
-	g.Add(queryServer.RunGetStore, queryServer.ShutDownGetStore)
-	g.Add(queryServer.RunHttp, queryServer.ShutDownHttp)
+	g.Add(queryServer.Run, queryServer.Close)
 	g.Add(sd.Run, func(error) {})
 
 	return err
