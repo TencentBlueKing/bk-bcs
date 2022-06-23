@@ -26,9 +26,7 @@ function query {
     --advertise-address clb:11902 \
     --config ./etc/config_dev.yaml \
     --credential-config ./etc/credentials_dev.yaml \
-    --credential-config ./etc/credentials_mgr_dev.yaml \
-    --store 127.0.0.1:19901 \
-    --store 127.0.0.1:11901
+    --credential-config ./etc/credentials_mgr_dev.yaml
 }
 
 function storegw() {

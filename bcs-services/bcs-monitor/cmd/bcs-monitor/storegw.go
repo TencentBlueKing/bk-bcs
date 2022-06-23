@@ -49,7 +49,7 @@ func StoreGWCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address, "Listen host:port for HTTP endpoints.")
 	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-advertise-ip", "127.0.0.1", "grpc advertise ip")
-	flags.StringVar(&grpcAdvertisePortRangeStr, "grpc-advertise-port-range", "28000-29000", "storegw grpc advertise port range")
+	flags.StringVar(&grpcAdvertisePortRangeStr, "grpc-advertise-port-range", "28000-29000", "grpc advertise port range")
 
 	// 设置配置命令行优先级高与配置文件
 	viper.BindPFlag("store.http.address", cmd.Flag("http-address"))

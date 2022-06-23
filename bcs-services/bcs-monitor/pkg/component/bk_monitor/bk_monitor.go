@@ -148,6 +148,8 @@ func QueryByPromQL(ctx context.Context, host string, bkBizId string, start, end,
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetBody(body).
+		SetQueryParam("bk_app_code", config.G.Base.AppCode).
+		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
 		Post(url)
 
 	if err != nil {
