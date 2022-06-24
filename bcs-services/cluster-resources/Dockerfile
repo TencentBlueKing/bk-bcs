@@ -49,7 +49,15 @@ RUN apk --update --no-cache add bash ca-certificates vim
 WORKDIR /data/workspace
 
 # for detect memory use growth, remove after solve problem
-COPY --from=builder /usr/local/go/ /usr/local/go/
+RUN apk add --no-cache git make musl-dev go
+
+# Configure Go
+ENV GOROOT /usr/lib/go
+ENV GOPATH /go
+ENV PATH /go/bin:$PATH
+
+RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
+# end
 
 COPY --from=builder /go/src/cluster-resources-service /usr/bin/cluster-resources-service
 
