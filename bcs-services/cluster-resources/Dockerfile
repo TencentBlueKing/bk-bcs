@@ -48,6 +48,9 @@ RUN apk --update --no-cache add bash ca-certificates vim
 
 WORKDIR /data/workspace
 
+# for detect memory use growth, remove after solve problem
+COPY --from=builder /usr/local/go/ /usr/local/go/
+
 COPY --from=builder /go/src/cluster-resources-service /usr/bin/cluster-resources-service
 
 COPY --from=builder /go/src/etc /data/workspace/etc
