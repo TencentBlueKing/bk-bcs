@@ -49,7 +49,7 @@ export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/
 export const createProject = request('post', '/api/nav/projects/')
 export const editProject = request('put', '/api/nav/projects/$projectId/')
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/')
-export const isProjectExit = request('get', '/api/nav/projects/')
+export const getProjectList = request('get', '/api/nav/projects/')// 项目列表（判断项目存在和项目管理中使用）
 
 // cluster
 export const schedulerNode = request('put', '/api/projects/$projectId/clusters/$clusterId/pods/reschedule/')

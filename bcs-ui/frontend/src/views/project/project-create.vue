@@ -5,17 +5,19 @@
         :title="isEdit ? $t('编辑项目') : $t('新建项目')"
         width="860"
         :loading="loading"
+        :auto-close="false"
+        render-directive="if"
         @value-change="handleChange"
         @confirm="handleConfirm">
-        <bk-form :label-width="labelWidth" v-model="formData" ref="bkFormRef">
-            <bk-form-item :label="$t('项目名称')" property="project_name" required>
+        <bk-form :label-width="labelWidth" :model="formData" :rules="rules" ref="bkFormRef">
+            <bk-form-item :label="$t('项目名称')" property="project_name" error-display-type="normal" required>
                 <bk-input class="create-input" :placeholder="$t('请输入4-12字符的项目名称')" v-model="formData.project_name"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('项目英文名')" property="english_name" required>
+            <bk-form-item :label="$t('项目英文名')" property="english_name" error-display-type="normal" required>
                 <bk-input class="create-input" :placeholder="$t('请输入2-32字符的小写字母+数字，以小写字母开头')" :disabled="isEdit"
                     v-model="formData.english_name"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('项目说明')" property="description" required>
+            <bk-form-item :label="$t('项目说明')" property="description" error-display-type="normal" required>
                 <bk-input
                     class="create-input"
                     :placeholder="$t('请输入项目描述')"
@@ -53,10 +55,34 @@
             const { projectData, value } = toRefs(props)
             const { emit } = ctx
             const { $bkMessage, $i18n, $store } = ctx.root
+            const bkFormRef = ref<any>(null)
             const formData = ref({
                 project_name: projectData?.value?.project_name,
                 english_name: projectData?.value?.english_name,
                 description: projectData?.value?.description
+            })
+            const rules = ref({
+                project_name: [
+                    {
+                        required: true,
+                        message: $i18n.t('必填项'),
+                        trigger: 'blur'
+                    }
+                ],
+                english_name: [
+                    {
+                        required: true,
+                        message: $i18n.t('必填项'),
+                        trigger: 'blur'
+                    }
+                ],
+                description: [
+                    {
+                        required: true,
+                        message: $i18n.t('必填项'),
+                        trigger: 'blur'
+                    }
+                ]
             })
             watch(value, (isShow) => {
                 if (isShow) {
@@ -106,6 +132,9 @@
                 return result
             }
             const handleConfirm = async () => {
+                const validate = await bkFormRef.value?.validate()
+                if (!validate) return
+                
                 let result = false
                 loading.value = true
                 if (isEdit.value) {
@@ -122,17 +151,19 @@
                         theme: 'success'
                     })
                     handleChange(false)
+                    emit('finished')
                 }
                 return result
             }
             const { initFormLabelWidth, labelWidth } = useFormLabel()
-            const bkFormRef = ref(null)
+            
             return {
                 labelWidth,
                 bkFormRef,
                 isEdit,
                 loading,
                 formData,
+                rules,
                 handleChange,
                 handleCreateProject,
                 handleEditProject,
@@ -142,4 +173,7 @@
     })
 </script>
 <style lang="postcss" scoped>
+>>> .form-error-tip {
+    text-align: left;
+}
 </style>

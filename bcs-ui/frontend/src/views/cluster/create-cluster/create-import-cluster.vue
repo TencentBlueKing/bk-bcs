@@ -1,16 +1,16 @@
 <template>
     <section class="create-import-cluster">
-        <bcs-form :label-width="labelWidth" :model="importClusterInfo" :rules="formRules" class="import-form" ref="importFormRef">
-            <bcs-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
+        <BkForm :label-width="labelWidth" :model="importClusterInfo" :rules="formRules" class="import-form" ref="importFormRef">
+            <BkFormItem :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
                 <bk-input v-model="importClusterInfo.clusterName"></bk-input>
-            </bcs-form-item>
-            <bcs-form-item :label="$t('导入方式')">
+            </BkFormItem>
+            <BkFormItem :label="$t('导入方式')">
                 <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
                     <bk-radio class="btn-group-first" value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
                     <bk-radio value="provider">{{$t('云服务商')}}</bk-radio>
                 </bk-radio-group>
-            </bcs-form-item>
-            <bcs-form-item :label="$t('集群环境')" required v-if="$INTERNAL">
+            </BkFormItem>
+            <BkFormItem :label="$t('集群环境')" required v-if="$INTERNAL">
                 <bk-radio-group class="btn-group" v-model="importClusterInfo.environment">
                     <bk-radio class="btn-group-first" value="debug">
                         {{ $t('测试环境') }}
@@ -19,12 +19,12 @@
                         {{ $t('正式环境') }}
                     </bk-radio>
                 </bk-radio-group>
-            </bcs-form-item>
-            <bcs-form-item :label="$t('集群描述')">
+            </BkFormItem>
+            <BkFormItem :label="$t('集群描述')">
                 <bk-input v-model="importClusterInfo.description" type="textarea"></bk-input>
-            </bcs-form-item>
+            </BkFormItem>
             <template v-if="importClusterInfo.importType === 'provider'">
-                <bcs-form-item :label="$t('云服务商')"
+                <BkFormItem :label="$t('云服务商')"
                     property="provider"
                     error-display-type="normal"
                     required>
@@ -38,8 +38,8 @@
                             :name="item.name">
                         </bcs-option>
                     </bcs-select>
-                </bcs-form-item>
-                <bcs-form-item :label="$t('云凭证')" property="accountID" error-display-type="normal" required>
+                </BkFormItem>
+                <BkFormItem :label="$t('云凭证')" property="accountID" error-display-type="normal" required>
                     <bcs-select :loading="accountsLoading"
                         class="w640"
                         :clearable="false"
@@ -57,8 +57,8 @@
                             </div>
                         </template>
                     </bcs-select>
-                </bcs-form-item>
-                <bcs-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
+                </BkFormItem>
+                <BkFormItem :label="$t('所属区域')" property="region" error-display-type="normal" required>
                     <bcs-select :loading="regionLoading"
                         class="w640"
                         searchable
@@ -70,8 +70,8 @@
                             :name="item.regionName">
                         </bcs-option>
                     </bcs-select>
-                </bcs-form-item>
-                <bcs-form-item :label="$t('TKE集群ID')" property="cloudID" error-display-type="normal" required>
+                </BkFormItem>
+                <BkFormItem :label="$t('TKE集群ID')" property="cloudID" error-display-type="normal" required>
                     <bcs-select class="w640" searchable
                         :clearable="false"
                         :loading="clusterLoading"
@@ -82,9 +82,9 @@
                             :name="item.clusterName">
                         </bcs-option>
                     </bcs-select>
-                </bcs-form-item>
+                </BkFormItem>
             </template>
-            <bcs-form-item :label="$t('集群kubeconfig')"
+            <BkFormItem :label="$t('集群kubeconfig')"
                 property="yaml"
                 error-display-type="normal"
                 required
@@ -103,14 +103,17 @@
                     v-model="importClusterInfo.yaml"
                     :show-gutter="false"
                 ></Ace>
-            </bcs-form-item>
-            <bcs-form-item class="mt16" v-if="importClusterInfo.importType === 'kubeconfig'">
+            </BkFormItem>
+            <BkFormItem class="mt16" v-if="importClusterInfo.importType === 'kubeconfig'">
                 <bk-button theme="primary"
                     :loading="testLoading"
                     @click="handleTest">{{$t('kubeconfig可用性测试')}}</bk-button>
-            </bcs-form-item>
-            <bcs-form-item class="mt32">
-                <span v-bk-tooltips="{ content: $t('请先测试kubeconfig可用性'), disabled: isTestSuccess }">
+            </BkFormItem>
+            <BkFormItem class="mt32">
+                <span v-bk-tooltips="{
+                    content: $t('请先测试kubeconfig可用性'),
+                    disabled: isTestSuccess || importClusterInfo.importType === 'provider'
+                }">
                     <bk-button class="btn"
                         theme="primary"
                         :loading="loading"
@@ -121,8 +124,8 @@
                 <bk-button class="btn"
                     @click="handleCancel"
                 >{{$t('取消')}}</bk-button>
-            </bcs-form-item>
-        </bcs-form>
+            </BkFormItem>
+        </BkForm>
     </section>
 </template>
 <script lang="ts">
@@ -132,12 +135,16 @@
     import useGoHome from '@/common/use-gohome'
     import useConfig from '@/common/use-config'
     import useFormLabel from '@/common/use-form-label'
+    import BkForm from 'bk-magic-vue/lib/form'
+    import BkFormItem from 'bk-magic-vue/lib/form-item'
 
     export default defineComponent({
         name: 'CreateImportCluster',
         components: {
             FormGroup,
-            Ace
+            Ace,
+            BkForm,
+            BkFormItem
         },
         setup (props, ctx) {
             const { $router, $bkMessage, $i18n, $route, $store } = ctx.root
@@ -270,7 +277,7 @@
 
                 clusterLoading.value = true
                 clusterList.value = await $store.dispatch('clustermanager/cloudClusterList', {
-                    $regionId: importClusterInfo.value.region,
+                    region: importClusterInfo.value.region,
                     $cloudId: importClusterInfo.value.provider,
                     accountID: importClusterInfo.value.accountID
                 })
@@ -281,15 +288,21 @@
                 type === 'provider' && !templateList.value.length && handleGetCloudList()
             })
             watch(() => importClusterInfo.value.provider, () => {
+                importClusterInfo.value.accountID = ''
                 handleGetCloudAccounts()
+                importClusterInfo.value.region = ''
                 getRegionList()
+                importClusterInfo.value.cloudID = ''
                 handleGetClusterList()
             })
             watch(() => importClusterInfo.value.accountID, () => {
+                importClusterInfo.value.region = ''
                 getRegionList()
+                importClusterInfo.value.cloudID = ''
                 handleGetClusterList()
             })
             watch(() => importClusterInfo.value.region, () => {
+                importClusterInfo.value.cloudID = ''
                 handleGetClusterList()
             })
             watch(() => importClusterInfo.value.yaml, () => {

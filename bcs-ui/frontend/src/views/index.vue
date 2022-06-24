@@ -32,7 +32,7 @@
     import SideTerminal from '@/components/terminal/index.vue'
     import Unregistry from '@/views/unregistry.vue'
     import ContentHeader from '@/views/content-header.vue'
-    import { isProjectExit } from '@/api/base'
+    import { getProjectList } from '@/api/base'
 
     export default defineComponent({
         name: 'home',
@@ -92,7 +92,7 @@
                 const _projectCode = projectCode || localProjectCode
                 if (!_projectCode) return false
 
-                const projectData = await isProjectExit({
+                const projectData = await getProjectList({
                     project_code: _projectCode,
                     with_perms: false
                 })

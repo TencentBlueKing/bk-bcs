@@ -2811,5 +2811,17 @@ export default {
         "Uninstall"
     ],
     "变更中...": ['changing'],
-    "确定卸载": ['Confirm Uninstall']
+    "确定卸载": ['Confirm Uninstall'],
+    "编辑成功": [
+        "Edit"
+    ],
+    "创建成功": [
+        "Successful creation"
+    ],
+    "kubeconfig": [
+        "kubeconfig"
+    ],
+    "新增凭证": [
+        "New voucher"
+    ]
 }
