@@ -26,7 +26,7 @@ from rest_framework.exceptions import ValidationError
 from backend.apps.whitelist import enable_helm_v3
 from backend.bcs_web.audit_log import client
 from backend.bcs_web.audit_log.client import get_log_client_by_activity_log_id
-from backend.helm.app.utils import get_cc_app_id, is_log_cluster
+from backend.helm.app.utils import get_cc_app_id
 from backend.helm.helm.constants import DEFAULT_VALUES_FILE_NAME, KEEP_TEMPLATE_UNCHANGED, RELEASE_VERSION_PREFIX
 from backend.helm.helm.models import Chart, ChartRelease
 from backend.helm.toolkit import utils as bcs_helm_utils
@@ -347,13 +347,6 @@ class App(models.Model):
         #    raise ValidationError("helm app is on transitioning, please try a later.")
 
         self.reset_transitioning("update")
-        if is_log_cluster(self.cluster_id):
-            logger.warning(
-                "ready to update release, release detail: cluster_id: %s, namespace: %s name: %s",
-                self.cluster_id,
-                self.namespace,
-                self.name,
-            )
         sync_or_async(upgrade_app)(
             kwargs={
                 "app_id": self.id,
@@ -371,13 +364,6 @@ class App(models.Model):
                 **kwargs,
             }
         )
-        if is_log_cluster(self.cluster_id):
-            logger.warning(
-                "update release task started, release detail: cluster_id: %s, namespace: %s name: %s",
-                self.cluster_id,
-                self.namespace,
-                self.name,
-            )
         return self
 
     def upgrade_app_task(
@@ -398,15 +384,6 @@ class App(models.Model):
         # make upgrade
         # `chart_version_id` indicate the target chartverion for app,
         # it can also use KEEP_TEMPLATE_UNCHANGED to keep app template unchanged.
-
-        # operation record
-        if is_log_cluster(self.cluster_id):
-            logger.warning(
-                "enter release task, release detail: cluster_id: %s, namespace: %s name: %s",
-                self.cluster_id,
-                self.namespace,
-                self.name,
-            )
         log_client = self.record_upgrade_app(
             chart_version_id,
             answers,
@@ -419,9 +396,24 @@ class App(models.Model):
             **kwargs,
         )
 
-        self.release = ChartRelease.objects.make_upgrade_release(
-            self, chart_version_id, answers, customs, valuefile=valuefile, valuefile_name=valuefile_name
-        )
+        # NOTE: 这里会匹配更新的版本，可能会导致 `ChartVersion matching query does not exist` 异常
+        try:
+            self.release = ChartRelease.objects.make_upgrade_release(
+                self, chart_version_id, answers, customs, valuefile=valuefile, valuefile_name=valuefile_name
+            )
+        except Exception as e:
+            logger.error(
+                "update release error, cluster_id: %s, namespace: %s, name: %s, error: %s",
+                self.cluster_id,
+                self.namespace,
+                self.name,
+                e,
+            )
+            transitioning_result = False
+            transitioning_message = f"update release failed, {e}"
+            self.set_transitioning(transitioning_result, transitioning_message)
+            return self
+
         self.version = self.release.chartVersionSnapshot.version
         self.updator = updator
         self.cmd_flags = json.dumps(kwargs.get("cmd_flags") or [])

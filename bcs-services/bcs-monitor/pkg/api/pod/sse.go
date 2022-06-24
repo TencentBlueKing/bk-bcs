@@ -39,7 +39,7 @@ func PodLogStream(c *rest.Context) {
 
 	logQuery := &k8sclient.LogQuery{}
 	if err := c.ShouldBindQuery(logQuery); err != nil {
-		rest.AbortWithBadRequestError(c, err)
+		rest.AbortWithJSONError(c, err)
 		return
 	}
 
@@ -55,7 +55,7 @@ func PodLogStream(c *rest.Context) {
 
 	logChan, err := k8sclient.GetPodLogStream(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, err)
+		rest.AbortWithJSONError(c, err)
 		return
 	}
 

@@ -17,15 +17,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 )
 
 func TestGetProject(t *testing.T) {
-	initConf()
 	ctx := context.Background()
 
-	project, err := GetProject(ctx, config.G.BCS, getTestProjectId())
+	project, err := GetProject(ctx, config.G.BCS, bcstesting.GetTestProjectId())
 	assert.NoError(t, err)
-	assert.Equal(t, project.ProjectId, getTestProjectId())
+	assert.Equal(t, project.ProjectId, bcstesting.GetTestProjectId())
 }

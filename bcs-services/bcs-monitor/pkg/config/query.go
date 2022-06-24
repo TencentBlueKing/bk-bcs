@@ -11,30 +11,15 @@
  *
  */
 
-package bcs
+package config
 
 import (
-	"context"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
+	httpdiscovery "github.com/prometheus/prometheus/discovery/http"
+	"github.com/prometheus/prometheus/discovery/targetgroup"
 )
 
-func TestListClusters(t *testing.T) {
-	ctx := context.Background()
-
-	clusters, err := ListClusters(ctx, config.G.BCS, bcstesting.GetTestProjectId())
-	assert.NoError(t, err)
-	assert.Equal(t, len(clusters), 0)
-}
-
-func TestGetCluster(t *testing.T) {
-	ctx := context.Background()
-
-	cluster, err := GetCluster(ctx, config.G.BCS, bcstesting.GetTestClusterId())
-	assert.NoError(t, err)
-	assert.Equal(t, cluster.ProjectId, bcstesting.GetTestProjectId())
+// QueryStore 配置
+type QueryStoreConf struct {
+	StaticConfigs []*targetgroup.Group      `yaml:"static_configs,omitempty"`
+	HTTPSDConfigs []*httpdiscovery.SDConfig `yaml:"http_sd_configs,omitempty"`
 }

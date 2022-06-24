@@ -25,4 +25,6 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/randhostport"
 	// import rand annnotationblocker plugin
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/blockannotation"
+	// import patchmount plugin
+	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/patchmount"
 )

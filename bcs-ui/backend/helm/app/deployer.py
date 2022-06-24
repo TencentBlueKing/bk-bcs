@@ -29,7 +29,7 @@ from backend.utils.client import make_kubectl_client, make_kubectl_client_from_k
 from ..helm.bcs_variable import get_valuefile_with_bcs_variable_injected
 from ..toolkit import utils as bcs_helm_utils
 from ..toolkit.kubehelm.exceptions import HelmError, HelmExecutionError
-from .utils import get_cc_app_id, is_log_cluster
+from .utils import get_cc_app_id
 
 logger = logging.getLogger(__name__)
 
@@ -100,14 +100,6 @@ class AppDeployer:
     def run_with_helm(self, operation):
         # NOTE: 兼容先前
         if operation in [ChartOperations.INSTALL.value, ChartOperations.UPGRADE.value]:
-            if is_log_cluster(self.app.cluster_id):
-                logger.warning(
-                    "start to exec task, task_id: %s release detail: cluster_id: %s, namespace: %s name: %s",
-                    current_task.request.id,
-                    self.app.cluster_id,
-                    self.app.namespace,
-                    self.app.name,
-                )
             content = self.app.render_app(
                 access_token=self.access_token,
                 username=self.app.updator,
@@ -165,14 +157,6 @@ class AppDeployer:
         transitioning_result = True
         try:
             if operation in [ChartOperations.INSTALL.value, ChartOperations.UPGRADE.value]:
-                if is_log_cluster(self.app.cluster_id):
-                    logger.warning(
-                        "helm release task started, task_id: %s release detail: cluster_id: %s, namespace: %s name: %s",
-                        current_task.request.id,
-                        self.app.cluster_id,
-                        self.app.namespace,
-                        self.app.name,
-                    )
                 project_id = self.app.project_id
                 namespace = self.app.namespace
                 bcs_inject_data = bcs_helm_utils.BCSInjectData(
@@ -234,14 +218,6 @@ class AppDeployer:
             transitioning_result = True
             transitioning_message = "app success %s" % operation
 
-        if is_log_cluster(self.app.cluster_id):
-            logger.warning(
-                "helm release task finished, task_id: %s release detail: cluster_id: %s, namespace: %s name: %s",
-                current_task.request.id,
-                self.app.cluster_id,
-                self.app.namespace,
-                self.app.name,
-            )
         self.app.set_transitioning(transitioning_result, transitioning_message)
 
     def run_with_kubectl(self, operation):
