@@ -109,11 +109,12 @@ func NewWatchOptions() *WatchConfig {
 
 // FileConfig the file config
 type FilterConfig struct {
-	APIResourceException []APIResourceException `json:"apiResourceException"`
+	APIResourceSpecification []APIResourceFilter `json:"apiResourceSpecification"`
+	APIResourceException     []APIResourceFilter `json:"apiResourceException"`
 }
 
-// APIResourceException api resource exception
-type APIResourceException struct {
+// APIResourceFilter api resource exception
+type APIResourceFilter struct {
 	GroupVersion  string   `json:"groupVersion"`
 	ResourceKinds []string `json:"resourceKinds"`
 }

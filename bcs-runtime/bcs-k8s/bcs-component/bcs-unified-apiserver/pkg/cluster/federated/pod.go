@@ -80,6 +80,14 @@ func (p *PodStor) List(ctx context.Context, namespace string, opts metav1.ListOp
 		Items:    []v1.Pod{},
 	}
 	for k, v := range p.k8sClientMap {
+		_, nsErr := v.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+		if nsErr != nil {
+			if apierrors.IsNotFound(nsErr) {
+				continue
+			}
+			return nil, fmt.Errorf("get ns %s from %s failed, err %s", namespace, k, nsErr)
+		}
+
 		result, err := v.CoreV1().Pods(namespace).List(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -185,6 +193,13 @@ func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeade
 	}
 
 	for clusterId, v := range p.k8sClientMap {
+		_, nsErr := v.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+		if nsErr != nil {
+			if apierrors.IsNotFound(nsErr) {
+				continue
+			}
+			return nil, fmt.Errorf("get ns %s from %s failed, err %s", namespace, clusterId, nsErr)
+		}
 		resultTemp := &metav1.Table{}
 		err := v.CoreV1().RESTClient().Get().
 			Namespace(namespace).
@@ -358,7 +373,15 @@ func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListO
 
 // GetLogs kubectl logs 命令
 func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error) {
-	for _, v := range p.k8sClientMap {
+	for k, v := range p.k8sClientMap {
+		_, nsErr := v.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+		if nsErr != nil {
+			if apierrors.IsNotFound(nsErr) {
+				continue
+			}
+			return nil, fmt.Errorf("get ns %s from %s failed, err %s", namespace, k, nsErr)
+		}
+
 		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {

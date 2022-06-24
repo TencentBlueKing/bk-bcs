@@ -57,6 +57,13 @@ func (p *EventStor) List(ctx context.Context, namespace string, opts metav1.List
 		Items:    []v1.Event{},
 	}
 	for k, v := range p.k8sClientMap {
+		_, nsErr := v.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+		if nsErr != nil {
+			if apierrors.IsNotFound(nsErr) {
+				continue
+			}
+			return nil, fmt.Errorf("get ns %s from %s failed, err %s", namespace, k, nsErr)
+		}
 		result, err := v.CoreV1().Events(namespace).List(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -101,6 +108,13 @@ func (p *EventStor) ListAsTable(ctx context.Context, namespace string, acceptHea
 	}
 
 	for clusterId, v := range p.k8sClientMap {
+		_, nsErr := v.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+		if nsErr != nil {
+			if apierrors.IsNotFound(nsErr) {
+				continue
+			}
+			return nil, fmt.Errorf("get ns %s from %s failed, err %s", namespace, clusterId, nsErr)
+		}
 		resultTemp := &metav1.Table{}
 		err := v.CoreV1().RESTClient().Get().
 			Namespace(namespace).

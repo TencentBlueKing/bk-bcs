@@ -4,5 +4,11 @@
             "groupVersion": "v1",
             "resourceKinds": ["ConfigMap", "Secret"]
         }
+    ],
+    "apiResourceSpecification": [
+        {
+            "groupVersion": "v1",
+            "resourceKinds": ["Pod"]
+        }
     ]
 }

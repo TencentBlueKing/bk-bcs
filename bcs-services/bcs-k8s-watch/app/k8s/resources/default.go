@@ -97,8 +97,10 @@ func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.Filter
 		}
 	}
 
+	resFilter := NewResourceFilter(filterConfig)
+
 	// 初始化待watch的k8s资源
-	WatcherConfigList, err = initK8sWatcherConfigList(restConfig, filter, watchResource.Namespace != "")
+	WatcherConfigList, err = initK8sWatcherConfigList(restConfig, resFilter, watchResource.Namespace != "")
 	if err != nil {
 		return err
 	}
@@ -226,7 +228,7 @@ func initTkexClient(restConfig *rest.Config) (map[string]rest.Interface, error) 
 }
 
 // initK8sWatcherConfigList init k8s resource
-func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[string]struct{}, onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) {
+func initK8sWatcherConfigList(restConfig *rest.Config, filter *ResourceFilter, onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) {
 	// create k8s clientset.
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -270,32 +272,15 @@ func initK8sWatcherConfigList(restConfig *rest.Config, filter map[string]map[str
 
 	for _, apiResourceList := range apiResourceLists {
 		if kubeClient, ok := K8sClientList[apiResourceList.GroupVersion]; ok {
-			resourceFiltered, resourceFilterOK := filter[apiResourceList.GroupVersion]
+			// resourceFiltered, resourceFilterOK := filter[apiResourceList.GroupVersion]
 			for _, apiResource := range apiResourceList.APIResources {
-				if apiResource.Kind != "Namespace" {
-					if resourceFilterOK && len(resourceFiltered) == 0 {
-						glog.Warnf("filter has banned all resource in groupversion %s", apiResourceList.GroupVersion)
-						continue
-					}
-					if _, filtered := resourceFiltered[apiResource.Kind]; filtered && resourceFilterOK {
-						glog.Warnf("filter has banned resource kind %s in groupversion %s", apiResource.Kind, apiResourceList.GroupVersion)
-						continue
-					}
+				if filter.IsBanned(apiResourceList.GroupVersion, apiResource) {
+					continue
 				}
 				var obj runtime.Object
 				_, ok := k8sWatcherConfigList[apiResource.Kind]
 				if ok && apiResourceList.GroupVersion == ExtensionsV1Beta1GroupVersion {
 					// 如果 deployment, daemonset 在apps和extensions下面都有，则只watch apps下面的资源
-					continue
-				}
-
-				if apiResource.Kind == "ComponentStatus" || apiResource.Kind == "Binding" || apiResource.Kind == "ReplicationControllerDummy" {
-					// 这几种类型的资源无法watch，跳过
-					continue
-				}
-
-				if apiResourceList.GroupVersion == StorageV1GroupVersion && apiResource.Kind != "StorageClass" {
-					// 1.12版本的 VolumeAttachment在v1beta1下，但1.14版本放到了v1下，为了避免list报错，暂时只同步StorageClass
 					continue
 				}
 				//如果指定了namespace则不监听非namespace的资源

@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	restclient "k8s.io/client-go/rest"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/rest"
 )
@@ -58,7 +59,11 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 
 	switch c.Options.Verb {
 	case rest.ListVerb:
-		obj, err = h.handler.ListByStor(ctx, c.Namespace, *c.Options.ListOptions)
+		if config.G.APIServer.StoreMode == config.BcsStorageMode {
+			obj, err = h.handler.ListByStor(ctx, c.Namespace, *c.Options.ListOptions)
+		} else {
+			obj, err = h.handler.List(ctx, c.Namespace, *c.Options.ListOptions)
+		}
 	case rest.ListAsTableVerb:
 		obj, err = h.handler.ListAsTable(ctx, c.Namespace, c.Options.AcceptHeader, *c.Options.ListOptions)
 	case rest.GetVerb:
