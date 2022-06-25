@@ -57,6 +57,9 @@ ENV GOPATH /go
 ENV PATH /go/bin:$PATH
 
 RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
+
+# source code for pprof debug
+COPY --from=builder /go/src /go/src
 # end
 
 COPY --from=builder /go/src/cluster-resources-service /usr/bin/cluster-resources-service
