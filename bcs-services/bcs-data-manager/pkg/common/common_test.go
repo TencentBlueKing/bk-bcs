@@ -23,7 +23,7 @@ import (
 func TestGetClusterIDList(t *testing.T) {
 	ctx := context.Background()
 	cmCli := mock.NewMockCm()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "test")
+	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
 	clusterList, err := getter.GetClusterIDList(ctx, cmCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 2, len(clusterList))

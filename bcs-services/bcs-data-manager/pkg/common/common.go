@@ -124,6 +124,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 			clusterMetaList = append(clusterMetaList, clusterMeta)
 		}
 	}
+	clusterMetaList = removeDuplicateCluster(clusterMetaList)
 	g.cache.Set("clusterList", clusterMetaList, 15*time.Minute)
 	return clusterMetaList, nil
 }
@@ -442,4 +443,16 @@ func generateMesosWorkloadList(cluster *types.ClusterMeta, workloadType string,
 		Name:         commonHeader.ResourceName,
 	}
 	return workloadMeta
+}
+
+func removeDuplicateCluster(clusterList []*types.ClusterMeta) []*types.ClusterMeta {
+	clusterMap := make(map[string]struct{})
+	result := make([]*types.ClusterMeta, 0)
+	for _, cluster := range clusterList {
+		if _, ok := clusterMap[cluster.ClusterID]; !ok {
+			clusterMap[cluster.ClusterID] = struct{}{}
+			result = append(result, cluster)
+		}
+	}
+	return result
 }
