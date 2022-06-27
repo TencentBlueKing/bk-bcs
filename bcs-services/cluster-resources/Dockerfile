@@ -60,6 +60,9 @@ RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
 
 # source code for pprof debug
 COPY --from=builder /go/src /go/src
+
+# remove .git for secure
+RUN rm -rf /go/src/.git
 # end
 
 COPY --from=builder /go/src/cluster-resources-service /usr/bin/cluster-resources-service
