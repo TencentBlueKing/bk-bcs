@@ -93,48 +93,53 @@ const (
 
 // ProjectMeta meta for project
 type ProjectMeta struct {
-	ProjectID  string `json:"projectID"`
-	BusinessID string `json:"businessID"`
+	ProjectID  string            `json:"projectID"`
+	BusinessID string            `json:"businessID"`
+	Label      map[string]string `json:"label"`
 }
 
 // ClusterMeta meta for cluster
 type ClusterMeta struct {
-	ProjectID   string `json:"projectID"`
-	BusinessID  string `json:"businessID"`
-	ClusterID   string `json:"clusterID"`
-	ClusterType string `json:"clusterType"`
+	ProjectID   string            `json:"projectID"`
+	BusinessID  string            `json:"businessID"`
+	ClusterID   string            `json:"clusterID"`
+	ClusterType string            `json:"clusterType"`
+	Label       map[string]string `json:"label"`
 }
 
 // NamespaceMeta meta for namespace
 type NamespaceMeta struct {
-	ProjectID   string `json:"projectID"`
-	BusinessID  string `json:"businessID"`
-	ClusterID   string `json:"clusterID"`
-	ClusterType string `json:"clusterType"`
-	Name        string `json:"name"`
+	ProjectID   string            `json:"projectID"`
+	BusinessID  string            `json:"businessID"`
+	ClusterID   string            `json:"clusterID"`
+	ClusterType string            `json:"clusterType"`
+	Name        string            `json:"name"`
+	Label       map[string]string `json:"label"`
 }
 
 // WorkloadMeta meta for workload
 type WorkloadMeta struct {
-	ProjectID    string `json:"projectID"`
-	ClusterID    string `json:"clusterID"`
-	BusinessID   string `json:"businessID"`
-	ClusterType  string `json:"clusterType"`
-	Namespace    string `json:"namespace"`
-	ResourceType string `json:"resourceType"`
-	Name         string `json:"name"`
+	ProjectID    string            `json:"projectID"`
+	ClusterID    string            `json:"clusterID"`
+	BusinessID   string            `json:"businessID"`
+	ClusterType  string            `json:"clusterType"`
+	Namespace    string            `json:"namespace"`
+	ResourceType string            `json:"resourceType"`
+	Name         string            `json:"name"`
+	Label        map[string]string `json:"label"`
 }
 
 // PodAutoscalerMeta meta for hpa or gpa
 type PodAutoscalerMeta struct {
-	ProjectID          string `json:"projectID"`
-	ClusterID          string `json:"clusterID"`
-	BusinessID         string `json:"businessID"`
-	ClusterType        string `json:"clusterType"`
-	Namespace          string `json:"namespace"`
-	TargetResourceType string `json:"targetResourceType"`
-	TargetWorkloadName string `json:"targetWorkloadName"`
-	PodAutoscaler      string `json:"podAutoscaler"`
+	ProjectID          string            `json:"projectID"`
+	ClusterID          string            `json:"clusterID"`
+	BusinessID         string            `json:"businessID"`
+	ClusterType        string            `json:"clusterType"`
+	Namespace          string            `json:"namespace"`
+	TargetResourceType string            `json:"targetResourceType"`
+	TargetWorkloadName string            `json:"targetWorkloadName"`
+	PodAutoscaler      string            `json:"podAutoscaler"`
+	Label              map[string]string `json:"label"`
 }
 
 // PublicData for public table
@@ -165,6 +170,7 @@ type WorkloadData struct {
 	Namespace          string                         `json:"namespace" bson:"namespace"`
 	WorkloadType       string                         `json:"workloadType" bson:"workload_type"`
 	Name               string                         `json:"workloadName" bson:"workload_name"`
+	Label              map[string]string              `json:"label"  bson:"label"`
 	MaxCPUUsageTime    *bcsdatamanager.ExtremumRecord `json:"maxCPUUsageTime"  bson:"max_cpu_usage_time"`
 	MinCPUUsageTime    *bcsdatamanager.ExtremumRecord `json:"minCPUUsageTime" bson:"min_cpu_usage_time"`
 	MaxMemoryUsageTime *bcsdatamanager.ExtremumRecord `json:"maxMemoryUsageTime" bson:"max_memory_usage_time"`
@@ -194,6 +200,7 @@ type PodAutoscalerData struct {
 	PodAutoscalerType string                  `json:"podAutoscalerType" bson:"pod_autoscaler_type"`
 	PodAutoscalerName string                  `json:"podAutoscalerName" bson:"pod_autoscaler_name"`
 	Total             int64                   `json:"total" bson:"total"`
+	Label             map[string]string       `json:"label"  bson:"label"`
 	Metrics           []*PodAutoscalerMetrics `json:"metrics" bson:"metrics"`
 }
 
@@ -205,6 +212,7 @@ type ProjectData struct {
 	Dimension  string                         `json:"dimension" bson:"dimension"`
 	ProjectID  string                         `json:"projectID" bson:"project_id"`
 	BusinessID string                         `json:"businessID" bson:"business_id"`
+	Label      map[string]string              `json:"label"  bson:"label"`
 	MinNode    *bcsdatamanager.ExtremumRecord `json:"minNode,omitempty" bson:"min_node"`
 	MaxNode    *bcsdatamanager.ExtremumRecord `json:"maxNode,omitempty" bson:"max_node"`
 	Metrics    []*ProjectMetrics              `json:"metrics" bson:"metrics"`
@@ -221,6 +229,7 @@ type NamespaceData struct {
 	ClusterID          string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType        string                         `json:"clusterType" bson:"cluster_type"`
 	Namespace          string                         `json:"namespace" bson:"namespace"`
+	Label              map[string]string              `json:"label"  bson:"label"`
 	MaxCPUUsageTime    *bcsdatamanager.ExtremumRecord `json:"maxCPUUsageTime" bson:"max_cpu_usage_time"`
 	MinCPUUsageTime    *bcsdatamanager.ExtremumRecord `json:"minCPUUsageTime" bson:"min_cpu_usage_time"`
 	MaxMemoryUsageTime *bcsdatamanager.ExtremumRecord `json:"maxMemoryUsageTime" bson:"max_memory_usage_time"`
@@ -243,6 +252,7 @@ type ClusterData struct {
 	ClusterID    string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType  string                         `json:"clusterType" bson:"cluster_type"`
 	TotalCACount int64                          `json:"totalCACount" bson:"total_ca_count"`
+	Label        map[string]string              `json:"label"  bson:"label"`
 	MinNode      *bcsdatamanager.ExtremumRecord `json:"minNode,omitempty" bson:"min_node"`
 	MaxNode      *bcsdatamanager.ExtremumRecord `json:"maxNode,omitempty" bson:"max_node"`
 	MinInstance  *bcsdatamanager.ExtremumRecord `json:"minInstance,omitempty" bson:"min_instance"`
@@ -384,6 +394,7 @@ type JobCommonOpts struct {
 	PodAutoscalerType string
 	Dimension         string
 	CurrentTime       time.Time
+	Label             map[string]string
 }
 
 // Clients clients for dataJob

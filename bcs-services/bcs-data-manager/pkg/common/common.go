@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"strconv"
 	"sync"
 	"time"
 
@@ -112,14 +113,16 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
 	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListCluster", "GET", err, start)
+	uniqueClusterList := removeDuplicateCluster(clusterList.Data)
 	clusterMetaList := make([]*types.ClusterMeta, 0)
-	for _, cluster := range clusterList.Data {
+	for _, cluster := range uniqueClusterList {
 		if (!g.needFilter || g.clusterIDs[cluster.ClusterID]) && cluster.Status != "DELETED" {
 			clusterMeta := &types.ClusterMeta{
 				ProjectID:   cluster.ProjectID,
 				BusinessID:  cluster.BusinessID,
 				ClusterID:   cluster.ClusterID,
 				ClusterType: cluster.EngineType,
+				Label:       map[string]string{"isShared": strconv.FormatBool(cluster.IsShared)},
 			}
 			clusterMetaList = append(clusterMetaList, clusterMeta)
 		}
@@ -442,4 +445,22 @@ func generateMesosWorkloadList(cluster *types.ClusterMeta, workloadType string,
 		Name:         commonHeader.ResourceName,
 	}
 	return workloadMeta
+}
+
+func removeDuplicateCluster(clusterList []*cm.Cluster) []*cm.Cluster {
+	clusterMap := make(map[string]struct{})
+	result := make([]*cm.Cluster, 0)
+	for _, cluster := range clusterList {
+		if cluster.IsShared {
+			clusterMap[cluster.ClusterID] = struct{}{}
+			result = append(result, cluster)
+		}
+	}
+	for _, cluster := range clusterList {
+		if _, ok := clusterMap[cluster.ClusterID]; !ok {
+			clusterMap[cluster.ClusterID] = struct{}{}
+			result = append(result, cluster)
+		}
+	}
+	return result
 }

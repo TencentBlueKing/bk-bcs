@@ -283,3 +283,16 @@ func (m *MockStore) InsertPublicInfo(ctx context.Context, metrics *types.PublicD
 	args := m.Called(testCluster)
 	return args.Error(0)
 }
+
+func (m *MockStore) InsertPodAutoscalerInfo(ctx context.Context, metrics *types.PodAutoscalerMetrics, opts *types.JobCommonOpts) error {
+	return nil
+}
+func (m *MockStore) GetPodAutoscalerList(ctx context.Context, request *datamanager.GetPodAutoscalerListRequest) ([]*datamanager.PodAutoscaler, int64, error) {
+	return nil, 0, nil
+}
+func (m *MockStore) GetPodAutoscalerInfo(ctx context.Context, request *datamanager.GetPodAutoscalerRequest) (*datamanager.PodAutoscaler, error) {
+	return nil, nil
+}
+func (m *MockStore) GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.PodAutoscalerData, error) {
+	return nil, nil
+}

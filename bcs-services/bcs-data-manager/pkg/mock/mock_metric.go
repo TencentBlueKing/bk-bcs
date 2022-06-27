@@ -96,3 +96,10 @@ func (m *MockMetric) GetClusterNodeCount(opts *types.JobCommonOpts, clients *typ
 	args := m.Called(testCluster)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
+
+func (m *MockMetric) GetPodAutoscalerCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error) {
+	return 0, nil
+}
+func (m *MockMetric) GetCACount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error) {
+	return 0, nil
+}

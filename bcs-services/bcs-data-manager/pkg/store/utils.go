@@ -141,6 +141,20 @@ func distinctSlice(key string, slice *[]map[string]string) []string {
 	return result
 }
 
+func distinctWorkloadSlice(slice *[]map[string]string) []map[string]string {
+	keyMap := make(map[string]struct{})
+	result := make([]map[string]string, 0)
+	for _, value := range *slice {
+		key := value[ProjectIDKey] + value[ClusterIDKey] + value[NamespaceKey] + value[WorkloadTypeKey] +
+			value[WorkloadNameKey]
+		if _, ok := keyMap[key]; !ok {
+			keyMap[key] = struct{}{}
+			result = append(result, value)
+		}
+	}
+	return result
+}
+
 func distinctPodAutoscaler(slice *[]map[string]string) []map[string]string {
 	keyMap := make(map[string]struct{})
 	result := make([]map[string]string, 0)

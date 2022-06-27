@@ -60,6 +60,25 @@ var (
 			},
 		},
 		{
+			Name: types.WorkloadTableName + "_list_idx2",
+			Key: bson.D{
+				bson.E{Key: ClusterIDKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
+			Name: types.WorkloadTableName + "_list_idx3",
+			Key: bson.D{
+				bson.E{Key: ClusterIDKey, Value: 1},
+				bson.E{Key: NamespaceKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
 			Name: types.WorkloadTableName + "_get_idx",
 			Key: bson.D{
 				bson.E{Key: ClusterIDKey, Value: 1},
@@ -191,6 +210,7 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 	if retWorkload.BusinessID == "" {
 		retWorkload.BusinessID = opts.BusinessID
 	}
+	retWorkload.Label = opts.Label
 	retWorkload.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retWorkload.Metrics = append(retWorkload.Metrics, metrics)
 	return m.DB.Table(m.TableName).
@@ -210,24 +230,35 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	cond := make([]*operator.Condition, 0)
+
 	cond = append(cond,
 		operator.NewLeafCondition(operator.Eq, operator.M{
-			ClusterIDKey:    request.ClusterID,
-			DimensionKey:    dimension,
-			NamespaceKey:    request.Namespace,
-			WorkloadTypeKey: request.WorkloadType,
-		}), operator.NewLeafCondition(operator.Gte, operator.M{
-			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			ClusterIDKey: request.ClusterID,
+			DimensionKey: dimension,
 		}))
+	if request.Namespace != "" {
+		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+			NamespaceKey: request.Namespace,
+		}))
+	}
+	if request.WorkloadType != "" {
+		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+			WorkloadTypeKey: request.WorkloadType,
+		}))
+	}
+	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+		MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+	}))
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempWorkloadList := make([]map[string]string, 0)
-	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{WorkloadNameKey: 1}).
+	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ProjectIDKey: 1, ClusterIDKey: 1,
+		NamespaceKey: 1, WorkloadTypeKey: 1, WorkloadNameKey: 1}).
 		All(ctx, &tempWorkloadList)
 	if err != nil {
-		blog.Errorf("get cluster id list error")
+		blog.Errorf("get workload list error")
 		return nil, total, err
 	}
-	workloadList := distinctSlice(WorkloadNameKey, &tempWorkloadList)
+	workloadList := distinctWorkloadSlice(&tempWorkloadList)
 	if len(workloadList) == 0 {
 		return nil, total, nil
 	}
@@ -250,11 +281,11 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	response := make([]*bcsdatamanager.Workload, 0)
 	for _, workload := range chooseWorkload {
 		workloadRequest := &bcsdatamanager.GetWorkloadInfoRequest{
-			ClusterID:    request.ClusterID,
-			Namespace:    request.Namespace,
+			ClusterID:    workload[ClusterIDKey],
+			Namespace:    workload[NamespaceKey],
 			Dimension:    dimension,
-			WorkloadType: request.WorkloadType,
-			WorkloadName: workload,
+			WorkloadType: workload[WorkloadTypeKey],
+			WorkloadName: workload[WorkloadNameKey],
 		}
 		namespaceInfo, err := m.GetWorkloadInfo(ctx, workloadRequest)
 		if err != nil {
@@ -273,7 +304,7 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	workloadMetricsMap := make([]map[string]*types.WorkloadMetrics, 0)
+	workloadMetricsMap := make([]*types.WorkloadData, 0)
 	publicCond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ClusterIDKey:    request.ClusterID,
 		ObjectTypeKey:   types.NamespaceType,
@@ -312,8 +343,25 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 		},
 	}})
 	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":     0,
-		"metrics": 1,
+		"_id":           0,
+		"metrics":       1,
+		"business_id":   1,
+		"project_id":    1,
+		"namespace":     1,
+		"cluster_id":    1,
+		"workload_name": 1,
+		"workload_type": 1,
+		"label":         1,
+	}}, map[string]interface{}{"$group": map[string]interface{}{
+		"_id":           nil,
+		"cluster_id":    map[string]interface{}{"$first": "$cluster_id"},
+		"namespace":     map[string]interface{}{"$first": "$namespace"},
+		"project_id":    map[string]interface{}{"$first": "$project_id"},
+		"workload_type": map[string]interface{}{"$first": "$workload_type"},
+		"workload_name": map[string]interface{}{"$first": "$workload_name"},
+		"business_id":   map[string]interface{}{"$max": "$business_id"},
+		"metrics":       map[string]interface{}{"$push": "$metrics"},
+		"label":         map[string]interface{}{"$first": "$label"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &workloadMetricsMap)
 	if err != nil {
@@ -325,12 +373,11 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	}
 	workloadMetrics := make([]*types.WorkloadMetrics, 0)
 	for _, metrics := range workloadMetricsMap {
-		workloadMetrics = append(workloadMetrics, metrics["metrics"])
+		workloadMetrics = append(workloadMetrics, metrics.Metrics...)
 	}
 	startTime := workloadMetrics[0].Time.Time().String()
 	endTime := workloadMetrics[len(workloadMetrics)-1].Time.Time().String()
-	return m.generateWorkloadResponse(workloadPublic, workloadMetrics, request.ClusterID, request.Namespace,
-		dimension, request.WorkloadType, request.WorkloadName, startTime, endTime), nil
+	return m.generateWorkloadResponse(workloadPublic, workloadMetrics, workloadMetricsMap[0], startTime, endTime), nil
 }
 
 // GetRawWorkloadInfo get raw workload data
@@ -373,16 +420,17 @@ func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCom
 }
 
 func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetrics,
-	metricSlice []*types.WorkloadMetrics, clusterID, namespace, dimension, workloadType, workloadName, startTime,
+	metricSlice []*types.WorkloadMetrics, data *types.WorkloadData, startTime,
 	endTime string) *bcsdatamanager.Workload {
 	response := &bcsdatamanager.Workload{
-		ClusterID:     clusterID,
-		Dimension:     dimension,
+		ClusterID:     data.ClusterID,
+		Dimension:     data.Dimension,
 		StartTime:     startTime,
 		EndTime:       endTime,
-		Namespace:     namespace,
-		WorkloadType:  workloadType,
-		WorkloadName:  workloadName,
+		Namespace:     data.Namespace,
+		WorkloadType:  data.WorkloadType,
+		WorkloadName:  data.Name,
+		Label:         data.Label,
 		Metrics:       nil,
 		SuggestCPU:    strconv.FormatFloat(public.SuggestCPU, 'f', 2, 64),
 		SuggestMemory: strconv.FormatFloat(public.SuggestMemory, 'f', 2, 64),

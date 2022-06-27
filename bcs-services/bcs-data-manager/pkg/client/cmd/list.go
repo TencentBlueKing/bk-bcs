@@ -177,10 +177,6 @@ func ListWorkload(cmd *cobra.Command, args []string) {
 	req.Page = flagPage
 	req.Size = flagSize
 	req.Namespace = flagNamespace
-	if flagWorkloadType == "" {
-		fmt.Printf("get workload data need specific workloadType, use -t {workloadType}\n")
-		os.Exit(1)
-	}
 	req.WorkloadType = flagWorkloadType
 	ctx := context.Background()
 	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
