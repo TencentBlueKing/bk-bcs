@@ -33,13 +33,12 @@ const (
 
 // BCSConf
 type BCSConf struct {
-	Host            string         `yaml:"host"`
-	Token           string         `yaml:"token"`
-	BCSProjectToken string         `yaml:"bcs_project_token"`
-	Verify          bool           `yaml:"verify"`
-	JWTPubKey       string         `yaml:"jwt_public_key"`
-	JWTPubKeyObj    *rsa.PublicKey `yaml:"-"`
-	ClusterEnv      BCSClusterEnv  `yaml:"cluster_env"`
+	Host         string         `yaml:"host"`
+	Token        string         `yaml:"token"`
+	Verify       bool           `yaml:"verify"`
+	JWTPubKey    string         `yaml:"jwt_public_key"`
+	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
+	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
 }
 
 // Init

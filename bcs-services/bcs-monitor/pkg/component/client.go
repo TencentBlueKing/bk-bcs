@@ -36,19 +36,33 @@ const (
 var (
 	clientOnce   sync.Once
 	globalClient *resty.Client
+	maskKeys     = map[string]struct{}{
+		"bk_app_secret": {},
+	}
 )
 
-func restyToCurl(c *resty.Client, r *resty.Response) error {
+// restyReqToCurl curl 格式的请求日志
+func restyReqToCurl(r *resty.Request) string {
 	headers := ""
-	for key, values := range r.Request.Header {
+	for key, values := range r.Header {
 		for _, value := range values {
 			headers += fmt.Sprintf(" -H %q", fmt.Sprintf("%s: %s", key, value))
 		}
 	}
 
-	reqMsg := fmt.Sprintf("curl -X %s %s%s", r.Request.Method, r.Request.URL, headers)
-	if r.Request.Body != nil {
-		switch body := r.Request.Body.(type) {
+	// 过滤掉敏感信息
+	rawURL := *r.RawRequest.URL
+	queryValue := rawURL.Query()
+	for key := range queryValue {
+		if _, ok := maskKeys[key]; ok {
+			queryValue.Set(key, "<masked>")
+		}
+	}
+	rawURL.RawQuery = queryValue.Encode()
+
+	reqMsg := fmt.Sprintf("curl -X %s %s%s", r.Method, rawURL.String(), headers)
+	if r.Body != nil {
+		switch body := r.Body.(type) {
 		case []byte:
 			reqMsg += fmt.Sprintf(" -d %q", body)
 		case string:
@@ -58,21 +72,36 @@ func restyToCurl(c *resty.Client, r *resty.Response) error {
 		default:
 			prtBodyBytes, err := json.Marshal(body)
 			if err != nil {
-				klog.Errorf("marshal json, %s", err)
+				reqMsg += fmt.Sprintf(" -d %q (MarshalErr %s)", body, err)
 			} else {
 				reqMsg += fmt.Sprintf(" -d '%s'", prtBodyBytes)
 			}
 		}
 	}
 
-	klog.Infof("REQ: %s", reqMsg)
+	return reqMsg
+}
 
-	respMsg := fmt.Sprintf("[%s] %s %s", r.Status(), r.Time(), r.Body())
-	if len(respMsg) > 1024 {
-		respMsg = respMsg[:1024] + fmt.Sprintf("...(Total %s)", humanize.Bytes(uint64(len(respMsg))))
+// restyResponseToCurl 返回日志
+func restyResponseToCurl(resp *resty.Response) string {
+	// 最大打印 1024 个字符
+	body := string(resp.Body())
+	if len(body) > 1024 {
+		body = fmt.Sprintf("%s...(Total %s)", body[:1024], humanize.Bytes(uint64(len(body))))
 	}
-	klog.Infof("RESP: %s", respMsg)
 
+	respMsg := fmt.Sprintf("[%s] %s %s", resp.Status(), resp.Time(), body)
+	return respMsg
+}
+
+func restyErrHook(r *resty.Request, err error) {
+	klog.Infof("REQ: %s", restyReqToCurl(r))
+	klog.Infof("RESP: [err] %s", err)
+}
+
+func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
+	klog.Infof("REQ: %s", restyReqToCurl(r.Request))
+	klog.Infof("RESP: %s", restyResponseToCurl(r))
 	return nil
 }
 
@@ -83,7 +112,8 @@ func GetClient() *resty.Client {
 			globalClient = resty.New().SetTimeout(timeout)
 			globalClient = globalClient.SetDebug(false) // 更多详情, 可以开启为 true
 			globalClient.SetDebugBodyLimit(1024)
-			globalClient.OnAfterResponse(restyToCurl)
+			globalClient.OnAfterResponse(restyAfterResponseHook)
+			globalClient.OnError(restyErrHook)
 			globalClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 		})
 	}

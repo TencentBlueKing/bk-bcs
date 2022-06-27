@@ -16,6 +16,7 @@ package bcs
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -24,12 +25,13 @@ import (
 
 // Project 项目信息
 type Project struct {
-	Name      string `json:"name"`
-	ProjectId string `json:"projectID"`
-	Code      string `json:"projectCode"`
-	CcBizID   string `json:"businessID"`
-	Creator   string `json:"creator"`
-	Kind      string `json:"kind"`
+	Name          string `json:"name"`
+	ProjectId     string `json:"projectID"`
+	Code          string `json:"projectCode"`
+	CcBizID       string `json:"businessID"`
+	Creator       string `json:"creator"`
+	Kind          string `json:"kind"`
+	RawCreateTime string `json:"createTime"`
 }
 
 // String
@@ -43,6 +45,10 @@ func (p *Project) String() string {
 	return fmt.Sprintf("project<%s, %s|%s|%s>", p.Name, displayCode, p.ProjectId, p.CcBizID)
 }
 
+func (p *Project) CreateTime() (time.Time, error) {
+	return time.ParseInLocation("2006-01-02T15:04:05Z", p.RawCreateTime, config.G.Base.Location)
+}
+
 // GetProject 通过 project_id/code 获取项目信息
 func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode string) (*Project, error) {
 	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
@@ -53,8 +59,8 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
-		SetHeader("X-Project-Username", "bcs-monitor").
-		SetAuthToken(bcsConf.BCSProjectToken).
+		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetAuthToken(bcsConf.Token).
 		Get(url)
 
 	if err != nil {

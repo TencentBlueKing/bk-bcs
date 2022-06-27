@@ -15,12 +15,15 @@ package storegw
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/discovery/targetgroup"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
@@ -97,4 +100,39 @@ func (s *StoreGW) Run() error {
 // Shutdown
 func (s *StoreGW) Shutdown(err error) {
 	s.stop()
+}
+
+// Group 兼容 targetgroup.Group, 老版本没有MarshalJSON, 按最新版本
+// 参考 https://github.com/prometheus/prometheus/blob/v2.36.2/discovery/targetgroup/targetgroup.go#L96
+type Group struct {
+	targetgroup.Group
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (tg Group) MarshalJSON() ([]byte, error) {
+	g := &struct {
+		Targets []string       `json:"targets"`
+		Labels  model.LabelSet `json:"labels,omitempty"`
+	}{
+		Targets: make([]string, 0, len(tg.Targets)),
+		Labels:  tg.Labels,
+	}
+	for _, t := range tg.Targets {
+		g.Targets = append(g.Targets, string(t[model.AddressLabel]))
+	}
+	return json.Marshal(g)
+}
+
+// TargetGroups 返回标准的targets
+func (s *StoreGW) TargetGroups() []*Group {
+	tgs := make([]*Group, 0, len(s.stores))
+	for _, store := range s.stores {
+		tgs = append(tgs, &Group{targetgroup.Group{
+			Targets: []model.LabelSet{
+				{model.AddressLabel: model.LabelValue(store.Address)},
+			},
+			Labels: model.LabelSet{},
+		}})
+	}
+	return tgs
 }

@@ -64,6 +64,11 @@ func (c *Configuration) init() error {
 		return err
 	}
 
+	// 把列表类型转换为map，方便检索
+	for _, conf := range c.BCSEnvConf {
+		c.BCSEnvMap[conf.ClusterEnv] = conf
+	}
+
 	return nil
 }
 

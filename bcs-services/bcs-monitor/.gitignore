@@ -25,3 +25,4 @@ etc/dev*
 /bcs-monitor
 /scripts/*.json
 etc/*dev*
+build.yml

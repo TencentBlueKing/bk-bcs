@@ -15,20 +15,24 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"path"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/route"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 )
 
 // APIServer
@@ -85,7 +89,9 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 
 	// 注册 HTTP 请求
 	registerRoutes(engine.Group(""))
-	registerRoutes(engine.Group(config.G.Web.RoutePrefix))
+	if config.G.Web.RoutePrefix != "" {
+		registerRoutes(engine.Group(config.G.Web.RoutePrefix))
+	}
 	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
 }
 
@@ -101,7 +107,21 @@ func registerRoutes(engine *gin.RouterGroup) {
 
 		// sse 实时日志流
 		route.GET("/namespaces/:namespace/pods/:pod/logs/stream", rest.StreamHandler(pod.PodLogStream))
+
+		// 蓝鲸监控采集器
+		route.GET("/telemetry/bkmonitor_agent/", rest.STDRestHandlerFunc(telemetry.IsBKMonitorAgent))
 	}
+}
+
+// RegisterStoreGWRoutes 注册storegw http-sd
+func RegisterStoreGWRoutes(gw *storegw.StoreGW) *route.Router {
+	router := route.New()
+	router.Get("/api/discovery/targetgroups", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(gw.TargetGroups())
+	})
+
+	return router
 }
 
 // HealthyHandler 健康检查

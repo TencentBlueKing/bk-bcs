@@ -27,6 +27,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/prober"
 	httpserver "github.com/thanos-io/thanos/pkg/server/http"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 )
@@ -75,6 +76,9 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		httpserver.WithListen(config.G.StoreGW.HTTP.Address),
 		httpserver.WithGracePeriod(time.Duration(config.G.StoreGW.HTTP.GracePeriod)),
 	)
+
+	router := api.RegisterStoreGWRoutes(gw)
+	srv.Handle("/", router)
 
 	g.Add(func() error {
 		statusProber.Healthy()

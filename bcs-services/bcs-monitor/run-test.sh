@@ -31,6 +31,7 @@ function query {
 
 function storegw() {
     ./bin/bcs-monitor storegw \
+        --http-address 0.0.0.0:13902 \
         --config ./etc/config_dev.yaml
 }
 

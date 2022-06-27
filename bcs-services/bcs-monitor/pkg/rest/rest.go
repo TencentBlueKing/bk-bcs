@@ -122,6 +122,24 @@ func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 	}
 }
 
+// STDRestHandlerFunc 标准handler, 错误返回非200状态码
+func STDRestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		restContext, err := GetRestContext(c)
+		if err != nil {
+			AbortWithUnauthorizedError(InitRestContext(c), err)
+			return
+		}
+		result, err := handler(restContext)
+		if err != nil {
+			AbortWithBadRequestError(restContext, err)
+			return
+		}
+
+		APIResponse(restContext, result)
+	}
+}
+
 // StreamHandler 流式 Handler
 func StreamHandler(handler StreamHandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
