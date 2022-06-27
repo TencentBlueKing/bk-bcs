@@ -154,6 +154,7 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 				ClusterType: opts.ClusterType,
 				Namespace:   opts.Namespace,
 				Metrics:     newMetrics,
+				Label:       opts.Label,
 			}
 			m.preAggregate(newNamespaceBucket, metrics)
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{newNamespaceBucket})
@@ -168,6 +169,7 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 	if retNamespace.BusinessID == "" {
 		retNamespace.BusinessID = opts.BusinessID
 	}
+	retNamespace.Label = opts.Label
 	retNamespace.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retNamespace.Metrics = append(retNamespace.Metrics, metrics)
 	return m.DB.Table(m.TableName).
@@ -247,7 +249,7 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	namespaceMetricsMap := make([]map[string]*types.NamespaceMetrics, 0)
+	namespaceMetricsMap := make([]*types.NamespaceData, 0)
 	publicCond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ClusterIDKey:  request.ClusterID,
 		ObjectTypeKey: types.NamespaceType,
@@ -283,8 +285,21 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 		},
 	}})
 	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":     0,
-		"metrics": 1,
+		"_id":         0,
+		"metrics":     1,
+		"business_id": 1,
+		"project_id":  1,
+		"namespace":   1,
+		"cluster_id":  1,
+		"label":       1,
+	}}, map[string]interface{}{"$group": map[string]interface{}{
+		"_id":         nil,
+		"cluster_id":  map[string]interface{}{"$first": "$cluster_id"},
+		"namespace":   map[string]interface{}{"$first": "$namespace"},
+		"project_id":  map[string]interface{}{"$first": "$project_id"},
+		"business_id": map[string]interface{}{"$max": "$business_id"},
+		"metrics":     map[string]interface{}{"$push": "$metrics"},
+		"label":       map[string]interface{}{"$first": "$label"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &namespaceMetricsMap)
 	if err != nil {
@@ -296,12 +311,11 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	}
 	namespaceMetrics := make([]*types.NamespaceMetrics, 0)
 	for _, metrics := range namespaceMetricsMap {
-		namespaceMetrics = append(namespaceMetrics, metrics["metrics"])
+		namespaceMetrics = append(namespaceMetrics, metrics.Metrics...)
 	}
 	startTime := namespaceMetrics[0].Time.Time().String()
 	endTime := namespaceMetrics[len(namespaceMetrics)-1].Time.Time().String()
-	return m.generateNamespaceResponse(namespacePublic, namespaceMetrics, request.ClusterID, request.Namespace,
-		dimension, startTime, endTime), nil
+	return m.generateNamespaceResponse(namespacePublic, namespaceMetrics, namespaceMetricsMap[0], startTime, endTime), nil
 }
 
 // GetRawNamespaceInfo get raw namespace data without time range
@@ -338,18 +352,18 @@ func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *types.Jo
 }
 
 func (m *ModelNamespace) generateNamespaceResponse(public types.NamespacePublicMetrics,
-	metricSlice []*types.NamespaceMetrics, clusterId, namespace, dimension, startTime,
-	endTime string) *bcsdatamanager.Namespace {
+	metricSlice []*types.NamespaceMetrics,
+	data *types.NamespaceData, start, end string) *bcsdatamanager.Namespace {
 	response := &bcsdatamanager.Namespace{
-		ClusterID:     clusterId,
-		Dimension:     dimension,
-		StartTime:     startTime,
-		EndTime:       endTime,
-		Namespace:     namespace,
+		ClusterID:     data.ClusterID,
+		StartTime:     start,
+		EndTime:       end,
+		Namespace:     data.Namespace,
 		Metrics:       nil,
 		SuggestCPU:    strconv.FormatFloat(public.SuggestCPU, 'f', 2, 64),
 		SuggestMemory: strconv.FormatFloat(public.SuggestMemory, 'f', 2, 64),
 		ResourceLimit: public.ResourceLimit,
+		Label:         data.Label,
 	}
 	responseMetrics := make([]*bcsdatamanager.NamespaceMetrics, 0)
 	for _, metric := range metricSlice {

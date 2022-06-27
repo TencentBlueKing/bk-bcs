@@ -2716,6 +2716,8 @@ func (m *Project) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Label
+
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
@@ -3105,6 +3107,8 @@ func (m *Cluster) validate(all bool) error {
 	}
 
 	// no validation rules for BusinessID
+
+	// no validation rules for Label
 
 	if len(errors) > 0 {
 		return ClusterMultiError(errors)
@@ -3901,6 +3905,8 @@ func (m *Namespace) validate(all bool) error {
 	}
 
 	// no validation rules for BusinessID
+
+	// no validation rules for Label
 
 	if len(errors) > 0 {
 		return NamespaceMultiError(errors)
@@ -4792,6 +4798,8 @@ func (m *Workload) validate(all bool) error {
 	}
 
 	// no validation rules for BusinessID
+
+	// no validation rules for Label
 
 	if len(errors) > 0 {
 		return WorkloadMultiError(errors)
@@ -5994,6 +6002,8 @@ func (m *PodAutoscaler) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for Label
 
 	if len(errors) > 0 {
 		return PodAutoscalerMultiError(errors)

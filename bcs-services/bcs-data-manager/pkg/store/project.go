@@ -209,11 +209,13 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 		"project_id":  1,
 		"business_id": 1,
 		"metrics":     1,
+		"label":       1,
 	}}, map[string]interface{}{"$group": map[string]interface{}{
 		"_id":         nil,
 		"project_id":  map[string]interface{}{"$first": "$project_id"},
 		"business_id": map[string]interface{}{"$max": "$business_id"},
 		"metrics":     map[string]interface{}{"$push": "$metrics"},
+		"label":       map[string]interface{}{"$first": "$label"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &projectMetricsMap)
 	if err != nil {
@@ -224,14 +226,12 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 		return &bcsdatamanager.Project{}, nil
 	}
 	projectMetrics := make([]*types.ProjectMetrics, 0)
-	projectID := projectMetricsMap[0].ProjectID
-	businessID := projectMetricsMap[0].BusinessID
 	for _, metrics := range projectMetricsMap {
 		projectMetrics = append(projectMetrics, metrics.Metrics...)
 	}
 	startTime := projectMetrics[len(projectMetrics)-1].Time.Time().String()
 	endTime := projectMetrics[0].Time.Time().String()
-	return m.generateProjectResponse(projectMetrics, projectID, businessID, dimension, startTime, endTime), nil
+	return m.generateProjectResponse(projectMetrics, projectMetricsMap[0], startTime, endTime), nil
 }
 
 // InsertProjectInfo insert project info data
@@ -279,6 +279,7 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.Pro
 	if retProject.BusinessID == "" {
 		retProject.BusinessID = opts.BusinessID
 	}
+	retProject.Label = opts.Label
 	retProject.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retProject.Metrics = append(retProject.Metrics, metrics)
 	return m.DB.Table(m.TableName).
@@ -313,14 +314,14 @@ func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *types.JobCom
 }
 
 func (m *ModelProject) generateProjectResponse(metricSlice []*types.ProjectMetrics,
-	projectID, businessID, dimension, startTime, endTime string) *bcsdatamanager.Project {
+	data *types.ProjectData, startTime, endTime string) *bcsdatamanager.Project {
 	response := &bcsdatamanager.Project{
-		ProjectID:  projectID,
-		BusinessID: businessID,
-		Dimension:  dimension,
+		ProjectID:  data.ProjectID,
+		BusinessID: data.BusinessID,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		Metrics:    nil,
+		Label:      data.Label,
 	}
 	responseMetrics := make([]*bcsdatamanager.ProjectMetrics, 0)
 	for _, metric := range metricSlice {

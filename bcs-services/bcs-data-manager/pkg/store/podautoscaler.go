@@ -159,6 +159,7 @@ func (m *ModelPodAutoscaler) InsertPodAutoscalerInfo(ctx context.Context, metric
 	retPodAutoscaler.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retPodAutoscaler.Metrics = append(retPodAutoscaler.Metrics, metrics)
 	retPodAutoscaler.Total += metrics.TotalSuccessfulRescale
+	retPodAutoscaler.Label = opts.Label
 	return m.DB.Table(m.TableName).
 		Update(ctx, cond, operator.M{"$set": retPodAutoscaler})
 }
@@ -264,6 +265,7 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerInfo(ctx context.Context,
 		"workload_type":       1,
 		"pod_autoscaler_type": 1,
 		"pod_autoscaler_name": 1,
+		"label":               1,
 	}}, map[string]interface{}{"$group": map[string]interface{}{
 		"_id":                 nil,
 		"cluster_id":          map[string]interface{}{"$first": "$cluster_id"},
@@ -275,6 +277,7 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerInfo(ctx context.Context,
 		"pod_autoscaler_name": map[string]interface{}{"$first": "$pod_autoscaler_name"},
 		"business_id":         map[string]interface{}{"$max": "$business_id"},
 		"metrics":             map[string]interface{}{"$push": "$metrics"},
+		"label":               map[string]interface{}{"$first": "$label"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &autoscalerMetricsMap)
 	if err != nil {
@@ -369,6 +372,7 @@ func (m *ModelPodAutoscaler) generateAutoscalerResponse(metricSlice []*types.Pod
 		StartTime:         start,
 		EndTime:           end,
 		Metrics:           nil,
+		Label:             data.Label,
 	}
 	responseMetrics := make([]*bcsdatamanager.PodAutoscalerMetrics, 0)
 	for _, metric := range metricSlice {

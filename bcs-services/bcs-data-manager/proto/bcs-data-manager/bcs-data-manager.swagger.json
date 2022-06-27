@@ -731,6 +731,12 @@
           "type": "string",
           "description": "业务id",
           "title": "businessID"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "记录cluster资源信息",
@@ -1311,6 +1317,12 @@
           "type": "string",
           "description": "业务id",
           "title": "businessID"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "记录namespace资源信息",
@@ -1482,6 +1494,12 @@
           },
           "description": "podAutoscaler指标",
           "title": "metrics"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "记录podAutoscaler资源信息",
@@ -1547,6 +1565,12 @@
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "最大节点数及时间",
           "title": "maxNode"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "记录project资源信息",
@@ -1757,6 +1781,12 @@
           "type": "string",
           "description": "业务id",
           "title": "businessID"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "记录模块资源信息",

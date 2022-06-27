@@ -487,7 +487,7 @@ message GetWorkloadInfoListRequest {
     json_schema : {
       title : "GetWorkloadInfoListRequest"
       description : "查询模块列表请求"
-      required : ["clusterID", "namespace", "WorkloadType"]
+      required : ["clusterID"]
     }
   };
 
@@ -674,6 +674,10 @@ message Project {
     title: "maxNode",
     description: "最大节点数及时间"
   }];
+  map<string, string> label = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "label",
+    description: "标签"
+  }];
 }
 
 message ProjectMetrics {
@@ -793,6 +797,10 @@ message Cluster {
   string businessID = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务id"
+  }];
+  map<string, string> label = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "label",
+    description: "标签"
   }];
 }
 
@@ -982,6 +990,10 @@ message Namespace {
   string businessID = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务id"
+  }];
+  map<string, string> label = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "label",
+    description: "标签"
   }];
 }
 
@@ -1178,6 +1190,10 @@ message Workload {
   string businessID = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务id"
+  }];
+  map<string, string> label = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "label",
+    description: "标签"
   }];
 }
 
@@ -1469,6 +1485,10 @@ message PodAutoscaler {
   repeated PodAutoscalerMetrics metrics = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "metrics",
     description: "podAutoscaler指标"
+  }];
+  map<string, string> label = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "label",
+    description: "标签"
   }];
 }
 
