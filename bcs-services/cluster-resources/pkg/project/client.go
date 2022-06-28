@@ -22,6 +22,7 @@ import (
 
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
+	"google.golang.org/grpc"
 
 	bcsapiProj "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
@@ -116,10 +117,12 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 
 // 获取项目信息
 func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[string]interface{}, error) {
-	cli, err := c.genAvailableCli(ctx)
+	cli, grpcConn, err := c.genAvailableCli(ctx)
 	if err != nil {
 		return nil, err
 	}
+	defer grpcConn.Close()
+
 	resp, err := cli.GetProject(grpcUtil.SetMD4CTX(ctx), &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID})
 	if err != nil {
 		return nil, errorx.New(errcode.ComponentErr, "call for project %s info failed: %v", projectID, err)
@@ -137,10 +140,10 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 }
 
 // 获取可用的 ProjManager 服务
-func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProjectClient, error) {
+func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProjectClient, *grpc.ClientConn, error) {
 	node, err := c.discovery.GetRandServiceInst(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	log.Info(ctx, "get remote project manager instance [%s] from etcd registry successfully", node.Address)
 
@@ -151,7 +154,7 @@ func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProject
 
 	cli := bcsapiProj.NewBCSProjectClient(conn)
 	if cli == nil {
-		return nil, errorx.New(errcode.ComponentErr, "no available project manager client")
+		return nil, nil, errorx.New(errcode.ComponentErr, "no available project manager client")
 	}
-	return cli, nil
+	return cli, conn, nil
 }

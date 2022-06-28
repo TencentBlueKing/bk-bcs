@@ -22,6 +22,7 @@ import (
 
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
+	"google.golang.org/grpc"
 
 	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
@@ -116,10 +117,12 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 
 // 获取集群信息
 func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interface{}, error) {
-	cli, err := c.genAvailableCli(ctx)
+	cli, grpcConn, err := c.genAvailableCli(ctx)
 	if err != nil {
 		return nil, err
 	}
+	defer grpcConn.Close()
+
 	resp, err := cli.GetCluster(grpcUtil.SetMD4CTX(ctx), &bcsapicm.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
 		return nil, errorx.New(errcode.ComponentErr, "call for cluster %s info failed: %v", clusterID, err)
@@ -142,10 +145,10 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 }
 
 // 获取可用的 ClusterManager 服务
-func (c *CMClient) genAvailableCli(ctx context.Context) (bcsapicm.ClusterManagerClient, error) {
+func (c *CMClient) genAvailableCli(ctx context.Context) (bcsapicm.ClusterManagerClient, *grpc.ClientConn, error) {
 	node, err := c.discovery.GetRandServiceInst(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	log.Info(ctx, "get remote cluster manager instance [%s] from etcd registry successfully", node.Address)
 
@@ -156,7 +159,7 @@ func (c *CMClient) genAvailableCli(ctx context.Context) (bcsapicm.ClusterManager
 
 	cli := bcsapicm.NewClusterManagerClient(conn)
 	if cli == nil {
-		return nil, errorx.New(errcode.ComponentErr, "no available cluster manager client")
+		return nil, nil, errorx.New(errcode.ComponentErr, "no available cluster manager client")
 	}
-	return cli, nil
+	return cli, conn, nil
 }
