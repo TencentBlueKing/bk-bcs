@@ -70,6 +70,13 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目code",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -550,6 +557,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目code",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -662,6 +676,13 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目code",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -737,6 +758,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目code",
+          "title": "projectCode"
         }
       },
       "description": "记录cluster资源信息",
@@ -1323,6 +1349,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目code",
+          "title": "projectCode"
         }
       },
       "description": "记录namespace资源信息",
@@ -1500,6 +1531,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目code",
+          "title": "projectCode"
         }
       },
       "description": "记录podAutoscaler资源信息",
@@ -1571,6 +1607,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目code",
+          "title": "projectCode"
         }
       },
       "description": "记录project资源信息",
@@ -1787,6 +1828,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目code",
+          "title": "projectCode"
         }
       },
       "description": "记录模块资源信息",

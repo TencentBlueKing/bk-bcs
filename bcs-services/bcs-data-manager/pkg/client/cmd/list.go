@@ -107,6 +107,7 @@ func ListCluster(cmd *cobra.Command, args []string) {
 	req.Project = flagProject
 	req.Business = flagBusinessID
 	req.Dimension = flagDimension
+	req.ProjectCode = flagProjectCode
 	req.Page = flagPage
 	req.Size = flagSize
 	ctx := context.Background()
@@ -255,6 +256,8 @@ func init() {
 	listCMD.AddCommand(listPodAutoscalerCMD)
 	listCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
+	listCMD.PersistentFlags().StringVarP(
+		&flagProjectCode, "projectCode", "", "", "project code for operation")
 	listCMD.PersistentFlags().StringVarP(
 		&flagBusinessID, "business", "", "", "business id for operation")
 	listCMD.PersistentFlags().StringVarP(

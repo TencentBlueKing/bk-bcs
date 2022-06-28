@@ -93,14 +93,16 @@ const (
 
 // ProjectMeta meta for project
 type ProjectMeta struct {
-	ProjectID  string            `json:"projectID"`
-	BusinessID string            `json:"businessID"`
-	Label      map[string]string `json:"label"`
+	ProjectID   string            `json:"projectID"`
+	ProjectCode string            `json:"projectCode"`
+	BusinessID  string            `json:"businessID"`
+	Label       map[string]string `json:"label"`
 }
 
 // ClusterMeta meta for cluster
 type ClusterMeta struct {
 	ProjectID   string            `json:"projectID"`
+	ProjectCode string            `json:"projectCode"`
 	BusinessID  string            `json:"businessID"`
 	ClusterID   string            `json:"clusterID"`
 	ClusterType string            `json:"clusterType"`
@@ -110,6 +112,7 @@ type ClusterMeta struct {
 // NamespaceMeta meta for namespace
 type NamespaceMeta struct {
 	ProjectID   string            `json:"projectID"`
+	ProjectCode string            `json:"projectCode"`
 	BusinessID  string            `json:"businessID"`
 	ClusterID   string            `json:"clusterID"`
 	ClusterType string            `json:"clusterType"`
@@ -120,6 +123,7 @@ type NamespaceMeta struct {
 // WorkloadMeta meta for workload
 type WorkloadMeta struct {
 	ProjectID    string            `json:"projectID"`
+	ProjectCode  string            `json:"projectCode"`
 	ClusterID    string            `json:"clusterID"`
 	BusinessID   string            `json:"businessID"`
 	ClusterType  string            `json:"clusterType"`
@@ -132,6 +136,7 @@ type WorkloadMeta struct {
 // PodAutoscalerMeta meta for hpa or gpa
 type PodAutoscalerMeta struct {
 	ProjectID          string            `json:"projectID"`
+	ProjectCode        string            `json:"projectCode"`
 	ClusterID          string            `json:"clusterID"`
 	BusinessID         string            `json:"businessID"`
 	ClusterType        string            `json:"clusterType"`
@@ -148,6 +153,7 @@ type PublicData struct {
 	UpdateTime   primitive.DateTime `json:"update_time" bson:"update_time"`
 	ObjectType   string             `json:"object_type" bson:"object_type"`
 	ProjectID    string             `json:"projectID" bson:"project_id"`
+	ProjectCode  string             `json:"projectCode" bson:"project_code"`
 	BusinessID   string             `json:"businessID" bson:"business_id"`
 	ClusterID    string             `json:"clusterID" bson:"cluster_id"`
 	ClusterType  string             `json:"clusterType" bson:"cluster_type"`
@@ -164,6 +170,7 @@ type WorkloadData struct {
 	BucketTime         string                         `json:"bucketTime" bson:"bucket_time"`
 	Dimension          string                         `json:"dimension" bson:"dimension"`
 	ProjectID          string                         `json:"projectID" bson:"project_id"`
+	ProjectCode        string                         `json:"projectCode" bson:"project_code"`
 	BusinessID         string                         `json:"businessID" bson:"business_id"`
 	ClusterID          string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType        string                         `json:"clusterType" bson:"cluster_type"`
@@ -191,6 +198,7 @@ type PodAutoscalerData struct {
 	BucketTime        string                  `json:"bucketTime" bson:"bucket_time"`
 	Dimension         string                  `json:"dimension" bson:"dimension"`
 	ProjectID         string                  `json:"projectID" bson:"project_id"`
+	ProjectCode       string                  `json:"projectCode" bson:"project_code"`
 	BusinessID        string                  `json:"businessID" bson:"business_id"`
 	ClusterID         string                  `json:"clusterID" bson:"cluster_id"`
 	ClusterType       string                  `json:"clusterType" bson:"cluster_type"`
@@ -206,16 +214,17 @@ type PodAutoscalerData struct {
 
 // ProjectData for project table
 type ProjectData struct {
-	CreateTime primitive.DateTime             `json:"createTime" bson:"create_time"`
-	UpdateTime primitive.DateTime             `json:"updateTime" bson:"update_time"`
-	BucketTime string                         `json:"bucketTime" bson:"bucket_time"`
-	Dimension  string                         `json:"dimension" bson:"dimension"`
-	ProjectID  string                         `json:"projectID" bson:"project_id"`
-	BusinessID string                         `json:"businessID" bson:"business_id"`
-	Label      map[string]string              `json:"label"  bson:"label"`
-	MinNode    *bcsdatamanager.ExtremumRecord `json:"minNode,omitempty" bson:"min_node"`
-	MaxNode    *bcsdatamanager.ExtremumRecord `json:"maxNode,omitempty" bson:"max_node"`
-	Metrics    []*ProjectMetrics              `json:"metrics" bson:"metrics"`
+	CreateTime  primitive.DateTime             `json:"createTime" bson:"create_time"`
+	UpdateTime  primitive.DateTime             `json:"updateTime" bson:"update_time"`
+	BucketTime  string                         `json:"bucketTime" bson:"bucket_time"`
+	Dimension   string                         `json:"dimension" bson:"dimension"`
+	ProjectID   string                         `json:"projectID" bson:"project_id"`
+	ProjectCode string                         `json:"projectCode" bson:"project_code"`
+	BusinessID  string                         `json:"businessID" bson:"business_id"`
+	Label       map[string]string              `json:"label"  bson:"label"`
+	MinNode     *bcsdatamanager.ExtremumRecord `json:"minNode,omitempty" bson:"min_node"`
+	MaxNode     *bcsdatamanager.ExtremumRecord `json:"maxNode,omitempty" bson:"max_node"`
+	Metrics     []*ProjectMetrics              `json:"metrics" bson:"metrics"`
 }
 
 // NamespaceData for namespace table
@@ -225,6 +234,7 @@ type NamespaceData struct {
 	BucketTime         string                         `json:"bucketTime" bson:"bucket_time"`
 	Dimension          string                         `json:"dimension" bson:"dimension"`
 	ProjectID          string                         `json:"projectID" bson:"project_id"`
+	ProjectCode        string                         `json:"projectCode" bson:"project_code"`
 	BusinessID         string                         `json:"businessID" bson:"business_id"`
 	ClusterID          string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType        string                         `json:"clusterType" bson:"cluster_type"`
@@ -248,6 +258,7 @@ type ClusterData struct {
 	BucketTime   string                         `json:"bucketTime" bson:"bucket_time"`
 	Dimension    string                         `json:"dimension" bson:"dimension"`
 	ProjectID    string                         `json:"projectID" bson:"project_id"`
+	ProjectCode  string                         `json:"projectCode" bson:"project_code"`
 	BusinessID   string                         `json:"businessID" bson:"business_id"`
 	ClusterID    string                         `json:"clusterID" bson:"cluster_id"`
 	ClusterType  string                         `json:"clusterType" bson:"cluster_type"`
@@ -384,6 +395,7 @@ type PodAutoscalerMetrics struct {
 type JobCommonOpts struct {
 	ObjectType        string
 	ProjectID         string
+	ProjectCode       string
 	BusinessID        string
 	ClusterID         string
 	ClusterType       string

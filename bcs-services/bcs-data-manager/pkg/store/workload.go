@@ -211,6 +211,7 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 		retWorkload.BusinessID = opts.BusinessID
 	}
 	retWorkload.Label = opts.Label
+	retWorkload.ProjectCode = opts.ProjectCode
 	retWorkload.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retWorkload.Metrics = append(retWorkload.Metrics, metrics)
 	return m.DB.Table(m.TableName).
@@ -347,6 +348,7 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 		"metrics":       1,
 		"business_id":   1,
 		"project_id":    1,
+		"project_code":  1,
 		"namespace":     1,
 		"cluster_id":    1,
 		"workload_name": 1,
@@ -361,7 +363,8 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 		"workload_name": map[string]interface{}{"$first": "$workload_name"},
 		"business_id":   map[string]interface{}{"$max": "$business_id"},
 		"metrics":       map[string]interface{}{"$push": "$metrics"},
-		"label":         map[string]interface{}{"$first": "$label"},
+		"label":         map[string]interface{}{"$max": "$label"},
+		"project_code":  map[string]interface{}{"$max": "$project_code"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &workloadMetricsMap)
 	if err != nil {
@@ -423,6 +426,9 @@ func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetr
 	metricSlice []*types.WorkloadMetrics, data *types.WorkloadData, startTime,
 	endTime string) *bcsdatamanager.Workload {
 	response := &bcsdatamanager.Workload{
+		ProjectID:     data.ProjectID,
+		ProjectCode:   data.ProjectCode,
+		BusinessID:    data.BusinessID,
 		ClusterID:     data.ClusterID,
 		Dimension:     data.Dimension,
 		StartTime:     startTime,

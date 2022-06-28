@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+	"github.com/panjf2000/ants/v2"
 	"sync"
 	"time"
 
@@ -200,6 +201,7 @@ func (p *Producer) ProjectProducer(dimension string) {
 	for _, project := range projectList {
 		opts := types.JobCommonOpts{
 			ProjectID:   project.ProjectID,
+			ProjectCode: project.ProjectCode,
 			BusinessID:  project.BusinessID,
 			CurrentTime: jobTime,
 			Dimension:   dimension,
@@ -239,6 +241,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 	for _, cluster := range clusterList {
 		opts := types.JobCommonOpts{
 			ProjectID:   cluster.ProjectID,
+			ProjectCode: cluster.ProjectCode,
 			BusinessID:  cluster.BusinessID,
 			ClusterID:   cluster.ClusterID,
 			ClusterType: cluster.ClusterType,
@@ -282,6 +285,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 		opts := types.JobCommonOpts{
 			ClusterID:   namespace.ClusterID,
 			ProjectID:   namespace.ProjectID,
+			ProjectCode: namespace.ProjectCode,
 			BusinessID:  namespace.BusinessID,
 			ClusterType: namespace.ClusterType,
 			Namespace:   namespace.Name,
@@ -327,64 +331,80 @@ func (p *Producer) WorkloadProducer(dimension string) {
 			totalWorkload = totalWorkload + count
 		}
 	}()
-	chPool := make(chan struct{}, p.concurrency)
-	blog.Infof("[producer] concurrency:%d", p.concurrency)
+
 	wg := sync.WaitGroup{}
+	pool, err := ants.NewPool(p.concurrency)
+	if err != nil {
+		blog.Errorf("[producer] init new pool err:%v", err)
+		return
+	}
+	blog.Infof("[producer] concurrency:%d", p.concurrency)
+	defer pool.Release()
 	for key := range clusterList {
-		chPool <- struct{}{}
 		wg.Add(1)
-		go func(clusterMeta *types.ClusterMeta) {
-			workloadList := make([]*types.WorkloadMeta, 0)
-			defer func() {
-				wg.Done()
-				<-chPool
-				countCh <- len(workloadList)
-			}()
-			switch clusterMeta.ClusterType {
-			case types.Kubernetes:
-				namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(clusterMeta, p.k8sStorageCli, p.mesosStorageCli)
-				if err != nil {
-					blog.Errorf("get workload list error: %v", err)
-					return
-				}
-				if workloadList, err = p.resourceGetter.GetK8sWorkloadList(namespaceList, p.k8sStorageCli); err != nil {
-					blog.Errorf("get workload list error: %v", err)
-					return
-				}
-			case types.Mesos:
-				if workloadList, err = p.resourceGetter.GetMesosWorkloadList(clusterMeta, p.mesosStorageCli); err != nil {
-					blog.Errorf("get workload list error: %v", err)
-					return
-				}
-			}
-			for _, workload := range workloadList {
-				opts := types.JobCommonOpts{
-					ProjectID:    workload.ProjectID,
-					BusinessID:   workload.BusinessID,
-					ClusterID:    workload.ClusterID,
-					ClusterType:  workload.ClusterType,
-					Namespace:    workload.Namespace,
-					WorkloadType: workload.ResourceType,
-					WorkloadName: workload.Name,
-					CurrentTime:  jobTime,
-					Dimension:    dimension,
-					ObjectType:   types.WorkloadType,
-					Label:        workload.Label,
-				}
-				if err = p.SendJob(opts); err != nil {
-					blog.Errorf("send workload job to msg queue error, opts: %v, err: %v", opts, err)
-					return
-				}
-			}
-			blog.Infof("[producer] send workload job success, count: %d", len(workloadList))
-		}(clusterList[key])
+		clusterMeta := clusterList[key]
+		err := pool.Submit(func() {
+			p.getSingleClusterWorkloadList(jobTime, dimension, countCh, clusterMeta)
+			wg.Done()
+		})
+		if err != nil {
+			blog.Errorf("submit task to ch pool err:%v", err)
+		}
 	}
 	wg.Wait()
-	close(chPool)
 	time.Sleep(100 * time.Microsecond)
 	close(countCh)
 	blog.Infof("[producer] send all workload job, count:%d, jobTime:%v, startTime:%v, "+
 		"currentTime:%v, cost:%v", totalWorkload, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
+}
+
+func (p *Producer) getSingleClusterWorkloadList(jobTime time.Time, dimension string, countCh chan int,
+	clusterMeta *types.ClusterMeta) {
+	workloadList := make([]*types.WorkloadMeta, 0)
+	var err error
+	defer func() {
+		countCh <- len(workloadList)
+	}()
+	switch clusterMeta.ClusterType {
+	case types.Kubernetes:
+		namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(p.ctx, clusterMeta, p.k8sStorageCli,
+			p.mesosStorageCli)
+		if err != nil {
+			blog.Errorf("get workload list error: %v", err)
+			return
+		}
+		if workloadList, err = p.resourceGetter.GetK8sWorkloadList(namespaceList, p.k8sStorageCli); err != nil {
+			blog.Errorf("get workload list error: %v", err)
+			return
+		}
+	case types.Mesos:
+		if workloadList, err = p.resourceGetter.GetMesosWorkloadList(clusterMeta, p.mesosStorageCli); err != nil {
+			blog.Errorf("get workload list error: %v", err)
+			return
+		}
+	}
+	for _, workload := range workloadList {
+		opts := types.JobCommonOpts{
+			ProjectID:    workload.ProjectID,
+			ProjectCode:  workload.ProjectCode,
+			BusinessID:   workload.BusinessID,
+			ClusterID:    workload.ClusterID,
+			ClusterType:  workload.ClusterType,
+			Namespace:    workload.Namespace,
+			WorkloadType: workload.ResourceType,
+			WorkloadName: workload.Name,
+			CurrentTime:  jobTime,
+			Dimension:    dimension,
+			ObjectType:   types.WorkloadType,
+			Label:        workload.Label,
+		}
+		if err = p.SendJob(opts); err != nil {
+			blog.Errorf("send workload job to msg queue error, opts: %v, err: %v", opts, err)
+			return
+		}
+	}
+	blog.Infof("[producer] send cluster[%s] workload job success, count: %d", clusterMeta.ClusterID,
+		len(workloadList))
 }
 
 //PodAutoscalerProducer is the function to produce podAutoscaler data job and send to message queue
@@ -414,52 +434,66 @@ func (p *Producer) PodAutoscalerProducer(dimension string) {
 			totalPodAutoscaler = totalPodAutoscaler + count
 		}
 	}()
-	chPool := make(chan struct{}, p.concurrency)
-	blog.Infof("[producer] concurrency:%d", p.concurrency)
+
 	wg := sync.WaitGroup{}
+	pool, err := ants.NewPool(p.concurrency)
+	if err != nil {
+		blog.Errorf("[producer] init new pool err:%v", err)
+		return
+	}
+	blog.Infof("[producer] concurrency:%d", p.concurrency)
+	defer pool.Release()
 	for key := range clusterList {
-		chPool <- struct{}{}
 		wg.Add(1)
-		go func(clusterMeta *types.ClusterMeta) {
-			hpaList := make([]*types.PodAutoscalerMeta, 0)
-			gpaList := make([]*types.PodAutoscalerMeta, 0)
-			defer func() {
-				wg.Done()
-				<-chPool
-				countCh <- len(hpaList)
-				countCh <- len(gpaList)
-			}()
-			switch clusterMeta.ClusterType {
-			case types.Kubernetes:
-				namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(clusterMeta, p.k8sStorageCli, p.mesosStorageCli)
-				if err != nil {
-					blog.Errorf("get workload list error: %v", err)
-					return
-				}
-				if hpaList, err = p.resourceGetter.GetPodAutoscalerList(types.HPAType, namespaceList,
-					p.k8sStorageCli); err != nil {
-					blog.Errorf("get hpa list error: %v", err)
-					return
-				}
-				if gpaList, err = p.resourceGetter.GetPodAutoscalerList(types.GPAType, namespaceList,
-					p.k8sStorageCli); err != nil {
-					blog.Errorf("get gpa list error: %v", err)
-					return
-				}
-			case types.Mesos:
-				return
-			}
-			p.genAndSendAutoscalerJob(types.HPAType, dimension, jobTime, hpaList)
-			p.genAndSendAutoscalerJob(types.GPAType, dimension, jobTime, gpaList)
-			blog.Infof("[producer] send podAutoscaler job success, count: %d", len(hpaList)+len(gpaList))
-		}(clusterList[key])
+		clusterMeta := clusterList[key]
+		err := pool.Submit(func() {
+			p.getSingleClusterAutoscalerList(jobTime, dimension, countCh, clusterMeta)
+			wg.Done()
+		})
+		if err != nil {
+			blog.Errorf("submit task to ch pool err:%v", err)
+		}
 	}
 	wg.Wait()
-	close(chPool)
 	time.Sleep(100 * time.Microsecond)
 	close(countCh)
 	blog.Infof("[producer] send all podAutoscaler job, count:%d, jobTime:%v, startTime:%v, "+
 		"currentTime:%v, cost:%v", totalPodAutoscaler, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
+}
+
+func (p *Producer) getSingleClusterAutoscalerList(jobTime time.Time, dimension string, countCh chan int,
+	clusterMeta *types.ClusterMeta) {
+	hpaList := make([]*types.PodAutoscalerMeta, 0)
+	gpaList := make([]*types.PodAutoscalerMeta, 0)
+	defer func() {
+		countCh <- len(hpaList)
+		countCh <- len(gpaList)
+	}()
+	switch clusterMeta.ClusterType {
+	case types.Kubernetes:
+		namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(p.ctx, clusterMeta,
+			p.k8sStorageCli, p.mesosStorageCli)
+		if err != nil {
+			blog.Errorf("get workload list error: %v", err)
+			return
+		}
+		if hpaList, err = p.resourceGetter.GetPodAutoscalerList(types.HPAType, namespaceList,
+			p.k8sStorageCli); err != nil {
+			blog.Errorf("get hpa list error: %v", err)
+			return
+		}
+		if gpaList, err = p.resourceGetter.GetPodAutoscalerList(types.GPAType, namespaceList,
+			p.k8sStorageCli); err != nil {
+			blog.Errorf("get gpa list error: %v", err)
+			return
+		}
+	case types.Mesos:
+		return
+	}
+	p.genAndSendAutoscalerJob(types.HPAType, dimension, jobTime, hpaList)
+	p.genAndSendAutoscalerJob(types.GPAType, dimension, jobTime, gpaList)
+	blog.Infof("[producer] send cluster[%s] podAutoscaler job success, count: %d", clusterMeta.ClusterID,
+		len(hpaList)+len(gpaList))
 }
 
 // SendJob is the function to send data job to msg queue
@@ -491,6 +525,7 @@ func (p *Producer) genAndSendAutoscalerJob(autoscalerType, dimension string, job
 	for _, autoscaler := range list {
 		opts := types.JobCommonOpts{
 			ProjectID:         autoscaler.ProjectID,
+			ProjectCode:       autoscaler.ProjectCode,
 			BusinessID:        autoscaler.BusinessID,
 			ClusterID:         autoscaler.ClusterID,
 			ClusterType:       autoscaler.ClusterType,

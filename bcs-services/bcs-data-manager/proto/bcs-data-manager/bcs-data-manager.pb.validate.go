@@ -394,6 +394,28 @@ func (m *GetProjectInfoRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetProjectCode()) > 100 {
+		err := GetProjectInfoRequestValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetProjectInfoRequest_ProjectCode_Pattern.MatchString(m.GetProjectCode()) {
+		err := GetProjectInfoRequestValidationError{
+			field:  "ProjectCode",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return GetProjectInfoRequestMultiError(errors)
 	}
@@ -483,6 +505,8 @@ var _GetProjectInfoRequest_Dimension_InLookup = map[string]struct{}{
 }
 
 var _GetProjectInfoRequest_Business_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _GetProjectInfoRequest_ProjectCode_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on GetProjectInfoResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -717,6 +741,28 @@ func (m *GetClusterListRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetProjectCode()) > 100 {
+		err := GetClusterListRequestValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetClusterListRequest_ProjectCode_Pattern.MatchString(m.GetProjectCode()) {
+		err := GetClusterListRequestValidationError{
+			field:  "ProjectCode",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return GetClusterListRequestMultiError(errors)
 	}
@@ -806,6 +852,8 @@ var _GetClusterListRequest_Dimension_InLookup = map[string]struct{}{
 	"day":    {},
 	"":       {},
 }
+
+var _GetClusterListRequest_ProjectCode_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on GetClusterListResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2718,6 +2766,8 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for Label
 
+	// no validation rules for ProjectCode
+
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
@@ -3109,6 +3159,8 @@ func (m *Cluster) validate(all bool) error {
 	// no validation rules for BusinessID
 
 	// no validation rules for Label
+
+	// no validation rules for ProjectCode
 
 	if len(errors) > 0 {
 		return ClusterMultiError(errors)
@@ -3907,6 +3959,8 @@ func (m *Namespace) validate(all bool) error {
 	// no validation rules for BusinessID
 
 	// no validation rules for Label
+
+	// no validation rules for ProjectCode
 
 	if len(errors) > 0 {
 		return NamespaceMultiError(errors)
@@ -4800,6 +4854,8 @@ func (m *Workload) validate(all bool) error {
 	// no validation rules for BusinessID
 
 	// no validation rules for Label
+
+	// no validation rules for ProjectCode
 
 	if len(errors) > 0 {
 		return WorkloadMultiError(errors)
@@ -6004,6 +6060,8 @@ func (m *PodAutoscaler) validate(all bool) error {
 	}
 
 	// no validation rules for Label
+
+	// no validation rules for ProjectCode
 
 	if len(errors) > 0 {
 		return PodAutoscalerMultiError(errors)

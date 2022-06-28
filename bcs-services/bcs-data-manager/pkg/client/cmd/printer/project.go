@@ -29,7 +29,7 @@ func PrintProjectInTable(wide bool, project *bcsdatamanager.Project) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"ID", "CC_ID", "METRIC_TIME",
+		r := []string{"CODE", "CC_ID", "LABEL", "METRIC_TIME",
 			"CLUSTER_CNT", "NODE_CNT", "TOTAL_CPU", "LOAD_CPU", "CPU_USAGE", "TOTAL_MM", "LOAD_MM", "MM_USAGE"}
 		if wide {
 			r = append(r, "AVG_CPU")
@@ -47,13 +47,13 @@ func PrintProjectInTable(wide bool, project *bcsdatamanager.Project) {
 	// table.SetBorder(false)
 	// table.SetTablePadding("")
 	// table.SetNoWhiteSpace(true)
-	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
+	table.SetAutoMergeCellsByColumnIndex([]int{0, 1, 2})
 	table.SetRowLine(true)
 
 	for _, metric := range project.Metrics {
 		table.Append(func() []string {
 			r := []string{
-				project.GetProjectID(), project.GetBusinessID(), metric.GetTime(),
+				project.GetProjectCode(), project.GetBusinessID(), fmt.Sprintln(project.GetLabel()), metric.GetTime(),
 				metric.GetClustersCount(), metric.GetNodeCount(),
 				metric.GetTotalCPU(),
 				metric.GetTotalLoadCPU(),
@@ -81,20 +81,20 @@ func PrintProjectListInTable(wide bool, projectList []*bcsdatamanager.Project) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"ID", "CC_ID", "METRIC_TIME",
+		r := []string{"CODE", "CC_ID", "LABEL", "METRIC_TIME",
 			"CLUSTER_CNT", "NODE_CNT", "TOTAL_CPU", "LOAD_CPU", "CPU_USAGE", "TOTAL_MM", "LOAD_MM", "MM_USAGE"}
 		if wide {
 			r = append(r, "AVG_CPU")
 		}
 		return r
 	}())
-	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
+	table.SetAutoMergeCellsByColumnIndex([]int{0, 1, 2})
 	table.SetRowLine(true)
 	for _, project := range projectList {
 		for _, metric := range project.Metrics {
 			table.Append(func() []string {
 				r := []string{
-					project.GetProjectID(), project.GetBusinessID(), metric.GetTime(),
+					project.GetProjectCode(), project.GetBusinessID(), fmt.Sprintln(project.GetLabel()), metric.GetTime(),
 					metric.GetClustersCount(), metric.GetNodeCount(),
 					metric.GetTotalCPU(),
 					metric.GetTotalLoadCPU(),

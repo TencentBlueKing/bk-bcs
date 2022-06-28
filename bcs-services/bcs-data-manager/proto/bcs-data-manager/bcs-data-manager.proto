@@ -210,6 +210,13 @@ message GetProjectInfoRequest {
     },
     (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
+  string projectCode = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectCode",
+      description : "项目code"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
 }
 
 message GetProjectInfoResponse {
@@ -278,6 +285,13 @@ message GetClusterListRequest {
       description : "查询限制数量"
     },
     (validate.rules).uint32.lte = 10
+  ];
+  string projectCode = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectCode",
+      description : "项目code"
+    },
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
 }
 
@@ -678,6 +692,10 @@ message Project {
     title: "label",
     description: "标签"
   }];
+  string projectCode = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目code"
+  }];
 }
 
 message ProjectMetrics {
@@ -801,6 +819,10 @@ message Cluster {
   map<string, string> label = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "label",
     description: "标签"
+  }];
+  string projectCode = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目code"
   }];
 }
 
@@ -994,6 +1016,10 @@ message Namespace {
   map<string, string> label = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "label",
     description: "标签"
+  }];
+  string projectCode = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目code"
   }];
 }
 
@@ -1194,6 +1220,10 @@ message Workload {
   map<string, string> label = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "label",
     description: "标签"
+  }];
+  string projectCode = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目code"
   }];
 }
 
@@ -1489,6 +1519,10 @@ message PodAutoscaler {
   map<string, string> label = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "label",
     description: "标签"
+  }];
+  string projectCode = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目code"
   }];
 }
 

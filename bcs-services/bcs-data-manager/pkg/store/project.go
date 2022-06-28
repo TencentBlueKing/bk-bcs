@@ -280,6 +280,7 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.Pro
 		retProject.BusinessID = opts.BusinessID
 	}
 	retProject.Label = opts.Label
+	retProject.ProjectCode = opts.ProjectCode
 	retProject.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retProject.Metrics = append(retProject.Metrics, metrics)
 	return m.DB.Table(m.TableName).

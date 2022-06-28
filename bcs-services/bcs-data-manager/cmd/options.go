@@ -57,6 +57,7 @@ type BcsAPIConfig struct {
 	OldBcsAPIGwURL string `json:"oldBcsApiGwUrl"`
 	AdminToken     string `json:"adminToken"`
 	GrpcGWAddress  string `json:"grpcGwAddress"`
+	UserName       string `json:"userName"`
 }
 
 // ServerConfig option for server

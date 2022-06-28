@@ -27,6 +27,7 @@ import (
 var (
 	flagOutput         string
 	flagProject        string
+	flagProjectCode    string
 	flagBusinessID     string
 	flagCluster        string
 	flagNamespace      string
@@ -84,6 +85,7 @@ func GetProject(cmd *cobra.Command, args []string) {
 	req := &bcsdatamanager.GetProjectInfoRequest{}
 	req.Project = flagProject
 	req.Business = flagBusinessID
+	req.ProjectCode = flagProjectCode
 	req.Dimension = flagDimension
 	ctx := context.Background()
 	client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
@@ -274,6 +276,8 @@ func init() {
 	getCMD.AddCommand(getPodAutoscalerCMD)
 	getCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
+	getCMD.PersistentFlags().StringVarP(
+		&flagProjectCode, "projectCode", "", "", "project code for operation")
 	getCMD.PersistentFlags().StringVarP(
 		&flagBusinessID, "business", "", "", "business id for operation")
 	getCMD.PersistentFlags().StringVarP(

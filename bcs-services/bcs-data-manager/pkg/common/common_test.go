@@ -23,7 +23,8 @@ import (
 func TestGetClusterIDList(t *testing.T) {
 	ctx := context.Background()
 	cmCli := mock.NewMockCm()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag")
+	pmCli := mock.NewMockPmClient()
+	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag", pmCli)
 	clusterList, err := getter.GetClusterIDList(ctx, cmCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 2, len(clusterList))
@@ -33,7 +34,8 @@ func TestGetNamespaceList(t *testing.T) {
 	ctx := context.Background()
 	cmCli := mock.NewMockCm()
 	storageCli := mock.NewMockStorage()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "test")
+	pmCli := mock.NewMockPmClient()
+	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag", pmCli)
 	namespaceList, err := getter.GetNamespaceList(ctx, cmCli, storageCli, storageCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 4, len(namespaceList))
@@ -43,12 +45,13 @@ func TestGetNamespaceListByCluster(t *testing.T) {
 	ctx := context.Background()
 	cmCli := mock.NewMockCm()
 	storageCli := mock.NewMockStorage()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "test")
+	pmCli := mock.NewMockPmClient()
+	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag", pmCli)
 	clusterList, err := getter.GetClusterIDList(ctx, cmCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 2, len(clusterList))
 	for _, cluster := range clusterList {
-		namespaceList, err := getter.GetNamespaceListByCluster(cluster, storageCli, storageCli)
+		namespaceList, err := getter.GetNamespaceListByCluster(ctx, cluster, storageCli, storageCli)
 		assert.Equal(t, nil, err)
 		assert.NotEqual(t, 0, len(namespaceList))
 	}
@@ -57,7 +60,8 @@ func TestGetNamespaceListByCluster(t *testing.T) {
 func TestGetProjectIDList(t *testing.T) {
 	ctx := context.Background()
 	cmCli := mock.NewMockCm()
-	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "test")
+	pmCli := mock.NewMockPmClient()
+	getter := NewGetter(true, []string{"BCS-MESOS-10039", "BCS-K8S-15091"}, "stag", pmCli)
 	projectList, err := getter.GetProjectIDList(ctx, cmCli)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 2, len(projectList))
@@ -65,9 +69,11 @@ func TestGetProjectIDList(t *testing.T) {
 
 func TestGetWorkloadList(t *testing.T) {
 	storageCli := mock.NewMockStorage()
-	getter := NewGetter(true, []string{"BCS-K8S-15091"}, "test")
+	pmCli := mock.NewMockPmClient()
+	getter := NewGetter(true, []string{"BCS-K8S-15091"}, "stag", pmCli)
 	k8sNamespace := []*types.NamespaceMeta{{
-		ProjectID:   "",
+		ProjectID:   "b37778ec757544868a01e1f01f07037f",
+		ProjectCode: "k8stest",
 		ClusterID:   "BCS-K8S-15091",
 		ClusterType: types.Kubernetes,
 		Name:        "bcs-system",
@@ -76,7 +82,8 @@ func TestGetWorkloadList(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(workloadList))
 	mesosCluster := &types.ClusterMeta{
-		ProjectID:   "",
+		ProjectID:   "ab2b254938e84f6b86b466cc22e730b1",
+		ProjectCode: "mesostest",
 		ClusterID:   "BCS-MESOS-10039",
 		ClusterType: types.Mesos,
 	}
@@ -87,7 +94,8 @@ func TestGetWorkloadList(t *testing.T) {
 
 func TestGetPodAutoscalerList(t *testing.T) {
 	storageCli := mock.NewMockStorage()
-	getter := NewGetter(true, []string{"BCS-K8S-15091"}, "test")
+	pmCli := mock.NewMockPmClient()
+	getter := NewGetter(true, []string{"BCS-K8S-15091"}, "stag", pmCli)
 	k8sNamespace := []*types.NamespaceMeta{{
 		ProjectID:   "",
 		ClusterID:   "BCS-K8S-90000",

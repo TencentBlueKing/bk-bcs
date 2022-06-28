@@ -51,9 +51,9 @@ const (
 		"sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
 		"mode=\"idle\",%s}))by(instance)"
 	ClusterAutoscalerUpCount = "sum(kube_event_unique_events_total{cluster_id=\"%s\", " +
-		"source=\"/cluster-autoscaler\",reason=~\"ScaledUpGroup\"})"
+		"source=\"/cluster-autoscaler\",reason=\"ScaledUpGroup\",involved_object_namespace=\"bcs-system\"})"
 	ClusterAutoscalerDownCount = "sum(kube_event_unique_events_total{cluster_id=\"%s\", " +
-		"source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"})"
+		"source=\"/cluster-autoscaler\",reason=\"ScaleDown\", involved_object_namespace=\"bcs-system\"})"
 	GeneralPodAutoscalerCount = "kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"%s\",namespace=\"%s\"," +
 		"source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"

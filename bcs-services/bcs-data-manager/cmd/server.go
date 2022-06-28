@@ -16,6 +16,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"net/http"
 	"net/http/pprof"
@@ -72,7 +73,8 @@ type Server struct {
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	// extra module server, [pprof, metrics, swagger]
-	extraServer *http.Server
+	extraServer    *http.Server
+	resourceGetter common.GetterInterface
 }
 
 // NewServer create server
@@ -96,6 +98,10 @@ func (s *Server) Init() error {
 	}
 	// init registry
 	if err := s.initRegistry(); err != nil {
+		return err
+	}
+	//
+	if err := s.initResourceGetter(); err != nil {
 		return err
 	}
 	// init core micro service
@@ -320,7 +326,7 @@ func (s *Server) initMicro() error {
 	microService.Init()
 
 	// create cluster manager server handler
-	s.handler = handler.NewBcsDataManager(s.store)
+	s.handler = handler.NewBcsDataManager(s.store, s.resourceGetter)
 	// Register handler
 	err := datamanager.RegisterDataManagerHandler(microService.Server(), s.handler)
 	if err != nil {
@@ -377,12 +383,9 @@ func (s *Server) initWorker() error {
 	}
 	// init producer
 	producerCron := cron.New()
-	selectClusters := strings.Split(s.opt.FilterRules.ClusterIDs, ",")
-	blog.Infof("selected cluster: %v", selectClusters)
-	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
-	resourceGetter := common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env)
+
 	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli,
-		resourceGetter, s.opt.ProducerConfig.Concurrency)
+		s.resourceGetter, s.opt.ProducerConfig.Concurrency)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
 		return err
@@ -618,4 +621,26 @@ func (s *Server) initPProf(mux *http.ServeMux) {
 func (s *Server) initMetric(mux *http.ServeMux) {
 	blog.Infof("init metric handler")
 	mux.Handle("/metrics", promhttp.Handler())
+}
+
+func (s *Server) initResourceGetter() error {
+	selectClusters := strings.Split(s.opt.FilterRules.ClusterIDs, ",")
+	blog.Infof("selected cluster: %v", selectClusters)
+	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
+	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
+	opts := &bcsproject.Options{
+		Module:          bcsproject.ModuleProjectManager,
+		Address:         s.opt.BcsAPIConf.GrpcGWAddress,
+		EtcdRegistry:    s.microRegistry,
+		ClientTLSConfig: s.clientTLSConfig,
+		AuthToken:       string(realAuthToken),
+		UserName:        s.opt.BcsAPIConf.UserName,
+	}
+	pmClient := bcsproject.NewBcsProjectManagerClient(opts)
+	if pmClient == nil {
+		blog.Errorf("init project manager cli error, client is nil")
+		return fmt.Errorf("init project manager cli error, client is nil")
+	}
+	s.resourceGetter = common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env, pmClient)
+	return nil
 }

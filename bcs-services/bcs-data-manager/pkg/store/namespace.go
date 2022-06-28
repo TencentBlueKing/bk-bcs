@@ -170,6 +170,7 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 		retNamespace.BusinessID = opts.BusinessID
 	}
 	retNamespace.Label = opts.Label
+	retNamespace.ProjectCode = opts.ProjectCode
 	retNamespace.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retNamespace.Metrics = append(retNamespace.Metrics, metrics)
 	return m.DB.Table(m.TableName).
@@ -285,21 +286,23 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 		},
 	}})
 	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":         0,
-		"metrics":     1,
-		"business_id": 1,
-		"project_id":  1,
-		"namespace":   1,
-		"cluster_id":  1,
-		"label":       1,
+		"_id":          0,
+		"metrics":      1,
+		"business_id":  1,
+		"project_id":   1,
+		"project_code": 1,
+		"namespace":    1,
+		"cluster_id":   1,
+		"label":        1,
 	}}, map[string]interface{}{"$group": map[string]interface{}{
-		"_id":         nil,
-		"cluster_id":  map[string]interface{}{"$first": "$cluster_id"},
-		"namespace":   map[string]interface{}{"$first": "$namespace"},
-		"project_id":  map[string]interface{}{"$first": "$project_id"},
-		"business_id": map[string]interface{}{"$max": "$business_id"},
-		"metrics":     map[string]interface{}{"$push": "$metrics"},
-		"label":       map[string]interface{}{"$first": "$label"},
+		"_id":          nil,
+		"cluster_id":   map[string]interface{}{"$first": "$cluster_id"},
+		"namespace":    map[string]interface{}{"$first": "$namespace"},
+		"project_id":   map[string]interface{}{"$first": "$project_id"},
+		"business_id":  map[string]interface{}{"$max": "$business_id"},
+		"metrics":      map[string]interface{}{"$push": "$metrics"},
+		"label":        map[string]interface{}{"$max": "$label"},
+		"project_code": map[string]interface{}{"$max": "$project_code"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &namespaceMetricsMap)
 	if err != nil {
@@ -355,6 +358,9 @@ func (m *ModelNamespace) generateNamespaceResponse(public types.NamespacePublicM
 	metricSlice []*types.NamespaceMetrics,
 	data *types.NamespaceData, start, end string) *bcsdatamanager.Namespace {
 	response := &bcsdatamanager.Namespace{
+		ProjectID:     data.ProjectID,
+		ProjectCode:   data.ProjectCode,
+		BusinessID:    data.BusinessID,
 		ClusterID:     data.ClusterID,
 		StartTime:     start,
 		EndTime:       end,

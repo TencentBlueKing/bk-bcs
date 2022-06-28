@@ -15,10 +15,11 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common"
+	bcsCommon "github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
@@ -26,13 +27,15 @@ import (
 
 // BcsDataManager for handler
 type BcsDataManager struct {
-	model store.Server
+	model          store.Server
+	resourceGetter common.GetterInterface
 }
 
 // NewBcsDataManager create DataManager Handler
-func NewBcsDataManager(model store.Server) *BcsDataManager {
+func NewBcsDataManager(model store.Server, resourceGetter common.GetterInterface) *BcsDataManager {
 	return &BcsDataManager{
-		model: model,
+		model:          model,
+		resourceGetter: resourceGetter,
 	}
 }
 
@@ -45,14 +48,14 @@ func (e *BcsDataManager) GetAllProjectList(ctx context.Context,
 	result, total, err := e.model.GetProjectList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get project list error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetAllProjectList", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	rsp.Total = uint32(total)
 	prom.ReportAPIRequestMetric("GetAllProjectList", "grpc", prom.StatusOK, start)
 	return nil
@@ -64,24 +67,42 @@ func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 	blog.Infof("Received GetProjectInfo.Call request. Project id: %s, dimension:%s",
 		req.GetProject(), req.GetDimension())
 	start := time.Now()
-	if req.GetProject() == "" && req.GetBusiness() == "" {
-		rsp.Message = fmt.Sprintf("get project info error, projectId or businessID is required")
-		rsp.Code = common.AdditionErrorCode + 500
+	if req.GetProject() == "" && req.GetProjectCode() == "" && req.GetBusiness() == "" {
+		rsp.Message = fmt.Sprintf("get project info error, projectId, businessID or projectCode is required")
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
+	if req.GetProject() == "" && req.GetBusiness() == "" && req.GetProjectCode() != "" {
+		project, err := e.resourceGetter.GetProjectInfo(ctx, "", req.GetProjectCode(), nil)
+		if err != nil {
+			rsp.Message = fmt.Sprintf("get project info err:%v", err)
+			rsp.Code = bcsCommon.AdditionErrorCode + 500
+			blog.Errorf(rsp.Message)
+			prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusErr, start)
+			return nil
+		}
+		if project == nil {
+			rsp.Message = fmt.Sprintf("cannot get project info by project code:%s", req.GetProjectCode())
+			rsp.Code = bcsCommon.AdditionErrorCode + 500
+			blog.Errorf(rsp.Message)
+			prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusErr, start)
+			return nil
+		}
+		req.Project = project.ProjectID
+	}
 	result, err := e.model.GetProjectInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get project info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
@@ -95,14 +116,14 @@ func (e *BcsDataManager) GetAllClusterList(ctx context.Context, req *bcsdatamana
 	result, total, err := e.model.GetClusterInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster list info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetAllClusterList", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	rsp.Total = uint32(total)
 	prom.ReportAPIRequestMetric("GetAllClusterList", "grpc", prom.StatusOK, start)
 	return nil
@@ -114,24 +135,42 @@ func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsda
 	blog.Infof("Received GetClusterListByProject.Call request. Project id: %s, dimension:%s, page:%s, size:%s",
 		req.GetProject(), req.GetDimension(), req.GetPage(), req.GetSize())
 	start := time.Now()
-	if req.GetProject() == "" && req.GetBusiness() == "" {
-		rsp.Message = fmt.Sprintf("get cluster list info error, projectId or businessID is required")
-		rsp.Code = common.AdditionErrorCode + 500
+	if req.GetProject() == "" && req.GetBusiness() == "" && req.GetProjectCode() == "" {
+		rsp.Message = fmt.Sprintf("get cluster list info error, projectId, projectCode or businessID is required")
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetClusterListByProject", "grpc", prom.StatusErr, start)
 		return nil
 	}
+	if req.GetProject() == "" && req.GetBusiness() == "" && req.GetProjectCode() != "" {
+		project, err := e.resourceGetter.GetProjectInfo(ctx, "", req.GetProjectCode(), nil)
+		if err != nil {
+			rsp.Message = fmt.Sprintf("get project info err:%v", err)
+			rsp.Code = bcsCommon.AdditionErrorCode + 500
+			blog.Errorf(rsp.Message)
+			prom.ReportAPIRequestMetric("GetClusterListByProject", "grpc", prom.StatusErr, start)
+			return nil
+		}
+		if project == nil {
+			rsp.Message = fmt.Sprintf("cannot get project info by project code:%s", req.GetProjectCode())
+			rsp.Code = bcsCommon.AdditionErrorCode + 500
+			blog.Errorf(rsp.Message)
+			prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusErr, start)
+			return nil
+		}
+		req.Project = project.ProjectID
+	}
 	result, total, err := e.model.GetClusterInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster list info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetClusterListByProject", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	rsp.Total = uint32(total)
 	prom.ReportAPIRequestMetric("GetClusterListByProject", "grpc", prom.StatusOK, start)
 	return nil
@@ -146,14 +185,14 @@ func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager
 	start := time.Now()
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get cluster info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetClusterInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	prom.ReportAPIRequestMetric("GetClusterInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
@@ -167,14 +206,14 @@ func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatam
 	result, total, err := e.model.GetNamespaceInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get namespace list info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetNamespaceInfoList", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	rsp.Total = uint32(total)
 	prom.ReportAPIRequestMetric("GetNamespaceInfoList", "grpc", prom.StatusOK, start)
 	return nil
@@ -189,14 +228,14 @@ func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanag
 	result, err := e.model.GetNamespaceInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get namespace info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetNamespaceInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	prom.ReportAPIRequestMetric("GetNamespaceInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
@@ -211,16 +250,16 @@ func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatama
 	result, total, err := e.model.GetWorkloadInfoList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload list info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
-		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusErr, start)
+		prom.ReportAPIRequestMetric("GetWorkloadInfoList", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	rsp.Total = uint32(total)
-	prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
+	prom.ReportAPIRequestMetric("GetWorkloadInfoList", "grpc", prom.StatusOK, start)
 	return nil
 }
 
@@ -234,14 +273,14 @@ func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanage
 	result, err := e.model.GetWorkloadInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	prom.ReportAPIRequestMetric("GetWorkloadInfo", "grpc", prom.StatusOK, start)
 	return nil
 }
@@ -257,14 +296,14 @@ func (e *BcsDataManager) GetPodAutoscalerList(ctx context.Context, req *bcsdatam
 	result, total, err := e.model.GetPodAutoscalerList(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get workload info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetPodAutoscalerList", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	rsp.Total = uint32(total)
 	prom.ReportAPIRequestMetric("GetPodAutoscalerList", "grpc", prom.StatusOK, start)
 	return nil
@@ -281,14 +320,14 @@ func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanag
 	result, err := e.model.GetPodAutoscalerInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get podAutoscaler info error: %v", err)
-		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetPodAutoscaler", "grpc", prom.StatusErr, start)
 		return nil
 	}
 	rsp.Data = result
-	rsp.Message = common.BcsSuccessStr
-	rsp.Code = common.BcsSuccess
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
 	prom.ReportAPIRequestMetric("GetPodAutoscaler", "grpc", prom.StatusOK, start)
 	return nil
 }

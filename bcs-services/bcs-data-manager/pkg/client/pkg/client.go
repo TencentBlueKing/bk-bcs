@@ -35,15 +35,15 @@ type Config struct {
 
 // NewClientWithConfiguration new client with config
 func NewClientWithConfiguration(ctx context.Context) (datamanager.DataManagerClient, context.Context, error) {
-	return NewDataManagerCli(&Config{
+	return NewDataManagerCli(ctx, &Config{
 		APIServer: viper.GetString("config.apiserver"),
 		AuthToken: viper.GetString("config.bcs_token"),
 		Operator:  viper.GetString("config.operator"),
-	}, ctx)
+	})
 }
 
 // NewDataManagerCli create client for bcs-data-manager
-func NewDataManagerCli(config *Config, ctx context.Context) (datamanager.DataManagerClient, context.Context, error) {
+func NewDataManagerCli(ctx context.Context, config *Config) (datamanager.DataManagerClient, context.Context, error) {
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
