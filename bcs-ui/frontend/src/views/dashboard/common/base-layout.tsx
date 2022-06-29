@@ -179,9 +179,9 @@ export default defineComponent({
         const handleGetTableData = async (subscribe = true) => {
             // 获取表格数据
             if (type.value === 'crd') {
-                // crd scope 为Namespaced时需要传递命名空间（gamedeployments、gamestatefulsets两个特殊的资源）
+                // crd scope 为Namespaced时需要传递命名空间（gamedeployments、gamestatefulsets、hooktemplates三个特殊的资源）
                 const customResourceNamespace = currentCrdExt.value?.scope === 'Namespaced'
-                    || ['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com'].includes(defaultCrd.value)
+                    || ['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com', 'hooktemplates.tkex.tencent.com'].includes(defaultCrd.value)
                     ? namespaceValue.value
                     : undefined
                 // crd 界面无需传当前crd参数

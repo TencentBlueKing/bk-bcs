@@ -19,6 +19,7 @@ const DashboardFormResourceUpdate = () => import(/* webpackChunkName: resource-c
 const DashboardCRD = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/crd.vue')
 const DashboardGameStatefulSets = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/gamestatefulsets.vue')
 const DashboardGameDeployments = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/gamedeployments.vue')
+const DashboardHookTemplates = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/hookTemplates.vue')
 const DashboardCustomObjects = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/customobjects.vue')
 
 // network
@@ -134,6 +135,13 @@ const childRoutes = [
         path: ':projectCode/:clusterId/dashboard/custom/gamedeployments',
         name: 'dashboardGameDeployments',
         component: DashboardGameDeployments,
+        meta: { isDashboard: true }
+    },
+    // dashboard hookTemplates
+    {
+        path: ':projectCode/:clusterId/dashboard/custom/hookTemplates',
+        name: 'dashboardHookTemplates',
+        component: DashboardHookTemplates,
         meta: { isDashboard: true }
     },
     // dashboard customobjects
@@ -291,6 +299,7 @@ const childRoutes = [
                 HorizontalPodAutoscaler: 'HPA',
                 GameStatefulSet: 'dashboardGameStatefulSets',
                 GameDeployment: 'dashboardGameDeployments',
+                HookTemplate: 'dashboardHookTemplates',
                 CustomObject: 'dashboardCustomObjects'
             }
             to.meta.menuId = menuIdMap[to.query.kind]

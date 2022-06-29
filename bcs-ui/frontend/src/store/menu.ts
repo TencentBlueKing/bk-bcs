@@ -186,6 +186,11 @@ const menu: IMenu = {
                     id: 'dashboardGameDeployments'
                 },
                 {
+                    name: 'HookTemplates',
+                    routeName: 'dashboardHookTemplates',
+                    id: 'dashboardHookTemplates'
+                },
+                {
                     name: 'CustomObjects',
                     routeName: 'dashboardCustomObjects',
                     id: 'dashboardCustomObjects'
