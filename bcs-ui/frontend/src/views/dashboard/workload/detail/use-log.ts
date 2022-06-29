@@ -27,20 +27,21 @@ export default function useLog () {
             logState.defaultContainer = ''
         }
     })
-    const handleGetContainer = async (podId: string, namespace: string) => {
+    const handleGetContainer = async (podId: string, namespace: string, clusterId: string) => {
         const data = await $store.dispatch('log/podContainersList', {
             $podId: podId,
-            $namespaceId: namespace
+            $namespaceId: namespace,
+            $clusterId: clusterId
         })
         return data
     }
     // 显示操作日志
-    const handleShowLog = async (row) => {
+    const handleShowLog = async (row, clusterId) => {
         logState.logShow = true
-        const { name, namespace } = row.metadata
+        const { name, namespace } = row.metadata || row
         logState.curPodId = name
         logState.curNamespace = namespace
-        logState.containerList = await handleGetContainer(name, namespace)
+        logState.containerList = await handleGetContainer(name, namespace, clusterId)
         logState.defaultContainer = logState.containerList[0]?.name
     }
 

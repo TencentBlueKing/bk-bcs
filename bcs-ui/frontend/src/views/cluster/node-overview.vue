@@ -3,17 +3,12 @@
         <div class="biz-top-bar">
             <div class="biz-cluster-node-overview-title">
                 <i class="bcs-icon bcs-icon-arrows-left back" @click="goNode"></i>
-                <span @click="refreshCurRouter">{{nodeId}}</span>
+                <span>{{nodeId}}</span>
             </div>
             <bk-guide></bk-guide>
         </div>
         <div class="biz-content-wrapper biz-cluster-node-overview">
-            <app-exception
-                v-if="exceptionCode"
-                :type="exceptionCode.code"
-                :text="exceptionCode.msg">
-            </app-exception>
-            <div v-else class="biz-cluster-node-overview-wrapper">
+            <div class="biz-cluster-node-overview-wrapper">
                 <div class="biz-cluster-node-overview-header">
                     <div class="header-item">
                         <div class="key-label">IP：</div>
@@ -91,7 +86,7 @@
                                     </bk-dropdown-menu>
                                 </div>
                             </div>
-                            <chart :options="cpuChartOptsK8S" ref="cpuLine1" auto-resize></chart>
+                            <ECharts :options="cpuChartOptsK8S" ref="cpuLine1" auto-resize></ECharts>
                         </div>
                         <div class="part top-right">
                             <div class="info">
@@ -118,7 +113,7 @@
                                     </bk-dropdown-menu>
                                 </div>
                             </div>
-                            <chart :options="memChartOptsK8S" ref="memoryLine1" auto-resize></chart>
+                            <ECharts :options="memChartOptsK8S" ref="memoryLine1" auto-resize></ECharts>
                         </div>
                     </div>
                     <div class="biz-cluster-node-overview-chart">
@@ -147,7 +142,7 @@
                                     </bk-dropdown-menu>
                                 </div>
                             </div>
-                            <chart :options="networkChartOptsK8S" ref="networkLine1" auto-resize></chart>
+                            <ECharts :options="networkChartOptsK8S" ref="networkLine1" auto-resize></ECharts>
                         </div>
                         <div class="part">
                             <div class="info">
@@ -174,372 +169,187 @@
                                     </bk-dropdown-menu>
                                 </div>
                             </div>
-                            <chart :options="diskioChartOptsK8S" ref="storageLine1" auto-resize></chart>
+                            <ECharts :options="diskioChartOptsK8S" ref="storageLine1" auto-resize></ECharts>
                         </div>
                     </div>
                 </div>
-                <div class="biz-cluster-node-overview-table-wrapper">
-                    <!-- <bk-tab class="biz-tab-container" :type="'fill'" :active-name="'container'" @tab-changed="tabChanged">
-                        <bk-tab-panel name="container" :title="$t('容器')">
-                            <div class="container-table-wrapper" v-bkloading="{ isLoading: containerTableLoading }">
-                                <table class="bk-table has-table-hover biz-table biz-cluster-node-overview-table">
-                                    <thead>
-                                        <tr>
-                                            <th style="padding-left: 20px;">{{$t('名称')}}</th>
-                                            <th>{{$t('状态')}}</th>
-                                            <th>{{$t('镜像')}}</th>
-                                            <th style="min-width: 120px;">{{$t('操作')}}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <template v-if="containerTableCurPageData.length">
-                                            <tr v-for="(containerTableItem, index) in containerTableCurPageData" :key="index">
-                                                <td style="padding-left: 20px;" v-if="(curProject.kind === 1 || curProject.kind === 3) && containerTableItem.status !== 'running'">
-                                                    <div class="name">
-                                                        <a href="javascript:void(0)" class="bk-text-button is-disabled">{{containerTableItem.name}}</a>
-                                                    </div>
-                                                </td>
-                                                <td style="padding-left: 20px;" v-else>
-                                                    <bcs-popover placement="top" :delay="500" :transfer="true">
-                                                        <div class="name">
-                                                            <a href="javascript:void(0)" @click="goContainerDetail(containerTableItem)" class="bk-text-button">{{containerTableItem.name}}</a>
-                                                        </div>
-                                                        <template slot="content">
-                                                            <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{containerTableItem.name}}</p>
-                                                        </template>
-                                                    </bcs-popover>
-                                                </td>
-                                                <td v-if="containerTableItem.status === 'terminated'">
-                                                    <i class="bcs-icon bcs-icon-circle-shape danger"></i>terminated
-                                                </td>
-                                                <td v-else-if="containerTableItem.status === 'running'">
-                                                    <i class="bcs-icon bcs-icon-circle-shape running"></i>running
-                                                </td>
-                                                <td v-else>
-                                                    <i class="bcs-icon bcs-icon-circle-shape warning"></i>{{containerTableItem.status}}
-                                                </td>
-                                                <td>
-                                                    <bcs-popover placement="top" :delay="500" :transfer="true">
-                                                        <div class="mirror">
-                                                            {{containerTableItem.image}}
-                                                        </div>
-                                                        <template slot="content">
-                                                            <p style="text-align: left; white-space: normal; word-break: break-all;font-weight: 400;">{{containerTableItem.image}}</p>
-                                                        </template>
-                                                    </bcs-popover>
-                                                </td>
-                                                <td>
-                                                    <template v-if="containerTableItem.status === 'running'">
-                                                        <a href="javascript: void(0);" class="bk-text-button" @click.stop="showTerminal(containerTableItem)">WebConsole</a>
-                                                    </template>
-                                                    <template v-else>
-                                                        <bcs-popover :content="$t('容器状态不是running')" placement="right">
-                                                            <a href="javascript: void(0);" class="bk-text-button is-disabled">WebConsole</a>
-                                                        </bcs-popover>
-                                                    </template>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                        <template v-else>
-                                            <tr>
-                                                <td colspan="4">
-                                                    <div class="bk-message-box no-data">
-                                                        <bcs-exception type="empty" scene="part"></bcs-exception>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                                <div class="biz-page-box biz-cluster-node-overview-page" v-if="containerTablePageConf.show">
-                                    <bk-pagination
-                                        :show-limit="false"
-                                        :current.sync="containerTablePageConf.curPage"
-                                        :count.sync="containerTablePageConf.count"
-                                        :limit="containerTablePageConf.pageSize"
-                                        :limit-list="containerTablePageConf.limitList"
-                                        @change="pageChange">
-                                    </bk-pagination>
-                                </div>
-                            </div>
-                        </bk-tab-panel>
-                    </bk-tab> -->
-                </div>
+                <bcs-tab class="mt20" :active.sync="activePanel" type="card" :label-height="40">
+                    <bcs-tab-panel name="pod" label="Pod">
+                        <bk-table
+                            :data="curPodsData"
+                            :pagination="podsDataPagination"
+                            v-bkloading="{ isLoading: podLoading }"
+                            @page-change="handlePageChange"
+                            @page-limit-change="handlePageLimitChange"
+                        >
+                            <bk-table-column :label="$t('名称')" min-width="130" sortable :resizable="false">
+                                <template #default="{ row }">
+                                    <bk-button class="bcs-button-ellipsis" text v-authority="{ clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable }"
+                                        @click="gotoPodDetail(row)">{{ row.name }}</bk-button>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('命名空间')" min-width="100" sortable :resizable="false">
+                                <template #default="{ row }">
+                                    <span>{{ row.namespace }}</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
+                                <template slot-scope="{ row }">
+                                    <span v-bk-tooltips.top="(row.images || []).join('<br />')">
+                                        {{ (row.images || []).join(', ') }}
+                                    </span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column label="Status" width="140" :resizable="false">
+                                <template slot-scope="{ row }">
+                                    <StatusIcon :status="row.status"></StatusIcon>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column label="Ready" width="100" :resizable="false">
+                                <template slot-scope="{ row }">
+                                    {{row.readyCnt}}/{{row.totalCnt}}
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column label="Restarts" width="100" :resizable="false">
+                                <template slot-scope="{ row }">{{row.restartCnt}}</template>
+                            </bk-table-column>
+                            <bk-table-column label="Host IP" width="140" :resizable="false">
+                                <template slot-scope="{ row }">{{row.hostIP || '--'}}</template>
+                            </bk-table-column>
+                            <bk-table-column label="Pod IP" width="140" :resizable="false">
+                                <template slot-scope="{ row }">{{row.podIP || '--'}}</template>
+                            </bk-table-column>
+                            <bk-table-column label="Node" :resizable="false">
+                                <template slot-scope="{ row }">{{row.node || '--'}}</template>
+                            </bk-table-column>
+                            <bk-table-column label="Age" :resizable="false">
+                                <template #default="{ row }">
+                                    <span>{{row.age || '--'}}</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('编辑模式')" :resizable="false" width="100">
+                                <template #default="{ row }">
+                                    <span>{{row.editModel === 'form' ? $t('表单') : 'YAML'}}</span>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('操作')" :resizable="false" width="180">
+                                <template #default="{ row }">
+                                    <bk-button text v-authority="{ clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable }"
+                                        @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
+                                    <bk-button text class="ml10" v-authority="{ clickable: podsWebAnnotations.perm.items[row.uid].updateBtn.clickable }"
+                                        @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+                                    <bk-button class="ml10" text v-authority="{ clickable: !podsWebAnnotations.perm.items[row.uid].deleteBtn.clickable }"
+                                        @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+                                </template>
+                            </bk-table-column>
+                        </bk-table>
+                    </bcs-tab-panel>
+                </bcs-tab>
             </div>
         </div>
+        <bcs-dialog class="log-dialog" v-model="logShow" width="80%" :show-footer="false" render-directive="if">
+            <BcsLog
+                :project-id="projectId"
+                :cluster-id="clusterId"
+                :namespace-id="curNamespace"
+                :pod-id="curPodId"
+                :default-container="defaultContainer"
+                :global-loading="logLoading"
+                :container-list="containerList">
+            </BcsLog>
+        </bcs-dialog>
     </div>
 </template>
 
-<script>
+<script lang="ts">
+    import { defineComponent, computed, ref, onMounted } from '@vue/composition-api'
     import moment from 'moment'
     import ECharts from 'vue-echarts/components/ECharts.vue'
     import 'echarts/lib/chart/line'
     import 'echarts/lib/component/tooltip'
     import 'echarts/lib/component/legend'
 
+    import { BCS_CLUSTER } from '@/common/constant'
+    import StatusIcon from '@/views/dashboard/common/status-icon'
+    import BaseLayout from '@/views/dashboard/common/base-layout'
+    import BcsLog from '@/components/bcs-log/index'
+    import useLog from '@/views/dashboard/workload/detail/use-log'
+
     import { nodeOverview } from '@/common/chart-option'
     import { catchErrorHandler, formatBytes } from '@/common/util'
-
     import { createChartOption } from './node-overview-chart-opts'
 
-    export default {
-        components: {
-            chart: ECharts
-        },
-        data () {
-            return {
-                PROJECT_MESOS: PROJECT_MESOS,
-                tabActiveName: 'container',
-
-                cpuLine: nodeOverview.cpu,
-                cpuChartOptsK8S: createChartOption(this),
-
-                memoryLine: nodeOverview.memory,
-                memChartOptsK8S: createChartOption(this),
-
-                networkLine: nodeOverview.network,
-                networkChartOptsK8S: createChartOption(this),
-
-                storageLine: nodeOverview.storage,
-                diskioChartOptsK8S: createChartOption(this),
-
-                bkMessageInstance: null,
-                cpuToggleRangeStr: this.$t('1小时'),
-                memToggleRangeStr: this.$t('1小时'),
-                networkToggleRangeStr: this.$t('1小时'),
-                storageToggleRangeStr: this.$t('1小时'),
-                nodeInfo: {},
-                containerTableLoading: false,
-                containerTableList: [],
-                containerTablePageConf: {
-                    count: 1,
-                    totalPage: 1,
-                    pageSize: 5,
-                    curPage: 1,
-                    show: false,
-                    limitList: [5, 10, 20, 100]
-                },
-                containerTableCurPageData: [],
-                labelList: [],
-                labelListLoading: true,
-                exceptionCode: null,
-                terminalWins: {}
-            }
-        },
-        computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            projectCode () {
-                return this.$route.params.projectCode
-            },
-            clusterId () {
-                return this.$route.params.clusterId
-            },
-            nodeId () {
-                return this.$route.params.nodeId
-            },
-            onlineProjectList () {
-                return this.$store.state.sideMenu.onlineProjectList
-            },
-            curProject () {
-                return this.$store.state.curProject
-            }
-        },
-        created () {
-            this.cpuLine.series[0].data
-                = this.memoryLine.series[0].data = this.memoryLine.series[1].data
-                = this.networkLine.series[0].data = this.networkLine.series[1].data
-                = this.storageLine.series[0].data = this.storageLine.series[1].data
-                = [0]
-            nodeOverview.storage.series[0].data = [9, 0, 22, 40, 12, 31, 2, 12, 18, 27, 27]
-        },
-        async mounted () {
-            const cpuRef = this.$refs.cpuLine1
-            cpuRef && cpuRef.showLoading({
-                text: this.$t('正在加载中...'),
-                color: '#30d878',
-                maskColor: 'rgba(255, 255, 255, 0.8)'
+    export default defineComponent({
+        components: { BaseLayout, StatusIcon, BcsLog, ECharts },
+        setup (props, ctx) {
+            const { $route, $router, $bkInfo, $bkMessage, $store, $i18n } = ctx.root
+            const cpuLine = ref(nodeOverview.cpu)
+            const memoryLine = ref(nodeOverview.memory)
+            const networkLine = ref(nodeOverview.network)
+            const storageLine = ref(nodeOverview.storage)
+            const cpuChartOptsK8S = ref(createChartOption())
+            const memChartOptsK8S = ref(createChartOption())
+            const networkChartOptsK8S = ref(createChartOption())
+            const diskioChartOptsK8S = ref(createChartOption())
+            const cpuToggleRangeStr = ref($i18n.t('1小时'))
+            const memToggleRangeStr = ref($i18n.t('1小时'))
+            const networkToggleRangeStr = ref($i18n.t('1小时'))
+            const storageToggleRangeStr = ref($i18n.t('1小时'))
+            const nodeInfo = ref<any>({})
+            const podsData = ref([])
+            const podsWebAnnotations = ref<any>({})
+            const podsDataPagination = ref({
+                current: 1,
+                count: 0,
+                limit: 10
             })
+            const podLoading = ref(false)
+            const cpuLine1 = ref<any>(null)
+            const memoryLine1 = ref<any>(null)
+            const storageLine1 = ref<any>(null)
+            const networkLine1 = ref<any>(null)
 
-            const memRef = this.$refs.memoryLine1
-            memRef && memRef.showLoading({
-                text: this.$t('正在加载中...'),
-                color: '#30d878',
-                maskColor: 'rgba(255, 255, 255, 0.8)'
+            const projectId = computed(() => $route.params.projectId)
+            const clusterId = computed(() => $route.params.clusterId)
+            const projectCode = computed(() => $route.params.projectCode)
+            const nodeId = computed(() => $route.params.nodeId)
+            const curPodsData = computed(() => {
+                const { limit, current } = podsDataPagination.value
+                return podsData.value.slice(limit * (current - 1), limit * current)
             })
-
-            const diskioRef = this.$refs.storageLine1
-            diskioRef && diskioRef.showLoading({
-                text: this.$t('正在加载中...'),
-                color: '#30d878',
-                maskColor: 'rgba(255, 255, 255, 0.8)'
-            })
-
-            const netRef = this.$refs.networkLine1
-            netRef && netRef.showLoading({
-                text: this.$t('正在加载中...'),
-                color: '#30d878',
-                maskColor: 'rgba(255, 255, 255, 0.8)'
-            })
-
-            await this.fetchNodeInfo()
-            // this.fetchNodeContainers()
-
-            this.fetchDataK8S('cpu_summary', '1')
-            this.fetchDataK8S('mem', '1')
-            this.fetchDataK8S('net', '1')
-            this.fetchDataK8S('io', '1')
-        },
-        methods: {
-            /**
-             * 打开到终端入口
-             *
-             * @param {Object} container 当前容器
-             */
-            async showTerminal (container) {
-                const clusterId = this.$route.params.clusterId
-                const containerId = container.container_id
-                const url = `${DEVOPS_BCS_API_URL}/web_console/projects/${this.projectId}/clusters/${clusterId}/?container_id=${containerId}`
-                if (this.terminalWins.hasOwnProperty(containerId)) {
-                    const win = this.terminalWins[containerId]
-                    if (!win.closed) {
-                        this.terminalWins[containerId].focus()
-                    } else {
-                        const win = window.open(url, '', 'width=990,height=618')
-                        this.terminalWins[containerId] = win
-                    }
-                } else {
-                    const win = window.open(url, '', 'width=990,height=618')
-                    this.terminalWins[containerId] = win
-                }
-            },
+            const clusterList = computed(() => $store.state.cluster.clusterList || [])
+            const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value))
 
             /**
              * 获取上方的信息
              */
-            async fetchNodeInfo () {
-                const { projectId, clusterId, nodeId } = this
+            const fetchNodeInfo = async () => {
                 try {
-                    const res = await this.$store.dispatch('cluster/nodeInfo', {
-                        projectId,
-                        clusterId,
-                        nodeId
+                    const res = await $store.dispatch('cluster/nodeInfo', {
+                        projectId: projectId.value,
+                        clusterId: clusterId.value,
+                        nodeId: nodeId.value
                     })
-
-                    const nodeInfo = {}
 
                     const data = res.data || {}
 
-                    nodeInfo.id = data.id || ''
-                    nodeInfo.provider = data.provider || '--'
-                    nodeInfo.dockerVersion = data.dockerVersion || '--'
-                    nodeInfo.osVersion = data.osVersion || '--'
-                    nodeInfo.domainname = data.domainname || '--'
-                    nodeInfo.machine = data.machine || '--'
-                    nodeInfo.nodename = data.nodename || '--'
-                    nodeInfo.release = data.release || '--'
-                    nodeInfo.sysname = data.sysname || '--'
-                    nodeInfo.version = data.version || '--'
-                    nodeInfo.cpu_count = data.cpu_count || '--'
-                    nodeInfo.memory = data.memory ? formatBytes(data.memory) : '--'
-                    nodeInfo.disk = data.disk ? formatBytes(data.disk) : '--'
-
-                    this.nodeInfo = Object.assign({}, nodeInfo)
+                    nodeInfo.value.id = data.id || ''
+                    nodeInfo.value.provider = data.provider || '--'
+                    nodeInfo.value.dockerVersion = data.dockerVersion || '--'
+                    nodeInfo.value.osVersion = data.osVersion || '--'
+                    nodeInfo.value.domainname = data.domainname || '--'
+                    nodeInfo.value.machine = data.machine || '--'
+                    nodeInfo.value.nodename = data.nodename || '--'
+                    nodeInfo.value.release = data.release || '--'
+                    nodeInfo.value.sysname = data.sysname || '--'
+                    nodeInfo.value.version = data.version || '--'
+                    nodeInfo.value.cpu_count = data.cpu_count || '--'
+                    nodeInfo.value.memory = data.memory ? formatBytes(data.memory, 0) : '--'
+                    nodeInfo.value.disk = data.disk ? formatBytes(data.disk, 0) : '--'
                 } catch (e) {
-                    catchErrorHandler(e, this)
+                    catchErrorHandler(e, ctx)
                 }
-            },
-
-            /**
-             * 获取下方容器选项卡表格数据
-             */
-            async fetchNodeContainers () {
-                const { projectId, clusterId, nodeId } = this
-                this.containerTableLoading = true
-                try {
-                    const res = await this.$store.dispatch('cluster/getNodeContainerList', {
-                        projectId,
-                        clusterId,
-                        nodeId
-                    })
-                    this.containerTableList = res.data || []
-                    this.initPageConf()
-                    this.containerTableCurPageData = this.getDataByPage(this.containerTablePageConf.curPage)
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                } finally {
-                    this.containerTableLoading = false
-                }
-            },
-
-            /**
-             * 获取下方 tab 标签的数据
-             */
-            async fetchLabel () {
-                this.labelListLoading = true
-                try {
-                    const res = await this.$store.dispatch('cluster/getNodeLabel', {
-                        projectId: this.projectId,
-                        nodeIds: [this.nodeInfo.id]
-                    })
-
-                    const labelList = []
-                    const labels = res.data || {}
-                    Object.keys(labels).forEach(key => {
-                        labelList.push({
-                            key: key,
-                            val: labels[key]
-                        })
-                    })
-                    this.labelList.splice(0, this.labelList.length, ...labelList)
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                } finally {
-                    this.labelListLoading = false
-                }
-            },
-
-            /**
-             * 初始化下方容器选项卡表格翻页条
-             */
-            initPageConf () {
-                const total = this.containerTableList.length
-                this.containerTablePageConf.show = total > 0
-                this.containerTablePageConf.totalPage = Math.ceil(total / this.containerTablePageConf.pageSize) || 1
-                this.containerTablePageConf.count = total
-            },
-
-            /**
-             * 获取当前这一页的数据
-             *
-             * @param {number} page 当前页
-             *
-             * @return {Array} 当前页数据
-             */
-            getDataByPage (page) {
-                let startIndex = (page - 1) * this.containerTablePageConf.pageSize
-                let endIndex = page * this.containerTablePageConf.pageSize
-                if (startIndex < 0) {
-                    startIndex = 0
-                }
-                if (endIndex > this.containerTableList.length) {
-                    endIndex = this.containerTableList.length
-                }
-                const data = this.containerTableList.slice(startIndex, endIndex)
-                return data
-            },
-
-            /**
-             * 翻页回调
-             *
-             * @param {number} page 当前页
-             */
-            pageChange (page) {
-                this.containerTablePageConf.curPage = page
-                const data = this.getDataByPage(page)
-                this.containerTableCurPageData.splice(0, this.containerTableCurPageData.length, ...data)
-            },
+            }
 
             /**
              * 获取中间图表数据 k8s
@@ -547,13 +357,13 @@
              * @param {string} idx 标识，cpu / memory / network / storage
              * @param {string} range 时间范围，1: 1 小时，2: 24 小时，3：近 7 天
              */
-            async fetchDataK8S (idx, range) {
+            const fetchDataK8S = async (idx, range) => {
                 const params = {
                     startAt: null,
                     endAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-                    projectId: this.projectId,
-                    resId: this.nodeId,
-                    clusterId: this.clusterId
+                    projectId: projectId.value,
+                    resId: nodeId.value,
+                    clusterId: clusterId.value
                 }
                 if (!params.resId) return
 
@@ -569,10 +379,10 @@
                 try {
                     if (idx === 'net') {
                         const res = await Promise.all([
-                            this.$store.dispatch('cluster/nodeNetReceive', Object.assign({}, params)),
-                            this.$store.dispatch('cluster/nodeNetTransmit', Object.assign({}, params))
+                            $store.dispatch('cluster/nodeNetReceive', Object.assign({}, params)),
+                            $store.dispatch('cluster/nodeNetTransmit', Object.assign({}, params))
                         ])
-                        this.renderNetChart(res[0].data.result, res[1].data.result)
+                        renderNetChart(res[0].data.result, res[1].data.result)
                     } else {
                         let url = ''
                         let renderFn = ''
@@ -591,27 +401,28 @@
                             renderFn = 'renderDiskioChart'
                         }
 
-                        const res = await this.$store.dispatch(url, params)
-                        this[renderFn](res.data.result || [])
+                        const res = await $store.dispatch(url, params)
+                        if (renderFn === 'renderCpuChart') renderCpuChart(res.data.result || [])
+                        if (renderFn === 'renderMemChart') renderMemChart(res.data.result || [])
+                        if (renderFn === 'renderDiskioChart') renderDiskioChart(res.data.result || [])
                     }
                 } catch (e) {
-                    catchErrorHandler(e, this)
+                    catchErrorHandler(e, ctx)
                 }
-            },
+            }
 
             /**
              * 渲染 cpu 图表
              *
              * @param {Array} list 图表数据
              */
-            renderCpuChart (list) {
-                const chartNode = this.$refs.cpuLine1
-                if (!chartNode) {
+            const renderCpuChart = (list) => {
+                if (!cpuLine1.value) {
                     return
                 }
 
-                const cpuChartOptsK8S = Object.assign({}, this.cpuChartOptsK8S)
-                cpuChartOptsK8S.series.splice(0, cpuChartOptsK8S.series.length, ...[])
+                const curCpuChartOptsK8S = Object.assign({}, cpuChartOptsK8S.value)
+                curCpuChartOptsK8S.series.splice(0, curCpuChartOptsK8S.series.length, ...[])
 
                 const data = list.length ? list : [{ values: [[parseInt(String(+new Date()).slice(0, 10), 10), '0']] }]
 
@@ -619,7 +430,7 @@
                     item.values.forEach(d => {
                         d[0] = parseInt(d[0] + '000', 10)
                     })
-                    cpuChartOptsK8S.series.push(
+                    curCpuChartOptsK8S.series.push(
                         {
                             type: 'line',
                             showSymbol: false,
@@ -640,8 +451,8 @@
                     )
                 })
 
-                const label = this.$t('CPU使用率')
-                chartNode.mergeOptions({
+                const label = $i18n.t('CPU使用率')
+                cpuLine1.value.mergeOptions({
                     tooltip: {
                         formatter (params, ticket, callback) {
                             let ret = ''
@@ -660,22 +471,21 @@
                     }
                 })
 
-                chartNode.hideLoading()
-            },
+                cpuLine1.value.hideLoading()
+            }
 
             /**
              * 渲染 mem 图表
              *
              * @param {Array} list 图表数据
              */
-            renderMemChart (list) {
-                const chartNode = this.$refs.memoryLine1
-                if (!chartNode) {
+            const renderMemChart = (list) => {
+                if (!memoryLine1.value) {
                     return
                 }
 
-                const memChartOptsK8S = Object.assign({}, this.memChartOptsK8S)
-                memChartOptsK8S.series.splice(0, memChartOptsK8S.series.length, ...[])
+                const curMemChartOptsK8S = Object.assign({}, memChartOptsK8S.value)
+                curMemChartOptsK8S.series.splice(0, curMemChartOptsK8S.series.length, ...[])
 
                 const data = list.length ? list : [{ values: [[parseInt(String(+new Date()).slice(0, 10), 10), '0']] }]
 
@@ -683,7 +493,7 @@
                     item.values.forEach(d => {
                         d[0] = parseInt(d[0] + '000', 10)
                     })
-                    memChartOptsK8S.series.push(
+                    curMemChartOptsK8S.series.push(
                         {
                             type: 'line',
                             showSymbol: false,
@@ -704,8 +514,8 @@
                     )
                 })
 
-                const label = this.$t('内存使用率')
-                chartNode.mergeOptions({
+                const label = $i18n.t('内存使用率')
+                memoryLine1.value.mergeOptions({
                     tooltip: {
                         formatter (params, ticket, callback) {
                             let ret = ''
@@ -724,22 +534,21 @@
                     }
                 })
 
-                chartNode.hideLoading()
-            },
+                memoryLine1.value.hideLoading()
+            }
 
             /**
              * 渲染 diskio 图表
              *
              * @param {Array} list 图表数据
              */
-            renderDiskioChart (list) {
-                const chartNode = this.$refs.storageLine1
-                if (!chartNode) {
+            const renderDiskioChart = (list) => {
+                if (!storageLine1.value) {
                     return
                 }
 
-                const diskioChartOptsK8S = Object.assign({}, this.diskioChartOptsK8S)
-                diskioChartOptsK8S.series.splice(0, diskioChartOptsK8S.series.length, ...[])
+                const curDiskioChartOptsK8S = Object.assign({}, diskioChartOptsK8S.value)
+                curDiskioChartOptsK8S.series.splice(0, curDiskioChartOptsK8S.series.length, ...[])
 
                 const data = list.length ? list : [{ values: [[parseInt(String(+new Date()).slice(0, 10), 10), '0']] }]
 
@@ -747,7 +556,7 @@
                     item.values.forEach(d => {
                         d[0] = parseInt(d[0] + '000', 10)
                     })
-                    diskioChartOptsK8S.series.push(
+                    curDiskioChartOptsK8S.series.push(
                         {
                             type: 'line',
                             showSymbol: false,
@@ -768,8 +577,8 @@
                     )
                 })
 
-                const label = this.$t('磁盘IO')
-                chartNode.mergeOptions({
+                const label = $i18n.t('磁盘IO')
+                storageLine1.value.mergeOptions({
                     tooltip: {
                         formatter (params, ticket, callback) {
                             let ret = ''
@@ -788,8 +597,8 @@
                     }
                 })
 
-                chartNode.hideLoading()
-            },
+                storageLine1.value.hideLoading()
+            }
 
             /**
              * 渲染 net 图表
@@ -797,20 +606,19 @@
              * @param {Array} listReceive net 入流量数据
              * @param {Array} listTransmit net 出流量数据
              */
-            renderNetChart (listReceive, listTransmit) {
-                const chartNode = this.$refs.networkLine1
-                if (!chartNode) {
+            const renderNetChart = (listReceive, listTransmit) => {
+                if (!networkLine1.value) {
                     return
                 }
 
-                const networkChartOptsK8S = Object.assign({}, this.networkChartOptsK8S)
-                networkChartOptsK8S.series.splice(0, networkChartOptsK8S.series.length, ...[])
+                const curNetworkChartOptsK8S = Object.assign({}, networkChartOptsK8S.value)
+                curNetworkChartOptsK8S.series.splice(0, curNetworkChartOptsK8S.series.length, ...[])
 
-                networkChartOptsK8S.yAxis.splice(0, networkChartOptsK8S.yAxis.length, ...[
+                curNetworkChartOptsK8S.yAxis.splice(0, curNetworkChartOptsK8S.yAxis.length, ...[
                     {
                         axisLabel: {
                             formatter (value, index) {
-                                return `${formatBytes(value)}`
+                                return `${formatBytes(value, 0)}`
                             }
                         }
                     }
@@ -829,7 +637,7 @@
                         d[0] = parseInt(d[0] + '000', 10)
                         d.push('receive')
                     })
-                    networkChartOptsK8S.series.push(
+                    curNetworkChartOptsK8S.series.push(
                         {
                             type: 'line',
                             showSymbol: false,
@@ -855,7 +663,7 @@
                         d[0] = parseInt(d[0] + '000', 10)
                         d.push('transmit')
                     })
-                    networkChartOptsK8S.series.push(
+                    curNetworkChartOptsK8S.series.push(
                         {
                             type: 'line',
                             showSymbol: false,
@@ -876,9 +684,9 @@
                     )
                 })
 
-                const labelReceive = this.$t('入流量')
-                const labelTransmit = this.$t('出流量')
-                chartNode.mergeOptions({
+                const labelReceive = $i18n.t('入流量')
+                const labelTransmit = $i18n.t('出流量')
+                networkLine1.value.mergeOptions({
                     tooltip: {
                         formatter (params, ticket, callback) {
                             let ret = ''
@@ -886,9 +694,9 @@
 
                             params.forEach(p => {
                                 if (p.value[2] === 'receive') {
-                                    ret += `<div>${labelReceive}：${formatBytes(p.value[1])}</div>`
+                                    ret += `<div>${labelReceive}：${formatBytes(p.value[1], 0)}</div>`
                                 } else if (p.value[2] === 'transmit') {
-                                    ret += `<div>${labelTransmit}：${formatBytes(p.value[1])}</div>`
+                                    ret += `<div>${labelTransmit}：${formatBytes(p.value[1], 0)}</div>`
                                 }
                             })
 
@@ -897,8 +705,8 @@
                     }
                 })
 
-                chartNode.hideLoading()
-            },
+                networkLine1.value.hideLoading()
+            }
 
             /**
              * 切换时间范围
@@ -908,116 +716,243 @@
              * @param {string} idx 标识，cpu / memory / network / storage
              * @param {string} range 时间范围，1: 1 小时，2: 24 小时，3：近 7 天
              */
-            toggleRange (dropdownRef, toggleRangeStr, idx, range) {
+            const toggleRange = (dropdownRef, toggleRangeStr, idx, range) => {
                 if (range === '1') {
-                    this[toggleRangeStr] = this.$t('1小时')
+                    if (toggleRangeStr === 'cpuToggleRangeStr') cpuToggleRangeStr.value = $i18n.t('1小时')
+                    if (toggleRangeStr === 'memToggleRangeStr') memToggleRangeStr.value = $i18n.t('1小时')
+                    if (toggleRangeStr === 'networkToggleRangeStr') networkToggleRangeStr.value = $i18n.t('1小时')
+                    if (toggleRangeStr === 'storageToggleRangeStr') storageToggleRangeStr.value = $i18n.t('1小时')
                 } else if (range === '2') {
-                    this[toggleRangeStr] = this.$t('24小时')
+                    if (toggleRangeStr === 'cpuToggleRangeStr') cpuToggleRangeStr.value = $i18n.t('24小时')
+                    if (toggleRangeStr === 'memToggleRangeStr') memToggleRangeStr.value = $i18n.t('24小时')
+                    if (toggleRangeStr === 'networkToggleRangeStr') networkToggleRangeStr.value = $i18n.t('24小时')
+                    if (toggleRangeStr === 'storageToggleRangeStr') storageToggleRangeStr.value = $i18n.t('24小时')
                 } else if (range === '3') {
-                    this[toggleRangeStr] = this.$t('近7天')
+                    if (toggleRangeStr === 'cpuToggleRangeStr') cpuToggleRangeStr.value = $i18n.t('近7天')
+                    if (toggleRangeStr === 'memToggleRangeStr') memToggleRangeStr.value = $i18n.t('近7天')
+                    if (toggleRangeStr === 'networkToggleRangeStr') networkToggleRangeStr.value = $i18n.t('近7天')
+                    if (toggleRangeStr === 'storageToggleRangeStr') storageToggleRangeStr.value = $i18n.t('近7天')
                 }
 
-                this.$refs[dropdownRef].hide()
-
-                let ref = null
+                const curRef = ref<any>(null)
                 if (idx === 'cpu_summary') {
-                    ref = this.$refs.cpuLine1
+                    curRef.value = cpuLine1.value
                 }
                 if (idx === 'mem') {
-                    ref = this.$refs.memoryLine1
+                    curRef.value = memoryLine1.value
                 }
                 if (idx === 'io') {
-                    ref = this.$refs.storageLine1
+                    curRef.value = storageLine1.value
                 }
                 if (idx === 'net') {
-                    ref = this.$refs.networkLine1
+                    curRef.value = networkLine1.value
                 }
-                ref && ref.showLoading({
-                    text: this.$t('正在加载中...'),
+                curRef.value && curRef.value.showLoading({
+                    text: $i18n.t('正在加载中...'),
                     color: '#30d878',
                     maskColor: 'rgba(255, 255, 255, 0.8)'
                 })
 
-                this.fetchDataK8S(idx, range)
-            },
-
-            /**
-             * 刷新当前 router
-             */
-            refreshCurRouter () {
-                typeof this.$parent.refreshRouterView === 'function' && this.$parent.refreshRouterView()
-            },
+                fetchDataK8S(idx, range)
+            }
 
             /**
              * 返回节点管理
              */
-            goNode () {
-                this.$router.back()
-                // const { params } = this.$route
-                // if (params.backTarget) {
-                //     this.$router.push({
-                //         name: params.backTarget,
-                //         params: {
-                //             projectId: this.projectId,
-                //             projectCode: this.projectCode
-                //         }
-                //     })
-                // } else {
-                //     this.$router.push({
-                //         name: 'clusterNode',
-                //         params: {
-                //             projectId: this.projectId,
-                //             projectCode: this.projectCode,
-                //             clusterId: this.clusterId
-                //         }
-                //     })
-                // }
-            },
+            const goNode = () => {
+                $router.back()
+            }
 
             /**
-             * 跳转到容器详情
-             *
-             * @param {Object} container 当前容器对象
+             * 获取pod数据
              */
-            async goContainerDetail (container) {
-                this.$router.push({
-                    name: 'containerDetailForNode',
+            const fetchPodData = async () => {
+                podLoading.value = true
+                const res = await $store.dispatch('cluster/fetchPodsData', {
+                    projectId: projectId.value,
+                    $clusterId: clusterId.value,
+                    $nodename: nodeInfo.value.nodename
+                })
+                podsData.value = res.data
+                podsWebAnnotations.value = res.webAnnotations
+                podsDataPagination.value.count = res.data.length
+                podLoading.value = false
+            }
+
+            const handlePageChange = (page) => {
+                podsDataPagination.value.current = page
+            }
+
+            const handlePageLimitChange = (limit) => {
+                podsDataPagination.value.limit = limit
+            }
+
+            const updateViewMode = () => {
+                localStorage.setItem('FEATURE_CLUSTER', 'done')
+                localStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id)
+                sessionStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id)
+                $store.commit('cluster/forceUpdateCurCluster', curCluster.value.cluster_id ? curCluster.value : {})
+                $store.commit('updateCurClusterId', curCluster.value.cluster_id)
+                $store.commit('updateViewMode', 'dashboard')
+                $store.dispatch('getFeatureFlag')
+            }
+
+            const gotoPodDetail = (row) => {
+                updateViewMode()
+                $router.push({
+                    name: 'dashboardWorkloadDetail',
                     params: {
-                        projectId: this.projectId,
-                        projectCode: this.projectCode,
-                        clusterId: this.clusterId,
-                        containerId: container.container_id,
-                        nodeId: this.nodeId
+                        category: 'pods',
+                        name: row.name,
+                        namespace: row.namespace
+                    },
+                    query: {
+                        kind: 'Pod'
                     }
                 })
-            },
+            }
 
-            tabChanged (name) {
-                if (this.tabActiveName === name) {
-                    return
-                }
-                this.tabActiveName = name
+            const handleDeleteResource = (row) => {
+                const { name, namespace } = row || {}
+                $bkInfo({
+                    type: 'warning',
+                    clsName: 'custom-info-confirm',
+                    title: $i18n.t('确认删除当前资源'),
+                    subTitle: `Pod ${name}`,
+                    defaultInfo: true,
+                    confirmFn: async () => {
+                        let result = false
+                        result = await $store.dispatch('dashboard/resourceDelete', {
+                            $namespaceId: namespace,
+                            $type: 'workloads',
+                            $category: 'pods',
+                            $name: name
+                        })
+                        result && $bkMessage({
+                            theme: 'success',
+                            message: $i18n.t('删除成功')
+                        })
+                        fetchPodData()
+                    }
+                })
+            }
 
-                clearTimeout(this.taskgroupTimer)
-                this.taskgroupTimer = null
-
-                this.openTaskgroup = Object.assign({}, {})
-
-                if (name === 'label') {
-                    this.labelList.splice(0, this.labelList.length, ...[])
-                    this.fetchLabel()
-                } else if (name === 'container') {
-                    this.containerTableList.splice(0, this.containerTableList.length, ...[])
-                    this.containerTablePageConf.curPage = 1
-                    this.fetchNodeContainers()
+            const handleUpdateResource = (row) => {
+                updateViewMode()
+                const { name, namespace, editMode } = row || {}
+                if (editMode === 'yaml') {
+                    $router.push({
+                        name: 'dashboardResourceUpdate',
+                        params: {
+                            namespace,
+                            name
+                        },
+                        query: {
+                            type: 'workloads',
+                            category: 'pods',
+                            kind: 'Pod'
+                        }
+                    })
+                } else {
+                    $router.push({
+                        name: 'dashboardFormResourceUpdate',
+                        params: {
+                            namespace,
+                            name
+                        },
+                        query: {
+                            type: 'workloads',
+                            category: 'pods',
+                            kind: 'Pod',
+                            formUpdate: podsWebAnnotations.value?.featureFlag?.FORM_CREATE
+                        }
+                    })
                 }
             }
+
+            onMounted(async () => {
+                cpuLine.value.series[0].data
+                    = memoryLine.value.series[0].data = memoryLine.value.series[1].data
+                    = networkLine.value.series[0].data = networkLine.value.series[1].data
+                    = storageLine.value.series[0].data = storageLine.value.series[1].data
+                    = [0]
+                nodeOverview.storage.series[0].data = [9, 0, 22, 40, 12, 31, 2, 12, 18, 27, 27]
+                cpuLine1.value && cpuLine1.value.showLoading({
+                    text: $i18n.t('正在加载中...'),
+                    color: '#30d878',
+                    maskColor: 'rgba(255, 255, 255, 0.8)'
+                })
+
+                memoryLine1.value && memoryLine1.value.showLoading({
+                    text: $i18n.t('正在加载中...'),
+                    color: '#30d878',
+                    maskColor: 'rgba(255, 255, 255, 0.8)'
+                })
+
+                storageLine1.value && storageLine1.value.showLoading({
+                    text: $i18n.t('正在加载中...'),
+                    color: '#30d878',
+                    maskColor: 'rgba(255, 255, 255, 0.8)'
+                })
+
+                networkLine1.value && networkLine1.value.showLoading({
+                    text: $i18n.t('正在加载中...'),
+                    color: '#30d878',
+                    maskColor: 'rgba(255, 255, 255, 0.8)'
+                })
+
+                await fetchNodeInfo()
+                await fetchPodData()
+                await fetchDataK8S('cpu_summary', '1')
+                await fetchDataK8S('mem', '1')
+                await fetchDataK8S('net', '1')
+                await fetchDataK8S('io', '1')
+            })
+
+            return {
+                memoryLine,
+                networkLine,
+                storageLine,
+                cpuChartOptsK8S,
+                memChartOptsK8S,
+                networkChartOptsK8S,
+                diskioChartOptsK8S,
+                cpuToggleRangeStr,
+                memToggleRangeStr,
+                networkToggleRangeStr,
+                storageToggleRangeStr,
+                nodeInfo,
+                podsData,
+                podsWebAnnotations,
+                podsDataPagination,
+                podLoading,
+                projectId,
+                clusterId,
+                projectCode,
+                nodeId,
+                curPodsData,
+                clusterList,
+                curCluster,
+                cpuLine1,
+                memoryLine1,
+                storageLine1,
+                networkLine1,
+                ...useLog(),
+                handlePageLimitChange,
+                handlePageChange,
+                toggleRange,
+                goNode,
+                gotoPodDetail,
+                handleDeleteResource,
+                handleUpdateResource
+            }
         }
-    }
+    })
 </script>
 
 <style scoped lang="postcss">
     @import '@/css/variable.css';
+    @import './pod-log.css';
 
     .biz-cluster-node-overview {
         padding: 20px;

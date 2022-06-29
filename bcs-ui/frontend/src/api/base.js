@@ -40,6 +40,7 @@ export const customResourceUpdate = request('put', `${CR_API_URL}/projects/$proj
 export const customResourceDelete = request('delete', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crd/$category/$name`) // 自定义资源删除
 export const reschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/reschedule`) // pod重新调度
 export const renderManifestPreview = request('post', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/render_manifest_preview`)
+export const fetchNodePodsData = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/nodes/$nodename/workloads/pods`)
 
 // apply hosts
 export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/')

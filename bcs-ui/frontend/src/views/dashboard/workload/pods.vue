@@ -58,7 +58,7 @@
                     </bk-table-column>
                     <bk-table-column :label="$t('操作')" :resizable="false" width="180">
                         <template #default="{ row }">
-                            <bk-button text @click="handleShowLog(row)">{{ $t('日志') }}</bk-button>
+                            <bk-button text @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
                             <bk-button text class="ml10" v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
                                 @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
                             <bk-button class="ml10" text v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"

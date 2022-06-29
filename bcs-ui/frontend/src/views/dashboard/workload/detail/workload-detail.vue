@@ -114,7 +114,7 @@
                         <bk-table-column :label="$t('操作')" width="140" :resizable="false">
                             <template #default="{ row }">
                                 <bk-button text :disabled="rescheduleStatusMap[row.metadata.name]"
-                                    @click="handleShowLog(row)">{{ $t('日志') }}</bk-button>
+                                    @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
                                 <bk-button class="ml10" :disabled="rescheduleStatusMap[row.metadata.name]"
                                     text @click="handleReschedule(row)">{{ $t('重新调度') }}</bk-button>
                             </template>

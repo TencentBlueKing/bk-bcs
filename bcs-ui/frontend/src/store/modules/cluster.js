@@ -21,7 +21,8 @@ import {
     getNodeTaints,
     setNodeTaints,
     fetchClusterList,
-    schedulerNode
+    schedulerNode,
+    fetchNodePodsData
 } from '@/api/base'
 
 export default {
@@ -1272,6 +1273,11 @@ export default {
                 `${DEVOPS_BCS_API_URL}/api/hosts/projects/${projectId}/disk_types/`,
                 config
             )
+        },
+
+        async fetchPodsData (context, params, config = {}) {
+            const data = fetchNodePodsData(params, { needRes: true }).catch(() => ([]))
+            return data
         }
     }
 }
