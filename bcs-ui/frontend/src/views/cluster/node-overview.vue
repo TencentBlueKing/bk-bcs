@@ -184,8 +184,24 @@
                         >
                             <bk-table-column :label="$t('名称')" min-width="130" sortable :resizable="false">
                                 <template #default="{ row }">
-                                    <bk-button v-if="podsWebAnnotations.perm.items[row.uid].detailBtn.clickable" class="bcs-button-ellipsis" text @click="gotoPodDetail(row)">{{ row.name }}</bk-button>
-                                    <span v-else>{{ row.name }}</span>
+                                    <bk-button
+                                        class="bcs-button-ellipsis"
+                                        text
+                                        v-authority="{
+                                            clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable,
+                                            actionId: 'namespace_scoped_view',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: clusterId,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click="gotoPodDetail(row)"
+                                    >
+                                        {{ row.name }}
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('命名空间')" min-width="100" sortable :resizable="false">
@@ -234,7 +250,23 @@
                             </bk-table-column>
                             <bk-table-column :label="$t('操作')" :resizable="false" width="180">
                                 <template #default="{ row }">
-                                    <bk-button text :disabled="!podsWebAnnotations.perm.items[row.uid].detailBtn.clickable" @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
+                                    <bk-button
+                                        text
+                                        v-authority="{
+                                            clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable,
+                                            actionId: 'namespace_scoped_view',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: clusterId,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click="handleShowLog(row, clusterId)"
+                                    >
+                                        {{ $t('日志') }}
+                                    </bk-button>
                                     <bk-button
                                         class="ml10"
                                         text
@@ -344,9 +376,10 @@
             const clusterId = computed(() => $route.params.clusterId)
             const projectCode = computed(() => $route.params.projectCode)
             const nodeId = computed(() => $route.params.nodeId)
+            const nodeName = computed(() => $route.params.nodeName)
             const curPodsData = computed(() => {
                 const { limit, current } = podsDataPagination.value
-                return podsData.value.slice(limit * (current - 1), limit * current)
+                return (podsData.value || []).slice(limit * (current - 1), limit * current)
             })
             const clusterList = computed(() => $store.state.cluster.clusterList || [])
             const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value))
@@ -802,8 +835,8 @@
                 const res = await $store.dispatch('cluster/fetchPodsData', {
                     $projectId: projectId.value,
                     $clusterId: clusterId.value,
-                    $nodename: nodeInfo.value.nodename
-                })
+                    $nodename: nodeName.value + '1'
+                }).catch(() => ({ data: [], webAnnotations: {} }))
                 podsData.value = res.data
                 podsWebAnnotations.value = res.webAnnotations
                 podsDataPagination.value.count = res.data.length

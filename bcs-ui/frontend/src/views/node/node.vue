@@ -789,6 +789,7 @@
                     name: 'clusterNodeOverview',
                     params: {
                         nodeId: row.inner_ip,
+                        nodeName: row.name,
                         clusterId: row.cluster_id
                     }
                 })
