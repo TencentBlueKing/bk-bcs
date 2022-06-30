@@ -184,8 +184,8 @@
                         >
                             <bk-table-column :label="$t('名称')" min-width="130" sortable :resizable="false">
                                 <template #default="{ row }">
-                                    <bk-button class="bcs-button-ellipsis" text v-authority="{ clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable }"
-                                        @click="gotoPodDetail(row)">{{ row.name }}</bk-button>
+                                    <bk-button v-if="podsWebAnnotations.perm.items[row.uid].detailBtn.clickable" class="bcs-button-ellipsis" text @click="gotoPodDetail(row)">{{ row.name }}</bk-button>
+                                    <span v-else>{{ row.name }}</span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('命名空间')" min-width="100" sortable :resizable="false">
@@ -234,12 +234,43 @@
                             </bk-table-column>
                             <bk-table-column :label="$t('操作')" :resizable="false" width="180">
                                 <template #default="{ row }">
-                                    <bk-button text v-authority="{ clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable }"
-                                        @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
-                                    <bk-button text class="ml10" v-authority="{ clickable: podsWebAnnotations.perm.items[row.uid].updateBtn.clickable }"
-                                        @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-                                    <bk-button class="ml10" text v-authority="{ clickable: !podsWebAnnotations.perm.items[row.uid].deleteBtn.clickable }"
-                                        @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+                                    <bk-button text :disabled="!podsWebAnnotations.perm.items[row.uid].detailBtn.clickable" @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
+                                    <bk-button
+                                        class="ml10"
+                                        text
+                                        v-authority="{
+                                            clickable: podsWebAnnotations.perm.items[row.uid].updateBtn.clickable,
+                                            actionId: 'namespace_scoped_update',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: clusterId,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click="handleUpdateResource(row)"
+                                    >
+                                        {{ $t('更新') }}
+                                    </bk-button>
+                                    <bk-button
+                                        class="ml10"
+                                        text
+                                        v-authority="{
+                                            clickable: podsWebAnnotations.perm.items[row.uid].deleteBtn.clickable,
+                                            actionId: 'namespace_scoped_delete',
+                                            resourceName: row.namespace,
+                                            disablePerms: true,
+                                            permCtx: {
+                                                project_id: projectId,
+                                                cluster_id: clusterId,
+                                                name: row.namespace
+                                            }
+                                        }"
+                                        @click="handleDeleteResource(row)"
+                                    >
+                                        {{ $t('删除') }}
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -769,7 +800,7 @@
             const fetchPodData = async () => {
                 podLoading.value = true
                 const res = await $store.dispatch('cluster/fetchPodsData', {
-                    projectId: projectId.value,
+                    $projectId: projectId.value,
                     $clusterId: clusterId.value,
                     $nodename: nodeInfo.value.nodename
                 })
@@ -863,8 +894,7 @@
                         query: {
                             type: 'workloads',
                             category: 'pods',
-                            kind: 'Pod',
-                            formUpdate: podsWebAnnotations.value?.featureFlag?.FORM_CREATE
+                            kind: 'Pod'
                         }
                     })
                 }
