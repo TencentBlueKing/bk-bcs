@@ -333,7 +333,7 @@ export default defineComponent({
                 query: {
                     type: type.value,
                     category: category.value,
-                    kind: kind.value,
+                    kind: currentCrdExt.value.kind,
                     crd: currentCrd.value,
                     formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                 }
@@ -341,6 +341,7 @@ export default defineComponent({
         }
         // 创建资源（表单模式）
         const handleCreateFormResource = () => {
+            const curKind = currentCrdExt.value.kind || kind.value
             $router.push({
                 name: 'dashboardFormResourceUpdate',
                 params: {
@@ -349,7 +350,7 @@ export default defineComponent({
                 query: {
                     type: type.value,
                     category: category.value,
-                    kind: kind.value,
+                    kind: curKind,
                     crd: currentCrd.value,
                     formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                 }
@@ -636,7 +637,8 @@ export default defineComponent({
                             renderCrdHeader: this.renderCrdHeader,
                             pagePerms: this.pagePerms,
                             additionalColumns: this.additionalColumns,
-                            namespaceDisabled: this.namespaceDisabled
+                            namespaceDisabled: this.namespaceDisabled,
+                            webAnnotations: this.webAnnotations
                         })
                     }
                 </div>

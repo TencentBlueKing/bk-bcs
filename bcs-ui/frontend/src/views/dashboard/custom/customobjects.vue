@@ -1,7 +1,7 @@
 <template>
     <BaseLayout title="CustomObjects" kind="CustomObject" type="crd" category="custom_objects" default-active-detail-type="yaml" show-crd :show-detail-tab="false">
         <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleUpdateResource, handleDeleteResource,
-                              handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, pagePerms, namespaceDisabled }">
+                              handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, pagePerms, namespaceDisabled, webAnnotations }">
             <bk-table
                 :data="curPageData"
                 :pagination="pageConf"
@@ -31,6 +31,14 @@
                 <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
                     <template #default="{ row }">
                         <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">{{ handleGetExtData(row.metadata.uid, 'age') }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column v-if="webAnnotations.featureFlag && webAnnotations.featureFlag.FORM_CREATE" :label="$t('编辑模式')" width="100">
+                    <template slot-scope="{ row }">
+                        <span>
+                            {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
+                                ? $t('表单') : 'YAML'}}
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t('操作')" :resizable="false" width="150">

@@ -24,7 +24,7 @@
                 </bk-table-column>
                 <bk-table-column label="ApiVersion" :resizable="false">
                     <template #default="{ row }">
-                        <span>{{ handleGetExtData(row.metadata.uid, 'api_version') }}</span>
+                        <span>{{ handleGetExtData(row.metadata.uid, 'apiVersion') }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">

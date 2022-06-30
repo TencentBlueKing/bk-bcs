@@ -417,7 +417,7 @@
                     result = await this.$store.dispatch('dashboard/customResourceCreate', {
                         $crd: this.crd,
                         $category: this.category,
-                        format: 'manifest',
+                        format: 'formData',
                         rawData: this.schemaFormData
                     }).catch(err => {
                         console.error(err)
