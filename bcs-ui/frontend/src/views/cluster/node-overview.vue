@@ -835,7 +835,7 @@
                 const res = await $store.dispatch('cluster/fetchPodsData', {
                     $projectId: projectId.value,
                     $clusterId: clusterId.value,
-                    $nodename: nodeName.value + '1'
+                    $nodename: nodeName.value
                 }).catch(() => ({ data: [], webAnnotations: {} }))
                 podsData.value = res.data
                 podsWebAnnotations.value = res.webAnnotations

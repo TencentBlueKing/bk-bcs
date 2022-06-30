@@ -25,12 +25,12 @@
                 </bk-table-column>
                 <bk-table-column label="MinPods" :resizable="false">
                     <template #default="{ row }">
-                        <span>{{ handleGetExtData(row.metadata.uid, 'min_pods') }}</span>
+                        <span>{{ handleGetExtData(row.metadata.uid, 'minPods') }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="MaxPods" :resizable="false">
                     <template #default="{ row }">
-                        <span>{{ handleGetExtData(row.metadata.uid, 'max_pods') }}</span>
+                        <span>{{ handleGetExtData(row.metadata.uid, 'maxPods') }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="Replicas" :resizable="false">

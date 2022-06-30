@@ -18,11 +18,11 @@
             </div>
             <div class="basic-info-item">
                 <label>MinPods</label>
-                <span>{{ extData.min_pods }}</span>
+                <span>{{ extData.minPods }}</span>
             </div>
             <div class="basic-info-item">
                 <label>MaxPods</label>
-                <span>{{ extData.max_pods }}</span>
+                <span>{{ extData.maxPods }}</span>
             </div>
             <div class="basic-info-item">
                 <label>Replicas</label>
