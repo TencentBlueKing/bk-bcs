@@ -1,7 +1,7 @@
 <template>
     <div class="biz-content">
         <BaseLayout title="Pods" kind="Pod" category="pods" type="workloads">
-            <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource, pagePerms }">
+            <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
                 <bk-table
                     :data="curPageData"
                     :pagination="pageConf"
@@ -59,9 +59,9 @@
                     <bk-table-column :label="$t('操作')" :resizable="false" width="180">
                         <template #default="{ row }">
                             <bk-button text @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
-                            <bk-button text class="ml10" v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
+                            <bk-button text class="ml10"
                                 @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-                            <bk-button class="ml10" text v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
+                            <bk-button class="ml10" text
                                 @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
                         </template>
                     </bk-table-column>

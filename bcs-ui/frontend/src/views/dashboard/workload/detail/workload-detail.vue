@@ -17,10 +17,8 @@
                     <bk-button theme="primary" @click="handleShowYamlPanel">To YAML</bk-button>
                     <template v-if="!hiddenOperate">
                         <bk-button theme="primary"
-                            v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
                             @click="handleUpdateResource">{{$t('更新')}}</bk-button>
                         <bk-button theme="danger"
-                            v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
                             @click="handleDeleteResource">{{$t('删除')}}</bk-button>
                     </template>
                 </div>
@@ -244,7 +242,6 @@
                 manifestExt,
                 yaml,
                 showYamlPanel,
-                pagePerms,
                 handleGetDetail,
                 handleShowYamlPanel,
                 handleUpdateResource,
@@ -413,7 +410,6 @@
                 podLoading,
                 yaml,
                 showYamlPanel,
-                pagePerms,
                 rescheduleStatusMap,
                 projectId,
                 clusterId,

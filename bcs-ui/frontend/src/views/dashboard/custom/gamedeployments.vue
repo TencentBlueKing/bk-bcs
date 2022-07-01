@@ -2,7 +2,7 @@
     <BaseLayout title="GameDeployments" kind="GameDeployment" type="crd" category="custom_objects" default-crd="gamedeployments.tkex.tencent.com"
         default-active-detail-type="yaml" :show-detail-tab="false" :show-crd="false">
         <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleUpdateResource,
-                              handleDeleteResource,handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, pagePerms }">
+                              handleDeleteResource,handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, webAnnotations }">
             <bk-table
                 :data="curPageData"
                 :pagination="pageConf"
@@ -44,9 +44,14 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('操作')" :resizable="false" width="150">
                     <template #default="{ row }">
-                        <bk-button text v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
+                        <bk-button text
                             @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-                        <bk-button class="ml10" text v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
+                        <bk-button class="ml10" text
+                            v-authority="{
+                                clickable: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
+                                content: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
+                                disablePerms: true
+                            }"
                             @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
                     </template>
                 </bk-table-column>

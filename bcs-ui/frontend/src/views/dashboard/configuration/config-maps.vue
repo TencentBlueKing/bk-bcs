@@ -1,6 +1,6 @@
 <template>
     <BaseLayout title="ConfigMaps" kind="ConfigMap" category="configmaps" type="configs">
-        <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleSortChange, handleShowDetail, handleUpdateResource, handleDeleteResource, pagePerms }">
+        <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleSortChange, handleShowDetail, handleUpdateResource, handleDeleteResource }">
             <bk-table
                 :data="curPageData"
                 :pagination="pageConf"
@@ -25,9 +25,9 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('操作')" :resizable="false" width="150">
                     <template #default="{ row }">
-                        <bk-button text v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
+                        <bk-button text
                             @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-                        <bk-button class="ml10" text v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
+                        <bk-button class="ml10" text
                             @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
                     </template>
                 </bk-table-column>

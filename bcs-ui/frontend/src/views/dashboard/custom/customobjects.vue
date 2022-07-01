@@ -1,7 +1,7 @@
 <template>
     <BaseLayout title="CustomObjects" kind="CustomObject" type="crd" category="custom_objects" default-active-detail-type="yaml" show-crd :show-detail-tab="false">
         <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleUpdateResource, handleDeleteResource,
-                              handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, pagePerms, namespaceDisabled, webAnnotations }">
+                              handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, namespaceDisabled, webAnnotations }">
             <bk-table
                 :data="curPageData"
                 :pagination="pageConf"
@@ -43,9 +43,14 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('操作')" :resizable="false" width="150">
                     <template #default="{ row }">
-                        <bk-button text v-authority="{ clickable: pagePerms.update.clickable, content: pagePerms.update.tip }"
+                        <bk-button text
                             @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-                        <bk-button class="ml10" text v-authority="{ clickable: pagePerms.delete.clickable, content: pagePerms.delete.tip }"
+                        <bk-button class="ml10" text
+                            v-authority="{
+                                clickable: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
+                                content: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
+                                disablePerms: true
+                            }"
                             @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
                     </template>
                 </bk-table-column>

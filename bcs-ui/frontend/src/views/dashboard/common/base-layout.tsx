@@ -195,13 +195,6 @@ export default defineComponent({
             subscribe && handleStartSubscribe()
         }
 
-        const pagePerms = computed(() => { // 界面权限
-            return {
-                create: webAnnotations.value.perms?.page?.create_btn || {},
-                delete: webAnnotations.value.perms?.page?.delete_btn || {},
-                update: webAnnotations.value.perms?.page?.update_btn || {}
-            }
-        })
         const additionalColumns = computed(() => { // 动态表格字段
             return webAnnotations.value.additionalColumns || []
         })
@@ -456,7 +449,6 @@ export default defineComponent({
             yaml,
             detailType,
             isLoading,
-            pagePerms,
             pageConf: pagination,
             nameValue: searchValue,
             data,
@@ -521,10 +513,6 @@ export default defineComponent({
                 }
                 return (
                     <bk-button
-                        v-authority={{
-                            clickable: this.pagePerms.create?.clickable,
-                            content: this.pagePerms.create?.tip || this.crdTips || this.$t('无权限')
-                        }}
                         class="resource-create"
                         icon="plus"
                         theme="primary"
@@ -635,7 +623,6 @@ export default defineComponent({
                             handleDeleteResource: this.handleDeleteResource,
                             getJsonPathValue: this.getJsonPathValue,
                             renderCrdHeader: this.renderCrdHeader,
-                            pagePerms: this.pagePerms,
                             additionalColumns: this.additionalColumns,
                             namespaceDisabled: this.namespaceDisabled,
                             webAnnotations: this.webAnnotations

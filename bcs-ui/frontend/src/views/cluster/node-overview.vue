@@ -188,7 +188,7 @@
                                         class="bcs-button-ellipsis"
                                         text
                                         v-authority="{
-                                            clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable,
+                                            clickable: podsWebAnnotations.perms.items[row.uid].detailBtn.clickable,
                                             actionId: 'namespace_scoped_view',
                                             resourceName: row.namespace,
                                             disablePerms: true,
@@ -253,7 +253,7 @@
                                     <bk-button
                                         text
                                         v-authority="{
-                                            clickable: podsWebAnnotations.perm.items[row.uid].detailBtn.clickable,
+                                            clickable: podsWebAnnotations.perms.items[row.uid].detailBtn.clickable,
                                             actionId: 'namespace_scoped_view',
                                             resourceName: row.namespace,
                                             disablePerms: true,
@@ -271,7 +271,7 @@
                                         class="ml10"
                                         text
                                         v-authority="{
-                                            clickable: podsWebAnnotations.perm.items[row.uid].updateBtn.clickable,
+                                            clickable: podsWebAnnotations.perms.items[row.uid].updateBtn.clickable,
                                             actionId: 'namespace_scoped_update',
                                             resourceName: row.namespace,
                                             disablePerms: true,
@@ -289,7 +289,7 @@
                                         class="ml10"
                                         text
                                         v-authority="{
-                                            clickable: podsWebAnnotations.perm.items[row.uid].deleteBtn.clickable,
+                                            clickable: podsWebAnnotations.perms.items[row.uid].deleteBtn.clickable,
                                             actionId: 'namespace_scoped_delete',
                                             resourceName: row.namespace,
                                             disablePerms: true,
