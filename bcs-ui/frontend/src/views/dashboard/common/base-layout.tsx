@@ -234,7 +234,7 @@ export default defineComponent({
         const apiVersion = computed(() => {
             return ['GameDeployment', 'GameStatefulSet'].includes(kind.value) ? 'tkex.tencent.com/v1alpha1' : currentCrdExt.value.api_version
         })
-        
+
         const handleStartSubscribe = () => {
             // 自定义的CRD订阅时必须传apiVersion
             // eslint-disable-next-line @typescript-eslint/camelcase
@@ -317,6 +317,7 @@ export default defineComponent({
         })
         // 创建资源
         const handleCreateResource = () => {
+            const curKind = currentCrdExt.value.kind || kind.value
             $router.push({
                 name: 'dashboardResourceUpdate',
                 params: {
@@ -326,7 +327,7 @@ export default defineComponent({
                 query: {
                     type: type.value,
                     category: category.value,
-                    kind: currentCrdExt.value.kind,
+                    kind: curKind,
                     crd: currentCrd.value,
                     formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE
                 }
