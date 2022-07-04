@@ -198,22 +198,22 @@
             const demoConfig = `apiVersion: v1
 kind: Config
 clusters:
-  - cluster:
+- cluster:
     # 独立集群使用的server地址
     server: '\${bcs_api_host}/clusters/\${cluster_id}/'
     # 共享集群使用的server地址，\${cluster_id}为共享集群ID
     # server: '\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/'
-    name: '\${cluster_id}'
+  name: '\${cluster_id}'
 contexts:
-  - context:
-      cluster: '\${cluster_id}'
-      user: '\${username}'
-    name: BCS
+- context:
+    cluster: '\${cluster_id}'
+    user: '\${username}'
+  name: BCS
 current-context: BCS
 users:
-  - name: '\${username}'
-    user:
-      token: '\${token}'`
+- name: '\${username}'
+  user:
+    token: '\${token}'`
             const demoConfigExample = ref(demoConfig
                 .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
