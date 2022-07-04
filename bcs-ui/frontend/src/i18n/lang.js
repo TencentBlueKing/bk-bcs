@@ -2825,5 +2825,7 @@ export default {
     ],
     "确认资源更新": [
         "Confirm resource update"
-    ]
+    ],
+    "表单": ["Form"],
+    "编辑模式": ["Edit mode"]
 }

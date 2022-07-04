@@ -19,6 +19,15 @@
                         {{ row.metadata.namespace || '--' }}
                     </template>
                 </bk-table-column>
+                <bk-table-column :label="$t('升级策略')" width="150" :resizable="false">
+                    <template slot-scope="{ row }">
+                        <span v-if="row.spec.updateStrategy">
+                            {{ row.spec.updateStrategy.type === 'RollingUpdate'
+                                ? $t('滚动升级') : $t('原地升级') }}
+                        </span>
+                        <span v-else>--</span>
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     v-for="item in additionalColumns"
                     :key="item.name"

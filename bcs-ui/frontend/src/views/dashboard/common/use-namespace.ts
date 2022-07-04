@@ -63,10 +63,11 @@ export function useSelectItemsNamespace (ctx: SetupContext) {
     const namespaceLoading = ref(false)
     const namespaceList = ref<ILabel[]>([])
 
-    const getNamespaceData = async (): Promise<ISubscribeData> => {
+    const getNamespaceData = async ({ clusterId }): Promise<ISubscribeData> => {
         namespaceLoading.value = true
         const data = await $store.dispatch('dashboard/getNamespaceList', {
-            format: "selectItems"
+            format: "selectItems",
+            $clusterId: clusterId
         })
         namespaceList.value = data.selectItems || []
         // 初始化默认选中命名空间

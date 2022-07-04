@@ -175,6 +175,29 @@
                 </div>
                 <bcs-tab class="mt20" :active.sync="activePanel" type="card" :label-height="40">
                     <bcs-tab-panel name="pod" label="Pod">
+                        <div class="layout-header">
+                            <div></div>
+                            <div class="select-wrapper">
+                                <span class="select-prefix">{{$t('命名空间')}}</span>
+                                <bcs-select
+                                    class="namespaces-select"
+                                    v-model="namespaceValue"
+                                    :loading="namespaceLoading"
+                                    searchable
+                                    :clearable="false"
+                                    :placeholder="$t('请选择命名空间')"
+                                >
+                                    <bcs-option v-for="option in namespaceList" :key="option.value" :id="option.value" :name="option.label"></bcs-option>
+                                </bcs-select>
+                                <bk-input
+                                    class="search-input ml5"
+                                    clearable
+                                    v-model="searchValue"
+                                    right-icon="bk-icon icon-search"
+                                    :placeholder="$t('输入名称搜索')">
+                                </bk-input>
+                            </div>
+                        </div>
                         <bk-table
                             :data="curPodsData"
                             :pagination="podsDataPagination"
@@ -337,6 +360,7 @@
     import BaseLayout from '@/views/dashboard/common/base-layout'
     import BcsLog from '@/components/bcs-log/index'
     import useLog from '@/views/dashboard/workload/detail/use-log'
+    import { useSelectItemsNamespace } from '@/views/dashboard/common/use-namespace'
 
     import { nodeOverview } from '@/common/chart-option'
     import { catchErrorHandler, formatBytes } from '@/common/util'
@@ -371,7 +395,10 @@
             const memoryLine1 = ref<any>(null)
             const storageLine1 = ref<any>(null)
             const networkLine1 = ref<any>(null)
-
+            const searchValue = ref('')
+            // 获取命名空间
+            const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace(ctx)
+            
             const projectId = computed(() => $route.params.projectId)
             const clusterId = computed(() => $route.params.clusterId)
             const projectCode = computed(() => $route.params.projectCode)
@@ -379,7 +406,9 @@
             const nodeName = computed(() => $route.params.nodeName)
             const curPodsData = computed(() => {
                 const { limit, current } = podsDataPagination.value
-                return (podsData.value || []).slice(limit * (current - 1), limit * current)
+                const curData = podsData.value.filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value))
+                podsDataPagination.value.count = curData.length
+                return (curData || []).slice(limit * (current - 1), limit * current)
             })
             const clusterList = computed(() => $store.state.cluster.clusterList || [])
             const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value))
@@ -837,10 +866,9 @@
                     $clusterId: clusterId.value,
                     $nodename: nodeName.value
                 }).catch(() => ({ data: [], webAnnotations: {} }))
+                podLoading.value = false
                 podsData.value = res.data
                 podsWebAnnotations.value = res.webAnnotations
-                podsDataPagination.value.count = res.data.length
-                podLoading.value = false
             }
 
             const handlePageChange = (page) => {
@@ -868,7 +896,11 @@
                     params: {
                         category: 'pods',
                         name: row.name,
-                        namespace: row.namespace
+                        namespace: row.namespace,
+                        clusterId: clusterId.value,
+                        nodeId: nodeId.value,
+                        nodeName: nodeName.value,
+                        from: 'nodePods'
                     },
                     query: {
                         kind: 'Pod'
@@ -964,12 +996,15 @@
                     maskColor: 'rgba(255, 255, 255, 0.8)'
                 })
 
-                await fetchNodeInfo()
-                await fetchPodData()
-                await fetchDataK8S('cpu_summary', '1')
-                await fetchDataK8S('mem', '1')
-                await fetchDataK8S('net', '1')
-                await fetchDataK8S('io', '1')
+                fetchNodeInfo()
+                fetchDataK8S('cpu_summary', '1')
+                fetchDataK8S('mem', '1')
+                fetchDataK8S('net', '1')
+                fetchDataK8S('io', '1')
+                getNamespaceData({
+                    clusterId: clusterId.value
+                })
+                fetchPodData()
             })
 
             return {
@@ -1000,6 +1035,10 @@
                 memoryLine1,
                 storageLine1,
                 networkLine1,
+                namespaceLoading,
+                namespaceValue,
+                namespaceList,
+                searchValue,
                 ...useLog(),
                 handlePageLimitChange,
                 handlePageChange,
@@ -1202,5 +1241,27 @@
             }
         }
     }
-
+    .layout-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    .select-wrapper {
+        display: flex;
+        .select-prefix {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            border: 1px solid #c4c6cc;
+            margin-right: -1px;
+            font-size: 12px;
+        }
+        .namespaces-select {
+            width: 200px;
+        }
+        .search-input {
+            width: 250px;
+        }
+    }
 </style>

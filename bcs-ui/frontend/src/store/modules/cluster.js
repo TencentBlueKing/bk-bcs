@@ -1276,7 +1276,7 @@ export default {
         },
 
         async fetchPodsData (context, params, config = {}) {
-            const data = fetchNodePodsData(params, { needRes: true }).catch(() => ([]))
+            const data = fetchNodePodsData(params, { needRes: true })
             return data
         }
     }

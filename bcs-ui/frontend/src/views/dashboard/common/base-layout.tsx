@@ -105,6 +105,9 @@ export default defineComponent({
         const customCrd = computed(() => {
             return (type.value === 'crd' && kind.value !== 'CustomResourceDefinition')
         })
+        const clusterId = computed(() => {
+            return $store.state.curClusterId
+        })
         const handleGetCrdData = async () => {
             crdLoading.value = true
             const res = await fetchCRDData()
@@ -425,7 +428,9 @@ export default defineComponent({
             const list: Promise<any>[] = []
             // 获取命名空间下拉列表
             if (showNameSpace.value) {
-                list.push(getNamespaceData())
+                list.push(getNamespaceData({
+                    clusterId: clusterId.value
+                }))
             }
 
             // 获取CRD下拉列表

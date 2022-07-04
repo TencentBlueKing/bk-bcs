@@ -10,7 +10,8 @@
     </div>
 </template>
 <script lang="ts">
-    import { defineComponent, toRefs } from '@vue/composition-api'
+    import { defineComponent, toRefs, computed } from '@vue/composition-api'
+    import { BCS_CLUSTER } from '@/common/constant'
 
     export default defineComponent({
         name: 'DetailTopNav',
@@ -18,14 +19,57 @@
             titles: {
                 type: Array,
                 default: () => []
+            },
+            from: {
+                type: String,
+                default: ''
+            },
+            clusterId: {
+                type: String,
+                default: ''
+            },
+            nodeId: {
+                type: String,
+                default: ''
+            },
+            nodeName: {
+                type: String,
+                default: ''
             }
         },
         setup (props, ctx) {
-            const { titles } = toRefs(props)
+            const { $router, $store } = ctx.root
+            const { titles, clusterId, from, nodeId, nodeName } = toRefs(props)
+
+            const clusterList = computed(() => $store.state.cluster.clusterList || [])
+            const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value))
+
             const handleBack = () => {
+                if (from.value === 'nodePods') {
+                    updateViewMode()
+                    $router.push({
+                        name: 'clusterNodeOverview',
+                        params: {
+                            nodeId: nodeId.value,
+                            nodeName: nodeName.value,
+                            clusterId: clusterId.value
+                        }
+                    })
+                    return false
+                }
                 const index = titles.value.length - 2
                 if (!titles.value[index]) return
                 routeHop(titles.value[index], index)
+            }
+
+            const updateViewMode = () => {
+                localStorage.setItem('FEATURE_CLUSTER', 'done')
+                localStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id)
+                sessionStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id)
+                $store.commit('cluster/forceUpdateCurCluster', curCluster.value.cluster_id ? curCluster.value : {})
+                $store.commit('updateCurClusterId', curCluster.value.cluster_id)
+                $store.commit('updateViewMode', 'cluster')
+                $store.dispatch('getFeatureFlag')
             }
 
             const routeHop = (item, index) => {
