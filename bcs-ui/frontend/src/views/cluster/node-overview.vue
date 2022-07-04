@@ -186,8 +186,9 @@
                                     searchable
                                     :clearable="false"
                                     :placeholder="$t('请选择命名空间')"
+                                    @selected="handleNamespaceSelected"
                                 >
-                                    <bcs-option v-for="option in namespaceList" :key="option.value" :id="option.value" :name="option.label"></bcs-option>
+                                    <bcs-option v-for="option in curNamespceList" :key="option.value" :id="option.value" :name="option.label"></bcs-option>
                                 </bcs-select>
                                 <bk-input
                                     class="search-input ml5"
@@ -397,7 +398,8 @@
             const networkLine1 = ref<any>(null)
             const searchValue = ref('')
             // 获取命名空间
-            const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace(ctx)
+            const namespaceValue = ref('all')
+            const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace(ctx)
             
             const projectId = computed(() => $route.params.projectId)
             const clusterId = computed(() => $route.params.clusterId)
@@ -406,13 +408,25 @@
             const nodeName = computed(() => $route.params.nodeName)
             const curPodsData = computed(() => {
                 const { limit, current } = podsDataPagination.value
-                const curData = podsData.value.filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value))
+                let curData = []
+                if (namespaceValue.value === 'all') {
+                    curData = podsData.value.filter(i => i.name.includes(searchValue.value))
+                } else {
+                    curData = podsData.value.filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value))
+                }
                 podsDataPagination.value.count = curData.length
-                return (curData || []).slice(limit * (current - 1), limit * current)
+                return curData.slice(limit * (current - 1), limit * current)
             })
             const clusterList = computed(() => $store.state.cluster.clusterList || [])
             const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value))
-
+            const curNamespceList = computed(() => {
+                const list = namespaceList.value
+                list.unshift({
+                    label: `${$i18n.t('全部命名空间')}`,
+                    value: 'all'
+                })
+                return list
+            })
             /**
              * 获取上方的信息
              */
@@ -964,6 +978,10 @@
                     })
                 }
             }
+            
+            const handleNamespaceSelected = (val) => {
+                namespaceValue.value = val
+            }
 
             onMounted(async () => {
                 cpuLine.value.series[0].data
@@ -1038,6 +1056,7 @@
                 namespaceLoading,
                 namespaceValue,
                 namespaceList,
+                curNamespceList,
                 searchValue,
                 ...useLog(),
                 handlePageLimitChange,
@@ -1046,7 +1065,8 @@
                 goNode,
                 gotoPodDetail,
                 handleDeleteResource,
-                handleUpdateResource
+                handleUpdateResource,
+                handleNamespaceSelected
             }
         }
     })

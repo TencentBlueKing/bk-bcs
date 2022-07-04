@@ -45,7 +45,7 @@
             const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value))
 
             const handleBack = () => {
-                if (from.value === 'nodePods') {
+                if (from.value === 'nodePods' && titles.value.length === 2) {
                     updateViewMode()
                     $router.push({
                         name: 'clusterNodeOverview',

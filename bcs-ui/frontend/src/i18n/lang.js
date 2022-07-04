@@ -2827,5 +2827,6 @@ export default {
         "Confirm resource update"
     ],
     "表单": ["Form"],
-    "编辑模式": ["Edit mode"]
+    "编辑模式": ["Edit mode"],
+    "全部命名空间": ["All namespaces"]
 }

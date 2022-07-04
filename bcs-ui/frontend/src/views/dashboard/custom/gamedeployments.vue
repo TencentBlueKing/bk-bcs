@@ -25,7 +25,7 @@
                             {{ row.spec.updateStrategy.type === 'RollingUpdate'
                                 ? $t('滚动升级') : $t('原地升级') }}
                         </span>
-                        <span v-else>--</span>
+                        <span v-else>{{ $t('滚动升级') }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column
