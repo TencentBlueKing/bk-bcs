@@ -205,17 +205,19 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	}
 
 	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":         0,
-		"project_id":  1,
-		"business_id": 1,
-		"metrics":     1,
-		"label":       1,
+		"_id":          0,
+		"project_id":   1,
+		"project_code": 1,
+		"business_id":  1,
+		"metrics":      1,
+		"label":        1,
 	}}, map[string]interface{}{"$group": map[string]interface{}{
-		"_id":         nil,
-		"project_id":  map[string]interface{}{"$first": "$project_id"},
-		"business_id": map[string]interface{}{"$max": "$business_id"},
-		"metrics":     map[string]interface{}{"$push": "$metrics"},
-		"label":       map[string]interface{}{"$first": "$label"},
+		"_id":          nil,
+		"project_id":   map[string]interface{}{"$first": "$project_id"},
+		"project_code": map[string]interface{}{"$max": "$project_code"},
+		"business_id":  map[string]interface{}{"$max": "$business_id"},
+		"metrics":      map[string]interface{}{"$push": "$metrics"},
+		"label":        map[string]interface{}{"$max": "$label"},
 	}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &projectMetricsMap)
 	if err != nil {
@@ -258,13 +260,15 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.Pro
 			newMetrics := make([]*types.ProjectMetrics, 0)
 			newMetrics = append(newMetrics, metrics)
 			newProjectBucket := &types.ProjectData{
-				CreateTime: primitive.NewDateTimeFromTime(time.Now()),
-				UpdateTime: primitive.NewDateTimeFromTime(time.Now()),
-				BucketTime: bucketTime,
-				Dimension:  opts.Dimension,
-				ProjectID:  opts.ProjectID,
-				BusinessID: opts.BusinessID,
-				Metrics:    newMetrics,
+				CreateTime:  primitive.NewDateTimeFromTime(time.Now()),
+				UpdateTime:  primitive.NewDateTimeFromTime(time.Now()),
+				BucketTime:  bucketTime,
+				Dimension:   opts.Dimension,
+				ProjectID:   opts.ProjectID,
+				ProjectCode: opts.ProjectCode,
+				BusinessID:  opts.BusinessID,
+				Metrics:     newMetrics,
+				Label:       opts.Label,
 			}
 			m.preAggregate(newProjectBucket, metrics)
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{newProjectBucket})
@@ -317,12 +321,13 @@ func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *types.JobCom
 func (m *ModelProject) generateProjectResponse(metricSlice []*types.ProjectMetrics,
 	data *types.ProjectData, startTime, endTime string) *bcsdatamanager.Project {
 	response := &bcsdatamanager.Project{
-		ProjectID:  data.ProjectID,
-		BusinessID: data.BusinessID,
-		StartTime:  startTime,
-		EndTime:    endTime,
-		Metrics:    nil,
-		Label:      data.Label,
+		ProjectID:   data.ProjectID,
+		ProjectCode: data.ProjectCode,
+		BusinessID:  data.BusinessID,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Metrics:     nil,
+		Label:       data.Label,
 	}
 	responseMetrics := make([]*bcsdatamanager.ProjectMetrics, 0)
 	for _, metric := range metricSlice {
