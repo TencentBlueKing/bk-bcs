@@ -247,6 +247,7 @@ func (c *Clb) batchCreateSegment4LayerListener(
 		if err != nil {
 			blog.Warnf("create 4 layer listener %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
 			failedListenerNameMap[li.GetName()] = struct{}{}
+			continue
 		}
 		successListenerNameMap[li.GetName()] = listenerID
 	}

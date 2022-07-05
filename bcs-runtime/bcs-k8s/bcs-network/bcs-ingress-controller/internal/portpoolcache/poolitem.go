@@ -68,6 +68,11 @@ func (cpi *CachePoolItem) SetStatus(status string) {
 	cpi.Status = status
 }
 
+// SetItemsStatus set itemStatus of pool cache status
+func (cpi *CachePoolItem) SetItemsStatus(itemStatus *networkextensionv1.PortPoolItemStatus) {
+	cpi.ItemStatus = itemStatus
+}
+
 // IncreaseEndPort increase end port
 func (cpi *CachePoolItem) IncreaseEndPort(endPort int) error {
 	for protocol, list := range cpi.PortListMap {

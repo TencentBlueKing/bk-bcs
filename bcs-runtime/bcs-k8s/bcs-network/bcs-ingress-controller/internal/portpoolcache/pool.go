@@ -85,6 +85,14 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 			if item.Status != itemStatus.Status {
 				item.SetStatus(itemStatus.Status)
 			}
+			if item.ItemStatus == nil {
+				item.SetItemsStatus(itemStatus)
+				return nil
+			}
+			if item.ItemStatus.Status != itemStatus.Status {
+				item.SetItemsStatus(itemStatus)
+				return nil
+			}
 			if itemStatus.EndPort > item.ItemStatus.EndPort {
 				return item.IncreaseEndPort(int(itemStatus.EndPort))
 			}

@@ -277,10 +277,12 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 	if err != nil {
 		blog.Warnf("delete listeners failed, requeue listeners")
 		for _, li := range listeners {
-			h.eventQueue.AddRateLimited(k8stypes.NamespacedName{
+			obj := k8stypes.NamespacedName{
 				Namespace: li.GetNamespace(),
 				Name:      li.GetName(),
-			})
+			}
+			h.eventQueue.AddRateLimited(obj)
+			h.eventQueue.Done(obj)
 		}
 		return
 	}
@@ -290,10 +292,12 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 		if err != nil {
 			blog.Warnf("failed to remove finalizer from listener %s/%s, err %s",
 				li.GetNamespace(), li.GetName(), err.Error())
-			h.eventQueue.AddRateLimited(k8stypes.NamespacedName{
+			obj := k8stypes.NamespacedName{
 				Namespace: li.GetNamespace(),
 				Name:      li.GetName(),
-			})
+			}
+			h.eventQueue.AddRateLimited(obj)
+			h.eventQueue.Done(obj)
 		}
 	}
 	for _, li := range listeners {
