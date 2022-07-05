@@ -85,7 +85,7 @@
                     </bcs-select>
                 </div>
                 <div class="container-network-item">
-                    <div>{{ $t('单节点Pod数量上限') }}</div>
+                    <span class="pod-tips" v-bk-tooltips="$t('单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写')">{{ $t('单节点Pod数量上限') }}</span>
                     <bcs-select class="w240" v-model="formData.networkSettings.maxNodePodNum" :clearable="false">
                         <bcs-option v-for="item in nodePodNumList" :key="item" :id="item" :name="item"></bcs-option>
                     </bcs-select>
@@ -312,6 +312,11 @@
     max-width: 600px;
     .container-network-item {
         margin-bottom: 16px;
+        .pod-tips {
+            cursor: pointer;
+            border-bottom: 1px dashed #979ba5;
+            padding-bottom: 1px;
+        }
         .w240 {
             width: 240px;
             background-color: #fff;

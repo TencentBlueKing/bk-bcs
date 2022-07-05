@@ -26,7 +26,10 @@
                     :prop="item.jsonPath"
                     :render-header="renderCrdHeader">
                     <template #default="{ row }">
-                        <span>{{ getJsonPathValue(row, item.jsonPath) || '--' }}</span>
+                        <span>
+                            {{ typeof getJsonPathValue(row, item.jsonPath) !== 'undefined'
+                                ? getJsonPathValue(row, item.jsonPath) : '--' }}
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">

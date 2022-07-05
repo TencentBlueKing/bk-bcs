@@ -2828,5 +2828,6 @@ export default {
     ],
     "表单": ["Form"],
     "编辑模式": ["Edit mode"],
-    "全部命名空间": ["All namespaces"]
+    "全部命名空间": ["All namespaces"],
+    "单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写": ["Node pod CIDR cannot be adjusted after allocation Please fill in after careful evaluation"]
 }
