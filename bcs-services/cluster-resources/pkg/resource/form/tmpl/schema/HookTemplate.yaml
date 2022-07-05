@@ -1,0 +1,5 @@
+title: deployment
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  {{- include "custom.hookTmplSpec" . | indent 2 }}

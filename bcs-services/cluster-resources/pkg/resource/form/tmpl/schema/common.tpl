@@ -15,6 +15,7 @@ metadata:
       ui:component:
         name: select
         props:
+          # 更新时候不允许编辑 APIVersion
           {{- if eq .action "update" }}
           disabled: true
           {{- end }}
@@ -33,6 +34,7 @@ metadata:
       title: {{ i18n "名称" .lang }}
       type: string
       default: {{ .resName }}
+      # 更新时候不允许编辑资源名称
       {{- if eq .action "update" }}
       ui:component:
         props:
@@ -49,6 +51,7 @@ metadata:
       ui:component:
         name: select
         props:
+          # 更新时候不允许编辑命名空间
           {{- if eq .action "update" }}
           disabled: true
           {{- end }}
@@ -71,7 +74,11 @@ metadata:
       title: {{ i18n "标签" .lang }}
       type: array
       description: {{ i18n "将作为 Pod & Selector 标签" .lang }}
+      {{- if eq .kind "HookTemplate" }}
+      minItems: 0
+      {{- else }}
       minItems: 1
+      {{- end }}
       items:
         properties:
           key:
@@ -90,7 +97,12 @@ metadata:
         type: object
       ui:component:
         name: noTitleArray
-        {{- if eq .action "update" }}
+        # TODO 如果后续 common.tpl 对资源类型的定制增多的话，可以考虑封装成方法
+        # HookTemplate 类型资源不展示 labels
+        {{- if eq .kind "HookTemplate" }}
+        props:
+          visible: false
+        {{- else if eq .action "update" }}
         props:
           disabled: true
         {{- end }}
@@ -105,12 +117,32 @@ metadata:
             ui:rules:
               - required
               - maxLength128
+            ui:reactions:
+              - if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
           value:
             title: {{ i18n "值" .lang }}
             type: string
         type: object
       ui:component:
         name: noTitleArray
+        {{- if eq .kind "HookTemplate" }}
+        props:
+          visible: false
+        {{- end }}
   ui:group:
     props:
       border: true

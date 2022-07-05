@@ -304,26 +304,30 @@ healthz:
 
 {{- define "container.probe" }}
 properties:
-  type:
-    title: {{ i18n "检查类型" .lang }}
-    type: string
-    default: noUse
-    ui:component:
-      name: select
-      props:
-        clearable: false
-        datasource:
-          - label: No Use
-            value: noUse
-          - label: httpGet
-            value: httpGet
-          - label: tcpSocket
-            value: tcpSocket
-          - label: exec
-            value: exec
+  enabled:
+    title: {{ i18n "启用" .lang }}
+    type: boolean
+    default: false
     ui:reactions:
+      - target: "{{`{{`}} $widgetNode?.getSibling('type')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('port')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value && $widgetNode?.getSibling('type')?.instance?.value !== 'exec' {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            value: 0
+            visible: false
       - target: "{{`{{`}} $widgetNode?.getSibling('path')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'httpGet' {{`}}`}}"
+        if: "{{`{{`}} $self.value && $widgetNode?.getSibling('type')?.instance?.value == 'httpGet' {{`}}`}}"
         then:
           state:
             visible: true
@@ -332,7 +336,7 @@ properties:
             value: ""
             visible: false
       - target: "{{`{{`}} $widgetNode?.getSibling('command')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'exec' {{`}}`}}"
+        if: "{{`{{`}} $self.value && $widgetNode?.getSibling('type')?.instance?.value === 'exec' {{`}}`}}"
         then:
           state:
             visible: true
@@ -340,8 +344,64 @@ properties:
           state:
             value: []
             visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('initialDelaySecs')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('periodSecs')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('timeoutSecs')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('successThreshold')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('failureThreshold')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+  type:
+    title: {{ i18n "检查类型" .lang }}
+    type: string
+    default: httpGet
+    ui:component:
+      name: select
+      props:
+        clearable: false
+        datasource:
+          - label: httpGet
+            value: httpGet
+          - label: tcpSocket
+            value: tcpSocket
+          - label: exec
+            value: exec
+    ui:reactions:
       - target: "{{`{{`}} $widgetNode?.getSibling('port')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'exec' || $self.value === 'noUse' {{`}}`}}"
+        if: "{{`{{`}} !$widgetNode?.getSibling('enabled')?.instance?.value || $self.value === 'exec' {{`}}`}}"
         then:
           state:
             value: 0
@@ -349,46 +409,24 @@ properties:
         else:
           state:
             visible: true
-      - target: "{{`{{`}} $widgetNode?.getSibling('initialDelaySecs')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
+      - target: "{{`{{`}} $widgetNode?.getSibling('path')?.id {{`}}`}}"
+        if: "{{`{{`}} $widgetNode?.getSibling('enabled')?.instance?.value && $self.value === 'httpGet' {{`}}`}}"
         then:
           state:
-            visible: false
+            visible: true
         else:
           state:
-            visible: true
-      - target: "{{`{{`}} $widgetNode?.getSibling('periodSecs')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
+            value: ""
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('command')?.id {{`}}`}}"
+        if: "{{`{{`}} $widgetNode?.getSibling('enabled')?.instance?.value && $self.value === 'exec' {{`}}`}}"
         then:
           state:
-            visible: false
+            visible: true
         else:
           state:
-            visible: true
-      - target: "{{`{{`}} $widgetNode?.getSibling('timeoutSecs')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
-        then:
-          state:
+            value: []
             visible: false
-        else:
-          state:
-            visible: true
-      - target: "{{`{{`}} $widgetNode?.getSibling('successThreshold')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
-        then:
-          state:
-            visible: false
-        else:
-          state:
-            visible: true
-      - target: "{{`{{`}} $widgetNode?.getSibling('failureThreshold')?.id {{`}}`}}"
-        if: "{{`{{`}} $self.value === 'noUse' {{`}}`}}"
-        then:
-          state:
-            visible: false
-        else:
-          state:
-            visible: true
   port:
     title: {{ i18n "端口" .lang }}
     type: integer

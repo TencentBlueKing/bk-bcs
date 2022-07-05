@@ -163,7 +163,9 @@ func validateSubscribeParams(ctx context.Context, req *clusterRes.SubscribeReq) 
 // 获取某类资源对应的 watcher
 func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Interface, error) {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
-	opts := metav1.ListOptions{ResourceVersion: req.ResourceVersion}
+
+	timeout := int64(res.WatchTimeout)
+	opts := metav1.ListOptions{ResourceVersion: req.ResourceVersion, TimeoutSeconds: &timeout}
 	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err

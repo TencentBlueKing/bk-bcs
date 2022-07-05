@@ -512,6 +512,12 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Workload.ListPoByNode",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Workload.GetPo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 			Method:  []string{"GET"},
@@ -613,6 +619,7 @@ type WorkloadService interface {
 	UpdateJob(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPoByNode(ctx context.Context, in *ListPoByNodeReq, opts ...client.CallOption) (*CommonListResp, error)
 	GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreatePo(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdatePo(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
@@ -898,6 +905,16 @@ func (c *workloadService) ListPo(ctx context.Context, in *PodResListReq, opts ..
 	return out, nil
 }
 
+func (c *workloadService) ListPoByNode(ctx context.Context, in *ListPoByNodeReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListPoByNode", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *workloadService) GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.GetPo", in)
 	out := new(CommonResp)
@@ -1037,6 +1054,7 @@ type WorkloadHandler interface {
 	UpdateJob(context.Context, *ResUpdateReq, *CommonResp) error
 	DeleteJob(context.Context, *ResDeleteReq, *CommonResp) error
 	ListPo(context.Context, *PodResListReq, *CommonResp) error
+	ListPoByNode(context.Context, *ListPoByNodeReq, *CommonListResp) error
 	GetPo(context.Context, *ResGetReq, *CommonResp) error
 	CreatePo(context.Context, *ResCreateReq, *CommonResp) error
 	UpdatePo(context.Context, *ResUpdateReq, *CommonResp) error
@@ -1078,6 +1096,7 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		UpdateJob(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeleteJob(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error
+		ListPoByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonListResp) error
 		GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreatePo(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdatePo(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
@@ -1266,6 +1285,12 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListPoByNode",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.GetPo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 		Method:  []string{"GET"},
@@ -1444,6 +1469,10 @@ func (h *workloadHandler) DeleteJob(ctx context.Context, in *ResDeleteReq, out *
 
 func (h *workloadHandler) ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error {
 	return h.WorkloadHandler.ListPo(ctx, in, out)
+}
+
+func (h *workloadHandler) ListPoByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonListResp) error {
+	return h.WorkloadHandler.ListPoByNode(ctx, in, out)
 }
 
 func (h *workloadHandler) GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error {
@@ -3510,6 +3539,12 @@ func NewResourceEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "Resource.GetResSelectItems",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/res_select_items"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -3527,6 +3562,8 @@ type ResourceService interface {
 	// 获取指定资源表单 Schema
 	GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error)
 	GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取用于下拉框选项的资源数据
+	GetResSelectItems(ctx context.Context, in *GetResSelectItemsReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type resourceService struct {
@@ -3645,6 +3682,16 @@ func (c *resourceService) GetFormSupportedAPIVersions(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *resourceService) GetResSelectItems(ctx context.Context, in *GetResSelectItemsReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.GetResSelectItems", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Resource service
 
 type ResourceHandler interface {
@@ -3659,6 +3706,8 @@ type ResourceHandler interface {
 	// 获取指定资源表单 Schema
 	GetResFormSchema(context.Context, *GetResFormSchemaReq, *CommonResp) error
 	GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq, *CommonResp) error
+	// 获取用于下拉框选项的资源数据
+	GetResSelectItems(context.Context, *GetResSelectItemsReq, *CommonResp) error
 }
 
 func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...server.HandlerOption) error {
@@ -3669,6 +3718,7 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error
 		GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error
 		GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonResp) error
+		GetResSelectItems(ctx context.Context, in *GetResSelectItemsReq, out *CommonResp) error
 	}
 	type Resource struct {
 		resource
@@ -3710,6 +3760,12 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Resource.GetFormSupportedAPIVersions",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_supported_api_versions"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.GetResSelectItems",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/res_select_items"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3778,4 +3834,8 @@ func (h *resourceHandler) GetResFormSchema(ctx context.Context, in *GetResFormSc
 
 func (h *resourceHandler) GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonResp) error {
 	return h.ResourceHandler.GetFormSupportedAPIVersions(ctx, in, out)
+}
+
+func (h *resourceHandler) GetResSelectItems(ctx context.Context, in *GetResSelectItemsReq, out *CommonResp) error {
+	return h.ResourceHandler.GetResSelectItems(ctx, in, out)
 }

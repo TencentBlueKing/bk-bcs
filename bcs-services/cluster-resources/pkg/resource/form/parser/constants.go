@@ -16,15 +16,20 @@ package parser
 
 import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/custom"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/hpa"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 )
 
 // Kind2ParseFuncMap 各资源类型对应 ParseFunc
 var Kind2ParseFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
-	res.Deploy: workload.ParseDeploy,
-	res.DS:     workload.ParseDS,
-	res.STS:    workload.ParseSTS,
-	res.CJ:     workload.ParseCJ,
-	res.Job:    workload.ParseJob,
-	res.Po:     workload.ParsePo,
+	res.Deploy:   workload.ParseDeploy,
+	res.DS:       workload.ParseDS,
+	res.STS:      workload.ParseSTS,
+	res.CJ:       workload.ParseCJ,
+	res.Job:      workload.ParseJob,
+	res.Po:       workload.ParsePo,
+	res.HPA:      hpa.ParseHPA,
+	res.HookTmpl: custom.ParseHookTmpl,
+	res.GDeploy:  custom.ParseGDeploy,
 }

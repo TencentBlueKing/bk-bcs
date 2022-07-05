@@ -4,7 +4,7 @@ metadata:
   namespace: {{ .namespace }}
   {{- if .labels }}
   labels:
-    {{- include "common.kvSlice2Map" .labels | indent 4 }}
+    {{- include "common.labelSlice2Map" .labels | indent 4 }}
   {{- end }}
   {{- if .annotations }}
   annotations:
@@ -12,9 +12,20 @@ metadata:
   {{- end }}
 {{- end }}
 
+{{- define "common.labelSlice2Map" -}}
+{{- range . }}
+# 跳过一些特殊的键，这些键需要走独立的 labels 渲染逻辑，比如 custom.gdeployMetadata
+{{- if ne .key "io.tencent.bcs.dev/deletion-allow" }}
+{{ .key | quote }}: {{ .value | default "" | quote }}
+{{- end }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
 {{- define "common.kvSlice2Map" -}}
 {{- range . }}
-{{ .key | quote }}: {{ .value | quote }}
+{{ .key | quote }}: {{ .value | default "" | quote }}
 {{- else }}
 {}
 {{- end }}

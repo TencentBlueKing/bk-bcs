@@ -375,6 +375,16 @@ service Workload {
 		};
 	}
 
+	rpc ListPoByNode(ListPoByNodeReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "通过节点名称获取 Pod 列表"
+			summary: "ListPoWithNodeName API"
+		};
+	}
+
 	rpc GetPo(ResGetReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"
@@ -1166,6 +1176,17 @@ service Resource {
 			summary: "Get resource's supported apiVersions for form"
 		};
 	}
+
+	// 获取用于下拉框选项的资源数据
+	rpc GetResSelectItems(GetResSelectItemsReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/res_select_items"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取用于下拉框选项的资源数据（selectItems）"
+			summary: "Get resource's select items for form"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -1391,6 +1412,21 @@ message PodResListReq {
 	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
 }
 
+message ListPoByNodeReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "PodResListReq", description: "Pod 资源列表查询请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string nodeName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "节点名称"
+	}, (validate.rules).string = {max_len: 256}];
+}
+
 message ContainerListReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "ContainerListReq", description: "查询单个 Pod 容器信息请求体"}
@@ -1601,6 +1637,9 @@ message CommonListResp {
 	google.protobuf.ListValue data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "data", description : "资源信息"
 	}];
+	google.protobuf.Struct webAnnotations = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "webAnnotations", description : "web 注解"
+	}];
 }
 
 message SubscribeReq {
@@ -1721,4 +1760,23 @@ message GetFormSupportedApiVersionsReq {
 	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源类型"
 	}, (validate.rules).string = {max_len: 128}];
+}
+
+message GetResSelectItemsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetFormSupportedApiVersionsReq", description: "获取指定资源可用于表单化的 ApiVersions"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
+	// NOTE 目前使用该 API 的请求资源都有命名空间，因此先加上 min_len == 1 的限制
+	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {min_len: 1, max_len: 128}];
 }

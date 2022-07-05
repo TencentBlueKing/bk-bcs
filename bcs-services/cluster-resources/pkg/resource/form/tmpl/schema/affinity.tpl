@@ -49,7 +49,6 @@ podAffinity:
         type: object
         properties:
           expressions:
-            title: matchExpressions
             type: array
             items:
               properties:
@@ -89,14 +88,13 @@ podAffinity:
                   type: string
                   ui:component:
                     props:
-                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
+                      placeholder: {{ i18n "值（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
             ui:component:
               name: noTitleArray
           labels:
-            title: matchFields
             type: array
             items:
               properties:
@@ -228,11 +226,10 @@ nodeAffinity:
                   type: string
                   ui:component:
                     props:
-                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
+                      placeholder: {{ i18n "值（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
-            title: matchExpressions
             type: array
             ui:component:
               name: noTitleArray
@@ -279,11 +276,10 @@ nodeAffinity:
                   type: string
                   ui:component:
                     props:
-                      placeholder: {{ i18n "values（多个值请以英文逗号分隔）" .lang }}
+                      placeholder: {{ i18n "值（多个值请以英文逗号分隔）" .lang }}
                   ui:rules:
                     - maxLength128
               type: object
-            title: matchFields
             type: array
             ui:component:
               name: noTitleArray

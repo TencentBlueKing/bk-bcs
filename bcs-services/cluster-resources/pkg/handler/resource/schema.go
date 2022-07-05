@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -41,7 +42,7 @@ func (h *Handler) GetResFormSchema(
 func (h *Handler) GetFormSupportedAPIVersions(
 	ctx context.Context, req *clusterRes.GetFormSupportedApiVersionsReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	supportedAPIVersions, ok := renderer.FormRenderSupportedResAPIVersion[req.Kind]
+	supportedAPIVersions, ok := validator.FormSupportedResAPIVersion[req.Kind]
 	if !ok {
 		return errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), req.Kind)
 	}

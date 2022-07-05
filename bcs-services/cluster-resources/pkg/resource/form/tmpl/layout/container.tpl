@@ -67,13 +67,13 @@
 {{- define "container.healthz" }}
 - - group:
       - - group:
-            # 请求路径（path）占三列宽度
-            - [ "type", "port", "path", "path", "path" ]
+            # 请求路径（path）占两列宽度
+            - [ "enabled", "type", "port", "path", "path" ]
             - [ "command" ]
             - [ "initialDelaySecs", "periodSecs", "timeoutSecs", "successThreshold", "failureThreshold" ]
           prop: readinessProbe
       - - group:
-            - [ "type", "port", "path", "path", "path" ]
+            - [ "enabled", "type", "port", "path", "path" ]
             - [ "command" ]
             - [ "initialDelaySecs", "periodSecs", "timeoutSecs", "successThreshold", "failureThreshold" ]
           prop: livenessProbe

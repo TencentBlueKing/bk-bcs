@@ -915,10 +915,12 @@ other:
         name: radio
         props:
           datasource:
+            # CJ, Job 类型只会有 OnFailure，Never
             {{- if and (ne .kind "CronJob") (ne .kind "Job") }}
             - label: Always
               value: Always
             {{- end }}
+            # Deploy, DS, STS 只会有 Always
             {{- if and (ne .kind "Deployment") (ne .kind "DaemonSet") (ne .kind "StatefulSet") }}
             - label: OnFailure
               value: OnFailure

@@ -18,134 +18,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"strings"
-	"text/template"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
-
-// ManifestRenderer 渲染并加载资源配置模板
-type ManifestRenderer struct {
-	ctx        context.Context
-	formData   map[string]interface{}
-	clusterID  string
-	kind       string
-	apiVersion string
-	tmpl       *template.Template
-	manifest   map[string]interface{}
-}
-
-// NewManifestRenderer ...
-func NewManifestRenderer(ctx context.Context, formData map[string]interface{}, clusterID, kind string) *ManifestRenderer {
-	return &ManifestRenderer{ctx: ctx, formData: formData, clusterID: clusterID, kind: kind, manifest: map[string]interface{}{}}
-}
-
-// Render 渲染表单数据，返回 Manifest
-func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
-	for _, f := range []func() error{
-		// 1. 自动获取资源对应版本
-		r.setAPIVersion,
-		// 2. 检查是否支持指定版本表单化
-		r.checkRenderable,
-		// 3. 添加 EditMode Label 标识
-		r.setEditMode,
-		// 4. 数据清洗，去除表单默认值等
-		r.cleanFormData,
-		// 5. 加载模板并初始化
-		r.initTemplate,
-		// 6. 渲染模板并转换格式
-		r.render2Map,
-	} {
-		if err := f(); err != nil {
-			return nil, err
-		}
-	}
-	return r.manifest, nil
-}
-
-// 获取资源对应 APIVersion 并更新 Renderer 配置
-func (r *ManifestRenderer) setAPIVersion() (err error) {
-	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
-	r.apiVersion = mapx.GetStr(r.formData, "metadata.apiVersion")
-	if r.apiVersion == "" {
-		if r.apiVersion, err = res.GetResPreferredVersion(r.ctx, r.clusterID, r.kind); err != nil {
-			return err
-		}
-		if err = mapx.SetItems(r.formData, "metadata.apiVersion", r.apiVersion); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// 检查指定资源能否渲染为表单
-func (r *ManifestRenderer) checkRenderable() error {
-	supportedAPIVersions, ok := FormRenderSupportedResAPIVersion[r.kind]
-	if !ok {
-		return errorx.New(errcode.Unsupported, i18n.GetMsg(r.ctx, "资源类型 `%s` 不支持表单化"), r.kind)
-	}
-	if !slice.StringInSlice(r.apiVersion, supportedAPIVersions) {
-		return errorx.New(
-			errcode.Unsupported,
-			i18n.GetMsg(r.ctx, "资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化"),
-			r.kind, r.apiVersion, supportedAPIVersions,
-		)
-	}
-	return nil
-}
-
-// 添加 EditMode Annotations 标识
-func (r *ManifestRenderer) setEditMode() error {
-	// 若 annotations 中有 editMode key，则刷新为 FormMode
-	annotations := mapx.GetList(r.formData, "metadata.annotations")
-	for _, anno := range annotations {
-		if anno.(map[string]interface{})["key"] == res.EditModeAnnoKey {
-			anno.(map[string]interface{})["value"] = res.EditModeForm
-			return nil
-		}
-	}
-	// 如果没有对应的 key，则新增
-	annotations = append(annotations, map[string]interface{}{"key": res.EditModeAnnoKey, "value": res.EditModeForm})
-	return mapx.SetItems(r.formData, "metadata.annotations", annotations)
-}
-
-// 清理表单数据，如去除默认值等
-func (r *ManifestRenderer) cleanFormData() error {
-	// 默认值清理规则：某子表单中均为初始的零值，则认为未被修改，不应作为配置下发
-	if isEmptyMap := mapx.RemoveZeroSubItem(r.formData); isEmptyMap {
-		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "数据清洗零值结果为空集合"))
-	}
-	return nil
-}
-
-// 加载模板并初始化
-func (r *ManifestRenderer) initTemplate() (err error) {
-	r.tmpl, err = initTemplate(envs.FormTmplFileBaseDir+"/manifest/", "*")
-	return err
-}
-
-// 渲染模板并转换成 Map 格式
-func (r *ManifestRenderer) render2Map() error {
-	// 渲染，转换并写入数据（模板名称格式：{r.kind}.yaml）
-	var buf bytes.Buffer
-	err := r.tmpl.ExecuteTemplate(&buf, r.kind+".yaml", r.formData)
-	if err != nil {
-		log.Warn(r.ctx, "failed to render template：%v", err)
-		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
-	}
-	return yaml.Unmarshal(buf.Bytes(), r.manifest)
-}
 
 const (
 	// RandomSuffixLength 资源名称随机后缀长度
@@ -187,7 +72,7 @@ func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action s
 // Render ...
 func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 	// 1. 检查指定资源类型是否支持表单化
-	supportedAPIVersions, ok := FormRenderSupportedResAPIVersion[r.kind]
+	supportedAPIVersions, ok := validator.FormSupportedResAPIVersion[r.kind]
 	if !ok {
 		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(r.ctx, "资源类型 `%s` 不支持表单化"), r.kind)
 	}
@@ -231,37 +116,6 @@ func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) 
 		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
 	}
 	return yaml.Unmarshal(buf.Bytes(), ret)
-}
-
-// 模板初始化（含挂载 include 方法等）
-func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
-	funcMap := newTmplFuncMap()
-	tmpl, err := template.New(
-		stringx.Rand(TmplRandomNameLength, ""),
-	).Funcs(funcMap).ParseFS(os.DirFS(baseDir), tmplPattern)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add the 'include' function here, so we can close over t.
-	// ref: https://github.com/helm/helm/blob/3d1bc72827e4edef273fb3d8d8ded2a25fa6f39d/pkg/engine/engine.go#L107
-	includedNames := map[string]int{}
-	funcMap["include"] = func(name string, data interface{}) (string, error) {
-		var buf strings.Builder
-		if v, ok := includedNames[name]; ok {
-			if v > RecursionMaxNums {
-				return "", errorx.New(errcode.Unsupported, "rendering template has a nested ref name: %s", name)
-			}
-			includedNames[name]++
-		} else {
-			includedNames[name] = 1
-		}
-		err = tmpl.ExecuteTemplate(&buf, name, data)
-		includedNames[name]--
-		return buf.String(), err
-	}
-
-	return tmpl.Funcs(funcMap), nil
 }
 
 // 生成 JsonSchema 校验规则

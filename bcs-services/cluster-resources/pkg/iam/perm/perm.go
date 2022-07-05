@@ -65,9 +65,9 @@ func (p *IAMPerm) CanMultiActions(ctx Ctx, actionIDs []string) (allow bool, err 
 
 // BatchResMultiActionAllowed 判断用户对某些资源是否具有多个指定操作的权限. 当前 sdk 仅支持同类型的资源
 func (p *IAMPerm) BatchResMultiActionAllowed(
-	username string, actionIDs []string, resIDs []string, resRequest ResRequest,
+	username string, actionIDs []string, resIDs []string,
 ) (map[string]map[string]bool, error) {
-	return p.Cli.BatchResMultiActionsAllowed(username, actionIDs, resRequest.MakeResources(resIDs))
+	return p.Cli.BatchResMultiActionsAllowed(username, actionIDs, p.ResReq.MakeResources(resIDs))
 }
 
 func (p *IAMPerm) hasParentRes() bool {

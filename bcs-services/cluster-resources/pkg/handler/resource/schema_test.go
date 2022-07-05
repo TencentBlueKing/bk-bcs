@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -31,7 +31,11 @@ func TestGetResFormSchema(t *testing.T) {
 
 	assert.Nil(t, i18n.InitMsgMap())
 
-	for kind := range renderer.FormRenderSupportedResAPIVersion {
+	for kind := range validator.FormSupportedResAPIVersion {
+		// TODO 目前测试集群没有自定义的 CRD，先跳过相关测试
+		if validator.IsFormSupportedCObjKinds(kind) {
+			continue
+		}
 		req, resp := clusterRes.GetResFormSchemaReq{Kind: kind}, clusterRes.CommonResp{}
 		err := hdlr.GetResFormSchema(ctx, &req, &resp)
 		assert.Nil(t, err)
@@ -42,7 +46,7 @@ func TestGetFormSupportedApiVersions(t *testing.T) {
 	hdlr := New()
 	ctx := context.TODO()
 
-	for kind := range renderer.FormRenderSupportedResAPIVersion {
+	for kind := range validator.FormSupportedResAPIVersion {
 		req, resp := clusterRes.GetFormSupportedApiVersionsReq{Kind: kind}, clusterRes.CommonResp{}
 		err := hdlr.GetFormSupportedAPIVersions(ctx, &req, &resp)
 		assert.Nil(t, err)

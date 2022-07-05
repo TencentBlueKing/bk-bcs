@@ -249,6 +249,7 @@ var exceptedContainerGroup = model.ContainerGroup{
 			},
 			Healthz: model.ContainerHealthz{
 				ReadinessProbe: model.Probe{
+					Enabled:          true,
 					PeriodSecs:       10,
 					InitialDelaySecs: 0,
 					TimeoutSecs:      3,
@@ -258,6 +259,7 @@ var exceptedContainerGroup = model.ContainerGroup{
 					Port:             80,
 				},
 				LivenessProbe: model.Probe{
+					Enabled:          true,
 					PeriodSecs:       10,
 					InitialDelaySecs: 0,
 					TimeoutSecs:      3,

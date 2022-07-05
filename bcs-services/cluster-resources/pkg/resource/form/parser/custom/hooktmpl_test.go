@@ -12,25 +12,6 @@
  * limitations under the License.
  */
 
-package renderer
+package custom
 
-import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-)
-
-// RecursionMaxNums 模板 include 嵌套最大层数
-const RecursionMaxNums = 100
-
-// TmplRandomNameLength 模板随机名称长度
-const TmplRandomNameLength = 12
-
-// FormRenderSupportedResAPIVersion 支持表单化的资源版本
-var FormRenderSupportedResAPIVersion = map[string][]string{
-	res.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	res.DS:     {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	res.STS:    {"apps/v1"},
-	res.CJ:     {"batch/v1", "batch/v1beta1"},
-	res.Job:    {"batch/v1"},
-	res.Po:     {"v1"},
-	// TODO 补充其他资源类型
-}
+// TODO 补充 ParseHookTmpl 单元测试

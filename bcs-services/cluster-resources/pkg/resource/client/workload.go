@@ -24,7 +24,13 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
+	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -67,6 +73,25 @@ func (c *PodClient) List(
 	}
 	manifest["items"] = c.filterByOwnerRefs(manifest["items"].([]interface{}), podOwnerRefs)
 	return manifest, nil
+}
+
+// ListAllNSPods 获取所有命名空间的 Pod，要求有集群管理权限
+func (c *PodClient) ListAllNSPods(ctx context.Context, projectID, clusterID string, opts metav1.ListOptions) (map[string]interface{}, error) {
+	// 权限控制为集群查看
+	permCtx := clusterAuth.NewPermCtx(
+		ctx.Value(ctxkey.UsernameKey).(string), projectID, clusterID,
+	)
+	if allow, err := iam.NewClusterPerm(projectID).CanManage(permCtx); err != nil {
+		return nil, err
+	} else if !allow {
+		return nil, errorx.New(errcode.NoIAMPerm, i18n.GetMsg(ctx, "无查看指定节点上运行的 Pod 的权限"))
+	}
+
+	ret, err := c.ResClient.cli.Resource(c.res).List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return ret.UnstructuredContent(), nil
 }
 
 // 非直接关联 Pod 的资源，找到下层直接关联的子资源

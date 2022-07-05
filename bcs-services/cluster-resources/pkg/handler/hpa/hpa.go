@@ -49,7 +49,7 @@ func (h *Handler) ListHPA(
 		return err
 	}
 	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, false),
+		web.NewFeatureFlag(featureflag.FormCreate, true),
 	).ToPbStruct()
 	return err
 }
@@ -68,7 +68,7 @@ func (h *Handler) GetHPA(
 		return err
 	}
 	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormUpdate, false),
+		web.NewFeatureFlag(featureflag.FormUpdate, true),
 	).ToPbStruct()
 	return err
 }

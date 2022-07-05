@@ -77,6 +77,7 @@ type ContainerHealthz struct {
 
 // Probe ...
 type Probe struct {
+	Enabled          bool     `structs:"enabled"`          // 是否启用
 	PeriodSecs       int64    `structs:"periodSecs"`       // 检查间隔
 	InitialDelaySecs int64    `structs:"initialDelaySecs"` // 初始延时
 	TimeoutSecs      int64    `structs:"timeoutSecs"`      // 超时时间

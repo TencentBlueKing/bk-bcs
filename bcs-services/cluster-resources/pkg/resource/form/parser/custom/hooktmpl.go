@@ -1,0 +1,149 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * 	http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under,
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package custom
+
+import (
+	"strconv"
+	"strings"
+
+	"github.com/fatih/structs"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
+)
+
+// ParseHookTmpl ...
+func ParseHookTmpl(manifest map[string]interface{}) map[string]interface{} {
+	tmpl := model.HookTmpl{}
+	common.ParseMetadata(manifest, &tmpl.Metadata)
+	ParseHookTmplSpec(manifest, &tmpl.Spec)
+	return structs.Map(tmpl)
+}
+
+// ParseHookTmplSpec ...
+func ParseHookTmplSpec(manifest map[string]interface{}, spec *model.HookTmplSpec) {
+	for _, arg := range mapx.GetList(manifest, "spec.args") {
+		spec.Args = append(spec.Args, genHookTmplArg(arg.(map[string]interface{})))
+	}
+	spec.Policy = mapx.Get(manifest, "spec.policy", HookTmplPolicyParallel).(string)
+	for _, metric := range mapx.GetList(manifest, "spec.metrics") {
+		spec.Metrics = append(spec.Metrics, genHookTmplMetric(metric.(map[string]interface{})))
+	}
+}
+
+func genHookTmplArg(raw map[string]interface{}) model.HookTmplArg {
+	rawName := raw["name"].(string)
+	argType, argName, argValue, containerIdx := "", "", "", 0
+	switch {
+	case slice.StringInSlice(rawName, []string{HookTmplArgTypePodIP, HookTmplArgTypePodName, HookTmplArgTypePodNS}):
+		argType = rawName
+	case strings.HasPrefix(rawName, HookTmplArgTypePodContainer):
+		argType = HookTmplArgTypePodContainer
+		containerIdx = parseContainerIdx(rawName)
+	case strings.HasPrefix(rawName, HookTmplArgTypeModifiedContainer):
+		argType = HookTmplArgTypeModifiedContainer
+		containerIdx = parseContainerIdx(rawName)
+	default:
+		argType = HookTmplArgTypeCustom
+		argName = rawName
+		argValue = mapx.GetStr(raw, "value")
+	}
+	return model.HookTmplArg{Type: argType, ContainerIdx: containerIdx, Key: argName, Value: argValue}
+}
+
+// 解析容器 Index，规则如 PodContainer[1] -> 1，ModifiedContainer[0] -> 0
+func parseContainerIdx(argName string) int {
+	_, suffix := stringx.Partition(argName, "[")
+	idxStr, _ := stringx.Partition(suffix, "]")
+	idx, _ := strconv.Atoi(idxStr)
+	return idx
+}
+
+func genHookTmplMetric(raw map[string]interface{}) model.HookTmplMetric {
+	// 表单创建的 interval 单位都是秒
+	intervalStr, _ := stringx.Partition(mapx.Get(raw, "interval", "1s").(string), "s")
+	interval, _ := strconv.Atoi(intervalStr)
+
+	// 优先级 成功条件 > 失败条件
+	conditionType, conditionExp := HookTmplConditionSuccess, ""
+	if exp, ok := raw["successCondition"]; ok {
+		conditionExp = exp.(string)
+	} else if exp, ok = raw["failureCondition"]; ok {
+		conditionType = HookTmplConditionFailure
+		conditionExp = exp.(string)
+	}
+
+	// 优先级 累计成功 > 连续成功
+	successPolicy, successCnt := HookTmplSuccessfulLimit, int64(0)
+	if limit, ok := raw["successfulLimit"]; ok {
+		successCnt = limit.(int64)
+	} else if limit, ok = raw["consecutiveSuccessfulLimit"]; ok {
+		successPolicy = HookTmplConsecutiveSuccessfulLimit
+		successCnt = limit.(int64)
+	}
+
+	// 优先级 累计失败 > 连续失败
+	failurePolicy, failureCnt := HookTmplFailureLimit, int64(0)
+	if limit, ok := raw["successPolicy"]; ok {
+		failureCnt = limit.(int64)
+	} else if limit, ok = raw["consecutiveErrorLimit"]; ok {
+		failurePolicy = HookTmplConsecutiveErrorLimit
+		failureCnt = limit.(int64)
+	}
+
+	metric := model.HookTmplMetric{
+		Name:          mapx.GetStr(raw, "name"),
+		Count:         mapx.GetInt64(raw, "count"),
+		Interval:      interval,
+		ConditionType: conditionType,
+		ConditionExp:  conditionExp,
+		SuccessPolicy: successPolicy,
+		SuccessCnt:    successCnt,
+		FailurePolicy: failurePolicy,
+		FailureCnt:    failureCnt,
+	}
+
+	// provider 优先级 web > prometheus > kubernetes
+	provider := raw["provider"].(map[string]interface{})
+	if web, ok := provider["web"]; ok {
+		// web 类型
+		w := web.(map[string]interface{})
+		metric.HookType = HookTmplMetricTypeWeb
+		metric.URL = mapx.GetStr(w, "url")
+		metric.JSONPath = mapx.GetStr(w, "jsonPath")
+		metric.TimeoutSecs = mapx.GetInt64(w, "timeoutSeconds")
+	} else if prometheus, ok := provider["prometheus"]; ok {
+		// prometheus 类型
+		prom := prometheus.(map[string]interface{})
+		metric.HookType = HookTmplMetricTypeProm
+		metric.Query = mapx.GetStr(prom, "query")
+		metric.Address = mapx.GetStr(prom, "address")
+	} else if kubernetes, ok := provider["kubernetes"]; ok {
+		// kubernetes 类型
+		k8s := kubernetes.(map[string]interface{})
+		metric.HookType = HookTmplMetricTypeK8S
+		metric.Function = mapx.GetStr(k8s, "function")
+		for _, field := range mapx.GetList(k8s, "fields") {
+			f := field.(map[string]interface{})
+			metric.Fields = append(metric.Fields, model.HookTmplField{
+				Key: mapx.GetStr(f, "path"), Value: mapx.GetStr(f, "value"),
+			})
+		}
+	}
+	return metric
+}

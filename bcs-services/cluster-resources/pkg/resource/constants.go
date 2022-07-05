@@ -75,9 +75,18 @@ const (
 
 	// GSTS ...
 	GSTS = "GameStatefulSet"
+
+	// HookTmpl ...
+	HookTmpl = "HookTemplate"
+
+	// HookRun ...
+	HookRun = "HookRun"
 )
 
 const (
+	// WatchTimeout 执行资源变动 Watch 超时时间 30 分钟
+	WatchTimeout = 30 * 60
+
 	// ResCacheTTL 资源信息默认过期时间 14 天
 	ResCacheTTL = 14 * 24 * 60 * 60
 
@@ -108,6 +117,8 @@ const (
 const (
 	// EditModeAnnoKey 资源被编辑的模式，表单为 form，Key 不存在或 Manifest 则为 Yaml 模式
 	EditModeAnnoKey = "io.tencent.bcs.editFormat"
+	// DeletionProtectLabelKey 删除保护标记使用的 Label 键名
+	DeletionProtectLabelKey = "io.tencent.bcs.dev/deletion-allow"
 )
 
 const (
@@ -115,4 +126,13 @@ const (
 	EditModeForm = "form"
 	// EditModeYaml 资源编辑模式 - Yaml
 	EditModeYaml = "yaml"
+)
+
+const (
+	// GDeployDeletionProtectPolicyCascading 实例数量为 0 才可以删除
+	GDeployDeletionProtectPolicyCascading = "Cascading"
+	// GDeployDeletionProtectPolicyAlways 不限制，任意时候可删除
+	GDeployDeletionProtectPolicyAlways = "Always"
+	// GDeployDeletionProtectPolicyNotAllow 任意时候都无法删除
+	GDeployDeletionProtectPolicyNotAllow = "NotAllow"
 )

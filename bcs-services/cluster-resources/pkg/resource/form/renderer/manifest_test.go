@@ -20,9 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
@@ -77,7 +75,7 @@ var deployManifest4RenderTest = map[string]interface{}{
 	},
 }
 
-func TestNewManifestRenderer(t *testing.T) {
+func TestManifestRenderer(t *testing.T) {
 	formData := workload.ParseDeploy(deployManifest4RenderTest)
 	manifest, err := NewManifestRenderer(context.TODO(), formData, envs.TestClusterID, res.Deploy).Render()
 	assert.Nil(t, err)
@@ -90,28 +88,4 @@ func TestNewManifestRenderer(t *testing.T) {
 	assert.Equal(t, "apps/v1", mapx.GetStr(manifest, "apiVersion"))
 
 	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}))
-}
-
-func TestSchemaRenderer(t *testing.T) {
-	assert.Nil(t, i18n.InitMsgMap())
-
-	// 默认版本（中文）
-	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default", "").Render()
-		assert.Nil(t, err)
-	}
-
-	// 英文版本
-	ctx := context.WithValue(context.TODO(), ctxkey.LangKey, i18n.EN)
-	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
-		assert.Nil(t, err)
-	}
-
-	// 中文版本
-	ctx = context.WithValue(context.TODO(), ctxkey.LangKey, i18n.ZH)
-	for kind := range FormRenderSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
-		assert.Nil(t, err)
-	}
 }

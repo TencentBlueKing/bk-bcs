@@ -17,6 +17,7 @@ package workload
 import (
 	"context"
 
+	"github.com/TencentBlueKing/gopkg/collection/set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
@@ -28,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -186,4 +188,44 @@ func (h *Handler) ReschedulePo(
 	return respUtil.BuildDeleteAPIResp(
 		ctx, req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
+}
+
+// ListPoByNode 获取指定集群运行于某 Node 上的 Pod
+// 注意，该接口权限为 "集群管理" 权限，而非命名空间域资源查看权限，返回的数据也不是 manifest，仅包含列表展示需要的数据
+func (h *Handler) ListPoByNode(
+	ctx context.Context, req *clusterRes.ListPoByNodeReq, resp *clusterRes.CommonListResp,
+) error {
+	podCli := cli.NewPodCliByClusterID(ctx, req.ClusterID)
+	ret, err := podCli.ListAllNSPods(
+		ctx, req.ProjectID, req.ClusterID, metav1.ListOptions{FieldSelector: "spec.nodeName=" + req.NodeName},
+	)
+	if err != nil {
+		return err
+	}
+
+	podList := []map[string]interface{}{}
+	namespaces := set.NewStringSet()
+
+	for _, po := range ret["items"].([]interface{}) {
+		p := po.(map[string]interface{})
+		ns := mapx.GetStr(p, "metadata.namespace")
+		pod := formatter.FormatPo(p)
+		pod["namespace"] = ns
+		pod["uid"] = mapx.GetStr(p, "metadata.uid")
+		pod["name"] = mapx.GetStr(p, "metadata.name")
+		pod["hostIP"] = mapx.Get(p, "status.hostIP", "N/A").(string)
+		pod["podIP"] = mapx.Get(p, "status.podIP", "N/A").(string)
+		pod["node"] = mapx.Get(p, "spec.nodeName", "N/A").(string)
+		podList = append(podList, pod)
+		namespaces.Add(ns)
+	}
+
+	if resp.Data, err = pbstruct.MapSlice2ListValue(podList); err != nil {
+		return err
+	}
+	// 提供列表行权限的 WebAnnotations，用于前端跳转禁用
+	resp.WebAnnotations, err = web.GenNodePodListWebAnnos(
+		ctx, podList, req.ProjectID, req.ClusterID, namespaces.ToSlice(),
+	)
+	return err
 }

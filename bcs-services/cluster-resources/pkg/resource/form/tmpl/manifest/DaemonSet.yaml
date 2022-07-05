@@ -4,7 +4,7 @@ kind: DaemonSet
 spec:
   selector:
     matchLabels:
-      {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
+      {{- include "common.labelSlice2Map" .metadata.labels | indent 6 }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}
     {{- if (eq .spec.replicas.updateStrategy "RollingUpdate") }}

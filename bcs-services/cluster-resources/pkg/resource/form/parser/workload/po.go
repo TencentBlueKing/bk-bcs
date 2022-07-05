@@ -112,7 +112,7 @@ func parseAffinityExpSelector(matchExps interface{}) []model.ExpSelector {
 	for _, exps := range matchExps.([]interface{}) {
 		es, _ := exps.(map[string]interface{})
 		values := []string{}
-		for _, v := range es["values"].([]interface{}) {
+		for _, v := range mapx.GetList(es, "values") {
 			values = append(values, v.(string))
 		}
 		selectors = append(selectors, model.ExpSelector{
@@ -127,7 +127,7 @@ func parseAffinityFieldSelector(matchFields interface{}) []model.FieldSelector {
 	for _, fields := range matchFields.([]interface{}) {
 		fs, _ := fields.(map[string]interface{})
 		values := []string{}
-		for _, v := range fs["values"].([]interface{}) {
+		for _, v := range mapx.GetList(fs, "values") {
 			values = append(values, v.(string))
 		}
 		selectors = append(selectors, model.FieldSelector{

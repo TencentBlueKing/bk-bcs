@@ -27,7 +27,7 @@ func TestWebAnnotations(t *testing.T) {
 		map[string]interface{}{"name": "Current", "type": "integer", "jsonPath": ".status.currentReplicas"},
 	}
 	exceptAnnos := Annotations{
-		Perm: Perm{
+		Perms: Perms{
 			Page: map[ObjName]PermDetail{
 				"createBtn": {false, "no perm", ""},
 			},

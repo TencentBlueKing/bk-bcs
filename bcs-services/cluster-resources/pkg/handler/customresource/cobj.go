@@ -28,8 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -48,16 +50,18 @@ func (h *Handler) ListCObj(
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
-	resp.Data, err = respUtil.BuildListAPIResp(
+	respData, err := respUtil.BuildListAPIRespData(
 		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.Format, metav1.ListOptions{},
 	)
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, false),
-		web.NewAdditionalColumns(crdInfo["addColumns"].([]interface{})),
-	).ToPbStruct()
+	resp.Data, err = pbstruct.Map2pbStruct(respData)
+	if err != nil {
+		return err
+	}
+
+	resp.WebAnnotations, err = web.GenCObjListWebAnnos(ctx, respData, crdInfo, req.Format)
 	return err
 }
 
@@ -82,8 +86,9 @@ func (h *Handler) GetCObj(
 	if err != nil {
 		return err
 	}
+
 	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormUpdate, false),
+		web.NewFeatureFlag(featureflag.FormUpdate, validator.IsFormSupportedCObjKinds(kind)),
 	).ToPbStruct()
 	return err
 }

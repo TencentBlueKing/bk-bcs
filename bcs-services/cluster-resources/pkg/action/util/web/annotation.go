@@ -33,8 +33,8 @@ type ObjPerm map[ObjName]PermDetail
 // ResUID 资源唯一 ID
 type ResUID string
 
-// Perm 权限注解
-type Perm struct {
+// Perms 权限注解
+type Perms struct {
 	Page  ObjPerm
 	Items map[ResUID]ObjPerm
 }
@@ -75,7 +75,7 @@ type AnnoFunc func(*Annotations)
 }
 */
 type Annotations struct {
-	Perm              Perm
+	Perms             Perms
 	FeatureFlag       map[FeatureFlagKey]bool
 	AdditionalColumns []interface{}
 }
@@ -85,13 +85,13 @@ type Annotations struct {
 func (a Annotations) ToPbStruct() (*spb.Struct, error) {
 	// 解析 perm.page
 	permPageMap := map[string]interface{}{}
-	for objName, permDetail := range a.Perm.Page {
+	for objName, permDetail := range a.Perms.Page {
 		permPageMap[string(objName)] = structs.Map(permDetail)
 	}
 
 	// 解析 perm.items
 	permItemsMap := map[string]interface{}{}
-	for uid, objPerm := range a.Perm.Items {
+	for uid, objPerm := range a.Perms.Items {
 		resPerm := map[string]interface{}{}
 		for objName, permDetail := range objPerm {
 			resPerm[string(objName)] = structs.Map(permDetail)
@@ -106,7 +106,7 @@ func (a Annotations) ToPbStruct() (*spb.Struct, error) {
 	}
 
 	annos := map[string]interface{}{
-		"perm": map[string]interface{}{
+		"perms": map[string]interface{}{
 			"page":  permPageMap,
 			"items": permItemsMap,
 		},
@@ -124,7 +124,7 @@ func (a Annotations) ToPbStruct() (*spb.Struct, error) {
 // NewAnnos ...
 func NewAnnos(funcs ...AnnoFunc) Annotations {
 	annos := Annotations{
-		Perm: Perm{
+		Perms: Perms{
 			Page:  ObjPerm{},
 			Items: map[ResUID]ObjPerm{},
 		},
@@ -146,17 +146,17 @@ func NewFeatureFlag(featureFlag FeatureFlagKey, enabled bool) AnnoFunc {
 // NewPagePerm 向注解中添加 PagePerm
 func NewPagePerm(objName ObjName, detail PermDetail) AnnoFunc {
 	return func(a *Annotations) {
-		a.Perm.Page[objName] = detail
+		a.Perms.Page[objName] = detail
 	}
 }
 
 // NewItemPerm 向注解中添加 ItemPerm
 func NewItemPerm(uid ResUID, objName ObjName, detail PermDetail) AnnoFunc {
 	return func(a *Annotations) {
-		if itemPerm, exists := a.Perm.Items[uid]; exists {
+		if itemPerm, exists := a.Perms.Items[uid]; exists {
 			itemPerm[objName] = detail
 		} else {
-			a.Perm.Items[uid] = map[ObjName]PermDetail{
+			a.Perms.Items[uid] = map[ObjName]PermDetail{
 				objName: detail,
 			}
 		}

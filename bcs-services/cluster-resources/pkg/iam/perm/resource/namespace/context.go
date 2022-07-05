@@ -15,14 +15,11 @@
 package namespace
 
 import (
-	"strings"
-
 	"github.com/fatih/structs"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/hash"
 )
 
 // PermCtx ...
@@ -124,16 +121,4 @@ func (c *PermCtx) FromMap(m map[string]interface{}) perm.Ctx {
 		c.NamespaceID = calcNamespaceID(c.ClusterID, c.Namespace)
 	}
 	return c
-}
-
-// 计算(压缩)出注册到权限中心的命名空间 ID，具备唯一性. 当前的算法并不能完全避免冲突，但概率较低。
-// note: 权限中心对资源 ID 有长度限制，不超过32位。长度越长，处理性能越低
-// NamespaceID 是命名空间注册到权限中心的资源 ID，它是对结构`集群ID:命名空间name`的一个压缩，
-// 如 `BCS-K8S-40000:default` 会被处理成 `40000:5f03d33dde`。
-func calcNamespaceID(clusterID, namespace string) string {
-	if clusterID == "" || namespace == "" {
-		return ""
-	}
-	clusterIDx := clusterID[strings.LastIndex(clusterID, "-")+1:]
-	return clusterIDx + ":" + hash.MD5Digest(namespace)[8:16] + namespace[:2]
 }

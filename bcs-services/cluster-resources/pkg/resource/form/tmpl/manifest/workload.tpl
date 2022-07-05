@@ -2,7 +2,7 @@
 template:
   metadata:
     labels:
-      {{- include "common.kvSlice2Map" .metadata.labels | indent 6 }}
+      {{- include "common.labelSlice2Map" .metadata.labels | indent 6 }}
   {{- include "workload.podSpec" . | nindent 2 }}
 {{- end }}
 

@@ -148,13 +148,16 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 	probe.SuccessThreshold = mapx.GetInt64(raw, "successThreshold")
 	probe.FailureThreshold = mapx.GetInt64(raw, "failureThreshold")
 	if httpGet, ok := raw["httpGet"]; ok {
+		probe.Enabled = true
 		probe.Type = ProbeTypeHTTPGet
 		probe.Path = httpGet.(map[string]interface{})["path"].(string)
 		probe.Port = httpGet.(map[string]interface{})["port"].(int64)
 	} else if tcpSocket, ok := raw["tcpSocket"]; ok {
+		probe.Enabled = true
 		probe.Type = ProbeTypeTCPSocket
 		probe.Port = tcpSocket.(map[string]interface{})["port"].(int64)
 	} else if exec, ok := raw["exec"]; ok {
+		probe.Enabled = true
 		probe.Type = ProbeTypeExec
 		for _, command := range exec.(map[string]interface{})["command"].([]interface{}) {
 			probe.Command = append(probe.Command, command.(string))
@@ -164,7 +167,8 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 
 // 预设探针默认值，但是不会启用
 func setDefaultProbe(probe *model.Probe) {
-	probe.Type = ProbeTypeNoUse
+	probe.Enabled = false
+	probe.Type = ProbeTypeHTTPGet
 	probe.PeriodSecs = 10
 	probe.InitialDelaySecs = 0
 	probe.TimeoutSecs = 1

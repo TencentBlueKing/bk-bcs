@@ -2001,6 +2001,140 @@ var _PodResListReq_Format_InLookup = map[string]struct{}{
 	"selectItems": {},
 }
 
+// Validate checks the field values on ListPoByNodeReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ListPoByNodeReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListPoByNodeReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListPoByNodeReqMultiError, or nil if none found.
+func (m *ListPoByNodeReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListPoByNodeReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ListPoByNodeReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ListPoByNodeReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ListPoByNodeReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNodeName()) > 256 {
+		err := ListPoByNodeReqValidationError{
+			field:  "NodeName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListPoByNodeReqMultiError(errors)
+	}
+	return nil
+}
+
+// ListPoByNodeReqMultiError is an error wrapping multiple validation errors
+// returned by ListPoByNodeReq.ValidateAll() if the designated constraints
+// aren't met.
+type ListPoByNodeReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListPoByNodeReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListPoByNodeReqMultiError) AllErrors() []error { return m }
+
+// ListPoByNodeReqValidationError is the validation error returned by
+// ListPoByNodeReq.Validate if the designated constraints aren't met.
+type ListPoByNodeReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListPoByNodeReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListPoByNodeReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListPoByNodeReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListPoByNodeReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListPoByNodeReqValidationError) ErrorName() string { return "ListPoByNodeReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListPoByNodeReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListPoByNodeReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListPoByNodeReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListPoByNodeReqValidationError{}
+
+var _ListPoByNodeReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
 // Validate checks the field values on ContainerListReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -3669,6 +3803,35 @@ func (m *CommonListResp) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonListRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return CommonListRespMultiError(errors)
 	}
@@ -4683,3 +4846,150 @@ var _ interface {
 } = GetFormSupportedApiVersionsReqValidationError{}
 
 var _GetFormSupportedApiVersionsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on GetResSelectItemsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetResSelectItemsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetResSelectItemsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetResSelectItemsReqMultiError, or nil if none found.
+func (m *GetResSelectItemsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetResSelectItemsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_GetResSelectItemsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetResSelectItemsReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 128 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 128 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetResSelectItemsReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetResSelectItemsReqMultiError is an error wrapping multiple validation
+// errors returned by GetResSelectItemsReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetResSelectItemsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetResSelectItemsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetResSelectItemsReqMultiError) AllErrors() []error { return m }
+
+// GetResSelectItemsReqValidationError is the validation error returned by
+// GetResSelectItemsReq.Validate if the designated constraints aren't met.
+type GetResSelectItemsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResSelectItemsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResSelectItemsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResSelectItemsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResSelectItemsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResSelectItemsReqValidationError) ErrorName() string {
+	return "GetResSelectItemsReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResSelectItemsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResSelectItemsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResSelectItemsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResSelectItemsReqValidationError{}
+
+var _GetResSelectItemsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")

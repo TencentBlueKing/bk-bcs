@@ -18,10 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -31,8 +29,9 @@ import (
 func (h *Handler) GetK8SResTemplate(
 	ctx context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
 ) (err error) {
+	// 不在列表里面的，则认为是自定义资源
 	if !slice.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
-		return errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 暂无参考示例"), req.Kind)
+		req.Kind = res.CObj
 	}
 	conf, err := example.LoadResConf(ctx, req.Kind)
 	if err != nil {

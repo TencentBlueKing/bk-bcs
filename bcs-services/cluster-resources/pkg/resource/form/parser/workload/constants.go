@@ -15,6 +15,15 @@
 package workload
 
 const (
+	// DefaultUpdateStrategy 默认更新策略
+	DefaultUpdateStrategy = "RollingUpdate"
+	// DefaultMaxSurge 默认最大调度 Pod 数量
+	DefaultMaxSurge = 25
+	// DefaultMaxUnavailable 默认最大不可用数量
+	DefaultMaxUnavailable = 25
+)
+
+const (
 	// NodeSelectTypeAnyAvailable 节点选择类型 - 任意节点
 	NodeSelectTypeAnyAvailable = "anyAvailable"
 	// NodeSelectTypeSpecificNode 节点选择类型 - 指定节点
@@ -52,8 +61,6 @@ const (
 )
 
 const (
-	// ProbeTypeNoUse 不启用探针
-	ProbeTypeNoUse = "noUse"
 	// ProbeTypeHTTPGet ...
 	ProbeTypeHTTPGet = "httpGet"
 	// ProbeTypeTCPSocket ...

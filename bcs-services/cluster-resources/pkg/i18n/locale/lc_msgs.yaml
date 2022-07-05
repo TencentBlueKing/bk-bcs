@@ -59,6 +59,24 @@
   en: 'failed to load template: %v'
 - msgID: 获取容器环境变量失败，请确认容器处于 Running 状态
   en: 'failed to get container environment variables, please make sure the container is in Running state'
+- msgID: 无查看指定节点上运行的 Pod 的权限
+  en: 'no permission to view Pods running on the specified node'
+- msgID: 标签有重复的键，请检查
+  en: 'labels has a duplicate Key'
+- msgID: 注解有重复的键，请检查
+  en: 'annotations has a duplicate key'
+- msgID: 配置信息->删除保护策略->总是允许删除
+  en: 'Spec -> Deletion Protect Policy -> Always'
+- msgID: 或确保实例数量为 0
+  en: 'or make sure the number of instances is 0'
+- msgID: '标签字段 %s: %s'
+  en: 'label field %s: %s'
+- msgID: '当前实例已添加删除保护功能，若确认要删除，请修改实例'
+  en: 'the deletion protect function has been added to the current instance. If you want to delete it, please modify the instance'
+- msgID: 需要指定命名空间
+  en: 'namespace is required'
+- msgID: '当前资源类型 %s 不受支持'
+  en: 'resource kind %s is unsupported'
 # JsonSchema 校验规则
 - msgID: 值不能为零
   en: 'no zero value required'
@@ -90,6 +108,8 @@
   en: At least contains one name server
 - msgID: 主机 PID 与共享进程命名空间不可同时启用
   en: HostPID and ShareProcessNamespace cannot both be true
+- msgID: 最大副本数必须大于最小副本数
+  en: The maxReplicas must be greater than the minReplicas
 # JsonSchema 标题，描述等
 - msgID: Pod 规则
   en: Pod Rules
@@ -397,3 +417,29 @@
   en: values (Multiple values should be separated by commas)
 - msgID: 别名（多个值请以英文逗号分隔）
   en: aliases (Multiple values should be separated by commas)
+- msgID: 关联对象
+  en: ScaleTargetRef
+- msgID: 资源类型
+  en: ResourceKind
+- msgID: 资源名称
+  en: ResourceName
+- msgID: 最小副本数
+  en: minReplicas
+- msgID: 最大副本数
+  en: maxReplicas
+- msgID: Resource 指标
+  en: ResourceMetric
+- msgID: 指标类型
+  en: MetricType
+- msgID: ContainerResource 指标
+  en: ContainerResourceMetric
+- msgID: 指标名称
+  en: MetricName
+- msgID: External 指标
+  en: ExternalMetric
+- msgID: 选择器
+  en: Selector
+- msgID: Object 指标
+  en: ObjectMetric
+- msgID: Pod 指标
+  en: PodMetric
