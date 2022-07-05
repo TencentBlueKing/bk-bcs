@@ -94,6 +94,11 @@ urlpatterns = [
         'api/cluster_tools/projects/<slug:project_id>/clusters/<slug:cluster_id>/',
         include('backend.container_service.cluster_tools.urls'),
     ),
+    # 日志采集
+    path(
+        'api/log_collect/projects/<slug:project_id>/',
+        include('backend.container_service.observability.log_collect.urls'),
+    ),
     # cluster manager的代理请求
     url(
         r"^{}".format(settings.CLUSTER_MANAGER_PROXY["PREFIX_PATH"]),

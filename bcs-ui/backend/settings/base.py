@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "backend.templatesets.var_mgmt.apps.VarMgmtConfig",
     "backend.change_log",
     "backend.container_service.cluster_tools.apps.ClusterToolsConfig",
+    "backend.container_service.observability.log_collect.apps.LogCollectConfig",
     "django_prometheus",
 ]
 
