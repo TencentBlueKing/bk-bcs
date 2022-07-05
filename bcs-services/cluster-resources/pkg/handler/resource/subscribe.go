@@ -181,6 +181,10 @@ func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Int
 	if req.Kind == res.CRD {
 		return cli.NewCRDClient(ctx, clusterConf).Watch(ctx, clusterInfo.Type, opts)
 	}
+	// HPA 资源强制指定为 autoscaling/v2beta2
+	if req.Kind == res.HPA {
+		req.ApiVersion = res.DefaultHPAGroupVersion
+	}
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, req.Kind, req.ApiVersion)
 	if err != nil {
 		return nil, err

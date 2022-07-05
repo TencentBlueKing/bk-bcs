@@ -6,72 +6,16 @@ spec:
     args:
       title: {{ i18n "参数定义" .lang }}
       type: array
-      description: {{ i18n "metrics 中引用方式为 {{`{{`}} args.自定参考键 {{`}}`}}，{{`{{`}} args.PodName {{`}}`}}，{{`{{`}} args.PodContainer[0] {{`}}`}}" .lang }}
+      description: {{ i18n "metrics 中引用自定义参数的方式为 {{ args.自定参数键 }}<br>除了支持引用自定义参数，还支持引用内置参数，具体内置参数如下：<br>当前 Pod IP：{{ args.PodIP }}<br>当前 Pod 名称：{{ args.PodName }}<br>Pod 所在命名空间：{{ args.PodNamespace }}<br>第 idx 个容器名称：{{ args.PodContainer[idx] }}（首个容器 idx 值为 0）<br>第 idx 个修改容器名称：{{ args.ModifiedContainer[idx] }}（原地更新模式）<br>Pod HostIP：{{ args.HostIP }}" .lang }}
       items:
         type: object
         properties:
-          type:
-            title: {{ i18n "类型" .lang }}
-            type: string
-            default: Custom
-            ui:component:
-              name: select
-              props:
-                clearable: false
-                datasource:
-                  - label: {{ i18n "自定义参数" .lang }}
-                    value: Custom
-                  - label: Pod IP
-                    value: PodIP
-                  - label: Pod Name
-                    value: PodName
-                  - label: Pod Namespace
-                    value: PodNamespace
-                  - label: Pod Container
-                    value: PodContainer
-                  - label: Modified Container
-                    value: ModifiedContainer
-            ui:reactions:
-              - target: "{{`{{`}} $widgetNode?.getSibling('key')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value !== 'Custom' {{`}}`}}"
-                then:
-                  state:
-                    disabled: true
-                else:
-                  state:
-                    disabled: false
-              - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value !== 'Custom' {{`}}`}}"
-                then:
-                  state:
-                    disabled: true
-                else:
-                  state:
-                    disabled: false
-              - target: "{{`{{`}} $widgetNode?.getSibling('containerIdx')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value === 'PodContainer' || $self.value === 'ModifiedContainer' {{`}}`}}"
-                then:
-                  state:
-                    disabled: false
-                else:
-                  state:
-                    disabled: true
-            ui:rules:
-              - required
-          containerIdx:
-            title: {{ i18n "容器 Index" .lang }}
-            type: integer
-            ui:component:
-              props:
-                max: 16
-                placeholder: {{ i18n "容器 index 值，第一个容器为 0" .lang }}
           key:
             title: {{ i18n "键" .lang }}
             type: string
             ui:rules:
+              - required
               - maxLength128
-              - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'Custom' || $self.value !== '' {{`}}`}}"
-                message: {{ i18n "值不能为空" .lang }}
           value:
             title: {{ i18n "值" .lang }}
             type: string
@@ -114,12 +58,9 @@ spec:
           - fields
           - count
           - interval
-          - conditionType
-          - conditionExp
+          - successConditionExp
           - successPolicy
           - successCnt
-          - failurePolicy
-          - failureCnt
         properties:
           name:
             title: {{ i18n "名称" .lang }}
@@ -285,7 +226,7 @@ spec:
           count:
             type: integer
             default: 0
-            description: {{ i18n "count 表示该 metric 需要完成 hook 调用的次数，如果 count 为 0，将会无限制地一直进行 hook 调用，直到满足统计策略后才会退出。" .lang }}
+            description: {{ i18n "count 表示该 metric 需要完成 hook 调用的次数，若 count 为 0，将会无限制地一直进行 hook 调用，直到满足统计策略后才会返回 OK；若 count 不为 0，则无视成功条件与统计策略，即运行达到 count 次数后直接返回 OK" .lang }}
             ui:component:
               props:
                 max: 4096
@@ -297,54 +238,8 @@ spec:
               props:
                 min: 1
                 max: 86400
-          conditionType:
-            title: {{ i18n "成功/失败条件" .lang }}
-            type: string
-            default: success
-            ui:component:
-              name: select
-              props:
-                clearable: false
-                datasource:
-                  - label: SuccessCondition
-                    value: success
-                  - label: FailureCondition
-                    value: failure
-            ui:reactions:
-              - target: "{{`{{`}} $widgetNode?.getSibling('successPolicy')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value === 'success' {{`}}`}}"
-                then:
-                  state:
-                    visible: true
-                else:
-                  state:
-                    visible: false
-              - target: "{{`{{`}} $widgetNode?.getSibling('successCnt')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value === 'success' {{`}}`}}"
-                then:
-                  state:
-                    visible: true
-                else:
-                  state:
-                    visible: false
-              - target: "{{`{{`}} $widgetNode?.getSibling('failurePolicy')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value === 'failure' {{`}}`}}"
-                then:
-                  state:
-                    visible: true
-                else:
-                  state:
-                    visible: false
-              - target: "{{`{{`}} $widgetNode?.getSibling('failureCnt')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value === 'failure' {{`}}`}}"
-                then:
-                  state:
-                    visible: true
-                else:
-                  state:
-                    visible: false
-          conditionExp:
-            title: {{ i18n "表达式" .lang }}
+          successConditionExp:
+            title: {{ i18n "成功条件表达式" .lang }}
             type: string
             ui:component:
               props:
@@ -365,26 +260,6 @@ spec:
                   - label: {{ i18n "连续成功次数" .lang }}
                     value: consecutiveSuccessfulLimit
           successCnt:
-            title: {{ i18n "次数" .lang }}
-            type: integer
-            default: 1
-            ui:component:
-              props:
-                min: 1
-                max: 7200
-          failurePolicy:
-            title: {{ i18n "统计策略" .lang }}
-            type: string
-            default: failureLimit
-            ui:component:
-              name: radio
-              props:
-                datasource:
-                  - label: {{ i18n "累计失败次数" .lang }}
-                    value: failureLimit
-                  - label: {{ i18n "连续失败次数" .lang }}
-                    value: consecutiveErrorLimit
-          failureCnt:
             title: {{ i18n "次数" .lang }}
             type: integer
             default: 1

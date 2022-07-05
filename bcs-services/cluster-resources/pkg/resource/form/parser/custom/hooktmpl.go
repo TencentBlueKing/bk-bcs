@@ -16,14 +16,12 @@ package custom
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/fatih/structs"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -38,7 +36,8 @@ func ParseHookTmpl(manifest map[string]interface{}) map[string]interface{} {
 // ParseHookTmplSpec ...
 func ParseHookTmplSpec(manifest map[string]interface{}, spec *model.HookTmplSpec) {
 	for _, arg := range mapx.GetList(manifest, "spec.args") {
-		spec.Args = append(spec.Args, genHookTmplArg(arg.(map[string]interface{})))
+		a := arg.(map[string]interface{})
+		spec.Args = append(spec.Args, model.HookTmplArg{Key: a["name"].(string), Value: mapx.GetStr(a, "value")})
 	}
 	spec.Policy = mapx.Get(manifest, "spec.policy", HookTmplPolicyParallel).(string)
 	for _, metric := range mapx.GetList(manifest, "spec.metrics") {
@@ -46,47 +45,10 @@ func ParseHookTmplSpec(manifest map[string]interface{}, spec *model.HookTmplSpec
 	}
 }
 
-func genHookTmplArg(raw map[string]interface{}) model.HookTmplArg {
-	rawName := raw["name"].(string)
-	argType, argName, argValue, containerIdx := "", "", "", 0
-	switch {
-	case slice.StringInSlice(rawName, []string{HookTmplArgTypePodIP, HookTmplArgTypePodName, HookTmplArgTypePodNS}):
-		argType = rawName
-	case strings.HasPrefix(rawName, HookTmplArgTypePodContainer):
-		argType = HookTmplArgTypePodContainer
-		containerIdx = parseContainerIdx(rawName)
-	case strings.HasPrefix(rawName, HookTmplArgTypeModifiedContainer):
-		argType = HookTmplArgTypeModifiedContainer
-		containerIdx = parseContainerIdx(rawName)
-	default:
-		argType = HookTmplArgTypeCustom
-		argName = rawName
-		argValue = mapx.GetStr(raw, "value")
-	}
-	return model.HookTmplArg{Type: argType, ContainerIdx: containerIdx, Key: argName, Value: argValue}
-}
-
-// 解析容器 Index，规则如 PodContainer[1] -> 1，ModifiedContainer[0] -> 0
-func parseContainerIdx(argName string) int {
-	_, suffix := stringx.Partition(argName, "[")
-	idxStr, _ := stringx.Partition(suffix, "]")
-	idx, _ := strconv.Atoi(idxStr)
-	return idx
-}
-
 func genHookTmplMetric(raw map[string]interface{}) model.HookTmplMetric {
 	// 表单创建的 interval 单位都是秒
 	intervalStr, _ := stringx.Partition(mapx.Get(raw, "interval", "1s").(string), "s")
 	interval, _ := strconv.Atoi(intervalStr)
-
-	// 优先级 成功条件 > 失败条件
-	conditionType, conditionExp := HookTmplConditionSuccess, ""
-	if exp, ok := raw["successCondition"]; ok {
-		conditionExp = exp.(string)
-	} else if exp, ok = raw["failureCondition"]; ok {
-		conditionType = HookTmplConditionFailure
-		conditionExp = exp.(string)
-	}
 
 	// 优先级 累计成功 > 连续成功
 	successPolicy, successCnt := HookTmplSuccessfulLimit, int64(0)
@@ -97,25 +59,13 @@ func genHookTmplMetric(raw map[string]interface{}) model.HookTmplMetric {
 		successCnt = limit.(int64)
 	}
 
-	// 优先级 累计失败 > 连续失败
-	failurePolicy, failureCnt := HookTmplFailureLimit, int64(0)
-	if limit, ok := raw["successPolicy"]; ok {
-		failureCnt = limit.(int64)
-	} else if limit, ok = raw["consecutiveErrorLimit"]; ok {
-		failurePolicy = HookTmplConsecutiveErrorLimit
-		failureCnt = limit.(int64)
-	}
-
 	metric := model.HookTmplMetric{
-		Name:          mapx.GetStr(raw, "name"),
-		Count:         mapx.GetInt64(raw, "count"),
-		Interval:      interval,
-		ConditionType: conditionType,
-		ConditionExp:  conditionExp,
-		SuccessPolicy: successPolicy,
-		SuccessCnt:    successCnt,
-		FailurePolicy: failurePolicy,
-		FailureCnt:    failureCnt,
+		Name:                mapx.GetStr(raw, "name"),
+		Count:               mapx.GetInt64(raw, "count"),
+		Interval:            interval,
+		SuccessConditionExp: mapx.GetStr(raw, "successCondition"),
+		SuccessPolicy:       successPolicy,
+		SuccessCnt:          successCnt,
 	}
 
 	// provider 优先级 web > prometheus > kubernetes

@@ -29,10 +29,8 @@ type HookTmplSpec struct {
 
 // HookTmplArg ...
 type HookTmplArg struct {
-	Type         string `structs:"type"`
-	ContainerIdx int    `structs:"containerIdx"`
-	Key          string `structs:"key"`
-	Value        string `structs:"value"`
+	Key   string `structs:"key"`
+	Value string `structs:"value"`
 }
 
 // HookTmplMetric ...
@@ -50,14 +48,11 @@ type HookTmplMetric struct {
 	Function string          `structs:"function"`
 	Fields   []HookTmplField `structs:"fields"`
 	// common fields
-	Count         int64  `structs:"count"`
-	Interval      int    `structs:"interval"`
-	ConditionType string `structs:"conditionType"`
-	ConditionExp  string `structs:"conditionExp"`
-	SuccessPolicy string `structs:"successPolicy"`
-	SuccessCnt    int64  `structs:"successCnt"`
-	FailurePolicy string `structs:"failurePolicy"`
-	FailureCnt    int64  `structs:"failureCnt"`
+	Count               int64  `structs:"count"`
+	Interval            int    `structs:"interval"`
+	SuccessConditionExp string `structs:"successConditionExp"`
+	SuccessPolicy       string `structs:"successPolicy"`
+	SuccessCnt          int64  `structs:"successCnt"`
 }
 
 // HookTmplField ...
@@ -111,7 +106,7 @@ type GDeployGracefulManage struct {
 type GDeployHookSpec struct {
 	Enabled  bool          `structs:"enabled"`
 	TmplName string        `structs:"tmplName"`
-	Args     []HookCallArg `structs:"params"`
+	Args     []HookCallArg `structs:"args"`
 }
 
 // HookCallArg 调用 Hook 时传入的参数

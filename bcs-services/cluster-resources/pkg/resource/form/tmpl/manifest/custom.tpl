@@ -2,14 +2,8 @@
 {{- if .args }}
 args:
   {{- range .args }}
-  {{- if or (eq .type "PodContainer") (eq .type "ModifiedContainer") }}
-  - name: {{ .type }}{{`[`}}{{ .containerIdx | default 0 }}{{`]`}}
-  {{- else if eq .type "Custom" }}
   - name: {{ .key | quote }}
     value: {{ .value | default "" | quote }}
-  {{- else }}
-  - name: {{ .type }}
-  {{- end }}
   {{- end }}
 {{- end }}
 {{- end }}
@@ -21,20 +15,11 @@ metrics:
   - name: {{ .name | quote }}
     interval: {{ .interval }}s
     count: {{ .count | default 0 }}
-    {{- if eq .conditionType "success" }}
-    successCondition: {{ .conditionExp | quote }}
+    successCondition: {{ .successConditionExp | quote }}
     {{- if eq .successPolicy "successfulLimit" }}
-    successfulLimit: {{ .successCnt }}
+    successfulLimit: {{ .successCnt | default 1 }}
     {{- else }}
-    consecutiveSuccessfulLimit: {{ .successCnt }}
-    {{- end }}
-    {{- else }}
-    failureCondition: {{ .conditionExp | quote }}
-    {{- if eq .failurePolicy "failureLimit" }}
-    failureLimit: {{ .failureCnt }}
-    {{- else }}
-    consecutiveErrorLimit: {{ .failureCnt }}
-    {{- end }}
+    consecutiveSuccessfulLimit: {{ .successCnt | default 1 }}
     {{- end }}
     {{- include "custom.hookTmplMetricProvider" . | nindent 4 }}
   {{- end }}

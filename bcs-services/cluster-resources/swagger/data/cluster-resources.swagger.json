@@ -4810,7 +4810,7 @@
     },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods": {
       "get": {
-        "summary": "ListPoWithNodeName API",
+        "summary": "ListPoByNode API",
         "description": "通过节点名称获取 Pod 列表",
         "operationId": "Workload_ListPoByNode",
         "responses": {

@@ -1,10 +1,10 @@
 {{ include "common.metadata" . }}
 - - group:
       - - group:
-            - [ "type", "containerIdx", "key", "value", "." ]
+            - [ "key", "value", "." ]
           prop: args
           container:
-            grid-template-columns: "1fr 1fr 1fr 1fr auto"
+            grid-template-columns: "1fr 1fr auto"
       - [ "policy" ]
       - - group:
             - [ "name", "." ]
@@ -18,9 +18,8 @@
                   grid-template-columns: "1fr 1fr auto"
                 prop: fields
             - [ "count", "interval" ]
-            - [ "conditionType", "conditionExp" ]
+            - [ "successConditionExp", "." ]
             - [ "successPolicy", "successCnt" ]
-            - [ "failurePolicy", "failureCnt" ]
           prop: metrics
           container:
             grid-template-columns: "1fr 1fr 120px"
