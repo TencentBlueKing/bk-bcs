@@ -54,10 +54,10 @@ class Projects(viewsets.ViewSet):
 
     def get_project(self, request, project_id):
         """单个项目信息"""
-        data = request.project
+        project = Project.get_project(request.user.token.access_token, project_id)
         # 添加业务名称
-        data["cc_app_name"] = cc.get_application_name(request.project.cc_app_id)
-        return Response(data)
+        project["cc_app_name"] = cc.get_application_name(request.project.cc_app_id)
+        return Response(project)
 
     def update_bound_biz(self, request, project_id):
         """更新项目信息"""
