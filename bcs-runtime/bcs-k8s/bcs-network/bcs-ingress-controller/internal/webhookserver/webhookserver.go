@@ -20,9 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -36,6 +34,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -58,8 +58,10 @@ type ServerOption struct {
 type Server struct {
 	server *http.Server
 	// k8s client
-	k8sClient client.Client
-	poolCache *portpoolcache.Cache
+	k8sClient    client.Client
+	poolCache    *portpoolcache.Cache
+	podName      string
+	podNamespace string
 }
 
 // NewHookServer create new hook server object
@@ -75,13 +77,16 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpo
 			Addr:      fmt.Sprintf("%s:%v", opt.Addr, opt.Port),
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
 		},
-		k8sClient: k8sClient,
-		poolCache: poolCache,
+		k8sClient:    k8sClient,
+		poolCache:    poolCache,
+		podName:      os.Getenv(constant.EnvIngressPodName),
+		podNamespace: os.Getenv(constant.EnvIngressPodNamespace),
 	}, nil
 }
 
 // Start start http server
-func (s *Server) Start() {
+func (s *Server) Start(stop <-chan struct{}) error {
+	blog.Infof("start webhook server")
 	mux := http.NewServeMux()
 	// register handler function
 	mux.HandleFunc("/portpool/v1/validate", s.HandleValidatingWebhook)
@@ -95,13 +100,27 @@ func (s *Server) Start() {
 	}()
 
 	blog.Infof("webhook server started")
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
 
-	blog.Infof("Got OS shutdown signal, shutting down webhook server gracefully...")
+	// patch pod label to add leader label
+	if err := s.patchPod(s.podName, s.podNamespace, constant.LeaderLabelValueTrue); err != nil {
+		blog.Errorf("failed to patch pod %s/%s, err %s", s.podNamespace, s.podName, err.Error())
+		return err
+	}
+	<-stop
+	blog.Infof("Got controller stop signal, shutting down webhook server gracefully...")
 	s.server.Shutdown(context.Background())
-	return
+	// patch pod label to remove leader
+	if err := s.patchPod(s.podName, s.podNamespace, constant.LeaderLabelValueFalse); err != nil {
+		blog.Errorf("failed to patch pod %s/%s, err %s", s.podNamespace, s.podName, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// NeedLeaderElection return true if need leader election
+func (s *Server) NeedLeaderElection() bool {
+	return true
 }
 
 // HandleValidatingWebhook handle validating webhook request
@@ -253,4 +272,31 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionR
 // convert error to admission response
 func errResponse(err error) *v1beta1.AdmissionResponse {
 	return &v1beta1.AdmissionResponse{Result: &metav1.Status{Message: err.Error()}}
+}
+
+func (s *Server) patchPod(name, namespace, isLeader string) error {
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		patchStruct := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"labels": map[string]string{
+					constant.LeaderLabel: isLeader,
+				},
+			},
+		}
+		patchData, err := json.Marshal(patchStruct)
+		if err != nil {
+			return err
+		}
+		updatePod := &k8scorev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+			},
+		}
+		return s.k8sClient.Patch(context.TODO(), updatePod, client.RawPatch(types.MergePatchType, patchData))
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
