@@ -66,6 +66,7 @@ type nodeTemplate struct {
 	Region       string
 	Resources    map[apiv1.ResourceName]resource.Quantity
 	Label        map[string]string
+	Taint        []*clustermanager.Taint
 }
 
 // MaxSize returns maximum size of the node group.
@@ -397,6 +398,15 @@ func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.No
 	node.Labels = cloudprovider.JoinStringMaps(node.Labels, template.Label)
 	// GenericLabels
 	node.Labels = cloudprovider.JoinStringMaps(node.Labels, buildGenericLabels(template, nodeName))
+
+	node.Spec.Taints = make([]apiv1.Taint, 0)
+	for _, t := range template.Taint {
+		node.Spec.Taints = append(node.Spec.Taints, apiv1.Taint{
+			Key:    t.Key,
+			Value:  t.Value,
+			Effect: apiv1.TaintEffect(t.Effect),
+		})
+	}
 
 	node.Status.Conditions = cloudprovider.BuildReadyConditions()
 	return &node, nil
