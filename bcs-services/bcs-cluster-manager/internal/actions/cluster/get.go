@@ -243,7 +243,8 @@ func (ca *CheckNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles check nodes in cluster request
-func (ca *CheckNodeAction) Handle(ctx context.Context, req *cmproto.CheckNodesRequest, resp *cmproto.CheckNodesResponse) {
+func (ca *CheckNodeAction) Handle(ctx context.Context, req *cmproto.CheckNodesRequest,
+	resp *cmproto.CheckNodesResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("check cluster node failed, req or resp is empty")
 		return

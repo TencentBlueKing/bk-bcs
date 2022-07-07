@@ -443,7 +443,8 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 }
 
 // BuildAddNodesToClusterTask build addNodes task
-func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	// addNodesToCluster has three steps:
 	// 1. call qcloud AddExistedInstancesToCluster to add node
 	// 2. call qcloud QueryTkeClusterInstances to check instance status(running initializing failed))
@@ -594,7 +595,8 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 }
 
 // BuildRemoveNodesFromClusterTask build removeNodes task
-func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
 	// 1. call qcloud DeleteTkeClusterInstance to delete node
 	// 2. update node DB info when delete node successful

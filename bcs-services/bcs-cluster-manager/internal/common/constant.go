@@ -19,7 +19,7 @@ import (
 // ResourceType resource type
 type ResourceType string
 
-// String()
+// String xxx
 func (rt ResourceType) String() string {
 	return string(rt)
 }

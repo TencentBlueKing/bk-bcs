@@ -306,7 +306,8 @@ func (da *DeleteAction) validate(req *cmproto.DeleteClusterReq) error {
 		req.InstanceDeleteMode = cloudprovider.Retain.String()
 	}
 
-	if req.InstanceDeleteMode != cloudprovider.Terminate.String() && req.InstanceDeleteMode != cloudprovider.Retain.String() {
+	if req.InstanceDeleteMode != cloudprovider.Terminate.String() &&
+		req.InstanceDeleteMode != cloudprovider.Retain.String() {
 		return fmt.Errorf("deleteInstanceMode is terminate or retain when delete cluster")
 	}
 
@@ -711,7 +712,8 @@ func (da *DeleteNodesAction) checkClusterNodeInfoDeletion() ([]string, error) {
 }
 
 // Handle delete cluster nodes request
-func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNodesRequest, resp *cmproto.DeleteNodesResponse) {
+func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNodesRequest,
+	resp *cmproto.DeleteNodesResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("delete cluster failed, req or resp is empty")
 		return
@@ -730,8 +732,9 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	if da.req.OnlyDeleteInfo {
 		nodeInnerIPs, err := da.checkClusterNodeInfoDeletion()
 		if err != nil || len(nodeInnerIPs) == 0 {
-			da.setResp(common.BcsErrClusterManagerDataEmptyErr, fmt.Sprintf("DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
-				"nodeInnerIPs empty"))
+			da.setResp(common.BcsErrClusterManagerDataEmptyErr,
+				fmt.Sprintf("DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
+					"nodeInnerIPs empty"))
 			return
 		}
 

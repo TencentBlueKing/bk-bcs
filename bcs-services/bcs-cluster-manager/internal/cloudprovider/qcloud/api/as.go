@@ -264,7 +264,7 @@ func (c *ASClient) ScaleOutInstances(asgID string, scaleOutNum uint64) (string, 
 	return *resp.Response.ActivityId, nil
 }
 
-// ScaleOutInstances 指定数量扩容实例, 返回伸缩活动ID
+// ScaleInInstances 指定数量扩容实例, 返回伸缩活动ID
 func (c *ASClient) ScaleInInstances(asgID string, scaleInNum uint64) (string, error) {
 	blog.Infof("ScaleInInstances input: asg %s; scaleIn %v", asgID, scaleInNum)
 

@@ -155,7 +155,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		return nil, fmt.Errorf("BuildCreateClusterTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.CreateClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateClusterJob.String()
 
 	return task, nil
 }
@@ -220,7 +220,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams["operator"] = opt.Operator
-	task.CommonParams["JobType"] = cloudprovider.ImportClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.ImportClusterJob.String()
 
 	return task, nil
 }
@@ -309,13 +309,14 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 		return nil, fmt.Errorf("BuildDeleteClusterTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.DeleteClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteClusterJob.String()
 
 	return task, nil
 }
 
 // BuildAddNodesToClusterTask build addNodes task
-func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	// addNodesToCluster has only two steps:
 	// 1. call bkops interface to add nodes to cluster
 	// 2. update DB operation
@@ -418,14 +419,15 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	task.CommonParams["operator"] = opt.Operator
 	task.CommonParams["user"] = opt.Operator
 
-	task.CommonParams["JobType"] = cloudprovider.AddNodeJob.String()
-	task.CommonParams["NodeIPs"] = strings.Join(nodeIPs, ",")
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.AddNodeJob.String()
+	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 
 	return task, nil
 }
 
 // BuildRemoveNodesFromClusterTask build removeNodes task
-func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
 	// 1. call blueking bkops to delete node
 	// 2. update node DB info when delete node successful
@@ -478,7 +480,8 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		for i := range action.PreActions {
 			plugin, ok := action.Plugins[action.PreActions[i]]
 			if !ok {
-				errMsg := fmt.Sprintf("cloud clusterManagerment removeNodesFromCluster preActions %s not exist", action.PreActions[i])
+				errMsg := fmt.Sprintf("cloud clusterManagerment removeNodesFromCluster preActions %s not exist",
+					action.PreActions[i])
 				return nil, fmt.Errorf("%s BuildRemoveNodesFromClusterTask failed: %v", cloudName, errMsg)
 			}
 			stepName := cloudprovider.BKSOPTask + "-" + action.PreActions[i]
@@ -518,8 +521,8 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	}
 	task.CurrentStep = task.StepSequence[0]
 
-	task.CommonParams["JobType"] = cloudprovider.DeleteNodeJob.String()
-	task.CommonParams["NodeIPs"] = strings.Join(nodeIPs, ",")
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteNodeJob.String()
+	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 
 	return task, nil
 }
@@ -536,7 +539,8 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 
 //BuildScalingNodesTask when scaling nodes, we need to create background
 // task to verify scaling status and update new nodes to local storage
-func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt *cloudprovider.TaskOptions) (*proto.Task, error) {
+func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup,
+	opt *cloudprovider.TaskOptions) (*proto.Task, error) {
 	//validate request params
 	return nil, nil
 }

@@ -57,7 +57,8 @@ func (ra *RetryCreateAction) validate(cluster *cmproto.Cluster) error {
 }
 
 // Handle retry create cluster request
-func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreateClusterReq, resp *cmproto.RetryCreateClusterResp) {
+func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreateClusterReq,
+	resp *cmproto.RetryCreateClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("retry createCluster failed, req or resp is empty")
 		return

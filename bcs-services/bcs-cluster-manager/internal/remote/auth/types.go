@@ -134,7 +134,7 @@ type PermList struct {
 func GetAllSharedClusterPerm() map[string]bool {
 	var (
 		defaultPerm = make(map[string]bool)
-		policyList = make([]string, 0)
+		policyList  = make([]string, 0)
 	)
 	policyList = append(policyList, PolicyList...)
 	policyList = append(policyList, V3PolicyList...)
@@ -162,7 +162,7 @@ func GetV3SharedClusterPerm() map[string]interface{} {
 	return defaultPerm
 }
 
-// GetSharedClusterPerm get sharedCluster perm policy
+// GetV0SharedClusterPerm get sharedCluster perm policy
 func GetV0SharedClusterPerm() map[string]bool {
 	defaultPerm := make(map[string]bool)
 	for _, p := range PolicyList {

@@ -235,7 +235,6 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 			ExistedInstancesPara: &tke.ExistedInstancesPara{
 				InstanceIds: common.StringPtrs(request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceIDs),
 				//InstanceAdvancedSettings: generateInstanceAdvancedSet(request.InstanceAdvanced),
-				//EnhancedService:          generateEnhancedService(request.ExistedInstancesForNode[i].ExistedInstancesPara.EnhancedService),
 				LoginSettings: generateLoginSet(request.ExistedInstancesForNode[i].ExistedInstancesPara.LoginSettings),
 				//SecurityGroupIds:         request.ExistedInstancesForNode[i].ExistedInstancesPara.SecurityGroupIds,
 			},

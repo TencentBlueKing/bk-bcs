@@ -306,7 +306,8 @@ func (ua *UpdateNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles update nodes request
-func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeRequest, resp *cmproto.UpdateNodeResponse) {
+func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeRequest,
+	resp *cmproto.UpdateNodeResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("update cluster node failed, req or resp is empty")
 		return
@@ -658,7 +659,8 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 			ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return
 		}
-		blog.Infof("only create nodes %v information to local storage under cluster %s successfully", req.Nodes, req.ClusterID)
+		blog.Infof("only create nodes %v information to local storage under cluster %s successfully",
+			req.Nodes, req.ClusterID)
 		ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 		return
 	}

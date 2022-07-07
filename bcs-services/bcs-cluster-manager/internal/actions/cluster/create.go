@@ -242,6 +242,11 @@ func (ca *CreateAction) validate() error {
 		return fmt.Errorf("lost kubernetes version in request")
 	}
 
+	// check masterIP
+	if len(ca.req.Master) == 0 {
+		return fmt.Errorf("lost kubernetes cluster masterIP")
+	}
+
 	// default not handle systemReinstall
 	ca.req.SystemReinstall = true
 
@@ -496,7 +501,8 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 	// Create Cluster by CloudProvider, underlay cloud cluster manager interface
 	provider, err := cloudprovider.GetClusterMgr(ca.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get cluster %s relative cloud provider %s failed, %s", ca.req.ClusterID, ca.cloud.CloudProvider, err.Error())
+		blog.Errorf("get cluster %s relative cloud provider %s failed, %s",
+			ca.req.ClusterID, ca.cloud.CloudProvider, err.Error())
 		ca.resp.Data = cls
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err

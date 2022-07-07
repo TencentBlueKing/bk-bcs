@@ -281,8 +281,13 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup, asc *as.LaunchConfiguration) *proto.NodeGroup {
-	// asg
+func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup,
+	asc *as.LaunchConfiguration) *proto.NodeGroup {
+	group = generateNodeGroupFromAsg(group, cloudNodeGroup, asg)
+	return generateNodeGroupFromAsc(group, cloudNodeGroup, asc)
+}
+
+func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup) *proto.NodeGroup {
 	if asg.AutoScalingGroupId != nil {
 		group.AutoScaling.AutoScalingID = *asg.AutoScalingGroupId
 	}
@@ -323,8 +328,10 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 	if asg.ServiceSettings != nil && asg.ServiceSettings.ScalingMode != nil {
 		group.AutoScaling.ScalingMode = *asg.ServiceSettings.ScalingMode
 	}
+	return group
+}
 
-	// asc
+func generateNodeGroupFromAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asc *as.LaunchConfiguration) *proto.NodeGroup {
 	if asc.LaunchConfigurationId != nil {
 		group.LaunchTemplate.LaunchConfigurationID = *asc.LaunchConfigurationId
 	}
@@ -341,16 +348,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 		group.LaunchTemplate.InstanceChargeType = *asc.InstanceChargeType
 	}
 	if asc.InternetAccessible != nil {
-		group.LaunchTemplate.InternetAccess = &proto.InternetAccessible{}
-		if asc.InternetAccessible.InternetChargeType != nil {
-			group.LaunchTemplate.InternetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
-		}
-		if asc.InternetAccessible.InternetMaxBandwidthOut != nil {
-			group.LaunchTemplate.InternetAccess.InternetMaxBandwidth = strconv.Itoa(int(*asc.InternetAccessible.InternetMaxBandwidthOut))
-		}
-		if asc.InternetAccessible.PublicIpAssigned != nil {
-			group.LaunchTemplate.InternetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
-		}
+		group.LaunchTemplate.InternetAccess = generateInternetAccessible(asc)
 	}
 	if asc.SecurityGroupIds != nil {
 		group.LaunchTemplate.SecurityGroupIDs = make([]string, 0)
@@ -359,10 +357,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 		}
 	}
 	if asc.ImageId != nil {
-		group.LaunchTemplate.ImageInfo = &proto.ImageInfo{ImageID: *asc.ImageId}
-		if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
-			group.LaunchTemplate.ImageInfo.ImageName = *cloudNodeGroup.NodePoolOs
-		}
+		group.LaunchTemplate.ImageInfo = generateImageInfo(cloudNodeGroup, group, *asc.ImageId)
 	}
 	if asc.UserData != nil {
 		group.LaunchTemplate.UserData = *asc.UserData
@@ -379,6 +374,28 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 		group.LaunchTemplate.ProjectID = fmt.Sprintf("%d", uint32(*asc.ProjectId))
 	}
 	return group
+}
+
+func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAccessible {
+	internetAccess := &proto.InternetAccessible{}
+	if asc.InternetAccessible.InternetChargeType != nil {
+		internetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
+	}
+	if asc.InternetAccessible.InternetMaxBandwidthOut != nil {
+		internetAccess.InternetMaxBandwidth = strconv.Itoa(int(*asc.InternetAccessible.InternetMaxBandwidthOut))
+	}
+	if asc.InternetAccessible.PublicIpAssigned != nil {
+		internetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
+	}
+	return internetAccess
+}
+
+func generateImageInfo(cloudNodeGroup *tke.NodePool, group *proto.NodeGroup, imageID string) *proto.ImageInfo {
+	imageInfo := &proto.ImageInfo{ImageID: imageID}
+	if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
+		imageInfo.ImageName = *cloudNodeGroup.NodePoolOs
+	}
+	return imageInfo
 }
 
 // UpdateCreateNodeGroupDBInfoTask update create node group db info task

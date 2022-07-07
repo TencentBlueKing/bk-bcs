@@ -3283,9 +3283,7 @@ message CreateClusterReq {
   repeated string master = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "master", 
     description: "集群master IP列表"
-  },
-  (validate.rules).repeated = {min_items: 1, max_items: 15}
-  ];
+  }];
   repeated string nodes = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "nodes", 
     description: "集群node IP列表"

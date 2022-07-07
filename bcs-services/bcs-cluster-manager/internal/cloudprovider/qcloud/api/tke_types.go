@@ -63,7 +63,7 @@ var (
 // ActivityStatus activity status
 type ActivityStatus string
 
-// Status return es
+// String return es
 func (as ActivityStatus) String() string {
 	return string(as)
 }
@@ -86,7 +86,7 @@ var (
 // InstanceAsStatus 实例在伸缩活动中的状态
 type InstanceAsStatus string
 
-// Status return es
+// String return es
 func (is InstanceAsStatus) String() string {
 	return string(is)
 }
@@ -105,7 +105,7 @@ var (
 // InstanceTkeStatus tke集群中实例状态
 type InstanceTkeStatus string
 
-// Status return es
+// String return es
 func (is InstanceTkeStatus) String() string {
 	return string(is)
 }

@@ -145,7 +145,8 @@ func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNo
 }
 
 // AddNodesToCluster add new node to cluster according cloudprovider
-func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("blueking AddNodesToCluster cluster is empty")
 	}
@@ -178,7 +179,8 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
-func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("blueking DeleteNodesFromCluster cluster is empty")
 	}
@@ -211,7 +213,8 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
+	opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
 	if cls == nil || opt == nil {
 		return true, nil
 	}

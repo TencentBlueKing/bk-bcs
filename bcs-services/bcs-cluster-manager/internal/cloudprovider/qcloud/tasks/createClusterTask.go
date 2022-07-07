@@ -16,10 +16,11 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -284,7 +285,8 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CreateClusterShieldAlarmTask[%s]: task %s not turn to run step %s, err %s",
+			taskID, taskID, stepName, err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -344,7 +346,8 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CreateTkeClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CreateTkeClusterTask[%s]: task %s not turn to run step %s, err %s",
+			taskID, taskID, stepName, err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -511,7 +514,8 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CheckTkeClusterStatusTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CheckTkeClusterStatusTask[%s]: task %s not turn to run step %s, err %s",
+			taskID, taskID, stepName, err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -773,7 +777,8 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s",
+			taskID, taskID, stepName, err.Error())
 		return err
 	}
 	// previous step successful when retry task

@@ -14,8 +14,9 @@
 package types
 
 import (
-	"github.com/ghodss/yaml"
 	"io/ioutil"
+
+	"github.com/ghodss/yaml"
 )
 
 // NOTE: This Config type definition is copied from k8s.io/client-go/tools/clientcmd/api/v1/types.go
@@ -211,7 +212,7 @@ type YamlInput struct {
 	YamlContent string
 }
 
-// GetKubeConfigFromYAMLFile get kubeConfig from YAML file
+// GetKubeConfigFromYAMLBody get kubeConfig from YAML file
 func GetKubeConfigFromYAMLBody(isFile bool, input YamlInput) (*Config, error) {
 	var (
 		kubeConfig []byte

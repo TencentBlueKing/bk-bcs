@@ -77,6 +77,19 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	if len(ua.req.Name) != 0 {
 		group.Name = ua.req.Name
 	}
+	ua.modifyNodeGroupAutoScaling(group)
+	ua.modifyNodeGroupLaunchTemplate(group)
+	ua.modifyNodeGroupNodeTemplate(group)
+	group.Labels = ua.req.Labels
+	group.Taints = ua.req.Taints
+	group.Tags = ua.req.Tags
+	if len(ua.req.NodeOS) != 0 {
+		group.NodeOS = ua.req.NodeOS
+	}
+	ua.group = group
+}
+
+func (ua *UpdateAction) modifyNodeGroupAutoScaling(group *cmproto.NodeGroup) {
 	if ua.req.AutoScaling != nil {
 		if ua.req.AutoScaling.MaxSize != 0 {
 			group.AutoScaling.MaxSize = ua.req.AutoScaling.MaxSize
@@ -98,6 +111,9 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 			group.AutoScaling.ScalingMode = ua.req.AutoScaling.ScalingMode
 		}
 	}
+}
+
+func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) {
 	if ua.req.LaunchTemplate != nil {
 		if ua.req.LaunchTemplate.InstanceType != "" {
 			group.LaunchTemplate.InstanceType = ua.req.LaunchTemplate.InstanceType
@@ -129,6 +145,9 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		group.LaunchTemplate.IsMonitorService = ua.req.LaunchTemplate.IsMonitorService
 		group.LaunchTemplate.IsSecurityService = ua.req.LaunchTemplate.IsSecurityService
 	}
+}
+
+func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 	if ua.req.NodeTemplate != nil {
 		if ua.req.NodeTemplate.NodeTemplateID != "" {
 			group.NodeTemplate.NodeTemplateID = ua.req.NodeTemplate.NodeTemplateID
@@ -173,13 +192,6 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
 		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
 	}
-	group.Labels = ua.req.Labels
-	group.Taints = ua.req.Taints
-	group.Tags = ua.req.Tags
-	if len(ua.req.NodeOS) != 0 {
-		group.NodeOS = ua.req.NodeOS
-	}
-	ua.group = group
 }
 
 func (ua *UpdateAction) getRelativeResource() error {

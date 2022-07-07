@@ -33,7 +33,7 @@ var (
 // TaskState bkops task status
 type TaskState string
 
-// String() to string
+// String to string
 func (ts TaskState) String() string {
 	return string(ts)
 }
@@ -146,7 +146,8 @@ func (c *Client) generateGateWayAuth(user string) (string, error) {
 }
 
 // CreateBkOpsTask create bkops task
-func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas, request *CreateTaskRequest) (*CreateTaskResponse, error) {
+func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas,
+	request *CreateTaskRequest) (*CreateTaskResponse, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -202,7 +203,8 @@ func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas, request
 }
 
 // StartBkOpsTask start bkops task
-func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas, request *StartTaskRequest) (*StartTaskResponse, error) {
+func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas,
+	request *StartTaskRequest) (*StartTaskResponse, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -259,7 +261,8 @@ func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas, request *Start
 }
 
 // GetTaskStatus get bkops task status
-func (c *Client) GetTaskStatus(url string, paras *TaskPathParas, request *StartTaskRequest) (*TaskStatusResponse, error) {
+func (c *Client) GetTaskStatus(url string, paras *TaskPathParas,
+	request *StartTaskRequest) (*TaskStatusResponse, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}

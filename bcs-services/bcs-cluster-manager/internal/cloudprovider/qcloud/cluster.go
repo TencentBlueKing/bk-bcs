@@ -176,13 +176,13 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, cls := range clusters {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
-			ClusterID:            *cls.ClusterId,
-			ClusterName:          *cls.ClusterName,
-			ClusterDescription:   *cls.ClusterDescription,
-			ClusterVersion:       *cls.ClusterVersion,
-			ClusterOS:            *cls.ClusterOs,
-			ClusterType:          *cls.ClusterType,
-			ClusterStatus:        *cls.ClusterStatus,
+			ClusterID:          *cls.ClusterId,
+			ClusterName:        *cls.ClusterName,
+			ClusterDescription: *cls.ClusterDescription,
+			ClusterVersion:     *cls.ClusterVersion,
+			ClusterOS:          *cls.ClusterOs,
+			ClusterType:        *cls.ClusterType,
+			ClusterStatus:      *cls.ClusterStatus,
 		})
 	}
 
@@ -190,7 +190,8 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 }
 
 // AddNodesToCluster add new node to cluster according cloudprovider
-func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud AddNodesToCluster cluster is empty")
 	}
@@ -227,7 +228,8 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
-func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud DeleteNodesFromCluster cluster is empty")
 	}
@@ -292,7 +294,8 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	clusterTotalNodes := uint64(math.Floor(float64((ipCount - uint64(cls.NetworkSettings.MaxServiceNum)) / uint64(cls.NetworkSettings.MaxNodePodNum))))
 
 	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable ipCount[%v] totalNodesCnt[%v] currentNodes[%v] masterCnt[%v]"+
-		"addNodeCnt[%v]", cls.ClusterID, cloudName, ipCount, clusterTotalNodes, opt.CurrentNodeCnt, len(cls.Master), opt.IncomingNodeCnt)
+		"addNodeCnt[%v]", cls.ClusterID, cloudName, ipCount, clusterTotalNodes, opt.CurrentNodeCnt,
+		len(cls.Master), opt.IncomingNodeCnt)
 
 	availableNodesCnt := clusterTotalNodes - uint64(len(cls.Master)) - opt.CurrentNodeCnt
 	if availableNodesCnt-opt.IncomingNodeCnt < 0 {

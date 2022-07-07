@@ -33,7 +33,8 @@ func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
 // will be released. Task is backgroup automatic task
-func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node, opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
+func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -48,12 +49,14 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 }
 
 // MoveNodesToGroup add cluster nodes to NodeGroup
-func (ng *NodeGroup) MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+func (ng *NodeGroup) MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
-func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.RemoveNodesOption) error {
+func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.RemoveNodesOption) error {
 	return cloudprovider.ErrCloudNotImplemented
 }
 
@@ -77,19 +80,22 @@ func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable b
 
 // CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 // deploy cluster-autoscaler in backgroup according cloudprovider implementation
-func (ng *NodeGroup) CreateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.CreateScalingOption) (*proto.Task, error) {
+func (ng *NodeGroup) CreateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
+	opt *cloudprovider.CreateScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // DeleteAutoScalingOption delete cluster autoscaling, cloudprovider will clean
 // cluster-autoscaler in backgroup according cloudprovider implementation
-func (ng *NodeGroup) DeleteAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.DeleteScalingOption) (*proto.Task, error) {
+func (ng *NodeGroup) DeleteAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
+	opt *cloudprovider.DeleteScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // UpdateAutoScalingOption update cluster autoscaling option, cloudprovider will update
 // cluster-autoscaler configuration in backgroup according cloudprovider implementation.
 // Implementation is optional.
-func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.DeleteScalingOption) (*proto.Task, error) {
+func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
+	opt *cloudprovider.DeleteScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

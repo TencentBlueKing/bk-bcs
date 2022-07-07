@@ -69,7 +69,7 @@ func (cm *ClusterManager) DeleteCloudAccount(ctx context.Context,
 	return nil
 }
 
-// ListCloudVPC implements interface cmproto.ClusterManagerServer
+// ListCloudAccount implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCloudAccount(ctx context.Context,
 	req *cmproto.ListCloudAccountRequest, resp *cmproto.ListCloudAccountResponse) error {
 	reqID, err := requestIDFromContext(ctx)

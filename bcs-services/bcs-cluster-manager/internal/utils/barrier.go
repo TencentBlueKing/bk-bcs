@@ -15,13 +15,13 @@ package utils
 
 import "sync"
 
-// RoutinePool
+// RoutinePool xxx
 type RoutinePool struct {
 	c  chan struct{}
 	wg *sync.WaitGroup
 }
 
-// NewRoutinePool
+// NewRoutinePool xxx
 func NewRoutinePool(maxSize int) *RoutinePool {
 	return &RoutinePool{
 		c:  make(chan struct{}, maxSize),
@@ -29,7 +29,7 @@ func NewRoutinePool(maxSize int) *RoutinePool {
 	}
 }
 
-// Add
+// Add xxx
 func (c *RoutinePool) Add(delta int) {
 	c.wg.Add(delta)
 	for i := 0; i < delta; i++ {
@@ -37,18 +37,18 @@ func (c *RoutinePool) Add(delta int) {
 	}
 }
 
-// Done
+// Done xxx
 func (c *RoutinePool) Done() {
 	<-c.c
 	c.wg.Done()
 }
 
-// Close
+// Close xxx
 func (c *RoutinePool) Close() {
 	close(c.c)
 }
 
-// Wait
+// Wait xxx
 func (c *RoutinePool) Wait() {
 	c.wg.Wait()
 }

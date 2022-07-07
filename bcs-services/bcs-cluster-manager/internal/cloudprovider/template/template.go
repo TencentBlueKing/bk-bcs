@@ -116,7 +116,8 @@ func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster
 }
 
 // GenerateBKopsStep generate common bk-sops step
-func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *proto.BKOpsPlugin, info ExtraInfo) (*proto.Step, error) {
+func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *proto.BKOpsPlugin,
+	info ExtraInfo) (*proto.Step, error) {
 	now := time.Now().Format(time.RFC3339)
 
 	step := &proto.Step{

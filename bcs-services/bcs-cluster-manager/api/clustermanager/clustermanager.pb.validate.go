@@ -10022,17 +10022,6 @@ func (m *CreateClusterReq) validate(all bool) error {
 
 	// no validation rules for ManageType
 
-	if l := len(m.GetMaster()); l < 1 || l > 15 {
-		err := CreateClusterReqValidationError{
-			field:  "Master",
-			reason: "value must contain between 1 and 15 items, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if m.GetNetworkSettings() == nil {
 		err := CreateClusterReqValidationError{
 			field:  "NetworkSettings",

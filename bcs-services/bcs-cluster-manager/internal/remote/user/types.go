@@ -110,7 +110,7 @@ type VerifyPermissionResponse struct {
 	Data       VerifyPermissionResult `json:"data"`
 }
 
-// VerifyPermissionResponse http verify response
+// VerifyPermissionResult http verify response
 type VerifyPermissionResult struct {
 	Allowed bool   `json:"allowed"`
 	Message string `json:"message"`

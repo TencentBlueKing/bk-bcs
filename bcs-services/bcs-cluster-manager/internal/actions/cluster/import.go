@@ -262,7 +262,8 @@ func (ia *ImportAction) importClusterTask(ctx context.Context, cls *cmproto.Clus
 	// Import Cluster by CloudProvider, underlay cloud cluster manager interface
 	provider, err := cloudprovider.GetClusterMgr(ia.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get cluster %s relative cloud provider %s failed, %s", ia.req.ClusterID, ia.cloud.CloudProvider, err.Error())
+		blog.Errorf("get cluster %s relative cloud provider %s failed, %s", ia.req.ClusterID,
+			ia.cloud.CloudProvider, err.Error())
 		ia.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err
 	}
