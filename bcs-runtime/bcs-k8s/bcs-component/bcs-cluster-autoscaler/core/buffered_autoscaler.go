@@ -34,6 +34,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
+	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 
@@ -61,6 +62,7 @@ type BufferedAutoscaler struct {
 	nodeInfoCache map[string]*schedulernodeinfo.NodeInfo
 	ignoredTaints taintKeySet
 	ratio         float64
+	webhook       Webhook
 }
 
 type bufferedAutoscalerProcessorCallbacks struct {
@@ -101,7 +103,8 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff, ratio float64) core.Autoscaler {
+	backoff backoff.Backoff, ratio float64,
+	client kubeclient.Interface) core.Autoscaler {
 
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
 	autoscalingContext := contextinternal.NewAutoscalingContext(opts, predicateChecker, autoscalingKubeClients,
@@ -124,6 +127,16 @@ func NewBufferedAutoscaler(
 
 	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, ratio)
 
+	var webhook Webhook
+	switch opts.WebhookMode {
+	case WebMode:
+		webhook = NewWebScaler(opts.WebhookModeConfig)
+	case ConfigMapMode:
+		webhook = NewConfigMapScaler(client, opts.WebhookModeConfig)
+	default:
+		webhook = nil
+	}
+
 	return &BufferedAutoscaler{
 		Context:                 autoscalingContext,
 		startTime:               time.Now(),
@@ -137,6 +150,7 @@ func NewBufferedAutoscaler(
 		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
 		ignoredTaints:           ignoredTaints,
 		ratio:                   ratio,
+		webhook:                 webhook,
 	}
 }
 
@@ -231,6 +245,15 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		return typedErr
 	}
 	metrics.UpdateLastTime(metrics.Autoscaling, time.Now())
+
+	if b.webhook != nil {
+		originalScheduledPods, listErr := b.ScheduledPodLister().List()
+		if listErr != nil {
+			klog.Errorf("Failed to list scheduled pods: %v", listErr)
+			return errors.ToAutoscalerError(errors.ApiCallError, listErr)
+		}
+		return b.webhook.DoWebhook(contexts, b.clusterStateRegistry, b.scaleDown, allNodes, originalScheduledPods)
+	}
 
 	// set minSize of nodegroups in cron mode
 	err = b.doCron(contexts, b.clusterStateRegistry, currentTime)
