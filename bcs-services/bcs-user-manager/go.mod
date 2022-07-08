@@ -30,7 +30,11 @@ require (
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	k8s.io/apimachinery v0.23.1
-	k8s.io/api v0.23.1
+)
+
+require (
+	github.com/google/gofuzz v1.1.0 // indirect
+	k8s.io/api v0.23.1 // indirect
 )
 
 require (
@@ -92,6 +96,5 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/api v0.23.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )

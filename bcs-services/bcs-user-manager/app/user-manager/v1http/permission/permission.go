@@ -572,7 +572,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 	}
 
 	// skip permission if user is admin
-	if user.UserType == sqlstore.AdminUser {
+	if user.UserType == models.AdminUser {
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
 			Allowed: true,
 			Message: fmt.Sprintf("admin user skip cluster permission check"),

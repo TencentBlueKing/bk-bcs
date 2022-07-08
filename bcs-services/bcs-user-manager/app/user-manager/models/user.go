@@ -30,7 +30,26 @@ type BcsUser struct {
 	DeletedAt *time.Time `json:"deleted_at" gorm:"type:timestamp null;default:null"` // user-token删除时间
 }
 
+const (
+	// AdminUser definition
+	AdminUser = iota + 1
+	// SaasUser definition
+	SaasUser
+	// PlainUser definition
+	PlainUser
+	// ClientUser define jwt client user
+	ClientUser
+)
+
 // HasExpired mean that is this token has been expired
 func (t *BcsUser) HasExpired() bool {
 	return time.Now().After(t.ExpiresAt)
+}
+
+// IsClient check if this user is client
+func (t *BcsUser) IsClient() bool {
+	if t.UserType == PlainUser {
+		return false
+	}
+	return true
 }

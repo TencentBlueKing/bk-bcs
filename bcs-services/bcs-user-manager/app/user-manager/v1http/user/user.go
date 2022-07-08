@@ -38,7 +38,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter("user_name")
 	user := &models.BcsUser{
 		Name:     userName,
-		UserType: sqlstore.AdminUser,
+		UserType: models.AdminUser,
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -72,7 +72,7 @@ func GetAdminUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	userName := request.PathParameter("user_name")
-	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.AdminUser})
+	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: models.AdminUser})
 	if user == nil {
 		metrics.ReportRequestAPIMetrics("GetAdminUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("user [%s] not found in db", userName)
@@ -94,7 +94,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter("user_name")
 	user := &models.BcsUser{
 		Name:     userName,
-		UserType: sqlstore.SaasUser,
+		UserType: models.SaasUser,
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -129,7 +129,7 @@ func GetSaasUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	userName := request.PathParameter("user_name")
-	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.SaasUser})
+	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: models.SaasUser})
 	if user == nil {
 		metrics.ReportRequestAPIMetrics("GetSaasUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("user [%s] not found in db", userName)
@@ -151,7 +151,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	userName := request.PathParameter("user_name")
 	user := &models.BcsUser{
 		Name:     userName,
-		UserType: sqlstore.PlainUser,
+		UserType: models.PlainUser,
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -186,7 +186,7 @@ func GetPlainUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	userName := request.PathParameter("user_name")
-	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.PlainUser})
+	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: models.PlainUser})
 	if user == nil {
 		metrics.ReportRequestAPIMetrics("GetPlainUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("failed to get user, user [%s] not found in db", userName)
@@ -223,7 +223,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.PlainUser})
+	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: models.PlainUser})
 	if user == nil {
 		metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("failed to refresh token, user [%s] not found in db", userName)
@@ -265,7 +265,7 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	userName := request.PathParameter("user_name")
-	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.SaasUser})
+	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: models.SaasUser})
 	if user == nil {
 		metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("failed to refresh token, user [%s] not found in db", userName)
