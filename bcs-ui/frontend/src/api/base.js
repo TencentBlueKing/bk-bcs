@@ -23,6 +23,7 @@ export const dashbordList = request('get', `${CR_API_URL}/projects/$projectId/cl
 export const formSchema = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/form_schema`)
 export const dashbordListWithoutNamespace = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/$type/$category`) // PersistentVolume, StorageClass资源暂不支持命名空间
 export const retrieveDetail = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category/$name`)
+export const retrieveCustomObjectDetail = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$name?namespace=$namespaceId`)
 export const retrieveContainerDetail = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/$category/$name/containers/$containerName`)
 export const listWorkloadPods = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods`)
 export const listStoragePods = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/$type`)

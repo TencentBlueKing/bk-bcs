@@ -14,6 +14,7 @@ export interface IDetailOptions {
     namespace: string;
     type: string;
     defaultActivePanel: string;
+    crd: string;
 }
 
 export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
@@ -48,6 +49,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
         return yamljs.dump(detail.value?.manifest || {})
     })
     const webAnnotations = ref<any>({})
+    const additionalColumns = ref<any>([])
     // 界面权限
     const pagePerms = computed(() => {
         return {
@@ -77,6 +79,22 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
         return detail.value
     }
 
+    const handleGetCustomObjectDetail = async () => {
+        const { name, crd, namespace } = options
+        // workload详情
+        isLoading.value = true
+        const res = await $store.dispatch('dashboard/getCustomObjectResourceDetail', {
+            $crdName: crd,
+            $namespaceId: namespace,
+            $name: name
+        })
+        detail.value = res.data
+        webAnnotations.value = res.webAnnotations
+        additionalColumns.value = res.webAnnotations?.additionalColumns
+        isLoading.value = false
+        return detail.value
+    }
+
     const handleShowYamlPanel = () => {
         showYamlPanel.value = true
     }
@@ -97,6 +115,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
                     type,
                     category,
                     kind,
+                    crd: options.crd,
                     formUpdate: webAnnotations.value?.featureFlag?.FORM_UPDATE
                 }
             })
@@ -110,7 +129,8 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
                 query: {
                     type,
                     category,
-                    kind
+                    kind,
+                    crd: options.crd
                 }
             })
         }
@@ -142,6 +162,16 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
         })
     }
 
+    const getJsonPathValue = (row, path: string) => {
+        const keys = path.split('.').filter(str => !!str)
+        return keys.reduce((data, key) => {
+            if (typeof data === 'object') {
+                return data?.[key]
+            }
+            return data
+        }, row)
+    }
+
     return {
         isLoading,
         detail,
@@ -150,13 +180,17 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
         annotations,
         metadata,
         manifestExt,
+        webAnnotations,
+        additionalColumns,
         yaml,
         showYamlPanel,
         pagePerms,
         handleShowYamlPanel,
         handleTabChange,
         handleGetDetail,
+        handleGetCustomObjectDetail,
         handleUpdateResource,
-        handleDeleteResource
+        handleDeleteResource,
+        getJsonPathValue
     }
 }

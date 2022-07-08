@@ -11,6 +11,7 @@
 import {
     dashbordList,
     retrieveDetail,
+    retrieveCustomObjectDetail,
     podMetric,
     listWorkloadPods,
     listStoragePods,
@@ -96,6 +97,16 @@ export default {
          */
         async getResourceDetail (context, params) {
             const res = await retrieveDetail(params, { needRes: true }).catch(() => ({
+                data: {
+                    manifest: {},
+                    manifestExt: {}
+                }
+            }))
+            return res
+        },
+
+        async getCustomObjectResourceDetail (context, params) {
+            const res = await retrieveCustomObjectDetail(params, { needRes: true }).catch(() => ({
                 data: {
                     manifest: {},
                     manifestExt: {}

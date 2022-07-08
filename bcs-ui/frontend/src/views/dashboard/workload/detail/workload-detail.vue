@@ -11,6 +11,12 @@
                             <span class="label">{{ item.label }}</span>
                             <span class="value">{{ item.value }}</span>
                         </div>
+                        <div v-for="item in additionalColumns"
+                            :key="item.name"
+                            class="basic-item">
+                            <span class="label">{{ item.name }}</span>
+                            <span class="value">{{ getJsonPathValue(detail && detail.manifest, item.JSONPath) }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="btns">
@@ -19,6 +25,11 @@
                         <bk-button theme="primary"
                             @click="handleUpdateResource">{{$t('更新')}}</bk-button>
                         <bk-button theme="danger"
+                            v-authority="{
+                                clickable: webAnnotations.perms && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.clickable : true,
+                                content: webAnnotations.perms && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.tip : '',
+                                disablePerms: true
+                            }"
                             @click="handleDeleteResource">{{$t('删除')}}</bk-button>
                     </template>
                 </div>
@@ -43,6 +54,11 @@
                 <div class="info-item">
                     <span class="label">{{ $t('存在时间') }}</span>
                     <span class="value">{{ manifestExt.age }}</span>
+                </div>
+                <div class="info-item" v-if="detail && detail.manifest.spec.updateStrategy">
+                    <span class="label">{{ $t('升级策略') }}</span>
+                    <span class="value">{{ detail.manifest.spec.updateStrategy.type === 'RollingUpdate'
+                        ? $t('滚动升级') : $t('原地升级') }}</span>
                 </div>
             </div>
         </div>
@@ -224,6 +240,11 @@
                 default: '',
                 required: true
             },
+            crd: {
+                type: String,
+                default: '',
+                required: true
+            },
             // 是否隐藏 更新 和 删除操作（兼容集群管理应用详情）
             hiddenOperate: {
                 type: Boolean,
@@ -232,6 +253,7 @@
         },
         setup (props, ctx) {
             const { $store, $bkMessage, $i18n, $route } = ctx.root
+            const curType = props.category === 'custom_objects' ? 'crd' : 'workloads'
             const {
                 isLoading,
                 detail,
@@ -240,16 +262,20 @@
                 annotations,
                 metadata,
                 manifestExt,
+                webAnnotations,
+                additionalColumns,
                 yaml,
                 showYamlPanel,
+                getJsonPathValue,
                 handleGetDetail,
+                handleGetCustomObjectDetail,
                 handleShowYamlPanel,
                 handleUpdateResource,
                 handleDeleteResource
             } = useDetail(ctx, {
                 ...props,
                 defaultActivePanel: 'pod',
-                type: 'workloads'
+                type: curType
             })
             const podLoading = ref(false)
             const workloadPods = ref<IDetail|null>(null)
@@ -341,7 +367,8 @@
                 deployments: 'deployment',
                 daemonsets: 'daemonset',
                 statefulsets: 'statefulset',
-                jobs: 'job'
+                jobs: 'job',
+                'custom_objects': 'custom_objects'
             } // 兼容老接口 category 类型
             const pagination = ref({
                 current: 1,
@@ -386,7 +413,11 @@
             const { start, stop } = useInterval(handleRefreshPodsStatus, 8000)
             onMounted(async () => {
                 // 详情接口前置
-                await handleGetDetail()
+                if (props.category === 'custom_objects') {
+                    await handleGetCustomObjectDetail()
+                } else {
+                    await handleGetDetail()
+                }
                 await handleGetWorkloadPods()
                 handleGetEventList()
                 // 开启轮询
@@ -401,6 +432,8 @@
                 detail,
                 metadata,
                 manifestExt,
+                webAnnotations,
+                additionalColumns,
                 basicInfoList,
                 activePanel,
                 params,
@@ -425,6 +458,7 @@
                 handleUpdateResource,
                 handleDeleteResource,
                 handleReschedule,
+                getJsonPathValue,
                 ...useLog()
             }
         }

@@ -48,6 +48,12 @@
                 type: String,
                 default: ''
             },
+            // crd名称
+            crd: {
+                type: String,
+                default: '',
+                required: true
+            },
             // kind类型
             kind: {
                 type: String,
@@ -89,7 +95,8 @@
                 cronjobs: 'CJ',
                 jobs: 'Job',
                 pods: 'Pod',
-                container: 'Container'
+                container: 'Container',
+                'custom_objects': 'CObj'
             }
             // 首字母大写
             const upperFirstLetter = (str: string) => {
