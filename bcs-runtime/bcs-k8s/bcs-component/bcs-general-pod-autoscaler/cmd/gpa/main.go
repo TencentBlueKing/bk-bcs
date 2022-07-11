@@ -134,6 +134,7 @@ func main() {
 		runConfig.GeneralPodAutoscalerTolerance,
 		runConfig.GeneralPodAutoscalerCPUInitializationPeriod.Duration,
 		runConfig.GeneralPodAutoscalerInitialReadinessDelay.Duration,
+		runConfig.GeneralPodAutoscalerWorkers,
 	)
 	coreFactory.Start(stop)
 	scalerFactory.Start(stop)
