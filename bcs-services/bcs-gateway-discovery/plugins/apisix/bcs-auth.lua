@@ -26,6 +26,7 @@ local schema = {
         bk_login_host = {type = "string", description = "bk login host (with scheme prefix)"},
         private_key = {type = "string", description = "jwt private_key"},
         bkapigw_jwt_verify_key = {type = "string", description = "jwt verify key for bkapigw"},
+        bkapigw_jwt_verify_key_map = {type = "object", description = "jwt verify keys for bkapigw"},
         exp = {type = "integer", default = 300, description = "jwt exp time in seconds"},
         -- redis backend config
         redis_host = {type = "string", description = "redis for bcs-auth plugin: host"},
@@ -34,7 +35,11 @@ local schema = {
         redis_database = {type = "integer", default = 0, description = "redis for bcs-auth plugin: database num"},
         run_env = {type = "string", default = "ce", description = "apisix on ce or cloud env"}
     },
-    required = {"bk_login_host", "private_key", "redis_host", "redis_password"}
+    required = {"bk_login_host", "private_key", "redis_host", "redis_password"},
+    oneOf = {
+        {required = {"bkapigw_jwt_verify_key"}},
+        {required = {"bkapigw_jwt_verify_key_map"}},
+    },
 }
 
 

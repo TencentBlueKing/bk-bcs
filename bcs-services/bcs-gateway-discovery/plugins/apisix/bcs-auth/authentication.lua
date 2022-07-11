@@ -157,11 +157,16 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
         return TokenAuthentication:fetch_credential(conf, ctx)
     end
 
-    local key = conf.bkapigw_jwt_verify_key
     local jwt_obj = resty_jwt:load_jwt(jwt_str)
     if not jwt_obj then
         core.log.error("load jwt from apigw jwt token failed, jwt token:"..jwt_str)
         core.response.exit(401, "Bad Bkapi JWT token")
+    end
+    local key = nil
+    if conf.bkapigw_jwt_verify_key_map and conf.bkapigw_jwt_verify_key_map[jwt_obj.header.kid] then
+        key = conf.bkapigw_jwt_verify_key_map[jwt_obj.header.kid]
+    else if conf.bkapigw_jwt_verify_key then
+        key = conf.bkapigw_jwt_verify_key
     end
     if not key then
         core.log.error("no verify key for apigw jwt token, jwt token:"..jwt_str)

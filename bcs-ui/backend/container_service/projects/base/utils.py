@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 from typing import Dict, List, Optional
 
 from backend.components import paas_cc
+from backend.utils.basic import normalize_time
 from backend.utils.decorators import parse_response_data
 
 
@@ -49,6 +50,8 @@ def list_projects(access_token: str, query_params: Optional[Dict] = None) -> Lis
     # 为了兼容导航的参数要求, 增加了project_code字段
     for p in data:
         p["project_code"] = p["english_name"]
+        p['updated_at'] = normalize_time(p['updated_at'])
+
     return data
 
 
