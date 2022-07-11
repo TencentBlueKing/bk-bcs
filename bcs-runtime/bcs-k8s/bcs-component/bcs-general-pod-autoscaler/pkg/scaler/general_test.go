@@ -692,6 +692,7 @@ func (tc *testCase) setupController(t *testing.T) (*GeneralController, informers
 		defaultTestingTolerance,
 		defaultTestingCPUInitializationPeriod,
 		defaultTestingDelayOfInitialReadinessStatus,
+		1,
 	)
 	gpaController.gpaListerSynced = alwaysReady
 	if tc.recommendations != nil {

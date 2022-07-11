@@ -100,6 +100,10 @@ func (o *RunOptions) addGPAFlags() {
 		"general-pod-autoscaler-initial-readiness-delay",
 		o.GeneralPodAutoscalerInitialReadinessDelay.Duration,
 		"The period after pod start during which readiness changes will be treated as initial readiness.")
+	pflag.IntVar(&o.GeneralPodAutoscalerWorkers,
+		"general-pod-autoscaler-workers",
+		o.GeneralPodAutoscalerWorkers,
+		"The number for parallel process worker.")
 }
 
 // NewConfig new config
