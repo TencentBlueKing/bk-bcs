@@ -139,7 +139,7 @@ replicas:
           datasource:
             - label: {{ i18n "滚动升级" .lang }}
               value: RollingUpdate
-            - label: {{ i18n "删除" .lang }}
+            - label: {{ i18n "手动删除" .lang }}
               value: OnDelete
       ui:reactions:
         - target: "{{`{{`}} $widgetNode?.getSibling('maxUnavailable')?.id {{`}}`}}"

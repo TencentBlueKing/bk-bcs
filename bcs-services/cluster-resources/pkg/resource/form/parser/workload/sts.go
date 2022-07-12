@@ -51,7 +51,7 @@ func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplicas) {
 	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
-	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", "RollingUpdate").(string)
+	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", DefaultUpdateStrategy).(string)
 	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
 }
 

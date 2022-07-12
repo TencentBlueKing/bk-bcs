@@ -28,8 +28,8 @@ var lightSTSManifest = map[string]interface{}{
 	"spec": map[string]interface{}{
 		"replicas":            int64(3),
 		"podManagementPolicy": "OrderedReady",
-		"strategy": map[string]interface{}{
-			"type": "RollingUpdate",
+		"updateStrategy": map[string]interface{}{
+			"type": "OnDelete",
 		},
 		"volumeClaimTemplates": []interface{}{
 			map[string]interface{}{
@@ -67,7 +67,7 @@ var lightSTSManifest = map[string]interface{}{
 
 var exceptedSTSReplicas = model.STSReplicas{
 	Cnt:            3,
-	UpdateStrategy: "RollingUpdate",
+	UpdateStrategy: "OnDelete",
 	PodManPolicy:   "OrderedReady",
 }
 

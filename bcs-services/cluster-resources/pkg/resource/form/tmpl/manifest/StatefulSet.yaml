@@ -9,7 +9,7 @@ spec:
   {{- if .spec.replicas.svcName }}
   serviceName: {{ .spec.replicas.svcName }}
   {{- end }}
-  strategy:
+  updateStrategy:
     type: {{ .spec.replicas.updateStrategy }}
   {{- if .spec.replicas.podManPolicy }}
   podManagementPolicy: {{ .spec.replicas.podManPolicy }}
