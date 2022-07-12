@@ -1,3 +1,18 @@
+{{- define "custom.hookTmplMetadata" -}}
+metadata:
+  name: {{ .metadata.name }}
+  namespace: {{ .metadata.namespace }}
+  # HookTemplate 不允许用户自己编辑标签，所以只会有删除保护策略的标签
+  {{- if eq .spec.deletionProtectPolicy "Always" }}
+  labels:
+    io.tencent.bcs.dev/deletion-allow: Always
+  {{- end }}
+  {{- if .metadata.annotations }}
+  annotations:
+    {{- include "common.kvSlice2Map" .metadata.annotations | indent 4 }}
+  {{- end }}
+{{- end }}
+
 {{- define "custom.hookTmplArgs" -}}
 {{- if .args }}
 args:
@@ -15,7 +30,9 @@ metrics:
   - name: {{ .name | quote }}
     interval: {{ .interval }}s
     count: {{ .count | default 0 }}
-    successCondition: {{ .successConditionExp | quote }}
+    {{- if .successCondition }}
+    successCondition: {{ .successCondition | quote }}
+    {{- end }}
     {{- if eq .successPolicy "successfulLimit" }}
     successfulLimit: {{ .successCnt | default 1 }}
     {{- else }}
@@ -52,7 +69,7 @@ provider:
   {{- end }}
 {{- end }}
 
-{{- define "custom.gdeployMetadata" -}}
+{{- define "custom.gWorkloadMetadata" }}
 metadata:
   name: {{ .metadata.name }}
   namespace: {{ .metadata.namespace }}

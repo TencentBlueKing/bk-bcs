@@ -23,8 +23,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
+	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
@@ -62,18 +68,38 @@ func (c *NSClient) List(ctx context.Context, opts metav1.ListOptions) (map[strin
 		return nil, err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared {
-		projInfo, err := project.FromContext(ctx)
-		if err != nil {
-			return nil, err
-		}
-		projNSList := []interface{}{}
-		for _, ns := range manifest["items"].([]interface{}) {
-			if isProjNSinSharedCluster(ns.(map[string]interface{}), projInfo.Code) {
-				projNSList = append(projNSList, ns)
-			}
-		}
-		manifest["items"] = projNSList
-		return manifest, nil
+		return filterProjNSList(ctx, manifest)
+	}
+	return manifest, nil
+}
+
+// ListByClusterViewPerm 获取集群中的全量命名空间，权限控制为：集群查看，建议只搭配 selectItems 使用
+func (c *NSClient) ListByClusterViewPerm(
+	ctx context.Context, projectID, clusterID string, opts metav1.ListOptions,
+) (map[string]interface{}, error) {
+	// 权限控制为集群查看
+	permCtx := clusterAuth.NewPermCtx(
+		ctx.Value(ctxkey.UsernameKey).(string), projectID, clusterID,
+	)
+	if allow, err := iam.NewClusterPerm(projectID).CanView(permCtx); err != nil {
+		return nil, err
+	} else if !allow {
+		return nil, errorx.New(errcode.NoIAMPerm, i18n.GetMsg(ctx, "无集群查看权限"))
+	}
+
+	// 获取集群中所有的命名空间数据
+	ret, err := c.cli.Resource(c.res).List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	manifest := ret.UnstructuredContent()
+	// 根据集群类型，决定是否按项目过滤命名空间
+	clusterInfo, err := cluster.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if clusterInfo.Type == cluster.ClusterTypeShared {
+		return filterProjNSList(ctx, manifest)
 	}
 	return manifest, nil
 }
@@ -112,6 +138,22 @@ func IsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) b
 		return false
 	}
 	return isProjNSinSharedCluster(manifest, projInfo.Code)
+}
+
+// 从命名空间列表中，过滤出属于指定项目的（注：项目信息通过 context 获取）
+func filterProjNSList(ctx context.Context, manifest map[string]interface{}) (map[string]interface{}, error) {
+	projInfo, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	projNSList := []interface{}{}
+	for _, ns := range manifest["items"].([]interface{}) {
+		if isProjNSinSharedCluster(ns.(map[string]interface{}), projInfo.Code) {
+			projNSList = append(projNSList, ns)
+		}
+	}
+	manifest["items"] = projNSList
+	return manifest, nil
 }
 
 // 判断某命名空间，是否属于指定项目（仅共享集群有效）

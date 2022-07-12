@@ -99,6 +99,6 @@ func genGDeployHookSpec(hook map[string]interface{}) model.GDeployHookSpec {
 // label io.tencent.bcs.dev/deletion-allow key 不存在：无法删除
 func ParseGDeployDeletionProtect(manifest map[string]interface{}, protect *model.GDeployDeletionProtect) {
 	protect.Policy = mapx.Get(
-		manifest, []string{"metadata", "labels", res.DeletionProtectLabelKey}, res.GDeployDeletionProtectPolicyNotAllow,
+		manifest, []string{"metadata", "labels", res.DeletionProtectLabelKey}, res.DeletionProtectPolicyNotAllow,
 	).(string)
 }

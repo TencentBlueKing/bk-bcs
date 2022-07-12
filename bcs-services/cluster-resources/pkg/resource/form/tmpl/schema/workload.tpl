@@ -233,8 +233,8 @@ replicas:
           datasource:
             - label: {{ i18n "滚动升级" .lang }}
               value: RollingUpdate
-            - label: {{ i18n "重新创建" .lang }}
-              value: Recreate
+            - label: {{ i18n "手动删除" .lang }}
+              value: OnDelete
     podManPolicy:
       title: {{ i18n "Pod 管理策略" .lang }}
       type: string
@@ -975,6 +975,7 @@ volume:
       border: true
       showTitle: true
       type: card
+      verifiable: true
   ui:order:
     - pvc
     - hostPath

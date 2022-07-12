@@ -1,7 +1,7 @@
 apiVersion: {{ .metadata.apiVersion }}
 kind: HookTemplate
-{{ include "common.metadata" .metadata }}
+{{ include "custom.hookTmplMetadata" . }}
 spec:
-  policy: {{ .spec.policy }}
+  policy: {{ .spec.execPolicy }}
   {{- include "custom.hookTmplArgs" .spec | indent 2 }}
   {{- include "custom.hookTmplMetrics" .spec | indent 2 }}

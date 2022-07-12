@@ -19,6 +19,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
@@ -37,10 +38,18 @@ func New() *Handler {
 // ListNS ...
 func (h *Handler) ListNS(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
-) error {
-	ret, err := cli.NewNSCliByClusterID(ctx, req.ClusterID).List(
-		ctx, metav1.ListOptions{LabelSelector: req.LabelSelector},
-	)
+) (err error) {
+	var ret map[string]interface{}
+	// NOTE 获取命名空间列表（selectItems 格式）权限控制为集群查看，其他格式权限为命令空间列举
+	if req.Format == action.SelectItemsFormat {
+		ret, err = cli.NewNSCliByClusterID(ctx, req.ClusterID).ListByClusterViewPerm(
+			ctx, req.ProjectID, req.ClusterID, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		)
+	} else {
+		ret, err = cli.NewNSCliByClusterID(ctx, req.ClusterID).List(
+			ctx, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		)
+	}
 	if err != nil {
 		return err
 	}

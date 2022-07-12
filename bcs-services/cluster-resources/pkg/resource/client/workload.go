@@ -75,9 +75,11 @@ func (c *PodClient) List(
 	return manifest, nil
 }
 
-// ListAllNSPods 获取所有命名空间的 Pod，要求有集群管理权限
-func (c *PodClient) ListAllNSPods(ctx context.Context, projectID, clusterID string, opts metav1.ListOptions) (map[string]interface{}, error) {
-	// 权限控制为集群查看
+// ListAllPods 获取所有命名空间的 Pod，要求有集群管理权限
+func (c *PodClient) ListAllPods(
+	ctx context.Context, projectID, clusterID string, opts metav1.ListOptions,
+) (map[string]interface{}, error) {
+	// 权限控制为集群管理
 	permCtx := clusterAuth.NewPermCtx(
 		ctx.Value(ctxkey.UsernameKey).(string), projectID, clusterID,
 	)
@@ -114,8 +116,8 @@ func (c *PodClient) getPodOwnerRefs(
 		return nil, err
 	}
 	ownerRefs := []map[string]string{}
-	for _, res := range c.filterByOwnerRefs(ret.UnstructuredContent()["items"].([]interface{}), subOwnerRefs) {
-		resName, _ := mapx.GetItems(res.(map[string]interface{}), "metadata.name")
+	for _, r := range c.filterByOwnerRefs(ret.UnstructuredContent()["items"].([]interface{}), subOwnerRefs) {
+		resName, _ := mapx.GetItems(r.(map[string]interface{}), "metadata.name")
 		ownerRefs = append(ownerRefs, map[string]string{"kind": subResKind, "name": resName.(string)})
 	}
 	return ownerRefs, nil
@@ -187,7 +189,9 @@ func (c *PodClient) ListPodRelatedRes(
 }
 
 // 获取 Pod 关联的某种资源的名称列表
-func (c *PodClient) getPodRelatedResNameList(ctx context.Context, namespace, podName, resKind string) ([]string, error) {
+func (c *PodClient) getPodRelatedResNameList(
+	ctx context.Context, namespace, podName, resKind string,
+) ([]string, error) {
 	podManifest, err := c.GetManifest(ctx, namespace, podName)
 	if err != nil {
 		return nil, err

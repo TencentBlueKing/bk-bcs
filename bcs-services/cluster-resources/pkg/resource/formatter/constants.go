@@ -52,6 +52,7 @@ var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[st
 	resource.HPA: FormatHPA,
 
 	// CustomResource
-	resource.CRD:  FormatCRD,
-	resource.CObj: FormatCObj,
+	resource.CRD:     FormatCRD,
+	resource.GDeploy: FormatGDeploy,
+	resource.CObj:    FormatCObj,
 }

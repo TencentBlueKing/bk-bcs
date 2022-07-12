@@ -5,7 +5,8 @@
           prop: args
           container:
             grid-template-columns: "1fr 1fr auto"
-      - [ "policy" ]
+      - [ "execPolicy" ]
+      - [ "deletionProtectPolicy", "." ]
       - - group:
             - [ "name", "." ]
             - [ "hookType", "." ]
@@ -18,7 +19,7 @@
                   grid-template-columns: "1fr 1fr auto"
                 prop: fields
             - [ "count", "interval" ]
-            - [ "successConditionExp", "." ]
+            - [ "successCondition", "." ]
             - [ "successPolicy", "successCnt" ]
           prop: metrics
           container:

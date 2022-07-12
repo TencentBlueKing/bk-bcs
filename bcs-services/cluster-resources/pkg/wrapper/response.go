@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -85,7 +86,10 @@ func getRespMsgCode(err interface{}) (string, int32) {
 func genNewRespData(err interface{}) *structpb.Struct {
 	switch e := err.(type) {
 	case *perm.IAMPermError:
-		perms, _ := e.Perms()
+		perms, genPermErr := e.Perms()
+		if genPermErr != nil {
+			log.Warn(context.TODO(), "generate iam perm apply url failed: %v", genPermErr)
+		}
 		spbPerms, _ := pbstruct.Map2pbStruct(perms)
 		return spbPerms
 	default:

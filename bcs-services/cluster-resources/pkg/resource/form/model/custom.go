@@ -22,9 +22,10 @@ type HookTmpl struct {
 
 // HookTmplSpec ...
 type HookTmplSpec struct {
-	Args    []HookTmplArg    `structs:"args"`
-	Policy  string           `structs:"policy"`
-	Metrics []HookTmplMetric `structs:"metrics"`
+	Args                  []HookTmplArg    `structs:"args"`
+	ExecPolicy            string           `structs:"execPolicy"`
+	DeletionProtectPolicy string           `structs:"deletionProtectPolicy"`
+	Metrics               []HookTmplMetric `structs:"metrics"`
 }
 
 // HookTmplArg ...
@@ -48,11 +49,11 @@ type HookTmplMetric struct {
 	Function string          `structs:"function"`
 	Fields   []HookTmplField `structs:"fields"`
 	// common fields
-	Count               int64  `structs:"count"`
-	Interval            int    `structs:"interval"`
-	SuccessConditionExp string `structs:"successConditionExp"`
-	SuccessPolicy       string `structs:"successPolicy"`
-	SuccessCnt          int64  `structs:"successCnt"`
+	Count            int64  `structs:"count"`
+	Interval         int    `structs:"interval"`
+	SuccessCondition string `structs:"successCondition"`
+	SuccessPolicy    string `structs:"successPolicy"`
+	SuccessCnt       int64  `structs:"successCnt"`
 }
 
 // HookTmplField ...

@@ -1,6 +1,6 @@
 apiVersion: {{ .metadata.apiVersion }}
 kind: GameDeployment
-{{ include "custom.gdeployMetadata" . }}
+{{ include "custom.gWorkloadMetadata" . }}
 spec:
   selector:
     matchLabels:

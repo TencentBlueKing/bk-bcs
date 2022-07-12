@@ -29,7 +29,7 @@ var gdeployList4Test = []interface{}{
 	map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"labels": map[string]interface{}{
-				res.DeletionProtectLabelKey: res.GDeployDeletionProtectPolicyNotAllow,
+				res.DeletionProtectLabelKey: res.DeletionProtectPolicyNotAllow,
 			},
 			"uid": "0001",
 		},
@@ -60,7 +60,7 @@ var gdeployList4Test = []interface{}{
 	map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"labels": map[string]interface{}{
-				res.DeletionProtectLabelKey: res.GDeployDeletionProtectPolicyCascading,
+				res.DeletionProtectLabelKey: res.DeletionProtectPolicyCascading,
 			},
 			"uid": "0005",
 		},
@@ -71,7 +71,7 @@ var gdeployList4Test = []interface{}{
 	map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"labels": map[string]interface{}{
-				res.DeletionProtectLabelKey: res.GDeployDeletionProtectPolicyCascading,
+				res.DeletionProtectLabelKey: res.DeletionProtectPolicyCascading,
 			},
 			"annotations": map[string]interface{}{
 				res.EditModeAnnoKey: res.EditModeForm,
@@ -85,7 +85,7 @@ var gdeployList4Test = []interface{}{
 	map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"labels": map[string]interface{}{
-				res.DeletionProtectLabelKey: res.GDeployDeletionProtectPolicyCascading,
+				res.DeletionProtectLabelKey: res.DeletionProtectPolicyCascading,
 			},
 			"uid": "0007",
 		},
@@ -97,7 +97,7 @@ var gdeployList4Test = []interface{}{
 	map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"labels": map[string]interface{}{
-				res.DeletionProtectLabelKey: res.GDeployDeletionProtectPolicyAlways,
+				res.DeletionProtectLabelKey: res.DeletionProtectPolicyAlways,
 			},
 			"uid": "0008",
 		},
@@ -107,13 +107,13 @@ var gdeployList4Test = []interface{}{
 func TestGenCObjListWebAnnoFuncs(t *testing.T) {
 	notAllowDeleteYamlTips := fmt.Sprintf(
 		"当前实例已添加删除保护功能，若确认要删除，请修改实例标签字段 %s: %s",
-		res.DeletionProtectLabelKey, res.GDeployDeletionProtectPolicyAlways,
+		res.DeletionProtectLabelKey, res.DeletionProtectPolicyAlways,
 	)
 	notAllowDeleteFormTips := "当前实例已添加删除保护功能，若确认要删除，请修改实例配置信息->删除保护策略->总是允许删除"
 	cascadingDeleteYamlTips := notAllowDeleteYamlTips + "或确保实例数量为 0"
 	cascadingDeleteFormTips := notAllowDeleteFormTips + "或确保实例数量为 0"
 
-	webAnno := NewAnnos(genGDeployListOpAnnoFuncs(context.TODO(), gdeployList4Test)...)
+	webAnno := NewAnnos(genResListDeleteProtectAnnoFuncs(context.TODO(), gdeployList4Test, res.GDeploy)...)
 	objPerm := webAnno.Perms.Items["0001"]
 	assert.False(t, objPerm[DeleteBtn].Clickable)
 	assert.Equal(t, notAllowDeleteYamlTips, objPerm[DeleteBtn].Tip)
