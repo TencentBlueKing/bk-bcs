@@ -68,10 +68,7 @@
             })
             const projectCode = $route.params.projectCode
             const localProjectCode = localStorage.getItem('curProjectCode')
-            if (localProjectCode !== projectCode) {
-                // 切换不同项目时清空单集群信息
-                handleSetClusterStorageInfo()
-            }
+            
             // 获取当前项目（优先级：路由 > 本地缓存 > 取项目列表第一个）
             const curProject = ref<any>(null)
             if (projectCode) {
@@ -114,7 +111,7 @@
                     // 项目不存在
                     const project = projectList.value.find(item => item.project_code === localProjectCode) || projectList.value[0]
                     const location = $router.resolve({
-                        name: $route.name || 'entry',
+                        name: 'clusterMain',
                         params: {
                             projectCode: project.project_code
                         }

@@ -15,7 +15,7 @@
                             :key="item.name"
                             class="basic-item">
                             <span class="label">{{ item.name }}</span>
-                            <span class="value">{{ getJsonPathValue(detail && detail.manifest, item.JSONPath) }}</span>
+                            <span class="value">{{ getJsonPathValue(detail && detail.manifest, item.jsonPath) }}</span>
                         </div>
                     </div>
                 </div>
@@ -55,9 +55,9 @@
                     <span class="label">{{ $t('存在时间') }}</span>
                     <span class="value">{{ manifestExt.age }}</span>
                 </div>
-                <div class="info-item" v-if="detail && detail.manifest.spec.updateStrategy">
+                <div class="info-item" v-if="category === 'custom_objects'">
                     <span class="label">{{ $t('升级策略') }}</span>
-                    <span class="value">{{ detail.manifest.spec.updateStrategy.type === 'RollingUpdate'
+                    <span class="value">{{ updateStrategy.type === 'RollingUpdate'
                         ? $t('滚动升级') : $t('原地升级') }}</span>
                 </div>
             </div>
@@ -260,6 +260,7 @@
                 activePanel,
                 labels,
                 annotations,
+                updateStrategy,
                 metadata,
                 manifestExt,
                 webAnnotations,
@@ -430,6 +431,7 @@
             return {
                 isLoading,
                 detail,
+                updateStrategy,
                 metadata,
                 manifestExt,
                 webAnnotations,

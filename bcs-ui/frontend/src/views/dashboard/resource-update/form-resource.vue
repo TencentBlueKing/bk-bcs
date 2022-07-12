@@ -108,7 +108,8 @@
     </div>
 </template>
 <script>
-    import createForm from '@/components/bkui-form-umd'
+    import createForm from '@blueking/bkui-form'
+    import '@blueking/bkui-form/dist/bkui-form.css'
     import request from '@/api/request'
     import DashboardTopActions from '../common/dashboard-top-actions'
     import SwitchButton from './switch-mode.vue'
@@ -455,9 +456,6 @@
         }
     }
 </script>
-<style lang="postcss">
-@import '@/components/bkui-form.css'
-</style>
 <style lang="postcss" scoped>
 .form-resource {
     padding-bottom: 0;

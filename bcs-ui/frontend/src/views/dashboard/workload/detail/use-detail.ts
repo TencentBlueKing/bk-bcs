@@ -44,6 +44,8 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
     const metadata = computed(() => detail.value?.manifest?.metadata || {})
     // manifestExt 数据
     const manifestExt = computed(() => detail.value?.manifestExt || {})
+    // updateStrategy数据(GameDeployments需要)
+    const updateStrategy = computed(() => detail.value?.manifest?.spec?.updateStrategy || {})
     // yaml数据
     const yaml = computed(() => {
         return yamljs.dump(detail.value?.manifest || {})
@@ -164,12 +166,13 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
 
     const getJsonPathValue = (row, path: string) => {
         const keys = path.split('.').filter(str => !!str)
-        return keys.reduce((data, key) => {
+        const value = keys.reduce((data, key) => {
             if (typeof data === 'object') {
                 return data?.[key]
             }
             return data
         }, row)
+        return value || value === 0 ? value : '--'
     }
 
     return {
@@ -178,6 +181,7 @@ export default function useDetail (ctx: SetupContext, options: IDetailOptions) {
         activePanel,
         labels,
         annotations,
+        updateStrategy,
         metadata,
         manifestExt,
         webAnnotations,

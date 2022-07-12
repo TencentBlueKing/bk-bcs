@@ -95,8 +95,7 @@
                 cronjobs: 'CJ',
                 jobs: 'Job',
                 pods: 'Pod',
-                container: 'Container',
-                'custom_objects': 'CObj'
+                container: 'Container'
             }
             // 首字母大写
             const upperFirstLetter = (str: string) => {
@@ -107,11 +106,11 @@
             // 顶部导航内容
             const titles = ref<ITitle[]>([
                 {
-                    name: upperFirstLetter(props.category),
+                    name: upperFirstLetter(props.kind === 'GameDeployment' ? 'GameDeployments' : props.category),
                     id: ''
                 },
                 {
-                    name: `${subTitleMap[props.category]}: ${props.name}`,
+                    name: `${props.kind === 'GameDeployment' ? 'GameDeployment' : subTitleMap[props.category]}: ${props.name}`,
                     id: defaultComId,
                     params: {
                         ...props
