@@ -6574,6 +6574,15 @@ spec:
                           in-place update a Pod.
                         format: int32
                         type: integer
+                      policy:
+                        default: DisOrdered
+                        description: Policy is the policy when in-place updating a
+                          pod. Defaults to DisOrdered
+                        enum:
+                        - DisOrdered
+                        - OrderedReady
+                        - OrderedUpdated
+                        type: string
                     type: object
                   maxSurge:
                     anyOf:
