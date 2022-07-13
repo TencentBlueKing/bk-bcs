@@ -301,7 +301,7 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 			"project_id":   map[string]interface{}{"$first": "$project_id"},
 			"business_id":  map[string]interface{}{"$max": "$business_id"},
 			"metrics":      map[string]interface{}{"$push": "$metrics"},
-			"label":        map[string]interface{}{"$first": "$label"},
+			"label":        map[string]interface{}{"$max": "$label"},
 			"project_code": map[string]interface{}{"$max": "$project_code"},
 		}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &clusterMetricsMap)

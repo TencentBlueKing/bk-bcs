@@ -84,13 +84,13 @@ func NewDataManagerEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "DataManager.GetWorkloadInfoList",
-			Path:    []string{"/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}"},
+			Path:    []string{"/datamanager/v1/workloads"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "DataManager.GetWorkloadInfo",
-			Path:    []string{"/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}/{workloadName}"},
+			Path:    []string{"/datamanager/v1/workload"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -325,13 +325,13 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "DataManager.GetWorkloadInfoList",
-		Path:    []string{"/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}"},
+		Path:    []string{"/datamanager/v1/workloads"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "DataManager.GetWorkloadInfo",
-		Path:    []string{"/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}/{workloadName}"},
+		Path:    []string{"/datamanager/v1/workload"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
