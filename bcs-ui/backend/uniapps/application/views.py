@@ -1447,7 +1447,7 @@ class ScaleInstance(InstanceAPI):
             resource_id=instance_id,
             extra=json.dumps({"config": conf, "namespace": namespace}),
             description=_("应用扩缩容"),
-        ).log_modify():
+        ).log_scale():
             resp = self.scale_instance(
                 request,
                 project_id,
@@ -1888,7 +1888,7 @@ class ReCreateInstance(InstanceAPI):
             resource_id=instance_id,
             extra=json.dumps({"config": conf, "namespace": namespace}),
             description=_("应用重新创建"),
-        ).log_add():
+        ).log_recreate():
             # if exist_inst:
             self.delete_instance_oper(
                 request, cluster_id, namespace, name, project_id=project_id, category=category, kind=project_kind

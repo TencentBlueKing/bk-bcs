@@ -111,7 +111,7 @@ class DeployController:
                 "instance_entity": release_data["instance_entity"],
                 "ns_list": release_data["ns_list"],
             },
-            'activity_type': ActivityType.Add,
+            'activity_type': ActivityType.Instantiate
         }
 
         # only one namespace

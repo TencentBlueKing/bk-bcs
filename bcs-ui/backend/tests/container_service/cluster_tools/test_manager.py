@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from unittest.mock import patch
 
-from backend.container_service.cluster_tools.constants import ToolStatus
+from backend.container_service.cluster_tools.constants import OpType, ToolStatus
 from backend.container_service.cluster_tools.manager import HelmCmd, ToolManager, result_handler
 from backend.helm.toolkit.deployer import make_valuesfile_flag
 
@@ -45,7 +45,7 @@ def test_tool_manager(mock_create_namespace, tool, request_user, project_id, clu
                     'options': [],
                 },
             ),
-            link=result_handler.s(itool.id),
+            link=result_handler.s(itool.id, OpType.INSTALL.value),
         )
         itool.success()
 
@@ -66,7 +66,7 @@ def test_tool_manager(mock_create_namespace, tool, request_user, project_id, clu
                     'options': ['--install', make_valuesfile_flag(values)],
                 },
             ),
-            link=result_handler.s(itool.id),
+            link=result_handler.s(itool.id, OpType.UPGRADE.value),
         )
         itool.success()
 
@@ -85,5 +85,5 @@ def test_tool_manager(mock_create_namespace, tool, request_user, project_id, clu
                     'options': [],
                 },
             ),
-            link=result_handler.s(itool.id, True),
+            link=result_handler.s(itool.id, OpType.UNINSTALL.value),
         )

@@ -32,6 +32,7 @@ from backend.helm.helm.models import Chart, ChartRelease
 from backend.helm.toolkit import utils as bcs_helm_utils
 from backend.helm.toolkit.diff.revision import AppRevisionDiffer
 from backend.helm.toolkit.kubehelm import exceptions as helm_exceptions
+from backend.metrics import Result, helm_rollback_total, helm_upgrade_total
 
 from . import bcs_info_injector
 from .deployer import AppDeployer
@@ -438,8 +439,15 @@ class App(models.Model):
             logger.exception("upgrade_task unexpected error: %s" % e)
             self.set_transitioning(False, "unexpected error: %s" % e)
             log_client.update_log(activity_status="failed")
+            helm_upgrade_total.labels(Result.Failure.value).inc()
         else:
-            activity_status = "succeed" if self.transitioning_result else "failed"
+            if self.transitioning_result:
+                activity_status = "succeed"
+                helm_upgrade_total.labels(Result.Success.value).inc()
+            else:
+                activity_status = "failed"
+                helm_upgrade_total.labels(Result.Failure.value).inc()
+
             log_client.update_log(activity_status=activity_status)
 
         return self
@@ -513,10 +521,17 @@ class App(models.Model):
             logger.exception("rollback_app_task unexpected error: %s", e)
             self.set_transitioning(self, False, "unexpected error: %s" % e)
             log_client.update_log(activity_status="failed")
+            helm_rollback_total.labels(Result.Failure.value).inc()
         else:
             # no exception case app deployer run kubectl will set transitioning
             # no exception case doesn't means success, so don't set transitioning here
-            activity_status = "succeed" if self.transitioning_result else "failed"
+            if self.transitioning_result:
+                activity_status = "succeed"
+                helm_rollback_total.labels(Result.Success.value).inc()
+            else:
+                activity_status = "failed"
+                helm_rollback_total.labels(Result.Failure.value).inc()
+
             log_client.update_log(activity_status=activity_status)
 
     def get_history_releases(self):

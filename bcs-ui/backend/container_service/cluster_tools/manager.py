@@ -22,9 +22,11 @@ from rest_framework.exceptions import ValidationError
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.helm.toolkit.deployer import ReleaseArgs, helm_install, helm_uninstall, helm_upgrade, make_valuesfile_flag
 from backend.helm.toolkit.kubehelm.options import RawFlag
+from backend.metrics import Result, counter_inc
 from backend.resources.namespace import Namespace
 from backend.resources.namespace.constants import K8S_SYS_NAMESPACE
 
+from .constants import OpType
 from .models import InstalledTool, Tool
 
 logger = logging.getLogger(__name__)
@@ -55,7 +57,11 @@ class HelmCmd:
             try:
                 self._create_namespace(request_user, itool.namespace)
             except Exception as e:
-                result_handler(f'create namespace {itool.namespace} in {self.cluster_id} error: {e}', itool.id)
+                result_handler(
+                    f'create namespace {itool.namespace} in {self.cluster_id} error: {e}',
+                    itool.id,
+                    OpType.INSTALL.value,
+                )
 
         # 设置额外的 install 参数
         if itool.extra_options:
@@ -68,7 +74,7 @@ class HelmCmd:
 
         helm_install.apply_async(
             (request_user.token.access_token, attr.asdict(ToolArgs.from_tool(itool, options))),
-            link=result_handler.s(itool.id),
+            link=result_handler.s(itool.id, OpType.INSTALL.value),
         )
         return itool
 
@@ -85,7 +91,7 @@ class HelmCmd:
 
         helm_upgrade.apply_async(
             (request_user.token.access_token, attr.asdict(ToolArgs.from_tool(itool, options))),
-            link=result_handler.s(itool.id),
+            link=result_handler.s(itool.id, OpType.UPGRADE.value),
         )
 
         return itool
@@ -93,7 +99,7 @@ class HelmCmd:
     def uninstall(self, request_user, itool: InstalledTool):
         helm_uninstall.apply_async(
             (request_user.token.access_token, attr.asdict(ToolArgs.from_tool(itool, options=[]))),
-            link=result_handler.s(itool.id, True),
+            link=result_handler.s(itool.id, OpType.UNINSTALL.value),
         )
 
     def _create_namespace(self, request_user, namespace: str):
@@ -163,18 +169,20 @@ class ToolManager:
 
 
 @shared_task
-def result_handler(err_msg: Optional[str], itool_id: int, is_uninstall: bool = False):
+def result_handler(err_msg: Optional[str], itool_id: int, op_type: str):
     """异步流转安装任务的状态"""
     itool = InstalledTool.objects.get(id=itool_id)
 
     if err_msg:
         itool.fail(err_msg)
+        counter_inc('cluster_tools', op_type, Result.Failure.value)
         return
 
     # 如果是卸载组件, 成功后清除安装记录
-    if is_uninstall:
+    if OpType.UNINSTALL.value == op_type:
         itool.delete()
         return
 
     # 其他操作记录成功
     itool.success()
+    counter_inc('cluster_tools', op_type, Result.Success.value)

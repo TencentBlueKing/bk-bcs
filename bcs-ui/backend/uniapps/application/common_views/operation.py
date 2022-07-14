@@ -22,6 +22,7 @@ from rest_framework.renderers import BrowsableAPIRenderer
 
 from backend.bcs_web.audit_log import client
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.metrics import Result, workload_reschedule_total
 from backend.utils.basic import getitems
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
@@ -209,7 +210,12 @@ class ReschedulePodsViewSet(InstanceAPI, viewsets.ViewSet):
 
         # 查询应用下面的pod
         pod_names = self._get_pod_names(request, project_id, data)
-        # 删除pod
-        delete_pods(access_token, project_id, pod_names)
+        try:
+            # 删除pod
+            delete_pods(access_token, project_id, pod_names)
+        except Exception:
+            workload_reschedule_total.labels(Result.Failure.value).inc()
+            raise
 
+        workload_reschedule_total.labels(Result.Success.value).inc()
         return response.Response()
