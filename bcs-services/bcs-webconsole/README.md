@@ -67,3 +67,15 @@ Build a docker image
 ```
 make docker
 ```
+
+## Resize 校验
+和 set_pty_size 一样，说明就是OK的
+
+```bash
+# centos/debian
+tput cols
+tput lines
+
+# busybox
+stty size
+```

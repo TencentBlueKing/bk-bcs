@@ -325,6 +325,17 @@ func GetClusterId(c *gin.Context) string {
 	return ""
 }
 
+// GetNamespace
+func GetNamespace(c *gin.Context) string {
+	if c.Param("namespace") != "" {
+		return c.Param("namespace")
+	}
+	if c.Query("namespace") != "" {
+		return c.Query("namespace")
+	}
+	return ""
+}
+
 // GetSessionId
 func GetSessionId(c *gin.Context) string {
 	if c.Param("sessionId") != "" {

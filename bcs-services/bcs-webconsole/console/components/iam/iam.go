@@ -2,17 +2,23 @@ package iam
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 func newIAMClient() (iam.PermClient, error) {
@@ -40,8 +46,8 @@ func newIAMClient() (iam.PermClient, error) {
 }
 
 // IsAllowedWithResource 校验项目, 集群是否有权限
-func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username string) (bool, error) {
-	logger.Infof("auth with iam, projectId=%s, clusterId=%s, username=%s", projectId, clusterId, username)
+func IsAllowedWithResource(ctx context.Context, projectId, clusterId, namespaceName, username string) (bool, error) {
+	logger.Infof("auth with iam, projectId=%s, clusterId=%s, namespace=%s, username=%s", projectId, clusterId, namespaceName, username)
 
 	iamClient, err := newIAMClient()
 	if err != nil {
@@ -56,12 +62,6 @@ func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username s
 		SystemID:        iam.SystemIDBKBCS,
 		ProjectID:       projectId}.BuildResourceNodes()
 
-	clusterNode := cluster.ClusterResourceNode{
-		IsCreateCluster: false,
-		SystemID:        iam.SystemIDBKBCS,
-		ProjectID:       projectId,
-		ClusterID:       clusterId}.BuildResourceNodes()
-
 	relatedActionIDs := []string{project.ProjectView.String()}
 
 	// related actions
@@ -74,15 +74,43 @@ func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username s
 	module := project.BCSProjectModule
 	operator := project.CanViewProjectOperation
 
+	// 集群查看权限
 	if clusterId != "" {
 		relatedActionIDs = append(relatedActionIDs, cluster.ClusterView.String())
 		resources = append(resources, utils.ResourceAction{Resource: clusterId, Action: cluster.ClusterView.String()})
+		clusterNode := cluster.ClusterResourceNode{
+			IsCreateCluster: false,
+			SystemID:        iam.SystemIDBKBCS,
+			ProjectID:       projectId,
+			ClusterID:       clusterId}.BuildResourceNodes()
 		nodes = append(nodes, clusterNode)
 		module = cluster.BCSClusterModule
 		operator = cluster.CanViewClusterOperation
 	}
 
-	// 集群查看权限
+	if namespaceName != "" {
+		nameSpaceID, err := calcNamespaceID(clusterId, namespaceName)
+		if err != nil {
+			return false, err
+		}
+		relatedActionIDs = append(relatedActionIDs, namespace.NameSpaceScopedCreate.String())
+		resources = append(resources, utils.ResourceAction{Resource: nameSpaceID, Action: namespace.NameSpaceScopedCreate.String()})
+		namespaceNode := iam.ResourceNode{
+			System:    iam.SystemIDBKBCS,
+			RType:     string(namespace.SysNamespace),
+			RInstance: nameSpaceID,
+			Rp: namespace.NamespaceScopedResourcePath{
+				ProjectID: projectId,
+				ClusterID: clusterId,
+			},
+		}
+		nodes = append(nodes, []iam.ResourceNode{namespaceNode})
+
+		// 只做日志使用
+		module = string(namespace.SysNamespace)
+		operator = namespace.NameSpaceScopedCreate.String()
+	}
+
 	perms, err := iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, nodes)
 	if err != nil {
 		return false, err
@@ -98,7 +126,7 @@ func IsAllowedWithResource(ctx context.Context, projectId, clusterId, username s
 }
 
 // MakeResourceApplyUrl 权限中心申请URL
-func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, username string) (string, error) {
+func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, namespaceName, username string) (string, error) {
 	iamClient, err := newIAMClient()
 	if err != nil {
 		return "", err
@@ -118,25 +146,86 @@ func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, username st
 		Data:            []string{projectId},
 	})
 
-	// 申请集群查看权限
-	clusterApp := cluster.BuildClusterApplicationInstance(cluster.ClusterApplicationAction{
-		IsCreateCluster: false,
-		ActionID:        cluster.ClusterView.String(),
-		Data: []cluster.ProjectClusterData{
-			{
-				Project: projectId,
-				Cluster: clusterId,
-			},
-		},
-	})
-
 	apps := []iam.ApplicationAction{projectApp}
+
+	// 申请集群查看权限
 	if clusterId != "" {
+		clusterApp := cluster.BuildClusterApplicationInstance(cluster.ClusterApplicationAction{
+			IsCreateCluster: false,
+			ActionID:        cluster.ClusterView.String(),
+			Data: []cluster.ProjectClusterData{
+				{
+					Project: projectId,
+					Cluster: clusterId,
+				},
+			},
+		})
 		apps = append(apps, clusterApp)
+	}
+
+	// 命名空间域创建权限
+	// 和bcs-api校验权限一致(POST请求, 命名空间下的资源)
+	if namespaceName != "" {
+		nameSpaceID, err := calcNamespaceID(clusterId, namespaceName)
+		if err != nil {
+			return "", err
+		}
+		namespaceApp := iam.ApplicationAction{
+			ActionID: namespace.NameSpaceScopedCreate.String(),
+			RelatedResources: []bkiam.ApplicationRelatedResourceType{
+				{
+					SystemID: iam.SystemIDBKBCS,
+					Type:     string(namespace.SysNamespace),
+					Instances: []bkiam.ApplicationResourceInstance{
+						[]bkiam.ApplicationResourceNode{
+							{
+								Type: string(project.SysProject),
+								ID:   projectId,
+							},
+							{
+								Type: string(cluster.SysCluster),
+								ID:   clusterId,
+							},
+							{
+								Type: string(namespace.SysNamespace),
+								ID:   nameSpaceID,
+							},
+						},
+					},
+				},
+			},
+		}
+		apps = append(apps, namespaceApp)
 	}
 
 	applyUrl, err := iamClient.GetApplyURL(req, apps, user)
 	return applyUrl, err
+}
+
+// md5Digest 字符串转 MD5
+func md5Digest(key string) string {
+	hash := md5.New()
+	hash.Write([]byte(key))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+// 计算(压缩)出注册到权限中心的命名空间 ID，具备唯一性. 当前的算法并不能完全避免冲突，但概率较低。
+// note: 权限中心对资源 ID 有长度限制，不超过32位。长度越长，处理性能越低
+// NamespaceID 是命名空间注册到权限中心的资源 ID，它是对结构`集群ID:命名空间name`的一个压缩，
+// 如 `BCS-K8S-10000:default` 会被处理成 `10000:5f03d33dde`。
+func calcNamespaceID(clusterID string, name string) (string, error) {
+	clusterStrs := strings.Split(clusterID, "-")
+	if len(clusterStrs) != 3 {
+		return "", fmt.Errorf("calcNamespaceID err: %v", "length not equal 3")
+	}
+	clusterIDx := clusterStrs[len(clusterStrs)-1]
+
+	iamNsID := clusterIDx + ":" + md5Digest(name)[8:16] + name[:2]
+	if len(iamNsID) > 32 {
+		return "", fmt.Errorf("calcNamespaceID iamNamespaceID more than 32characters")
+	}
+
+	return iamNsID, nil
 }
 
 // accessToken 返回
