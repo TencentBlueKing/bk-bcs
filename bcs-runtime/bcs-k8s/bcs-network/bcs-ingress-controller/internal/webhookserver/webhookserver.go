@@ -240,8 +240,12 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionR
 		blog.Warnf("decode %s to pod failed, err %s", string(req.Object.Raw), err.Error)
 		return errResponse(fmt.Errorf("decode %s to pod failed, err %s", string(req.Object.Raw), err.Error()))
 	}
-	pod.Namespace = req.Namespace
-	pod.Name = req.Name
+	if len(pod.Namespace) == 0 {
+		pod.Namespace = req.Namespace
+	}
+	if len(pod.Name) == 0 {
+		pod.Name = req.Name
+	}
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	if !ok {
 		blog.Warnf("pod %s/%s has no portpool annotation", pod.GetName(), pod.GetNamespace())
