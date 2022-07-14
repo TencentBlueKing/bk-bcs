@@ -43,7 +43,10 @@ func RecommendDefaultGPAControllerConfig(obj *v1alpha1.GPAControllerConfiguratio
 	if obj.GeneralPodAutoscalerDownscaleForbiddenWindow == zero {
 		obj.GeneralPodAutoscalerDownscaleForbiddenWindow = metav1.Duration{Duration: 5 * time.Minute}
 	}
-	if obj.GeneralPodAutoscalerTolerance == 0 {
+	if obj.GeneralPodAutoscalerTolerance <= 0 {
 		obj.GeneralPodAutoscalerTolerance = 0.1
+	}
+	if obj.GeneralPodAutoscalerWorkers < 1 {
+		obj.GeneralPodAutoscalerWorkers = 1
 	}
 }

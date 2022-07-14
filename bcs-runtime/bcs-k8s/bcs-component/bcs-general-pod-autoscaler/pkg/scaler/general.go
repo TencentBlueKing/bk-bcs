@@ -104,6 +104,9 @@ type GeneralController struct {
 	scaleDownEvents map[string][]timestampedScaleEvent
 
 	doingCron sync.Map
+
+	// Multi goroutines for autoscaler
+	workers int
 }
 
 // NewGeneralController creates a new GeneralController.
@@ -120,6 +123,7 @@ func NewGeneralController(
 	tolerance float64,
 	cpuInitializationPeriod,
 	delayOfInitialReadinessStatus time.Duration,
+	workers int,
 
 ) *GeneralController {
 	_ = autoscalingscheme.AddToScheme(scheme.Scheme)
@@ -139,6 +143,7 @@ func NewGeneralController(
 		recommendations: map[string][]timestampedRecommendation{},
 		scaleUpEvents:   map[string][]timestampedScaleEvent{},
 		scaleDownEvents: map[string][]timestampedScaleEvent{},
+		workers:         workers,
 	}
 
 	gpaInformer.Informer().AddEventHandlerWithResyncPeriod(
@@ -180,7 +185,13 @@ func (a *GeneralController) Run(stopCh <-chan struct{}) {
 	}
 
 	// start a single worker (we may wish to start more in the future)
-	go wait.Until(a.worker, time.Second, stopCh)
+	//go wait.Until(a.worker, time.Second, stopCh)
+
+	// Launch workers to process gpa
+	for i := 0; i < a.workers; i++ {
+		go wait.Until(a.worker, time.Second, stopCh)
+	}
+
 	<-stopCh
 }
 
