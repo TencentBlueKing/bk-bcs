@@ -170,12 +170,16 @@
             async handleProjectChange (code) {
                 // 解决组件初始化时触发change事件问题
                 if (code === this.curProjectCode) return
+                // 切换项目跳转区分:
+                // 1.共享集群下切换项目跳到命名空间
+                // 2.专用集群下切换项目跳转到集群列表
 
+                const name = this.isSharedCluster ? 'namespace' : 'clusterMain'
                 const item = this.onlineProjectList.find(item => item.project_code === code)
                 if (item?.kind !== this.curProject.kind) {
                     // 切换不同项目时刷新界面
                     const route = this.$router.resolve({
-                        name: 'clusterMain',
+                        name,
                         params: {
                             projectCode: code,
                             // eslint-disable-next-line camelcase
@@ -185,7 +189,7 @@
                     location.href = route.href
                 } else {
                     this.$router.push({
-                        name: 'clusterMain',
+                        name,
                         params: {
                             projectCode: code,
                             // eslint-disable-next-line camelcase
