@@ -68,7 +68,7 @@ class BkRepoAuth(AuthBase):
         # 添加auth参数到headers中
         r.headers.update(
             {
-                "X-BKREPO-UID": self.username or settings.ADMIN_USERNAME,
+                "X-BKREPO-UID": settings.ADMIN_USERNAME,
                 "authorization": settings.BK_REPO_AUTHORIZATION,
                 "Content-Type": "application/json",
             }
