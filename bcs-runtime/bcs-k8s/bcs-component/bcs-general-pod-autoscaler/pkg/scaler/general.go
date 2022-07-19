@@ -973,17 +973,17 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		}
 		return fmt.Errorf("failed to query scale subresource for %s: %v", reference, err)
 	}
-	if len(scale.Status.Selector) != 0 {
-		// record selector accelerate search
-		labelMap, err2 := labels.ConvertSelectorToLabelsMap(scale.Status.Selector)
-		if err2 == nil {
-			if err2 = a.updateLabelsIfNeeded(gpa, labelMap); err2 != nil {
-				klog.Warningf("Add labels: %v to gpa: %v failed: %v", labelMap, gpa.Name, err2)
-			}
-		} else {
-			klog.Errorf("ConvertSelectorToLabelsMap: %v faield: %v", scale.Status.Selector, err2)
-		}
-	}
+	// if len(scale.Status.Selector) != 0 {
+	// 	// record selector accelerate search
+	// 	labelMap, err2 := labels.ConvertSelectorToLabelsMap(scale.Status.Selector)
+	// 	if err2 == nil {
+	// 		if err2 = a.updateLabelsIfNeeded(gpa, labelMap); err2 != nil {
+	// 			klog.Warningf("Add labels: %v to gpa: %v failed: %v", labelMap, gpa.Name, err2)
+	// 		}
+	// 	} else {
+	// 		klog.Errorf("ConvertSelectorToLabelsMap: %v failed: %v", scale.Status.Selector, err2)
+	// 	}
+	// }
 
 	setCondition(gpa, autoscaling.AbleToScale, v1.ConditionTrue, "SucceededGetScale",
 		"the GPA controller was able to get the target's current scale")
