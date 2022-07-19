@@ -87,5 +87,5 @@ def counter_inc(resource_type: str, activity_type: str, result: str):
     if not counter:
         return
 
-    if result in [Result.get_values()]:
+    if result in Result.get_values():
         counter.labels(result).inc()

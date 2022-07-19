@@ -169,8 +169,6 @@ class AppManager(models.Manager):
             log_client.update_log(activity_status="failed")
             helm_install_total.labels(Result.Failure.value).inc()
             raise e
-        else:
-            helm_install_total.labels(Result.Success.value).inc()
 
         if deploy_options is None:
             deploy_options = dict()

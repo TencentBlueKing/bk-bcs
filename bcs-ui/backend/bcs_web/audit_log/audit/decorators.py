@@ -99,10 +99,8 @@ class BaseLogAudit(metaclass=ABCMeta):
         auditor = self.auditor_cls(audit_ctx)
         if err_msg:
             auditor.log_failed(err_msg)
-            counter_inc(audit_ctx.resource_type, audit_ctx.activity_type, Result.Failure.value)
         else:
             auditor.log_succeed()
-            counter_inc(audit_ctx.resource_type, audit_ctx.activity_type, Result.Success.value)
 
     def _save_raw_audit(self, audit_ctx: AuditContext):
         """保存原始的审计信息"""
