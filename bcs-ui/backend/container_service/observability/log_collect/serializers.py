@@ -26,7 +26,7 @@ from .models import LogCollectMetadata
 
 class BaseConfSLZ(serializers.Serializer):
     enable_stdout = serializers.BooleanField(default=False)
-    log_paths = serializers.ListField(child=serializers.CharField(), required=False, min_length=1)
+    log_paths = serializers.ListField(child=serializers.CharField(), required=False)
 
     def validate(self, data):
         if data['enable_stdout'] is False and not data.get('log_paths'):
@@ -76,7 +76,7 @@ class UpdateOrCreateCollectConfSLZ(serializers.Serializer):
     bk_biz_id = serializers.IntegerField()
     project_id = serializers.CharField()
     cluster_id = serializers.CharField()
-    config_name = serializers.CharField(required=False)
+    config_name = serializers.RegexField(regex=r'^[a-zA-Z0-9_]+$', min_length=5, max_length=50)
     namespace = serializers.CharField(required=False)
     add_pod_label = serializers.BooleanField(default=False)
     extra_labels = serializers.JSONField(default=dict)
@@ -134,6 +134,11 @@ class CollectConfSLZ(serializers.ModelSerializer):
 
     def _getitem(self, obj, key) -> Any:
         return getitems(self.context['rule_configs'], [obj.config_id, key])
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data.update(data.pop('config'))
+        return data
 
 
 class QueryLogLinksSLZ(serializers.Serializer):

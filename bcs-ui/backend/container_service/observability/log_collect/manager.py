@@ -56,14 +56,14 @@ class CollectConfManager:
             'project_id': self.project_id,
             'cluster_id': self.cluster_id,
             'log_source_type': builder.log_source_type,
-            'config_name': builder.collector_config_name,
+            'config_name': builder.config_name,
             'namespace': builder.namespace,
         }
         if LogCollectMetadata.objects.filter(**kwargs).exists():
             raise IntegrityError(
                 f'collect config create failed: '
                 f'config(cluster_id: {self.cluster_id}, namespace: {builder.namespace}, '
-                f'log_source_type: {builder.log_source_type}, config_name: {builder.collector_config_name}) '
+                f'log_source_type: {builder.log_source_type}, config_name: {builder.config_name}) '
                 f'is already exists!'
             )
 

@@ -27,10 +27,10 @@ class DataBusApiConfig:
 
         # 日志采集规则 API 地址
         prefix_path = 'api/c/compapi/v2/bk_log'
-        self.create_collect_config = f'{self.host}/{prefix_path}/create_bcs_collector'
-        self.update_collect_config = f'{self.host}/{prefix_path}/update_bcs_collector/{{rule_id}}'
-        self.list_collect_configs = f'{self.host}/{prefix_path}/list_bcs_collector?bcs_cluster_id={{cluster_id}}'
-        self.delete_collect_config = f'{self.host}/{prefix_path}/delete_bcs_collector/{{rule_id}}'
+        self.create_collect_config_url = f'{self.host}/{prefix_path}/create_bcs_collector'
+        self.update_collect_config_url = f'{self.host}/{prefix_path}/update_bcs_collector/{{rule_id}}'
+        self.list_collect_configs_url = f'{self.host}/{prefix_path}/list_bcs_collector?bcs_cluster_id={{cluster_id}}'
+        self.delete_collect_config_url = f'{self.host}/{prefix_path}/delete_bcs_collector/{{rule_id}}'
 
 
 class LogCollectorClient(BkApiClient):
@@ -42,20 +42,19 @@ class LogCollectorClient(BkApiClient):
 
     @response_handler()
     def create_collect_config(self, config: Dict) -> Dict:
-        url = self._config.create_collect_config
-        return self._client.request_json('POST', url, params=config)
+        return self._client.request_json('POST', self._config.create_collect_config_url, json=config)
 
     @response_handler()
     def update_collect_config(self, config_id: int, config: Dict) -> Dict:
-        url = self._config.update_collect_config.format(rule_id=config_id)
-        return self._client.request_json('POST', url, params=config)
+        url = self._config.update_collect_config_url.format(rule_id=config_id)
+        return self._client.request_json('POST', url, json=config)
 
-    @response_handler()
+    @response_handler(default=list)
     def list_collect_configs(self, cluster_id: str) -> List[Dict]:
-        url = self._config.list_collect_configs.format(cluster_id=cluster_id)
+        url = self._config.list_collect_configs_url.format(cluster_id=cluster_id)
         return self._client.request_json('GET', url)
 
     @response_handler()
     def delete_collect_config(self, config_id: int) -> Dict:
-        url = self._config.delete_collect_config.format(rule_id=config_id)
+        url = self._config.delete_collect_config_url.format(rule_id=config_id)
         return self._client.request_json('DELETE', url)

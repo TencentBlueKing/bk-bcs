@@ -16,9 +16,7 @@ import re
 from typing import Dict, List
 
 import attr
-from django.utils.crypto import get_random_string
 
-from backend.templatesets.legacy_apps.configuration.k8s.validator import K8S_NAME_REGEX as K8S_NAME_PATTERN
 from backend.utils.url_slug import NAMESPACE_REGEX
 
 from .constants import LogSourceType
@@ -34,11 +32,7 @@ class ConfBuilder:
     cluster_id = attr.ib(validator=attr.validators.instance_of(str))
     add_pod_label = attr.ib(validator=attr.validators.instance_of(bool))
     extra_labels = attr.ib(validator=attr.validators.instance_of(dict))
-    config_name = attr.ib(validator=attr.validators.instance_of(str), default='')
-    collector_config_name = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        self.collector_config_name = self.config_name
+    config_name = attr.ib(validator=attr.validators.instance_of(str))
 
     @classmethod
     def from_dict(cls, init_data: Dict) -> 'ConfBuilder':
@@ -50,8 +44,8 @@ class ConfBuilder:
         return {
             'bk_biz_id': self.bk_biz_id,
             'project_id': self.project_id,
-            'collector_config_name': self.collector_config_name,
-            'collector_config_name_en': self.collector_config_name,
+            'collector_config_name': self.config_name,
+            'collector_config_name_en': self.config_name,
             'custom_type': 'log',
             'description': '',
             'bcs_cluster_id': self.cluster_id,
@@ -65,7 +59,7 @@ class ConfBuilder:
         return {
             'bk_biz_id': self.bk_biz_id,
             'project_id': self.project_id,
-            'collector_config_name': self.collector_config_name,
+            'collector_config_name': self.config_name,
             'description': '',
             'bcs_cluster_id': self.cluster_id,
             'add_pod_label': self.add_pod_label,
@@ -94,16 +88,6 @@ class AllContainersConfBuilder(ConfBuilder):
         if value and not NAMESPACE_PATTERN.match(value):
             raise ValueError(f'the namespace {value} is invalid')
 
-    def __attrs_post_init__(self):
-        if self.config_name:
-            self.collector_config_name = self.config_name
-            return
-
-        if self.namespace:
-            self.collector_config_name = f'namespace-{self.namespace}-all-log'
-        else:
-            self.collector_config_name = 'cluster-scoped-all-log'
-
     def _build_config(self) -> List[Dict]:
         config = {'data_encoding': 'UTF-8', 'enable_stdout': self.base['enable_stdout']}
 
@@ -128,19 +112,6 @@ class SelectedContainersConfBuilder(ConfBuilder):
 
     namespace = attr.ib(validator=attr.validators.matches_re(NAMESPACE_REGEX))
     workload = attr.ib(validator=attr.validators.instance_of(dict))
-
-    def __attrs_post_init__(self):
-        if self.config_name:
-            self.collector_config_name = self.config_name
-            return
-
-        workload_name = self.workload['name']
-        workload_kind = self.workload['kind']
-        # 应用名称不满足k8s的规则时, 应用名称替换成长度为6的随机字符串
-        if not K8S_NAME_PATTERN.match(workload_name):
-            self.collector_config_name = f'{workload_kind}-{get_random_string(6)}-log'.lower()
-        else:
-            self.collector_config_name = f'{workload_kind}-{workload_name}-log'.lower()
 
     def _build_config(self) -> List[Dict]:
         configs = []
@@ -178,13 +149,6 @@ class SelectedLabelsConfBuilder(ConfBuilder):
 
     namespace = attr.ib(validator=attr.validators.matches_re(NAMESPACE_REGEX))
     selector = attr.ib(validator=attr.validators.instance_of(dict))
-
-    def __attrs_post_init__(self):
-        if self.config_name:
-            self.collector_config_name = self.config_name
-            return
-
-        self.collector_config_name = f'label-selector-{get_random_string(6)}-log'.lower()
 
     def _build_config(self) -> List[Dict]:
         label_selector = {}
