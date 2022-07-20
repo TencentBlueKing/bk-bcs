@@ -93,7 +93,7 @@ metadata:
   {{- end }}
 {{- end }}
 
-{{- define "custom.gdeployUpdateHook" -}}
+{{- define "custom.gworkloadUpdateHook" -}}
 hook:
   templateName: {{ .tmplName }}
   {{- if .args }}
@@ -103,4 +103,46 @@ hook:
       value: {{ .value | quote }}
     {{- end }}
   {{- end }}
+{{- end }}
+
+{{- define "custom.gworkloadCommonSpec" -}}
+selector:
+  matchLabels:
+    {{- include "common.labelSlice2Map" .metadata.labels | indent 4 }}
+replicas: {{ .spec.replicas.cnt | default 0 }}
+updateStrategy:
+  type: {{ .spec.replicas.updateStrategy }}
+  {{- if eq .metadata.kind "GameDeployment" }}
+  {{- include "custom.gworkloadUpdateArgs" . | nindent 2 }}
+  {{- else if eq .metadata.kind "GameStatefulSet" }}
+  rollingUpdate:
+    {{- include "custom.gworkloadUpdateArgs" . | nindent 4 }}
+  {{- end }}
+  {{- if eq .spec.replicas.updateStrategy "InplaceUpdate" }}
+  inPlaceUpdateStrategy:
+    gracePeriodSeconds: {{ .spec.replicas.gracePeriodSecs | default 0 }}
+  {{- end }}
+{{- if .spec.gracefulManage.preDeleteHook.enabled }}
+preDeleteUpdateStrategy:
+  {{- include "custom.gworkloadUpdateHook" .spec.gracefulManage.preDeleteHook | nindent 2 }}
+{{- end }}
+{{- if .spec.gracefulManage.preInplaceHook.enabled }}
+preInplaceUpdateStrategy:
+  {{- include "custom.gworkloadUpdateHook" .spec.gracefulManage.preInplaceHook | nindent 2 }}
+{{- end }}
+{{- if .spec.gracefulManage.postInplaceHook.enabled }}
+postInplaceUpdateStrategy:
+  {{- include "custom.gworkloadUpdateHook" .spec.gracefulManage.postInplaceHook | nindent 2 }}
+{{- end }}
+{{- if .spec.gracefulManage.preInplaceHook }}
+{{- end }}
+{{- if .spec.gracefulManage.postInplaceHook }}
+{{- end }}
+minReadySeconds: {{ .spec.replicas.minReadySecs | default 0 }}
+{{- end }}
+
+{{- define "custom.gworkloadUpdateArgs" -}}
+partition: {{ .spec.replicas.partition | default 0 }}
+maxUnavailable: {{ .spec.replicas.maxUnavailable | default 0 }}{{ if and (.spec.replicas.maxUnavailable) (eq .spec.replicas.muaUnit "percent") }}% {{ end }}
+maxSurge: {{ .spec.replicas.maxSurge | default 0 }}{{ if and (.spec.replicas.maxSurge) (eq .spec.replicas.msUnit "percent") }}% {{ end }}
 {{- end }}

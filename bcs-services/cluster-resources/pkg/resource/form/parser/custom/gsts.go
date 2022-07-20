@@ -17,7 +17,6 @@ package custom
 import (
 	"github.com/fatih/structs"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
@@ -25,19 +24,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseGDeploy GameDeployment manifest -> formData
-func ParseGDeploy(manifest map[string]interface{}) map[string]interface{} {
-	deploy := model.GDeploy{}
+// ParseGSTS GameDeployment manifest -> formData
+func ParseGSTS(manifest map[string]interface{}) map[string]interface{} {
+	deploy := model.GSTS{}
 	common.ParseMetadata(manifest, &deploy.Metadata)
-	ParseGDeploySpec(manifest, &deploy.Spec)
+	ParseGSTSSpec(manifest, &deploy.Spec)
 	workload.ParseWorkloadVolume(manifest, &deploy.Volume)
 	workload.ParseContainerGroup(manifest, &deploy.ContainerGroup)
 	return structs.Map(deploy)
 }
 
-// ParseGDeploySpec ...
-func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) {
-	ParseGDeployReplicas(manifest, &spec.Replicas)
+// ParseGSTSSpec ...
+func ParseGSTSSpec(manifest map[string]interface{}, spec *model.GSTSSpec) {
+	ParseGSTSReplicas(manifest, &spec.Replicas)
 	ParseGWorkloadGracefulManage(manifest, &spec.GracefulManage)
 	ParseGWorkloadDeletionProtect(manifest, &spec.DeletionProtect)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
@@ -50,55 +49,23 @@ func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) 
 	workload.ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseGDeployReplicas ...
-func ParseGDeployReplicas(manifest map[string]interface{}, replicas *model.GDeployReplicas) {
+// ParseGSTSReplicas ...
+func ParseGSTSReplicas(manifest map[string]interface{}, replicas *model.GSTSReplicas) {
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
+	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", workload.DefaultUpdateStrategy).(string)
+	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
 	replicas.MaxSurge, replicas.MSUnit = DefaultGWorkloadMaxSurge, util.UnitCnt
-	if maxSurge, err := mapx.GetItems(manifest, "spec.updateStrategy.maxSurge"); err == nil {
+	if maxSurge, err := mapx.GetItems(manifest, "spec.updateStrategy.rollingUpdate.maxSurge"); err == nil {
 		replicas.MaxSurge, replicas.MSUnit = util.AnalyzeIntStr(maxSurge)
 	}
 	replicas.MaxUnavailable, replicas.MUAUnit = DefaultGWorkloadMaxUnavailable, util.UnitPercent
-	if maxUnavailable, err := mapx.GetItems(manifest, "spec.updateStrategy.maxUnavailable"); err == nil {
+	if maxUnavailable, err := mapx.GetItems(manifest, "spec.updateStrategy.rollingUpdate.maxUnavailable"); err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
 	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")
-	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.partition")
+	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.rollingUpdate.partition")
 	replicas.GracePeriodSecs = mapx.Get(
-		manifest, "spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds", int64(DefaultGWorkloadGracePeriodSecs),
+		manifest, "spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds", int64(DefaultGWorkloadMaxSurge),
 	).(int64)
-}
-
-// ParseGWorkloadGracefulManage ...
-func ParseGWorkloadGracefulManage(manifest map[string]interface{}, man *model.GWorkloadGracefulManage) {
-	if hook, err := mapx.GetItems(manifest, "spec.preDeleteUpdateStrategy.hook"); err == nil {
-		man.PreDeleteHook = genGWorkloadHookSpec(hook.(map[string]interface{}))
-	}
-	if hook, err := mapx.GetItems(manifest, "spec.preInplaceUpdateStrategy.hook"); err == nil {
-		man.PreInplaceHook = genGWorkloadHookSpec(hook.(map[string]interface{}))
-	}
-	if hook, err := mapx.GetItems(manifest, "spec.postInplaceUpdateStrategy.hook"); err == nil {
-		man.PostInplaceHook = genGWorkloadHookSpec(hook.(map[string]interface{}))
-	}
-}
-
-func genGWorkloadHookSpec(hook map[string]interface{}) model.GWorkloadHookSpec {
-	spec := model.GWorkloadHookSpec{Enabled: true, TmplName: mapx.GetStr(hook, "templateName")}
-	for _, arg := range mapx.GetList(hook, "args") {
-		a := arg.(map[string]interface{})
-		spec.Args = append(spec.Args, model.HookCallArg{
-			Key: mapx.GetStr(a, "name"), Value: mapx.GetStr(a, "value"),
-		})
-	}
-	return spec
-}
-
-// ParseGWorkloadDeletionProtect 解析 GameDeployment 删除保护规则
-// io.tencent.bcs.dev/deletion-allow: Cascading -> 实例数量为 0 时可以删除
-// io.tencent.bcs.dev/deletion-allow: Always -> 实例数量为 0 时可以删除
-// label io.tencent.bcs.dev/deletion-allow key 不存在：无法删除
-func ParseGWorkloadDeletionProtect(manifest map[string]interface{}, protect *model.GWorkloadDeletionProtect) {
-	protect.Policy = mapx.Get(
-		manifest, []string{"metadata", "labels", res.DeletionProtectLabelKey}, res.DeletionProtectPolicyNotAllow,
-	).(string)
 }

@@ -30,7 +30,8 @@ var FormSupportedResAPIVersion = map[string][]string{
 	// 自定义资源
 	res.GDeploy:  {"tkex.tencent.com/v1alpha1"},
 	res.HookTmpl: {"tkex.tencent.com/v1alpha1"},
+	res.GSTS:     {"tkex.tencent.com/v1alpha1"},
 }
 
 // FormSupportedCObjKinds 支持表单化的自定义资源
-var FormSupportedCObjKinds = []string{res.GDeploy, res.HookTmpl}
+var FormSupportedCObjKinds = []string{res.GDeploy, res.HookTmpl, res.GSTS}

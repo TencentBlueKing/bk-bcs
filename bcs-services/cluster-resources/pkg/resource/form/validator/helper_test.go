@@ -25,6 +25,6 @@ import (
 func TestIsFormSupportedCObjKinds(t *testing.T) {
 	assert.True(t, IsFormSupportedCObjKinds(res.GDeploy))
 	assert.True(t, IsFormSupportedCObjKinds(res.HookTmpl))
-	assert.False(t, IsFormSupportedCObjKinds(res.GSTS))
+	assert.True(t, IsFormSupportedCObjKinds(res.GSTS))
 	assert.False(t, IsFormSupportedCObjKinds(res.HookRun))
 }

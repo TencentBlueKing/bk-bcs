@@ -55,7 +55,7 @@ func NewManifestRenderer(
 func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 	for _, f := range []func() error{
 		// 1. 获取资源对应版本
-		r.setAPIVersion,
+		r.setVersionAndKind,
 		// 2. 校验表单数据
 		r.validate,
 		// 3. 添加 EditMode 注解标识
@@ -74,8 +74,8 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 	return r.manifest, nil
 }
 
-// 获取资源对应 APIVersion 并更新 Renderer 配置
-func (r *ManifestRenderer) setAPIVersion() (err error) {
+// 获取资源对应 APIVersion && Kind 并更新 Renderer 配置
+func (r *ManifestRenderer) setVersionAndKind() (err error) {
 	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
 	r.apiVersion = mapx.GetStr(r.formData, "metadata.apiVersion")
 	if r.apiVersion == "" {
@@ -85,6 +85,10 @@ func (r *ManifestRenderer) setAPIVersion() (err error) {
 		if err = mapx.SetItems(r.formData, "metadata.apiVersion", r.apiVersion); err != nil {
 			return err
 		}
+	}
+	// 预设资源 Kind
+	if err = mapx.SetItems(r.formData, "metadata.kind", r.kind); err != nil {
+		return err
 	}
 	return nil
 }

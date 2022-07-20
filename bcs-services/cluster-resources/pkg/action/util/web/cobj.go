@@ -68,7 +68,7 @@ func GenRetrieveCObjWebAnnos(
 
 // 判断是否需要提供删除保护的 webAnnotations 信息
 func requireDeletionProtectWebAnno(kind, format string) bool {
-	return slice.StringInSlice(kind, []string{res.GDeploy, res.HookTmpl}) &&
+	return slice.StringInSlice(kind, []string{res.GDeploy, res.HookTmpl, res.GSTS}) &&
 		(format == action.DefaultFormat || format == action.ManifestFormat)
 }
 
@@ -106,9 +106,8 @@ func genDeleteProtectTips(ctx context.Context, manifest map[string]interface{}, 
 			res.DeletionProtectPolicyAlways,
 		)
 	}
-	// HookTemplate 类型没有 Cascading 模式
-	if kind == res.GDeploy && dpPolicy == res.DeletionProtectPolicyCascading {
-		// 当类型是 GameDeployment，保护策略为 Cascading，实例数为 0 时候是可以删除的
+	// 当类型是 GameDeploy/GameSTS，保护策略为 Cascading，实例数为 0 时候是可以删除的
+	if (kind == res.GDeploy || kind == res.GSTS) && dpPolicy == res.DeletionProtectPolicyCascading {
 		if replicas == 0 {
 			return ""
 		}

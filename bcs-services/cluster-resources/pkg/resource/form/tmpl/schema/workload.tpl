@@ -221,6 +221,8 @@ replicas:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
         - source: "metadata.namespace"
           then:
+            state:
+              value: ""
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
     updateStrategy:

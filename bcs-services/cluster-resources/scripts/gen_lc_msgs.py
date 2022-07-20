@@ -77,6 +77,9 @@ class LcMsgsGenerator:
             old_lc_msgs = yaml.load(fr.read(), yaml.SafeLoader)
         for msg in old_lc_msgs:
             msg_id = msg["msgID"]
+            # 可能存在不再使用的国际化数据，这里忽略掉
+            if msg_id not in self.ls_msgs:
+                continue
             self.ls_msgs[msg_id] = LcMsg(msg_id, msg["en"])
 
     def write_to_file(self):
@@ -88,7 +91,7 @@ class LcMsgsGenerator:
                 fw.write("  en: " + self.quote_when_necessary(en) + "\n")
 
     @staticmethod
-    def quote_when_necessary(s) -> str:
+    def quote_when_necessary(s: str) -> str:
         if " " in s or ":" in s:
             return '"{}"'.format(s)
         return s

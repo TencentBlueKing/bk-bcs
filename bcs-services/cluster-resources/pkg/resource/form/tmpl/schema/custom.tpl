@@ -303,10 +303,14 @@ spec:
       type: card
 {{- end }}
 
-{{- define "custom.gdeployReplicas" }}
+{{- define "custom.gworkloadReplicas" }}
 replicas:
   title: {{ i18n "副本管理" .lang }}
   type: object
+  {{- if eq .kind "GameStatefulSet" }}
+  required:
+    - svcName
+  {{- end }}
   properties:
     cnt:
       title: {{ i18n "副本数量" .lang }}
@@ -315,6 +319,46 @@ replicas:
       ui:component:
         props:
           max: 4096
+    {{- if eq .kind "GameStatefulSet" }}
+    svcName:
+      title: {{ i18n "服务名称" .lang }}
+      type: string
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          searchable: true
+          remoteConfig:
+            params:
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/networks/services` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+        - source: "metadata.namespace"
+          then:
+            state:
+              value: ""
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+      ui:rules:
+        - required
+        - maxLength128
+    podManPolicy:
+      title: {{ i18n "Pod 管理策略" .lang }}
+      type: string
+      default: OrderedReady
+      ui:component:
+        name: radio
+        props:
+          datasource:
+            - label: OrderedReady
+              value: OrderedReady
+            - label: Parallel
+              value: Parallel
+    {{- end }}
     updateStrategy:
       title: {{ i18n "升级策略" .lang }}
       type: string
@@ -328,6 +372,10 @@ replicas:
               value: RollingUpdate
             - label: {{ i18n "原地升级" .lang }}
               value: InplaceUpdate
+            {{- if eq .kind "GameStatefulSet" }}
+            - label: {{ i18n "手动删除" .lang }}
+              value: OnDelete
+            {{- end }}
       ui:reactions:
         - target: "{{`{{`}} $widgetNode?.getSibling('gracePeriodSecs')?.id {{`}}`}}"
           if: "{{`{{`}} $self.value === 'InplaceUpdate' {{`}}`}}"
@@ -412,7 +460,7 @@ replicas:
           unit: s
 {{- end }}
 
-{{- define "custom.gdeployGracefulManage" }}
+{{- define "custom.gworkloadGracefulManage" }}
 gracefulManage:
   title: {{ i18n "优雅删除/更新" .lang }}
   type: object
@@ -463,7 +511,7 @@ properties:
           state:
             visible: false
   tmplName:
-    title: Hook Template
+    title: HookTemplate
     type: string
     ui:component:
       name: select
@@ -480,6 +528,8 @@ properties:
             - "{{`{{`}} $loadDataSource {{`}}`}}"
       - source: "metadata.namespace"
         then:
+          state:
+            value: ""
           actions:
             - "{{`{{`}} $loadDataSource {{`}}`}}"
     ui:rules:
@@ -508,7 +558,7 @@ properties:
       showTitle: true
 {{- end }}
 
-{{- define "custom.gdeploydeletionProtect" }}
+{{- define "custom.gworkloadDeletionProtect" }}
 deletionProtect:
   title: {{ i18n "删除保护" .lang }}
   type: object

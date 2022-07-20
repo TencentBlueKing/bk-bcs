@@ -38,10 +38,10 @@ const (
 )
 
 const (
-	// DefaultGDeployMaxSurge ...
-	DefaultGDeployMaxSurge = 0
-	// DefaultGDeployMaxUnavailable ...
-	DefaultGDeployMaxUnavailable = 20
-	// DefaultGDeployGracePeriodSecs 默认优雅更新时间
-	DefaultGDeployGracePeriodSecs = 30
+	// DefaultGWorkloadMaxSurge ...
+	DefaultGWorkloadMaxSurge = 0
+	// DefaultGWorkloadMaxUnavailable ...
+	DefaultGWorkloadMaxUnavailable = 20
+	// DefaultGWorkloadGracePeriodSecs 默认优雅更新时间
+	DefaultGWorkloadGracePeriodSecs = 30
 )

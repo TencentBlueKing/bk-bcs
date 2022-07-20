@@ -32,4 +32,5 @@ var Kind2ParseFuncMap = map[string]func(manifest map[string]interface{}) map[str
 	res.HPA:      hpa.ParseHPA,
 	res.HookTmpl: custom.ParseHookTmpl,
 	res.GDeploy:  custom.ParseGDeploy,
+	res.GSTS:     custom.ParseGSTS,
 }

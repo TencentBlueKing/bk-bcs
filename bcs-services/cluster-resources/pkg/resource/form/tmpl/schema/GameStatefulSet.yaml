@@ -1,4 +1,4 @@
-title: gameDeployment
+title: gameStatefulSet
 type: object
 properties:
   {{- include "common.metadata" . | indent 2 }}

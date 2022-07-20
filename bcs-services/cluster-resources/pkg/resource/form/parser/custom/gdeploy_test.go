@@ -97,8 +97,8 @@ func TestParseGDeployReplicas(t *testing.T) {
 	assert.Equal(t, exceptedGDeployReplicas, actualGDeployReplicas)
 }
 
-var exceptedGDeployGracefulManage = model.GDeployGracefulManage{
-	PreDeleteHook: model.GDeployHookSpec{
+var exceptedGWorkloadGracefulManage = model.GWorkloadGracefulManage{
+	PreDeleteHook: model.GWorkloadHookSpec{
 		Enabled:  true,
 		TmplName: "hooktemplate-4mdfd82m",
 		Args: []model.HookCallArg{
@@ -112,7 +112,7 @@ var exceptedGDeployGracefulManage = model.GDeployGracefulManage{
 			},
 		},
 	},
-	PreInplaceHook: model.GDeployHookSpec{
+	PreInplaceHook: model.GWorkloadHookSpec{
 		Enabled:  true,
 		TmplName: "hooktemplate-99ifkar7",
 		Args: []model.HookCallArg{
@@ -122,23 +122,23 @@ var exceptedGDeployGracefulManage = model.GDeployGracefulManage{
 			},
 		},
 	},
-	PostInplaceHook: model.GDeployHookSpec{
+	PostInplaceHook: model.GWorkloadHookSpec{
 		Enabled: false,
 	},
 }
 
-func TestGDeployGracefulManage(t *testing.T) {
-	actualGDeployGracefulManage := model.GDeployGracefulManage{}
-	ParseGDeployGracefulManage(lightGDeployManifest, &actualGDeployGracefulManage)
-	assert.Equal(t, exceptedGDeployGracefulManage, actualGDeployGracefulManage)
+func TestParseGWorkloadGracefulManage(t *testing.T) {
+	actualGWorkloadGracefulManage := model.GWorkloadGracefulManage{}
+	ParseGWorkloadGracefulManage(lightGDeployManifest, &actualGWorkloadGracefulManage)
+	assert.Equal(t, exceptedGWorkloadGracefulManage, actualGWorkloadGracefulManage)
 }
 
-func TestParseGDeployDeletionProtect(t *testing.T) {
-	deletionProtect := model.GDeployDeletionProtect{}
-	ParseGDeployDeletionProtect(lightGDeployManifest, &deletionProtect)
+func TestParseGWorkloadDeletionProtect(t *testing.T) {
+	deletionProtect := model.GWorkloadDeletionProtect{}
+	ParseGWorkloadDeletionProtect(lightGDeployManifest, &deletionProtect)
 	assert.Equal(t, res.DeletionProtectPolicyCascading, deletionProtect.Policy)
 
 	_ = mapx.SetItems(lightGDeployManifest, "metadata.labels", map[string]interface{}{})
-	ParseGDeployDeletionProtect(lightGDeployManifest, &deletionProtect)
+	ParseGWorkloadDeletionProtect(lightGDeployManifest, &deletionProtect)
 	assert.Equal(t, res.DeletionProtectPolicyNotAllow, deletionProtect.Policy)
 }
