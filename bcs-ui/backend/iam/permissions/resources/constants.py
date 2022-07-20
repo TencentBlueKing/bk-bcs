@@ -19,4 +19,5 @@ class ResourceType(str, StructuredEnum):
     Project = 'project'
     Cluster = 'cluster'
     Namespace = 'namespace'
-    Templateset = "templateset"
+    Templateset = 'templateset'
+    Cloudaccount = 'cloud_account'
