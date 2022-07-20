@@ -111,11 +111,12 @@
                     // 项目不存在
                     const project = projectList.value.find(item => item.project_code === localProjectCode) || projectList.value[0]
                     const location = $router.resolve({
-                        name: 'clusterMain',
+                        name: $route.name || 'entry',
                         params: {
                             projectCode: project.project_code
                         }
                     })
+                    handleSetProjectStorageInfo(project)
                     window.location.href = location.href
                 }
                 return false
@@ -208,7 +209,7 @@
                 } else if ($route.name === 'clusterMain' && curCluster) {
                     // 集群ID存在，但是当前处于全部集群首页时需要跳回单集群概览页
                     $router.replace({
-                        name: 'clusterOverview'
+                        name: curCluster.is_shared ? 'namespace' : 'clusterOverview'
                     })
                 }
                 await $store.dispatch('getFeatureFlag').catch(err => {
