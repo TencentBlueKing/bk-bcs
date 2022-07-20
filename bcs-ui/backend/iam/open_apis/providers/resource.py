@@ -22,12 +22,14 @@ from .cluster import ClusterProvider
 from .namespace import NamespaceProvider
 from .project import ProjectProvider
 from .templateset import TemplatesetProvider
+from .cloud_account import CloudAccountProvider
 
 PROVIDER_CLS_MAP = {
     ResourceType.Project: ProjectProvider,
     ResourceType.Namespace: NamespaceProvider,
     ResourceType.Cluster: ClusterProvider,
     ResourceType.Templateset: TemplatesetProvider,
+    ResourceType.Cloudaccount: CloudAccountProvider,
 }
 
 

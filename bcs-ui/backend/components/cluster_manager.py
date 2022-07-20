@@ -28,6 +28,8 @@ class ClusterManagerConfig:
 
         self.get_nodes_url = f"{self.host}/bcsapi/v4/clustermanager/v1/cluster/{{cluster_id}}/node"
         self.get_shared_clusters_url = f"{self.host}/bcsapi/v4/clustermanager/v1/sharedclusters"
+        # 云账号接口
+        self.list_cloud_accounts_url = f'{self.host}/bcsapi/v4/clustermanager/v1/accounts'
 
 
 class ClusterManagerAuth(AuthBase):
@@ -75,6 +77,18 @@ class ClusterManagerClient(BkApiClient):
 
         url = self._config.get_shared_clusters_url
         return self._client.request_json("GET", url)
+
+    @response_handler(default=list)
+    def list_cloud_accounts(self, project_id: str) -> List[Dict]:
+        """查询云账号"""
+        return self._client.request_json('GET', self._config.list_cloud_accounts_url, params={'projectID': project_id})
+
+    @response_handler(default=list)
+    def list_cloud_accounts_by_ids(self, account_ids: List[str]) -> List[Dict]:
+        """根据 ID 查询账号信息"""
+        return self._client.request_json(
+            'GET', self._config.list_cloud_accounts_url, params={'accountID': account_ids}
+        )
 
 
 def get_shared_clusters() -> List[Dict[str, str]]:
