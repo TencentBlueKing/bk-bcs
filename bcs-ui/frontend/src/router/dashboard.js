@@ -167,7 +167,8 @@ const childRoutes = [
                 Job: 'dashboardWorkloadJobs',
                 Pod: 'dashboardWorkloadPods',
                 StatefulSet: 'dashboardWorkloadStatefulSets',
-                GameDeployment: 'dashboardGameDeployments'
+                GameDeployment: 'dashboardGameDeployments',
+                GameStatefulSet: 'dashboardGameStatefulSets'
             }
             to.meta.menuId = menuIdMap[to.query.kind]
             next()

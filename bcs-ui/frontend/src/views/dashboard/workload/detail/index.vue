@@ -97,6 +97,14 @@
                 pods: 'Pod',
                 container: 'Container'
             }
+            const cobjKindMap = {
+                GameDeployment: 'GameDeployments',
+                GameStatefulSet: 'GameStatefulSets'
+            }
+            const cobjSubTitleMap = {
+                GameDeployment: 'GameDeployment',
+                GameStatefulSet: 'GameStatefulSet'
+            }
             // 首字母大写
             const upperFirstLetter = (str: string) => {
                 if (!str) return str
@@ -106,11 +114,11 @@
             // 顶部导航内容
             const titles = ref<ITitle[]>([
                 {
-                    name: upperFirstLetter(props.kind === 'GameDeployment' ? 'GameDeployments' : props.category),
+                    name: upperFirstLetter(cobjKindMap[props.kind] || props.category),
                     id: ''
                 },
                 {
-                    name: `${props.kind === 'GameDeployment' ? 'GameDeployment' : subTitleMap[props.category]}: ${props.name}`,
+                    name: `${cobjSubTitleMap[props.kind] || subTitleMap[props.category]}: ${props.name}`,
                     id: defaultComId,
                     params: {
                         ...props
