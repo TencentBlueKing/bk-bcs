@@ -22,7 +22,10 @@ from .featureflag.featflags import cluster_mgr
 
 def register_to_app():
     """注册额外的功能"""
-    ext_feature_flags = [enum.FeatureFlagField(name='CLOUDTOKEN', label='云凭证', default=True)]
+    ext_feature_flags = [
+        enum.FeatureFlagField(name='CLOUDTOKEN', label='云凭证', default=True),
+        enum.FeatureFlagField(name='LOG', label='日志采集', default=True),
+    ]
     for ext_feat_flag in ext_feature_flags:
         cluster_mgr.GlobalClusterFeatureFlag.register_feature_flag(ext_feat_flag)
         cluster_mgr.SingleClusterFeatureFlag.register_feature_flag(ext_feat_flag)
