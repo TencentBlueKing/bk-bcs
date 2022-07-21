@@ -32,13 +32,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
 // Config 配置
 type Config struct {
-	URL         string `yaml:"url"`          // unify-query 访问地址
-	MetadataURL string `yaml:"metadata_url"` // 元数据地址, 目前只包含白名单
+	URL         string `yaml:"url" mapstructure:"metadata_url"`          // unify-query 访问地址
+	MetadataURL string `yaml:"metadata_url" mapstructure:"metadata_url"` // 元数据地址, 目前只包含白名单
 }
 
 // BKMonitorStore implements the store node API on top of the Prometheus remote read API.
@@ -82,15 +83,30 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 	// 默认配置
 	lsets := []labelpb.ZLabelSet{zset}
 
+	clusterMap, err := bcs.GetClusterMap(ctx, config.G.BCS)
+	if err != nil {
+		return nil, err
+	}
+
 	clusterList, err := bkmonitor_client.QueryClusterList(ctx, s.config.MetadataURL)
 	if err != nil {
 		klog.Errorf("query bk_monitor cluster list error, %s", err)
 	} else if clusterList.Enabled {
 		lsets = make([]labelpb.ZLabelSet, 0, len(clusterList.ClusterIdList))
 		for _, clusterId := range clusterList.ClusterIdList {
+			// 不存在的，或者已经删除的集群，需要过滤
+			if _, ok := clusterMap[clusterId]; !ok {
+				continue
+			}
+
 			labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterId})
 			lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
 		}
+	}
+
+	for _, m := range AvailableNodeMetrics {
+		labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "__name__": m})
+		lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
 	}
 
 	res := &storepb.InfoResponse{
@@ -114,6 +130,8 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 	if r.Label == "__name__" {
 		values = []string{"container_network_receive_bytes_total"}
 	}
+	values = append(values, AvailableNodeMetrics...)
+
 	return &storepb.LabelValuesResponse{Values: values}, nil
 }
 
@@ -140,7 +158,13 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 	if metricName == "" {
-		return errors.New("metric name is required")
+		return nil
+		// return errors.New("metric name is required")
+	}
+
+	// bcs 聚合 metrics 忽略
+	if strings.HasPrefix(metricName, "bcs:") {
+		return nil
 	}
 
 	clusterId, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
@@ -149,7 +173,8 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	}
 
 	if clusterId == "" {
-		return errors.New("cluster_id is required")
+		return nil
+		// return errors.New("cluster_id is required")
 	}
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))

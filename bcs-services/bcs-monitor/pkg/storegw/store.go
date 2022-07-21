@@ -30,12 +30,14 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system"
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bk_monitor"
 )
 
 const (
 	// BKMONITOR 蓝鲸监控数据源
-	BKMONITOR config.StoreProvider = "BK_MONITOR"
+	BKMONITOR  config.StoreProvider = "BK_MONITOR"
+	BCS_SYSTEM config.StoreProvider = "BCS_SYSTEM"
 )
 
 // StoreGW Store 基类
@@ -60,6 +62,8 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 	switch strings.ToUpper(string(conf.Type)) {
 	case string(BKMONITOR):
 		return bkmonitor.NewBKMonitorStore(config)
+	case string(BCS_SYSTEM):
+		return bcs_system.NewBCSSystemStore(config)
 	default:
 		return nil, errors.Errorf("store with type %s is not supported", conf.Type)
 	}

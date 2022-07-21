@@ -38,6 +38,7 @@ type Configuration struct {
 	API         *APIConf                   `yaml:"query"`
 	Logging     *LogConf                   `yaml:"logging"`
 	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
+	BKMonitor   *BKMonitorConf             `yaml:"bk_monitor_conf"`
 	BCS         *BCSConf                   `yaml:"bcs_conf"`
 	Credentials map[string][]*Credential   `yaml:"-"`
 	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
@@ -67,6 +68,10 @@ func (c *Configuration) init() error {
 	// 把列表类型转换为map，方便检索
 	for _, conf := range c.BCSEnvConf {
 		c.BCSEnvMap[conf.ClusterEnv] = conf
+	}
+
+	if err := c.BKMonitor.init(); err != nil {
+		return err
 	}
 
 	return nil
@@ -109,6 +114,8 @@ func newConfiguration() (*Configuration, error) {
 	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
 
 	c.QueryStore = &QueryStoreConf{}
+
+	c.BKMonitor = defaultBKMonitorConf()
 
 	return c, nil
 }

@@ -19,12 +19,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/prompb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 )
 
@@ -179,12 +181,25 @@ type BKMonitorResult struct {
 
 // GrayClusterList 灰度列表
 type GrayClusterList struct {
-	Enabled       bool     `json:"enable_bsc_gray_cluster"`
-	ClusterIdList []string `json:"bcs_gray_cluster_id_list"`
+	Enabled       bool                `json:"enable_bsc_gray_cluster"`
+	ClusterIdList []string            `json:"bcs_gray_cluster_id_list"`
+	ClusterMap    map[string]struct{} `json:"-"`
+}
+
+func (c *GrayClusterList) initClusterMap() {
+	c.ClusterMap = map[string]struct{}{}
+	for _, id := range c.ClusterIdList {
+		c.ClusterMap[id] = struct{}{}
+	}
 }
 
 // QueryClusterList 查询已经接入蓝鲸监控的集群列表
 func QueryClusterList(ctx context.Context, host string) (*GrayClusterList, error) {
+	cacheKey := "bcs.QueryClusterList"
+	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		return cacheResult.(*GrayClusterList), nil
+	}
+
 	url := fmt.Sprintf("%s/get_bcs_gray_cluster_list", host)
 
 	resp, err := component.GetClient().R().
@@ -209,6 +224,9 @@ func QueryClusterList(ctx context.Context, host string) (*GrayClusterList, error
 	if !bkMonitorResult.Result {
 		return nil, errors.Errorf("result = %t, shoud be true", bkMonitorResult.Result)
 	}
+
+	bkMonitorResult.Data.initClusterMap()
+	storage.LocalCache.Slot.Set(cacheKey, bkMonitorResult.Data, time.Minute*10)
 
 	return bkMonitorResult.Data, nil
 }

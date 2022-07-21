@@ -14,15 +14,11 @@
 package telemetry
 
 import (
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
-
-var bKMontiorEnableTime = time.Date(2022, time.June, 28, 0, 0, 0, 0, config.G.Base.Location)
 
 // 是否安装蓝鲸监控采集器, 灰度使用
 func IsBKMonitorAgent(c *rest.Context) (interface{}, error) {
@@ -46,7 +42,7 @@ func IsBKMonitorAgent(c *rest.Context) (interface{}, error) {
 		"agent":  "bk_monitor",
 		"enable": false,
 	}
-	if createTime.After(bKMontiorEnableTime) {
+	if createTime.After(config.G.BKMonitor.AgentEnableAfterTime) {
 		data["enable"] = true
 	}
 	return data, nil

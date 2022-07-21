@@ -16,9 +16,11 @@ package bcs
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 )
 
 // Cluster 集群信息
@@ -65,6 +67,47 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 	}
 
 	return clusters, nil
+}
+
+// GetClusterMap 获取全部集群数据, map格式
+func GetClusterMap(ctx context.Context, bcsConf *config.BCSConf) (map[string]*Cluster, error) {
+	cacheKey := fmt.Sprintf("bcs.GetClusterMap:%s", bcsConf.ClusterEnv)
+	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		return cacheResult.(map[string]*Cluster), nil
+	}
+
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", bcsConf.Host)
+
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetAuthToken(bcsConf.Token).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*Cluster
+	if err := component.UnmarshalBKResult(resp, &result); err != nil {
+		return nil, err
+	}
+
+	clusterMap := map[string]*Cluster{}
+	for _, cluster := range result {
+		// 过滤掉共享集群
+		if cluster.IsShared {
+			continue
+		}
+		// 集群状态 https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-cluster-manager/api/clustermanager/clustermanager.proto#L1003
+		if cluster.Status != "RUNNING" {
+			continue
+		}
+		clusterMap[cluster.ClusterId] = cluster
+	}
+
+	storage.LocalCache.Slot.Set(cacheKey, clusterMap, time.Minute*10)
+
+	return clusterMap, nil
 }
 
 // GetCluster 获取集群详情
