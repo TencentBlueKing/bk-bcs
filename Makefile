@@ -389,12 +389,12 @@ alert-manager:pre
 	cp ./bcs-services/bcs-alert-manager/pkg/proto/alertmanager/alertmanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/alertmanager.swagger.json
 	cd ./bcs-services/bcs-alert-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
 
-project:
+project-manager:
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project/swagger
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-project ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_SERVICES_PATH}/bcs-project/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-project/swagger/swagger-ui
 	cp ${BCS_SERVICES_PATH}/bcs-project/proto/bcsproject/bcsproject.swagger.json ${PACKAGEPATH}/bcs-services/bcs-project/swagger/bcsproject.swagger.json
-	cd ${BCS_SERVICES_PATH}/bcs-project &&  go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project/bcs-project-service ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-project &&  go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project/bcs-project-manager ./main.go
 
 # end of bcs-service section
 

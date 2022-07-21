@@ -8,7 +8,7 @@ WORKDIR /data/project
 
 RUN mkdir -p /data/project/logs /data/project/cert /data/project/swagger
 
-COPY bcs-project-service /usr/bin/bcs-project-service
+COPY bcs-project /usr/bin/bcs-project
 COPY ./swagger /data/project/swagger
 
-CMD ["/usr/bin/bcs-project-service"]
+CMD ["/usr/bin/bcs-project"]
