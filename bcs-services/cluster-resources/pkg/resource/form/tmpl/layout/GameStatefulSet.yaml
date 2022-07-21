@@ -6,8 +6,7 @@
             - [ "cnt", "svcName" ]
             - [ "updateStrategy", "podManPolicy" ]
             - [ "maxSurge", "msUnit", "maxUnavailable", "muaUnit" ]
-            - [ "minReadySecs", "partition" ]
-            - [ "gracePeriodSecs", "." ]
+            - [ "partition", "gracePeriodSecs" ]
           prop: replicas
       - - group:
             - - group:

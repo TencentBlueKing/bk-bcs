@@ -31,8 +31,7 @@ var lightGSTSManifest = map[string]interface{}{
 		"namespace": "default",
 	},
 	"spec": map[string]interface{}{
-		"minReadySeconds": int64(0),
-		"replicas":        int64(1),
+		"replicas": int64(1),
 		"updateStrategy": map[string]interface{}{
 			"inPlaceUpdateStrategy": map[string]interface{}{
 				"gracePeriodSeconds": int64(30),
@@ -58,7 +57,6 @@ var exceptedGSTSReplicas = model.GSTSReplicas{
 	MSUnit:          util.UnitCnt,
 	MaxUnavailable:  20,
 	MUAUnit:         util.UnitPercent,
-	MinReadySecs:    0,
 	Partition:       1,
 	GracePeriodSecs: 30,
 }

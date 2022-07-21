@@ -152,7 +152,6 @@ type GSTSReplicas struct {
 	MSUnit          string `structs:"msUnit"`
 	MaxUnavailable  int64  `structs:"maxUnavailable"`
 	MUAUnit         string `structs:"muaUnit"`
-	MinReadySecs    int64  `structs:"minReadySecs"`
 	Partition       int64  `structs:"partition"`
 	GracePeriodSecs int64  `structs:"gracePeriodSecs"`
 }

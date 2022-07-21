@@ -63,7 +63,6 @@ func ParseGSTSReplicas(manifest map[string]interface{}, replicas *model.GSTSRepl
 	if maxUnavailable, err := mapx.GetItems(manifest, "spec.updateStrategy.rollingUpdate.maxUnavailable"); err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
-	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")
 	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.rollingUpdate.partition")
 	replicas.GracePeriodSecs = mapx.Get(
 		manifest, "spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds", int64(DefaultGWorkloadMaxSurge),

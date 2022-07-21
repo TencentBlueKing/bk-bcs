@@ -138,7 +138,6 @@ postInplaceUpdateStrategy:
 {{- end }}
 {{- if .spec.gracefulManage.postInplaceHook }}
 {{- end }}
-minReadySeconds: {{ .spec.replicas.minReadySecs | default 0 }}
 {{- end }}
 
 {{- define "custom.gworkloadUpdateArgs" -}}

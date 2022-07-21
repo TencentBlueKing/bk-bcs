@@ -431,6 +431,7 @@ replicas:
               value: percent
             - label: {{ i18n "个" .lang }}
               value: cnt
+    {{- if eq .kind "GameDeployment" }}
     minReadySecs:
       title: {{ i18n "最小就绪时间" .lang }}
       type: integer
@@ -440,6 +441,7 @@ replicas:
         props:
           max: 2147483647
           unit: s
+    {{- end }}
     partition:
       title: {{ i18n "保留旧版本实例数量" .lang }}
       type: integer
