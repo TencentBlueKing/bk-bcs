@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/composition-api'
 import DashboardTopActions from './dashboard-top-actions'
-import {useSelectItemsNamespace} from './use-namespace'
+import { useSelectItemsNamespace } from './use-namespace'
 import usePage from './use-page'
 import useSearch from './use-search'
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe'
@@ -80,6 +80,11 @@ export default defineComponent({
         const { $router, $i18n, $bkInfo, $store, $bkMessage } = ctx.root
         const { type, category, kind, showNameSpace, showCrd, defaultActiveDetailType, defaultCrd } = toRefs(props)
         const defaultCustomObjectsMap = ref(['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com', 'hooktemplates.tkex.tencent.com'])
+        const updateStrategyMap = ref({
+            RollingUpdate: $i18n.t('滚动升级'),
+            InplaceUpdate: $i18n.t('原地升级'),
+            OnDelete: $i18n.t('手动删除')
+        })
 
         // crd
         const currentCrd = ref(defaultCrd.value || sessionStorage.getItem(CUR_SELECT_CRD) || '')
@@ -448,6 +453,7 @@ export default defineComponent({
         })
 
         return {
+            updateStrategyMap,
             namespaceValue,
             namespaceLoading,
             namespaceDisabled,
@@ -489,7 +495,7 @@ export default defineComponent({
     render () {
         const renderCreate = () => {
             if (this.showCreate) {
-                if(this.webAnnotations?.featureFlag?.FORM_CREATE) {
+                if (this.webAnnotations?.featureFlag?.FORM_CREATE) {
                     return (
                         <bk-dropdown-menu trigger="click" {...{
                             scopedSlots: {
@@ -632,7 +638,8 @@ export default defineComponent({
                             renderCrdHeader: this.renderCrdHeader,
                             additionalColumns: this.additionalColumns,
                             namespaceDisabled: this.namespaceDisabled,
-                            webAnnotations: this.webAnnotations
+                            webAnnotations: this.webAnnotations,
+                            updateStrategyMap: this.updateStrategyMap
                         })
                     }
                 </div>

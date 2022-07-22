@@ -2,7 +2,7 @@
     <BaseLayout title="GameDeployments" kind="GameDeployment" type="crd" category="custom_objects" default-crd="gamedeployments.tkex.tencent.com"
         default-active-detail-type="yaml" :show-detail-tab="false" :show-crd="false">
         <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleUpdateResource,
-                              handleDeleteResource,handleSortChange, gotoDetail, renderCrdHeader, getJsonPathValue, additionalColumns, webAnnotations }">
+                              handleDeleteResource,handleSortChange, gotoDetail, renderCrdHeader, getJsonPathValue, additionalColumns, webAnnotations, updateStrategyMap }">
             <bk-table
                 :data="curPageData"
                 :pagination="pageConf"
@@ -22,8 +22,7 @@
                 <bk-table-column :label="$t('升级策略')" width="150" :resizable="false">
                     <template slot-scope="{ row }">
                         <span v-if="row.spec.updateStrategy">
-                            {{ row.spec.updateStrategy.type === 'RollingUpdate'
-                                ? $t('滚动升级') : $t('原地升级') }}
+                            {{ updateStrategyMap[row.spec.updateStrategy.type] || $t('滚动升级') }}
                         </span>
                         <span v-else>{{ $t('滚动升级') }}</span>
                     </template>

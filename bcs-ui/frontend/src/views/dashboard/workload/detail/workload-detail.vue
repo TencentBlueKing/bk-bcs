@@ -57,8 +57,7 @@
                 </div>
                 <div class="info-item" v-if="category === 'custom_objects'">
                     <span class="label">{{ $t('升级策略') }}</span>
-                    <span class="value">{{ updateStrategy.type === 'RollingUpdate'
-                        ? $t('滚动升级') : $t('原地升级') }}</span>
+                    <span class="value">{{ updateStrategyMap[updateStrategy.type] || $t('滚动升级') }}</span>
                 </div>
             </div>
         </div>
@@ -253,6 +252,11 @@
         },
         setup (props, ctx) {
             const { $store, $bkMessage, $i18n, $route } = ctx.root
+            const updateStrategyMap = ref({
+                RollingUpdate: $i18n.t('滚动升级'),
+                InplaceUpdate: $i18n.t('原地升级'),
+                OnDelete: $i18n.t('手动删除')
+            })
             const curType = props.category === 'custom_objects' ? 'crd' : 'workloads'
             const {
                 isLoading,
@@ -429,6 +433,7 @@
             })
 
             return {
+                updateStrategyMap,
                 isLoading,
                 detail,
                 updateStrategy,
