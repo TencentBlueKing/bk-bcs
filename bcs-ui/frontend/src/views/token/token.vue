@@ -121,8 +121,8 @@
                 <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
                 <div class="code-wrapper">
                     <ace :show-gutter="false" lang="yaml" :height="330"
-                        v-full-screen="{ tools: ['copy'], content: demoConfigExample }"
-                        read-only :value="demoConfigExample" width="100%">
+                        v-full-screen="{ tools: ['copy'], content: shareDemoConfigExample }"
+                        read-only :value="shareDemoConfigExample" width="100%">
                     </ace>
                 </div>
             </div>
@@ -130,7 +130,7 @@
                 <div class="title">{{$t('BCS API')}}:</div>
                 <div class="code-wrapper">
                     <ace :show-gutter="false" :height="50"
-                        v-full-screen="{ tools: ['copy'], content: shareDemoConfigExample }"
+                        v-full-screen="{ tools: ['copy'], content: shareBcsApiExample }"
                         read-only :value="shareBcsApiExample" width="100%">
                     </ace>
                 </div>
@@ -261,7 +261,7 @@ kind: Config
 clusters:
 - cluster:
     # 共享集群使用的server地址，\${cluster_id}为共享集群ID
-    # server: '\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/'
+    server: '\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/'
   name: '\${cluster_id}'
 contexts:
 - context:
