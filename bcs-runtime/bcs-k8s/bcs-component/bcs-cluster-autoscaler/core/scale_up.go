@@ -439,9 +439,9 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 		if len(option.Pods) > 0 || bufferNotEnough {
 			estimator := context.ExtendedEstimatorBuilder(context.PredicateChecker, existingNodeInfos)
 			if len(upcomingNodes) > 0 {
-				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(upcomingNodes), upcomingNodes[0])
+				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(option.Pods), upcomingNodes[0])
 			} else {
-				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(upcomingNodes), upcomingNodes)
+				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(option.Pods), upcomingNodes)
 			}
 			option.NodeCount = estimator.Estimate(option.Pods, nodeInfo, upcomingNodes)
 			if option.NodeCount > 0 {
