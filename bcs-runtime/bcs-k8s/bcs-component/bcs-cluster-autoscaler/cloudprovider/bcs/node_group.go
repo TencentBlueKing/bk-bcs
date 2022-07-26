@@ -280,7 +280,7 @@ func (group *NodeGroup) Nodes() ([]cloudprovider.Instance, error) {
 		}
 
 		i := cloudprovider.Instance{
-			Id:     fmt.Sprintf("qcloud:///%v/%s", instance.Zone, instance.NodeID),
+			Id:     instance.InnerIP,
 			Status: &cloudprovider.InstanceStatus{},
 		}
 		cache[instance.NodeID] = instance.InnerIP
