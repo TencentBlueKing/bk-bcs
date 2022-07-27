@@ -61,7 +61,8 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
-	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager
+	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
+        helm-manager
 
 bcs-scenarios: kourse
 
@@ -416,6 +417,15 @@ data-manager:pre
 	cp -R ${BCS_SERVICES_PATH}/bcs-data-manager/third_party/swagger-ui/* ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-data-manager/proto/bcs-data-manager/bcs-data-manager.swagger.json  ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/bcs-data-manager.swagger.json
 	cd bcs-services/bcs-data-manager/ && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-data-manager/bcs-data-manager ./main.go
+
+helm-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-helm-manager
+	cp -R ${BCS_SERVICES_PATH}/bcs-helm-manager/images/bcs-helm-manager/* ${PACKAGEPATH}/bcs-services/bcs-helm-manager/
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger
+	cp -R ${BCS_SERVICES_PATH}/bcs-helm-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/
+	cp ${BCS_SERVICES_PATH}/bcs-helm-manager/proto/bcs-helm-manager/bcs-helm-manager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/swagger-ui/bcs-helm-manager.swagger.json
+	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
+
 
 test: test-bcs-runtime
 
