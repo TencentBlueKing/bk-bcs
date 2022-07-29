@@ -35,6 +35,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
@@ -74,12 +75,17 @@ type Watcher struct {
 	stopChan           chan struct{}
 	namespace          string
 	labelSelector      string
+	labelMap           map[string]string
 }
 
 // NewWatcher creates a new watcher of target type resource.
 func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string, objType runtime.Object,
-	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool, labelSelector string) *Watcher {
+	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool, labelSelector string) (*Watcher, error) {
 
+	labelSet, err := labels.ConvertSelectorToLabelsMap(labelSelector)
+	if err != nil {
+		return nil, err
+	}
 	watcher := &Watcher{
 		resourceType:       resourceType,
 		writer:             writer,
@@ -88,6 +94,7 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 		queue:              queue.New(),
 		namespace:          namespace,
 		labelSelector:      labelSelector,
+		labelMap:           labelSet,
 	}
 
 	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", resourceType, resourceName, namespace, labelSelector)
@@ -117,7 +124,7 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 	watcher.store = store
 	watcher.controller = controller
 
-	return watcher
+	return watcher, nil
 }
 
 // GetByKey returns object data by target key.
@@ -300,6 +307,20 @@ func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncD
 	if w.isEventShouldFilter(dMeta, eventAction) {
 		glog.V(2).Infof("watcher metadata is filtered %s %s: %s/%s", eventAction, w.resourceType, namespace, name)
 		return nil
+	}
+
+	// don't remove this code
+	// in a specific scenario, when using label selector to watch multiple sub-clusters of a karmada federated cluster,
+	// returned data may not carry the label selector, so we add label selector into object returned.
+	if len(w.labelMap) != 0 {
+		tmpLabels := dMeta.GetLabels()
+		if tmpLabels == nil {
+			tmpLabels = make(map[string]string)
+		}
+		for k, v := range w.labelMap {
+			tmpLabels[k] = v
+		}
+		dMeta.SetLabels(tmpLabels)
 	}
 
 	ownerUID := ""
