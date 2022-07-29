@@ -125,7 +125,10 @@ class CollectConfSLZ(serializers.ModelSerializer):
         return {}
 
     def get_config(self, obj) -> Dict[str, Any]:
-        return format(obj.log_source_type, self._getitem(obj, 'container_config'))
+        container_config = self._getitem(obj, 'container_config')
+        if container_config:
+            return format(obj.log_source_type, container_config)
+        return {}
 
     def get_deleted(self, obj) -> bool:
         if obj.config_id not in self.context['rule_configs']:
