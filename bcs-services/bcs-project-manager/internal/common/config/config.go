@@ -18,7 +18,7 @@ const (
 	// ServiceDomain 域名，用于注册到APISIX
 	ServiceDomain = "project.bkbcs.tencent.com"
 	// DefaultConfigPath 配置路径
-	DefaultConfigPath = "etc/project.yaml"
+	DefaultConfigPath = "./bcs-project-manager.yaml"
 	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport
 	MicroMetaKeyHTTPPort = "httpport"
 

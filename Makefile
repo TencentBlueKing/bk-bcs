@@ -62,7 +62,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
-        helm-manager
+    helm-manager project-manager
 
 bcs-scenarios: kourse
 
@@ -390,12 +390,12 @@ alert-manager:pre
 	cp ./bcs-services/bcs-alert-manager/pkg/proto/alertmanager/alertmanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/alertmanager.swagger.json
 	cd ./bcs-services/bcs-alert-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
 
-project-manager:
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project/swagger
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-project ${PACKAGEPATH}/bcs-services
-	cp -R ${BCS_SERVICES_PATH}/bcs-project/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-project/swagger/swagger-ui
-	cp ${BCS_SERVICES_PATH}/bcs-project/proto/bcsproject/bcsproject.swagger.json ${PACKAGEPATH}/bcs-services/bcs-project/swagger/bcsproject.swagger.json
-	cd ${BCS_SERVICES_PATH}/bcs-project &&  go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project/bcs-project-manager ./main.go
+project-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project-manager/swagger
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-project-manager/* ${PACKAGEPATH}/bcs-services/bcs-project-manager
+	cp -R ${BCS_SERVICES_PATH}/bcs-project-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-project-manager/swagger/swagger-ui
+	cp ${BCS_SERVICES_PATH}/bcs-project-manager/proto/bcsproject/bcsproject.swagger.json ${PACKAGEPATH}/bcs-services/bcs-project-manager/swagger/bcsproject.swagger.json
+	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-project-manager ./main.go
 
 # end of bcs-service section
 

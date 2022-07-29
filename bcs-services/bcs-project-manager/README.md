@@ -17,5 +17,5 @@ docker build . -t docker.io/bcs-poroject:v0.1.0
 ```
 # 在项目的根目录执行
 make build
-./bcs-project -c project.yaml
+./bcs-project-manager -c bcs-project-manager.yaml
 ```

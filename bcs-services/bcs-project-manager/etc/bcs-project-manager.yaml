@@ -28,8 +28,8 @@ server:
   useLocalIP: false
   address: "127.0.0.1"
   insecureAddress: "127.0.0.1"
-  port: 8090
-  httpPort: 8091
+  port: 8091
+  httpPort: 8090
   metricPort: 8092
   cert: ""
   certPwd: ""
