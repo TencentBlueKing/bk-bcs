@@ -77,29 +77,61 @@
                 </bcs-exception>
             </template>
         </bk-table>
-        <!-- 使用案例 -->
+        <!-- 独立集群使用案例 -->
         <div class="user-token-example" v-if="data.length">
             <div class="example-item">
-                <div class="title">{{$t('Kubeconfig使用示例')}}:</div>
+                <div class="title total-title">{{$t('独立集群kubectl与BCS API使用示例')}}:</div>
                 <div class="code-wrapper">
+                    <p>kubectl:</p>
+                    <br>
                     {{kubeConfigExample}}
                 </div>
             </div>
             <div class="example-item">
                 <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
                 <div class="code-wrapper">
-                    <ace :show-gutter="false" lang="yaml" :height="370"
+                    <ace :show-gutter="false" lang="yaml" :height="330"
                         v-full-screen="{ tools: ['copy'], content: demoConfigExample }"
                         read-only :value="demoConfigExample" width="100%">
                     </ace>
                 </div>
             </div>
             <div class="example-item">
-                <div class="title">{{$t('BCS API使用示例')}}:</div>
+                <div class="title">{{$t('BCS API')}}:</div>
                 <div class="code-wrapper">
-                    <ace :show-gutter="false" :height="120"
+                    <ace :show-gutter="false" :height="50"
                         v-full-screen="{ tools: ['copy'], content: bcsApiExample }"
                         read-only :value="bcsApiExample" width="100%">
+                    </ace>
+                </div>
+            </div>
+        </div>
+
+        <!-- 共享集群使用案例 -->
+        <div class="user-token-example mt50" v-if="data.length && $INTERNAL">
+            <div class="example-item">
+                <div class="title total-title">{{$t('共享集群kubectl与BCS API使用示例')}}:</div>
+                <div class="code-wrapper">
+                    <p>kubectl:</p>
+                    <br>
+                    {{shareKubeConfigExample}}
+                </div>
+            </div>
+            <div class="example-item">
+                <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
+                <div class="code-wrapper">
+                    <ace :show-gutter="false" lang="yaml" :height="330"
+                        v-full-screen="{ tools: ['copy'], content: demoConfigExample }"
+                        read-only :value="demoConfigExample" width="100%">
+                    </ace>
+                </div>
+            </div>
+            <div class="example-item">
+                <div class="title">{{$t('BCS API')}}:</div>
+                <div class="code-wrapper">
+                    <ace :show-gutter="false" :height="50"
+                        v-full-screen="{ tools: ['copy'], content: shareDemoConfigExample }"
+                        read-only :value="shareBcsApiExample" width="100%">
                     </ace>
                 </div>
             </div>
@@ -201,8 +233,6 @@ clusters:
 - cluster:
     # 独立集群使用的server地址
     server: '\${bcs_api_host}/clusters/\${cluster_id}/'
-    # 共享集群使用的server地址，\${cluster_id}为共享集群ID
-    # server: '\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/'
   name: '\${cluster_id}'
 contexts:
 - context:
@@ -219,12 +249,37 @@ users:
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
                 .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
                 .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value))
-            const apiExample = `# 独享集群调用bcs api示例
-curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/clusters/\${cluster_id}/version"
-# 共享集群调用bcs api示例，\${cluster_id}为共享集群ID
-curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/version"
-`
+            const apiExample = `curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/clusters/\${cluster_id}/version"`
             const bcsApiExample = ref(apiExample
+                .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
+                .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value))
+
+            const shareKubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get all -n <namespace>')
+            const shareDemoConfig = `apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    # 共享集群使用的server地址，\${cluster_id}为共享集群ID
+    # server: '\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/'
+  name: '\${cluster_id}'
+contexts:
+- context:
+    cluster: '\${cluster_id}'
+    user: '\${username}'
+  name: BCS
+current-context: BCS
+users:
+- name: '\${username}'
+  user:
+    token: '\${token}'`
+            const shareDemoConfigExample = ref(shareDemoConfig
+                .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
+                .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
+                .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
+                .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value))
+            const shareApiExample = `curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/version"`
+            const shareBcsApiExample = ref(shareApiExample
                 .replace(new RegExp(/\$\{token\}/, 'g'), '${' + $i18n.t('API密钥') + '}')
                 .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
                 .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value))
@@ -407,6 +462,9 @@ curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "
                 kubeConfigExample,
                 demoConfigExample,
                 bcsApiExample,
+                shareKubeConfigExample,
+                shareDemoConfigExample,
+                shareBcsApiExample,
                 BK_IAM_APP_URL: window.BK_IAM_APP_URL
             }
         }
@@ -494,6 +552,9 @@ curl -X GET -H "Authorization: Bearer \${token}" -H "accept: application/json" "
             text-align: left;
             color: #313238;
             font-size: 14px;
+        }
+        .total-title {
+            font-weight: 700;
         }
         .code-wrapper {
             font-size: 14px;

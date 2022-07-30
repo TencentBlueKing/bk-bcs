@@ -19,6 +19,7 @@ import (
 
 	"github.com/fatih/structs"
 
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -39,7 +40,10 @@ func ParseHookTmplSpec(manifest map[string]interface{}, spec *model.HookTmplSpec
 		a := arg.(map[string]interface{})
 		spec.Args = append(spec.Args, model.HookTmplArg{Key: a["name"].(string), Value: mapx.GetStr(a, "value")})
 	}
-	spec.Policy = mapx.Get(manifest, "spec.policy", HookTmplPolicyParallel).(string)
+	spec.ExecPolicy = mapx.Get(manifest, "spec.policy", HookTmplPolicyParallel).(string)
+	spec.DeletionProtectPolicy = mapx.Get(
+		manifest, []string{"metadata", "labels", res.DeletionProtectLabelKey}, res.DeletionProtectPolicyNotAllow,
+	).(string)
 	for _, metric := range mapx.GetList(manifest, "spec.metrics") {
 		spec.Metrics = append(spec.Metrics, genHookTmplMetric(metric.(map[string]interface{})))
 	}
@@ -60,12 +64,12 @@ func genHookTmplMetric(raw map[string]interface{}) model.HookTmplMetric {
 	}
 
 	metric := model.HookTmplMetric{
-		Name:                mapx.GetStr(raw, "name"),
-		Count:               mapx.GetInt64(raw, "count"),
-		Interval:            interval,
-		SuccessConditionExp: mapx.GetStr(raw, "successCondition"),
-		SuccessPolicy:       successPolicy,
-		SuccessCnt:          successCnt,
+		Name:             mapx.GetStr(raw, "name"),
+		Count:            mapx.GetInt64(raw, "count"),
+		Interval:         interval,
+		SuccessCondition: mapx.GetStr(raw, "successCondition"),
+		SuccessPolicy:    successPolicy,
+		SuccessCnt:       successCnt,
 	}
 
 	// provider 优先级 web > prometheus > kubernetes

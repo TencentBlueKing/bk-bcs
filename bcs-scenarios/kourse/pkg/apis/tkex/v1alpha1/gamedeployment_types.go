@@ -287,4 +287,26 @@ type InPlaceUpdateStrategy struct {
 	// GracePeriodSeconds is the timespan between set Pod status to not-ready and update images in Pod spec
 	// when in-place update a Pod.
 	GracePeriodSeconds int32 `json:"gracePeriodSeconds,omitempty"`
+	// Policy is the policy when in-place updating a pod.
+	// Defaults to DisOrdered
+	// +kubebuilder:validation:Enum=DisOrdered;OrderedReady;OrderedUpdated
+	// +kubebuilder:default="DisOrdered"
+	Policy InplaceUpdatePolicy `json:"policy"`
 }
+
+// InplaceUpdatePolicy defines policies for pods in-place update.
+type InplaceUpdatePolicy string
+
+const (
+	// DisOrderedInplaceUpdatePolicy indicates that we inplace update all containers
+	// of the pod out of order, which is the default policy.
+	DisOrderedInplaceUpdatePolicy = "DisOrdered"
+
+	// OrderedReadyInplaceUpdatePolicy indicates that containers would be inplace updated according to
+	// the definition of template, progressing only when the previous container is ready
+	OrderedReadyInplaceUpdatePolicy = "OrderedReady"
+
+	// OrderedUpdatedInplaceUpdatePolicy indicates that containers would be inplace updated according to
+	// the definition of template, progressing only when the previous container's image has been updated.
+	OrderedUpdatedInplaceUpdatePolicy = "OrderedUpdated"
+)

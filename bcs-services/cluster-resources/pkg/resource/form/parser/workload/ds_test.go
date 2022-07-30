@@ -27,7 +27,7 @@ var lightDSManifest = map[string]interface{}{
 	"kind":       "DaemonSet",
 	"spec": map[string]interface{}{
 		"minReadySeconds": int64(60),
-		"strategy": map[string]interface{}{
+		"updateStrategy": map[string]interface{}{
 			"rollingUpdate": map[string]interface{}{
 				"maxUnavailable": "25%",
 			},

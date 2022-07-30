@@ -66,3 +66,6 @@ dockerdev:
 	-t cluster-resources:${VERSION} \
 	--no-cache .
 
+# collect，merge and re-generate pkg/i18n/locale/lc_msg.yaml
+gen-lc-msgs:
+	python3 ./scripts/gen_lc_msgs.py

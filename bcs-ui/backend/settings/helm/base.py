@@ -119,7 +119,7 @@ else:
     DEBUG = True
 
 # 是否在中间件中统一输出异常信息
-IS_COMMON_EXCEPTION_MSG = True
+IS_COMMON_EXCEPTION_MSG = False
 COMMON_EXCEPTION_MSG = '联系管理员处理'
 
 # 是否使用容器服务自身的TLS证书

@@ -19,8 +19,6 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
-	"net/http"
-	_ "net/http/pprof"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
@@ -74,11 +72,6 @@ func Start() {
 	if err = i18n.InitMsgMap(); err != nil {
 		panic(errorx.New(errcode.General, "init i18n message map failed: %v", err))
 	}
-
-	// TODO 调试内存使用问题用，需去除
-	go func() {
-		http.ListenAndServe("0.0.0.0:8083", nil) // nolint:errcheck
-	}()
 
 	crSvc := newClusterResourcesService(crConf)
 	if err = crSvc.Init(); err != nil {

@@ -68,10 +68,7 @@
             })
             const projectCode = $route.params.projectCode
             const localProjectCode = localStorage.getItem('curProjectCode')
-            if (localProjectCode !== projectCode) {
-                // 切换不同项目时清空单集群信息
-                handleSetClusterStorageInfo()
-            }
+            
             // 获取当前项目（优先级：路由 > 本地缓存 > 取项目列表第一个）
             const curProject = ref<any>(null)
             if (projectCode) {
@@ -119,6 +116,7 @@
                             projectCode: project.project_code
                         }
                     })
+                    handleSetProjectStorageInfo(project)
                     window.location.href = location.href
                 }
                 return false
@@ -211,7 +209,7 @@
                 } else if ($route.name === 'clusterMain' && curCluster) {
                     // 集群ID存在，但是当前处于全部集群首页时需要跳回单集群概览页
                     $router.replace({
-                        name: 'clusterOverview'
+                        name: curCluster.is_shared ? 'namespace' : 'clusterOverview'
                     })
                 }
                 await $store.dispatch('getFeatureFlag').catch(err => {

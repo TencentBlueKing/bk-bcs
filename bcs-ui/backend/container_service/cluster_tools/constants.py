@@ -20,3 +20,9 @@ class ToolStatus(str, StructuredEnum):
     DEPLOYED = EnumField('deployed', label='deployed')
     FAILED = EnumField('failed', label='failed')
     UNKNOWN = EnumField('unknown', label='unknown')
+
+
+class OpType(str, StructuredEnum):
+    INSTALL = 'install'
+    UPGRADE = 'upgrade'
+    UNINSTALL = 'uninstall'

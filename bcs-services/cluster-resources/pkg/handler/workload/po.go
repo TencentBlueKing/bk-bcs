@@ -196,7 +196,7 @@ func (h *Handler) ListPoByNode(
 	ctx context.Context, req *clusterRes.ListPoByNodeReq, resp *clusterRes.CommonListResp,
 ) error {
 	podCli := cli.NewPodCliByClusterID(ctx, req.ClusterID)
-	ret, err := podCli.ListAllNSPods(
+	ret, err := podCli.ListAllPods(
 		ctx, req.ProjectID, req.ClusterID, metav1.ListOptions{FieldSelector: "spec.nodeName=" + req.NodeName},
 	)
 	if err != nil {

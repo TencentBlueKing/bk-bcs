@@ -69,6 +69,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	promRequestQuery := url.Values{}
 	promRequestQuery.Set("project_id", projectId)
 	promRequestQuery.Set("cluster_id", clusterId)
+	promRequestQuery.Set("namespace", route.GetNamespace(c))
 	promRequestUrl := path.Join(s.opts.RoutePrefix, "/user/perm_request") + "/" + "?" + promRequestQuery.Encode()
 
 	// webconsole Url

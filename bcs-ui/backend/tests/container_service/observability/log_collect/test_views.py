@@ -146,17 +146,17 @@ class TestLogCollectViewSet:
 
             assert selectedlabels_conf['log_source_type'] == LogSourceType.SELECTED_LABELS
             assert selectedlabels_conf['namespace'] == namespace
-            selector = selectedlabels_conf['config']['selector']
+            selector = selectedlabels_conf['selector']
             assert selector['match_labels'] == {'app': 'nginx'}
 
             assert selectedcontainers_conf['log_source_type'] == LogSourceType.SELECTED_CONTAINERS
             assert selectedcontainers_conf['add_pod_label']
             assert selectedcontainers_conf['extra_labels'] == {'app': 'nginx'}
-            workload = selectedcontainers_conf['config']['workload']
+            workload = selectedcontainers_conf['workload']
             assert workload['name'] == 'nginx-deployment'
             assert workload['container_confs'][0]['log_paths'] == ['/log/access.log']
             assert workload['container_confs'][1]['name'] == 'notify'
 
             assert allcontainers_conf['log_source_type'] == LogSourceType.ALL_CONTAINERS
             assert allcontainers_conf['add_pod_label']
-            assert allcontainers_conf['config']['base']['enable_stdout']
+            assert allcontainers_conf['base']['enable_stdout']

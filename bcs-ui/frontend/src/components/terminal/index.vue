@@ -1,7 +1,9 @@
 <template>
     <div
+        ref="terminal"
         :class="['bk-dropdown-menu biz-terminal active', { 'active': isActive }]"
         v-if="curProject && clusterList.length && !isSharedCluster"
+        @mousedown="handlerMousedown"
         @mouseover="handlerMouseover"
         @mouseout="handlerMouseout">
         <div class="bk-dropdown-trigger">
@@ -13,7 +15,7 @@
                 </a>
             </div>
             <transition name="fade">
-                <div :class="['bk-dropdown-content is-show']" style="bottom: 44px; right: 0; position: absolute;" v-show="isShow">
+                <div :class="['bk-dropdown-content is-show']" ref="terminalContent" style="bottom: 40px; right: 0; position: absolute;" v-show="isShow">
                     <div class="search-box">
                         <bkbcs-input
                             v-model="keyword"
@@ -79,6 +81,26 @@
             ...mapGetters('cluster', ['isSharedCluster'])
         },
         methods: {
+            handlerMousedown (event) {
+                const terminal = this.$refs.terminal
+                const terminalContent = this.$refs.terminalContent
+                const e = event || window.event
+                const cursorX = e.pageX - terminal.offsetLeft
+                const cursorY = e.pageY - terminal.offsetTop
+
+                document.onmousemove = function (event) {
+                    const e = event || window.event
+                    terminal.style.top = e.pageY - cursorY + 'px'
+                    terminal.style.left = e.pageX - cursorX + 'px'
+                    terminalContent.style.bottom = '40px'
+                    terminalContent.style.left = '0'
+                }
+
+                document.onmouseup = function (event) {
+                    document.onmousemove = null
+                    document.onmouseup = null
+                }
+            },
             handlerMouseover () {
                 clearTimeout(this.showTimer)
                 clearTimeout(this.activeTimer)
@@ -134,6 +156,7 @@
         position: fixed;
         right: 10px;
         bottom: 10px;
+        width: 200px;
         z-index: 1900;
         &.active {
             .biz-terminal-trigger {
@@ -156,7 +179,7 @@
             border-radius: 50%;
             transition: all ease 0.3s;
             box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
+            cursor: move;
             z-index: 10;
             padding: 0 10px;
 
@@ -188,8 +211,12 @@
                 }
             }
         }
-
+        .bk-dropdown-content,
+        .bk-dropdown-trigger {
+            width: 200px;
+        }
         .bk-dropdown-list {
+            overflow: visible;
             > li {
                 width: 200px;
                 a {

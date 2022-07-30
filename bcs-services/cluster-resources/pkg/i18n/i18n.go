@@ -30,7 +30,7 @@ import (
 
 // GetLangFromCookies 从 Cookies 中获取语言版本
 func GetLangFromCookies(md metadata.Metadata) string {
-	cookies, ok := md.Get("Grpcgateway-Cookie")
+	cookies, ok := md.Get(MetadataCookiesKey)
 	if !ok {
 		return DefaultLang
 	}

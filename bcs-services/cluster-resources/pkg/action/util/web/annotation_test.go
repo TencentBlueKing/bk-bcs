@@ -33,7 +33,7 @@ func TestWebAnnotations(t *testing.T) {
 			},
 			Items: map[ResUID]ObjPerm{
 				"a8ec4e03": {
-					"editBtn": {false, "can't edit", ""},
+					"editBtn": {false, "this can't edit", ""},
 				},
 				"ed8250cc": {
 					"editBtn": {true, "", ""},
@@ -46,6 +46,8 @@ func TestWebAnnotations(t *testing.T) {
 	actualAnnos := NewAnnos(
 		NewPagePerm("createBtn", PermDetail{false, "no perm", ""}),
 		NewItemPerm("a8ec4e03", "editBtn", PermDetail{false, "can't edit", ""}),
+		// 第二个 a8ec4e03 的用于测试覆盖 ItemPerm
+		NewItemPerm("a8ec4e03", "editBtn", PermDetail{false, "this can't edit", ""}),
 		NewItemPerm("ed8250cc", "editBtn", PermDetail{true, "", ""}),
 		NewFeatureFlag("pvc", false),
 		NewFeatureFlag("hpa", true),

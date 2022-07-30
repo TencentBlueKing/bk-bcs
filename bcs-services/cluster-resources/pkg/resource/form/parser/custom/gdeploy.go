@@ -38,8 +38,8 @@ func ParseGDeploy(manifest map[string]interface{}) map[string]interface{} {
 // ParseGDeploySpec ...
 func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) {
 	ParseGDeployReplicas(manifest, &spec.Replicas)
-	ParseGDeployGracefulManage(manifest, &spec.GracefulManage)
-	ParseGDeployDeletionProtect(manifest, &spec.DeletionProtect)
+	ParseGWorkloadGracefulManage(manifest, &spec.GracefulManage)
+	ParseGWorkloadDeletionProtect(manifest, &spec.DeletionProtect)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
 	podSpec, _ := tmplSpec.(map[string]interface{})
 	workload.ParseNodeSelect(podSpec, &spec.NodeSelect)
@@ -54,36 +54,36 @@ func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) 
 func ParseGDeployReplicas(manifest map[string]interface{}, replicas *model.GDeployReplicas) {
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", workload.DefaultUpdateStrategy).(string)
-	replicas.MaxSurge, replicas.MSUnit = DefaultGDeployMaxSurge, util.UnitCnt
+	replicas.MaxSurge, replicas.MSUnit = DefaultGWorkloadMaxSurge, util.UnitCnt
 	if maxSurge, err := mapx.GetItems(manifest, "spec.updateStrategy.maxSurge"); err == nil {
 		replicas.MaxSurge, replicas.MSUnit = util.AnalyzeIntStr(maxSurge)
 	}
-	replicas.MaxUnavailable, replicas.MUAUnit = DefaultGDeployMaxUnavailable, util.UnitPercent
+	replicas.MaxUnavailable, replicas.MUAUnit = DefaultGWorkloadMaxUnavailable, util.UnitPercent
 	if maxUnavailable, err := mapx.GetItems(manifest, "spec.updateStrategy.maxUnavailable"); err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
 	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")
 	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.partition")
 	replicas.GracePeriodSecs = mapx.Get(
-		manifest, "spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds", int64(DefaultGDeployGracePeriodSecs),
+		manifest, "spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds", int64(DefaultGWorkloadGracePeriodSecs),
 	).(int64)
 }
 
-// ParseGDeployGracefulManage ...
-func ParseGDeployGracefulManage(manifest map[string]interface{}, man *model.GDeployGracefulManage) {
+// ParseGWorkloadGracefulManage ...
+func ParseGWorkloadGracefulManage(manifest map[string]interface{}, man *model.GWorkloadGracefulManage) {
 	if hook, err := mapx.GetItems(manifest, "spec.preDeleteUpdateStrategy.hook"); err == nil {
-		man.PreDeleteHook = genGDeployHookSpec(hook.(map[string]interface{}))
+		man.PreDeleteHook = genGWorkloadHookSpec(hook.(map[string]interface{}))
 	}
 	if hook, err := mapx.GetItems(manifest, "spec.preInplaceUpdateStrategy.hook"); err == nil {
-		man.PreInplaceHook = genGDeployHookSpec(hook.(map[string]interface{}))
+		man.PreInplaceHook = genGWorkloadHookSpec(hook.(map[string]interface{}))
 	}
 	if hook, err := mapx.GetItems(manifest, "spec.postInplaceUpdateStrategy.hook"); err == nil {
-		man.PostInplaceHook = genGDeployHookSpec(hook.(map[string]interface{}))
+		man.PostInplaceHook = genGWorkloadHookSpec(hook.(map[string]interface{}))
 	}
 }
 
-func genGDeployHookSpec(hook map[string]interface{}) model.GDeployHookSpec {
-	spec := model.GDeployHookSpec{Enabled: true, TmplName: mapx.GetStr(hook, "templateName")}
+func genGWorkloadHookSpec(hook map[string]interface{}) model.GWorkloadHookSpec {
+	spec := model.GWorkloadHookSpec{Enabled: true, TmplName: mapx.GetStr(hook, "templateName")}
 	for _, arg := range mapx.GetList(hook, "args") {
 		a := arg.(map[string]interface{})
 		spec.Args = append(spec.Args, model.HookCallArg{
@@ -93,12 +93,12 @@ func genGDeployHookSpec(hook map[string]interface{}) model.GDeployHookSpec {
 	return spec
 }
 
-// ParseGDeployDeletionProtect 解析 GameDeployment 删除保护规则
+// ParseGWorkloadDeletionProtect 解析 GameDeployment 删除保护规则
 // io.tencent.bcs.dev/deletion-allow: Cascading -> 实例数量为 0 时可以删除
 // io.tencent.bcs.dev/deletion-allow: Always -> 实例数量为 0 时可以删除
 // label io.tencent.bcs.dev/deletion-allow key 不存在：无法删除
-func ParseGDeployDeletionProtect(manifest map[string]interface{}, protect *model.GDeployDeletionProtect) {
+func ParseGWorkloadDeletionProtect(manifest map[string]interface{}, protect *model.GWorkloadDeletionProtect) {
 	protect.Policy = mapx.Get(
-		manifest, []string{"metadata", "labels", res.DeletionProtectLabelKey}, res.GDeployDeletionProtectPolicyNotAllow,
+		manifest, []string{"metadata", "labels", res.DeletionProtectLabelKey}, res.DeletionProtectPolicyNotAllow,
 	).(string)
 }

@@ -122,4 +122,16 @@ const (
 	LoadBalanceCheckFormat = "^lb-[A-Za-z0-9]+"
 	//LoadBalanceCheckFormatWithApLbName
 	LoadBalanceCheckFormatWithApLbName = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:[A-Za-z0-9]+"
+
+	// LeaderLabel label
+	LeaderLabel = "leader"
+	// LeaderLabelValueTrue value
+	LeaderLabelValueTrue = "true"
+	// LeaderLabelValueFalse value
+	LeaderLabelValueFalse = "false"
+
+	// EnvIngressPodName env for ingress pod name
+	EnvIngressPodName = "INGRESS_POD_NAME"
+	// EnvIngressPodNamespace env for ingress pod namespace
+	EnvIngressPodNamespace = "INGRESS_POD_NAMESPACE"
 )

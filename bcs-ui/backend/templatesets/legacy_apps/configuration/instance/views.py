@@ -327,7 +327,7 @@ class VersionInstanceView(viewsets.ViewSet):
                     resource_id=self.template_id,
                     extra=self.instance_entity,
                     description=_("实例化模板集[{}]命名空间[{}]").format(temp_name, i['ns_name']),
-                    activity_type=ActivityType.Add,
+                    activity_type=ActivityType.Instantiate,
                     activity_status=ActivityStatus.Succeed,
                 )
             ).log_raw()
@@ -365,7 +365,7 @@ class VersionInstanceView(viewsets.ViewSet):
                     resource_id=self.template_id,
                     extra=self.instance_entity,
                     description=description,
-                    activity_type=ActivityType.Add,
+                    activity_type=ActivityType.Instantiate,
                     activity_status=ActivityStatus.Failed,
                 )
             ).log_raw()

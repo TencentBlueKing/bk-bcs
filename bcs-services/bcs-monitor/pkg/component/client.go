@@ -78,6 +78,9 @@ func restyReqToCurl(r *resty.Request) string {
 			}
 		}
 	}
+	if r.FormData.Encode() != "" {
+		reqMsg += fmt.Sprintf(" -d %q", r.FormData.Encode())
+	}
 
 	return reqMsg
 }

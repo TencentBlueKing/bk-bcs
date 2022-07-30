@@ -37,6 +37,13 @@ func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
+// FormatGDeploy ...
+func FormatGDeploy(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonFormatRes(manifest)
+	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
+	return ret
+}
+
 // 根据 CRD 配置解析 cobj ApiVersion
 // ref: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions
 func parseCObjAPIVersion(manifest map[string]interface{}) string {

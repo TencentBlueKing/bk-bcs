@@ -11,6 +11,7 @@ containerGroup:
       border: true
       showTitle: true
       type: card
+      verifiable: true
       defaultActiveName:
         - containers
   ui:order:
@@ -271,11 +272,15 @@ envs:
             type: string
             ui:rules:
               - maxLength128
+              - validator: "{{`{{`}} ($widgetNode?.getSibling('type')?.instance?.value === 'keyValue' || $widgetNode?.getSibling('type')?.instance?.value === 'podField') || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
           value:
             title: {{ i18n "值" .lang }}
             type: string
             ui:rules:
               - maxLength128
+              - validator: "{{`{{`}} ($widgetNode?.getSibling('type')?.instance?.value === 'keyValue' || $widgetNode?.getSibling('type')?.instance?.value === 'configMap' || $widgetNode?.getSibling('type')?.instance?.value === 'secret') || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
       ui:component:
         name: noTitleArray
       ui:props:
@@ -434,14 +439,14 @@ properties:
       props:
         max: 65535
     ui:rules:
-      - validator: "{{`{{`}} ($widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' && $widgetNode?.getSibling('type')?.instance?.value !== 'tcpSocket') || ($self.value !== '' && $self.value !== 0) {{`}}`}}"
+      - validator: "{{`{{`}} !$widgetNode?.getSibling('enabled')?.instance?.value || ($widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' && $widgetNode?.getSibling('type')?.instance?.value !== 'tcpSocket') || ($self.value !== '' && $self.value !== 0) {{`}}`}}"
         message: {{ i18n "值不能为零" .lang }}
   path:
     title: {{ i18n "请求路径" .lang }}
     type: string
     ui:rules:
       - maxLength250
-      - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' || $self.value !== '' {{`}}`}}"
+      - validator: "{{`{{`}} !$widgetNode?.getSibling('enabled')?.instance?.value || $widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' || $self.value !== '' {{`}}`}}"
         message: {{ i18n "值不能为空" .lang }}
   command:
     items:

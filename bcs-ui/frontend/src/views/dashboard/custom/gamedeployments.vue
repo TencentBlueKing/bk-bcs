@@ -2,7 +2,7 @@
     <BaseLayout title="GameDeployments" kind="GameDeployment" type="crd" category="custom_objects" default-crd="gamedeployments.tkex.tencent.com"
         default-active-detail-type="yaml" :show-detail-tab="false" :show-crd="false">
         <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleUpdateResource,
-                              handleDeleteResource,handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, webAnnotations }">
+                              handleDeleteResource,handleSortChange, gotoDetail, renderCrdHeader, getJsonPathValue, additionalColumns, webAnnotations }">
             <bk-table
                 :data="curPageData"
                 :pagination="pageConf"
@@ -11,7 +11,7 @@
                 @sort-change="handleSortChange">
                 <bk-table-column :label="$t('名称')" prop="metadata.name" sortable>
                     <template #default="{ row }">
-                        <bk-button class="bcs-button-ellipsis" text @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
+                        <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" min-width="100" sortable>

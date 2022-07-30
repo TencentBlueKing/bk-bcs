@@ -1,4 +1,4 @@
-title: deployment
+title: hookTemplate
 type: object
 properties:
   {{- include "common.metadata" . | indent 2 }}

@@ -252,8 +252,7 @@ func main() {
 		blog.Errorf("create hook server failed, err %s", err.Error())
 		os.Exit(1)
 	}
-	go webhookServer.Start()
-	blog.Infof("webhook server started")
+	mgr.Add(webhookServer)
 
 	// init cloud loadbalance backend status collector
 	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient())

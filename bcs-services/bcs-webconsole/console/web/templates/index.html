@@ -158,6 +158,7 @@
         term.loadAddon(new WebLinksAddon.WebLinksAddon());
 
         term.open(document.getElementById('terminal-container'));
+        fitAddon.fit();
 
         // debounce 200 毫秒, 减少 resize 事件多次触发问题
         const debounceFit = throttleDebounce.debounce(200, false, function () {
@@ -213,7 +214,6 @@
         // }
 
         function get_session_id() {
-            debounceFit()
             term.write('\x1b[32mLaunching BCS Console...\x1b[m');
             $.getJSON(session_url, function (result) {
                 if (result.code != 0) {
@@ -300,11 +300,13 @@
             }
         }
 
-        get_session_id()
-
         function focusTerminal() {
             term.focus();
         }
+
+        $(document).ready(function () {
+            get_session_id();
+        })
     </script>
 </body>
 

@@ -33,3 +33,6 @@ var langMap = map[string]string{
 	"en-us":   EN,
 	"en-gb":   EN,
 }
+
+// MetadataCookiesKey 在 GoMicro Metadata 中，Cookie 的键名
+const MetadataCookiesKey = "Grpcgateway-Cookie"

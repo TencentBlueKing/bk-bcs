@@ -685,7 +685,7 @@
                             RUNNING: this.$t('主机申请中')
                         }
                         this.applyHostButton.tips = `${tipsContentMap[status] || this.$t('项目下存在主机申请失败的单据，请联系申请者【{name}】或', { name: data.operator })}
-                        <a href="${data.scr_url}" target="_blank" style="color: #3a84ff;">${this.$t('查看详情')}</a>`
+                        <a href="${window.BCS_CONFIG?.host?.SRC_IED_HOST}" target="_blank" style="color: #3a84ff;">${this.$t('查看详情')}</a>`
                     } else {
                         this.applyHostButton.tips = ''
                     }

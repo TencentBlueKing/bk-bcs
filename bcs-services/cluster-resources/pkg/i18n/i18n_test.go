@@ -19,9 +19,24 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go-micro.dev/v4/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 )
+
+func TestGetLangFromCookies(t *testing.T) {
+	md := metadata.Metadata{}
+	assert.Equal(t, DefaultLang, GetLangFromCookies(md))
+
+	md = metadata.Metadata{MetadataCookiesKey: "blueking_language=EN-US"}
+	assert.Equal(t, EN, GetLangFromCookies(md))
+
+	md = metadata.Metadata{MetadataCookiesKey: "blueking_language=zh"}
+	assert.Equal(t, ZH, GetLangFromCookies(md))
+
+	md = metadata.Metadata{MetadataCookiesKey: "blueking_language=ru"}
+	assert.Equal(t, DefaultLang, GetLangFromCookies(md))
+}
 
 func TestGetMsg(t *testing.T) {
 	// 初始化 i18n 字典

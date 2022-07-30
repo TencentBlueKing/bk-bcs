@@ -1,4 +1,4 @@
-title: deployment
+title: gameDeployment
 type: object
 properties:
   {{- include "common.metadata" . | indent 2 }}
@@ -6,9 +6,9 @@ properties:
     title: {{ i18n "配置信息" .lang }}
     type: object
     properties:
-      {{- include "custom.gdeployReplicas" . | indent 6 }}
-      {{- include "custom.gdeployGracefulManage" . | indent 6 }}
-      {{- include "custom.gdeploydeletionProtect" . | indent 6 }}
+      {{- include "custom.gworkloadReplicas" . | indent 6 }}
+      {{- include "custom.gworkloadGracefulManage" . | indent 6 }}
+      {{- include "custom.gworkloadDeletionProtect" . | indent 6 }}
       {{- include "workload.nodeSelect" . | indent 6 }}
       {{- include "workload.affinity" . | indent 6 }}
       {{- include "workload.toleration" . | indent 6 }}
@@ -21,6 +21,7 @@ properties:
         border: true
         showTitle: true
         type: card
+        verifiable: true
     ui:order:
       - replicas
       - gracefulManage

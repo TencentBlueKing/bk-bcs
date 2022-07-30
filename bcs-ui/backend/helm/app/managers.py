@@ -22,6 +22,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework.serializers import ValidationError
 
 from backend.bcs_web.audit_log import client
+from backend.metrics import Result, helm_install_total
 
 from ..helm.constants import DEFAULT_VALUES_FILE_NAME, TEMPORARY_APP_ID
 from ..helm.models import ChartRelease, ChartVersionSnapshot
@@ -166,6 +167,7 @@ class AppManager(models.Manager):
         except Exception as e:
             logger.exception("initialize_app_core unexpected error: %s", e)
             log_client.update_log(activity_status="failed")
+            helm_install_total.labels(Result.Failure.value).inc()
             raise e
 
         if deploy_options is None:

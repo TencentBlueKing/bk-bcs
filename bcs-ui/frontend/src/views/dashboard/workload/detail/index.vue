@@ -48,6 +48,12 @@
                 type: String,
                 default: ''
             },
+            // crd名称
+            crd: {
+                type: String,
+                default: '',
+                required: true
+            },
             // kind类型
             kind: {
                 type: String,
@@ -100,11 +106,11 @@
             // 顶部导航内容
             const titles = ref<ITitle[]>([
                 {
-                    name: upperFirstLetter(props.category),
+                    name: upperFirstLetter(props.kind === 'GameDeployment' ? 'GameDeployments' : props.category),
                     id: ''
                 },
                 {
-                    name: `${subTitleMap[props.category]}: ${props.name}`,
+                    name: `${props.kind === 'GameDeployment' ? 'GameDeployment' : subTitleMap[props.category]}: ${props.name}`,
                     id: defaultComId,
                     params: {
                         ...props

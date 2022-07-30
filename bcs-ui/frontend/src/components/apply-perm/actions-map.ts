@@ -13,6 +13,7 @@ export default {
     templateset_delete: window.i18n.t('模板集删除'),
     templateset_update: window.i18n.t('模板集更新'),
     templateset_instantiate: window.i18n.t('模板集实例化'),
+    namespace_list: window.i18n.t('命名空间列举'),
     namespace_delete: window.i18n.t('命名空间删除'),
     namespace_update: window.i18n.t('命名空间更新'),
     namespace_view: window.i18n.t('命名空间查看'),

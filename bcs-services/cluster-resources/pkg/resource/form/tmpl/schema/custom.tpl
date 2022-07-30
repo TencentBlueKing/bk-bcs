@@ -6,7 +6,7 @@ spec:
     args:
       title: {{ i18n "参数定义" .lang }}
       type: array
-      description: {{ i18n "metrics 中引用自定义参数的方式为 {{ args.自定参数键 }}<br>除了支持引用自定义参数，还支持引用内置参数，具体内置参数如下：<br>当前 Pod IP：{{ args.PodIP }}<br>当前 Pod 名称：{{ args.PodName }}<br>Pod 所在命名空间：{{ args.PodNamespace }}<br>第 idx 个容器名称：{{ args.PodContainer[idx] }}（首个容器 idx 值为 0）<br>第 idx 个修改容器名称：{{ args.ModifiedContainer[idx] }}（原地更新模式）<br>Pod HostIP：{{ args.HostIP }}" .lang }}
+      description: {{ i18n "metrics 中引用自定义参数的方式为 {{ args.自定参数键 }}<br>除了支持引用自定义参数，还支持引用内置参数，具体内置参数如下：<br>当前 Pod IP：{{ args.PodIP }}<br>当前 Pod 名称：{{ args.PodName }}<br>Pod 所在命名空间：{{ args.PodNamespace }}<br>第 idx 个容器名称：{{ args.PodContainer[idx] }}（首个容器 idx 值为 0）<br>第 idx 个修改容器名称：{{ args.ModifiedContainer[idx] }}（原地更新模式）<br>Pod HostIP：{{ args.HostIP }}" .lang | quote }}
       items:
         type: object
         properties:
@@ -28,11 +28,11 @@ spec:
         name: noTitleArray
       ui:props:
         showTitle: true
-    policy:
+    execPolicy:
       title: {{ i18n "Metric 执行策略" .lang }}
       type: string
       default: Parallel
-      description: {{ i18n "并行执行：在执行时会并行执行所有 metrics；顺序执行（BcsHook-Operator 1.27.0+ 支持）：执行时顺序执行所有metrics，只有上个 metric 执行结束后才会继续执行下个 metric" .lang }}
+      description: {{ i18n "并行执行：在执行时会并行执行所有 metrics；顺序执行（BcsHook-Operator 1.27.0+ 支持）：执行时顺序执行所有metrics，只有上个 metric 执行结束后才会继续执行下个 metric" .lang | quote }}
       ui:component:
         name: radio
         props:
@@ -41,6 +41,19 @@ spec:
               value: Parallel
             - label: {{ i18n "顺序执行" .lang }}
               value: Ordered
+    deletionProtectPolicy:
+      title: {{ i18n "删除保护策略" .lang }}
+      type: string
+      default: Always
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          datasource:
+            - label: {{ i18n "总是允许删除" .lang }}
+              value: Always
+            - label: {{ i18n "不允许删除" .lang }}
+              value: NotAllow
     metrics:
       title: {{ i18n "Metric 定义" .lang }}
       type: array
@@ -58,7 +71,7 @@ spec:
           - fields
           - count
           - interval
-          - successConditionExp
+          - successCondition
           - successPolicy
           - successCnt
         properties:
@@ -141,6 +154,14 @@ spec:
                 else:
                   state:
                     visible: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('successCondition')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'kubernetes' {{`}}`}}"
+                then:
+                  state:
+                    visible: false
+                else:
+                  state:
+                    visible: true
           url:
             type: string
             description: {{ i18n "webhook 调用的地址，目前只支持 get 请求，返回值必须是 json 格式" .lang }}
@@ -191,6 +212,7 @@ spec:
           function:
             type: string
             default: get
+            description: {{ i18n "Patch 执行成功即成功，Get 到的值于 value 一致即成功" .lang }}
             ui:component:
               name: select
               props:
@@ -238,15 +260,16 @@ spec:
               props:
                 min: 1
                 max: 86400
-          successConditionExp:
+          successCondition:
             title: {{ i18n "成功条件表达式" .lang }}
             type: string
             ui:component:
               props:
                 placeholder: "asInt(result) == 1"
             ui:rules:
-              - required
               - maxLength128
+              - validator: "{{`{{`}} $widgetNode?.getSibling('hookType')?.instance?.value === 'kubernetes' || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
           successPolicy:
             title: {{ i18n "统计策略" .lang }}
             type: string
@@ -280,10 +303,14 @@ spec:
       type: card
 {{- end }}
 
-{{- define "custom.gdeployReplicas" }}
+{{- define "custom.gworkloadReplicas" }}
 replicas:
   title: {{ i18n "副本管理" .lang }}
   type: object
+  {{- if eq .kind "GameStatefulSet" }}
+  required:
+    - svcName
+  {{- end }}
   properties:
     cnt:
       title: {{ i18n "副本数量" .lang }}
@@ -292,11 +319,51 @@ replicas:
       ui:component:
         props:
           max: 4096
+    {{- if eq .kind "GameStatefulSet" }}
+    svcName:
+      title: {{ i18n "服务名称" .lang }}
+      type: string
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          searchable: true
+          remoteConfig:
+            params:
+              format: selectItems
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/networks/services` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+        - source: "metadata.namespace"
+          then:
+            state:
+              value: ""
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+      ui:rules:
+        - required
+        - maxLength128
+    podManPolicy:
+      title: {{ i18n "Pod 管理策略" .lang }}
+      type: string
+      default: OrderedReady
+      ui:component:
+        name: radio
+        props:
+          datasource:
+            - label: OrderedReady
+              value: OrderedReady
+            - label: Parallel
+              value: Parallel
+    {{- end }}
     updateStrategy:
       title: {{ i18n "升级策略" .lang }}
       type: string
       default: RollingUpdate
-      description: {{ i18n "原地升级策略只支持以原地重启容器的方式更新 image 字段，或以不重启不重建的方式更新 labels/annotations 字段；若更改除此之外的其它字段，则此次原地更新会卡住！" .lang }}
+      description: {{ i18n "原地升级策略只支持以原地重启容器的方式更新 image 字段，或以不重启不重建的方式更新 labels/annotations 字段；若更改除此之外的其它字段，则此次原地更新会卡住！" .lang | quote }}
       ui:component:
         name: radio
         props:
@@ -305,6 +372,10 @@ replicas:
               value: RollingUpdate
             - label: {{ i18n "原地升级" .lang }}
               value: InplaceUpdate
+            {{- if eq .kind "GameStatefulSet" }}
+            - label: {{ i18n "手动删除" .lang }}
+              value: OnDelete
+            {{- end }}
       ui:reactions:
         - target: "{{`{{`}} $widgetNode?.getSibling('gracePeriodSecs')?.id {{`}}`}}"
           if: "{{`{{`}} $self.value === 'InplaceUpdate' {{`}}`}}"
@@ -360,6 +431,7 @@ replicas:
               value: percent
             - label: {{ i18n "个" .lang }}
               value: cnt
+    {{- if eq .kind "GameDeployment" }}
     minReadySecs:
       title: {{ i18n "最小就绪时间" .lang }}
       type: integer
@@ -369,6 +441,7 @@ replicas:
         props:
           max: 2147483647
           unit: s
+    {{- end }}
     partition:
       title: {{ i18n "保留旧版本实例数量" .lang }}
       type: integer
@@ -389,7 +462,7 @@ replicas:
           unit: s
 {{- end }}
 
-{{- define "custom.gdeployGracefulManage" }}
+{{- define "custom.gworkloadGracefulManage" }}
 gracefulManage:
   title: {{ i18n "优雅删除/更新" .lang }}
   type: object
@@ -440,7 +513,7 @@ properties:
           state:
             visible: false
   tmplName:
-    title: Hook Template
+    title: HookTemplate
     type: string
     ui:component:
       name: select
@@ -457,6 +530,8 @@ properties:
             - "{{`{{`}} $loadDataSource {{`}}`}}"
       - source: "metadata.namespace"
         then:
+          state:
+            value: ""
           actions:
             - "{{`{{`}} $loadDataSource {{`}}`}}"
     ui:rules:
@@ -485,7 +560,7 @@ properties:
       showTitle: true
 {{- end }}
 
-{{- define "custom.gdeploydeletionProtect" }}
+{{- define "custom.gworkloadDeletionProtect" }}
 deletionProtect:
   title: {{ i18n "删除保护" .lang }}
   type: object

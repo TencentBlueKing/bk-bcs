@@ -155,7 +155,7 @@ const childRoutes = [
     {
         path: ':projectCode/:clusterId/dashboard/workload/:category/:namespace/:name/detail',
         name: 'dashboardWorkloadDetail',
-        props: (route) => ({ ...route.params, kind: route.query.kind }),
+        props: (route) => ({ ...route.params, kind: route.query.kind, crd: route.query.crd }),
         component: DashboardWorkloadDetail,
         meta: { isDashboard: true },
         beforeEnter: (to, from, next) => {
@@ -166,7 +166,8 @@ const childRoutes = [
                 DaemonSet: 'dashboardWorkloadDaemonSets',
                 Job: 'dashboardWorkloadJobs',
                 Pod: 'dashboardWorkloadPods',
-                StatefulSet: 'dashboardWorkloadStatefulSets'
+                StatefulSet: 'dashboardWorkloadStatefulSets',
+                GameDeployment: 'dashboardGameDeployments'
             }
             to.meta.menuId = menuIdMap[to.query.kind]
             next()

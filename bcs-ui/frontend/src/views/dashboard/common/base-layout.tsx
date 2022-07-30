@@ -79,6 +79,7 @@ export default defineComponent({
     setup (props, ctx) {
         const { $router, $i18n, $bkInfo, $store, $bkMessage } = ctx.root
         const { type, category, kind, showNameSpace, showCrd, defaultActiveDetailType, defaultCrd } = toRefs(props)
+        const defaultCustomObjectsMap = ref(['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com', 'hooktemplates.tkex.tencent.com'])
 
         // crd
         const currentCrd = ref(defaultCrd.value || sessionStorage.getItem(CUR_SELECT_CRD) || '')
@@ -87,7 +88,7 @@ export default defineComponent({
         const crdData = ref<ISubscribeData|null>(null)
         // crd 列表
         const crdList = computed(() => {
-            return crdData.value?.manifest?.items || []
+            return (crdData.value?.manifest?.items)?.filter(i => !defaultCustomObjectsMap.value.includes(i.metadata.name)) || []
         })
         const currentCrdExt = computed(() => {
             const item = crdList.value.find(item => item.metadata.name === currentCrd.value)
@@ -184,7 +185,7 @@ export default defineComponent({
             if (type.value === 'crd') {
                 // crd scope 为Namespaced时需要传递命名空间（gamedeployments、gamestatefulsets、hooktemplates三个特殊的资源）
                 const customResourceNamespace = currentCrdExt.value?.scope === 'Namespaced'
-                    || ['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com', 'hooktemplates.tkex.tencent.com'].includes(defaultCrd.value)
+                    || defaultCustomObjectsMap.value.includes(defaultCrd.value)
                     ? namespaceValue.value
                     : undefined
                 // crd 界面无需传当前crd参数
@@ -247,7 +248,6 @@ export default defineComponent({
                 kind: subscribeKind.value,
                 resourceVersion: resourceVersion.value,
                 namespace: namespaceValue.value
-
             }
             if (apiVersion.value) {
                 params.apiVersion = apiVersion.value
@@ -274,7 +274,8 @@ export default defineComponent({
                     namespace: row.metadata.namespace
                 },
                 query: {
-                    kind: subscribeKind.value
+                    kind: subscribeKind.value,
+                    crd: currentCrd.value
                 }
             })
         }

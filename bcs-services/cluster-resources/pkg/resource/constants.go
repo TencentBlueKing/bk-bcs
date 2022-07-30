@@ -129,10 +129,10 @@ const (
 )
 
 const (
-	// GDeployDeletionProtectPolicyCascading 实例数量为 0 才可以删除
-	GDeployDeletionProtectPolicyCascading = "Cascading"
-	// GDeployDeletionProtectPolicyAlways 不限制，任意时候可删除
-	GDeployDeletionProtectPolicyAlways = "Always"
-	// GDeployDeletionProtectPolicyNotAllow 任意时候都无法删除
-	GDeployDeletionProtectPolicyNotAllow = "NotAllow"
+	// DeletionProtectPolicyCascading 实例数量为 0 才可以删除
+	DeletionProtectPolicyCascading = "Cascading"
+	// DeletionProtectPolicyAlways 不限制，任意时候可删除
+	DeletionProtectPolicyAlways = "Always"
+	// DeletionProtectPolicyNotAllow 任意时候都无法删除
+	DeletionProtectPolicyNotAllow = "NotAllow"
 )

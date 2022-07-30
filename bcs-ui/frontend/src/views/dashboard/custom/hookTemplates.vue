@@ -2,7 +2,7 @@
     <BaseLayout title="HookTemplates" kind="HookTemplate" type="crd" category="custom_objects" default-crd="hooktemplates.tkex.tencent.com"
         default-active-detail-type="yaml" :show-detail-tab="false" :show-crd="false">
         <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleUpdateResource,
-                              handleDeleteResource,handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns }">
+                              handleDeleteResource,handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, webAnnotations }">
             <bk-table
                 :data="curPageData"
                 :pagination="pageConf"
@@ -50,6 +50,11 @@
                         <bk-button text
                             @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
                         <bk-button class="ml10" text
+                            v-authority="{
+                                clickable: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
+                                content: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
+                                disablePerms: true
+                            }"
                             @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
                     </template>
                 </bk-table-column>

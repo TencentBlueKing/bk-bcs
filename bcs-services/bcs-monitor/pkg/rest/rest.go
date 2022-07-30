@@ -84,6 +84,8 @@ func InitRestContext(c *gin.Context) *Context {
 	restContext := &Context{
 		Context:   c,
 		RequestId: requestid.Get(c),
+		ClusterId: c.Param("clusterId"),
+		ProjectId: c.Param("projectId"),
 	}
 	c.Set("rest_context", restContext)
 	return restContext

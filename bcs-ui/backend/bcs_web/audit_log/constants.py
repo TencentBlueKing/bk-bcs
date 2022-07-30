@@ -33,6 +33,9 @@ class ActivityType(str, StructuredEnum):
     Restart = EnumField('restart', _('重启'))
     Retrieve = EnumField('retrieve', _('查询'))
     Reschedule = EnumField('reschedule', _('重新调度'))
+    Instantiate = EnumField('instantiate', _('实例化'))
+    Scale = EnumField('scale', _('扩缩容'))
+    Recreate = EnumField('recreate', _('重建'))
 
 
 class ActivityStatus(str, StructuredEnum):

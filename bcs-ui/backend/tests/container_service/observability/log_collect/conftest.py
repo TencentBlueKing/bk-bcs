@@ -45,16 +45,17 @@ def log_collect_result(config_id):
 
 @pytest.fixture
 def allcontainers_create_params(project_id, cluster_id, namespace, bk_biz_id) -> Dict[str, Dict]:
+    collector_config_name = f'namespace_{namespace}_all_log'
     req_params = {
         'log_source_type': LogSourceType.ALL_CONTAINERS.value,
         'namespace': namespace,
+        'config_name': collector_config_name,
         'bk_biz_id': bk_biz_id,
         'add_pod_label': True,
         'extra_labels': {'env': 'test', 'app': 'nginx'},
         'base': {'enable_stdout': True, 'log_paths': ['/data/1.log', '/data/2.log']},
     }
 
-    collector_config_name = f'namespace-{namespace}-all-log'
     config_params = {
         'bk_biz_id': bk_biz_id,
         'project_id': project_id,
@@ -80,9 +81,11 @@ def allcontainers_create_params(project_id, cluster_id, namespace, bk_biz_id) ->
 
 @pytest.fixture
 def selectedcontainers_create_params(project_id, cluster_id, namespace, bk_biz_id) -> Dict[str, Dict]:
+    collector_config_name = f'{SupportedWorkload.Deployment}_nginx_deployment_log'.lower()
     req_params = {
         'log_source_type': LogSourceType.SELECTED_CONTAINERS.value,
         'namespace': namespace,
+        'config_name': collector_config_name,
         'bk_biz_id': bk_biz_id,
         'add_pod_label': True,
         'workload': {
@@ -94,8 +97,6 @@ def selectedcontainers_create_params(project_id, cluster_id, namespace, bk_biz_i
             ],
         },
     }
-
-    collector_config_name = f'{SupportedWorkload.Deployment}-nginx-deployment-log'.lower()
 
     config_params = {
         'bk_biz_id': bk_biz_id,
@@ -137,7 +138,7 @@ def selectedcontainers_create_params(project_id, cluster_id, namespace, bk_biz_i
 
 @pytest.fixture
 def selectedlabels_create_params(project_id, cluster_id, namespace, bk_biz_id) -> Dict[str, Dict]:
-    config_name = 'app-nginx-log'
+    config_name = 'app_nginx_log'
     req_params = {
         'log_source_type': LogSourceType.SELECTED_LABELS.value,
         'namespace': namespace,
@@ -178,7 +179,7 @@ def log_collect_meta_data(project_id, cluster_id, namespace, config_id):
         cluster_id=cluster_id,
         log_source_type=LogSourceType.ALL_CONTAINERS.value,
         config_id=config_id,
-        config_name=f'namespace-{namespace}-all-log',
+        config_name=f'namespace_{namespace}_all_log',
     )
 
 
@@ -190,7 +191,7 @@ def log_collect_meta_data_qset(project_id, cluster_id, namespace):
         log_source_type=LogSourceType.ALL_CONTAINERS.value,
         namespace='',
         config_id=random.randint(1, 10000),
-        config_name='cluster-scoped-all-log',
+        config_name='cluster_scoped_all_log',
     )
     LogCollectMetadata.objects.create(
         project_id=project_id,
@@ -198,7 +199,7 @@ def log_collect_meta_data_qset(project_id, cluster_id, namespace):
         log_source_type=LogSourceType.SELECTED_CONTAINERS.value,
         namespace=namespace,
         config_id=random.randint(1, 10000),
-        config_name=f'deployment-nginx-log',
+        config_name=f'deployment_nginx_log',
     )
     LogCollectMetadata.objects.create(
         project_id=project_id,
@@ -206,7 +207,7 @@ def log_collect_meta_data_qset(project_id, cluster_id, namespace):
         log_source_type=LogSourceType.SELECTED_LABELS.value,
         namespace=namespace,
         config_id=random.randint(1, 10000),
-        config_name=f'label-selector-{get_random_string(6)}-log'.lower(),
+        config_name=f'label_selector_{get_random_string(6)}_log'.lower(),
     )
     return LogCollectMetadata.objects.filter(project_id=project_id, cluster_id=cluster_id)
 
@@ -218,16 +219,18 @@ def collect_conf_list(log_collect_meta_data_qset):
 
 @pytest.fixture
 def allcontainers_update_params(project_id, cluster_id, namespace, bk_biz_id) -> Dict[str, Dict]:
+    collector_config_name = f'namespace_{namespace}_all_log'
+
     req_params = {
         'log_source_type': LogSourceType.ALL_CONTAINERS.value,
         'namespace': namespace,
+        'config_name': collector_config_name,
         'bk_biz_id': bk_biz_id,
         'add_pod_label': True,
         'extra_labels': {'env': 'test', 'app': 'nginx'},
         'base': {'enable_stdout': True, 'log_paths': ['/data/1.log', '/data/2.log']},
     }
 
-    collector_config_name = f'namespace-{namespace}-all-log'
     config_params = {
         'bk_biz_id': bk_biz_id,
         'project_id': project_id,

@@ -59,6 +59,14 @@ go run main.go --conf xxx.yaml
 ./cluster-resources-service --conf xxx.yaml
 ```
 
+#### 采集国际化数据
+
+```shell script
+make gen-lc-msgs
+```
+
+执行以上命令后，完成 lc_msgs.yaml 中的 TODO 项
+
 #### 验证服务
 
 - 使用 micro call
@@ -91,7 +99,7 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 ├── etc
 │   └── conf.yaml // 默认服务配置
 ├── pkg
-│   ├── action // 缓存
+│   ├── action
 │   │   ├── resource 资源操作相关封装
 │   │   │   └── ...
 |   │   └── util 工具类

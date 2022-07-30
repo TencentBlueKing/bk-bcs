@@ -24,11 +24,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -56,8 +54,7 @@ func (h *Handler) ListCObj(
 	if err != nil {
 		return err
 	}
-	resp.Data, err = pbstruct.Map2pbStruct(respData)
-	if err != nil {
+	if resp.Data, err = pbstruct.Map2pbStruct(respData); err != nil {
 		return err
 	}
 
@@ -80,16 +77,17 @@ func (h *Handler) GetCObj(
 		return err
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
-	resp.Data, err = respUtil.BuildRetrieveAPIResp(
+	respData, err := respUtil.BuildRetrieveAPIRespData(
 		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Format, metav1.GetOptions{},
 	)
 	if err != nil {
 		return err
 	}
+	if resp.Data, err = pbstruct.Map2pbStruct(respData); err != nil {
+		return err
+	}
 
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormUpdate, validator.IsFormSupportedCObjKinds(kind)),
-	).ToPbStruct()
+	resp.WebAnnotations, err = web.GenRetrieveCObjWebAnnos(ctx, respData, crdInfo, req.Format)
 	return err
 }
 

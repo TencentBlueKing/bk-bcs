@@ -35,7 +35,6 @@ func BuildListAPIResp(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, format string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	// NOTE 部分逻辑需要保留 map[string]interface{} 格式以生成 webAnnotations，因此分离出 BuildListAPIRespData
-	// TODO 考虑全部保留 map[string]interface{} 格式而不是 *structpb.Struct? 后续处理会更加的灵活
 	respData, err := BuildListAPIRespData(ctx, clusterID, resKind, groupVersion, namespace, format, opts)
 	if err != nil {
 		return nil, err
@@ -47,23 +46,7 @@ func BuildListAPIResp(
 func BuildRetrieveAPIResp(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, name, format string, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
-	if err != nil {
-		return nil, err
-	}
-
-	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(ctx, namespace, name, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	respDataBuilder, err := NewRespDataBuilder(ctx, ret.UnstructuredContent(), resKind, format)
-	if err != nil {
-		return nil, err
-	}
-	respData, err := respDataBuilder.Build()
+	respData, err := BuildRetrieveAPIRespData(ctx, clusterID, resKind, groupVersion, namespace, name, format, opts)
 	if err != nil {
 		return nil, err
 	}

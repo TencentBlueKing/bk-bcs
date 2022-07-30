@@ -22,9 +22,10 @@ type HookTmpl struct {
 
 // HookTmplSpec ...
 type HookTmplSpec struct {
-	Args    []HookTmplArg    `structs:"args"`
-	Policy  string           `structs:"policy"`
-	Metrics []HookTmplMetric `structs:"metrics"`
+	Args                  []HookTmplArg    `structs:"args"`
+	ExecPolicy            string           `structs:"execPolicy"`
+	DeletionProtectPolicy string           `structs:"deletionProtectPolicy"`
+	Metrics               []HookTmplMetric `structs:"metrics"`
 }
 
 // HookTmplArg ...
@@ -48,11 +49,11 @@ type HookTmplMetric struct {
 	Function string          `structs:"function"`
 	Fields   []HookTmplField `structs:"fields"`
 	// common fields
-	Count               int64  `structs:"count"`
-	Interval            int    `structs:"interval"`
-	SuccessConditionExp string `structs:"successConditionExp"`
-	SuccessPolicy       string `structs:"successPolicy"`
-	SuccessCnt          int64  `structs:"successCnt"`
+	Count            int64  `structs:"count"`
+	Interval         int    `structs:"interval"`
+	SuccessCondition string `structs:"successCondition"`
+	SuccessPolicy    string `structs:"successPolicy"`
+	SuccessCnt       int64  `structs:"successCnt"`
 }
 
 // HookTmplField ...
@@ -71,15 +72,15 @@ type GDeploy struct {
 
 // GDeploySpec ...
 type GDeploySpec struct {
-	Replicas        GDeployReplicas        `structs:"replicas"`
-	GracefulManage  GDeployGracefulManage  `structs:"gracefulManage"`
-	DeletionProtect GDeployDeletionProtect `structs:"deletionProtect"`
-	NodeSelect      NodeSelect             `structs:"nodeSelect"`
-	Affinity        Affinity               `structs:"affinity"`
-	Toleration      Toleration             `structs:"toleration"`
-	Networking      Networking             `structs:"networking"`
-	Security        PodSecurityCtx         `structs:"security"`
-	Other           SpecOther              `structs:"other"`
+	Replicas        GDeployReplicas          `structs:"replicas"`
+	GracefulManage  GWorkloadGracefulManage  `structs:"gracefulManage"`
+	DeletionProtect GWorkloadDeletionProtect `structs:"deletionProtect"`
+	NodeSelect      NodeSelect               `structs:"nodeSelect"`
+	Affinity        Affinity                 `structs:"affinity"`
+	Toleration      Toleration               `structs:"toleration"`
+	Networking      Networking               `structs:"networking"`
+	Security        PodSecurityCtx           `structs:"security"`
+	Other           SpecOther                `structs:"other"`
 }
 
 // GDeployReplicas ...
@@ -95,15 +96,15 @@ type GDeployReplicas struct {
 	GracePeriodSecs int64  `structs:"gracePeriodSecs"` // 原地升级优雅更新时间
 }
 
-// GDeployGracefulManage 优雅删除/更新
-type GDeployGracefulManage struct {
-	PreDeleteHook   GDeployHookSpec `structs:"preDeleteHook"`
-	PreInplaceHook  GDeployHookSpec `structs:"preInplaceHook"`
-	PostInplaceHook GDeployHookSpec `structs:"postInplaceHook"`
+// GWorkloadGracefulManage 优雅删除/更新
+type GWorkloadGracefulManage struct {
+	PreDeleteHook   GWorkloadHookSpec `structs:"preDeleteHook"`
+	PreInplaceHook  GWorkloadHookSpec `structs:"preInplaceHook"`
+	PostInplaceHook GWorkloadHookSpec `structs:"postInplaceHook"`
 }
 
-// GDeployHookSpec ...
-type GDeployHookSpec struct {
+// GWorkloadHookSpec ...
+type GWorkloadHookSpec struct {
 	Enabled  bool          `structs:"enabled"`
 	TmplName string        `structs:"tmplName"`
 	Args     []HookCallArg `structs:"args"`
@@ -115,7 +116,42 @@ type HookCallArg struct {
 	Value string `structs:"value"`
 }
 
-// GDeployDeletionProtect 删除保护
-type GDeployDeletionProtect struct {
+// GWorkloadDeletionProtect 删除保护
+type GWorkloadDeletionProtect struct {
 	Policy string `structs:"policy"`
+}
+
+// GSTS GameStatefulSet 表单化建模
+type GSTS struct {
+	Metadata       Metadata       `structs:"metadata"`
+	Spec           GSTSSpec       `structs:"spec"`
+	Volume         WorkloadVolume `structs:"volume"`
+	ContainerGroup ContainerGroup `structs:"containerGroup"`
+}
+
+// GSTSSpec ...
+type GSTSSpec struct {
+	Replicas        GSTSReplicas             `structs:"replicas"`
+	GracefulManage  GWorkloadGracefulManage  `structs:"gracefulManage"`
+	DeletionProtect GWorkloadDeletionProtect `structs:"deletionProtect"`
+	NodeSelect      NodeSelect               `structs:"nodeSelect"`
+	Affinity        Affinity                 `structs:"affinity"`
+	Toleration      Toleration               `structs:"toleration"`
+	Networking      Networking               `structs:"networking"`
+	Security        PodSecurityCtx           `structs:"security"`
+	Other           SpecOther                `structs:"other"`
+}
+
+// GSTSReplicas ...
+type GSTSReplicas struct {
+	Cnt             int64  `structs:"cnt"`
+	SVCName         string `structs:"svcName"`
+	UpdateStrategy  string `structs:"updateStrategy"`
+	PodManPolicy    string `structs:"podManPolicy"`
+	MaxSurge        int64  `structs:"maxSurge"`
+	MSUnit          string `structs:"msUnit"`
+	MaxUnavailable  int64  `structs:"maxUnavailable"`
+	MUAUnit         string `structs:"muaUnit"`
+	Partition       int64  `structs:"partition"`
+	GracePeriodSecs int64  `structs:"gracePeriodSecs"`
 }

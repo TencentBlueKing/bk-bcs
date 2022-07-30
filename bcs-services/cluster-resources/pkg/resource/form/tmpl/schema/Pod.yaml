@@ -18,6 +18,7 @@ properties:
         border: true
         showTitle: true
         type: card
+        verifiable: true
     ui:order:
       - nodeSelect
       - affinity

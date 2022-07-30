@@ -59,7 +59,7 @@ class DeployController:
     def _run_with_kubectl(self, operation):
         manifests = self._to_manifests()
         if operation == 'apply':
-            self._update_audit_ctx(activity_type=ActivityType.Modify)
+            self._update_audit_ctx(activity_type=ActivityType.Instantiate)
             self.kubectl.apply(self.namespace, manifests)
         elif operation == 'delete':
             self._update_audit_ctx(activity_type=ActivityType.Delete)

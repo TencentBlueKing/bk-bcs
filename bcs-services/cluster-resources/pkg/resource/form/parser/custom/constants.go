@@ -22,36 +22,10 @@ const (
 )
 
 const (
-	// HookTmplArgTypeCustom 自定义参数
-	HookTmplArgTypeCustom = "Custom"
-	// HookTmplArgTypePodIP ...
-	HookTmplArgTypePodIP = "PodIP"
-	// HookTmplArgTypePodName ...
-	HookTmplArgTypePodName = "PodName"
-	// HookTmplArgTypePodNS ...
-	HookTmplArgTypePodNS = "PodNamespace"
-	// HookTmplArgTypePodContainer ...
-	HookTmplArgTypePodContainer = "PodContainer"
-	// HookTmplArgTypeModifiedContainer ...
-	HookTmplArgTypeModifiedContainer = "ModifiedContainer"
-)
-
-const (
-	// HookTmplConditionSuccess 成功条件
-	HookTmplConditionSuccess = "success"
-	// HookTmplConditionFailure 失败条件
-	HookTmplConditionFailure = "failure"
-)
-
-const (
 	// HookTmplSuccessfulLimit 累计成功数
 	HookTmplSuccessfulLimit = "successfulLimit"
 	// HookTmplConsecutiveSuccessfulLimit 连续成功数
 	HookTmplConsecutiveSuccessfulLimit = "consecutiveSuccessfulLimit"
-	// HookTmplFailureLimit 累计失败数
-	HookTmplFailureLimit = "failureLimit"
-	// HookTmplConsecutiveErrorLimit 连续失败数
-	HookTmplConsecutiveErrorLimit = "consecutiveErrorLimit"
 )
 
 const (
@@ -64,10 +38,10 @@ const (
 )
 
 const (
-	// DefaultGDeployMaxSurge ...
-	DefaultGDeployMaxSurge = 0
-	// DefaultGDeployMaxUnavailable ...
-	DefaultGDeployMaxUnavailable = 20
-	// DefaultGDeployGracePeriodSecs 默认优雅更新时间
-	DefaultGDeployGracePeriodSecs = 30
+	// DefaultGWorkloadMaxSurge ...
+	DefaultGWorkloadMaxSurge = 0
+	// DefaultGWorkloadMaxUnavailable ...
+	DefaultGWorkloadMaxUnavailable = 20
+	// DefaultGWorkloadGracePeriodSecs 默认优雅更新时间
+	DefaultGWorkloadGracePeriodSecs = 30
 )

@@ -28,7 +28,7 @@ func NewLogWrapper() server.HandlerWrapper {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
 			logging.Info(ctx, "called func: %s", req.Endpoint())
 			if err := fn(ctx, req, rsp); err != nil {
-				logging.Error(ctx, "call func %s failed, body: %v, error: %v", req.Endpoint(), req.Body(), err)
+				logging.Error(ctx, "call func %s failed, body: %v, error: %+v", req.Endpoint(), req.Body(), err)
 				return err
 			}
 			return nil

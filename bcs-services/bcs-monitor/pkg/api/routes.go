@@ -27,6 +27,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -110,6 +111,7 @@ func registerRoutes(engine *gin.RouterGroup) {
 
 		// 蓝鲸监控采集器
 		route.GET("/telemetry/bkmonitor_agent/", rest.STDRestHandlerFunc(telemetry.IsBKMonitorAgent))
+		route.GET("/metrics/overview", rest.RestHandlerFunc(metrics.GetClusterOverview))
 	}
 }
 

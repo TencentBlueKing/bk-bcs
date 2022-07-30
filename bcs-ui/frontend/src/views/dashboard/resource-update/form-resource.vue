@@ -108,7 +108,8 @@
     </div>
 </template>
 <script>
-    import createForm from '@/components/bkui-form-umd'
+    import createForm from '@blueking/bkui-form'
+    import '@blueking/bkui-form/dist/bkui-form.css'
     import request from '@/api/request'
     import DashboardTopActions from '../common/dashboard-top-actions'
     import SwitchButton from './switch-mode.vue'
@@ -446,18 +447,15 @@
             },
             // 表单预览
             async handlePreview () {
-                this.showSideslider = true
                 this.previewLoading = true
                 this.detail = await this.handleGetManifestByFormData(this.schemaFormData)
                 this.previewData = yamljs.dump(this.detail)
+                this.showSideslider = true
                 this.previewLoading = false
             }
         }
     }
 </script>
-<style lang="postcss">
-@import '@/components/bkui-form.css'
-</style>
 <style lang="postcss" scoped>
 .form-resource {
     padding-bottom: 0;
