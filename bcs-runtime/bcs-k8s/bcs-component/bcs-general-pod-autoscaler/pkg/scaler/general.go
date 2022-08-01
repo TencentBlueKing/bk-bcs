@@ -263,7 +263,7 @@ func getTargetRefKey(gpa *autoscaling.GeneralPodAutoscaler) string {
 func getMetricName(metricSpec autoscaling.MetricSpec) string {
 	switch metricSpec.Type {
 	case autoscaling.ObjectMetricSourceType:
-		return string(metricSpec.Resource.Name)
+		return metricSpec.Object.Metric.Name
 	case autoscaling.PodsMetricSourceType:
 		return metricSpec.Pods.Metric.Name
 	case autoscaling.ResourceMetricSourceType:
