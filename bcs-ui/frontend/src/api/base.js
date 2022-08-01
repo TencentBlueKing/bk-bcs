@@ -95,6 +95,14 @@ export const clusterToolsUpgrade = request('put', '/api/cluster_tools/projects/$
 export const clusterToolsUninstall = request('delete', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/')
 export const clusterToolsInstalledDetail = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/installed_detail/')
 
+// log
+export const createLogCollect = request('post', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/')
+export const logCollectList = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/')
+export const updateLogCollect = request('put', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/')
+export const deleteLogCollect = request('delete', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/')
+export const retrieveLogCollect = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/')
+export const getLogLinks = request('get', '/api/log_collect/projects/$projectId/log_links/')
+
 export default {
     stdLogs,
     stdLogsDownload,

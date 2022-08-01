@@ -249,12 +249,13 @@
             },
 
             goBack () {
-                this.$router.push({
-                    name: 'dbCrdcontroller',
-                    params: {
-                        projectId: this.projectId
-                    }
-                })
+                this.$router.back()
+                // this.$router.push({
+                //     name: 'dbCrdcontroller',
+                //     params: {
+                //         projectId: this.projectId
+                //     }
+                // })
             },
 
             handleUpdate () {

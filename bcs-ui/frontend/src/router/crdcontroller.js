@@ -5,6 +5,7 @@
 const Index = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/index.vue')
 const DBList = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/db_list.vue')
 const LogList = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/log_list.vue')
+const NewLogList = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/new-log-list.vue')
 const Detail = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/detail.vue')
 const BcsPolaris = () => import(/* webpackChunkName: 'network' */'@/views/crdcontroller/polaris_list.vue')
 
@@ -45,7 +46,8 @@ const childRoutes = [
     {
         path: ':projectCode/cluster/:clusterId/crdcontroller/BcsLog/instances',
         name: 'crdcontrollerLogInstances',
-        component: LogList
+        props: true,
+        component: window.REGION === 'ieod' ? LogList : NewLogList
     },
 
     {

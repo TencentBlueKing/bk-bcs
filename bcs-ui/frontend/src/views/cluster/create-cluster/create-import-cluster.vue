@@ -91,7 +91,7 @@
                 v-else>
                 <bk-button class="mb10">
                     <input class="file-input"
-                        accept=".yaml,yml"
+                        accept="*"
                         type="file"
                         @change="handleFileChange">
                     {{$t('文件导入')}}

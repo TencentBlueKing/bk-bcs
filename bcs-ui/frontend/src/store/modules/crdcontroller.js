@@ -16,7 +16,13 @@ import {
     clusterToolsInstalledDetail,
     clusterToolsInstall,
     clusterToolsUpgrade,
-    clusterToolsUninstall
+    clusterToolsUninstall,
+    createLogCollect,
+    logCollectList,
+    updateLogCollect,
+    deleteLogCollect,
+    retrieveLogCollect,
+    getLogLinks
 } from '@/api/base'
 
 export default {
@@ -201,6 +207,30 @@ export default {
         deleteCrdInstance (context, { projectId, clusterId, crdKind, crdId }, config = {}) {
             const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crds/${crdKind}/custom_objects/`
             return http.delete(url, { data: { id: crdId } }, config)
+        },
+        async createLogCollect (ctx, params) {
+            const result = await createLogCollect(params).then(() => true).catch(() => false)
+            return result
+        },
+        async logCollectList (ctx, params) {
+            const data = await logCollectList(params).catch(() => [])
+            return data
+        },
+        async updateLogCollect (ctx, params) {
+            const result = await updateLogCollect(params).then(() => true).catch(() => false)
+            return result
+        },
+        async deleteLogCollect (ctx, params) {
+            const result = await deleteLogCollect(params).then(() => true).catch(() => false)
+            return result
+        },
+        async retrieveLogCollect (ctx, params) {
+            const data = await retrieveLogCollect(params).catch(() => ({}))
+            return data
+        },
+        async getLogLinks (ctx, params) {
+            const data = await getLogLinks(params)
+            return data
         }
     }
 }
