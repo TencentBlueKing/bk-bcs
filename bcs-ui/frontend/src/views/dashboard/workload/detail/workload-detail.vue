@@ -49,7 +49,7 @@
                 </div>
                 <div class="info-item">
                     <span class="label">{{ $t('创建时间') }}</span>
-                    <span class="value">{{ manifestExt.createTime }}</span>
+                    <span class="value">{{ timeZoneTransForm(manifestExt.createTime) }}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">{{ $t('存在时间') }}</span>
@@ -193,6 +193,7 @@
     import useInterval from '../../common/use-interval'
     import BcsLog from '@/components/bcs-log/index'
     import useLog from './use-log'
+    import { timeZoneTransForm } from '@/common/util'
 
     export interface IDetail {
         manifest: any;
@@ -456,6 +457,7 @@
                 events,
                 eventLoading,
                 pagination,
+                timeZoneTransForm,
                 handlePageChange,
                 handlePageLimitChange,
                 handleShowYamlPanel,

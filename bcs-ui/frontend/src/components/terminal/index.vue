@@ -216,7 +216,8 @@
             width: 200px;
         }
         .bk-dropdown-list {
-            overflow: visible;
+            overflow: scroll;
+            overflow-y: hidden;
             > li {
                 width: 200px;
                 a {
