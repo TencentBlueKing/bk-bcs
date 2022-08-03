@@ -28,6 +28,8 @@ import (
 func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&GameStatefulSet{}, func(obj interface{}) { SetObjectDefaults_GameStatefulSet(obj.(*GameStatefulSet)) })
 	scheme.AddTypeDefaultingFunc(&GameStatefulSetList{}, func(obj interface{}) { SetObjectDefaults_GameStatefulSetList(obj.(*GameStatefulSetList)) })
+	scheme.AddTypeDefaultingFunc(&GameDeployment{}, func(obj interface{}) { SetObjectDefaults_GameDeployment(obj.(*GameDeployment)) })
+	scheme.AddTypeDefaultingFunc(&GameDeploymentList{}, func(obj interface{}) { SetObjectDefaults_GameDeploymentList(obj.(*GameDeploymentList)) })
 	return nil
 }
 
@@ -39,5 +41,16 @@ func SetObjectDefaults_GameStatefulSetList(in *GameStatefulSetList) {
 	for i := range in.Items {
 		a := &in.Items[i]
 		SetObjectDefaults_GameStatefulSet(a)
+	}
+}
+
+func SetObjectDefaults_GameDeployment(in *GameDeployment) {
+	SetDefaults_GameDeployment(in)
+}
+
+func SetObjectDefaults_GameDeploymentList(in *GameDeploymentList) {
+	for i := range in.Items {
+		a := &in.Items[i]
+		SetObjectDefaults_GameDeployment(a)
 	}
 }

@@ -140,19 +140,19 @@ type GameDeploymentUpdateStrategy struct {
 	// is set during pods updating, (replicas - partition) number of pods will be updated.
 	// Default value is 0.
 	// +kubebuilder:default=0
-	Partition *int32 `json:"partition,omitempty"`
+	Partition *intstr.IntOrString `json:"partition,omitempty"`
 	// The maximum number of pods that can be unavailable during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up by default.
 	// When maxSurge > 0, absolute number is calculated from percentage by rounding down.
-	// Defaults to 20%.
-	// +kubebuilder:default="20%"
+	// Defaults to 25%. Keep same with Deployment.
+	// +kubebuilder:default="25%"
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
 	// The maximum number of pods that can be scheduled above the desired replicas during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up.
-	// Defaults to 0.
-	// +kubebuilder:default=0
+	// Defaults to 25%. Keep same with Deployment.
+	// +kubebuilder:default="25%"
 	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
 	// Paused indicates that the GameDeployment is paused.
 	// Default value is false
