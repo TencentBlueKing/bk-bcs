@@ -164,7 +164,7 @@
                                                     <i v-bk-tooltips.top="$t('如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间')" class="bcs-icon bcs-icon-question-circle f14 ml5"></i>
                                                 </div>
                                             </div>
-                                            <p class="biz-tip pt10" id="cluster-info" style="clear: both;" v-if="clusterInfo" v-html="clusterInfo"></p>
+                                            <p class="biz-tip pt10" id="cluster-info" style="clear: both;" v-if="clusterInfo && $INTERNAL" v-html="clusterInfo"></p>
                                         </div>
                                     </div>
                                 </div>
@@ -220,6 +220,7 @@
                                                     :lang="yamlConfig.lang"
                                                     :read-only="yamlConfig.readOnly"
                                                     :full-screen="yamlConfig.fullScreen"
+                                                    @input="handleChangeAceValue"
                                                     @init="editorInit">
                                                 </ace>
                                             </div>
@@ -537,7 +538,8 @@
                     }
                 ],
                 hignDesc: this.$t('设置Flags，如设置wait，输入格式为 --wait = true'),
-                webAnnotations: { perms: {} }
+                webAnnotations: { perms: {} },
+                cacheValueFilesMap: {}
             }
         },
         computed: {
@@ -917,6 +919,7 @@
                     this.curTplReadme = files[`${tplName}/README.md`]
                     this.curTplYaml = files[`${tplName}/values.yaml`]
                     this.yamlFile = files[`${tplName}/values.yaml`]
+                    this.cacheValueFilesMap[this.curValueFile] = this.curTplYaml
                     this.editYaml()
                     this.curTpl.description = res.data.data.description
                 } catch (e) {
@@ -930,10 +933,21 @@
              * 修改value file
              */
             changeValueFile (index, data) {
-                this.curValueFile = index
-                this.curTplYaml = data.content
-                this.yamlFile = data.content
+                if (this.cacheValueFilesMap[index]) {
+                    this.curValueFile = index
+                    this.curTplYaml = this.cacheValueFilesMap[index]
+                    this.yamlFile = this.cacheValueFilesMap[index]
+                } else {
+                    this.cacheValueFilesMap[index] = data.content
+                    this.curValueFile = index
+                    this.curTplYaml = data.content
+                    this.yamlFile = data.content
+                }
                 this.editYaml()
+            },
+
+            handleChangeAceValue (val) {
+                this.cacheValueFilesMap[this.curValueFile] = val
             },
 
             /**
