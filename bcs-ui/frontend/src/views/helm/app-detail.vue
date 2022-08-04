@@ -200,6 +200,7 @@
                                                 :read-only="yamlConfig.readOnly"
                                                 :full-screen="yamlConfig.fullScreen"
                                                 :key="curValueFile"
+                                                @input="handleChangeAceValue"
                                                 @init="editorInit">
                                             </ace>
                                         </div>
@@ -695,7 +696,8 @@
                 isHignPanelShow: true,
                 hignSetupMap: [], // helm部署配置高级设置
                 timeoutValue: 600,
-                hignDesc: this.$t('设置Flags，如设置wait，输入格式为 --wait = true')
+                hignDesc: this.$t('设置Flags，如设置wait，输入格式为 --wait = true'),
+                cacheValueFilesMap: {}
             }
         },
         computed: {
@@ -1051,6 +1053,7 @@
                 this.curTplReadme = files[`${tplName}/README.md`]
                 this.curValueFile = this.originReleaseData.valuefile_name || 'values.file'
                 this.curTplYaml = this.originReleaseData.valuefile
+                this.cacheValueFilesMap[this.curValueFile] = this.curTplYaml
                 this.instanceYamlValue = this.originReleaseData.valuefile // 保存当前应用实例化后的配置
                 this.instanceValueFileName = this.originReleaseData.valuefile_name // 保存用户实例化时选择的文件名
                 this.curTplName = tplName
@@ -1197,14 +1200,14 @@
                 if (!valueFileName) {
                     // 如果锁定则用release values
                     if (this.isLocked) {
-                        this.curTplYaml = this.instanceYamlValue
                         this.curValueFile = this.instanceValueFileName
+                        this.curTplYaml = this.cacheValueFilesMap[this.curValueFile] || this.instanceYamlValue
                         console.log('locked usedefault')
                     } else {
                         // 选择版本后依然是原来的, 显示原来实例化时的配置内容
                         if (String(this.tplVersionId) === this.originReleaseVersion) {
-                            this.curTplYaml = this.instanceYamlValue
                             this.curValueFile = this.instanceValueFileName
+                            this.curTplYaml = this.cacheValueFilesMap[this.curValueFile] || this.instanceYamlValue
                             console.log('unlocked but no change usedefault')
                         } else {
                             const fileNames = Object.keys(files)
@@ -1230,18 +1233,20 @@
              * 修改value file
              */
             changeValueFile (index, data) {
-                this.curValueFile = index
-                // this.curVersionYaml = data.content
-                this.curTplYaml = data.content
-                this.yamlFile = ''
-
-                // 没有选择过版本时, 如果切换为原来实例化的文件名，显示原来实例化时的配置内容
-                if (String(this.tplVersionId) === this.originReleaseVersion && index === this.instanceValueFileName) {
-                    this.curTplYaml = this.instanceYamlValue
-                    console.log('unlocked && nochange use default')
+                if (this.cacheValueFilesMap[index]) {
+                    this.curValueFile = index
+                    this.curTplYaml = this.cacheValueFilesMap[index]
+                    this.yamlFile = ''
                 } else {
-                    console.log('unlocked && valsuechange')
+                    this.cacheValueFilesMap[index] = data.content
+                    this.curValueFile = index
+                    this.curTplYaml = data.content
+                    this.yamlFile = ''
                 }
+            },
+
+            handleChangeAceValue (val) {
+                this.cacheValueFilesMap[this.curValueFile] = val
             },
 
             /**

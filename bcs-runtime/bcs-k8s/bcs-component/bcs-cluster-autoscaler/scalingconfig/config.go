@@ -19,4 +19,6 @@ import "k8s.io/autoscaler/cluster-autoscaler/config"
 type Options struct {
 	config.AutoscalingOptions
 	BufferedResourceRatio float64
+	WebhookMode           string
+	WebhookModeConfig     string
 }

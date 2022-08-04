@@ -49,7 +49,7 @@
                 </div>
                 <div class="info-item">
                     <span class="label">{{ $t('创建时间') }}</span>
-                    <span class="value">{{ manifestExt.createTime }}</span>
+                    <span class="value">{{ timeZoneTransForm(manifestExt.createTime) }}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">{{ $t('存在时间') }}</span>
@@ -253,7 +253,7 @@
     import StatusIcon from '../../common/status-icon'
     import Metric from '../../common/metric.vue'
     import useDetail from './use-detail'
-    import { formatTime } from '@/common/util'
+    import { formatTime, timeZoneTransForm } from '@/common/util'
     import Ace from '@/components/ace-editor'
     import fullScreen from '@/directives/full-screen'
 
@@ -466,6 +466,7 @@
                 isDropdownShow,
                 logLinks,
                 isSharedCluster,
+                timeZoneTransForm,
                 handleShowYamlPanel,
                 handleGetStorage,
                 handleGetContainer,

@@ -399,7 +399,9 @@ func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.No
 	// GenericLabels
 	node.Labels = cloudprovider.JoinStringMaps(node.Labels, buildGenericLabels(template, nodeName))
 
-	node.Spec.Taints = make([]apiv1.Taint, 0)
+	node.Spec = apiv1.NodeSpec{
+		Taints: make([]apiv1.Taint, 0),
+	}
 	for _, t := range template.Taint {
 		node.Spec.Taints = append(node.Spec.Taints, apiv1.Taint{
 			Key:    t.Key,

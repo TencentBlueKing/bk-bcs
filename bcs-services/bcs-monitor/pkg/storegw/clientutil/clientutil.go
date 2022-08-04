@@ -17,24 +17,28 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
+	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 // ChunkSamples 按120个点，分割为chunk
-func ChunkSamples(series *prompb.TimeSeries, maxSamplesPerChunk int) (chks []storepb.AggrChunk, err error) {
+func ChunkSamples(series *prompb.TimeSeries) (chks []storepb.AggrChunk, err error) {
 	samples := series.Samples
 
 	for len(samples) > 0 {
 		chunkSize := len(samples)
-		if chunkSize > maxSamplesPerChunk {
-			chunkSize = maxSamplesPerChunk
+		// 最大 120 个
+		if chunkSize > store.MaxSamplesPerChunk {
+			chunkSize = store.MaxSamplesPerChunk
 		}
 
 		enc, cb, err := EncodeChunk(samples[:chunkSize])
@@ -131,6 +135,23 @@ func matchMetricNames(m *labels.Matcher, metricNames []string) bool {
 		}
 	}
 	return false
+}
+
+// MatchLabels label 匹配
+func MatchLabels(matchers []*labels.Matcher, lb labels.Labels, metricNames []string) bool {
+	for _, m := range matchers {
+		if m.Name == labels.MetricName {
+			if !matchMetricNames(m, metricNames) {
+				return false
+			}
+			continue
+		}
+
+		if !m.Matches(lb.Get(m.Name)) {
+			return false
+		}
+	}
+	return true
 }
 
 // GetEQMatcherMap 获取 = 匹配关系
@@ -245,7 +266,7 @@ func MergeTimeSeriesMap(seriesMap map[uint64]*prompb.TimeSeries, toBeMerged map[
 	}
 }
 
-// GetLabelMatch
+// GetLabelMatch :
 func GetLabelMatch(name string, matchers []storepb.LabelMatcher) *storepb.LabelMatcher {
 	// 可能存在多个名称相同的 LabelMatch, prom解析为且的关系, 因为这里只支持=, =~, 可忽略这种 case
 	for _, m := range matchers {
@@ -256,7 +277,7 @@ func GetLabelMatch(name string, matchers []storepb.LabelMatcher) *storepb.LabelM
 	return nil
 }
 
-// GetLabelMatchValues
+// GetLabelMatchValues :
 func GetLabelMatchValues(name string, matchers []storepb.LabelMatcher) ([]string, error) {
 	m := GetLabelMatch(name, matchers)
 	if m == nil {
@@ -275,7 +296,7 @@ func GetLabelMatchValues(name string, matchers []storepb.LabelMatcher) ([]string
 	return []string{}, errors.Errorf("Not support match type: %s", m.Type)
 }
 
-// GetLabelMatchValue
+// GetLabelMatchValue :
 func GetLabelMatchValue(name string, matchers []storepb.LabelMatcher) (string, error) {
 	m := GetLabelMatch(name, matchers)
 	if m == nil {
@@ -292,4 +313,61 @@ func GetLabelMatchValue(name string, matchers []storepb.LabelMatcher) (string, e
 
 	// 不支持 "不等于", "正则不等于" 2 个匹配规则
 	return "", errors.Errorf("Not support match type: %s", m.Type)
+}
+
+// SampleStreamToSeries :
+func SampleStreamToSeries(values model.Matrix, ignoreLabels map[string]string, appendLabels map[string]string) []*prompb.TimeSeries {
+	series := make([]*prompb.TimeSeries, 0, len(values))
+	for _, value := range values {
+		lb := make([]prompb.Label, 0, len(value.Metric))
+		for k, v := range value.Metric {
+			// 需要过滤掉的 label
+			if _, ok := ignoreLabels[string(k)]; ok {
+				continue
+			}
+			lb = append(lb, prompb.Label{Name: string(k), Value: string(v)})
+		}
+
+		// 替换原始 labels
+		for name, value := range appendLabels {
+			lb = append(lb, prompb.Label{Name: name, Value: value})
+		}
+
+		samples := make([]prompb.Sample, 0, len(value.Values))
+		for _, v := range value.Values {
+			samples = append(samples, prompb.Sample{Value: float64(v.Value), Timestamp: int64(v.Timestamp)})
+		}
+		series = append(series, &prompb.TimeSeries{Labels: lb, Samples: samples})
+	}
+	return series
+}
+
+// PromQueryTime promql range 时间参数
+type PromQueryTime struct {
+	Start time.Time
+	End   time.Time
+	Step  time.Duration
+}
+
+// GetPromQueryTime 获取查询时间
+func GetPromQueryTime(r *storepb.SeriesRequest) *PromQueryTime {
+	// 最小1分钟维度
+	stepMills := r.QueryHints.StepMillis
+	if stepMills < 60000 {
+		stepMills = 60000
+	}
+
+	// series 数据, 这里只查询最近5分钟
+	if r.SkipChunks {
+		r.MaxTime = time.Now().UnixMilli()
+		r.MinTime = r.MaxTime - 5*60*1000
+	}
+
+	queryTime := &PromQueryTime{
+		Start: time.UnixMilli(r.MinTime),
+		End:   time.UnixMilli(r.MaxTime),
+		Step:  time.Millisecond * time.Duration(stepMills),
+	}
+
+	return queryTime
 }

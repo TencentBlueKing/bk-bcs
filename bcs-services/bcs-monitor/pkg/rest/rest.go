@@ -72,14 +72,14 @@ func APIResponse(c *Context, data interface{}) {
 	c.JSON(http.StatusOK, result)
 }
 
-// RequestIdGenerator
+// RequestIdGenerator :
 func RequestIdGenerator() string {
 	uid := uuid.New().String()
 	requestId := strings.Replace(uid, "-", "", -1)
 	return requestId
 }
 
-// InitRestContext
+// InitRestContext :
 func InitRestContext(c *gin.Context) *Context {
 	restContext := &Context{
 		Context:   c,

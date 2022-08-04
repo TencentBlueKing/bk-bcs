@@ -34,45 +34,45 @@ func NewEmptyMetaDataClient() *emptyMetadataClient {
 	return &emptyMetadataClient{}
 }
 
-// NewEmptyTargetClient
+// NewEmptyTargetClient :
 func NewEmptyTargetClient() *emptyTargetClient {
 	return &emptyTargetClient{}
 }
 
-// NewEmptyRuleClient
+// NewEmptyRuleClient :
 func NewEmptyRuleClient() *emptyRuleClient {
 	return &emptyRuleClient{}
 }
 
-// NewEmptyExemplarClient
+// NewEmptyExemplarClient :
 func NewEmptyExemplarClient() *emptyExemplarClient {
 	return &emptyExemplarClient{}
 }
 
 type emptyMetadataClient struct{}
 
-// MetricMetadata
+// MetricMetadata :
 func (e *emptyMetadataClient) MetricMetadata(_ context.Context, _ *metadatapb.MetricMetadataRequest) (map[string][]metadatapb.Meta, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }
 
 type emptyTargetClient struct{}
 
-// Targets
+// Targets :
 func (e *emptyTargetClient) Targets(_ context.Context, _ *targetspb.TargetsRequest) (*targetspb.TargetDiscovery, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }
 
 type emptyRuleClient struct{}
 
-// Rules
+// Rules :
 func (e *emptyRuleClient) Rules(_ context.Context, _ *rulespb.RulesRequest) (*rulespb.RuleGroups, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }
 
 type emptyExemplarClient struct{}
 
-// Exemplars
+// Exemplars :
 func (e *emptyExemplarClient) Exemplars(_ context.Context, _ *exemplarspb.ExemplarsRequest) ([]*exemplarspb.ExemplarData, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }

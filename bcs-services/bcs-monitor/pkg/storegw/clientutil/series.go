@@ -17,7 +17,6 @@ import (
 	"sort"
 
 	"github.com/prometheus/prometheus/prompb"
-	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 )
 
@@ -32,7 +31,7 @@ func (s *TimeSeries) AddLabels(promLabels []prompb.Label) *TimeSeries {
 	return s
 }
 
-// AddLabel
+// AddLabel :
 func (s *TimeSeries) AddLabel(name, value string) *TimeSeries {
 	s.Labels = append(s.Labels, prompb.Label{Name: name, Value: value})
 	return s
@@ -64,7 +63,7 @@ func (s *TimeSeries) ToThanosSeries(skipChunks bool) (*storepb.Series, error) {
 	series := &storepb.Series{Labels: lset}
 	// 不需要 chunks 数据, series 接口场景
 	if !skipChunks {
-		aggregatedChunks, err := ChunkSamples(s.TimeSeries, store.MaxSamplesPerChunk)
+		aggregatedChunks, err := ChunkSamples(s.TimeSeries)
 		if err != nil {
 			return nil, err
 		}

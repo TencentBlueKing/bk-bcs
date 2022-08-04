@@ -108,6 +108,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 		}
 		klog.V(4).Infof("CronMode: set minsize of %v to %v Successfully", ng.Id(), desired)
 	}
+	clusterStateRegistry.Recalculate()
 	return nil
 }
 

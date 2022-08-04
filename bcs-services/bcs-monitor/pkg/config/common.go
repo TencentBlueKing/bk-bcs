@@ -24,20 +24,20 @@ const (
 	RetentionDuration = time.Hour * 24 * 2
 )
 
-// EndpointConfig
+// EndpointConfig :
 type EndpointConfig struct {
 	Address     string        `yaml:"address" mapstructure:"address"`
 	GracePeriod time.Duration `yaml:"grace_period" mapstructure:"grace_period"`
 }
 
-// TSDBConfig
+// TSDBConfig :
 type TSDBConfig struct {
 	MinBlockDuration time.Duration `yaml:"min-block-duration" mapstructure:"min-block-duration"`
 	MaxBlockDuration time.Duration `yaml:"max-block-duration" mapstructure:"max-block-duration"`
 	Retention        time.Duration `yaml:"retention" mapstructure:"retention"`
 }
 
-// Init
+// Init :
 func (c *TSDBConfig) Init() error {
 	c.MinBlockDuration = MinBlockDuration
 	c.MaxBlockDuration = MaxBlockDuration

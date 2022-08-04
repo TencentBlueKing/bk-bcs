@@ -86,7 +86,7 @@ type Log struct {
 	Time string `json:"time"`
 }
 
-// LogWithPreviousLink
+// LogWithPreviousLink :
 type LogWithPreviousLink struct {
 	Logs     []*Log `json:"logs"`
 	Previous string `json:"previous"` // 向上翻页链接

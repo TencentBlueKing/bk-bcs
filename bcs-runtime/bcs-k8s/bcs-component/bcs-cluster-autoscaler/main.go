@@ -218,6 +218,9 @@ var (
 		"maxNodeGroupBackoffDuration is the maximum backoff duration for a NodeGroup after new nodes failed to start.")
 	nodeGroupBackoffResetTimeout = flag.Duration("node-group-backoff-reset-timeout", 15*time.Minute,
 		"nodeGroupBackoffResetTimeout is the time after last failed scale-up when the backoff duration is reset.")
+	webhookMode       = flag.String("webhook-mode", "", "Webhook Mode. Available values: [ Web, ConfigMap ]")
+	webhookModeConfig = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
+		" It is a url for web, or namespace/name for configmap")
 )
 
 func createAutoscalingOptions() scalingconfig.Options {
@@ -288,6 +291,8 @@ func createAutoscalingOptions() scalingconfig.Options {
 			AWSUseStaticInstanceList:            *awsUseStaticInstanceList,
 		},
 		BufferedResourceRatio: *bufferedResourceRatio,
+		WebhookMode:           *webhookMode,
+		WebhookModeConfig:     *webhookModeConfig,
 	}
 }
 
@@ -315,6 +320,8 @@ func getKubeConfig() *rest.Config {
 }
 
 func createKubeClient(kubeConfig *rest.Config) kube_client.Interface {
+	kubeConfig.QPS = 100
+	kubeConfig.Burst = 200
 	return kube_client.NewForConfigOrDie(kubeConfig)
 }
 

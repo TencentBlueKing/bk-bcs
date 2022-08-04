@@ -15,7 +15,7 @@
                 </a>
             </div>
             <transition name="fade">
-                <div :class="['bk-dropdown-content is-show']" ref="terminalContent" style="bottom: 40px; right: 0; position: absolute;" v-show="isShow">
+                <div :class="['bk-dropdown-content is-show']" ref="terminalContent" style="bottom: 35px; right: 0; position: absolute;" v-show="isShow">
                     <div class="search-box">
                         <bkbcs-input
                             v-model="keyword"
@@ -92,7 +92,7 @@
                     const e = event || window.event
                     terminal.style.top = e.pageY - cursorY + 'px'
                     terminal.style.left = e.pageX - cursorX + 'px'
-                    terminalContent.style.bottom = '40px'
+                    terminalContent.style.bottom = '35px'
                     terminalContent.style.left = '0'
                 }
 
@@ -198,7 +198,6 @@
                 display: inline-block;
                 overflow: hidden;
                 display: none;
-
             }
         }
 
@@ -216,7 +215,8 @@
             width: 200px;
         }
         .bk-dropdown-list {
-            overflow: visible;
+            overflow: scroll;
+            overflow-x: hidden;
             > li {
                 width: 200px;
                 a {
