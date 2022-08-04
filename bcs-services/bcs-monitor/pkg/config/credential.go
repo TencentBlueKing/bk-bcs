@@ -54,7 +54,7 @@ type Scope map[ScopeType]string
 // LabelMatchers :
 type LabelMatchers []*labels.Matcher
 
-// Matchs : 多个是且的关系, 注意, 只匹配单个
+// Matches 多个是且的关系, 注意, 只匹配单个
 func (m *LabelMatchers) Matches(name ScopeType, value string) bool {
 	for _, matcher := range *m {
 		if matcher.Name != string(name) {
@@ -83,7 +83,7 @@ type Credential struct {
 	scopeMatcher   []*LabelMatchers    `yaml:"-"`
 }
 
-// InitCred
+// InitCred :
 func (c *Credential) InitCred() error {
 	if len(c.Scopes) == 0 {
 		return errors.New("scopes is required")

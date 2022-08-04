@@ -61,7 +61,7 @@ func StoreGWCmd() *cobra.Command {
 
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
-	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, config.G.StoreGW.GRPC.Address, grpcAdvertisePortRangeStr, config.G.StoreGWList)
+	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, config.G.StoreGW.GRPC.Address, grpcAdvertisePortRangeStr, config.G.StoreGWList, storegw.GetStoreSvr)
 	if err != nil {
 		return err
 	}

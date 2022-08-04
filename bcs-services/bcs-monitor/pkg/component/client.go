@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"sync"
 	"time"
@@ -79,7 +80,10 @@ func restyReqToCurl(r *resty.Request) string {
 		}
 	}
 	if r.FormData.Encode() != "" {
-		reqMsg += fmt.Sprintf(" -d %q", r.FormData.Encode())
+		encodeStr := r.FormData.Encode()
+		reqMsg += fmt.Sprintf(" -d %q", encodeStr)
+		rawStr, _ := url.QueryUnescape(encodeStr)
+		reqMsg += fmt.Sprintf(" -raw `%s`", rawStr)
 	}
 
 	return reqMsg

@@ -36,14 +36,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 )
 
-// APIServer
+// APIServer :
 type APIServer struct {
 	ctx    context.Context
 	engine *gin.Engine
 	srv    *http.Server
 }
 
-// NewAPIServer
+// NewAPIServer :
 func NewAPIServer(ctx context.Context, addr string) (*APIServer, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
@@ -60,12 +60,12 @@ func NewAPIServer(ctx context.Context, addr string) (*APIServer, error) {
 	return s, nil
 }
 
-// Run
+// Run :
 func (a *APIServer) Run() error {
 	return a.srv.ListenAndServe()
 }
 
-// Close
+// Close :
 func (a *APIServer) Close() error {
 	return a.srv.Shutdown(a.ctx)
 }
@@ -92,8 +92,10 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 	registerRoutes(engine.Group(""))
 	if config.G.Web.RoutePrefix != "" {
 		registerRoutes(engine.Group(config.G.Web.RoutePrefix))
+		registerMetricsRoutes(engine.Group(config.G.Web.RoutePrefix))
 	}
 	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
+	registerMetricsRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
 }
 
 func registerRoutes(engine *gin.RouterGroup) {
@@ -111,7 +113,35 @@ func registerRoutes(engine *gin.RouterGroup) {
 
 		// 蓝鲸监控采集器
 		route.GET("/telemetry/bkmonitor_agent/", rest.STDRestHandlerFunc(telemetry.IsBKMonitorAgent))
-		route.GET("/metrics/overview", rest.RestHandlerFunc(metrics.GetClusterOverview))
+	}
+}
+
+// registerMetricsRoutes metrics 相关接口
+func registerMetricsRoutes(engine *gin.RouterGroup) {
+
+	engine.Use(middleware.AuthRequired())
+
+	route := engine.Group("/metrics/projects/:projectId/clusters/:clusterId")
+	{
+		route.GET("/overview", rest.RestHandlerFunc(metrics.GetClusterOverview))
+		route.GET("/cpu_usage", rest.RestHandlerFunc(metrics.ClusterCPUUsage))
+		route.GET("/memory_usage", rest.RestHandlerFunc(metrics.ClusterMemoryUsage))
+		route.GET("/disk_usage", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.GET("/nodes/:ip/info/", rest.RestHandlerFunc(metrics.GetNodeInfo))
+		route.GET("/nodes/:ip/overview/", rest.RestHandlerFunc(metrics.GetNodeOverview))
+		route.GET("/nodes/:ip/cpu_usage/", rest.RestHandlerFunc(metrics.GetNodeCPUUsage))
+		route.GET("/nodes/:ip/memory_usage/", rest.RestHandlerFunc(metrics.GetNodeMemoryUsage))
+		route.GET("/nodes/:ip/network_receive/", rest.RestHandlerFunc(metrics.GetNodeNetworkReceiveUsage))
+		route.GET("/nodes/:ip/network_transmit/", rest.RestHandlerFunc(metrics.GetNodeNetworkTransmitUsage))
+		route.GET("/nodes/:ip/diskio_usage/", rest.RestHandlerFunc(metrics.GetNodeDiskioUsage))
+		route.POST("/pods/cpu_usage/", rest.RestHandlerFunc(metrics.PodCPUUsage))
+		route.POST("/pods/memory_usage/", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.POST("/pods/network_receive/", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.POST("/pods/network_transmit/", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.POST("/pods/:pod/containers/cpu_usage/", rest.RestHandlerFunc(metrics.ContainerCPUUsage))
+		route.POST("/pods/:pod/containers/memory_usage/", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.POST("/pods/:pod/containers/disk_read/", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.POST("/pods/:pod/containers/disk_write/", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
 	}
 }
 

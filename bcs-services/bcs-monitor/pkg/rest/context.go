@@ -72,7 +72,7 @@ type APIGWToken struct {
 	*jwt.StandardClaims
 }
 
-// String
+// String :
 func (a *APIGWToken) String() string {
 	return fmt.Sprintf("<%s, %v>", a.App.AppCode, a.App.Verified)
 }

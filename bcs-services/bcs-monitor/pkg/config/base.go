@@ -27,7 +27,7 @@ const (
 	ProdEnv = "prod"
 )
 
-// BaseConf
+// BaseConf :
 type BaseConf struct {
 	AppCode      string              `yaml:"app_code"`
 	AppSecret    string              `yaml:"app_secret"`
@@ -40,7 +40,7 @@ type BaseConf struct {
 	Location     *time.Location      `yaml:"-"`
 }
 
-// Init
+// Init :
 func (c *BaseConf) Init() error {
 	var err error
 	c.AppCode = ""
@@ -58,7 +58,7 @@ func (c *BaseConf) Init() error {
 	return nil
 }
 
-// InitManagers
+// InitManagers :
 func (c *BaseConf) InitManagers() error {
 	for _, manager := range c.Managers {
 		c.ManagerMap[manager] = struct{}{}

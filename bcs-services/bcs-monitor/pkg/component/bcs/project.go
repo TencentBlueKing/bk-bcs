@@ -34,7 +34,7 @@ type Project struct {
 	RawCreateTime string `json:"createTime"`
 }
 
-// String
+// String :
 func (p *Project) String() string {
 	var displayCode string
 	if p.Code == "" {

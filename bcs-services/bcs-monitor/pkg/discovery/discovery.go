@@ -34,7 +34,7 @@ type serviceDiscovery struct {
 	srv micro.Service
 }
 
-// NewServiceDiscovery
+// NewServiceDiscovery :
 func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr string) (*serviceDiscovery, error) {
 	svr := server.NewServer(
 		server.Name(name+serverNameSuffix),

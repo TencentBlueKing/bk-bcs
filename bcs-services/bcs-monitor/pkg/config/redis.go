@@ -37,7 +37,7 @@ type RedisConf struct {
 	WriteTimeout     int      `yaml:"write_timeout" mapstructure:"write_timeout"`
 }
 
-// DefaultRedisConf
+// DefaultRedisConf :
 func DefaultRedisConf() *RedisConf {
 	// only for development
 	return &RedisConf{

@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
@@ -137,7 +136,7 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 
 // Series 返回时序数据
 func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
-	logger.Infow(clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime", r.MaxTime)
+	klog.InfoS(clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	if r.Step < 60 {
 		r.Step = 60
@@ -179,6 +178,10 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
 	for _, m := range r.Matchers {
+		if m.Name == "provider" {
+			continue
+		}
+
 		// 集群Id转换为 bcs 的规范
 		if m.Name == "cluster_id" {
 			// 对 bkmonitor: 为 蓝鲸监控主机的数据, 不能添加集群过滤
@@ -186,9 +189,10 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 				continue
 			}
 			newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: m.Value})
-		} else {
-			newMatchers = append(newMatchers, m)
+			continue
 		}
+
+		newMatchers = append(newMatchers, m)
 	}
 
 	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)

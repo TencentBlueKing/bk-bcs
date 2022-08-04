@@ -33,7 +33,7 @@ type Cluster struct {
 	IsShared    bool   `json:"is_shared"`
 }
 
-// String
+// String :
 func (c *Cluster) String() string {
 	return fmt.Sprintf("cluster<%s, %s>", c.ClusterName, c.ClusterId)
 }
@@ -112,6 +112,11 @@ func GetClusterMap(ctx context.Context, bcsConf *config.BCSConf) (map[string]*Cl
 
 // GetCluster 获取集群详情
 func GetCluster(ctx context.Context, bcsConf *config.BCSConf, clusterId string) (*Cluster, error) {
+	cacheKey := fmt.Sprintf("bcs.GetCluster:%s", clusterId)
+	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		return cacheResult.(*Cluster), nil
+	}
+
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterId)
 
 	resp, err := component.GetClient().R().
@@ -127,6 +132,8 @@ func GetCluster(ctx context.Context, bcsConf *config.BCSConf, clusterId string) 
 	if err := component.UnmarshalBKResult(resp, &cluster); err != nil {
 		return nil, err
 	}
+
+	storage.LocalCache.Slot.Set(cacheKey, cluster, storage.LocalCache.DefaultExpiration)
 
 	return cluster, nil
 }

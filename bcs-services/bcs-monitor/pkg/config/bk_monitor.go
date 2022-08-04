@@ -18,7 +18,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// BKMonitorConf
+// BKMonitorConf :
 type BKMonitorConf struct {
 	URL                  string    `yaml:"url"`          // unify-query 访问地址
 	MetadataURL          string    `yaml:"metadata_url"` // 元数据地址, 目前只包含白名单

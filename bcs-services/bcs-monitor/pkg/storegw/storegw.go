@@ -24,9 +24,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/discovery/targetgroup"
+	"github.com/thanos-io/thanos/pkg/store/storepb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
+
+// StoreFactory 工厂模式
+type StoreFactory func(logger log.Logger, reg *prometheus.Registry, conf *config.StoreConf) (storepb.StoreServer, error)
 
 // StoreGW Store 管理结构
 type StoreGW struct {
@@ -38,10 +42,11 @@ type StoreGW struct {
 	stop            func()
 	GRPCAdvertiseIP string
 	portRange       *PortRange
+	storeFunc       StoreFactory
 }
 
-// NewStoreGW
-func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, grpcAdvertisePortRangeStr string, confs []*config.StoreConf) (*StoreGW, error) {
+// NewStoreGW :
+func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, grpcAdvertisePortRangeStr string, confs []*config.StoreConf, storeFunc StoreFactory) (*StoreGW, error) {
 	portRange, err := NewPortRange(grpcAdvertisePortRangeStr)
 	if err != nil {
 		return nil, err
@@ -58,6 +63,7 @@ func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry
 		GRPCAdvertiseIP: gprcAdvertiseIP,
 		portRange:       portRange,
 		stores:          map[string]*Store{},
+		storeFunc:       storeFunc,
 	}
 
 	return gw, nil
@@ -74,7 +80,12 @@ func (s *StoreGW) Run() error {
 
 		address := fmt.Sprintf("%s:%d", s.GRPCAdvertiseIP, port)
 
-		store, err := NewStore(s.ctx, logger, s.reg, address, conf)
+		storeSvr, err := s.storeFunc(logger, s.reg, conf)
+		if err != nil {
+			return err
+		}
+
+		store, err := NewStore(s.ctx, logger, s.reg, address, conf, storeSvr)
 		if err != nil {
 			return err
 		}
