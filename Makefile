@@ -397,6 +397,11 @@ project-manager:pre
 	cp ${BCS_SERVICES_PATH}/bcs-project-manager/proto/bcsproject/bcsproject.swagger.json ${PACKAGEPATH}/bcs-services/bcs-project-manager/swagger/bcsproject.swagger.json
 	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-project-manager ./main.go
 
+cluster-resources:
+	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources
+	cp -R ${BCS_CONF_SERVICES_PATH}/cluster-resources/* ${PACKAGEPATH}/bcs-services/cluster-resources
+	cd ${BCS_SERVICES_PATH}/cluster-resources && make build
+
 # end of bcs-service section
 
 apiserver-proxy:pre
