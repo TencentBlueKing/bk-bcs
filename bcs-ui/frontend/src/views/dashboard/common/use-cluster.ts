@@ -1,8 +1,8 @@
-import { SetupContext, computed, onMounted, ComputedRef } from '@vue/composition-api'
+import { SetupContext, computed, onMounted, ComputedRef } from '@vue/composition-api';
 
 export interface IUseClusterListResult {
-    curClusterList: ComputedRef<any[]>;
-    getClusterList: () => Promise<void>;
+  curClusterList: ComputedRef<any[]>;
+  getClusterList: () => Promise<void>;
 }
 
 /**
@@ -10,24 +10,24 @@ export interface IUseClusterListResult {
  * @param ctx
  * @returns
  */
-export default function useClusterList (ctx: SetupContext): IUseClusterListResult {
-    const { $route, $store } = ctx.root
-    const projectId = computed(() => $route.params.projectId)
-    const curClusterList = computed(() => $store.state.cluster.clusterList)
+export default function useClusterList(ctx: SetupContext): IUseClusterListResult {
+  const { $route, $store } = ctx.root;
+  const projectId = computed(() => $route.params.projectId);
+  const curClusterList = computed(() => $store.state.cluster.clusterList);
 
-    const getClusterList = async () => {
-        const res = await $store.dispatch('cluster/getClusterList', projectId.value).catch(() => ({ data: [] }))
-        $store.commit('cluster/forceUpdateClusterList', res.data)
+  const getClusterList = async () => {
+    const res = await $store.dispatch('cluster/getClusterList', projectId.value).catch(() => ({ data: [] }));
+    $store.commit('cluster/forceUpdateClusterList', res.data);
+  };
+
+  onMounted(() => {
+    if (!curClusterList.value.length) {
+      getClusterList();
     }
+  });
 
-    onMounted(() => {
-        if (!curClusterList.value.length) {
-            getClusterList()
-        }
-    })
-
-    return {
-        curClusterList,
-        getClusterList
-    }
+  return {
+    curClusterList,
+    getClusterList,
+  };
 }

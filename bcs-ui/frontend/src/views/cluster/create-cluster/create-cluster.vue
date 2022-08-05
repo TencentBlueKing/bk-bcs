@@ -1,149 +1,148 @@
 <template>
-    <section class="cluster">
-        <div class="mode-wrapper mt15">
-            <!-- 自建集群 -->
-            <div class="mode-panel" @click="handleCreateCluster">
-                <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-sitemap"></i></span>
-                <span class="mode-panel-title">{{ $t('自建集群') }}</span>
-                <span class="mode-panel-desc">{{ $t('可自定义集群基本信息和集群版本') }}</span>
-            </div>
-            <!-- 导入集群 -->
-            <div :class="['mode-panel', { disabled: $INTERNAL }]"
-                v-bk-tooltips="{ disabled: !$INTERNAL, content: $t('功能建设中') }"
-                @click="handleImportCluster">
-                <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-upload"></i></span>
-                <span class="mode-panel-title">{{ $t('导入集群') }}</span>
-                <span class="mode-panel-desc">{{ $t('支持快速导入已存在的集群') }}</span>
-            </div>
-        </div>
-        <div class="cluster-template-title">
-            <span class="title">{{ $t('云服务商') }}</span>
-            <!-- <bcs-button size="small" @click="handleCreateTemplate">{{ $t('新建集群模板') }}</bcs-button> -->
-        </div>
-        <bcs-table class="mt15"
-            :data="curPageData"
-            :pagination="pagination"
-            v-bkloading="{ isLoading }"
-            @page-change="pageChange"
-            @page-limit-change="pageSizeChange">
-            <bcs-table-column :label="$t('名称')">
-                <template #default="{ row }">
-                    <bcs-button text @click="handleShowDetail(row)">{{ row.name }}</bcs-button>
-                </template>
-            </bcs-table-column>
-            <bcs-table-column :label="$t('描述')" prop="description" min-width="300" show-overflow-tooltip>
-                <template #default="{ row }">
-                    {{ row.description || '--' }}
-                </template>
-            </bcs-table-column>
-            <bcs-table-column :label="$t('创建者')" prop="creator"></bcs-table-column>
-            <bcs-table-column :label="$t('更新者')" prop="updater"></bcs-table-column>
-            <bcs-table-column :label="$t('更新时间')" prop="updateTime" min-width="200"></bcs-table-column>
-            <!-- <bcs-table-column :label="$t('操作')">
+  <section class="cluster">
+    <div class="mode-wrapper mt15">
+      <!-- 自建集群 -->
+      <div class="mode-panel" @click="handleCreateCluster">
+        <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-sitemap"></i></span>
+        <span class="mode-panel-title">{{ $t('自建集群') }}</span>
+        <span class="mode-panel-desc">{{ $t('可自定义集群基本信息和集群版本') }}</span>
+      </div>
+      <!-- 导入集群 -->
+      <div
+        :class="['mode-panel', { disabled: $INTERNAL }]"
+        v-bk-tooltips="{ disabled: !$INTERNAL, content: $t('功能建设中') }"
+        @click="handleImportCluster">
+        <span class="mode-panel-icon"><i class="bcs-icon bcs-icon-upload"></i></span>
+        <span class="mode-panel-title">{{ $t('导入集群') }}</span>
+        <span class="mode-panel-desc">{{ $t('支持快速导入已存在的集群') }}</span>
+      </div>
+    </div>
+    <div class="cluster-template-title">
+      <span class="title">{{ $t('云服务商') }}</span>
+      <!-- <bcs-button size="small" @click="handleCreateTemplate">{{ $t('新建集群模板') }}</bcs-button> -->
+    </div>
+    <bcs-table
+      class="mt15"
+      :data="curPageData"
+      :pagination="pagination"
+      v-bkloading="{ isLoading }"
+      @page-change="pageChange"
+      @page-limit-change="pageSizeChange">
+      <bcs-table-column :label="$t('名称')">
+        <template #default="{ row }">
+          <bcs-button text @click="handleShowDetail(row)">{{ row.name }}</bcs-button>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('描述')" prop="description" min-width="300" show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ row.description || '--' }}
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('创建者')" prop="creator"></bcs-table-column>
+      <bcs-table-column :label="$t('更新者')" prop="updater"></bcs-table-column>
+      <bcs-table-column :label="$t('更新时间')" prop="updateTime" min-width="200"></bcs-table-column>
+      <!-- <bcs-table-column :label="$t('操作')">
                 <template #default="{ row }">
                     <bcs-button text @click="handleEditTemplate(row)">{{ $t('编辑') }}</bcs-button>
                     <bcs-button class="ml15" text @click="handleDeleteTemplate(row)">{{ $t('删除') }}</bcs-button>
                 </template>
             </bcs-table-column> -->
-        </bcs-table>
-        <bk-sideslider :is-show.sync="showDetail" quick-close :title="detailTitle" width="600">
-            <template #content>
-                <ace v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"
-                    width="100%" height="100%" lang="yaml" read-only :value="yaml"></ace>
-            </template>
-        </bk-sideslider>
-    </section>
+    </bcs-table>
+    <bk-sideslider :is-show.sync="showDetail" quick-close :title="detailTitle" width="600">
+      <template #content>
+        <ace
+          v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"
+          width="100%" height="100%" lang="yaml" read-only :value="yaml"></ace>
+      </template>
+    </bk-sideslider>
+  </section>
 </template>
 <script lang="ts">
-    import { computed, defineComponent, onMounted, ref } from '@vue/composition-api'
-    import DashboardTopActions from '@/views/dashboard/common/dashboard-top-actions'
-    import usePage from '@/views/dashboard/common/use-page'
-    import * as ace from '@/components/ace-editor'
-    import fullScreen from '@/directives/full-screen'
-    import yamljs from 'js-yaml'
-    import useConfig from '@/common/use-config'
+import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import DashboardTopActions from '@/views/dashboard/common/dashboard-top-actions';
+import usePage from '@/views/dashboard/common/use-page';
+import * as ace from '@/components/ace-editor';
+import fullScreen from '@/directives/full-screen';
+import yamljs from 'js-yaml';
+import useConfig from '@/common/use-config';
 
-    export default defineComponent({
-        name: 'CreateCluster',
-        components: { DashboardTopActions, ace },
-        directives: {
-            'full-screen': fullScreen
-        },
-        setup (props, ctx) {
-            const { $router, $store } = ctx.root
-            const { $INTERNAL } = useConfig()
+export default defineComponent({
+  name: 'CreateCluster',
+  components: { DashboardTopActions, ace },
+  directives: {
+    'full-screen': fullScreen,
+  },
+  setup(props, ctx) {
+    const { $router, $store } = ctx.root;
+    const { $INTERNAL } = useConfig();
 
-            // 自建集群
-            const handleCreateCluster = () => {
-                if ($INTERNAL.value) {
-                    $router.push({ name: 'createFormCluster' })
-                } else {
-                    $router.push({ name: 'createFormClusterEE' })
-                }
-            }
-            // 导入集群
-            const handleImportCluster = () => {
-                if ($INTERNAL.value) return
-                $router.push({ name: 'createImportCluster' })
-            }
+    // 自建集群
+    const handleCreateCluster = () => {
+      if ($INTERNAL.value) {
+        $router.push({ name: 'createFormCluster' });
+      } else {
+        $router.push({ name: 'createFormClusterEE' });
+      }
+    };
+    // 导入集群
+    const handleImportCluster = () => {
+      if ($INTERNAL.value) return;
+      $router.push({ name: 'createImportCluster' });
+    };
 
-            // 获取表格数据
-            const isLoading = ref(false)
-            const tableData = ref([])
-            const handleGetTableData = async () => {
-                isLoading.value = true
-                const data = await $store.dispatch('clustermanager/fetchCloudList')
-                tableData.value = data
-                pagination.value.count = data.length
-                isLoading.value = false
-            }
-            // 前端分页
-            const { pagination, curPageData, pageChange, pageSizeChange } = usePage(tableData)
-            // 创建集群模板
-            const handleCreateTemplate = () => {
-                $router.push({ name: 'createClusterTemplate' })
-            }
-            // 编辑集群模板
-            const handleEditTemplate = (row) => {}
-            // 删除集群模板
-            const handleDeleteTemplate = (row) => {}
-            // 展示模板详情
-            const showDetail = ref(false)
-            const curCloud = ref<any>({})
-            const detailTitle = computed(() => {
-                return `${curCloud.value.name}${curCloud.value.description ? `( ${curCloud.value.description} )` : ''}`
-            })
-            const yaml = computed(() => {
-                return yamljs.dump(curCloud.value)
-            })
-            const handleShowDetail = (row) => {
-                showDetail.value = true
-                curCloud.value = row
-            }
-            onMounted(() => {
-                handleGetTableData()
-            })
-            return {
-                isLoading,
-                curPageData,
-                pagination,
-                showDetail,
-                curCloud,
-                detailTitle,
-                yaml,
-                handleCreateCluster,
-                handleGetTableData,
-                handleCreateTemplate,
-                handleEditTemplate,
-                handleDeleteTemplate,
-                pageChange,
-                pageSizeChange,
-                handleShowDetail,
-                handleImportCluster,
-                $INTERNAL
-            }
-        }
-    })
+    // 获取表格数据
+    const isLoading = ref(false);
+    const tableData = ref([]);
+    const handleGetTableData = async () => {
+      isLoading.value = true;
+      const data = await $store.dispatch('clustermanager/fetchCloudList');
+      tableData.value = data;
+      pagination.value.count = data.length;
+      isLoading.value = false;
+    };
+    // 前端分页
+    const { pagination, curPageData, pageChange, pageSizeChange } = usePage(tableData);
+    // 创建集群模板
+    const handleCreateTemplate = () => {
+      $router.push({ name: 'createClusterTemplate' });
+    };
+    // 编辑集群模板
+    const handleEditTemplate = (row) => {};
+    // 删除集群模板
+    const handleDeleteTemplate = (row) => {};
+    // 展示模板详情
+    const showDetail = ref(false);
+    const curCloud = ref<any>({});
+    const detailTitle = computed(() => `${curCloud.value.name}${curCloud.value.description ? `( ${curCloud.value.description} )` : ''}`);
+    const yaml = computed(() => yamljs.dump(curCloud.value));
+    const handleShowDetail = (row) => {
+      showDetail.value = true;
+      curCloud.value = row;
+    };
+    onMounted(() => {
+      handleGetTableData();
+    });
+    return {
+      isLoading,
+      curPageData,
+      pagination,
+      showDetail,
+      curCloud,
+      detailTitle,
+      yaml,
+      handleCreateCluster,
+      handleGetTableData,
+      handleCreateTemplate,
+      handleEditTemplate,
+      handleDeleteTemplate,
+      pageChange,
+      pageSizeChange,
+      handleShowDetail,
+      handleImportCluster,
+      $INTERNAL,
+    };
+  },
+});
 </script>
 <style lang="postcss" scoped>
 /deep/ .bk-sideslider-content {
