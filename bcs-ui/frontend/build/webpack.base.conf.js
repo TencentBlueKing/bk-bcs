@@ -3,7 +3,7 @@
 const webpack = require('webpack')
 const { VueLoaderPlugin } = require('vue-loader')
 const threadLoader = require('thread-loader')
-const friendlyFormatter = require('eslint-friendly-formatter')
+// const friendlyFormatter = require('eslint-friendly-formatter')
 
 const config = require('./config')
 const { assetsPath, resolve } = require('./util')
@@ -62,16 +62,16 @@ module.exports = {
             /\/node_modules\/zrender\/dist\/zrender\.min\.js$/
         ],
         rules: [
-            {
-                test: /\.(js|vue)$/,
-                enforce: 'pre',
-                loader: 'eslint-loader',
-                include: [resolve('src'), resolve('build')],
-                exclude: /node_modules\/|lib\.bundle\.js|ip-selector\.js|bkui-form-umd\.js/,
-                options: {
-                    formatter: friendlyFormatter
-                }
-            },
+            // {
+            //     test: /\.(js|vue)$/,
+            //     enforce: 'pre',
+            //     loader: 'eslint-loader',
+            //     include: [resolve('src'), resolve('build')],
+            //     exclude: /node_modules\/|lib\.bundle\.js|ip-selector\.js|bkui-form-umd\.js/,
+            //     options: {
+            //         formatter: friendlyFormatter
+            //     }
+            // },
             {
                 test: /\.tsx?$/,
                 include: resolve('src'),
