@@ -73,6 +73,7 @@ type LogConfig struct {
 	Size          int    `yaml:"size" usage:"log file size, unit: MB"`
 	Age           int    `yaml:"age" usage:"log reserved age, unit: day"`
 	Backups       int    `yaml:"backups" usage:"the count of reserved log"`
+	AlsoToStdErr  bool   `yaml:"alsoToStdErr" usage:"also write log to stdErr"`
 }
 
 // SwaggerConfig

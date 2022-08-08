@@ -26,5 +26,5 @@ tidy:
 	go mod tidy
 
 # build image
-docker:
-	go mod tidy
+docker: build
+	docker build -t bcs-project-manager:${VERSION} .
