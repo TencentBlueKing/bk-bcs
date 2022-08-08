@@ -223,7 +223,6 @@
                           :lang="yamlConfig.lang"
                           :read-only="yamlConfig.readOnly"
                           :full-screen="yamlConfig.fullScreen"
-                          @input="handleChangeAceValue"
                           @init="editorInit">
                         </ace>
                       </div>
@@ -546,7 +545,6 @@ export default {
       ],
       hignDesc: this.$t('设置Flags，如设置wait，输入格式为 --wait = true'),
       webAnnotations: { perms: {} },
-      cacheValueFilesMap: {},
     };
   },
   computed: {
@@ -926,7 +924,6 @@ export default {
         this.curTplReadme = files[`${tplName}/README.md`];
         this.curTplYaml = files[`${tplName}/values.yaml`];
         this.yamlFile = files[`${tplName}/values.yaml`];
-        this.cacheValueFilesMap[this.curValueFile] = this.curTplYaml;
         this.editYaml();
         this.curTpl.description = res.data.data.description;
       } catch (e) {
@@ -937,29 +934,18 @@ export default {
     },
 
     /**
-             * 修改value file
-             */
+     * 修改value file
+     */
     changeValueFile(index, data) {
-      if (this.cacheValueFilesMap[index]) {
-        this.curValueFile = index;
-        this.curTplYaml = this.cacheValueFilesMap[index];
-        this.yamlFile = this.cacheValueFilesMap[index];
-      } else {
-        this.cacheValueFilesMap[index] = data.content;
-        this.curValueFile = index;
-        this.curTplYaml = data.content;
-        this.yamlFile = data.content;
-      }
+      this.curValueFile = index;
+      this.curTplYaml = data.content;
+      this.yamlFile = data.content;
       this.editYaml();
     },
 
-    handleChangeAceValue(val) {
-      this.cacheValueFilesMap[this.curValueFile] = val;
-    },
-
     /**
-             * 同步仓库
-             */
+     * 同步仓库
+     */
     async syncHelmTpl() {
       if (this.isTplSynLoading) {
         return false;
