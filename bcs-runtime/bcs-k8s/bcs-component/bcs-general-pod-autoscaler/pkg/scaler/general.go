@@ -263,7 +263,7 @@ func getTargetRefKey(gpa *autoscaling.GeneralPodAutoscaler) string {
 func getMetricName(metricSpec autoscaling.MetricSpec) string {
 	switch metricSpec.Type {
 	case autoscaling.ObjectMetricSourceType:
-		return metricSpec.Object.Metric.Name
+		return string(metricSpec.Object.Metric.Name)
 	case autoscaling.PodsMetricSourceType:
 		return metricSpec.Pods.Metric.Name
 	case autoscaling.ResourceMetricSourceType:
@@ -272,6 +272,8 @@ func getMetricName(metricSpec autoscaling.MetricSpec) string {
 		return string(metricSpec.ContainerResource.Name)
 	case autoscaling.ExternalMetricSourceType:
 		return metricSpec.External.Metric.Name
+	default:
+		return ""
 	}
 	return ""
 }
@@ -660,7 +662,7 @@ func (a *GeneralController) computeStatusForObjectMetric(
 			},
 		}
 		metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "metric",
-			metricSpec.Object.Metric.Name, metricSpec.Object.Target.Value.Value(),
+			metricSpec.Object.Metric.Name, metricSpec.Object.Target.AverageValue.Value(),
 			status.Object.Current.AverageValue.Value())
 		return replicaCountProposal,
 			timestampProposal,
