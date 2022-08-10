@@ -72,6 +72,12 @@ type Storage interface {
 	QueryK8sHPA(cluster, namespace string) ([]*storage.Hpa, error)
 	// QueryK8sGPA query all gpa in specified cluster and namespace
 	QueryK8sGPA(cluster, namespace string) ([]*storage.Gpa, error)
+	// QueryK8sPvc query pvc in specified cluster and namespace
+	QueryK8sPvc(cluster, namespace string) ([]*storage.Pvc, error)
+	// QueryK8sStorageClass query all StorageClass in specified cluster
+	QueryK8sStorageClass(cluster string) ([]*storage.StorageClass, error)
+	// QueryK8sResourceQuota query ResourceQuota in specified cluster and namespace
+	QueryK8sResourceQuota(cluster, namespace string) ([]*storage.ResourceQuota, error)
 	// QueryMesosNamespace query all namespace in specified cluster
 	QueryMesosNamespace(cluster string) ([]*storage.MesosNamespace, error)
 	//QueryMesosDeployment query all deployment in specified cluster
@@ -105,6 +111,101 @@ type StorageCli struct {
 	Config   *Config
 	Client   *restclient.RESTClient
 	discover registry.Registry
+}
+
+// QueryK8sPvc query pvc in specified cluster and namespace
+func (c *StorageCli) QueryK8sPvc(cluster, namespace string) ([]*storage.Pvc, error) {
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/PersistentVolumeClaim"
+	var pvcs []*storage.Pvc
+	offset := 0
+	for {
+		var pvcsTmp []*storage.Pvc
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &pvcsTmp); err != nil {
+			return nil, fmt.Errorf("pvcs slice decode err: %s", err.Error())
+		}
+		pvcs = append(pvcs, pvcsTmp...)
+		if len(pvcsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
+	}
+
+	if len(pvcs) == 0 {
+		//No pvc data retrieve from bcs-storage
+		blog.V(5).Infof("query kubernetes empty pvcs in cluster %s", cluster)
+		return nil, nil
+	}
+	return pvcs, nil
+}
+
+// QueryK8sStorageClass query all StorageClass in specified cluster
+func (c *StorageCli) QueryK8sStorageClass(cluster string) ([]*storage.StorageClass, error) {
+	subPath := "/k8s/dynamic/cluster_resources/clusters/%s/StorageClass"
+	var scs []*storage.StorageClass
+	offset := 0
+	for {
+		var scsTmp []*storage.StorageClass
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &scsTmp); err != nil {
+			return nil, fmt.Errorf("scs slice decode err: %s", err.Error())
+		}
+		scs = append(scs, scsTmp...)
+		if len(scsTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
+	}
+
+	if len(scs) == 0 {
+		blog.V(5).Infof("query kubernetes empty scs in cluster %s", cluster)
+		return nil, nil
+	}
+	return scs, nil
+}
+
+// QueryK8sResourceQuota query ResourceQuota in specified cluster and namespace
+func (c *StorageCli) QueryK8sResourceQuota(cluster, namespace string) ([]*storage.ResourceQuota, error) {
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/ResourceQuota"
+	var quotas []*storage.ResourceQuota
+	offset := 0
+	for {
+		var quotasTmp []*storage.ResourceQuota
+		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, subPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(response.Data, &quotasTmp); err != nil {
+			return nil, fmt.Errorf("quotas slice decode err: %s", err.Error())
+		}
+		quotas = append(quotas, quotasTmp...)
+		if len(quotasTmp) == storageRequestLimit {
+			offset += storageRequestLimit
+			continue
+		}
+		break
+	}
+
+	if len(quotas) == 0 {
+		//No quota data retrieve from bcs-storage
+		blog.V(5).Infof("query kubernetes empty quotas in cluster %s", cluster)
+		return nil, nil
+	}
+	return quotas, nil
 }
 
 // QueryK8sHPA query all hpa in specified cluster and namespace
