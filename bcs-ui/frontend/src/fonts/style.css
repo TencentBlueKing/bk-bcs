@@ -848,3 +848,18 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-yunpingzhengguanli:before {
 	content: "\e21e";
 }
+.bcs-icon-kuosuorong:before {
+	content: "\e21f";
+}
+.bcs-icon-yulan:before {
+	content: "\e220";
+}
+.bcs-icon-zhongzhishuju:before {
+	content: "\e221";
+}
+.bcs-icon-fenxiang:before {
+	content: "\e222";
+}
+.bcs-icon-mobanpeizhi:before {
+	content: "\e223";
+}

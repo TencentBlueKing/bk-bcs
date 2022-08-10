@@ -7,6 +7,7 @@ const { $bkMessage } = Vue.prototype;
 export interface INodesParams {
   clusterId: string;
   nodeIps: string[];
+  nodeTemplateID?: string;
 }
 export interface INodeParams {
   clusterId: string;
@@ -26,6 +27,7 @@ export interface IBatchDispatchParams {
 
 export default function useNode() {
   const projectId = computed(() => store.state.curProjectId);
+  const user = computed(() => store.state.user);
   // 获取节点列表
   const getNodeList = async (clusterId) => {
     if (!clusterId) {
@@ -39,7 +41,7 @@ export default function useNode() {
   };
   // 添加节点
   const addNode = async (params: INodesParams) => {
-    const { clusterId, nodeIps = [] } = params;
+    const { clusterId, nodeIps = [], nodeTemplateID = '' } = params;
     if (!clusterId || !nodeIps.length) {
       console.warn('clusterId or is nodes is empty');
       return;
@@ -47,6 +49,7 @@ export default function useNode() {
     const result = await store.dispatch('clustermanager/addClusterNode', {
       $clusterId: clusterId,
       nodes: nodeIps,
+      nodeTemplateID,
       operator: store.state.user?.username,
     });
     result && $bkMessage({
@@ -74,6 +77,18 @@ export default function useNode() {
       taskData,
       latestTask,
     };
+  };
+  // 任务重试
+  const retryTask = async (params: Omit<INodeParams, 'status'>) => {
+    const { latestTask } = await getTaskData({
+      clusterId: params.clusterId,
+      nodeIP: params.nodeIP,
+    });
+    const result = await store.dispatch('clustermanager/taskRetry', {
+      $taskId: latestTask.taskID,
+      updater: user.value.username,
+    });
+    return result;
   };
   // 停止/允许 调度
   const toggleNodeDispatch = async (params: INodeDispatchParams) => {
@@ -166,5 +181,6 @@ export default function useNode() {
     addNode,
     getNodeOverview,
     batchToggleNodeDispatch,
+    retryTask,
   };
 }

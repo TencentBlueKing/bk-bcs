@@ -7,7 +7,10 @@
         <span class="desc ml10" v-if="desc">{{ desc }}</span>
       </slot>
     </div>
-    <bk-guide></bk-guide>
+    <div class="help-docs-wrapper">
+      <div class="help-docs"><slot name="right"></slot></div>
+      <bk-guide></bk-guide>
+    </div>
   </div>
 </template>
 <script>
@@ -62,6 +65,14 @@ export default defineComponent({
             color: #c3cdd7;
             font-size: 12px;
         }
+    }
+    .help-docs-wrapper {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      .help-docs {
+        margin-right: -20px;
+      }
     }
 }
 </style>

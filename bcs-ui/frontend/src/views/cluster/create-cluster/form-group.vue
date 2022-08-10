@@ -2,7 +2,10 @@
   <section class="form-group">
     <div class="form-group-title" @click="toggleActive">
       <span class="left">
-        <span class="icon" :style="!active ? 'transform: rotate(-90deg);' : 'transform: rotate(0deg);'">
+        <span
+          class="icon"
+          :style="!active ? 'transform: rotate(-90deg);' : 'transform: rotate(0deg);'"
+          v-if="allowToggle">
           <i class="bcs-icon bcs-icon-down-shape"></i>
         </span>
         <span class="label">{{ title }}</span>
@@ -33,11 +36,16 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    allowToggle: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props, ctx) {
     const { emit } = ctx;
     const active = ref(props.defaultActive);
     const toggleActive = () => {
+      if (!props.allowToggle) return;
       active.value = !active.value;
       emit('toggle', active.value);
     };

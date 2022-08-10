@@ -58,6 +58,26 @@
               <div class="value-label">{{nodeInfo.sysname}}</div>
             </bcs-popover>
           </div>
+          <template v-if="isTkeCluster">
+            <div class="header-item">
+              <div class="key-label">{{$t('节点模板：')}}</div>
+              <bcs-popover
+                :content="nodeTemplateInfo.name"
+                placement="bottom">
+                <div class="value-label">
+                  {{nodeTemplateInfo.name || '--' }}
+                </div>
+              </bcs-popover>
+            </div>
+            <div class="header-item">
+              <div class="key-label">{{$t('Kubelet组件参数：')}}</div>
+              <div
+                class="value-label"
+                v-bk-tooltips.bottom="nodeTemplateInfo.extraArgs.kubelet.split(';').join('<br>')">
+                {{nodeTemplateInfo.extraArgs.kubelet}}
+              </div>
+            </div>
+          </template>
         </div>
         <div class="biz-cluster-node-overview-chart-wrapper">
           <div class="biz-cluster-node-overview-chart">
@@ -74,13 +94,22 @@
                     </div>
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')">{{$t('1小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')">
+                          {{$t('1小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')">{{$t('24小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')">
+                          {{$t('24小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')">{{$t('近7天')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')">
+                          {{$t('近7天')}}</a>
                       </li>
                     </ul>
                   </bk-dropdown-menu>
@@ -101,13 +130,22 @@
                     </div>
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">{{$t('1小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">
+                          {{$t('1小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">{{$t('24小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">
+                          {{$t('24小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">{{$t('近7天')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">
+                          {{$t('近7天')}}</a>
                       </li>
                     </ul>
                   </bk-dropdown-menu>
@@ -130,13 +168,22 @@
                     </div>
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')">{{$t('1小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')">
+                          {{$t('1小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')">{{$t('24小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')">
+                          {{$t('24小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')">{{$t('近7天')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')">
+                          {{$t('近7天')}}</a>
                       </li>
                     </ul>
                   </bk-dropdown-menu>
@@ -157,13 +204,22 @@
                     </div>
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')">{{$t('1小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')">
+                          {{$t('1小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')">{{$t('24小时')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')">
+                          {{$t('24小时')}}</a>
                       </li>
                       <li>
-                        <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')">{{$t('近7天')}}</a>
+                        <a
+                          href="javascript:;"
+                          @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')">
+                          {{$t('近7天')}}</a>
                       </li>
                     </ul>
                   </bk-dropdown-menu>
@@ -188,7 +244,11 @@
                   :placeholder="$t('请选择命名空间')"
                   @selected="handleNamespaceSelected"
                 >
-                  <bcs-option v-for="option in curNamespceList" :key="option.value" :id="option.value" :name="option.label"></bcs-option>
+                  <bcs-option
+                    v-for="option in curNamespceList"
+                    :key="option.value"
+                    :id="option.value"
+                    :name="option.label"></bcs-option>
                 </bcs-select>
                 <bk-input
                   class="search-input ml5"
@@ -358,7 +418,6 @@ import 'echarts/lib/component/legend';
 
 import { BCS_CLUSTER } from '@/common/constant';
 import StatusIcon from '@/views/dashboard/common/status-icon';
-import BaseLayout from '@/views/dashboard/common/base-layout';
 import BcsLog from '@/components/bcs-log/index';
 import useLog from '@/views/dashboard/workload/detail/use-log';
 import { useSelectItemsNamespace } from '@/views/dashboard/common/use-namespace';
@@ -366,25 +425,26 @@ import { useSelectItemsNamespace } from '@/views/dashboard/common/use-namespace'
 import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from './node-overview-chart-opts';
+import { getNodeTemplateInfo } from '@/api/base';
 
 export default defineComponent({
-  components: { BaseLayout, StatusIcon, BcsLog, ECharts },
+  components: {  StatusIcon, BcsLog, ECharts },
   setup(props, ctx) {
     const { $route, $router, $bkInfo, $bkMessage, $store, $i18n } = ctx.root;
     const cpuLine = ref(nodeOverview.cpu);
     const memoryLine = ref(nodeOverview.memory);
     const networkLine = ref(nodeOverview.network);
     const storageLine = ref(nodeOverview.storage);
-    const cpuChartOptsK8S = ref(createChartOption());
-    const memChartOptsK8S = ref(createChartOption());
-    const networkChartOptsK8S = ref(createChartOption());
-    const diskioChartOptsK8S = ref(createChartOption());
+    const cpuChartOptsK8S = ref<any>(createChartOption());
+    const memChartOptsK8S = ref<any>(createChartOption());
+    const networkChartOptsK8S = ref<any>(createChartOption());
+    const diskioChartOptsK8S = ref<any>(createChartOption());
     const cpuToggleRangeStr = ref($i18n.t('1小时'));
     const memToggleRangeStr = ref($i18n.t('1小时'));
     const networkToggleRangeStr = ref($i18n.t('1小时'));
     const storageToggleRangeStr = ref($i18n.t('1小时'));
     const nodeInfo = ref<any>({});
-    const podsData = ref([]);
+    const podsData = ref<any[]>([]);
     const podsWebAnnotations = ref<any>({});
     const podsDataPagination = ref({
       current: 1,
@@ -403,16 +463,19 @@ export default defineComponent({
 
     const projectId = computed(() => $route.params.projectId);
     const clusterId = computed(() => $route.params.clusterId);
+    const isTkeCluster = computed(() => ($store.state as any).cluster.clusterList
+      ?.find(item => item.clusterID === clusterId.value)?.provider === 'tencentCloud');
     const projectCode = computed(() => $route.params.projectCode);
     const nodeId = computed(() => $route.params.nodeId);
     const nodeName = computed(() => $route.params.nodeName);
     const curPodsData = computed(() => {
       const { limit, current } = podsDataPagination.value;
-      let curData = [];
+      let curData: any[] = [];
       if (namespaceValue.value === 'all') {
         curData = podsData.value.filter(i => i.name.includes(searchValue.value));
       } else {
-        curData = podsData.value.filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value));
+        curData = podsData.value
+          .filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value));
       }
       podsDataPagination.value.count = curData.length;
       return curData.slice(limit * (current - 1), limit * current);
@@ -466,7 +529,7 @@ export default defineComponent({
              */
     const fetchDataK8S = async (idx, range) => {
       const params = {
-        startAt: null,
+        startAt: '',
         endAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         projectId: projectId.value,
         resId: nodeId.value,
@@ -562,7 +625,7 @@ export default defineComponent({
       const label = $i18n.t('CPU使用率');
       cpuLine1.value.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let ret = '';
 
             if (params[0].value[1] === '-') {
@@ -623,7 +686,7 @@ export default defineComponent({
       const label = $i18n.t('内存使用率');
       memoryLine1.value.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let ret = '';
 
             if (params[0].value[1] === '-') {
@@ -684,7 +747,7 @@ export default defineComponent({
       const label = $i18n.t('磁盘IO');
       storageLine1.value.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let ret = '';
 
             if (params[0].value[1] === '-') {
@@ -721,7 +784,7 @@ export default defineComponent({
       curNetworkChartOptsK8S.yAxis.splice(0, curNetworkChartOptsK8S.yAxis.length, ...[
         {
           axisLabel: {
-            formatter(value, index) {
+            formatter(value) {
               return `${formatBytes(value, 0)}`;
             },
           },
@@ -788,7 +851,7 @@ export default defineComponent({
       const labelTransmit = $i18n.t('出流量');
       networkLine1.value.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let ret = ''
                                 + `<div>${moment(parseInt(params[0].value[0], 10)).format('YYYY-MM-DD HH:mm:ss')}</div>`;
 
@@ -847,7 +910,7 @@ export default defineComponent({
       if (idx === 'net') {
         curRef.value = networkLine1.value;
       }
-      curRef.value && curRef.value.showLoading({
+      curRef.value?.showLoading({
         text: $i18n.t('正在加载中...'),
         color: '#30d878',
         maskColor: 'rgba(255, 255, 255, 0.8)',
@@ -975,34 +1038,50 @@ export default defineComponent({
     const handleNamespaceSelected = (val) => {
       namespaceValue.value = val;
     };
+    const nodeTemplateInfo = ref({
+      name: '',
+      extraArgs: { kubelet: '' },
+    });
+    const fetchNodeTemplateInfo = async () => {
+      const data = await getNodeTemplateInfo({
+        $innerIP: nodeId.value,
+      });
+      nodeTemplateInfo.value = data?.nodeTemplate || {
+        name: '',
+        extraArgs: { kubelet: '' },
+      };
+    };
 
     onMounted(async () => {
-      cpuLine.value.series[0].data                    = memoryLine.value.series[0].data = memoryLine.value.series[1].data                    = networkLine.value.series[0].data = networkLine.value.series[1].data                    = storageLine.value.series[0].data = storageLine.value.series[1].data                    = [0];
+      // eslint-disable-next-line max-len, no-multi-assign
+      cpuLine.value.series[0].data = memoryLine.value.series[0].data = memoryLine.value.series[1].data  = networkLine.value.series[0].data = networkLine.value.series[1].data = storageLine.value.series[0].data = storageLine.value.series[1].data = [0];
       nodeOverview.storage.series[0].data = [9, 0, 22, 40, 12, 31, 2, 12, 18, 27, 27];
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       cpuLine1.value && cpuLine1.value.showLoading({
         text: $i18n.t('正在加载中...'),
         color: '#30d878',
         maskColor: 'rgba(255, 255, 255, 0.8)',
       });
-
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       memoryLine1.value && memoryLine1.value.showLoading({
         text: $i18n.t('正在加载中...'),
         color: '#30d878',
         maskColor: 'rgba(255, 255, 255, 0.8)',
       });
-
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       storageLine1.value && storageLine1.value.showLoading({
         text: $i18n.t('正在加载中...'),
         color: '#30d878',
         maskColor: 'rgba(255, 255, 255, 0.8)',
       });
-
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       networkLine1.value && networkLine1.value.showLoading({
         text: $i18n.t('正在加载中...'),
         color: '#30d878',
         maskColor: 'rgba(255, 255, 255, 0.8)',
       });
 
+      fetchNodeTemplateInfo();
       fetchNodeInfo();
       fetchDataK8S('cpu_summary', '1');
       fetchDataK8S('mem', '1');
@@ -1015,6 +1094,8 @@ export default defineComponent({
     });
 
     return {
+      nodeTemplateInfo,
+      isTkeCluster,
       memoryLine,
       networkLine,
       storageLine,
@@ -1102,7 +1183,7 @@ export default defineComponent({
             flex: 1;
             height: 75px;
             border-right: 1px solid $borderWeightColor;
-            padding-left: 20px;
+            padding: 0 20px;
 
             &:last-child {
                 border-right: none;
@@ -1110,8 +1191,14 @@ export default defineComponent({
 
             .key-label {
                 font-weight: 700;
-                padding-top: 13px;
-                padding-bottom: 5px;
+                margin: 12px 0 5px 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: normal;
+                word-break: break-all;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
             }
 
             .value-label {
@@ -1228,16 +1315,6 @@ export default defineComponent({
     }
 
     @media screen and (max-width: $mediaWidth) {
-        .biz-cluster-node-overview-header {
-            .header-item {
-                div {
-                    &:last-child {
-                        width: 100px;
-                    }
-                }
-            }
-        }
-
         .biz-cluster-node-overview-table {
             border-bottom: none;
 

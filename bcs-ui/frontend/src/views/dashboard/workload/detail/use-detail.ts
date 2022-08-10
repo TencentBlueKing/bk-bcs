@@ -14,7 +14,7 @@ export interface IDetailOptions {
   namespace: string;
   type: string;
   defaultActivePanel: string;
-  crd: string;
+  crd?: string;
 }
 
 export default function useDetail(ctx: SetupContext, options: IDetailOptions) {

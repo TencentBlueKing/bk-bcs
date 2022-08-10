@@ -39,3 +39,4 @@ export const taskStatusColorMap = {
   timeout: 'red',
   notstarted: 'blue',
 };
+export const NODE_TEMPLATE_ID = 'node-template-id';

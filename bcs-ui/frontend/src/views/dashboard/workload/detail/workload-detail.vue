@@ -1,5 +1,5 @@
 <template>
-  <div class="workload-detail" v-bkloading="{ isLoading }">
+  <div class="workload-detail bcs-content-wrapper" v-bkloading="{ isLoading }">
     <div class="workload-detail-info">
       <div class="workload-info-basic">
         <div class="basic-left">
@@ -30,8 +30,10 @@
             <bk-button
               theme="danger"
               v-authority="{
-                clickable: webAnnotations.perms && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.clickable : true,
-                content: webAnnotations.perms && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.tip : '',
+                clickable: webAnnotations.perms
+                  && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.clickable : true,
+                content: webAnnotations.perms
+                  && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.tip : '',
                 disablePerms: true
               }"
               @click="handleDeleteResource">{{$t('删除')}}</bk-button>
@@ -45,7 +47,8 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('镜像') }}</span>
-          <span class="value" v-bk-overflow-tips="getImagesTips(manifestExt.images)">{{ manifestExt.images && manifestExt.images.join(', ') }}</span>
+          <span class="value" v-bk-overflow-tips="getImagesTips(manifestExt.images)">
+            {{ manifestExt.images && manifestExt.images.join(', ') }}</span>
         </div>
         <div class="info-item">
           <span class="label">UID</span>

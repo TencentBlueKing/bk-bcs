@@ -122,8 +122,10 @@ export default defineComponent({
     // 数组去重
     const removeDuplicates = (data: (IMenuItem | ISpecialMenuItem)[]) => {
       let slow = 0;
+      // eslint-disable-next-line @typescript-eslint/prefer-for-of
       for (let fast = 0; fast < data.length; fast++) {
         if (data[slow].id !== data[fast].id) {
+          // eslint-disable-next-line no-plusplus
           data[++slow] = data[fast];
         }
       }
@@ -273,5 +275,12 @@ export default defineComponent({
         right: 4px;
         z-index: 1;
         padding: 2px;
+    }
+    .side-nav {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 </style>

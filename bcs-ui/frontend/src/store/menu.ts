@@ -434,6 +434,13 @@ const menu: IMenu = {
       icon: 'bcs-icon-monitors',
       id: 'MONITOR',
     },
+    { type: 'line' },
+    {
+      name: window.i18n.t('节点模板'),
+      routeName: 'nodeTemplate',
+      icon: 'bcs-icon-mobanpeizhi',
+      id: 'NODETEMPLATE',
+    },
   ],
 };
 export default menu;

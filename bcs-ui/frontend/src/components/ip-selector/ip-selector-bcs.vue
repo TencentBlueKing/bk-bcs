@@ -224,6 +224,10 @@ export default defineComponent({
         ip_list: ipList,
       };
       const data = await fetchBizHosts(bizHostsParams).catch(() => ({ results: [] }));
+      const nodeAvailableData = await nodeAvailable({
+        innerIPs: data.results.map(item => item.bk_host_innerip),
+      });
+      Object.assign(nodeAvailableMap, nodeAvailableData);
       return {
         total: data.count || 0,
         data: data.results,
@@ -238,7 +242,7 @@ export default defineComponent({
     };
     // 判断两个IP节点是否相同
     const identityIp = (current, origin) => current.bk_cloud_id === origin.bk_cloud_id
-     && current.bk_host_innerip === origin.bk_host_innerip;
+      && current.bk_host_innerip === origin.bk_host_innerip;
     // 重新获取表格勾选状态
     const resetTableCheckedStatus = () => {
       selectorRef.value?.handleGetDefaultSelections();
@@ -358,7 +362,8 @@ export default defineComponent({
     };
     // 统一抛出change事件
     const handleChange = () => {
-      const group = state.previewData.find(data => data.id === 'nodes');
+      const group = state.previewData.find(data => data.id === 'nodes') || {};
+      group.data = (group.data || []).filter(row => !nodeAvailableMap[row.bk_host_innerip]?.isExist);
       ctx.emit('change', group?.data || []);
     };
     // 获取IP节点数据

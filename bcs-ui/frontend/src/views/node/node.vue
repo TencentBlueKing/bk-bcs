@@ -1,5 +1,6 @@
+<!-- eslint-disable max-len -->
 <template>
-  <div class="cluster-node">
+  <div class="cluster-node bcs-content-wrapper">
     <bcs-alert
       type="info"
       class="cluster-node-tip"
@@ -80,7 +81,9 @@
                 content: $t('kubeconfig导入集群，节点管理功能不可用')
               }"
               @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
-            <div style="height:32px;" v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
+            <div
+              style="height:32px;"
+              v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
               <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('pod迁移')}}</li>
             </div>
             <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
@@ -384,10 +387,15 @@
                 <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
                 <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
               </template>
-              <bk-button text @click="handleStopNode(row)" v-if="row.status === 'RUNNING'">
+              <bk-button
+                class="mr10"
+                text
+                @click="handleStopNode(row)"
+                v-if="row.status === 'RUNNING'">
                 {{ $t('停止调度') }}
               </bk-button>
               <bk-button
+                class="mr10"
                 text
                 v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
                 @click="handleShowLog(row)"
@@ -496,7 +504,19 @@
       <div slot="content">
         <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
           <bk-table :data="logSideDialogConf.taskData">
-            <bk-table-column :label="$t('步骤')" prop="taskName" width="160"></bk-table-column>
+            <bk-table-column :label="$t('步骤')" prop="taskName" width="160">
+              <template #default="{ row }">
+                <span class="task-name">
+                  <span class="bcs-ellipsis">
+                    {{row.taskName}}
+                  </span>
+                  <i
+                    class="bcs-icon bcs-icon-fenxiang"
+                    v-if="row.params && row.params.taskUrl"
+                    @click="handleGotoSops(row)"></i>
+                </span>
+              </template>
+            </bk-table-column>
             <bk-table-column :label="$t('状态')" prop="status" width="120">
               <template #default="{ row }">
                 <div class="log-wrapper-status" v-if="row.status === 'RUNNING'">
@@ -558,7 +578,7 @@ import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import useDefaultClusterId from './use-default-clusterId';
 
 export default defineComponent({
-  name: 'Node',
+  name: 'NodeList',
   components: {
     StatusIcon,
     LoadingIcon,
@@ -717,13 +737,15 @@ export default defineComponent({
       addNode,
       getNodeOverview,
       batchToggleNodeDispatch,
+      retryTask,
     } = useNode();
 
     const tableLoading = ref(false);
     // 初始化当前集群ID
     const { defaultClusterId, clusterList, isSingleCluster } = useDefaultClusterId();
     const localClusterId = ref(props.clusterId || defaultClusterId.value || '');
-    const curSelectedCluster = computed(() => clusterList.value.find(item => item.clusterID === localClusterId.value) || {});
+    const curSelectedCluster = computed(() => clusterList.value
+      .find(item => item.clusterID === localClusterId.value) || {});
     // 导入集群
     const isImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer');
     // 全量表格数据
@@ -843,7 +865,7 @@ export default defineComponent({
         theme: 'success',
         message: $i18n.t('成功复制 {num} 个IP', { num: ipData.length }),
       });
-      copyDropdownRef.value && copyDropdownRef.value.hide();
+      copyDropdownRef.value?.hide();
     };
 
     // 设置污点
@@ -937,6 +959,7 @@ export default defineComponent({
       if (setLabelConf.value.rows.length > 1) {
         const oldLabels = setLabelConf.value.data;
         oldLabels.forEach((item) => {
+          // eslint-disable-next-line no-prototype-builtins
           if (!newLabels.hasOwnProperty(item.key)) {
             // 删除去除的key
             delete originLabels[item.key];
@@ -983,7 +1006,7 @@ export default defineComponent({
         subTitle,
         title,
         defaultInfo: true,
-        confirmFn: async (vm) => {
+        confirmFn: async () => {
           await callback();
         },
       });
@@ -1089,26 +1112,13 @@ export default defineComponent({
       }
     };
     // 节点重试
-    const handleRetry = (row) => {
-      if (row.status === 'REMOVE-FAILURE') {
-        // 删除重试
-        bkComfirmInfo({
-          title: $i18n.t('确认删除节点', { ip: row.inner_ip }),
-          subTitle: row.inner_ip,
-          callback: async () => {
-            await delNode(row.cluster_id, [row.inner_ip]);
-          },
-        });
-      } else if (row.status === 'ADD-FAILURE') {
-        // 添加重试
-        bkComfirmInfo({
-          title: $i18n.t('确认添加节点', { ip: row.inner_ip }),
-          subTitle: row.inner_ip,
-          callback: async () => {
-            await addClusterNode(row.cluster_id, [row.inner_ip]);
-          },
-        });
-      }
+    const handleRetry = async (row) => {
+      tableLoading.value = true;
+      await retryTask({
+        clusterId: row.cluster_id,
+        nodeIP: row.inner_ip,
+      });
+      tableLoading.value = false;
     };
     // 批量允许调度
     const handleBatchEnableNodes = () => {
@@ -1213,7 +1223,12 @@ export default defineComponent({
     // 添加节点
     const showIpSelector = ref(false);
     const handleAddNode = () => {
-      showIpSelector.value = true;
+      $router.push({
+        name: 'addClusterNode',
+        params: {
+          clusterId: props.clusterId,
+        },
+      });
     };
     const chooseServer = (data) => {
       if (!data.length) return;
@@ -1329,6 +1344,7 @@ export default defineComponent({
       tableData.value = await getNodeList(localClusterId.value);
     }, 5000);
 
+    // eslint-disable-next-line max-len
     const nodesCount = computed(() => tableData.value.length + Object.keys(curSelectedCluster.value?.master || {}).length);
     const getCidrIpNum = (cidr) => {
       const mask = Number(cidr.split('/')[1] || 0);
@@ -1339,7 +1355,12 @@ export default defineComponent({
     };
     // 当前CIDR可添加节点数
     const realRemainNodesCount = computed(() => {
-      const { maxNodePodNum, maxServiceNum, clusterIPv4CIDR, multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {};
+      const {
+        maxNodePodNum,
+        maxServiceNum,
+        clusterIPv4CIDR,
+        multiClusterCIDR = [],
+      } = curSelectedCluster.value?.networkSettings || {};
       const totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce((pre, cidr) => {
         pre += getCidrIpNum(cidr);
         return pre;
@@ -1348,7 +1369,13 @@ export default defineComponent({
     });
     // 扩容后最大节点数量
     const maxRemainNodesCount = computed(() => {
-      const { cidrStep, maxNodePodNum, maxServiceNum, clusterIPv4CIDR, multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {};
+      const {
+        cidrStep,
+        maxNodePodNum,
+        maxServiceNum,
+        clusterIPv4CIDR,
+        multiClusterCIDR = [],
+      } = curSelectedCluster.value?.networkSettings || {};
       let totalCidrStep = 0;
       if (multiClusterCIDR.length < 3) {
         totalCidrStep = (5 - multiClusterCIDR.length) * cidrStep + multiClusterCIDR.reduce((pre, cidr) => {
@@ -1363,6 +1390,10 @@ export default defineComponent({
       }
       return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum);
     });
+    // 跳转标准运维
+    const handleGotoSops = (row) => {
+      window.open(row.params.taskUrl);
+    };
 
     onMounted(async () => {
       await handleGetNodeData();
@@ -1445,6 +1476,7 @@ export default defineComponent({
       webAnnotations,
       curProject,
       isImportCluster,
+      handleGotoSops,
     };
   },
 });
@@ -1474,6 +1506,7 @@ export default defineComponent({
         }
     }
     .right {
+        background-color: #fff;
         display: flex;
         .search-select {
             width: 400px;
@@ -1592,6 +1625,15 @@ export default defineComponent({
     width: 100%;
     /deep/ .bk-tooltip-ref {
         display: block;
+    }
+}
+.task-name {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    i {
+        color: #3a84ff;
+        cursor: pointer;
     }
 }
 </style>

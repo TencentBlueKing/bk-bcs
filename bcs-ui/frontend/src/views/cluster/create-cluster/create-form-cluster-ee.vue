@@ -1,5 +1,5 @@
 <template>
-  <section class="create-form-cluster">
+  <section class="create-form-cluster bcs-content-wrapper">
     <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
       <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
         <bk-input class="w640" v-model="basicInfo.clusterName"></bk-input>
@@ -122,7 +122,8 @@ export default defineComponent({
       ipList: [],
     });
     const templateList = ref<any[]>([]);
-    const availableTemplateList = computed(() => templateList.value.filter(item => !item?.confInfo?.disableCreateCluster));
+    const availableTemplateList = computed(() => templateList.value
+      .filter(item => !item?.confInfo?.disableCreateCluster));
     const versionList = computed(() => {
       const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider);
       return cloud?.clusterManagement.availableVersion || [];

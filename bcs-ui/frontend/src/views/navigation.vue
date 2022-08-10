@@ -3,7 +3,9 @@
     <bcs-navigation navigation-type="top-bottom" :need-menu="false">
       <template slot="side-header">
         <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
-        <span class="title-desc bcs-title-desc" @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
+        <span
+          class="title-desc bcs-title-desc"
+          @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
       </template>
       <template #header>
         <div class="bcs-navigation-header">
@@ -18,20 +20,40 @@
                 :key="option.project_code"
                 :id="option.project_code"
                 :name="option.project_name">
+                <div
+                  class="project-item" v-bk-tooltips="{
+                    content: `${$t('项目名称')}: ${option.project_name}<br/>${$t('业务ID')}: ${option.cc_app_id}`,
+                    placement: 'right',
+                    boundary: 'window'
+                  }">
+                  {{option.project_name}}
+                  <span class="biz-id">{{`(${option.cc_app_id})`}}</span>
+                </div>
               </bcs-option>
               <template #extension>
-                <div class="extension-item" @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
-                <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
+                <div
+                  class="extension-item"
+                  @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
+                <div
+                  class="extension-item"
+                  @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
               </template>
             </bcs-select>
-            <bcs-popover ref="clusterManagePopover" theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+            <bcs-popover
+              ref="clusterManagePopover"
+              theme="navigation-cluster-manage"
+              :arrow="false"
+              placement="bottom-start"
+              :tippy-options="{ 'hideOnClick': false }">
               <div class="cluster-manage-angle">
                 <a>{{ $t('集群管理') }}</a>
                 <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
               </div>
               <template slot="content">
                 <ul class="cluster-manage-angle-content">
-                  <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
+                  <li
+                    :class="['angle-item', { active: !isSharedCluster }]"
+                    @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
                   <li
                     :class="[
                       'angle-item',
@@ -48,22 +70,6 @@
             </bcs-popover>
           </div>
           <div class="nav-right">
-            <!-- <bcs-popover theme="light navigation-message" class="mr10" offset="0, 20" placement="bottom" :arrow="false">
-                            <div class="flag-box">
-                                <i :class="['bcs-icon', curLang.icon]"></i>
-                            </div>
-                            <template slot="content">
-                                <ul class="bcs-navigation-admin">
-                                    <li v-for="(item, index) in langs" :key="index"
-                                        :class="['nav-item', { active: activeLangId === item.id }]"
-                                        @click="handleChangeLang(item)"
-                                    >
-                                        <i :class="['bcs-icon mr5', item.icon]"></i>
-                                        {{item.name}}
-                                    </li>
-                                </ul>
-                            </template>
-                        </bcs-popover> -->
             <bcs-popover theme="light navigation-message" class="mr5" offset="0, 20" placement="bottom" :arrow="false">
               <div class="flag-box">
                 <i id="siteHelp" class="bcs-icon bcs-icon-help-document-fill"></i>
@@ -76,7 +82,11 @@
                 </ul>
               </template>
             </bcs-popover>
-            <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 20" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
+            <bcs-popover
+              theme="light navigation-message"
+              :arrow="false" offset="0, 20"
+              placement="bottom-start"
+              :tippy-options="{ 'hideOnClick': false }">
               <div class="header-user">
                 {{user.username}}
                 <i class="bk-icon icon-down-shape"></i>
@@ -117,7 +127,7 @@ import BcsMd from '@/components/bcs-md/index.vue';
 import featureMd from '../../static/features.md';
 
 export default {
-  name: 'Navigation',
+  name: 'NewNavigation',
   components: {
     systemLog,
     BcsMd,
@@ -213,7 +223,7 @@ export default {
       window.open(window.BK_IAM_APP_URL);
     },
     handleGotoProjectManage() {
-      this.$refs.projectSelectRef && this.$refs.projectSelectRef.close();
+      this.$refs.projectSelectRef?.close();
       if (window.REGION === 'ieod') {
         window.open(`${window.DEVOPS_HOST}/console/pm`);
       } else {
@@ -224,7 +234,7 @@ export default {
       }
     },
     handleCreateProject() {
-      this.$refs.projectSelectRef && this.$refs.projectSelectRef.close();
+      this.$refs.projectSelectRef?.close();
       this.$emit('create-project');
     },
 
@@ -289,14 +299,18 @@ export default {
 </script>
 <style lang="postcss" scoped>
 /deep/ .bk-navigation-wrapper .container-content {
-    padding: 0;
-    overflow-x: hidden;
+  max-height: calc(100vh - 52px);
+  padding: 0;
+  overflow: hidden;
 }
 /deep/ .bk-select .bk-tooltip.bk-select-dropdown {
     background: transparent;
 }
 /deep/ .bcs-title-desc {
     cursor: pointer;
+}
+.project-item .biz-id {
+    color: #C4C6CC;
 }
 .all-icon {
     width: 28px;

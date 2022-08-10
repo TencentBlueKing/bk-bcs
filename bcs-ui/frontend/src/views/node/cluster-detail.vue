@@ -6,33 +6,35 @@
       :desc="`(${curCluster.clusterID})`"
       :hide-back="isSingleCluster"
     ></ContentHeader>
-    <div class="cluster-detail">
-      <div class="cluster-detail-tab">
-        <div
-          v-for="item in tabItems"
-          :key="item.com"
-          :class="['item', { active: activeCom === item.com }]"
-          @click="handleChangeActive(item)"
-        >
-          <span class="icon"><i :class="item.icon"></i></span>
-          {{item.title}}
+    <div class="biz-content-wrapper">
+      <div class="cluster-detail">
+        <div class="cluster-detail-tab">
+          <div
+            v-for="item in tabItems"
+            :key="item.com"
+            :class="['item', { active: activeCom === item.com }]"
+            @click="handleChangeActive(item)"
+          >
+            <span class="icon"><i :class="item.icon"></i></span>
+            {{item.title}}
+          </div>
         </div>
-      </div>
-      <div class="cluster-detail-content">
-        <component
-          :is="activeCom"
-          :node-menu="false"
-          :cluster-id="clusterId"
-          :hide-cluster-select="true"
-          :selected-fields="[
-            'container_count',
-            'pod_count',
-            'cpu_usage',
-            'memory_usage',
-            'disk_usage',
-            'diskio_usage'
-          ]"
-        ></component>
+        <div class="cluster-detail-content">
+          <component
+            :is="activeCom"
+            :node-menu="false"
+            :cluster-id="clusterId"
+            :hide-cluster-select="true"
+            :selected-fields="[
+              'container_count',
+              'pod_count',
+              'cpu_usage',
+              'memory_usage',
+              'disk_usage',
+              'diskio_usage'
+            ]"
+          ></component>
+        </div>
       </div>
     </div>
   </div>
@@ -110,7 +112,6 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .cluster-detail {
-    margin: 20px;
     border: 1px solid #dfe0e5;
     &-tab {
         display: flex;

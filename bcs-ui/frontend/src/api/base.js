@@ -114,7 +114,7 @@ export const createCloudAccounts = request('post', `${prefix}/clustermanager/v1/
 export const deleteCloudAccounts = request('delete', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts/$accountID`);
 export const cloudRegionByAccount = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions`);
 export const cloudClusterList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/clusters`);
-
+export const taskRetry = request('put', `${prefix}/clustermanager/v1/task/$taskId/retry`);
 // token
 export const createToken = request('post', `${prefix}/usermanager/v1/tokens`);
 export const updateToken = request('put', `${prefix}/usermanager/v1/tokens/$token`);
@@ -129,6 +129,19 @@ export const clusterToolsInstall = request('post', '/api/cluster_tools/projects/
 export const clusterToolsUpgrade = request('put', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/');
 export const clusterToolsUninstall = request('delete', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/');
 export const clusterToolsInstalledDetail = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/installed_detail/');
+
+// nodetemplate
+export const nodeTemplateList = request('get', `${prefix}/clustermanager/v1/projects/$projectId/nodetemplates`);
+export const createNodeTemplate = request('post', `${prefix}/clustermanager/v1/projects/$projectId/nodetemplates`);
+export const deleteNodeTemplate = request('delete', `${prefix}/clustermanager/v1/projects/$projectId/nodetemplates/$nodeTemplateId`);
+export const updateNodeTemplate = request('put', `${prefix}/clustermanager/v1/projects/$projectId/nodetemplates/$nodeTemplateId`);
+export const nodeTemplateDetail = request('get', `${prefix}/clustermanager/v1/projects/$projectId/nodetemplates/$nodeTemplateId`);
+export const bkSopsList = request('get', `${prefix}/clustermanager/v1/bksops/business/$businessID/templates`);
+export const bkSopsParamsList = request('get', `${prefix}/clustermanager/v1/bksops/business/$businessID/templates/$templateID`);
+export const cloudModulesParamsList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/versions/$version/modules/$moduleID`);
+export const bkSopsDebug = request('post', `${prefix}/clustermanager/v1/bksops/debug`);
+export const bkSopsTemplatevalues = request('get', `${prefix}/clustermanager/v1/bksops/templatevalues`);
+export const getNodeTemplateInfo = request('get', `${prefix}/clustermanager/v1/node/$innerIP/info`);
 
 export default {
   dashbordList,

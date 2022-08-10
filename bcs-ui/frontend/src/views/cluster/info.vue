@@ -1,8 +1,10 @@
 <template>
-  <div class="biz-content">
-    <div class="biz-content-wrapper biz-cluster-info-wrapper">
+  <div>
+    <div class="biz-cluster-info-wrapper">
       <div class="biz-cluster-info-inner">
-        <div class="biz-cluster-tab-content" v-bkloading="{ isLoading: containerLoading, opacity: 1 }" style="min-height: 600px;">
+        <div
+          class="biz-cluster-tab-content"
+          v-bkloading="{ isLoading: containerLoading, opacity: 1 }" style="min-height: 600px;">
           <div class="biz-cluster-info-form-wrapper">
             <div class="label">
               {{$t('基本信息')}}
@@ -76,7 +78,8 @@
                 <div class="left">
                   <p>{{$t('集群版本')}}</p>
                 </div>
-                <div class="right">{{clusterInfo.clusterBasicSettings ? clusterInfo.clusterBasicSettings.version : '--'}}</div>
+                <div class="right">
+                  {{clusterInfo.clusterBasicSettings ? clusterInfo.clusterBasicSettings.version : '--'}}</div>
               </div>
               <div class="row">
                 <div class="left">
@@ -313,7 +316,11 @@
                   <div class="biz-key-value-item" v-for="variable in variableList" :key="variable.id">
                     <bk-input style="width: 270px;" disabled :value="`${variable.name}(${variable.key})`"></bk-input>
                     <span class="equals-sign">=</span>
-                    <bk-input class="right" style="width: 270px; margin-left: 35px;" :placeholder="$t('值')" v-model="variable.value"></bk-input>
+                    <bk-input
+                      class="right"
+                      style="width: 270px; margin-left: 35px;"
+                      :placeholder="$t('值')"
+                      v-model="variable.value"></bk-input>
                   </div>
                 </div>
               </div>
@@ -337,6 +344,7 @@
 // import moment from 'moment'
 import StatusIcon from '@/views/dashboard/common/status-icon.tsx';
 export default {
+  name: 'NodeInfo',
   components: {
     StatusIcon,
   },

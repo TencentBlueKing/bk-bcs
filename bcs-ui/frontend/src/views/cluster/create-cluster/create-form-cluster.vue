@@ -1,104 +1,103 @@
 <template>
-  <section class="create-form-cluster">
-    <FormGroup :title="$t('基本信息')">
-      <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
-        <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
-          <bk-input v-model="basicInfo.clusterName"></bk-input>
-        </bk-form-item>
-        <bk-form-item :label="$t('集群环境')" required>
-          <bk-radio-group v-model="basicInfo.environment">
-            <bk-radio value="stag" v-if="runEnv === 'dev'">
-              UAT
-            </bk-radio>
-            <bk-radio value="debug">
-              {{ $t('测试环境') }}
-            </bk-radio>
-            <bk-radio value="prod">
-              {{ $t('正式环境') }}
-            </bk-radio>
-          </bk-radio-group>
-        </bk-form-item>
-        <bk-form-item :label="$t('模板名称')" property="provider" error-display-type="normal" required>
-          <div class="template-name">
-            <bcs-select v-model="basicInfo.provider" :clearable="false">
-              <bcs-option
-                v-for="item in templateList"
-                :key="item.cloudID"
-                :id="item.cloudID"
-                :name="item.name">
-              </bcs-option>
-            </bcs-select>
+  <div class="bcs-content-wrapper">
+    <section class="create-form-cluster">
+      <FormGroup :title="$t('基本信息')">
+        <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
+          <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
+            <bk-input v-model="basicInfo.clusterName"></bk-input>
+          </bk-form-item>
+          <bk-form-item :label="$t('集群环境')" required>
+            <bk-radio-group v-model="basicInfo.environment">
+              <bk-radio value="stag" v-if="runEnv === 'dev'">
+                UAT
+              </bk-radio>
+              <bk-radio value="debug">
+                {{ $t('测试环境') }}
+              </bk-radio>
+              <bk-radio value="prod">
+                {{ $t('正式环境') }}
+              </bk-radio>
+            </bk-radio-group>
+          </bk-form-item>
+          <bk-form-item :label="$t('模板名称')" property="provider" error-display-type="normal" required>
+            <div class="template-name">
+              <bcs-select v-model="basicInfo.provider" :clearable="false">
+                <bcs-option
+                  v-for="item in templateList"
+                  :key="item.cloudID"
+                  :id="item.cloudID"
+                  :name="item.name">
+                </bcs-option>
+              </bcs-select>
             <!-- <bk-button text class="ml10">{{ $t('新增集群模板') }}</bk-button> -->
-          </div>
-        </bk-form-item>
-        <bk-form-item :label="$t('描述')">
-          <bk-input v-model="basicInfo.description" type="textarea"></bk-input>
-        </bk-form-item>
-      </bk-form>
-    </FormGroup>
-    <FormGroup :title="$t('集群选项')" class="mt15">
-      <!-- <template #title>
-                <div class="bk-button-group">
-                    <bk-button @click.native.stop="handleChangeMode('form')" :class="createMode === 'form' ? 'is-selected' : ''" size="small">{{ $t('表单结构') }}</bk-button>
-                    <bk-button @click.native.stop="handleChangeMode('yaml')" :class="createMode === 'yaml' ? 'is-selected' : ''" size="small">{{ $t('Yaml格式') }}</bk-button>
-                </div>
-            </template> -->
-      <template #default>
-        <FormMode
-          v-if="createMode === 'form'"
-          :version-list="versionList"
-          :cloud-id="basicInfo.provider"
-          :cidr-step-list="cidrStepList"
-          :environment="basicInfo.environment"
-          :label-width="labelWidth"
-          ref="formMode"
-        >
-        </FormMode>
-        <YamlMode v-else></YamlMode>
-      </template>
-    </FormGroup>
-    <FormGroup :title="$t('选择Master')" :desc="$t('仅支持数量为3,5和7个')" class="mt15 mb50">
-      <template #title>
-        <bk-button text v-if="ipList.length" @click.native.stop="handleOpenSelector">
-          <i class="bcs-icon bcs-icon-plus" style="position: relative;top: -1px;"></i>
-          {{ $t('选择服务器') }}
-        </bk-button>
-      </template>
-      <div :class="['choose-server-btn', { 'error-btn': ipErrorTips }]" @click.stop="handleOpenSelector" v-if="!ipList.length">
-        <i class="bcs-icon bcs-icon-plus mr5" style="position: relative;top: 1px;"></i>
-        <span>{{ $t('选择服务器') }}</span>
+            </div>
+          </bk-form-item>
+          <bk-form-item :label="$t('描述')">
+            <bk-input v-model="basicInfo.description" type="textarea"></bk-input>
+          </bk-form-item>
+        </bk-form>
+      </FormGroup>
+      <FormGroup :title="$t('集群选项')" class="mt15">
+        <template #default>
+          <FormMode
+            v-if="createMode === 'form'"
+            :version-list="versionList"
+            :cloud-id="basicInfo.provider"
+            :cidr-step-list="cidrStepList"
+            :environment="basicInfo.environment"
+            :label-width="labelWidth"
+            ref="formMode"
+          >
+          </FormMode>
+          <YamlMode v-else></YamlMode>
+        </template>
+      </FormGroup>
+      <FormGroup :title="$t('选择Master')" :desc="$t('仅支持数量为3,5和7个')" class="mt15 mb50">
+        <template #title>
+          <bk-button text v-if="ipList.length" @click.native.stop="handleOpenSelector">
+            <i class="bcs-icon bcs-icon-plus" style="position: relative;top: -1px;"></i>
+            {{ $t('选择服务器') }}
+          </bk-button>
+        </template>
+        <div
+          :class="['choose-server-btn', { 'error-btn': ipErrorTips }]"
+          @click.stop="handleOpenSelector" v-if="!ipList.length">
+          <i class="bcs-icon bcs-icon-plus mr5" style="position: relative;top: 1px;"></i>
+          <span>{{ $t('选择服务器') }}</span>
+        </div>
+        <div class="choose-server-list" v-else>
+          <bk-table :data="ipList">
+            <bk-table-column type="index" :label="$t('序列')" width="60"></bk-table-column>
+            <bk-table-column :label="$t('内网IP')" prop="bk_host_innerip"></bk-table-column>
+            <bk-table-column :label="$t('机房')" prop="idc_name"></bk-table-column>
+            <bk-table-column :label="$t('机型')" prop="svr_device_class"></bk-table-column>
+            <bk-table-column :label="$t('操作')" width="100">
+              <template #default="{ row }">
+                <bk-button text @click="handleDeleteIp(row)">{{ $t('移除') }}</bk-button>
+              </template>
+            </bk-table-column>
+          </bk-table>
+        </div>
+        <p class="error-tips" v-if="ipErrorTips">{{ ipErrorTips }}</p>
+      </FormGroup>
+      <div class="footer">
+        <bk-button class="btn" theme="primary" :loading="creating" @click="showConfirmDialog">{{$t('创建')}}</bk-button>
+        <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
       </div>
-      <div class="choose-server-list" v-else>
-        <bk-table :data="ipList">
-          <bk-table-column type="index" :label="$t('序列')" width="60"></bk-table-column>
-          <bk-table-column :label="$t('内网IP')" prop="bk_host_innerip"></bk-table-column>
-          <bk-table-column :label="$t('机房')" prop="idc_name"></bk-table-column>
-          <bk-table-column :label="$t('机型')" prop="svr_device_class"></bk-table-column>
-          <bk-table-column :label="$t('操作')" width="100">
-            <template #default="{ row }">
-              <bk-button text @click="handleDeleteIp(row)">{{ $t('移除') }}</bk-button>
-            </template>
-          </bk-table-column>
-        </bk-table>
-      </div>
-      <p class="error-tips" v-if="ipErrorTips">{{ ipErrorTips }}</p>
-    </FormGroup>
-    <div class="footer">
-      <bk-button class="btn" theme="primary" :loading="creating" @click="showConfirmDialog">{{$t('创建')}}</bk-button>
-      <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
-    </div>
-    <IpSelector v-model="showIpSelector" @confirm="handleChooseServer"></IpSelector>
-    <tipDialog
-      ref="confirmDialog"
-      icon="bcs-icon bcs-icon-exclamation-triangle"
-      :title="$t('确定创建集群')"
-      :sub-title="$t('请确认以下配置:')"
-      :check-list="checkList"
-      :confirm-btn-text="$t('确定，创建集群')"
-      :cancel-btn-text="$t('我再想想')"
-      :confirm-callback="handleCreateCluster">
-    </tipDialog>
-  </section>
+      <IpSelector v-model="showIpSelector" @confirm="handleChooseServer"></IpSelector>
+      <tipDialog
+        ref="confirmDialog"
+        icon="bcs-icon bcs-icon-exclamation-triangle"
+        :title="$t('确定创建集群')"
+        :sub-title="$t('请确认以下配置:')"
+        :check-list="checkList"
+        :confirm-btn-text="$t('确定，创建集群')"
+        :cancel-btn-text="$t('我再想想')"
+        :confirm-callback="handleCreateCluster">
+      </tipDialog>
+    </section>
+  </div>
+
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';

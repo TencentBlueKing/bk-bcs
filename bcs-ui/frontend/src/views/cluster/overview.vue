@@ -1,6 +1,6 @@
 <template>
-  <div class="biz-content">
-    <div class="biz-content-wrapper biz-cluster-overview" v-bkloading="{ isLoading: showLoading }">
+  <div>
+    <div class="biz-cluster-overview" v-bkloading="{ isLoading: showLoading }">
       <app-exception
         v-if="exceptionCode && !showLoading"
         :type="exceptionCode.code"
@@ -157,6 +157,7 @@ import { catchErrorHandler, formatBytes } from '@/common/util';
 import ClusterOverviewChart from './cluster-overview-chart';
 
 export default {
+  name: 'NodeOverview',
   components: {
     Ring,
     ClusterOverviewChart,

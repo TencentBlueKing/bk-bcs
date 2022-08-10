@@ -47,6 +47,17 @@ import {
   deleteCloudAccounts,
   cloudRegionByAccount,
   cloudClusterList,
+  nodeTemplateList,
+  createNodeTemplate,
+  deleteNodeTemplate,
+  updateNodeTemplate,
+  nodeTemplateDetail,
+  bkSopsList,
+  bkSopsParamsList,
+  cloudModulesParamsList,
+  bkSopsTemplatevalues,
+  bkSopsDebug,
+  taskRetry,
 } from '@/api/base';
 
 export default {
@@ -164,6 +175,53 @@ export default {
     async cloudClusterList(ctx, params) {
       const data = await cloudClusterList(params).catch(() => []);
       return data;
+    },
+    async nodeTemplateList(ctx, params) {
+      const data = await nodeTemplateList(params).catch(() => []);
+      return data;
+    },
+    async createNodeTemplate(ctx, params) {
+      const result = await createNodeTemplate(params).then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    async deleteNodeTemplate(ctx, params) {
+      const result = await deleteNodeTemplate(params).then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    async updateNodeTemplate(ctx, params) {
+      const result = await updateNodeTemplate(params).then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    async nodeTemplateDetail(ctx, params) {
+      const data = await nodeTemplateDetail(params).catch(() => ({}));
+      return data;
+    },
+    async bkSopsList(ctx, params) {
+      const data = await bkSopsList(params).catch(() => []);
+      return data;
+    },
+    async bkSopsParamsList(ctx, params) {
+      const data = await bkSopsParamsList(params).catch(() => ({ templateUrl: '', values: [] }));
+      return data;
+    },
+    async cloudModulesParamsList(ctx, params) {
+      const data = await cloudModulesParamsList(params).catch(() => []);
+      return data;
+    },
+    async bkSopsTemplatevalues(ctx, params) {
+      const data = await bkSopsTemplatevalues(params).catch(() => []);
+      return data;
+    },
+    async bkSopsDebug(ctx, params) {
+      const data = await bkSopsDebug(params).catch(() => ({}));
+      return data;
+    },
+    async taskRetry(ctx, params) {
+      const result = await taskRetry(params).catch(() => false);
+      return result;
     },
   },
 };

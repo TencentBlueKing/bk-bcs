@@ -1,6 +1,11 @@
 <template>
-  <section class="create-import-cluster">
-    <bcs-form :label-width="labelWidth" :model="importClusterInfo" :rules="formRules" class="import-form" ref="importFormRef">
+  <section class="create-import-cluster bcs-content-wrapper">
+    <bcs-form
+      :label-width="labelWidth"
+      :model="importClusterInfo"
+      :rules="formRules"
+      class="import-form"
+      ref="importFormRef">
       <bcs-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
         <bk-input v-model="importClusterInfo.clusterName"></bk-input>
       </bcs-form-item>
@@ -142,7 +147,6 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
-import FormGroup from './form-group.vue';
 import Ace from '@/components/ace-editor';
 import useGoHome from '@/common/use-gohome';
 import useConfig from '@/common/use-config';
@@ -151,7 +155,6 @@ import useFormLabel from '@/common/use-form-label';
 export default defineComponent({
   name: 'CreateImportCluster',
   components: {
-    FormGroup,
     Ace,
   },
   setup(props, ctx) {
@@ -238,7 +241,8 @@ export default defineComponent({
 
     // 云服务商
     const templateList = ref<any[]>([]);
-    const availableTemplateList = computed(() => templateList.value.filter(item => !item?.confInfo?.disableImportCluster));
+    const availableTemplateList = computed(() => templateList.value
+      .filter(item => !item?.confInfo?.disableImportCluster));
     const templateLoading = ref(false);
     const handleGetCloudList = async () => {
       templateLoading.value = true;
