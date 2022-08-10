@@ -480,6 +480,7 @@ func (hm *HelmManager) getServerAddress() error {
 	return nil
 }
 
+// InitComponentConfig init component config
 func (hm *HelmManager) InitComponentConfig() error {
 	c := project.ProjectClient{Host: hm.opt.ProjectService.Host, Token: hm.opt.App.Token}
 	project.NewClient(c)

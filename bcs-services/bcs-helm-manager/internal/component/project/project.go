@@ -49,6 +49,7 @@ type ProjectData struct {
 	Name        string `json:"name"`
 }
 
+// ProjectResp project service response
 type ProjectResp struct {
 	Code    int         `json:"code"`
 	Data    ProjectData `json:"data"`
@@ -61,7 +62,7 @@ var (
 	defaultTimeout = 20
 )
 
-// GetProjectID get project id from project code
+// GetProjectIDByCode get project id from project code
 // TODO: projectID不会变动，可以添加下缓存
 func GetProjectIDByCode(username string, projectCode string) (string, error) {
 	p, err := Client.GetProjectDetail(username, projectCode)
@@ -76,7 +77,11 @@ func (p *ProjectClient) GetProjectDetail(username string, projectCode string) (*
 	path := fmt.Sprintf(getProjectPath, projectCode)
 	url := fmt.Sprintf("%s%s", p.Host, path)
 	authorization := fmt.Sprintf("Bearer %s", p.Token)
-	headers := map[string]string{"Content-Type": "application/json", "Authorization": authorization, "X-Project-Username": username}
+	headers := map[string]string{
+		"Content-Type":       "application/json",
+		"Authorization":      authorization,
+		"X-Project-Username": username,
+	}
 	// 组装请求参数
 	req := gorequest.SuperAgent{
 		Url:    url,

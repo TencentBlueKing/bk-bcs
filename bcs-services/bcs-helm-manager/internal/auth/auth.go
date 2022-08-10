@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
 )
 
+// JWTClientConfig jwt client config
 type JWTClientConfig struct {
 	Enable         bool
 	PublicKey      string
@@ -38,6 +39,7 @@ var (
 	JWTConfig *JWTClientConfig
 )
 
+// NewJWTClient new a jwt client
 func NewJWTClient(c JWTClientConfig) (*jwt.JWTClient, error) {
 	jwtOpt, err := getJWTOpt(c)
 	if err != nil {
@@ -62,6 +64,7 @@ func GetUserFromCtx(ctx context.Context) string {
 	return username
 }
 
+// AuthUser auth user
 type AuthUser struct {
 	Username string
 	UserType string
@@ -121,7 +124,7 @@ var NoAuthEndpoints = []string{
 	"Common.Available",
 }
 
-// 检查当前请求是否允许免除用户认证
+// CanExemptAuth 检查当前请求是否允许免除用户认证
 func CanExemptAuth(ep string) bool {
 	// 禁用身份认证
 	if !JWTConfig.Enable {
