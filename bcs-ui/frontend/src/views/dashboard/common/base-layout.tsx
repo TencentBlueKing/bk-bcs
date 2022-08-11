@@ -84,6 +84,7 @@ export default defineComponent({
       RollingUpdate: $i18n.t('滚动升级'),
       InplaceUpdate: $i18n.t('原地升级'),
       OnDelete: $i18n.t('手动删除'),
+      Recreate: $i18n.t('重新创建'),
     });
 
     // crd
@@ -144,6 +145,13 @@ export default defineComponent({
         }
         return data;
       }, row);
+    };
+    // 状态
+    const statusMap = {
+      normal: $i18n.t('正常'),
+      creating: $i18n.t('创建中'),
+      updating: $i18n.t('更新中'),
+      deleting: $i18n.t('删除中'),
     };
 
     // 命名空间
@@ -296,6 +304,30 @@ export default defineComponent({
       curDetailRow.value.extData = handleGetExtData(row.metadata.uid);
       showDetailPanel.value = true;
     };
+
+    const showCapacityDialog = ref(false);
+    const replicas = ref(0);
+    // 显示扩缩容弹框
+    const handleEnlargeCapacity = (row) => {
+      curDetailRow.value.data = row;
+      replicas.value = row.spec.replicas;
+      showCapacityDialog.value = true;
+    };
+    // 确定扩缩容
+    const handleConfirmChangeCapacity = async () => {
+      const { name, namespace } = curDetailRow.value.data?.metadata || {};
+      const result = await $store.dispatch('dashboard/enlargeCapacityChange', {
+        $namespace: namespace,
+        $category: category.value,
+        $name: name,
+        replicas: replicas.value,
+      });
+      result && $bkMessage({
+        theme: 'success',
+        message: $i18n.t('修改成功'),
+      });
+      handleGetTableData();
+    };
     // 切换详情类型
     const handleChangeDetailType = (type) => {
       detailType.value.active = type;
@@ -441,6 +473,7 @@ export default defineComponent({
       namespaceDisabled,
       showDetailPanel,
       curDetailRow,
+      replicas,
       yaml,
       detailType,
       isLoading,
@@ -456,6 +489,8 @@ export default defineComponent({
       additionalColumns,
       crdTips,
       webAnnotations,
+      statusMap,
+      showCapacityDialog,
       getJsonPathValue,
       renderCrdHeader,
       stop,
@@ -472,6 +507,8 @@ export default defineComponent({
       handleCreateFormResource,
       handleCrdChange,
       handleNamespaceSelected,
+      handleEnlargeCapacity,
+      handleConfirmChangeCapacity,
     };
   },
   render() {
@@ -607,12 +644,14 @@ export default defineComponent({
                 pageConf: this.pageConf,
                 data: this.data,
                 curPageData: this.curPageData,
+                statusMap: this.statusMap,
                 handlePageChange: this.handlePageChange,
                 handlePageSizeChange: this.handlePageSizeChange,
                 handleGetExtData: this.handleGetExtData,
                 handleSortChange: this.handleSortChange,
                 gotoDetail: this.gotoDetail,
                 handleShowDetail: this.handleShowDetail,
+                handleEnlargeCapacity: this.handleEnlargeCapacity,
                 handleUpdateResource: this.handleUpdateResource,
                 handleDeleteResource: this.handleDeleteResource,
                 getJsonPathValue: this.getJsonPathValue,
@@ -667,6 +706,17 @@ export default defineComponent({
               },
             }
             }></bcs-sideslider>
+        <bcs-dialog
+          v-model={this.showCapacityDialog}
+          mask-close={false}
+          title={`${this.curDetailRow?.data?.metadata?.name}${this.$t('扩缩容')}`}
+          on-confirm={this.handleConfirmChangeCapacity}
+        >
+          <span class="capacity-dialog-content">
+            { this.$t('实例数量') }
+            <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min="0"></bk-input>
+          </span>
+        </bcs-dialog>
       </div>
     );
   },

@@ -1,6 +1,9 @@
 <template>
   <BaseLayout title="StatefulSets" kind="StatefulSet" category="statefulsets" type="workloads">
-    <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
+    <template
+      #default="{ curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
+                  handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource,
+                  handleEnlargeCapacity }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -13,11 +16,24 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" sortable></bk-table-column>
-        <bk-table-column :label="$t('镜像')" prop="extraFE.images" width="450" :show-overflow-tooltip="false">
+        <bk-table-column :label="$t('Pod 管理策略')">
           <template slot-scope="{ row }">
-            <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
-              {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
-            </span>
+            {{ row.spec.podManagementPolicy || '--' }}
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('升级策略')" min-width="100">
+          <template slot-scope="{ row }">
+            {{ updateStrategyMap[$chainable(row.spec, 'updateStrategy.type')] || $t('滚动升级') }}
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('状态')" min-width="60">
+          <template slot-scope="{ row }">
+            <StatusIcon status="running" v-if="handleGetExtData(row.metadata.uid, 'status') === 'normal'">
+              {{statusMap[handleGetExtData(row.metadata.uid, 'status')] || '--'}}
+            </StatusIcon>
+            <LoadingIcon v-else>
+              <span class="bcs-ellipsis">{{ statusMap[handleGetExtData(row.metadata.uid, 'status')] || '--' }}</span>
+            </LoadingIcon>
           </template>
         </bk-table-column>
         <bk-table-column label="Ready" width="110" :resizable="false">
@@ -39,11 +55,17 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('操作')" :resizable="false" width="150">
+        <bk-table-column :label="$t('操作')" :resizable="false" width="220">
           <template #default="{ row }">
             <bk-button
               text
               @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+            <bk-button
+              class="ml10" text
+              @click="handleEnlargeCapacity(row)">{{ $t('扩缩容') }}</bk-button>
+            <bk-button
+              class="ml10" text
+              @click="gotoDetail(row)">{{ $t('重新调度') }}</bk-button>
             <bk-button
               class="ml10" text
               @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
@@ -56,8 +78,11 @@
 <script>
 import { defineComponent } from '@vue/composition-api';
 import BaseLayout from '@/views/dashboard/common/base-layout';
+import StatusIcon from '../common/status-icon';
+import LoadingIcon from '@/components/loading-icon.vue';
 
 export default defineComponent({
-  components: { BaseLayout },
+  name: 'DashboardStateful',
+  components: { BaseLayout, StatusIcon, LoadingIcon },
 });
 </script>

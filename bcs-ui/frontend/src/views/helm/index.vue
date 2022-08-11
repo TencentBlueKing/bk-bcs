@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -18,12 +19,6 @@
 
         <div class="biz-panel-header p20">
           <div class="left">
-            <!-- <router-link class="bk-button bk-primary" :to="{ name: 'helmTplList' }">
-                            <i class="bcs-icon bcs-icon-plus"></i>
-                            <span>{{$t('部署Helm Chart')}}</span>
-                        </router-link> -->
-            <!-- <bcs-button>批量下载</bcs-button>
-                        <bcs-button>批量删除</bcs-button> -->
           </div>
           <div class="right">
             <search
@@ -148,7 +143,7 @@
                 <p class="updated">{{$t('更新时间')}}：{{ row.updated }}</p>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('操作')" width="230">
+            <bk-table-column :label="$t('操作')" width="260">
               <template slot-scope="{ row }">
                 <bk-button
                   class="ml5"
@@ -167,6 +162,23 @@
                   }"
                   @click="showAppInfoSlider(row)"
                 >{{ $t('查看状态') }}</bk-button>
+                <bk-button
+                  class="ml5"
+                  text
+                  v-authority="{
+                    clickable: webAnnotationsPerms[row.iam_ns_id]
+                      && webAnnotationsPerms[row.iam_ns_id].namespace_scoped_view,
+                    actionId: 'namespace_scoped_view',
+                    resourceName: row.namespace,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectId,
+                      cluster_id: row.cluster_id,
+                      name: row.namespace
+                    }
+                  }"
+                  @click="handleShowHistory(row)"
+                >{{ $t('更新记录') }}</bk-button>
                 <bk-button
                   class="ml5"
                   text
@@ -411,6 +423,40 @@
         </table>
       </div>
     </bk-sideslider>
+    <bcs-dialog
+      :title="$t('更新记录')"
+      header-position="left"
+      :show-footer="false"
+      width="860"
+      v-model="showReleaseHistory">
+      <bcs-table
+        :data="curHistoryPageData"
+        :pagination="pageConf"
+        v-bkloading="{ isLoading }"
+        @page-change="pageChange"
+        @page-limit-change="pageSizeChange">
+        <bcs-table-column label="Revision" prop="revision" width="100"></bcs-table-column>
+        <bcs-table-column :label="$t('更新时间')" prop="updateTime" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('状态')" prop="status" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column label="Chart" prop="chart" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column label="App Version" prop="appVersion"></bcs-table-column>
+        <bcs-table-column label="Values" width="80">
+          <template #default="{ row }">
+            <bcs-button
+              text
+              @click="handleShowValuesDetail(row)"
+              v-if="row.values">{{$t('查看')}}</bcs-button>
+            <span v-else>--</span>
+          </template>
+        </bcs-table-column>
+        <bcs-table-column
+          :label="$t('描述')"
+          prop="description"
+          show-overflow-tooltip
+          min-width="160">
+        </bcs-table-column>
+      </bcs-table>
+    </bcs-dialog>
   </div>
 </template>
 
@@ -420,11 +466,13 @@ import { catchErrorHandler } from '@/common/util';
 import Clipboard from 'clipboard';
 import search from './search.vue';
 import { mapGetters } from 'vuex';
+import { helmReleaseHistory } from '@/api/base';
 
 const FAST_TIME = 3000;
 const SLOW_TIME = 10000;
 
 export default {
+  name: 'HelmList',
   components: {
     ace,
     search,
@@ -532,6 +580,14 @@ export default {
         Statefulset: 'statefulset',
         Job: 'job',
       },
+      showReleaseHistory: false,
+      releaseHistoryData: [],
+      pageConf: {
+        current: 1,
+        limit: 10,
+        count: 0,
+      },
+      isLoading: false,
     };
   },
   computed: {
@@ -563,6 +619,10 @@ export default {
 
       return results;
     },
+    curHistoryPageData() {
+      const { limit, current } = this.pageConf;
+      return this.releaseHistoryData.slice(limit * (current - 1), limit * current);
+    },
     ...mapGetters('cluster', ['isSharedCluster']),
   },
   watch: {
@@ -590,10 +650,10 @@ export default {
   mounted() {
     this.isRouterLeave = false;
     this.winHeight = window.innerHeight;
-    if (window.sessionStorage && window.sessionStorage['bcs-cluster']) {
+    if (window.sessionStorage?.['bcs-cluster']) {
       this.searchScope = window.sessionStorage['bcs-cluster'];
     }
-    if (window.sessionStorage && window.sessionStorage['bcs-helm-namespace']) {
+    if (window.sessionStorage?.['bcs-helm-namespace']) {
       this.searchNamespace = window.sessionStorage['bcs-helm-namespace'];
     }
 
@@ -784,6 +844,7 @@ export default {
     async deleteApp(app) {
       const { projectId } = this;
       const appId = app.id;
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       // const boxStyle = {
       //     'margin-top': '-20px',
@@ -834,7 +895,7 @@ export default {
             me.showLoading = false;
           }
         },
-        cancelFn(close) {
+        cancelFn() {
           me.appCheckTime = FAST_TIME;
           me.isOperaLayerShow = false;
           me.getAppsStatus();
@@ -876,13 +937,13 @@ export default {
       this.rebackDialogConf.isShow = false;
       this.errorDialogConf.actionType = actionType;
 
-      if (this.clipboardInstance && this.clipboardInstance.off) {
+      if (this.clipboardInstance?.off) {
         this.clipboardInstance.off('success');
       }
       if (this.errorDialogConf.message) {
         this.$nextTick(() => {
           this.clipboardInstance = new Clipboard('#error-copy-btn');
-          this.clipboardInstance.on('success', (e) => {
+          this.clipboardInstance.on('success', () => {
             this.$bkMessage({
               theme: 'success',
               message: this.$t('复制成功'),
@@ -1065,7 +1126,7 @@ export default {
     /**
              * 获取所有命名空间列表
              */
-    async getNamespaces(reload) {
+    async getNamespaces() {
       try {
         clearTimeout(this.statusTimer);
         const res = await this.$store.dispatch('helm/getNamespaceList', {
@@ -1118,7 +1179,7 @@ export default {
     },
 
     updateApp(appId, status) {
-      this.appList.forEach((app, index) => {
+      this.appList.forEach((app) => {
         if (app.id === appId) {
           app.transitioning_action = status.transitioning_action;
           app.transitioning_message = status.transitioning_message;
@@ -1126,7 +1187,7 @@ export default {
           app.transitioning_result = status.transitioning_result;
         }
       });
-      this.appListCache.forEach((app, index) => {
+      this.appListCache.forEach((app) => {
         if (app.id === appId) {
           app.transitioning_action = status.transitioning_action;
           app.transitioning_message = status.transitioning_message;
@@ -1163,6 +1224,7 @@ export default {
              */
     getAppsStatus() {
       clearTimeout(this.statusTimer);
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       this.statusTimer = setTimeout(async () => {
         if (this.isOperaLayerShow) {
           return false;
@@ -1290,7 +1352,7 @@ export default {
              * 显示回滚相应的预览对比列表
              * @param  {object} app 应用
              */
-    async showRebackPreview(app) {
+    async showRebackPreview() {
       const { projectId } = this;
       const appId = this.curApp.id;
       const params = {
@@ -1415,7 +1477,31 @@ export default {
       this.selectLists = [];
       return this.appList.slice(startIndex, endIndex);
     },
-
+    async handleShowHistory(row) {
+      this.showReleaseHistory = true;
+      this.isLoading = true;
+      this.releaseHistoryData = await helmReleaseHistory({
+        $projectCode: this.projectCode,
+        $clusterId: row.cluster_id,
+        $namespaceId: row.namespace,
+        $name: row.name,
+      }).catch(() => []);
+      this.pageConf.count = this.releaseHistoryData.length;
+      this.isLoading = false;
+    },
+    handleShowValuesDetail(row) {
+      this.$bkInfo({
+        subTitle: row.values,
+        showFooter: false,
+      });
+    },
+    pageChange(current) {
+      this.pageConf.current = current;
+    },
+    pageSizeChange(pageSize) {
+      this.pageConf.current = 1;
+      this.pageConf.limit = pageSize;
+    },
     // /**
     //  * 自定义checkbox表格头
     //  */

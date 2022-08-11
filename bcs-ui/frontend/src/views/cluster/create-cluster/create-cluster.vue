@@ -59,7 +59,6 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
-import DashboardTopActions from '@/views/dashboard/common/dashboard-top-actions';
 import usePage from '@/views/dashboard/common/use-page';
 import * as ace from '@/components/ace-editor';
 import fullScreen from '@/directives/full-screen';
@@ -68,7 +67,7 @@ import useConfig from '@/common/use-config';
 
 export default defineComponent({
   name: 'CreateCluster',
-  components: { DashboardTopActions, ace },
+  components: { ace },
   directives: {
     'full-screen': fullScreen,
   },
@@ -107,9 +106,9 @@ export default defineComponent({
       $router.push({ name: 'createClusterTemplate' });
     };
     // 编辑集群模板
-    const handleEditTemplate = (row) => {};
+    const handleEditTemplate = () => {};
     // 删除集群模板
-    const handleDeleteTemplate = (row) => {};
+    const handleDeleteTemplate = () => {};
     // 展示模板详情
     const showDetail = ref(false);
     const curCloud = ref<any>({});

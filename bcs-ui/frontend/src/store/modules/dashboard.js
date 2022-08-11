@@ -50,6 +50,8 @@ import {
   crdList,
   formSchema,
   renderManifestPreview,
+  enlargeCapacityChange,
+  batchReschedulePod,
 } from '@/api/base';
 
 export default {
@@ -312,5 +314,15 @@ export default {
       const data = await renderManifestPreview(params).catch(() => ({}));
       return data;
     },
+    // 扩缩容
+    async enlargeCapacityChange(context, params) {
+      const data = await enlargeCapacityChange(params).catch(() => ({}));
+      return data;
+    },
+    // 批量重新调度
+    async batchReschedulePod(context, params) {
+      const data = await batchReschedulePod(params).then(() => true);
+      return data;
+    }
   },
 };

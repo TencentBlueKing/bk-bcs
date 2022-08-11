@@ -1,5 +1,5 @@
 <template>
-  <div class="biz-content">
+  <div class="biz-content" v-bkloading="{ isLoading: updateInstanceLoading, zIndex: 100 }">
     <div class="biz-top-bar">
       <div class="biz-helm-title">
         <a class="bcs-icon bcs-icon-arrows-left back" href="javascript:void(0);" @click="goToHelmIndex"></a>
@@ -7,7 +7,7 @@
       </div>
     </div>
 
-    <div class="biz-content-wrapper" v-bkloading="{ isLoading: updateInstanceLoading, zIndex: 100 }">
+    <div class="biz-content-wrapper">
       <div>
         <div class="biz-helm-header">
           <div class="left">
@@ -25,9 +25,6 @@
                 <use xlink:href="#biz-set-icon"></use>
               </svg>
               <div class="title">{{curApp.name}}</div>
-              <!-- <p>
-                                <a class="bk-text-button f12" href="javascript:void(0);" @click="gotoHelmTplDetail">{{$t('查看Chart详情')}}</a>
-                            </p> -->
               <div class="desc" :title="curApp.description">
                 <span>Chart：</span>
                 <a class="bk-text-button f12 ml5" href="javascript:void(0);" @click="gotoHelmTplDetail">{{curApp.chart_info.name || '--'}}</a>
@@ -60,7 +57,7 @@
                   <div class="inner">
                     <div class="inner-item">
                       <label class="title">{{$t('名称')}}</label>
-                      <bkbcs-input :value="curApp.name" :readonly="true" />
+                      <bkbcs-input :value="curApp.name" disabled />
                     </div>
 
                     <div class="inner-item">
@@ -123,6 +120,14 @@
                       </label>
                       <div>
                         <bkbcs-input :value="curApp.namespace" :disabled="true" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="inner">
+                    <div class="inner-item">
+                      <label class="title">{{$t('描述')}}</label>
+                      <div>
+                        <bk-input type="textarea" v-model="curApp.description"></bk-input>
                       </div>
                     </div>
                   </div>
@@ -620,6 +625,7 @@ export default {
           customs: [],
           answers: {},
         },
+        description: '',
       },
       treeData: [],
       editorConfig: {
@@ -1446,6 +1452,7 @@ export default {
         customs,
         cmd_flags: commands,
         valuefile_name: this.curValueFile,
+        description: this.curApp.description,
       };
 
       params.valuefile = this.yamlFile || this.curTplYaml;

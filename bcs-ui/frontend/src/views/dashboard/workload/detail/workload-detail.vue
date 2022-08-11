@@ -62,9 +62,46 @@
           <span class="label">{{ $t('存在时间') }}</span>
           <span class="value">{{ manifestExt.age }}</span>
         </div>
-        <div class="info-item" v-if="category === 'custom_objects'">
+        <div class="info-item" v-if="showUpdateStrategy">
           <span class="label">{{ $t('升级策略') }}</span>
           <span class="value">{{ updateStrategyMap[updateStrategy.type] || $t('滚动升级') }}</span>
+        </div>
+      </div>
+      <div class="workload-main-info" v-if="category === 'deployments'">
+        <div class="info-item">
+          <span class="label">{{ $t('最大调度Pod数量') }}</span>
+          <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxSurge')">
+            {{ String(spec.strategy.rollingUpdate.maxSurge).split('%')[0] }}%</span>
+          <span class="value" v-else>--</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ $t('最大不可用数量') }}</span>
+          <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxUnavailable')">
+            {{ String(spec.strategy.rollingUpdate.maxUnavailable).split('%')[0] }}%</span>
+          <span class="value" v-else>--</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ $t('最小就绪时间') }}</span>
+          <span class="value" v-if="Number.isInteger(spec.minReadySeconds)">{{ spec.minReadySeconds }}s</span>
+          <span class="value" v-else>--</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ $t('进程截止时间') }}</span>
+          <span class="value" v-if="Number.isInteger(spec.progressDeadlineSeconds)">
+            {{ spec.progressDeadlineSeconds }}s</span>
+          <span class="value" v-else>--</span>
+        </div>
+      </div>
+      <div class="workload-main-info" v-if="category === 'statefulsets'">
+        <div class="info-item">
+          <span class="label">{{ $t('Pod管理策略') }}</span>
+          <span class="value">{{ spec.podManagementPolicy || '--' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ $t('分区滚动更新') }}</span>
+          <span class="value" v-if="Number.isInteger($chainable(spec, 'updateStrategy.rollingUpdate.partition'))">
+            {{ spec.updateStrategy.rollingUpdate.partition }}s</span>
+          <span class="value" v-else>--</span>
         </div>
       </div>
     </div>
@@ -92,49 +129,75 @@
       </div>
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="40">
         <bcs-tab-panel name="pod" label="Pod" v-bkloading="{ isLoading: podLoading }">
-          <bk-table :data="pods">
-            <bk-table-column :label="$t('名称')" min-width="130" prop="metadata.name" sortable :resizable="false">
+          <div class="pod-info-header">
+            <bk-button
+              v-if="showBatchDispatch"
+              :loading="batchBtnLoading"
+              :disabled="!selectPods.length"
+              @click="handleBatchDispatchPod">
+              {{ $t('批量重新调度') }}
+            </bk-button>
+            <!-- 占位 -->
+            <div v-else></div>
+            <bk-input
+              v-model="searchPodVal"
+              :placeholder="$t('输入名称搜索')"
+              class="search-input"
+              right-icon="bk-icon icon-search"
+            ></bk-input>
+          </div>
+          <bcs-table
+            :data="curPods"
+            ref="podTable"
+            row-key="metadata.uid"
+            @select="handleSelectPod"
+            @select-all="handleSelectAllPod"
+          >
+            <bcs-table-column v-if="showBatchDispatch" type="selection" width="60" reserve-selection></bcs-table-column>
+            <bcs-table-column
+              :label="$t('名称')"
+              min-width="130" prop="metadata.name" sortable :resizable="false" show-overflow-tooltip>
               <template #default="{ row }">
                 <bk-button
                   :disabled="rescheduleStatusMap[row.metadata.name]"
                   class="bcs-button-ellipsis" text @click="gotoPodDetail(row)">{{ row.metadata.name }}</bk-button>
               </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
+            </bcs-table-column>
+            <bcs-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
               <template slot-scope="{ row }">
                 <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                   {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
                 </span>
               </template>
-            </bk-table-column>
-            <bk-table-column label="Status" width="120" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column label="Status" width="120" :resizable="false" show-overflow-tooltip>
               <template slot-scope="{ row }">
                 <StatusIcon :status="handleGetExtData(row.metadata.uid, 'status')"></StatusIcon>
               </template>
-            </bk-table-column>
-            <bk-table-column label="Ready" width="100" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column label="Ready" width="100" :resizable="false">
               <template slot-scope="{ row }">
                 {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
               </template>
-            </bk-table-column>
-            <bk-table-column label="Restarts" width="100" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column label="Restarts" width="100" :resizable="false">
               <template slot-scope="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
-            </bk-table-column>
-            <bk-table-column label="Host IP" width="140" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column label="Host IP" width="140" :resizable="false">
               <template slot-scope="{ row }">{{row.status.hostIP || '--'}}</template>
-            </bk-table-column>
-            <bk-table-column label="Pod IP" width="140" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column label="Pod IP" width="140" :resizable="false">
               <template slot-scope="{ row }">{{row.status.podIP || '--'}}</template>
-            </bk-table-column>
-            <bk-table-column label="Node" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column label="Node" :resizable="false" show-overflow-tooltip>
               <template slot-scope="{ row }">{{row.spec.nodeName || '--'}}</template>
-            </bk-table-column>
-            <bk-table-column label="Age" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column label="Age" :resizable="false">
               <template #default="{ row }">
                 <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
               </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('操作')" width="140" :resizable="false">
+            </bcs-table-column>
+            <bcs-table-column :label="$t('操作')" width="140" :resizable="false">
               <template #default="{ row }">
                 <bk-button
                   text :disabled="rescheduleStatusMap[row.metadata.name]"
@@ -143,8 +206,8 @@
                   class="ml10" :disabled="rescheduleStatusMap[row.metadata.name]"
                   text @click="handleReschedule(row)">{{ $t('重新调度') }}</bk-button>
               </template>
-            </bk-table-column>
-          </bk-table>
+            </bcs-table-column>
+          </bcs-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('事件')" v-if="category !== 'cronjobs'">
           <bk-table
@@ -168,6 +231,12 @@
         </bcs-tab-panel>
         <bcs-tab-panel name="annotations" :label="$t('注解')">
           <bk-table :data="annotations">
+            <bk-table-column label="Key" prop="key"></bk-table-column>
+            <bk-table-column label="Value" prop="value"></bk-table-column>
+          </bk-table>
+        </bcs-tab-panel>
+        <bcs-tab-panel name="selector" label="Selector" v-if="['deployments', 'statefulsets'].includes(category)">
+          <bk-table :data="selectors">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
@@ -271,6 +340,7 @@ export default defineComponent({
       RollingUpdate: $i18n.t('滚动升级'),
       InplaceUpdate: $i18n.t('原地升级'),
       OnDelete: $i18n.t('手动删除'),
+      Recreate: $i18n.t('重新创建'),
     });
     const curType = props.category === 'custom_objects' ? 'crd' : 'workloads';
     const {
@@ -279,7 +349,9 @@ export default defineComponent({
       activePanel,
       labels,
       annotations,
+      selectors,
       updateStrategy,
+      spec,
       metadata,
       manifestExt,
       webAnnotations,
@@ -303,8 +375,17 @@ export default defineComponent({
       category: props.category,
       detail,
     });
+    const podTable = ref();
+    const searchPodVal = ref('');
+    // 表格选中的pods数据
+    const selectPods = ref<any[]>([]);
     // pods数据
     const pods = computed(() => workloadPods.value?.manifest?.items || []);
+    const curPods = computed(() => pods.value.filter(pod => pod.metadata.name.includes(searchPodVal.value)));
+    // 是否展示升级策略
+    const showUpdateStrategy = computed(() => ['deployments', 'statefulsets', 'custom_objects'].includes(props.category));
+    // 是否展示批量调度功能
+    const showBatchDispatch = computed(() => ['deployments', 'statefulsets'].includes(props.category));
     // 获取pod manifestExt数据
     const handleGetExtData = (uid, prop) => workloadPods.value?.manifestExt?.[uid]?.[prop];
     // 指标参数
@@ -334,6 +415,13 @@ export default defineComponent({
       };
     };
 
+    const handleSelectPod = (selection) => {
+      selectPods.value = selection;
+    };
+    const handleSelectAllPod = (selection) => {
+      selectPods.value = selection;
+    };
+
     const handleGetPodsData = async () => {
       if (!clusterId.value) return;
       // 获取工作负载下对应的pod数据
@@ -351,6 +439,15 @@ export default defineComponent({
         ownerName: props.name,
         format: 'manifest',
       });
+
+      if (selectPods.value.length) {
+        const curPods = data.manifest?.items || [];
+        selectPods.value = selectPods.value.filter((pod) => {
+          const { uid } = pod.metadata;
+          return curPods.some(item => item.metadata.uid === uid);
+        });
+        if (!selectPods.value.length) podTable.value?.clearSelection();
+      }
       return data;
     };
     // 获取工作负载下的pods数据
@@ -375,6 +472,40 @@ export default defineComponent({
         message: $i18n.t('调度成功'),
       });
       rescheduleStatusMap.value[row.metadata.name] = false;
+    };
+
+    // 批量重新调度
+    const batchBtnLoading = ref(false);
+    const handleBatchDispatchPod = async () => {
+      batchBtnLoading.value = true;
+      const podNames: any[] = [];
+      selectPods.value.forEach((pod) => {
+        podNames.push(pod.metadata.name);
+        set(rescheduleStatusMap.value, pod.metadata.name, true);
+      });
+      const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {};
+      const labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
+        pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
+        return pre;
+      }, '');
+      const result = await $store.dispatch('dashboard/batchReschedulePod', {
+        $namespace: props.namespace,
+        $name: metadata.value.name,
+        $category: props.category,
+        podNames,
+        labelSelector,
+      });
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('调度成功'),
+        });
+        selectPods.value.forEach((pod) => {
+          const name = String(pod.metadata.name);
+          rescheduleStatusMap.value[name] = false;
+        });
+      }
+      batchBtnLoading.value = false;
     };
     // 事件列表
     const events = ref([]);
@@ -444,10 +575,14 @@ export default defineComponent({
     });
 
     return {
+      batchBtnLoading,
       updateStrategyMap,
       isLoading,
       detail,
       updateStrategy,
+      showUpdateStrategy,
+      showBatchDispatch,
+      spec,
       metadata,
       manifestExt,
       webAnnotations,
@@ -456,8 +591,13 @@ export default defineComponent({
       activePanel,
       params,
       pods,
+      curPods,
+      podTable,
+      selectPods,
+      searchPodVal,
       labels,
       annotations,
+      selectors,
       podLoading,
       yaml,
       showYamlPanel,
@@ -478,6 +618,9 @@ export default defineComponent({
       handleDeleteResource,
       handleReschedule,
       getJsonPathValue,
+      handleSelectPod,
+      handleSelectAllPod,
+      handleBatchDispatchPod,
       ...useLog(),
     };
   },
@@ -505,6 +648,14 @@ export default defineComponent({
         }
         .workload-tab {
             margin-top: 16px;
+        }
+        .pod-info-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          .search-input {
+            width: 350px;
+          }
         }
     }
 }

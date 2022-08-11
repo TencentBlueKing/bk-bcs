@@ -163,7 +163,7 @@ export default defineComponent({
         subTitle: row.account.accountID,
         title: $i18n.t('删除凭证'),
         defaultInfo: true,
-        confirmFn: async (vm) => {
+        confirmFn: async () => {
           loading.value = true;
           const result = await $store.dispatch('clustermanager/deleteCloudAccounts', {
             $cloudId: 'tencentCloud',

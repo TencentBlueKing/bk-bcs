@@ -911,9 +911,7 @@ export default {
 
     async handleComfirmDownload() {
       const url = await this.getChartVersionDetail(this.downloadDialog);
-      const a = document.createElement('a');
-      a.href = url;
-      a.click();
+      window.open(url);
       this.handleCancelDownload();
     },
 

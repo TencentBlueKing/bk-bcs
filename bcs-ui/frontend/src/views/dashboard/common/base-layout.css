@@ -79,4 +79,8 @@
             font-size: 12px;
         }
     }
+  }
+.capacity-dialog-content {
+  display: flex;
+  align-items: center;
 }

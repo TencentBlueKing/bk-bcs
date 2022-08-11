@@ -67,6 +67,8 @@ export const customResourceDelete = request('delete', `${CR_API_URL}/projects/$p
 export const reschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/reschedule`); // pod重新调度
 export const renderManifestPreview = request('post', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/render_manifest_preview`);
 export const fetchNodePodsData = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/nodes/$nodename/workloads/pods`);
+export const enlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/scale`) // 扩缩容
+export const batchReschedulePod = request('put',`${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/reschedule`) // 批量重新调度
 
 // apply hosts
 export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/');
@@ -142,6 +144,10 @@ export const cloudModulesParamsList = request('get', `${prefix}/clustermanager/v
 export const bkSopsDebug = request('post', `${prefix}/clustermanager/v1/bksops/debug`);
 export const bkSopsTemplatevalues = request('get', `${prefix}/clustermanager/v1/bksops/templatevalues`);
 export const getNodeTemplateInfo = request('get', `${prefix}/clustermanager/v1/node/$innerIP/info`);
+
+// helm
+const helmPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/clusters/$clusterId`;
+export const helmReleaseHistory = request('get', `${helmPrefix}/namespaces/$namespaceId/releases/$name/history`);
 
 export default {
   dashbordList,

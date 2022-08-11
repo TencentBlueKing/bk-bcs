@@ -1,18 +1,18 @@
 <template>
   <div class="apply-host-wrapper" v-if="$INTERNAL">
     <div class="apply-host-btn">
-      <span
-        v-if="!hasAuth"
-        class="bk-default bk-button-normal bk-button is-disabled"
-        v-bk-tooltips="authTips">
-        {{$t('申请服务器')}}
-      </span>
-      <span
-        v-else-if="applyHostButton.disabled"
-        class="bk-default bk-button-normal bk-button is-disabled"
-        v-bk-tooltips="applyHostButton.tips">
-        {{$t('申请服务器')}}
-      </span>
+      <bk-popover placement="bottom" v-if="!hasAuth" transfer>
+        <span class="bk-default bk-button-normal bk-button is-disabled">{{$t('申请服务器')}}</span>
+        <div slot="content" style="width: 220px;">
+          {{ authTips.content }}
+        </div>
+      </bk-popover>
+      <bk-popover placement="bottom" v-else-if="applyHostButton.disabled" transfer>
+        <span class="bk-default bk-button-normal bk-button is-disabled">{{$t('申请服务器')}}</span>
+        <div slot="content" style="width: 220px;">
+          {{ applyHostButton.tips }}
+        </div>
+      </bk-popover>
       <bk-button
         v-else
         :theme="theme"

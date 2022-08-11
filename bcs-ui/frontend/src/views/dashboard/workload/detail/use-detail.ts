@@ -40,6 +40,16 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
       value: obj[key],
     }));
   });
+  // Selector数据
+  const selectors = computed(() => {
+    const obj = detail.value?.manifest?.spec?.selector?.matchLabels || {};
+    return Object.keys(obj).map(key => ({
+      key,
+      value: obj[key],
+    }));
+  });
+  // spec 数据
+  const spec = computed(() => detail.value?.manifest.spec || {});
   // metadata 数据
   const metadata = computed(() => detail.value?.manifest?.metadata || {});
   // manifestExt 数据
@@ -177,7 +187,9 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
     activePanel,
     labels,
     annotations,
+    selectors,
     updateStrategy,
+    spec,
     metadata,
     manifestExt,
     webAnnotations,

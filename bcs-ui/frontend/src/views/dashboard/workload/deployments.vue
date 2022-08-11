@@ -1,6 +1,9 @@
 <template>
   <BaseLayout title="Deployments" kind="Deployment" category="deployments" type="workloads">
-    <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource,handleDeleteResource }">
+    <template
+      #default="{ curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
+                  handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource, handleDeleteResource,
+                  handleEnlargeCapacity }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -13,11 +16,39 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" min-width="100" sortable></bk-table-column>
-        <bk-table-column :label="$t('镜像')" min-width="280" :show-overflow-tooltip="false">
+        <bk-table-column :label="$t('升级策略')" min-width="100">
           <template slot-scope="{ row }">
-            <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
-              {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
+            <span>
+              <bk-popover placement="top" v-if="$chainable(row.spec, 'strategy.type') === 'RollingUpdate'">
+                <span>{{ $t('滚动升级') }}</span>
+                <div slot="content" v-if="$chainable(row.spec, 'strategy.rollingUpdate.maxSurge')">
+                  <p>
+                    {{ $t(`最大调度Pod数量（maxSurge）: ${String(row.spec.strategy.rollingUpdate.maxSurge).split('%')[0]}%`) }}
+                  </p>
+                  <p>
+                    {{ $t(`最大不可用数量（maxUnavailable）: ${String(row.spec.strategy.rollingUpdate.maxUnavailable)
+                      .split('%')[0]}%`) }}
+                  </p>
+                </div>
+                <div slot="content" v-else>
+                  <p>{{ $t('最大调度Pod数量（maxSurge）: --') }}</p>
+                  <p>{{ $t('最大不可用数量（maxUnavailable）: --') }}</p>
+                </div>
+              </bk-popover>
+              <span v-else>
+                {{ updateStrategyMap[row.spec.strategy.type] }}
+              </span>
             </span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('状态')" min-width="60">
+          <template slot-scope="{ row }">
+            <StatusIcon status="running" v-if="handleGetExtData(row.metadata.uid, 'status') === 'normal'">
+              {{statusMap[handleGetExtData(row.metadata.uid, 'status')] || '--'}}
+            </StatusIcon>
+            <LoadingIcon v-else>
+              <span class="bcs-ellipsis">{{ statusMap[handleGetExtData(row.metadata.uid, 'status')] || '--' }}</span>
+            </LoadingIcon>
           </template>
         </bk-table-column>
         <bk-table-column label="Ready" width="100" :resizable="false">
@@ -42,11 +73,17 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('操作')" :resizable="false" width="150">
+        <bk-table-column :label="$t('操作')" :resizable="false" width="220">
           <template #default="{ row }">
             <bk-button
               text
               @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+            <bk-button
+              class="ml10" text
+              @click="handleEnlargeCapacity(row)">{{ $t('扩缩容') }}</bk-button>
+            <bk-button
+              class="ml10" text
+              @click="gotoDetail(row)">{{ $t('重新调度') }}</bk-button>
             <bk-button
               class="ml10" text
               @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
@@ -60,8 +97,11 @@
 <script>
 import { defineComponent } from '@vue/composition-api';
 import BaseLayout from '@/views/dashboard/common/base-layout';
+import StatusIcon from '../common/status-icon';
+import LoadingIcon from '@/components/loading-icon.vue';
 
 export default defineComponent({
-  components: { BaseLayout },
+  name: 'DashboardDeploy',
+  components: { BaseLayout, StatusIcon, LoadingIcon },
 });
 </script>

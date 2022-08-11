@@ -48,8 +48,10 @@ import ApplyPerm from '@/components/apply-perm';
 import bkGuide from '@/components/guide';
 import bkFileUpload from '@/components/file-upload';
 import k8sIngress from '@/views/ingress/k8s-ingress.vue';
+import { chainable } from '@/common/util' 
 
 Vue.config.devtools = NODE_ENV === 'development';
+Vue.prototype.$chainable = chainable;
 
 Vue.use(VueCompositionAPI);
 Vue.use(Authority);
