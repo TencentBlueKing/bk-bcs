@@ -14,7 +14,6 @@ endif
 
 GOPATH=$(shell go env GOPATH)
 BUILDTIME=${shell date +%Y-%m-%dT%I:%M:%S}
-BUILDDIR=../build/bcs-cluster-resources.${VERSION}
 
 LDFLAGS="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} \
 	-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=${GITCOMMIT} \
