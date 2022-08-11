@@ -147,6 +147,28 @@ service Workload {
 		};
 	}
 
+	rpc ScaleDeploy(ResScaleReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/scale"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "Deployment 扩缩容"
+			summary: "ScaleDeploy API"
+		};
+	}
+
+	rpc RescheduleDeployPo(ResBatchRescheduleReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度 Deployment 下属的 Pod"
+			summary: "RescheduleDeployPo API"
+		};
+	}
+
 	rpc DeleteDeploy(ResDeleteReq) returns (CommonResp) {
 		option (google.api.http) = {
 			delete: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"
@@ -248,6 +270,28 @@ service Workload {
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "更新 StatefulSet"
 			summary: "UpdateSTS API"
+		};
+	}
+
+	rpc ScaleSTS(ResScaleReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/scale"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "StatefulSet 扩缩容"
+			summary: "ScaleSTS API"
+		};
+	}
+
+	rpc RescheduleSTSPo(ResBatchRescheduleReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度 StatefulSets 下属的 Pod"
+			summary: "RescheduleSTSPo API"
 		};
 	}
 
@@ -1367,6 +1411,27 @@ message ResUpdateReq {
 	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
+message ResScaleReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ResScaleReq", description: "单个 k8s 资源扩缩容请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+	int64 replicas = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "副本数量（0-8192）"
+	}, (validate.rules).int64 = {lte: 8192, gte: 0}];
+}
+
 message ResDeleteReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "ResDeleteReq", description: "删除单个 k8s 资源请求体"}
@@ -1383,6 +1448,34 @@ message ResDeleteReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+}
+
+message ResBatchRescheduleReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ResBatchRescheduleReq", description: "重新调度 k8s 资源下属 Pod 请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+	string labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签选择器"
+	}, (validate.rules).string = {max_len: 2048}];
+	repeated string podNames = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "待重新调度 Pod 名称列表"
+	}, (validate.rules).repeated = {
+		unique: true, min_items: 1, items: {
+			string: {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}
+		}
+	}];
 }
 
 message PodResListReq {

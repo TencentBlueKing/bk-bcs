@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -62,6 +63,19 @@ func TestSTS(t *testing.T) {
 	respData = getResp.Data.AsMap()
 	assert.Equal(t, "StatefulSet", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, float64(3), mapx.Get(respData, "manifest.spec.replicas", 0))
+
+	// Scale
+	resp := clusterRes.CommonResp{}
+	scaleReq := clusterRes.ResScaleReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName,
+		Replicas:  2,
+	}
+	err = h.ScaleSTS(ctx, &scaleReq, &resp)
+	assert.Nil(t, err)
+	assert.Equal(t, float64(2), mapx.Get(resp.Data.AsMap(), "spec.replicas", 0).(float64))
 
 	// Delete
 	deleteReq := handler.GenResDeleteReq(resName)

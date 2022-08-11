@@ -114,6 +114,7 @@ type STSReplicas struct {
 	Cnt            int64  `structs:"cnt"`
 	UpdateStrategy string `structs:"updateStrategy"`
 	PodManPolicy   string `structs:"podManPolicy"`
+	Partition      int64  `structs:"partition"`
 }
 
 // STSVolumeClaimTmpl ...

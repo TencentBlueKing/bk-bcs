@@ -20,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 
@@ -109,6 +110,16 @@ func (c *ResClient) Update(
 		return nil, err
 	}
 	return c.cli.Resource(c.res).Namespace(namespace).Update(ctx, &unstructured.Unstructured{Object: manifest}, opts)
+}
+
+// Patch 以 Patch 的方式更新资源
+func (c *ResClient) Patch(
+	ctx context.Context, namespace, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
+) (*unstructured.Unstructured, error) {
+	if err := c.permValidate(ctx, action.Update, namespace); err != nil {
+		return nil, err
+	}
+	return c.cli.Resource(c.res).Namespace(namespace).Patch(ctx, name, pt, data, opts)
 }
 
 // Delete 删除单个资源

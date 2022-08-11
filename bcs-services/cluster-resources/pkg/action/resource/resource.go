@@ -17,9 +17,12 @@ package resource
 
 import (
 	"context"
+	"encoding/json"
 
+	"github.com/TencentBlueKing/gopkg/collection/set"
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
@@ -103,6 +106,56 @@ func (m *ResMgr) Update(
 	// apiVersion 以 manifest 中的为准，不强制要求 preferred
 	m.GroupVersion = mapx.GetStr(manifest, "apiVersion")
 	return resp.BuildUpdateAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, manifest, opts)
+}
+
+// Scale 对某个资源进行扩缩容
+func (m *ResMgr) Scale(
+	ctx context.Context, namespace, name string, replicas int64, opts metav1.PatchOptions,
+) (*structpb.Struct, error) {
+	if !isScalable(m.Kind) {
+		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 %s 不支持扩缩容"), m.Kind)
+	}
+	patchByte, _ := json.Marshal(
+		map[string]interface{}{
+			"spec": map[string]interface{}{
+				"replicas": replicas,
+			},
+		},
+	)
+	return resp.BuildPatchAPIResp(
+		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.MergePatchType, patchByte, opts,
+	)
+}
+
+// Reschedule 对某类资源下属的 Pod 进行重新调度
+func (m *ResMgr) Reschedule(ctx context.Context, namespace, name, labelSelector string, podNames []string) error {
+	// 1. 父资源类型检查，仅几类可以批量重新调度
+	if !isReschedulable(m.Kind) {
+		return errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 %s 不支持重新调度下属 Pod"), m.Kind)
+	}
+
+	// 2. 获取父资源下属 Pod，与准备重新调度的 Pod 名称列表做比较，确保都属于指定父资源
+	podCli := cli.NewPodCliByClusterID(ctx, m.ClusterID)
+	podList, err := podCli.List(
+		ctx, namespace, m.Kind, name, metav1.ListOptions{LabelSelector: labelSelector},
+	)
+	if err != nil {
+		return err
+	}
+	ownerPodNames := set.NewStringSet()
+	for _, po := range mapx.GetList(podList, "items") {
+		ownerPodNames.Add(mapx.GetStr(po.(map[string]interface{}), "metadata.name"))
+	}
+	// 过滤出属于指定资源的，可以重新调度的 Pod
+	allowReschedulePodNames := []string{}
+	for _, pn := range podNames {
+		if ownerPodNames.Has(pn) {
+			allowReschedulePodNames = append(allowReschedulePodNames, pn)
+		}
+	}
+
+	// 3. 通过批量删除的方式，对下属的 Pod 进行重新调度
+	return podCli.BatchDelete(ctx, namespace, allowReschedulePodNames, metav1.DeleteOptions{})
 }
 
 // Delete 删除某个 k8s 资源

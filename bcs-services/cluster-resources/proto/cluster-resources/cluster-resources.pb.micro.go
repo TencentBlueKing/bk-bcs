@@ -367,6 +367,20 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Workload.ScaleDeploy",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/scale"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.RescheduleDeployPo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
 			Name:    "Workload.DeleteDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 			Method:  []string{"DELETE"},
@@ -428,6 +442,20 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 		{
 			Name:    "Workload.UpdateSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ScaleSTS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/scale"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.RescheduleSTSPo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
@@ -597,6 +625,8 @@ type WorkloadService interface {
 	GetDeploy(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateDeploy(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateDeploy(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	ScaleDeploy(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error)
+	RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListDS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetDS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
@@ -607,6 +637,8 @@ type WorkloadService interface {
 	GetSTS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateSTS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateSTS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	ScaleSTS(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error)
+	RescheduleSTSPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteSTS(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListCJ(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetCJ(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
@@ -677,6 +709,26 @@ func (c *workloadService) CreateDeploy(ctx context.Context, in *ResCreateReq, op
 
 func (c *workloadService) UpdateDeploy(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.UpdateDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ScaleDeploy(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ScaleDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.RescheduleDeployPo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -777,6 +829,26 @@ func (c *workloadService) CreateSTS(ctx context.Context, in *ResCreateReq, opts 
 
 func (c *workloadService) UpdateSTS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.UpdateSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ScaleSTS(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ScaleSTS", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) RescheduleSTSPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.RescheduleSTSPo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -1032,6 +1104,8 @@ type WorkloadHandler interface {
 	GetDeploy(context.Context, *ResGetReq, *CommonResp) error
 	CreateDeploy(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateDeploy(context.Context, *ResUpdateReq, *CommonResp) error
+	ScaleDeploy(context.Context, *ResScaleReq, *CommonResp) error
+	RescheduleDeployPo(context.Context, *ResBatchRescheduleReq, *CommonResp) error
 	DeleteDeploy(context.Context, *ResDeleteReq, *CommonResp) error
 	ListDS(context.Context, *ResListReq, *CommonResp) error
 	GetDS(context.Context, *ResGetReq, *CommonResp) error
@@ -1042,6 +1116,8 @@ type WorkloadHandler interface {
 	GetSTS(context.Context, *ResGetReq, *CommonResp) error
 	CreateSTS(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateSTS(context.Context, *ResUpdateReq, *CommonResp) error
+	ScaleSTS(context.Context, *ResScaleReq, *CommonResp) error
+	RescheduleSTSPo(context.Context, *ResBatchRescheduleReq, *CommonResp) error
 	DeleteSTS(context.Context, *ResDeleteReq, *CommonResp) error
 	ListCJ(context.Context, *ResListReq, *CommonResp) error
 	GetCJ(context.Context, *ResGetReq, *CommonResp) error
@@ -1074,6 +1150,8 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		GetDeploy(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateDeploy(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateDeploy(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		ScaleDeploy(ctx context.Context, in *ResScaleReq, out *CommonResp) error
+		RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error
 		DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetDS(ctx context.Context, in *ResGetReq, out *CommonResp) error
@@ -1084,6 +1162,8 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		GetSTS(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateSTS(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateSTS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
+		ScaleSTS(ctx context.Context, in *ResScaleReq, out *CommonResp) error
+		RescheduleSTSPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error
 		DeleteSTS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListCJ(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetCJ(ctx context.Context, in *ResGetReq, out *CommonResp) error
@@ -1135,6 +1215,20 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdateDeploy",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ScaleDeploy",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/scale"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.RescheduleDeployPo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
@@ -1201,6 +1295,20 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdateSTS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ScaleSTS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/scale"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.RescheduleSTSPo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
@@ -1383,6 +1491,14 @@ func (h *workloadHandler) UpdateDeploy(ctx context.Context, in *ResUpdateReq, ou
 	return h.WorkloadHandler.UpdateDeploy(ctx, in, out)
 }
 
+func (h *workloadHandler) ScaleDeploy(ctx context.Context, in *ResScaleReq, out *CommonResp) error {
+	return h.WorkloadHandler.ScaleDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error {
+	return h.WorkloadHandler.RescheduleDeployPo(ctx, in, out)
+}
+
 func (h *workloadHandler) DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
 	return h.WorkloadHandler.DeleteDeploy(ctx, in, out)
 }
@@ -1421,6 +1537,14 @@ func (h *workloadHandler) CreateSTS(ctx context.Context, in *ResCreateReq, out *
 
 func (h *workloadHandler) UpdateSTS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error {
 	return h.WorkloadHandler.UpdateSTS(ctx, in, out)
+}
+
+func (h *workloadHandler) ScaleSTS(ctx context.Context, in *ResScaleReq, out *CommonResp) error {
+	return h.WorkloadHandler.ScaleSTS(ctx, in, out)
+}
+
+func (h *workloadHandler) RescheduleSTSPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error {
+	return h.WorkloadHandler.RescheduleSTSPo(ctx, in, out)
 }
 
 func (h *workloadHandler) DeleteSTS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {

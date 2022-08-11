@@ -310,7 +310,7 @@ external:
                       ui:rules:
                         - maxLength128
                 ui:component:
-                  name: noTitleArray
+                  name: bfArray
               labels:
                 type: array
                 items:
@@ -328,7 +328,7 @@ external:
                         - maxLength128
                   type: object
                 ui:component:
-                  name: noTitleArray
+                  name: bfArray
         ui:group:
           props:
             showTitle: false
@@ -477,7 +477,7 @@ object:
                       ui:rules:
                         - maxLength128
                 ui:component:
-                  name: noTitleArray
+                  name: bfArray
               labels:
                 type: array
                 items:
@@ -495,7 +495,7 @@ object:
                         - maxLength128
                   type: object
                 ui:component:
-                  name: noTitleArray
+                  name: bfArray
         ui:group:
           props:
             showTitle: false
@@ -594,7 +594,7 @@ pod:
                       ui:rules:
                         - maxLength128
                 ui:component:
-                  name: noTitleArray
+                  name: bfArray
               labels:
                 type: array
                 items:
@@ -612,7 +612,7 @@ pod:
                         - maxLength128
                   type: object
                 ui:component:
-                  name: noTitleArray
+                  name: bfArray
         ui:group:
           props:
             showTitle: false

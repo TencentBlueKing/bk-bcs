@@ -92,7 +92,7 @@ type GDeployReplicas struct {
 	MaxUnavailable  int64  `structs:"maxUnavailable"`  // 最大不可用数量
 	MUAUnit         string `structs:"muaUnit"`         // 最大不可用数量单位（个/%）
 	MinReadySecs    int64  `structs:"minReadySecs"`    // 最小就绪时间
-	Partition       int64  `structs:"partition"`       // 保留旧版本示例数量
+	Partition       int64  `structs:"partition"`       // 保留旧版本实例数量
 	GracePeriodSecs int64  `structs:"gracePeriodSecs"` // 原地升级优雅更新时间
 }
 

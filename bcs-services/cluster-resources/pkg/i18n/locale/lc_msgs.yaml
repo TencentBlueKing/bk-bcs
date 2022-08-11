@@ -48,6 +48,12 @@
   en: "unsupported generator form: %s"
 - msgID: 不受支持的转换器格式：%s
   en: "unsupported transformer form: %s"
+- msgID: "资源类型 %s 不支持扩缩容"
+  en: "scale resource %s is unsupported"
+- msgID: "资源类型 %s 不支持重新调度下属 Pod"
+  en: "reschedule resource %s is unsupported"
+- msgID: "Pod %s 不属于 %s %s"
+  en: "Pod %s does not belong to %s %s"
 - msgID: "该请求资源类型 %s 在共享集群中不可用"
   en: "current resource %s unavailable in shared cluster"
 - msgID: "获取资源 APIVersion 信息失败：%v"
@@ -148,6 +154,10 @@
   en: Replicas
 - msgID: 副本数量
   en: Replicas
+- msgID: 服务名称
+  en: ServiceName
+- msgID: "Pod 管理策略"
+  en: PodManagePolicy
 - msgID: 升级策略
   en: UpdateStrategy
 - msgID: "原地升级策略只支持以原地重启容器的方式更新 image 字段，或以不重启不重建的方式更新 labels/annotations 字段；若更改除此之外的其它字段，则此次原地更新会卡住！"
@@ -156,6 +166,8 @@
   en: RollingUpdate
 - msgID: 原地升级
   en: InplaceUpdate
+- msgID: 手动删除
+  en: OnDelete
 - msgID: "最大调度 Pod 数量"
   en: MaxSurge
 - msgID: "最大调度 Pod 数量 与最大不可用数量不可均为 0"
@@ -172,10 +184,6 @@
   en: Partition
 - msgID: 优雅更新时间
   en: GracePeriodSeconds
-- msgID: 服务名称
-  en: ServiceName
-- msgID: "Pod 管理策略"
-  en: PodManagePolicy
 - msgID: 优雅删除/更新
   en: GracefulManage
 - msgID: 启用
@@ -216,8 +224,12 @@
   en: ProgressDeadlineSecs
 - msgID: 进程截止时间必须大于最小就绪时间
   en: "ProgressDeadlineSecs must be greater than MinReadySecs"
-- msgID: 手动删除
-  en: OnDelete
+- msgID: "OrderedReady：顺序启动或停止 Pod，若前一个 Pod 启动或停止未完成，则不会操作下一个 Pod<br>Parallel：启动或停止 Pod 前，不会检查 Pod 状态，直接进行并发操作<br>注意：此选项只会影响扩缩容操作，对更新操作无效！"
+  en: "OrderedReady: Start or stop Pods sequentially. If the previous Pod is not started or stopped, the next Pod will not be operated.<br>Parallel: Before starting or stopping a Pod, the Pod status will not be checked, and concurrent operations will be performed directly<br>Note : This option only affects scale operation, not for update operation!"
+- msgID: 分区滚动更新
+  en: Partition
+- msgID: "更新策略可以实现分区，所有序号大于该值的 Pod 都会被更新<br>例如：存在 Pod web-0 至 web-9，这里设置为 5，则只会更新 web-5 至 web-9，其他 Pod 不会被更新"
+  en: "The update strategy can implement partitioning, and all Pods with a sequence number greater than this value will be updated<br>For example: if there are pods web-0 to web-9, if set to 5 here, only web-5 to web-9 will be updated, and other pods will not be updated"
 - msgID: 存储卷声明模板
   en: VolumeClaimTemplate
 - msgID: 卷声明

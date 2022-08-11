@@ -86,6 +86,25 @@ func (h *Handler) UpdateDeploy(
 	return err
 }
 
+// ScaleDeploy Deployment 扩缩容
+func (h *Handler) ScaleDeploy(
+	ctx context.Context, req *clusterRes.ResScaleReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Deploy).Scale(
+		ctx, req.Namespace, req.Name, req.Replicas, metav1.PatchOptions{},
+	)
+	return err
+}
+
+// RescheduleDeployPo 批量重新调度 Deployment 下的 Pod
+func (h *Handler) RescheduleDeployPo(
+	ctx context.Context, req *clusterRes.ResBatchRescheduleReq, _ *clusterRes.CommonResp,
+) (err error) {
+	return resAction.NewResMgr(req.ClusterID, "", res.Deploy).Reschedule(
+		ctx, req.Namespace, req.Name, req.LabelSelector, req.PodNames,
+	)
+}
+
 // DeleteDeploy 删除 Deployment
 func (h *Handler) DeleteDeploy(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
