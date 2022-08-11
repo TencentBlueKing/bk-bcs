@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
 	"net/http"
 	"strconv"
 	"strings"
@@ -228,6 +229,7 @@ func insert(req *restful.Request) error {
 	if err != nil {
 		return err
 	}
+	dynamicData := lib.CopyMap(data)
 
 	putOption := &lib.StorePutOption{
 		UniqueKey: eventIndexKeys,
@@ -242,6 +244,24 @@ func insert(req *restful.Request) error {
 			return nil
 		}
 		return fmt.Errorf("failed to insert, err %s", err.Error())
+	}
+
+	if dynamicData[dataTag] != nil {
+		if _, ok := dynamicData[dataTag].(map[string]interface{}); ok {
+			dynamicData[namespaceTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["namespace"].(string)
+			dynamicData[resourceNameTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string)
+			dynamicData[resourceTypeTag] = EventResource
+
+			features := make(operator.M)
+			for _, key := range nsFeatTags {
+				features[key] = dynamicData[key]
+			}
+			// dynamic event
+			err = dynamic.PutData(req.Request.Context(), dynamicData, features, nsFeatTags, EventResource)
+			if err != nil {
+				blog.Errorf("dymanic event put data failed, err %s", err.Error())
+			}
+		}
 	}
 
 	hasIndex, err := store.GetDB().Table(tablePrefix+data[clusterIDTag].(string)).HasIndex(req.Request.Context(), eventTimeTag)

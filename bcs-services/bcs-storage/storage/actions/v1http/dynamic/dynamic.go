@@ -367,6 +367,9 @@ func CleanDynamic() {
 	}
 	for _, table := range tables {
 		cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), table, time.Hour)
+		if table == eventResourceType {
+			cleaner.WithMaxDuration(time.Duration(1)*time.Hour, eventTimeTag)
+		}
 		go cleaner.Run(context.TODO())
 	}
 }
