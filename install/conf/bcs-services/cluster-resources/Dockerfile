@@ -8,7 +8,7 @@ RUN apk --update --no-cache add bash ca-certificates vim
 
 WORKDIR /data/workspace
 
-COPY cluster-resources-service /usr/bin/cluster-resources-service
+COPY bcs-cluster-resources /usr/bin/bcs-cluster-resources
 
 COPY etc/ /data/workspace/etc
 
