@@ -3,9 +3,7 @@
     <span>{{$t('该操作需要以下权限')}}</span>
     <bk-table :data="tableData" class="mt25" v-bkloading="{ isLoading }">
       <bk-table-column :label="$t('系统')" prop="system" min-width="150">
-        <template>
-          {{ $t('容器管理平台') }}
-        </template>
+        {{ $t('容器管理平台') }}
       </bk-table-column>
       <bk-table-column :label="$t('需要申请的权限')" prop="auth" min-width="220">
         <template slot-scope="{ row }">
@@ -32,7 +30,7 @@ import { userPermsByAction } from '@/api/base';
 import actionsMap from '@/components/apply-perm/actions-map';
 
 export default defineComponent({
-  name: 'BkException',
+  name: 'BcsException',
   props: {
     type: {
       type: String,
