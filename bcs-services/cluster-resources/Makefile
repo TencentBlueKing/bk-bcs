@@ -14,7 +14,6 @@ endif
 
 GOPATH=$(shell go env GOPATH)
 BUILDTIME=${shell date +%Y-%m-%dT%I:%M:%S}
-BUILDDIR=../build/bcs-cluster-resources.${VERSION}
 
 LDFLAGS="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} \
 	-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=${GITCOMMIT} \
@@ -35,7 +34,7 @@ tidy:
 
 # build executable binary locally for develop
 build: tidy
-	go build -ldflags ${LDFLAGS} -o cluster-resources-service *.go
+	go build -ldflags ${LDFLAGS} -o bcs-cluster-resources *.go
 
 # compile third_party/swagger-ui to swagger/datafile.go，execute only once!
 swagger: proto

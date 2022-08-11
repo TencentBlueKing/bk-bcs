@@ -151,7 +151,7 @@ command:
         ui:rules:
           - maxLength250
       ui:component:
-        name: noTitleArray
+        name: bfArray
     args:
       title: {{ i18n "参数" .lang }}
       type: array
@@ -160,7 +160,7 @@ command:
         ui:rules:
           - maxLength250
       ui:component:
-        name: noTitleArray
+        name: bfArray
 {{- end }}
 
 {{- define "container.service" }}
@@ -204,7 +204,7 @@ service:
               props:
                 max: 65535
       ui:component:
-        name: noTitleArray
+        name: bfArray
       ui:props:
         showTitle: false
 {{- end }}
@@ -282,7 +282,7 @@ envs:
               - validator: "{{`{{`}} ($widgetNode?.getSibling('type')?.instance?.value === 'keyValue' || $widgetNode?.getSibling('type')?.instance?.value === 'configMap' || $widgetNode?.getSibling('type')?.instance?.value === 'secret') || $self.value !== '' {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
       ui:component:
-        name: noTitleArray
+        name: bfArray
       ui:props:
         showTitle: false
 {{- end }}
@@ -458,7 +458,7 @@ properties:
     title: {{ i18n "命令" .lang }}
     type: array
     ui:component:
-      name: noTitleArray
+      name: bfArray
     ui:rules:
       - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'exec' || $self.value.length > 0 {{`}}`}}"
         message: {{ i18n "至少包含一条命令" .lang }}
@@ -467,7 +467,7 @@ properties:
     type: integer
     default: 0
     ui:component:
-      name: unitInput
+      name: bfInput
       props:
         max: 86400
         unit: s
@@ -476,7 +476,7 @@ properties:
     type: integer
     default: 10
     ui:component:
-      name: unitInput
+      name: bfInput
       props:
         max: 86400
         unit: s
@@ -485,7 +485,7 @@ properties:
     type: integer
     default: 1
     ui:component:
-      name: unitInput
+      name: bfInput
       props:
         max: 86400
         unit: s
@@ -517,7 +517,7 @@ resource:
           title: {{ i18n "CPU 预留" .lang }}
           type: integer
           ui:component:
-            name: unitInput
+            name: bfInput
             props:
               max: 256000
               unit: mCPUs
@@ -527,7 +527,7 @@ resource:
           title: {{ i18n "内存预留" .lang }}
           type: integer
           ui:component:
-            name: unitInput
+            name: bfInput
             props:
               max: 256000
               unit: Mi
@@ -538,7 +538,7 @@ resource:
           title: {{ i18n "CPU 限制" .lang }}
           type: integer
           ui:component:
-            name: unitInput
+            name: bfInput
             props:
               max: 256000
               unit: mCPUs
@@ -548,7 +548,7 @@ resource:
           title: {{ i18n "内存限制" .lang }}
           type: integer
           ui:component:
-            name: unitInput
+            name: bfInput
             props:
               max: 256000
               unit: Mi
@@ -750,7 +750,7 @@ mount:
             ui:component:
               name: checkbox
       ui:component:
-        name: noTitleArray
+        name: bfArray
       ui:props:
         showTitle: false
 {{- end }}

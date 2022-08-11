@@ -65,10 +65,15 @@ class BkRepoAuth(AuthBase):
         self.password = password
 
     def __call__(self, r: PreparedRequest):
+        if settings.EDITION == settings.COMMUNITY_EDITION:
+            repo_uid = settings.ADMIN_USERNAME
+        else:
+            repo_uid = self.username or settings.ADMIN_USERNAME
+
         # 添加auth参数到headers中
         r.headers.update(
             {
-                "X-BKREPO-UID": settings.ADMIN_USERNAME,
+                "X-BKREPO-UID": repo_uid,
                 "authorization": settings.BK_REPO_AUTHORIZATION,
                 "Content-Type": "application/json",
             }

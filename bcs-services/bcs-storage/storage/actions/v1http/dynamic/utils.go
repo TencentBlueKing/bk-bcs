@@ -14,6 +14,7 @@
 package dynamic
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"time"
@@ -50,10 +51,13 @@ const (
 	limitTag      = "limit"
 	updateTimeTag = "updateTime"
 	createTimeTag = "createTime"
+	eventTimeTag  = "eventTime"
 
 	applicationTypeName = "application"
 	processTypeName     = "process"
 	kindTag             = "data.kind"
+
+	eventResourceType = "Event"
 )
 
 var needTimeFormatList = []string{updateTimeTag, createTimeTag}
@@ -312,6 +316,17 @@ func putResources(req *restful.Request, resourceFeatList []string) (operator.M, 
 	if err != nil {
 		return nil, err
 	}
+
+	err = PutData(req.Request.Context(), data, features, resourceFeatList, getTable(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// PutData put data to db
+func PutData(ctx context.Context, data, features operator.M, resourceFeatList []string, table string) error {
 	putOption := &lib.StorePutOption{
 		UniqueKey:     resourceFeatList,
 		Cond:          operator.NewLeafCondition(operator.Eq, features),
@@ -322,12 +337,12 @@ func putResources(req *restful.Request, resourceFeatList []string) (operator.M, 
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	store.SetSoftDeletion(true)
-	err = store.Put(req.Request.Context(), getTable(req), data, putOption)
+	err := store.Put(ctx, table, data, putOption)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return data, nil
+	return nil
 }
 
 func deleteNamespaceResources(req *restful.Request) error {

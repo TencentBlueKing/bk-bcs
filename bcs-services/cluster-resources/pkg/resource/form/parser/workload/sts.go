@@ -53,6 +53,7 @@ func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplic
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", DefaultUpdateStrategy).(string)
 	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
+	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.rollingUpdate.partition")
 }
 
 // ParseSTSVolumeClaimTmpl ...

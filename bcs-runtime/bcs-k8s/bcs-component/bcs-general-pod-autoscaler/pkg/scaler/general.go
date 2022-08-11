@@ -263,7 +263,7 @@ func getTargetRefKey(gpa *autoscaling.GeneralPodAutoscaler) string {
 func getMetricName(metricSpec autoscaling.MetricSpec) string {
 	switch metricSpec.Type {
 	case autoscaling.ObjectMetricSourceType:
-		return metricSpec.Object.Metric.Name
+		return string(metricSpec.Object.Metric.Name)
 	case autoscaling.PodsMetricSourceType:
 		return metricSpec.Pods.Metric.Name
 	case autoscaling.ResourceMetricSourceType:
@@ -272,6 +272,8 @@ func getMetricName(metricSpec autoscaling.MetricSpec) string {
 		return string(metricSpec.ContainerResource.Name)
 	case autoscaling.ExternalMetricSourceType:
 		return metricSpec.External.Metric.Name
+	default:
+		return ""
 	}
 	return ""
 }
@@ -660,7 +662,7 @@ func (a *GeneralController) computeStatusForObjectMetric(
 			},
 		}
 		metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "metric",
-			metricSpec.Object.Metric.Name, metricSpec.Object.Target.Value.Value(),
+			metricSpec.Object.Metric.Name, metricSpec.Object.Target.AverageValue.Value(),
 			status.Object.Current.AverageValue.Value())
 		return replicaCountProposal,
 			timestampProposal,
@@ -971,17 +973,17 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		}
 		return fmt.Errorf("failed to query scale subresource for %s: %v", reference, err)
 	}
-	if len(scale.Status.Selector) != 0 {
-		// record selector accelerate search
-		labelMap, err2 := labels.ConvertSelectorToLabelsMap(scale.Status.Selector)
-		if err2 == nil {
-			if err2 = a.updateLabelsIfNeeded(gpa, labelMap); err2 != nil {
-				klog.Warningf("Add labels: %v to gpa: %v failed: %v", labelMap, gpa.Name, err2)
-			}
-		} else {
-			klog.Errorf("ConvertSelectorToLabelsMap: %v faield: %v", scale.Status.Selector, err2)
-		}
-	}
+	// if len(scale.Status.Selector) != 0 {
+	// 	// record selector accelerate search
+	// 	labelMap, err2 := labels.ConvertSelectorToLabelsMap(scale.Status.Selector)
+	// 	if err2 == nil {
+	// 		if err2 = a.updateLabelsIfNeeded(gpa, labelMap); err2 != nil {
+	// 			klog.Warningf("Add labels: %v to gpa: %v failed: %v", labelMap, gpa.Name, err2)
+	// 		}
+	// 	} else {
+	// 		klog.Errorf("ConvertSelectorToLabelsMap: %v failed: %v", scale.Status.Selector, err2)
+	// 	}
+	// }
 
 	setCondition(gpa, autoscaling.AbleToScale, v1.ConditionTrue, "SucceededGetScale",
 		"the GPA controller was able to get the target's current scale")

@@ -18,7 +18,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// GenUuid 长度为32
+// GenUUID generate a uuid
 func GenUUID() string {
 	return uuid.New().String()
 }

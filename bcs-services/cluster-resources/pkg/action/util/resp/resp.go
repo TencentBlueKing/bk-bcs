@@ -21,6 +21,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -83,6 +84,24 @@ func BuildUpdateAPIResp(
 
 	var ret *unstructured.Unstructured
 	ret, err = cli.NewResClient(clusterConf, k8sRes).Update(ctx, namespace, name, manifest, opts)
+	if err != nil {
+		return nil, err
+	}
+	return pbstruct.Unstructured2pbStruct(ret), nil
+}
+
+// BuildPatchAPIResp ...
+func BuildPatchAPIResp(
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
+) (*structpb.Struct, error) {
+	clusterConf := res.NewClusterConfig(clusterID)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	var ret *unstructured.Unstructured
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Patch(ctx, namespace, name, pt, data, opts)
 	if err != nil {
 		return nil, err
 	}

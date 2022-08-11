@@ -24,6 +24,16 @@ func StringInSlice(str string, list []string) bool {
 	return false
 }
 
+// AllInt64Equal 判断 Int64 列表中是否每个值都相等
+func AllInt64Equal(list []int64) bool {
+	for idx := 1; idx < len(list); idx++ {
+		if list[idx] != list[0] {
+			return false
+		}
+	}
+	return true
+}
+
 // MatchKVInSlice 对 MapList 中每项进行检查，
 // 若存在某项的 key 的 value 为指定值，则返回 true
 func MatchKVInSlice(list []interface{}, key, value string) bool {

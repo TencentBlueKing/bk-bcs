@@ -1,23 +1,23 @@
 <template>
-    <div class="switch-button" @click="handleClick">
-        <i class="bcs-icon bcs-icon-qiehuan mr5"></i>
-        {{title}}
-    </div>
+  <div class="switch-button" @click="handleClick">
+    <i class="bcs-icon bcs-icon-qiehuan mr5"></i>
+    {{title}}
+  </div>
 </template>
 <script>
-    export default {
-        props: {
-            title: {
-                type: String,
-                default: ''
-            }
-        },
-        methods: {
-            handleClick () {
-                this.$emit('click')
-            }
-        }
-    }
+export default {
+  props: {
+    title: {
+      type: String,
+      default: '',
+    },
+  },
+  methods: {
+    handleClick() {
+      this.$emit('click');
+    },
+  },
+};
 </script>
 <style lang="postcss" scoped>
 .switch-button {

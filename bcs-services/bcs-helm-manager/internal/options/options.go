@@ -105,6 +105,19 @@ type ExemptClientsConfig struct {
 	ClientIDs string `json:"clientids"`
 }
 
+// IAMConfig for perm interface
+type IAMConfig struct {
+	SystemID      string `json:"systemID"`
+	AppCode       string `json:"appCode"`
+	AppSecret     string `json:"appSecret"`
+	External      bool   `json:"external"`
+	GatewayServer string `json:"gateWayServer"`
+	IAMServer     string `json:"iamServer"`
+	BkiIAMServer  string `json:"bkiIamServer"`
+	Metric        bool   `json:"metric"`
+	Debug         bool   `json:"debug"`
+}
+
 // AppConfig basic config
 type AppConfig struct {
 	Code   string `json:"code"`
@@ -125,6 +138,7 @@ type HelmManagerOptions struct {
 	Mongo          MongoConfig          `json:"mongo"`
 	Repo           RepoConfig           `json:"repo"`
 	Release        ReleaseConfig        `json:"release"`
+	IAM            IAMConfig            `json:"iam"`
 	JWT            JWTConfig            `json:"jwt"`
 	ExemptClients  ExemptClientsConfig  `json:"exemptclients"`
 	ProjectService ProjectServiceConfig `json:"projectservice"`

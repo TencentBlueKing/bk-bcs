@@ -41,7 +41,7 @@ pvc:
         ui:component:
           name: checkbox
   ui:component:
-    name: noTitleArray
+    name: bfArray
   ui:props:
     showTitle: false
 {{- end }}
@@ -90,7 +90,7 @@ hostPath:
               - label: BlockDevice
                 value: BlockDevice
   ui:component:
-    name: noTitleArray
+    name: bfArray
   ui:props:
     showTitle: false
 {{- end }}
@@ -161,7 +161,7 @@ configMap:
                 - maxLength128
           type: object
         ui:component:
-          name: noTitleArray
+          name: bfArray
     ui:group:
       props:
         showTitle: false
@@ -239,7 +239,7 @@ secret:
                 - maxLength128
           type: object
         ui:component:
-          name: noTitleArray
+          name: bfArray
     ui:group:
       props:
         showTitle: false
@@ -266,7 +266,7 @@ emptyDir:
           - maxLength128
           - nameRegex
   ui:component:
-    name: noTitleArray
+    name: bfArray
   ui:props:
     showTitle: false
 {{- end }}
@@ -303,7 +303,7 @@ nfs:
         ui:component:
           name: checkbox
   ui:component:
-    name: noTitleArray
+    name: bfArray
   ui:props:
     showTitle: false
 {{- end }}

@@ -1,6 +1,6 @@
 {
   "kind": "PersistentVolume",
-  "class": "storages",
+  "class": "storage",
   "references": null,
   "items": [
     {

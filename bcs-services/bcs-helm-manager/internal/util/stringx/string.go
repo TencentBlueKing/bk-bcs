@@ -51,7 +51,7 @@ func Errs2String(errs []error) string {
 	return strings.Join(strList, ",")
 }
 
-// SplitYaml 分割 yaml 为数组 string
+// SplitYaml2Array 分割 yaml 为数组 string
 // separator 为空时，设置为以 "---\n" 分割
 func SplitYaml2Array(yamlStr string, separator string) []string {
 	if separator == "" {

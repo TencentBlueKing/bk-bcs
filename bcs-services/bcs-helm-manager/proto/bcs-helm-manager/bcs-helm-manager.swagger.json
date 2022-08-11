@@ -232,6 +232,60 @@
         ]
       }
     },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history": {
+      "get": {
+        "summary": "查询指定集群的chart release历史信息",
+        "description": "查询指定集群的chart release历史信息",
+        "operationId": "HelmManager_GetReleaseHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetReleaseHistoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代号",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在的namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart release名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
     "/helmmanager/v1/release/{clusterID}": {
       "get": {
         "summary": "查询指定集群的chart release信息",
@@ -1350,6 +1404,38 @@
       "description": "查询指定release信息的返回",
       "title": "GetReleaseDetailResp"
     },
+    "helmmanagerGetReleaseHistoryResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/helmmanagerReleaseHistory"
+          },
+          "description": "release history",
+          "title": "data"
+        }
+      },
+      "description": "release history的返回",
+      "title": "GetReleaseHistoryResp"
+    },
     "helmmanagerGetRepositoryResp": {
       "type": "object",
       "properties": {
@@ -1692,6 +1778,64 @@
           "title": "values"
         }
       }
+    },
+    "helmmanagerReleaseHistory": {
+      "type": "object",
+      "properties": {
+        "revision": {
+          "type": "integer",
+          "format": "int64",
+          "description": "release revision",
+          "title": "revision"
+        },
+        "name": {
+          "type": "string",
+          "description": "release name",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "release namespace",
+          "title": "namespace"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "description": {
+          "type": "string",
+          "description": "release 描述",
+          "title": "description"
+        },
+        "status": {
+          "type": "string",
+          "description": "release 状态",
+          "title": "status"
+        },
+        "chart": {
+          "type": "string",
+          "description": "release chart",
+          "title": "chart"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart 版本",
+          "title": "chartVersion"
+        },
+        "appVersion": {
+          "type": "string",
+          "description": "release appVersion",
+          "title": "appVersion"
+        },
+        "values": {
+          "type": "string",
+          "description": "release values",
+          "title": "values"
+        }
+      },
+      "description": "release history",
+      "title": "ReleaseHistory"
     },
     "helmmanagerReleaseListData": {
       "type": "object",

@@ -34,7 +34,8 @@ const (
 )
 
 // CustomHTTPError catch error, and return error response
-func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
+func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler,
+	w http.ResponseWriter, r *http.Request, err error) {
 	w.Header().Set("Content-type", marshaler.ContentType())
 	w.WriteHeader(runtime.HTTPStatusFromCode(http.StatusOK))
 	jErr := json.NewEncoder(w).Encode(ErrResp{

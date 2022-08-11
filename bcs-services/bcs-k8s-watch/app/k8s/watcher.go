@@ -298,9 +298,21 @@ func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bo
 }
 
 func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncData {
+	dMeta, isObj := obj.(metav1.Object)
 
-	// construct and send
-	dMeta := obj.(metav1.Object)
+	if !isObj {
+		deletedState, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			glog.Errorf("Error casting to DeletedFinalStateUnknown, obj: %+v", obj)
+			return nil
+		}
+		dMeta, ok = deletedState.Obj.(metav1.Object)
+		if !ok {
+			glog.Errorf("Error DeletedFinalStateUnknown contained Obj, obj: %+v", obj)
+			return nil
+		}
+	}
+
 	namespace := dMeta.GetNamespace()
 	name := dMeta.GetName()
 

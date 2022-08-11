@@ -22,6 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
@@ -29,6 +30,20 @@ import (
 func FormatWorkloadRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
+	return ret
+}
+
+// FormatDeploy ...
+func FormatDeploy(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatWorkloadRes(manifest)
+	ret["status"] = newDeployStatusParser(manifest).Parse()
+	return ret
+}
+
+// FormatSTS ...
+func FormatSTS(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatWorkloadRes(manifest)
+	ret["status"] = newSTSStatusParser(manifest).Parse()
 	return ret
 }
 
@@ -86,6 +101,69 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 }
 
 // 工具方法/解析器
+
+// StatusChecker ...
+type StatusChecker interface {
+	// IsNormal 判断当前资源是否为正常状态
+	IsNormal(map[string]interface{}) bool
+}
+
+// DeployStatusChecker ...
+type DeployStatusChecker struct{}
+
+// IsNormal ...
+func (c *DeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "status.availableReplicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "spec.replicas"),
+	})
+}
+
+// STSStatusChecker ...
+type STSStatusChecker struct{}
+
+// IsNormal ...
+func (c *STSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "status.currentReplicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "spec.replicas"),
+	})
+}
+
+// WorkloadStatusParser 工作负载资源 自定义状态 解析器
+type WorkloadStatusParser struct {
+	checker  StatusChecker
+	manifest map[string]interface{}
+}
+
+// Parse ...
+func (p *WorkloadStatusParser) Parse() string {
+	// 删除中优先级最高，判断根据是 deletionTimestamp 存在
+	if dt := mapx.Get(p.manifest, "metadata.deletionTimestamp", nil); dt != nil {
+		return WorkloadStatusDeleting
+	}
+	// 不同资源类型正常判断条件不同
+	if p.checker.IsNormal(p.manifest) {
+		return WorkloadStatusNormal
+	}
+	// 若非正常情况，检查 generation，若为 1（第一个版本），则状态为创建中
+	if gen := mapx.GetInt64(p.manifest, "metadata.generation"); gen == int64(1) {
+		return WorkloadStatusCreating
+	}
+	return WorkloadStatusUpdating
+}
+
+func newDeployStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&DeployStatusChecker{}, manifest}
+}
+
+func newSTSStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&STSStatusChecker{}, manifest}
+}
 
 // 遍历每个容器，收集所有 image 信息并去重
 func parseContainerImages(manifest map[string]interface{}, paths string) []string {

@@ -46,10 +46,6 @@ func SetDefaults_GameStatefulSet(obj *GameStatefulSet) {
 		return
 	}
 
-	if obj.Spec.UpdateStrategy.CanaryStrategy != nil {
-		return
-	}
-
 	setDefaultsRollingUpdate(obj)
 
 	if obj.Spec.UpdateStrategy.Type == InplaceUpdateGameStatefulSetStrategyType {
@@ -100,10 +96,6 @@ func SetDefaults_GameDeployment(obj *GameDeployment) {
 
 	if obj.Spec.UpdateStrategy.Type == "" {
 		obj.Spec.UpdateStrategy.Type = RollingGameDeploymentUpdateStrategyType
-	}
-
-	if obj.Spec.UpdateStrategy.CanaryStrategy != nil {
-		return
 	}
 
 	if obj.Spec.UpdateStrategy.Partition == nil {

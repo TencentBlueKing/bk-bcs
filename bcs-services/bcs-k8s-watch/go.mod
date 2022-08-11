@@ -15,7 +15,7 @@ replace (
 	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20181126155829-0cd23ebeb688
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
-	k8s.io/client-go => k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
+	k8s.io/client-go => github.com/okkervil/client-go v0.0.0-20220801130650-120a08c09dc9
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20181109181836-c59034cc13d5
 	k8s.io/kubernetes => k8s.io/kubernetes v1.13.1
 )

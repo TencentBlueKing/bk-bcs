@@ -386,6 +386,7 @@ class AppUpgradeSLZ(AppBaseSLZ):
         source="get_valuefile_name", write_only=True, default=DEFAULT_VALUES_FILE_NAME
     )
     cmd_flags = serializers.JSONField(required=False, default=[])
+    description = serializers.CharField(required=False)
 
     def update(self, instance, validated_data):
         ns_info = self.get_ns_info_by_id(instance.namespace_id)
@@ -403,6 +404,12 @@ class AppUpgradeSLZ(AppBaseSLZ):
             project_id=instance.project_id,
             namespace_id=instance.namespace_id,
         )
+
+        cmd_flags = validated_data['cmd_flags']
+        # 添加 upgrade 时的描述信息
+        if validated_data.get('description'):
+            cmd_flags.extend([{'--description': validated_data['description']}, {'--history-max': '100'}])
+
         return instance.upgrade_app(
             access_token=self.access_token,
             chart_version_id=validated_data["upgrade_verion"],
@@ -412,7 +419,7 @@ class AppUpgradeSLZ(AppBaseSLZ):
             updator=self.request_username,
             sys_variables=sys_variables,
             valuefile_name=validated_data.get("get_valuefile_name"),
-            cmd_flags=validated_data["cmd_flags"],
+            cmd_flags=cmd_flags,
         )
 
     class Meta:

@@ -144,6 +144,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "HelmManager.GetReleaseHistory",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -170,6 +176,7 @@ type HelmManagerService interface {
 	UninstallRelease(ctx context.Context, in *UninstallReleaseReq, opts ...client.CallOption) (*UninstallReleaseResp, error)
 	UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, opts ...client.CallOption) (*UpgradeReleaseResp, error)
 	RollbackRelease(ctx context.Context, in *RollbackReleaseReq, opts ...client.CallOption) (*RollbackReleaseResp, error)
+	GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error)
 }
 
 type helmManagerService struct {
@@ -344,6 +351,16 @@ func (c *helmManagerService) RollbackRelease(ctx context.Context, in *RollbackRe
 	return out, nil
 }
 
+func (c *helmManagerService) GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseHistory", in)
+	out := new(GetReleaseHistoryResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for HelmManager service
 
 type HelmManagerHandler interface {
@@ -367,6 +384,7 @@ type HelmManagerHandler interface {
 	UninstallRelease(context.Context, *UninstallReleaseReq, *UninstallReleaseResp) error
 	UpgradeRelease(context.Context, *UpgradeReleaseReq, *UpgradeReleaseResp) error
 	RollbackRelease(context.Context, *RollbackReleaseReq, *RollbackReleaseResp) error
+	GetReleaseHistory(context.Context, *GetReleaseHistoryReq, *GetReleaseHistoryResp) error
 }
 
 func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts ...server.HandlerOption) error {
@@ -387,6 +405,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		UninstallRelease(ctx context.Context, in *UninstallReleaseReq, out *UninstallReleaseResp) error
 		UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, out *UpgradeReleaseResp) error
 		RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error
+		GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error
 	}
 	type HelmManager struct {
 		helmManager
@@ -496,6 +515,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseHistory",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&HelmManager{h}, opts...))
 }
 
@@ -565,4 +590,8 @@ func (h *helmManagerHandler) UpgradeRelease(ctx context.Context, in *UpgradeRele
 
 func (h *helmManagerHandler) RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error {
 	return h.HelmManagerHandler.RollbackRelease(ctx, in, out)
+}
+
+func (h *helmManagerHandler) GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error {
+	return h.HelmManagerHandler.GetReleaseHistory(ctx, in, out)
 }

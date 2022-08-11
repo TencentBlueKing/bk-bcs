@@ -1,6 +1,6 @@
 {
   "kind": "Job",
-  "class": "workloads",
+  "class": "workload",
   "references": null,
   "items": [
     {

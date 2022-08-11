@@ -5,6 +5,7 @@
           group:
             - [ "cnt", "svcName" ]
             - [ "updateStrategy",  "podManPolicy" ]
+            - [ "partition" ]
           prop: replicas
       - - group:
             - - group:

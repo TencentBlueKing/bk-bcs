@@ -59,6 +59,8 @@ const (
 	resourceKindTag = "resourceKind"
 	resourceNameTag = "resourceName"
 
+	namespaceTag = "namespace"
+
 	EventResource = "Event"
 )
 
@@ -68,6 +70,8 @@ var conditionTagList = [...]string{
 	"extraInfo.name", "extraInfo.namespace", "extraInfo.kind"}
 var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typeTag,
 	clusterIDTag, nameSpaceTag, resourceTypeTag, resourceKindTag, resourceNameTag}
+
+var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceNameTag}
 
 var eventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
 

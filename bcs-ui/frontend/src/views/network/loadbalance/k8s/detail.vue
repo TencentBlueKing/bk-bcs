@@ -1,3 +1,3 @@
 <template>
-    <div>待开发</div>
+  <div>待开发</div>
 </template>

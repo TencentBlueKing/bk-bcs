@@ -12,9 +12,11 @@
 
 package auth
 
-const (
-	// UserType 用户态类型
-	UserType = "user"
-	// UserTypeClient 非用户态类型
-	UserTypeClient = "client"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 )
+
+// ActionPermissions action 对应权限中心的权限
+var ActionPermissions = map[string]string{
+	"HelmManager.GetReleaseHistory": cluster.CanViewClusterOperation,
+}
