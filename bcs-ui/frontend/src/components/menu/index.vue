@@ -6,7 +6,12 @@
         :class="['bk-menu-title-wrapper', item.disable, { selected: selected === item.id }]"
         @click="handleItemClick(item)" v-else>
         <i :class="['bcs-icon left-icon', item.icon]"></i>
-        <div class="bk-menu-title">{{item.name}}</div>
+        <div class="bk-menu-title">
+          <span>
+            {{item.name}}
+            <bcs-tag theme="danger" v-if="item.new">NEW</bcs-tag>
+          </span>
+        </div>
         <i
           :class="['bcs-icon right-icon bcs-icon-angle-down',
                    openedMenu.includes(item.id) ? 'selected' : 'bcs-icon-angle-down']"

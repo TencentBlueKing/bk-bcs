@@ -9,11 +9,11 @@
               content: $t('非TKE集群不支持节点模板')
             }">
             <bcs-select
-              style="flex: 1;"
               searchable
               :clearable="false"
               placeholder=" "
               :disabled="!isTkeCluster"
+              :loading="loading"
               v-model="nodeTemplateID"
               @change="handleNodeTemplateIDChange">
               <bcs-option id="" :name="$t('不使用节点模板')"></bcs-option>
@@ -32,12 +32,20 @@
                 </span>
               </template>
             </bcs-select>
-            <bcs-button
-              text class="ml10"
-              :disabled="!nodeTemplateID"
-              @click="handlePreview">
-              {{$t('预览')}}
-            </bcs-button>
+            <template v-if="isTkeCluster">
+              <span
+                class="icon ml10"
+                v-bk-tooltips.top="$t('刷新列表')"
+                @click="handleNodeTemplateList">
+                <i class="bcs-icon bcs-icon-reset"></i>
+              </span>
+              <span class="icon" v-if="nodeTemplateID">
+                <i
+                  class="bcs-icon bcs-icon-yulan ml15"
+                  v-bk-tooltips.top="$t('预览')"
+                  @click="handlePreview"></i>
+              </span>
+            </template>
           </div>
         </bk-form-item>
         <bk-form-item :label="$t('选择节点')">
@@ -200,6 +208,7 @@ export default defineComponent({
       handleNodeTemplateList();
     });
     return {
+      loading,
       isTkeCluster,
       showDetail,
       currentRow,
@@ -216,6 +225,7 @@ export default defineComponent({
       handlePreview,
       handleAddNode,
       handleNodeTemplateIDChange,
+      handleNodeTemplateList,
     };
   },
 });
@@ -226,6 +236,13 @@ export default defineComponent({
     >>> .item-node-template {
         display: flex;
         max-width: 524px;
+        .bk-select {
+          width: 400px;
+        }
+        .icon:hover {
+          color: #3a84ff;
+          cursor: pointer;
+        }
     }
     >>> .choose-node {
         .form-group-content {

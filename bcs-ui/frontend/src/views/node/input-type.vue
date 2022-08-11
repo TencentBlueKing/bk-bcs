@@ -24,6 +24,8 @@
         v-else-if="type === 'int'"
         type="number"
         v-model="inputValue"
+        :min="range.min"
+        :max="range.max"
         ref="inputRef"
         @change="handleValueChange"
         @enter="handleEnter">
@@ -64,6 +66,10 @@ export default defineComponent({
     options: {
       type: Array,
       default: () => ([]),
+    },
+    range: {
+      type: Object,
+      default: () => ({}),
     },
   },
   setup(props, ctx) {

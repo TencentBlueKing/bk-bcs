@@ -81,7 +81,13 @@
                 <i class="bk-icon icon-plus-circle-shape mr5"></i>
                 {{$t('添加')}}
               </span>
-              <Taints style="max-width: 600px;" v-else v-model="formData.taints"></Taints>
+              <Taints
+                style="max-width: 600px;"
+                v-else
+                v-model="formData.taints"
+                @add="handleValidateForm"
+                @delete="handleValidateForm"
+              ></Taints>
             </bk-form-item>
           </FormGroup>
           <FormGroup class="mt15" :title="$t('Kubelet组件参数配置')" :allow-toggle="false">
@@ -125,6 +131,7 @@
                         v-if="editKey === row.flagName"
                         :type="row.flagType"
                         :options="row.flagValueList"
+                        :range="row.range"
                         ref="editInputRef"
                         v-model="kubeletParams[row.flagName]"
                         @blur="handleEditBlur"
@@ -157,11 +164,11 @@
                 type="textarea"
                 class="mt10 mw524"
                 :rows="6"
+                placeholder="#!/bin/bash"
                 v-model="formData.preStartUserScript"></bcs-input>
             </bk-form-item>
             <bk-form-item
-              :label="$t('后置初始化')" :desc="
-                postActionType === 'simple' ? $t('暂时只支持bash脚本') : ''">
+              :label="$t('后置初始化')" :desc="$t('简单脚本执行只支持bash脚本，复杂场景请使用标准运维流程执行')">
               <bcs-select class="mw524" :clearable="false" v-model="postActionType">
                 <bcs-option id="simple" :name="$t('简单脚本执行')"></bcs-option>
                 <bcs-option id="complex" :name="$t('标准运维流程执行')"></bcs-option>
@@ -170,6 +177,7 @@
                 type="textarea"
                 class="mt10 mw524"
                 :rows="6"
+                placeholder="#!/bin/bash"
                 v-model="formData.userScript"
                 v-if="postActionType === 'simple'">
               </bcs-input>
@@ -205,7 +213,11 @@
                 </span>
               </div>
               <div class="bk-sops-params mw524" v-bkloading="{ isLoading: sopsParamsLoading }">
-                <div class="title">{{$t('任务参数')}}</div>
+                <div class="title">
+                  <span v-bk-tooltips.top="{ content: $t('目前仅支持输入框类型参数') }" class="name">
+                    {{$t('任务参数')}}
+                  </span>
+                </div>
                 <div class="content">
                   <div class="content-item mb15" v-for="item in sopsParamsList" :key="item.key">
                     <div class="content-item-label">
@@ -253,7 +265,7 @@
           header-position="left"
           width="640"
           v-model="showPreview">
-          <bcs-table :data="kubeletDiffData">
+          <bcs-table :data="kubeletDiffData" :key="JSON.stringify(kubeletDiffData)">
             <bcs-table-column :label="$t('组件名称')" prop="moduleID"></bcs-table-column>
             <bcs-table-column :label="$t('组件参数')" prop="flagName"></bcs-table-column>
             <bcs-table-column :label="$t('修改前值')" prop="origin">
@@ -395,6 +407,9 @@ export default defineComponent({
 
       }],
     });
+    const handleValidateForm = async () => {
+      await formRef.value?.validate();
+    };
 
     // kubelet 组件参数
     const loading = ref(false);
@@ -403,7 +418,8 @@ export default defineComponent({
     const kubeletParams = ref({});
     const originKubeletParams = ref<any>({});
     const kubeletDiffData = computed(() => Object.keys(kubeletParams.value).reduce<any[]>((pre, key) => {
-      if (kubeletParams.value[key] !== originKubeletParams.value[key]) {
+      if (kubeletParams.value[key] !== ''
+        && kubeletParams.value[key] !== originKubeletParams.value[key]) {
         pre.push({
           moduleID: 'kubelet',
           flagName: key,
@@ -451,15 +467,13 @@ export default defineComponent({
     const handlePreview = () => {
       showPreview.value = true;
     };
-    const validateKubeletParams = () =>
     // 校验kubelet参数
-      kubeletList.value.every((item) => {
-        if (!kubeletParams.value[item.flagName] || !item.regex?.validator) return true;
+    const validateKubeletParams = () => kubeletList.value.every((item) => {
+      if (!kubeletParams.value[item.flagName] || !item.regex?.validator) return true;
 
-        const regx = new RegExp(item.regex.validator);
-        return regx.test(kubeletParams.value[item.flagName]);
-      })
-            ;
+      const regx = new RegExp(item.regex.validator);
+      return regx.test(kubeletParams.value[item.flagName]);
+    });
 
     // 添加污点
     const handleAddTaints = () => {
@@ -516,10 +530,10 @@ export default defineComponent({
       // 优先还原历史详情数据
       sopsParams.value = JSON.parse(JSON.stringify(
         formData.value.scaleOutExtraAddons?.plugins?.[bkSopsTemplateID.value]?.params
-                        || data.values.reduce((pre, item) => {
-                          pre[item.key] = '';
-                          return pre;
-                        }, {}),
+        || data.values.reduce((pre, item) => {
+          pre[item.key] = '';
+          return pre;
+        }, {}),
         (key, value) => {
           if (['template_biz_id', 'template_id', 'template_user'].includes(key)) {
             return undefined;
@@ -662,7 +676,9 @@ export default defineComponent({
         return pre;
       }, {}) || {};
     };
-    const handleTransformParamsToKubelet = (params = {}) => Object.keys(params || {}).reduce<string[]>((pre, key) => {
+    const handleTransformParamsToKubelet = (params = {}) => Object.keys(params || {})
+      .filter(key => params[key] !== '')
+      .reduce<string[]>((pre, key) => {
       pre.push(`${key}=${params[key]}`);
       return pre;
     }, [])
@@ -740,6 +756,7 @@ export default defineComponent({
       handleRefreshList,
       isSopsParamsExitVar,
       handleGotoSops,
+      handleValidateForm,
     };
   },
 });
@@ -862,6 +879,10 @@ export default defineComponent({
             padding: 0 16px;
             display: flex;
             align-items: center;
+            .name {
+              border-bottom: 1px dashed #979ba5;
+              line-height: 20px;
+            }
         }
         .content {
             padding: 20px 16px;

@@ -12,7 +12,10 @@
         <label>{{$t('描述')}}</label>
         <span
           class="bcs-ellipsis"
-          v-bk-tooltips="data.desc">{{ data.desc || '--' }}</span>
+          v-bk-tooltips="{
+            disabled: !data.desc,
+            content: data.desc
+          }">{{ data.desc || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>{{ $t('更新时间') }}</label>

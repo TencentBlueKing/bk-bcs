@@ -30,6 +30,7 @@ export interface IMenuItem {
   id: string; // 菜单ID（和feature_flags接口的菜单ID匹配，用于判断菜单显示和选中的唯一标识）,注意：ID和routeName有时是不一样的
   routeName?: string; // 菜单对应的路由名称（用于路由跳转），注意：routeName不能作为唯一ID
   disable?: boolean;
+  new?: boolean;
   children?: IMenuItem[]; // 子菜单
 }
 export interface ISpecialMenuItem {
@@ -217,6 +218,13 @@ const menu: IMenu = {
       icon: 'bcs-icon-jd-node',
       id: 'NODE',
       routeName: 'nodeMain',
+    },
+    {
+      name: window.i18n.t('节点模板'),
+      routeName: 'nodeTemplate',
+      icon: 'bcs-icon-mobanpeizhi',
+      id: 'NODETEMPLATE',
+      new: true,
     },
     {
       name: namespace,
@@ -433,13 +441,6 @@ const menu: IMenu = {
       name: monitor,
       icon: 'bcs-icon-monitors',
       id: 'MONITOR',
-    },
-    { type: 'line' },
-    {
-      name: window.i18n.t('节点模板'),
-      routeName: 'nodeTemplate',
-      icon: 'bcs-icon-mobanpeizhi',
-      id: 'NODETEMPLATE',
     },
   ],
 };
