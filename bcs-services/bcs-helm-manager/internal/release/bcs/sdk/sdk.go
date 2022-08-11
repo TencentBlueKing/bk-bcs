@@ -107,6 +107,7 @@ type Client interface {
 	Upgrade(ctx context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error)
 	Uninstall(ctx context.Context, config release.HelmUninstallConfig) (*release.HelmUninstallResult, error)
 	Rollback(ctx context.Context, config release.HelmRollbackConfig) (*release.HelmRollbackResult, error)
+	History(ctx context.Context, namespace, name string, max int) ([]*rspb.Release, error)
 }
 
 type client struct {
@@ -289,6 +290,17 @@ func (c *client) Rollback(_ context.Context, config release.HelmRollbackConfig) 
 	}
 
 	return &release.HelmRollbackResult{}, nil
+}
+
+// History get helm release history
+func (c *client) History(_ context.Context, namespace, name string, max int) ([]*rspb.Release, error) {
+	conf := new(action.Configuration)
+	if err := conf.Init(c.getConfigFlag(namespace), namespace, "", blog.Infof); err != nil {
+		return nil, err
+	}
+	conf.Releases.MaxHistory = max
+
+	return action.NewHistory(conf).Run(name)
 }
 
 // getConfigFlag 获取helm-client配置
