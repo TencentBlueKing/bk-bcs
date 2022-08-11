@@ -127,7 +127,7 @@
                     <div class="inner-item">
                       <label class="title">{{$t('描述')}}</label>
                       <div>
-                        <bk-input type="textarea" v-model="curApp.description"></bk-input>
+                        <bk-input type="textarea" v-model="appDescription"></bk-input>
                       </div>
                     </div>
                   </div>
@@ -542,6 +542,7 @@ export default {
   mixins: [baseMixin],
   data() {
     return {
+      appDescription: '',
       tabChangeIndex: 0,
       tempProjectId: '',
       curTplReadme: '',
@@ -625,7 +626,6 @@ export default {
           customs: [],
           answers: {},
         },
-        description: '',
       },
       treeData: [],
       editorConfig: {
@@ -1452,7 +1452,7 @@ export default {
         customs,
         cmd_flags: commands,
         valuefile_name: this.curValueFile,
-        description: this.curApp.description,
+        description: this.appDescription,
       };
 
       params.valuefile = this.yamlFile || this.curTplYaml;

@@ -378,6 +378,11 @@ export default defineComponent({
     const isEdit = computed(() => !!props.nodeTemplateID);
 
     const postActionType = ref<'complex' | 'simple'>('simple');
+    watch(postActionType, () => {
+      if (postActionType.value === 'complex' && !bkSopsList.value.length) {
+        handleGetbkSopsList();
+      }
+    });
     const formRef = ref<any>(null);
     const formData = ref({
       projectID: curProject.value.project_id,
@@ -704,7 +709,6 @@ export default defineComponent({
     };
     onMounted(() => {
       handleGetkubeletData();
-      handleGetbkSopsList();
       handleGetConfigList();
       handleGetDetail();
     });
