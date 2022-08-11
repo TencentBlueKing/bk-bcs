@@ -130,7 +130,7 @@ func NewBufferedAutoscaler(
 	var webhook Webhook
 	switch opts.WebhookMode {
 	case WebMode:
-		webhook = NewWebScaler(opts.WebhookModeConfig)
+		webhook = NewWebScaler(opts.WebhookModeConfig, opts.WebhookModeToken)
 	case ConfigMapMode:
 		webhook = NewConfigMapScaler(client, opts.WebhookModeConfig)
 	default:

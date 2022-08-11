@@ -13,6 +13,7 @@
 package core
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -20,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	errors_util "github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
@@ -31,20 +31,17 @@ import (
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
-var client = http.Client{
-	Timeout: 5 * time.Second,
-}
-
 var _ Webhook = &WebScaler{}
 
-// WebScaler impletements Webhook via web
+// WebScaler implements Webhook via web
 type WebScaler struct {
-	url string
+	url   string
+	token string
 }
 
 // NewWebScaler initilizes a WebScaler
-func NewWebScaler(url string) Webhook {
-	return &WebScaler{url: url}
+func NewWebScaler(url, token string) Webhook {
+	return &WebScaler{url: url, token: token}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -89,28 +86,16 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 		return nil, nil, fmt.Errorf(
 			"Cannot marshal review to bytes, err: %s", err.Error())
 	}
-	res, err := client.Post(w.url, "application/json", strings.NewReader(string(b)))
+	result, err := postRequest(w.url, w.token, b)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"Failed to post review to url: %s err: %s", w.url, err.Error())
 	}
-	defer func() {
-		if cerr := res.Body.Close(); cerr != nil {
-			if err != nil {
-				err = errors_util.Wrap(err, cerr.Error())
-			} else {
-				err = cerr
-			}
-		}
-	}()
-	result, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to read body of response, err: %s", err.Error())
-	}
 	var faResp ClusterAutoscalerReview
 	err = json.Unmarshal(result, &faResp)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to unmarshal response to review, err: %s", err.Error())
+		return nil, nil, fmt.Errorf("Failed to unmarshal response to review, err: %s, response: %s",
+			err.Error(), string(result))
 	}
 
 	// get response
@@ -146,4 +131,31 @@ func (w *WebScaler) ExecuteScale(context *contextinternal.Context,
 	}
 
 	return nil
+}
+
+func postRequest(url, token string, data []byte) ([]byte, error) {
+	req, _ := http.NewRequest("POST", url, strings.NewReader(string(data)))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
+	req.Header.Set("Accept", "application/json")
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := http.Client{
+		Transport: tr,
+		Timeout:   5 * time.Second,
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to finish this request: %v", err)
+	}
+	defer resp.Body.Close()
+	contentsBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read body: %+v err: %v", resp, err)
+	}
+	if resp.StatusCode/100 > 2 {
+		return nil, fmt.Errorf("failed to finish this request: %v, body: %v", resp.StatusCode, string(contentsBytes))
+	}
+	return contentsBytes, nil
 }

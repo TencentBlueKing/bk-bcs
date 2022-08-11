@@ -221,6 +221,7 @@ var (
 	webhookMode       = flag.String("webhook-mode", "", "Webhook Mode. Available values: [ Web, ConfigMap ]")
 	webhookModeConfig = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
 		" It is a url for web, or namespace/name for configmap")
+	webhookModeToken = flag.String("webhook-mode-token", "", "Token for webhook mode")
 )
 
 func createAutoscalingOptions() scalingconfig.Options {
@@ -293,6 +294,7 @@ func createAutoscalingOptions() scalingconfig.Options {
 		BufferedResourceRatio: *bufferedResourceRatio,
 		WebhookMode:           *webhookMode,
 		WebhookModeConfig:     *webhookModeConfig,
+		WebhookModeToken:      *webhookModeToken,
 	}
 }
 
