@@ -34,7 +34,7 @@ tidy:
 
 # build executable binary locally for develop
 build: tidy
-	go build -ldflags ${LDFLAGS} -o cluster-resources-service *.go
+	go build -ldflags ${LDFLAGS} -o bcs-cluster-resources *.go
 
 # compile third_party/swagger-ui to swagger/datafile.go，execute only once!
 swagger: proto

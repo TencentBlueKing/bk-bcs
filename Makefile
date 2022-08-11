@@ -411,7 +411,7 @@ cluster-resources:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/swagger
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/third_party/swagger-ui/ ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/swagger-ui/
 	cp ${BCS_SERVICES_PATH}/cluster-resources/swagger/data/cluster-resources.swagger.json ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/cluster-resources.swagger.json
-	# example files 
+	# example files
 	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/example/
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/config/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/config/
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/manifest/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/manifest/
@@ -422,7 +422,7 @@ cluster-resources:pre
 	# i18n files
 	cp ${BCS_SERVICES_PATH}/cluster-resources/pkg/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/cluster-resources/lc_msgs.yaml
 	# go build
-	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy -compat=1.17 && go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/cluster-resources-service *.go
+	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy -compat=1.17 && go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
 
 # end of bcs-service section
 
