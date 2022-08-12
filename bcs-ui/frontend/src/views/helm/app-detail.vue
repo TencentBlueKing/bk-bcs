@@ -123,14 +123,14 @@
                       </div>
                     </div>
                   </div>
-                  <div class="inner">
+                  <!-- <div class="inner">
                     <div class="inner-item">
                       <label class="title">{{$t('描述')}}</label>
                       <div>
                         <bk-input type="textarea" v-model="appDescription"></bk-input>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -1452,8 +1452,10 @@ export default {
         customs,
         cmd_flags: commands,
         valuefile_name: this.curValueFile,
-        description: this.appDescription,
       };
+      if (this.appDescription) {
+        params.description = this.appDescription;
+      }
 
       params.valuefile = this.yamlFile || this.curTplYaml;
       return params;

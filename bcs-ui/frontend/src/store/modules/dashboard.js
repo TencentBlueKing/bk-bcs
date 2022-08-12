@@ -296,7 +296,8 @@ export default {
     },
     // 重新调度
     async reschedulePod(context, params) {
-      const data = await reschedulePod(params).then(() => true).catch(() => false);
+      const data = await reschedulePod(params).then(() => true)
+        .catch(() => false);
       return data;
     },
     // 容器日志链接
@@ -316,13 +317,13 @@ export default {
     },
     // 扩缩容
     async enlargeCapacityChange(context, params) {
-      const data = await enlargeCapacityChange(params).catch(() => ({}));
+      const data = await enlargeCapacityChange(params).catch(() => false);
       return data;
     },
     // 批量重新调度
     async batchReschedulePod(context, params) {
       const data = await batchReschedulePod(params).then(() => true);
       return data;
-    }
+    },
   },
 };
