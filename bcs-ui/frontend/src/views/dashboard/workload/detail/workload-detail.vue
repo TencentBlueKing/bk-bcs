@@ -156,7 +156,13 @@
             @select="handleSelectPod"
             @select-all="handleSelectAllPod"
           >
-            <bcs-table-column v-if="showBatchDispatch" type="selection" width="60" reserve-selection></bcs-table-column>
+            <bcs-table-column
+              v-if="showBatchDispatch"
+              type="selection"
+              width="60"
+              reserve-selection
+              :selectable="handlePodSelectable">
+            </bcs-table-column>
             <bcs-table-column
               :label="$t('名称')"
               min-width="130" prop="metadata.name" sortable :resizable="false" show-overflow-tooltip>
@@ -413,7 +419,8 @@ export default defineComponent({
       curPageData: curPodTablePageData,
       pagination: podTablePagination,
     } = usePage(tableDataMatchSearch);
-
+    // 当前行是否可以勾选
+    const handlePodSelectable = row => handleGetExtData(row.metadata.uid, 'status') !== 'Terminating';
     // 是否展示升级策略
     const showUpdateStrategy = computed(() => ['deployments', 'statefulsets', 'custom_objects'].includes(props.category));
     // 是否展示批量调度功能
@@ -672,6 +679,7 @@ export default defineComponent({
       isBatchReschedule,
       curPodRowData,
       handelShowRescheduleDialog,
+      handlePodSelectable,
       ...useLog(),
     };
   },
