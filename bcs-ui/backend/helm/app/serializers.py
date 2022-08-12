@@ -441,6 +441,7 @@ class AppUpgradeSLZ(AppBaseSLZ):
             "id",
             "valuefile_name",
             "cmd_flags",
+            "description",
         )
         read_only_fields = (
             "name",
@@ -459,6 +460,7 @@ class AppUpgradeSLZ(AppBaseSLZ):
             "valuefile": {"write_only": True},
             "upgrade_verion": {"write_only": True},
             "valuefile_name": {"write_only": True},
+            "description": {"write_only": True},
         }
 
 
