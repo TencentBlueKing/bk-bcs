@@ -296,7 +296,7 @@ export default {
     },
     // 重新调度
     async reschedulePod(context, params) {
-      const data = await reschedulePod(params).catch(() => false);
+      const data = await reschedulePod(params).then(() => true).catch(() => false);
       return data;
     },
     // 容器日志链接
