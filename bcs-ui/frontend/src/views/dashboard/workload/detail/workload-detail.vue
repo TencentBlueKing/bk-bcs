@@ -140,7 +140,7 @@
             <!-- 占位 -->
             <div v-else></div>
             <bk-input
-              v-model="searchPodVal"
+              v-model="searchValue"
               :placeholder="$t('请入名称、镜像、Host IP、Pod IP、Node搜索')"
               class="search-input"
               right-icon="bk-icon icon-search">
@@ -148,7 +148,7 @@
           </div>
           <bcs-table
             :data="curPodTablePageData"
-            ref="podTable"
+            ref="podTableRef"
             row-key="metadata.uid"
             :pagination="podTablePagination"
             @page-change="podTablePageChang"
@@ -162,8 +162,8 @@
               min-width="130" prop="metadata.name" sortable :resizable="false" show-overflow-tooltip>
               <template #default="{ row }">
                 <bk-button
-                  :disabled="rescheduleStatusMap[row.metadata.name]"
-                  class="bcs-button-ellipsis" text @click="gotoPodDetail(row)">{{ row.metadata.name }}</bk-button>
+                  class="bcs-button-ellipsis"
+                  text @click="gotoPodDetail(row)">{{ row.metadata.name }}</bk-button>
               </template>
             </bcs-table-column>
             <bcs-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
@@ -203,10 +203,10 @@
             <bcs-table-column :label="$t('操作')" width="140" :resizable="false">
               <template #default="{ row }">
                 <bk-button
-                  text :disabled="rescheduleStatusMap[row.metadata.name]"
+                  text :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
                   @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
                 <bk-button
-                  class="ml10" :disabled="rescheduleStatusMap[row.metadata.name]"
+                  class="ml10" :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
                   text @click="handleReschedule(row)">{{ $t('重新调度') }}</bk-button>
               </template>
             </bcs-table-column>
@@ -267,7 +267,7 @@
     <bcs-dialog v-model="podRescheduleShow" :title="$t(`确认重新调度以下Pod`)" @confirm="handleConfirmReschedule">
       <template v-if="isBatchReschedule">
         <div v-for="pod in selectPods" :key="pod['metadata']['uid']">
-         {{ pod['metadata']['name'] }}
+          {{ pod['metadata']['name'] }}
         </div>
       </template>
       <template v-else>
@@ -280,7 +280,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, computed, ref, onMounted, onBeforeUnmount, set } from '@vue/composition-api';
+import { defineComponent, computed, ref, onMounted, onBeforeUnmount } from '@vue/composition-api';
 import { bkOverflowTips } from 'bk-magic-vue';
 import StatusIcon from '../../common/status-icon';
 import Metric from '../../common/metric.vue';
@@ -293,6 +293,7 @@ import BcsLog from '@/components/bcs-log/index';
 import useLog from './use-log';
 import usePage from '@/views/dashboard/common/use-page';
 import { timeZoneTransForm } from '@/common/util';
+import useSearch from '../../common/use-search';
 
 export interface IDetail {
   manifest: any;
@@ -391,26 +392,28 @@ export default defineComponent({
       category: props.category,
       detail,
     });
-    const podTable = ref();
-    const searchPodVal = ref('');
+    const podTableRef = ref();
     const podRescheduleShow = ref(false);
     const isBatchReschedule = ref(false);
     const curPodRowData = ref<any>([]);
     // 表格选中的pods数据
-    const selectPods = ref([])
+    const selectPods = ref<any[]>([]);
     // pods数据
-    const pods = computed(() => workloadPods.value?.manifest?.items || []);
+    const pods = computed(() => (workloadPods.value?.manifest?.items || []).map(item => ({
+      ...item,
+      images: (handleGetExtData(item.metadata?.uid, 'images') || []).join(''),
+    })));
     // pods过滤
-    const curPods = computed(() => {
-      return pods.value.filter(pod => pod.metadata.name.includes(searchPodVal.value)
-        || handleGetExtData(pod.metadata.uid, 'images').join('').includes(searchPodVal.value)
-        || pod.status.hostIP.includes(searchPodVal.value)
-        || pod.status.podIP.includes(searchPodVal.value)
-        || pod.spec.nodeName.includes(searchPodVal.value)
-      );
-    })
-    const { pageChange: podTablePageChang, pageSizeChange: podTablePageSizeChange, curPageData: curPodTablePageData, pagination: podTablePagination } = usePage(curPods);
-    
+    const keys = ref(['metadata.name', 'images', 'status.hostIP', 'status.podIP', 'spec.nodeName']);
+    const { searchValue, tableDataMatchSearch } = useSearch(pods, keys);
+    // pods分页
+    const {
+      pageChange: podTablePageChang,
+      pageSizeChange: podTablePageSizeChange,
+      curPageData: curPodTablePageData,
+      pagination: podTablePagination,
+    } = usePage(tableDataMatchSearch);
+
     // 是否展示升级策略
     const showUpdateStrategy = computed(() => ['deployments', 'statefulsets', 'custom_objects'].includes(props.category));
     // 是否展示批量调度功能
@@ -485,7 +488,7 @@ export default defineComponent({
     const handelShowRescheduleDialog = () => {
       isBatchReschedule.value = true;
       podRescheduleShow.value = true;
-    }
+    };
     // 单个重新调度-打开弹框
     const handleReschedule = async (row) => {
       curPodRowData.value = [row];
@@ -494,19 +497,20 @@ export default defineComponent({
     };
 
     // 确认调度
-    const handleConfirmReschedule = () => {
+    const handleConfirmReschedule = async () => {
+      podLoading.value = true;
       if (isBatchReschedule.value) {
-        handleBatchReschedulePod();
+        await handleBatchReschedulePod();
       } else {
-        handleReschedulePod();
+        await handleReschedulePod();
       }
-    }
+      await handleGetWorkloadPods();
+      podLoading.value = false;
+    };
 
     // 单个重新调度
-    const rescheduleStatusMap = ref({});
     const handleReschedulePod = async () => {
-      const name = curPodRowData.value[0]['metadata']['name'];
-      set(rescheduleStatusMap.value, name, true);
+      const { name } = curPodRowData.value[0].metadata;
       const result = await $store.dispatch('dashboard/reschedulePod', {
         $namespaceId: props.namespace,
         $podId: name,
@@ -515,20 +519,14 @@ export default defineComponent({
         theme: 'success',
         message: $i18n.t('调度成功'),
       });
-      rescheduleStatusMap.value[name] = false;
       selectPods.value = [];
-      podTable.value?.clearSelection();
-    }
-    
+      podTableRef.value?.clearSelection();
+    };
+
     // 批量重新调度
     const batchBtnLoading = ref(false);
     const handleBatchReschedulePod = async () => {
       batchBtnLoading.value = true;
-      const podNames: any[] = [];
-      selectPods.value.forEach(pod => {
-        podNames.push(pod['metadata']['name']);
-        set(rescheduleStatusMap.value, pod['metadata']['name'], true);
-      });
       const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {};
       const labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
         pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
@@ -538,7 +536,7 @@ export default defineComponent({
         $namespace: props.namespace,
         $name: metadata.value.name,
         $category: props.category,
-        podNames,
+        podNames: selectPods.value.map(pod => pod.metadata.name),
         labelSelector,
       });
       if (result) {
@@ -546,12 +544,8 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('调度成功'),
         });
-        selectPods.value.forEach((pod) => {
-          const name = String(pod['metadata']['name']);
-          rescheduleStatusMap.value[name] = false;
-        });
         selectPods.value = [];
-        podTable.value?.clearSelection();
+        podTableRef.value?.clearSelection();
       }
       batchBtnLoading.value = false;
     };
@@ -640,16 +634,15 @@ export default defineComponent({
       activePanel,
       params,
       pods,
-      podTable,
+      podTableRef,
       selectPods,
-      searchPodVal,
+      searchValue,
       labels,
       annotations,
       selectors,
       podLoading,
       yaml,
       showYamlPanel,
-      rescheduleStatusMap,
       projectId,
       clusterId,
       events,

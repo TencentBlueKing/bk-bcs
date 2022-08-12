@@ -1475,9 +1475,9 @@ export default {
              * @param  {string} title 错误提示
              * @param  {string} actionType 操作
              */
-    showErrorDialog(res, title, actionType) {
+    showErrorDialog(res, title) {
       this.errorDialogConf.errorCode = res.code;
-      this.errorDialogConf.message = res.message || res.data.msg || res.statusText;
+      this.errorDialogConf.message = res?.message || res?.data?.msg || res?.statusText;
       this.errorDialogConf.title = title;
       this.errorDialogConf.isShow = true;
       this.previewEditorConfig.isShow = false;
@@ -1589,6 +1589,7 @@ export default {
         this.checkAppStatus(res.data);
       } catch (e) {
         this.showErrorDialog(e, this.$t('更新失败'), 'update');
+        this.updateInstanceLoading = false;
       }
     },
 
