@@ -21,6 +21,10 @@ const (
 	// patch templates const key format
 	patchTemplateKeyPrefix = "__BCS_HELM_PATCH_"
 	patchTemplateKeySuffix = "__"
+	// BCSPrefix values bcs variables prefix
+	BCSPrefix = "__BCS__"
+	// ValuesDefaultKey values default key
+	ValuesDefaultKey = "default"
 )
 
 // ptk define the patch-template-key format

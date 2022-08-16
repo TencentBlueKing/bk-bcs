@@ -124,7 +124,14 @@ func (c *client) List(_ context.Context, namespace string) ([]*rspb.Release, err
 		return nil, err
 	}
 
-	return action.NewList(conf).Run()
+	releases, err := action.NewList(conf).Run()
+	if err != nil {
+		return nil, err
+	}
+	for i := range releases {
+		releases[i].Config = removeValuesTemplate(releases[i].Config)
+	}
+	return releases, nil
 }
 
 // Install helm release through helm client
@@ -300,7 +307,14 @@ func (c *client) History(_ context.Context, namespace, name string, max int) ([]
 	}
 	conf.Releases.MaxHistory = max
 
-	return action.NewHistory(conf).Run(name)
+	releases, err := action.NewHistory(conf).Run(name)
+	if err != nil {
+		return nil, err
+	}
+	for i := range releases {
+		releases[i].Config = removeValuesTemplate(releases[i].Config)
+	}
+	return releases, nil
 }
 
 // getConfigFlag 获取helm-client配置
@@ -371,6 +385,24 @@ func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 		out[k] = v
 	}
 	return out
+}
+
+// removeValuesTemplate 移除 values 中的 bcs 模版变量
+func removeValuesTemplate(values map[string]interface{}) map[string]interface{} {
+	delete(values, common.BCSPrefix)
+	if _, ok := values[common.ValuesDefaultKey]; !ok {
+		return values
+	}
+	if _, ok := values[common.ValuesDefaultKey].(map[string]interface{})[common.BCSPrefix]; ok {
+		// 因为 ValuesDefaultKey 是 bcs-ui 下发添加的键，如果只包含 bcs 变量，则直接删除 ValuesDefaultKey,
+		// 如果还有其他值，则表示 ValuesDefaultKey 下还有用户添加的值，则需要保留其他的值。
+		if len(values[common.ValuesDefaultKey].(map[string]interface{})) == 1 {
+			delete(values, common.ValuesDefaultKey)
+		} else {
+			delete(values[common.ValuesDefaultKey].(map[string]interface{}), common.BCSPrefix)
+		}
+	}
+	return values
 }
 
 // replaceVarTplKey 替换掉varTemplate中的模版变量, 用于作为最后的values文件, 让用户能够在chart中直接引用.Values.__BCS__相关配置
