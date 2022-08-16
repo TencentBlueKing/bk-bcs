@@ -1,5 +1,5 @@
 <template>
-  <div class="choose-node-template">
+  <div class="choose-node-template bcs-content-wrapper">
     <bk-form>
       <FormGroup :allow-toggle="false" class="choose-node">
         <bk-form-item :label="$t('选择节点模板')">
