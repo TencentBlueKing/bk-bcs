@@ -143,7 +143,7 @@
                 <p class="updated">{{$t('更新时间')}}：{{ row.updated }}</p>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('操作')" width="230">
+            <bk-table-column :label="$t('操作')" width="260">
               <template slot-scope="{ row }">
                 <bk-button
                   class="ml5"
@@ -162,7 +162,7 @@
                   }"
                   @click="showAppInfoSlider(row)"
                 >{{ $t('查看状态') }}</bk-button>
-                <!-- <bk-button
+                <bk-button
                   class="ml5"
                   text
                   v-authority="{
@@ -178,7 +178,7 @@
                     }
                   }"
                   @click="handleShowHistory(row)"
-                >{{ $t('更新记录') }}</bk-button> -->
+                >{{ $t('更新记录') }}</bk-button>
                 <bk-button
                   class="ml5"
                   text
@@ -488,9 +488,7 @@
         </div>
       </template>
       <div class="helm-release-dialog">
-        <pre>
-          {{curReleaseRow.values}}
-        </pre>
+        <pre>{{curReleaseRow.values}}</pre>
       </div>
     </bcs-dialog>
   </div>

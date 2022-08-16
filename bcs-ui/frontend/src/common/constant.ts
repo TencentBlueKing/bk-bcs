@@ -40,3 +40,4 @@ export const taskStatusColorMap = {
   notstarted: 'blue',
 };
 export const NODE_TEMPLATE_ID = 'node-template-id';
+export const SpecialCharRegx = /[`~!@#_$%^&*()=|{}':;',\\[\\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？\s]/;

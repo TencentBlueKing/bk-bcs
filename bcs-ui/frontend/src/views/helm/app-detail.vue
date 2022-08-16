@@ -27,7 +27,9 @@
               <div class="title">{{curApp.name}}</div>
               <div class="desc" :title="curApp.description">
                 <span>Chart：</span>
-                <a class="bk-text-button f12 ml5" href="javascript:void(0);" @click="gotoHelmTplDetail">{{curApp.chart_info.name || '--'}}</a>
+                <a
+                  class="bk-text-button f12 ml5" href="javascript:void(0);"
+                  @click="gotoHelmTplDetail">{{curApp.chart_info.name || '--'}}</a>
               </div>
               <div class="desc" :title="curApp.description">
                 <span>{{$t('简介')}}：</span>
@@ -35,7 +37,9 @@
               </div>
               <div class="desc">
                 <span>Notes：</span>
-                <bcs-button v-if="notesdialog.notes" text size="small" style="padding: 0;" @click="handleViewNodesDetails">{{$t('点击查看详情')}}</bcs-button>
+                <bcs-button
+                  v-if="notesdialog.notes" text size="small" style="padding: 0;"
+                  @click="handleViewNodesDetails">{{$t('点击查看详情')}}</bcs-button>
                 <span
                   v-else
                   class="bk-primary bk-button-normal bk-button-text is-disabled"
@@ -76,22 +80,13 @@
                           search-key="version"
                           @item-selected="handlerVersionChange">
                         </bk-selector>
-                        <!-- <bkbcs-input
-                                                    style="width: 215px;"
-                                                    type="text"
-                                                    :placeholder="$t('请选择')"
-                                                    :value.sync="tplVersionId"
-                                                    :is-select-mode="true"
-                                                    :default-list="curAppVersions"
-                                                    :setting-key="'version'"
-                                                    :disabled="isTplSynLoading"
-                                                    :display-key="'version'"
-                                                    :search-key="'version'"
-                                                    @item-selected="handlerVersionChange">
-                                                </bkbcs-input> -->
 
-                        <bk-button class="bk-button bk-default is-outline is-icon" v-bk-tooltips.top="$t('同步仓库')" @click="syncHelmTpl">
-                          <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-default" style="margin-top: -3px;" v-if="isTplSynLoading">
+                        <bk-button
+                          class="bk-button bk-default is-outline is-icon"
+                          v-bk-tooltips.top="$t('同步仓库')" @click="syncHelmTpl">
+                          <div
+                            class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-default"
+                            style="margin-top: -3px;" v-if="isTplSynLoading">
                             <div class="rotate rotate1"></div>
                             <div class="rotate rotate2"></div>
                             <div class="rotate rotate3"></div>
@@ -123,14 +118,21 @@
                       </div>
                     </div>
                   </div>
-                  <!-- <div class="inner">
+                  <div class="inner">
                     <div class="inner-item">
                       <label class="title">{{$t('描述')}}</label>
                       <div>
-                        <bk-input type="textarea" v-model="appDescription"></bk-input>
+                        <bk-input
+                          type="textarea"
+                          maxlength="200"
+                          v-model="appDescription">
+                        </bk-input>
                       </div>
+                      <p class="error-tips" v-if="isDescHasSpecialChar">
+                        {{$t('不支持特殊字符')}}
+                      </p>
                     </div>
-                  </div> -->
+                  </div>
                 </div>
               </div>
             </div>
@@ -169,7 +171,13 @@
                   <bk-checkbox class="ml10 mr5" v-model="isLocked">{{isLocked ? $t('已锁定') : $t('已解锁')}}</bk-checkbox>
                 </div>
                 <!-- <span class="f12 vm">{{isLocked ? '已锁定' : '已解锁'}}</span> -->
-                <span class="biz-tip vm">({{$t('默认锁定values内容为当前release')}}({{$t('版本：')}}<span v-bk-tooltips.top="curApp.chart_info.version" class="release-version">{{curApp.chart_info.version}}</span>){{$t('的内容，解除锁定后，加载为对应Chart中的values内容')}})</span>
+                <span class="biz-tip vm">
+                  ({{$t('默认锁定values内容为当前release')}}({{$t('版本：')}}
+                  <span v-bk-tooltips.top="curApp.chart_info.version" class="release-version">
+                    {{curApp.chart_info.version}}
+                  </span>
+                  ){{$t('的内容，解除锁定后，加载为对应Chart中的values内容')}})
+                </span>
               </section>
               <bk-tab
                 :type="'fill'"
@@ -192,9 +200,16 @@
                       <i class="bcs-icon bcs-icon-info-circle biz-warning-text mr5"></i>
                       {{$t('YAML初始值为创建时Chart中values.yaml内容，后续更新部署以该YAML内容为准，内容最终通过`--values`选项传递给`helm template`命令')}}
                     </p>
-                    <div v-if="String(tplVersionId) !== originReleaseVersion && !isLocked" class="f14 mb15 ml15" style="color: #63656E;">
+                    <div
+                      v-if="String(tplVersionId) !== originReleaseVersion && !isLocked"
+                      class="f14 mb15 ml15" style="color: #63656E;">
                       <i class="bcs-icon bcs-icon-eye biz-warning-text mr5"></i>
-                      {{$t('您更改了Chart版本，')}}<span class="bk-text-button" @click="showCodeDiffDialog">{{$t('点击查看')}}</span> Helm Release参数与选中的Chart Version中values.yaml区别
+                      {{$t('您更改了Chart版本，')}}
+                      <span
+                        class="bk-text-button"
+                        @click="showCodeDiffDialog">{{$t('点击查看')}}
+                      </span>
+                      Helm Release参数与选中的Chart Version中values.yaml区别
                     </div>
                     <div v-bkloading="{ isLoading: isSyncYamlLoading, color: '#272822' }">
                       <ace
@@ -213,7 +228,8 @@
                 </bk-tab-panel>
                 <bk-tab-panel name="form-mode" :title="$t('表单模式')">
                   <p class="biz-tip p15" style="color: #63656E;">
-                    <i class="bcs-icon bcs-icon-info-circle biz-warning-text mr5"></i>{{$t('表单根据Chart中questions.yaml生成，表单修改后的数据会自动同步给YAML模式')}}
+                    <i class="bcs-icon bcs-icon-info-circle biz-warning-text mr5"></i>
+                    {{$t('表单根据Chart中questions.yaml生成，表单修改后的数据会自动同步给YAML模式')}}
                   </p>
                   <template v-if="formData.questions">
                     <bk-form-creater :form-data="formData" ref="bkFormCreater"></bk-form-creater>
@@ -221,10 +237,15 @@
                   <template v-else>
                     <div class="biz-guard-box" v-if="!isQuestionsLoading">
                       <span>{{$t('您可以参考')}}
-                        <a class="bk-text-button" :href="PROJECT_CONFIG.doc.questionsYaml" target="_blank">{{$t('指引')}}</a>
+                        <a
+                          class="bk-text-button"
+                          :href="PROJECT_CONFIG.doc.questionsYaml" target="_blank">{{$t('指引')}}</a>
                         {{$t('通过表单模式配置您的Helm Release 参数')}}，
                       </span>
-                      <span>{{$t('也可以通过')}}<a href="javascript:void(0)" class="bk-text-button" @click="editYaml">{{$t('YAML模式')}}</a>{{$t('直接修改Helm Release参数')}}
+                      <span>
+                        {{$t('也可以通过')}}
+                        <a href="javascript:void(0)" class="bk-text-button" @click="editYaml">{{$t('YAML模式')}}</a>
+                        {{$t('直接修改Helm Release参数')}}
                       </span>
                     </div>
                   </template>
@@ -273,7 +294,9 @@
                 <div v-show="isHignPanelShow">
                   <div class="biz-key-value-wrapper mb10">
                     <li class="biz-key-value-item mb10" v-for="(item, index) in hignSetupMap" :key="index">
-                      <bk-input style="width: 280px;" v-model="item.key" @change="handleHignkeyChange(item.key ,index)" />
+                      <bk-input
+                        style="width: 280px;"
+                        v-model="item.key" @change="handleHignkeyChange(item.key ,index)" />
                       <span class="equals-sign">=</span>
                       <bk-input style="width: 280px;" :placeholder="$t('值')" v-model="item.value" />
                       <button class="action-btn" @click.stop.prevent>
@@ -306,10 +329,14 @@
         </div>
 
         <div class="create-wrapper" v-else>
-          <bk-button type="primary" :title="$t('更新')" @click="confirmUpdateApp" :disabled="isNamespaceLoading || !isNamespaceMatch">
+          <bk-button
+            type="primary" :title="$t('更新')"
+            @click="confirmUpdateApp" :disabled="isNamespaceLoading || !isNamespaceMatch || isDescHasSpecialChar">
             {{$t('更新')}}
           </bk-button>
-          <bk-button type="default" :title="$t('预览')" @click="showPreview" :disabled="isNamespaceLoading || !isNamespaceMatch">
+          <bk-button
+            type="default" :title="$t('预览')"
+            @click="showPreview" :disabled="isNamespaceLoading || !isNamespaceMatch || isDescHasSpecialChar">
             {{$t('预览')}}
           </bk-button>
           <bk-button type="default" :title="$t('取消')" @click="goToHelmIndex">
@@ -369,19 +396,18 @@
       @cancel="hideConfirmDialog">
       <template slot="content">
         <p class="biz-tip mb5 tl" style="color: #666;">{{$t('Helm Release参数发生如下变化，请确认后再点击“确定”更新')}}</p>
-        <div class="difference-code" v-bkloading="{ isLoading: isDifferenceLoading }" v-if="isDifferenceLoading || difference" style="height: 400px;">
+        <div
+          class="difference-code"
+          v-bkloading="{ isLoading: isDifferenceLoading }"
+          v-if="isDifferenceLoading || difference" style="height: 400px;">
           <div class="editor-header">
             <div>当前版本</div>
             <div>更新版本</div>
           </div>
 
-          <div :class="['diff-editor-box', { 'editor-fullscreen': yamlDiffEditorOptions.fullScreen }]" style="position: relative;">
-            <!-- <div title="关闭全屏" class="fullscreen-close" v-if="yamlDiffEditorOptions.fullScreen" @click="cancelFullScreen">
-                            <i class="bcs-icon bcs-icon-close"></i>
-                        </div>
-                        <div title="全屏" class="fullscreen-use" v-else @click="setFullScreen">
-                            <i class="bcs-icon bcs-icon-full-screen"></i>
-                        </div> -->
+          <div
+            :class="['diff-editor-box', { 'editor-fullscreen': yamlDiffEditorOptions.fullScreen }]"
+            style="position: relative;">
             <monaco-editor
               ref="yamlEditor"
               class="editor"
@@ -406,7 +432,9 @@
             :full-screen="updateConfirmDialog.fullScreen">
           </ace>
         </div>
-        <p class="biz-tip mt15 tl biz-warning" v-if="isChartVersionChange">{{$t('温馨提示：Helm Chart 版本已更改，请检查是否需要同步容器服务上Release 的参数')}}</p>
+        <p
+          class="biz-tip mt15 tl biz-warning"
+          v-if="isChartVersionChange">{{$t('温馨提示：Helm Chart 版本已更改，请检查是否需要同步容器服务上Release 的参数')}}</p>
       </template>
       <div slot="footer">
         <div class="bk-dialog-outer">
@@ -435,10 +463,10 @@
       @cancel="hideErrorDialog">
       <template slot="content">
         <div class="bk-intro bk-danger pb30 mb15" v-if="errorDialogConf.message" style="position: relative;">
-          <pre class="biz-error-message">
-                        {{errorDialogConf.message}}
-                    </pre>
-          <bk-button size="small" type="default" id="error-copy-btn" :data-clipboard-text="errorDialogConf.message"><i class="bcs-icon bcs-icon-clipboard mr5"></i>{{$t('复制')}}</bk-button>
+          <pre class="biz-error-message">{{errorDialogConf.message}}</pre>
+          <bk-button size="small" type="default" id="error-copy-btn" :data-clipboard-text="errorDialogConf.message">
+            <i class="bcs-icon bcs-icon-clipboard mr5"></i>{{$t('复制')}}
+          </bk-button>
         </div>
         <div class="biz-message" v-if="errorDialogConf.errorCode === 40031">
           <h3>{{$t('您需要')}}：</h3>
@@ -471,8 +499,12 @@
           <h3>{{$t('Chart 默认值')}}：</h3>
         </div>
         <div style="max-height: 500px; overflow: auto; position: relative; border: 1px solid #ddd; border-radius: 2px;">
-          <div :class="['diff-editor-box', { 'editor-fullscreen': yamlDiffEditorOptions.fullScreen }]" style="position: relative;">
-            <div :title="$t('关闭全屏')" class="fullscreen-close" v-if="yamlDiffEditorOptions.fullScreen" @click="cancelFullScreen">
+          <div
+            :class="['diff-editor-box', { 'editor-fullscreen': yamlDiffEditorOptions.fullScreen }]"
+            style="position: relative;">
+            <div
+              :title="$t('关闭全屏')" class="fullscreen-close"
+              v-if="yamlDiffEditorOptions.fullScreen" @click="cancelFullScreen">
               <i class="bcs-icon bcs-icon-close"></i>
             </div>
             <div :title="$t('全屏')" class="fullscreen-use" v-else @click="setFullScreen">
@@ -533,6 +565,7 @@ import { catchErrorHandler } from '@/common/util';
 import Clipboard from 'clipboard';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import resizer from '@/components/resize';
+import { SpecialCharRegx } from '@/common/constant';
 
 export default {
   components: {
@@ -760,13 +793,18 @@ export default {
     clusterList() {
       return this.$store.state.cluster.clusterList;
     },
+    isDescHasSpecialChar() {
+      return SpecialCharRegx.test(this.appDescription);
+    },
   },
   watch: {
     tplVersionId() {
+      // eslint-disable-next-line no-plusplus
       this.tabChangeIndex++;
     },
     isLocked() {
       this.initValuesFileData(this.curTplName, this.curTplFiles);
+      // eslint-disable-next-line no-plusplus
       this.tabChangeIndex++;
     },
   },
@@ -790,6 +828,7 @@ export default {
              * 显示yaml对比
              */
     showCodeDiffDialog() {
+      // eslint-disable-next-line no-plusplus
       this.differenceKey++;
       this.curEditYaml = this.yamlEditor.getValue();
       this.codeDialogConf.isShow = true;
@@ -828,6 +867,7 @@ export default {
              * @param  {object} file 文件
              */
     getFileDetail(file) {
+      // eslint-disable-next-line no-prototype-builtins
       if (file.hasOwnProperty('value')) {
         this.curReourceFile = file;
       }
@@ -933,7 +973,7 @@ export default {
       }
 
       const annot = editor.getSession().getAnnotations();
-      if (annot && annot.length) {
+      if (annot?.length) {
         editor.gotoLine(annot[0].row, annot[0].column, true);
         return false;
       }
@@ -990,7 +1030,7 @@ export default {
       const questions = JSON.parse(JSON.stringify(this.formData));
       if (questions.questions) {
         questions.questions.forEach((question) => {
-          if (fieldset && fieldset.length) {
+          if (fieldset?.length) {
             fieldset.forEach((item) => {
               if (question.variable === item.name) {
                 question.default = item.value;
@@ -1000,7 +1040,7 @@ export default {
 
           if (question.subquestions) {
             question.subquestions.forEach((subQuestion) => {
-              if (fieldset && fieldset.length) {
+              if (fieldset?.length) {
                 fieldset.forEach((item) => {
                   if (subQuestion.variable === item.name) {
                     subQuestion.default = item.value;
@@ -1070,10 +1110,10 @@ export default {
       this.curTplFiles = files;
       this.initValuesFileData(tplName, files, this.originReleaseData.valuefile_name);
       this.$nextTick(() => {
-        this.$refs.codeViewer && this.$refs.codeViewer.$ace && this.$refs.codeViewer.$ace.scrollToLine(1, true, true);
+        this.$refs.codeViewer?.$ace?.scrollToLine(1, true, true);
       });
 
-      if (this.originReleaseData.cmd_flags && this.originReleaseData.cmd_flags.length) {
+      if (this.originReleaseData.cmd_flags?.length) {
         // 所有常用枚举项keys
         const commonKeys = Object.keys(this.helmCommandParams);
         this.originReleaseData.cmd_flags.forEach((item) => {
@@ -1106,7 +1146,7 @@ export default {
       if (questions.questions) {
         questions.questions.forEach((question) => {
           this.fieldset = this.originReleaseData.release.answers;
-          if (this.fieldset && this.fieldset.length) {
+          if (this.fieldset?.length) {
             this.fieldset.forEach((item) => {
               if (question.variable === item.name) {
                 question.default = item.value;
@@ -1116,7 +1156,7 @@ export default {
 
           if (question.subquestions) {
             question.subquestions.forEach((subQuestion) => {
-              if (this.fieldset && this.fieldset.length) {
+              if (this.fieldset?.length) {
                 this.fieldset.forEach((item) => {
                   if (subQuestion.variable === item.name) {
                     subQuestion.default = item.value;
@@ -1485,13 +1525,13 @@ export default {
       this.previewEditorConfig.isShow = false;
       this.updateConfirmDialog.isShow = false;
 
-      if (this.clipboardInstance && this.clipboardInstance.off) {
+      if (this.clipboardInstance?.off) {
         this.clipboardInstance.off('success');
       }
       if (this.errorDialogConf.message) {
         this.$nextTick(() => {
           this.clipboardInstance = new Clipboard('#error-copy-btn');
-          this.clipboardInstance.on('success', (e) => {
+          this.clipboardInstance.on('success', () => {
             this.$bkMessage({
               theme: 'success',
               message: this.$t('复制成功'),
@@ -1669,6 +1709,7 @@ export default {
         // }
         this.curAppDifference.content = res.data.new_content;
         this.curAppDifference.originContent = res.data.old_content;
+        // eslint-disable-next-line no-plusplus
         this.differenceKey++;
         this.isChartVersionChange = res.data.chart_version_changed;
       } catch (e) {
@@ -1682,8 +1723,9 @@ export default {
     /**
              * 全屏
              */
-    setFullScreen(index) {
+    setFullScreen() {
       this.yamlDiffEditorOptions.fullScreen = true;
+      // eslint-disable-next-line no-plusplus
       this.differenceKey++;
     },
 
@@ -1692,6 +1734,7 @@ export default {
              */
     cancelFullScreen() {
       this.yamlDiffEditorOptions.fullScreen = false;
+      // eslint-disable-next-line no-plusplus
       this.differenceKey++;
     },
 
@@ -1723,7 +1766,7 @@ export default {
       if (this.notesdialog.notes) {
         this.$nextTick(() => {
           this.notesdialog.clipboard = new Clipboard('#notes-message');
-          this.notesdialog.clipboard.on('success', (e) => {
+          this.notesdialog.clipboard.on('success', () => {
             this.$bkMessage({
               theme: 'success',
               message: this.$t('复制成功'),
@@ -1735,7 +1778,7 @@ export default {
 
     handleCloseNotes() {
       this.notesdialog.isShow = false;
-      if (this.notesdialog.clipboard && this.notesdialog.clipboard.off) {
+      if (this.notesdialog.clipboard?.off) {
         this.notesdialog.clipboard.off('success');
       }
     },
@@ -1781,4 +1824,10 @@ export default {
 
 <style scoped>
     @import './app-detail.css';
+    .error-tips {
+      font-size: 12px;
+      color: #ea3636;
+      line-height: 18px;
+      margin: 2px 0 0;
+    }
 </style>
