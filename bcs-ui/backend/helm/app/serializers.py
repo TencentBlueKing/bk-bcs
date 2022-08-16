@@ -408,7 +408,7 @@ class AppUpgradeSLZ(AppBaseSLZ):
         cmd_flags = validated_data['cmd_flags']
         # 添加 upgrade 时的描述信息
         if validated_data.get('description'):
-            cmd_flags.extend([{'--description': validated_data['description']}, {'--history-max': '100'}])
+            cmd_flags.append({'--description': validated_data['description']})
 
         return instance.upgrade_app(
             access_token=self.access_token,
@@ -441,6 +441,7 @@ class AppUpgradeSLZ(AppBaseSLZ):
             "id",
             "valuefile_name",
             "cmd_flags",
+            "description",
         )
         read_only_fields = (
             "name",
@@ -459,6 +460,7 @@ class AppUpgradeSLZ(AppBaseSLZ):
             "valuefile": {"write_only": True},
             "upgrade_verion": {"write_only": True},
             "valuefile_name": {"write_only": True},
+            "description": {"write_only": True},
         }
 
 

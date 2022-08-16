@@ -433,12 +433,19 @@
         :data="curHistoryPageData"
         :pagination="pageConf"
         v-bkloading="{ isLoading }"
+        max-height="600"
+        @row-mouse-enter="handleMouseEnter"
+        @row-mouse-leave="handleMouseLeave"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
         <bcs-table-column label="Revision" prop="revision" width="100"></bcs-table-column>
         <bcs-table-column :label="$t('更新时间')" prop="updateTime" show-overflow-tooltip></bcs-table-column>
         <bcs-table-column :label="$t('状态')" prop="status" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column label="Chart" prop="chart" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column label="Chart" prop="chart" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{`${row.chart}:${row.chartVersion}`}}
+          </template>
+        </bcs-table-column>
         <bcs-table-column label="App Version" prop="appVersion"></bcs-table-column>
         <bcs-table-column label="Values" width="80">
           <template #default="{ row }">
@@ -447,6 +454,13 @@
               @click="handleShowValuesDetail(row)"
               v-if="row.values">{{$t('查看')}}</bcs-button>
             <span v-else>--</span>
+            <span
+              class="copy-icon ml5"
+              v-if="activeRevision === row.revision"
+              v-bk-tooltips="$t('复制 Values')"
+              @click="handleCopyValues(row)">
+              <i class="bcs-icon bcs-icon-copy"></i>
+            </span>
           </template>
         </bcs-table-column>
         <bcs-table-column
@@ -457,12 +471,32 @@
         </bcs-table-column>
       </bcs-table>
     </bcs-dialog>
+    <bcs-dialog
+      header-position="left"
+      :show-footer="false"
+      width="860"
+      v-model="showValuesDialog">
+      <template #header>
+        <div class="bcs-flex">
+          <span>{{`${curReleaseRow.chart}:${curReleaseRow.chartVersion}`}}</span>
+          <span
+            class="copy-icon ml10"
+            v-bk-tooltips="$t('复制 Values')"
+            @click="handleCopyValues(curReleaseRow)">
+            <i class="bcs-icon bcs-icon-copy"></i>
+          </span>
+        </div>
+      </template>
+      <div class="helm-release-dialog">
+        <pre>{{curReleaseRow.values}}</pre>
+      </div>
+    </bcs-dialog>
   </div>
 </template>
 
 <script>
 import ace from '@/components/ace-editor';
-import { catchErrorHandler } from '@/common/util';
+import { catchErrorHandler, copyText } from '@/common/util';
 import Clipboard from 'clipboard';
 import search from './search.vue';
 import { mapGetters } from 'vuex';
@@ -588,6 +622,9 @@ export default {
         count: 0,
       },
       isLoading: false,
+      curReleaseRow: {},
+      showValuesDialog: false,
+      activeRevision: '',
     };
   },
   computed: {
@@ -1490,10 +1527,8 @@ export default {
       this.isLoading = false;
     },
     handleShowValuesDetail(row) {
-      this.$bkInfo({
-        subTitle: row.values,
-        showFooter: false,
-      });
+      this.curReleaseRow = row;
+      this.showValuesDialog = true;
     },
     pageChange(current) {
       this.pageConf.current = current;
@@ -1501,6 +1536,19 @@ export default {
     pageSizeChange(pageSize) {
       this.pageConf.current = 1;
       this.pageConf.limit = pageSize;
+    },
+    handleCopyValues(row) {
+      copyText(row.values);
+      this.$bkMessage({
+        theme: 'success',
+        message: this.$i18n.t('复制成功'),
+      });
+    },
+    handleMouseEnter(index, event, row) {
+      this.activeRevision = row.revision;
+    },
+    handleMouseLeave() {
+      this.activeRevision = '';
     },
     // /**
     //  * 自定义checkbox表格头
@@ -1533,6 +1581,15 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="postcss" scoped>
     @import './index.css';
+    .helm-release-dialog {
+      max-height: 600px;
+      overflow: auto;
+    }
+    >>> .copy-icon {
+      color: #3a84ff;
+      cursor: pointer;
+      font-size: 14px;
+    }
 </style>

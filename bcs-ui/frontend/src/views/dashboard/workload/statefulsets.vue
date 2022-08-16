@@ -16,14 +16,14 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" sortable></bk-table-column>
-        <bk-table-column :label="$t('Pod 管理策略')">
-          <template slot-scope="{ row }">
-            {{ row.spec.podManagementPolicy || '--' }}
-          </template>
-        </bk-table-column>
         <bk-table-column :label="$t('升级策略')" min-width="100">
           <template slot-scope="{ row }">
             {{ updateStrategyMap[$chainable(row.spec, 'updateStrategy.type')] || $t('滚动升级') }}
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('Pod 管理策略')">
+          <template slot-scope="{ row }">
+            {{ row.spec.podManagementPolicy || '--' }}
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('状态')" min-width="60">

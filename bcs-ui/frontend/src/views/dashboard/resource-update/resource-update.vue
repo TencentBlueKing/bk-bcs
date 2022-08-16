@@ -25,7 +25,9 @@
           <div class="top-operate">
             <span class="title bcs-ellipsis">{{ subTitle }}</span>
             <span class="tools">
-              <span v-if="isEdit" v-bk-tooltips.top="$t('重置')" @click="handleReset"><i class="bcs-icon bcs-icon-reset"></i></span>
+              <span
+                v-if="isEdit"
+                v-bk-tooltips.top="$t('重置')" @click="handleReset"><i class="bcs-icon bcs-icon-reset"></i></span>
               <span class="upload" v-bk-tooltips.top="$t('上传（仅支持YAML格式）')">
                 <input type="file" ref="fileRef" tabindex="-1" accept=".yaml,.yml" @change="handleFileChange">
                 <i class="bcs-icon bcs-icon-upload"></i>
@@ -48,7 +50,8 @@
             :ext-cls="['custom-layout-cls', { 'hide-help': !editorErr.message }]"
             :style="{ 'height': fullScreen ? clientHeight + 'px' : height + 'px' }">
             <div slot="aside">
-              <EditorStatus class="status-wrapper" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
+              <EditorStatus
+                class="status-wrapper" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
             </div>
             <div slot="main">
               <ResourceEditor
@@ -86,8 +89,12 @@
             <span v-else><!-- 空元素为了flex布局 --></span>
             <span class="tools">
               <span v-bk-tooltips.top="$t('复制代码')" @click="handleCopy"><i class="bcs-icon bcs-icon-copy"></i></span>
-              <span v-bk-tooltips.top="$t('帮助')" @click="handleHelp"><i :class="['bcs-icon bcs-icon-help-2', { active: showHelp }]"></i></span>
-              <span v-bk-tooltips.top="$t('关闭')" @click="showExample = false"><i class="bcs-icon bcs-icon-close-5"></i></span>
+              <span
+                v-bk-tooltips.top="$t('帮助')"
+                @click="handleHelp"><i :class="['bcs-icon bcs-icon-help-2', { active: showHelp }]"></i></span>
+              <span
+                v-bk-tooltips.top="$t('关闭')"
+                @click="showExample = false"><i class="bcs-icon bcs-icon-close-5"></i></span>
             </span>
           </div>
           <div class="example-desc" v-if="showDesc" ref="descWrapperRef">{{ activeExample.description }}</div>
@@ -139,7 +146,9 @@
           readonly
           @diff-stat="handleDiffStatChange">
         </ResourceEditor>
-        <EditorStatus class="status-wrapper diff" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
+        <EditorStatus
+          class="status-wrapper diff"
+          :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
       </div>
     </div>
     <div class="resource-btn-group">

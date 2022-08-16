@@ -1,5 +1,5 @@
 <template>
-  <div class="user-token">
+  <div class="user-token bcs-content-wrapper">
     <div class="user-token-header">
       <span>
         <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i>
@@ -218,6 +218,7 @@ import * as ace from '@/components/ace-editor';
 import fullScreen from '@/directives/full-screen';
 
 export default defineComponent({
+  name: 'UserToken',
   components: { StatusIcon, ace },
   directives: {
     'full-screen': fullScreen,

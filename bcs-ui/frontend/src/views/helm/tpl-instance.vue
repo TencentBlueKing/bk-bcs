@@ -1,5 +1,5 @@
 <template>
-  <div class="biz-content">
+  <div class="biz-content" v-bkloading="{ isLoading: createInstanceLoading, zIndex: 100 }">
     <div class="biz-top-bar">
       <div class="biz-helm-title">
         <a class="bcs-icon bcs-icon-arrows-left back" @click="goTplList"></a>
@@ -7,7 +7,7 @@
       </div>
     </div>
 
-    <div class="biz-content-wrapper" v-bkloading="{ isLoading: createInstanceLoading, zIndex: 100 }">
+    <div class="biz-content-wrapper">
       <div>
         <div class="biz-helm-header">
           <div class="left">
@@ -1272,6 +1272,7 @@ export default {
         this.checkAppStatus(res.data);
       } catch (e) {
         this.showErrorDialog(e, this.$t('部署失败'), 'createApp');
+        this.createInstanceLoading = false;
       }
     },
 

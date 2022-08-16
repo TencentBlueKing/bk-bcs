@@ -21,4 +21,7 @@ const (
 
 	// AnonymousUsername 匿名用户
 	AnonymousUsername = "anonymous"
+
+	// TimeFormat time format YYYY-mm-dd HH:MM:SS
+	TimeFormat = "2006-01-02 15:04:05"
 )

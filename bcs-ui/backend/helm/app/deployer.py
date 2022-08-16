@@ -19,7 +19,6 @@ import traceback
 from dataclasses import dataclass
 
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from celery import current_task
 
 from backend.kube_core.toolkit.kubectl.exceptions import KubectlError, KubectlExecutionError
 from backend.utils import client as bcs_client

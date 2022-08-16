@@ -254,6 +254,7 @@ replicas:
       ui:component:
         name: radio
         props:
+          disabled: {{ eq .action "update" }}
           datasource:
             - label: OrderedReady
               value: OrderedReady
@@ -351,8 +352,9 @@ volumeClaimTmpl:
                 then:
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
-            # ui:rules:
-            # TODO claimType == useExistPV 必填
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('claimType')?.instance?.value !== 'useExistPV' || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
           scName:
             title: {{ i18n "存储类名称" .lang }}
             type: string
@@ -370,8 +372,9 @@ volumeClaimTmpl:
                 then:
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
-            # ui:rules:
-            # TODO claimType == createBySC 必填
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('claimType')?.instance?.value !== 'createBySC' || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
           storageSize:
             title: {{ i18n "容量" .lang }}
             type: integer
@@ -381,8 +384,9 @@ volumeClaimTmpl:
               props:
                 max: 4096
                 unit: Gi
-            # ui:rules:
-            # TODO claimType == createBySC 必填
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('claimType')?.instance?.value !== 'createBySC' || $self.value !== 0 {{`}}`}}"
+                message: {{ i18n "值不能为零" .lang }}
           accessModes:
             title: {{ i18n "访问模式" .lang }}
             type: array
