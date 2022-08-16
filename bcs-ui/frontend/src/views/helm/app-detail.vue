@@ -129,7 +129,7 @@
                         </bk-input>
                       </div>
                       <p class="error-tips" v-if="isDescHasSpecialChar">
-                        {{$t('不支持特殊字符')}}
+                        {{$t('描述不能包含特殊字符')}}
                       </p>
                     </div>
                   </div>
@@ -1081,6 +1081,8 @@ export default {
       this.isQuestionsLoading = true;
       try {
         const res = await this.$store.dispatch('helm/getAppById', { projectId, appId });
+        // eslint-disable-next-line no-prototype-builtins
+        res.data.cmd_flags = (res.data.cmd_flags || []).filter(item => !item.hasOwnProperty('--description'));
         result = res.data;
         this.originReleaseData = result;
         this.setAppDetail();
