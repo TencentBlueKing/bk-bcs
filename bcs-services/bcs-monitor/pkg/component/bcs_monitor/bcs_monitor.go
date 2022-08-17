@@ -14,21 +14,18 @@ package bcsmonitor
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/chonla/format"
 	"github.com/prometheus/common/model"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
 )
 
-// QueryInstant 查询实时数据, 包含租户等信息
-func QueryInstant(ctx context.Context, projectId string, promql string, t time.Time) (model.Vector, []string, error) {
-	return promclient.QueryInstant(ctx, getQueryURL(), promql, t)
-}
-
-// QueryInstantF 查询实时数据, 带格式化
-func QueryInstantF(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (model.Vector, []string, error) {
+// QueryInstant 查询实时数据, 带格式化
+func QueryInstant(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (*promclient.Result, error) {
 	var rawQL string
 	if params == nil {
 		rawQL = promql
@@ -36,22 +33,12 @@ func QueryInstantF(ctx context.Context, projectId string, promql string, params 
 		rawQL = format.Sprintf(promql, params)
 	}
 
-	return promclient.QueryInstant(ctx, getQueryURL(), rawQL, t)
+	queryURL, header := getQueryURL()
+	return promclient.QueryInstant(ctx, queryURL, header, rawQL, t)
 }
 
-// MultiQueryInstant 并发查询多个
-// func MultiQueryInstant(ctx context.Context, projectId string, promqlList []string, t time.Time) (map[string]model.Vector, []string, error) {
-
-// 	return promclient.QueryInstant(ctx, getQueryURL(), promql, t)
-// }
-
-// QueryRange 查询历史数据, 包含租户等信息
-func QueryRange(ctx context.Context, projectId string, promql string, start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
-	return promclient.QueryRange(ctx, getQueryURL(), promql, start, end, step)
-}
-
-// QueryRangeF 查询历史数据 带格式的查询
-func QueryRangeF(ctx context.Context, projectId string, promql string, params map[string]interface{}, start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
+// QueryInstantVector 查询实时数据, 带格式化
+func QueryInstantVector(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (model.Vector, []string, error) {
 	var rawQL string
 	if params == nil {
 		rawQL = promql
@@ -59,21 +46,84 @@ func QueryRangeF(ctx context.Context, projectId string, promql string, params ma
 		rawQL = format.Sprintf(promql, params)
 	}
 
-	return promclient.QueryRange(ctx, getQueryURL(), rawQL, start, end, step)
+	queryURL, header := getQueryURL()
+	return promclient.QueryInstantVector(ctx, queryURL, header, rawQL, t)
+}
+
+// QueryRange 查询历史数据 带格式的查询
+func QueryRange(ctx context.Context, projectId string, promql string, params map[string]interface{}, start time.Time, end time.Time, step time.Duration) (*promclient.Result, error) {
+	var rawQL string
+	if params == nil {
+		rawQL = promql
+	} else {
+		rawQL = format.Sprintf(promql, params)
+	}
+
+	queryURL, header := getQueryURL()
+	return promclient.QueryRange(ctx, queryURL, header, rawQL, start, end, step)
+}
+
+// QueryRangeMatrix 查询历史数据, 包含租户等信息
+func QueryRangeMatrix(ctx context.Context, projectId string, promql string, params map[string]interface{}, start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
+	var rawQL string
+	if params == nil {
+		rawQL = promql
+	} else {
+		rawQL = format.Sprintf(promql, params)
+	}
+
+	queryURL, header := getQueryURL()
+	return promclient.QueryRangeMatrix(ctx, queryURL, header, rawQL, start, end, step)
 }
 
 // QueryValue 查询第一个值 format 格式 %<var>s
 func QueryValue(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (string, error) {
-	vector, _, err := QueryInstantF(ctx, projectId, promql, params, t)
+	vector, _, err := QueryInstantVector(ctx, projectId, promql, params, t)
 	if err != nil {
 		return "", err
 	}
 	return GetFirstValue(vector), nil
 }
 
+// QueryMultiValues 查询第一个值 format 格式 %<var>s
+func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[string]string, params map[string]interface{}, t time.Time) (map[string]string, error) {
+	var (
+		wg  sync.WaitGroup
+		mtx sync.Mutex
+	)
+
+	defaultValue := "0"
+
+	resultMap := map[string]string{}
+
+	// promql 数量已知, 不控制并发数量
+	for k, v := range promqlMap {
+		wg.Add(1)
+		go func(key, promql string) {
+			defer wg.Done()
+
+			vector, _, err := QueryInstantVector(ctx, projectId, promql, params, t)
+			mtx.Lock()
+			defer mtx.Unlock()
+
+			// 多个查询不报错, 有默认值
+			if err != nil {
+				klog.Warningf("query %s error, %s", promql, err)
+				resultMap[key] = defaultValue
+			} else {
+				resultMap[key] = GetFirstValue(vector)
+			}
+		}(k, v)
+	}
+
+	wg.Wait()
+
+	return resultMap, nil
+}
+
 // QueryLabelSet 查询
 func QueryLabelSet(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (map[string]string, error) {
-	vector, _, err := QueryInstantF(ctx, projectId, promql, params, t)
+	vector, _, err := QueryInstantVector(ctx, projectId, promql, params, t)
 	if err != nil {
 		return nil, err
 	}

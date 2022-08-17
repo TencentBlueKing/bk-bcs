@@ -75,7 +75,15 @@ type MetricHandler interface {
 	GetNodePodCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeContainerCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodNetworkTransmit(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetContainerCPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerMemoryUsed(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerCPULimit(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 }
 
 // GetNodeMatch 按集群node节点正则匹配

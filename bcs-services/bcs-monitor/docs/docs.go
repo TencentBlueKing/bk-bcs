@@ -16,13 +16,61 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/cpu_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "集群 CPU 使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/disk_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "集群磁盘使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/memory_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "集群内存使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/namespaces/:namespace/pods/:pod/containers": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Pod"
+                    "Logs"
                 ],
                 "summary": "获取 Pod 容器列表",
                 "responses": {
@@ -44,7 +92,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Pod"
+                    "Logs"
                 ],
                 "summary": "查询容器日志",
                 "parameters": [
@@ -82,7 +130,7 @@ const docTemplate = `{
                     "application/octet-stream"
                 ],
                 "tags": [
-                    "Pod"
+                    "Logs"
                 ],
                 "summary": "下载日志",
                 "parameters": [
@@ -117,7 +165,7 @@ const docTemplate = `{
                     "text/event-stream"
                 ],
                 "tags": [
-                    "Pod"
+                    "Logs"
                 ],
                 "summary": "SSE 实时日志流",
                 "parameters": [
@@ -135,6 +183,294 @@ const docTemplate = `{
                         "in": "query"
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/:namespace/pods/cpu_usage": {
+            "post": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Pod CPU使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/:namespace/pods/memory_used": {
+            "post": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Pod 内存使用量",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/:namespace/pods/network_receive": {
+            "post": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "网络接收量",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/:namespace/pods/network_transmit": {
+            "post": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Pod 网络发送量",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/namespace/pods/:pod/containers/:container/cpu_limit": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "容器 CPU 限制",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/namespace/pods/:pod/containers/:container/cpu_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "容器 CPU 使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/namespace/pods/:pod/containers/:container/disk_read_total": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "容器磁盘读总量",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/namespace/pods/:pod/containers/:container/disk_write_total": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "容器磁盘写总量",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/namespace/pods/:pod/containers/:container/memory_limit": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "容器内存限制",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespaces/namespace/pods/:pod/containers/:container/memory_used": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "容器内存使用量",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/cpu_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "查询 CPU 使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/diskio_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "节点磁盘IO",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/info": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "节点信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/memory_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "节点内存使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/network_receive": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "节点网络发送",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/network_transmit": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "节点网络接收",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/overview": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "查询节点概览",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/overview": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "集群概览数据",
                 "responses": {
                     "200": {
                         "description": "OK",

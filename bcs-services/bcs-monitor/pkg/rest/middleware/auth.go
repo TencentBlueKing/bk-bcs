@@ -170,6 +170,14 @@ func GetProjectIdOrCode(c *gin.Context) string {
 	return ""
 }
 
+// GetProjectCode 获取 projectCode 参数
+func GetProjectCode(c *gin.Context) string {
+	if c.Param("projectCode") != "" {
+		return c.Param("projectCode")
+	}
+	return ""
+}
+
 // GetClusterId :
 func GetClusterId(c *gin.Context) string {
 	if c.Param("clusterId") != "" {

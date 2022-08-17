@@ -13,10 +13,7 @@
 package metrics
 
 import (
-	"fmt"
 	"time"
-
-	"github.com/prometheus/common/model"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -41,64 +38,53 @@ type ClusterOverviewMetric struct {
 	MemoryUsage *UsageByte `json:"memory_usage"`
 }
 
-// GetFirstValue 获取第一个值
-func GetFirstValue(vector model.Vector) string {
-	if len(vector) == 0 {
-		return "0"
+// handleClusterMetric Cluster 处理公共函数
+func handleClusterMetric(c *rest.Context, promql string) (interface{}, error) {
+	params := map[string]interface{}{"clusterId": c.ClusterId}
+
+	end := time.Now()
+	start := end.Add(-time.Hour)
+	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, start, end, time.Minute)
+	if err != nil {
+		return nil, err
 	}
-	return vector[0].Value.String()
+	return result.Data, nil
 }
 
 // GetClusterOverview 集群概览数据
+// @Summary  集群概览数据
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /overview [get]
 func GetClusterOverview(c *rest.Context) (interface{}, error) {
-	promqlUsed := fmt.Sprintf(`bcs:cluster:cpu:used{cluster_id="%s"}`, c.ClusterId)
-	usedVector, _, err := bcsmonitor.QueryInstant(c.Context, c.ProjectId, promqlUsed, time.Now())
-	if err != nil {
-		return nil, err
+	params := map[string]interface{}{"clusterId": c.ClusterId}
+
+	promqlMap := map[string]string{
+		"cpu_used":     `bcs:cluster:cpu:used{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
+		"cpu_total":    `bcs:cluster:cpu:total{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
+		"memory_used":  `bcs:cluster:memory:used{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
+		"memory_total": `bcs:cluster:memory:total{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
+		"disk_used":    `bcs:cluster:disk:used{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
+		"disk_total":   `bcs:cluster:disk:total{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
 	}
 
-	promqlTotal := fmt.Sprintf(`bcs:cluster:cpu:total{cluster_id="%s"}`, c.ClusterId)
-	totalVector, _, err := bcsmonitor.QueryInstant(c.Context, c.ProjectId, promqlTotal, time.Now())
-	if err != nil {
-		return nil, err
-	}
-
-	memoryTotal := fmt.Sprintf(`bcs:cluster:memory:total{cluster_id="%s"}`, c.ClusterId)
-	memoryTotalVector, _, err := bcsmonitor.QueryInstant(c.Context, c.ProjectId, memoryTotal, time.Now())
-	if err != nil {
-		return nil, err
-	}
-
-	memoryUsed := fmt.Sprintf(`bcs:cluster:memory:used{cluster_id="%s"}`, c.ClusterId)
-	memoryUsedVector, _, err := bcsmonitor.QueryInstant(c.Context, c.ProjectId, memoryUsed, time.Now())
-	if err != nil {
-		return nil, err
-	}
-
-	diskTotal := fmt.Sprintf(`bcs:cluster:disk:total{cluster_id="%s"}`, c.ClusterId)
-	diskTotalVector, _, err := bcsmonitor.QueryInstant(c.Context, c.ProjectId, diskTotal, time.Now())
-	if err != nil {
-		return nil, err
-	}
-
-	diskUsed := fmt.Sprintf(`bcs:cluster:disk:used{cluster_id="%s"}`, c.ClusterId)
-	diskUsedVector, _, err := bcsmonitor.QueryInstant(c.Context, c.ProjectId, diskUsed, time.Now())
+	result, err := bcsmonitor.QueryMultiValues(c.Context, c.ProjectId, promqlMap, params, time.Now())
 	if err != nil {
 		return nil, err
 	}
 
 	m := ClusterOverviewMetric{
 		CPUUsage: &Usage{
-			Used:  GetFirstValue(usedVector),
-			Total: GetFirstValue(totalVector),
+			Used:  result["cpu_used"],
+			Total: result["cpu_total"],
 		},
 		MemoryUsage: &UsageByte{
-			UsedByte:  GetFirstValue(memoryUsedVector),
-			TotalByte: GetFirstValue(memoryTotalVector),
+			UsedByte:  result["memory_used"],
+			TotalByte: result["memory_total"],
 		},
 		DiskUsage: &UsageByte{
-			UsedByte:  GetFirstValue(diskUsedVector),
-			TotalByte: GetFirstValue(diskTotalVector),
+			UsedByte:  result["disk_used"],
+			TotalByte: result["disk_total"],
 		},
 	}
 
@@ -106,37 +92,35 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 }
 
 // ClusterCPUUsage 集群 CPU 使用率
+// @Summary  集群 CPU 使用率
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /cpu_usage [get]
 func ClusterCPUUsage(c *rest.Context) (interface{}, error) {
-	promql := fmt.Sprintf(`bcs:cluster:cpu:usage{cluster_id="%s"}`, c.ClusterId)
-	end := time.Now()
-	start := end.Add(-time.Hour)
-	vector, _, err := bcsmonitor.QueryRange(c.Context, c.ProjectId, promql, start, end, time.Minute)
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
+	promql := `bcs:cluster:cpu:usage{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`
+
+	return handleClusterMetric(c, promql)
+
 }
 
-// ClusterMemoryUsage 集群 内存 使用率
+// ClusterMemoryUsage 集群内存使用率
+// @Summary  集群内存使用率
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /memory_usage [get]
 func ClusterMemoryUsage(c *rest.Context) (interface{}, error) {
-	promql := fmt.Sprintf(`bcs:cluster:memory:usage{cluster_id="%s"}`, c.ClusterId)
-	end := time.Now()
-	start := end.Add(-time.Hour)
-	vector, _, err := bcsmonitor.QueryRange(c.Context, c.ProjectId, promql, start, end, time.Minute)
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
+	promql := `bcs:cluster:memory:usage{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`
+
+	return handleClusterMetric(c, promql)
 }
 
 // ClusterDiskUsage 集群磁盘使用率
+// @Summary  集群磁盘使用率
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /disk_usage [get]
 func ClusterDiskUsage(c *rest.Context) (interface{}, error) {
-	promql := fmt.Sprintf(`bcs:cluster:disk:usage{cluster_id="%s"}`, c.ClusterId)
-	end := time.Now()
-	start := end.Add(-time.Hour)
-	vector, _, err := bcsmonitor.QueryRange(c.Context, c.ProjectId, promql, start, end, time.Minute)
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
+	promql := `bcs:cluster:disk:usage{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`
+
+	return handleClusterMetric(c, promql)
 }

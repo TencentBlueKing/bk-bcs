@@ -23,7 +23,7 @@ import (
 
 // GetPodContainers 获取 Pod 容器列表
 // @Summary  获取 Pod 容器列表
-// @Tags     Pod
+// @Tags     Logs
 // @Produce  json
 // @Success  200  {array}  k8sclient.Container
 // @Router   /namespaces/:namespace/pods/:pod/containers [get]
@@ -41,7 +41,7 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 
 // GetPodLog 查询容器日志
 // @Summary  查询容器日志
-// @Tags     Pod
+// @Tags     Logs
 // @Param    container_name  query  string  true  "容器名称"
 // @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
 // @Produce  json
@@ -71,7 +71,7 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 
 // DownloadPodLog 下载日志
 // @Summary  下载日志
-// @Tags     Pod
+// @Tags     Logs
 // @Param    container_name  query  string  true  "容器名称"
 // @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
 // @Produce  octet-stream

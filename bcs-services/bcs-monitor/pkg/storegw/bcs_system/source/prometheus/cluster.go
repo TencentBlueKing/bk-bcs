@@ -14,7 +14,6 @@ package prometheus
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
@@ -36,245 +35,103 @@ func NewPrometheus() *Prometheus {
 	return &Prometheus{}
 }
 
-// GetClusterCPUTotal 获取集群CPU核心总量
-func (p *Prometheus) GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
+// handleClusterMetric Cluster 处理公共函数
+func (m *Prometheus) handleClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	nodeMatch, err := base.GetNodeMatch(ctx, clusterId, true)
 	if err != nil {
 		return nil, err
 	}
 
-	promql := fmt.Sprintf(
-		`sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%s", job="node-exporter", mode="idle", instance=~"%s"}))`,
-		clusterId,
-		instanceMatch,
-	)
+	params := map[string]interface{}{
+		"clusterId":  clusterId,
+		"instance":   nodeMatch,
+		"fstype":     DISK_FSTYPE,
+		"mountpoint": DISK_MOUNTPOINT,
+	}
 
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
+	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
 	if err != nil {
 		return nil, err
 	}
 
 	return base.MatrixToSeries(matrix), nil
+}
+
+// GetClusterCPUTotal 获取集群CPU核心总量
+func (p *Prometheus) GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode="idle", instance=~"%<instance>s"}))`
+
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsed 获取CPU核心使用量
 func (p *Prometheus) GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", instance=~"%<instance>s"}[2m]))`
 
-	promql := fmt.Sprintf(
-		`sum(irate(node_cpu_seconds_total{cluster_id="%s", job="node-exporter", mode!="idle", instance=~"%s"}[2m]))`,
-		clusterId,
-		instanceMatch,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsage 获取CPU核心使用量
 func (p *Prometheus) GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", instance=~"%<instance>s"}[2m])) /
+        sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode="idle", instance=~"%<instance>s"})) *
+        100`
 
-	promql := fmt.Sprintf(
-		`sum(irate(node_cpu_seconds_total{cluster_id="%s", job="node-exporter", mode!="idle", instance=~"%s"}[2m])) /
-        sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%s", job="node-exporter", mode="idle", instance=~"%s"})) *
-        100`,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterMemoryTotal 获取集群内存总量
 func (p *Prometheus) GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"})`
 
-	promql := fmt.Sprintf(
-		`sum(node_memory_MemTotal_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"})`,
-		clusterId,
-		instanceMatch,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterMemoryUsed 获取内存使用量
 func (p *Prometheus) GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
+        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
+        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
+        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) +
+        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}))`
 
-	promql := fmt.Sprintf(
-		`(sum(node_memory_MemTotal_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) -
-        sum(node_memory_MemFree_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) -
-        sum(node_memory_Buffers_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) -
-        sum(node_memory_Cached_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) +
-        sum(node_memory_Shmem_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}))`,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterMemoryUsage 获取内存使用率
 func (p *Prometheus) GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
+        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
+        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
+        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) +
+        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"})) /
+        sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) *
+        100`
 
-	promql := fmt.Sprintf(
-		`(sum(node_memory_MemTotal_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) -
-        sum(node_memory_MemFree_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) -
-        sum(node_memory_Buffers_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) -
-        sum(node_memory_Cached_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) +
-        sum(node_memory_Shmem_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"})) /
-        sum(node_memory_MemTotal_bytes{cluster_id="%s", job="node-exporter", instance=~"%s"}) *
-        100`,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-		clusterId,
-		instanceMatch,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterDiskTotal 获取集群磁盘总量
 func (p *Prometheus) GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"})`
 
-	promql := fmt.Sprintf(
-		`sum(node_filesystem_size_bytes{cluster_id="%s", job="node-exporter", instance=~"%s", fstype=~"%s", mountpoint=~"%s"})`,
-		clusterId,
-		instanceMatch,
-		DISK_FSTYPE,
-		DISK_MOUNTPOINT,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterDiskUsed 获取集群磁盘使用量
 func (p *Prometheus) GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}) -
+        sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"})`
 
-	promql := fmt.Sprintf(
-		`sum(node_filesystem_size_bytes{cluster_id="%s", job="node-exporter", instance=~"%s", fstype=~"%s", mountpoint=~"%s"}) -
-        sum(node_filesystem_free_bytes{cluster_id="%s", job="node-exporter", instance=~"%s", fstype=~"%s", mountpoint=~"%s"})`,
-		clusterId,
-		instanceMatch,
-		DISK_FSTYPE,
-		DISK_MOUNTPOINT,
-		clusterId,
-		instanceMatch,
-		DISK_FSTYPE,
-		DISK_MOUNTPOINT,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsed 获取CPU核心使用量
 func (p *Prometheus) GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	instanceMatch, err := base.GetNodeMatch(ctx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
+	promql := `(sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}) -
+		sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"})) /
+        sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}) *
+        100`
 
-	promql := fmt.Sprintf(
-		`(sum(node_filesystem_size_bytes{cluster_id="%s", job="node-exporter", instance=~"%s", fstype=~"%s", mountpoint=~"%s"}) -
-		sum(node_filesystem_free_bytes{cluster_id="%s", job="node-exporter", instance=~"%s", fstype=~"%s", mountpoint=~"%s"})) /
-        sum(node_filesystem_size_bytes{cluster_id="%s", job="node-exporter", instance=~"%s", fstype=~"%s", mountpoint=~"%s"}) *
-        100`,
-		clusterId,
-		instanceMatch,
-		DISK_FSTYPE,
-		DISK_MOUNTPOINT,
-		clusterId,
-		instanceMatch,
-		DISK_FSTYPE,
-		DISK_MOUNTPOINT,
-		clusterId,
-		instanceMatch,
-		DISK_FSTYPE,
-		DISK_MOUNTPOINT,
-	)
-
-	matrix, _, err := bcsmonitor.QueryRange(ctx, projectId, promql, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }

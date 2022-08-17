@@ -24,6 +24,22 @@ import (
 // 和现在规范的名称保持一致
 const provider = "BK-Monitor"
 
+// handleNodeMetric
+func (m *BKMonitor) handleNodeMetric(ctx context.Context, projectId, clusterId, ip string, promql string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	params := map[string]interface{}{
+		"clusterId":   clusterId,
+		"ip":          ip,
+		"device_type": IGNORE_DEVICE_TYPE,
+	}
+
+	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	return base.MatrixToSeries(matrix), nil
+}
+
 // GetNodeInfo 节点信息
 func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectId, clusterId, ip string, t time.Time) (*base.NodeInfo, error) {
 	params := map[string]interface{}{
@@ -45,170 +61,83 @@ func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectId, clusterId, ip st
 	info.Sysname = infoLabelSet["osVersion"]
 	info.Provider = provider
 
-	// CPU 核心
-	coreCountPromQL := `count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})`
-	coreCount, err := bcsmonitor.QueryValue(ctx, projectId, coreCountPromQL, params, t)
-	if err != nil {
-		return nil, err
+	promqlMap := map[string]string{
+		"coreCount": `count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})`,
+		"memory":    `sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})`,
+		"disk":      `sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip="%<ip>s", device_type!~"%<deviceType>s", provider="BK_MONITOR"})`,
 	}
-	info.CPUCount = coreCount
 
-	memoryPromQL := `sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})`
-	memory, err := bcsmonitor.QueryValue(ctx, projectId, memoryPromQL, params, t)
+	result, err := bcsmonitor.QueryMultiValues(ctx, projectId, promqlMap, params, time.Now())
 	if err != nil {
 		return nil, err
 	}
-	info.Memory = memory
 
-	diskPromQL := `sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip="%<ip>s", device_type!~"%<deviceType>s", provider="BK_MONITOR"})`
-	disk, err := bcsmonitor.QueryValue(ctx, projectId, diskPromQL, params, t)
-	if err != nil {
-		return nil, err
-	}
-	info.Disk = disk
+	info.CPUCount = result["coreCount"]
+	info.Memory = result["memory"]
+	info.Disk = result["disk"]
 
 	return info, nil
 }
 
 // GetNodeCPUUsage 节点CPU使用率
 func (m *BKMonitor) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId": clusterId,
-		"ip":        ip,
-	}
+	promql := `sum(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"}) / count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})`
 
-	promql := `sum(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}) / count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip="%<ip>s"})`
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
 // GetNodeMemoryUsage 内存使用率
 func (m *BKMonitor) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId": clusterId,
-		"ip":        ip,
-	}
-
 	promql := `
-		(sum(bkmonitor:system:mem:used{cluster_id="%<clusterId>s", ip="%<ip>s"}) /
-		sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip="%<ip>s"})) *
+		(sum(bkmonitor:system:mem:used{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"}) /
+		sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})) *
 		100`
 
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
 // GetNodeDiskUsage 节点磁盘使用率
 func (m *BKMonitor) GetNodeDiskUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId":   clusterId,
-		"ip":          ip,
-		"device_type": IGNORE_DEVICE_TYPE,
-	}
-
 	promql := `
-		(sum(bkmonitor:system:disk:used{cluster_id="%<clusterId>s", ip="%<ip>s", device_type!~"%<device_type>s"}) /
-		sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip="%<ip>s", device_type!~"%<device_type>s"})) *
+		(sum(bkmonitor:system:disk:used{cluster_id="%<clusterId>s", ip="%<ip>s", device_type!~"%<device_type>s", provider="BK_MONITOR"}) /
+		sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip="%<ip>s", device_type!~"%<device_type>s", provider="BK_MONITOR"})) *
 		100`
 
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
 // GetNodeDiskioUsage 节点磁盘IO使用率
 func (m *BKMonitor) GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId": clusterId,
-		"ip":        ip,
-	}
+	promql := `max(bkmonitor:system:io:util{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"}) * 100`
 
-	promql := `max(bkmonitor:system:io:util{cluster_id="%<clusterId>s", ip="%<ip>s"}) * 100`
-
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
 // GetNodePodCount PodCount
 func (m *BKMonitor) GetNodePodCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId": clusterId,
-		"ip":        ip,
-	}
-
 	// 注意 k8s 1.19 版本以前的 metrics 是 kubelet_running_container_count
-	promql := `max by (bk_instance) (kubelet_running_pods{cluster_id="%<clusterId>s", bk_instance=~"%<ip>s:.*"})`
+	promql := `max by (bk_instance) (kubelet_running_pods{cluster_id="%<clusterId>s", bk_instance=~"%<ip>s:.*", provider="BK_MONITOR"})`
 
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
 // GetNodeContainerCount 容器Count
 func (m *BKMonitor) GetNodeContainerCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId": clusterId,
-		"ip":        ip,
-	}
+	promql := `max by (bk_instance) (kubelet_running_containers{cluster_id="%<clusterId>s", container_state="running", bk_instance=~"%<ip>s:.*", provider="BK_MONITOR"})`
 
-	promql := `max by (bk_instance) (kubelet_running_containers{cluster_id="%<clusterId>s", container_state="running", bk_instance=~"%<ip>s:.*"})`
-
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
 // GetNodeNetworkTransmit 节点网络发送量
 func (m *BKMonitor) GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId": clusterId,
-		"ip":        ip,
-	}
+	promql := `max(bkmonitor:system:net:speed_sent{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})`
 
-	promql := `max(bkmonitor:system:net:speed_sent{cluster_id="%<clusterId>s", ip="%<ip>s"})`
-
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
 // GetNodeNetworkReceive 节点网络接收
 func (m *BKMonitor) GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	params := map[string]interface{}{
-		"clusterId": clusterId,
-		"ip":        ip,
-	}
+	promql := `max(bkmonitor:system:net:speed_recv{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BK_MONITOR"})`
 
-	promql := `max(bkmonitor:system:net:speed_recv{cluster_id="%<clusterId>s", ip="%<ip>s"})`
-
-	matrix, _, err := bcsmonitor.QueryRangeF(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
-	}
-
-	return base.MatrixToSeries(matrix), nil
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }

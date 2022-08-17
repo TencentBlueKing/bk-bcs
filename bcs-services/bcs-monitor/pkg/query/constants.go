@@ -19,7 +19,7 @@ import (
 
 // 减少配置, 默认使用 thanos 的参数配置
 const (
-	maxConcurrentQueries              = 20              // 最大并行查询数
+	maxConcurrentQueries              = 20 * 100        // 最大并行查询数, 提供并发查询, bcs-system storegw 也发并发, 如果20会blocks自己
 	maxConcurrentSelects              = 4               // 一次查询最多的并行数
 	defaultRangeQueryStep             = time.Second     // 默认查询步长
 	queryTimeout                      = time.Minute * 2 // 查询超时时间

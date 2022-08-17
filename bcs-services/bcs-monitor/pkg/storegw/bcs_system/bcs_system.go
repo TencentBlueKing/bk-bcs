@@ -203,8 +203,24 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		promSeriesSet, promErr = client.GetNodeNetworkReceive(ctx, cluster.ProjectId, cluster.ClusterId, ip, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
 	case "bcs:pod:cpu_usage":
 		promSeriesSet, promErr = client.GetPodCPUUsage(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:pod:memory_used":
+		promSeriesSet, promErr = client.GetPodMemoryUsed(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:pod:network_receive":
+		promSeriesSet, promErr = client.GetPodNetworkReceive(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:pod:network_transmit":
+		promSeriesSet, promErr = client.GetPodNetworkTransmit(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
 	case "bcs:container:cpu_usage":
 		promSeriesSet, promErr = client.GetContainerCPUUsage(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podName, containerNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:container:memory_used":
+		promSeriesSet, promErr = client.GetContainerMemoryUsed(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podName, containerNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:container:cpu_limit":
+		promSeriesSet, promErr = client.GetContainerCPULimit(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podName, containerNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:container:memory_limit":
+		promSeriesSet, promErr = client.GetContainerMemoryLimit(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podName, containerNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:container:disk_read_total":
+		promSeriesSet, promErr = client.GetContainerDiskReadTotal(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podName, containerNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
+	case "bcs:container:disk_write_total":
+		promSeriesSet, promErr = client.GetContainerDiskWriteTotal(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podName, containerNameList, time.UnixMilli(r.MinTime), time.UnixMilli(r.MaxTime), time.Millisecond*time.Duration(step))
 	default:
 		return nil
 	}
