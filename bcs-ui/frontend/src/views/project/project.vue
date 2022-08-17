@@ -15,7 +15,12 @@
         v-model="keyword">
       </bk-input>
     </div>
-    <bk-table :data="filterList" :pagination="pagination" size="medium" @page-change="handlePageChange" @page-limit-change="handleLimitChange">
+    <bk-table
+      :data="filterList"
+      :pagination="pagination"
+      size="medium"
+      @page-change="handlePageChange"
+      @page-limit-change="handleLimitChange">
       <bk-table-column :label="$t('项目名称')" prop="project_name">
         <template #default="{ row }">
           <div class="row-name">
@@ -64,7 +69,10 @@ export default defineComponent({
     const projectList = computed(() => $store.state.sideMenu.onlineProjectList || []);
     const filterList = computed(() => projectList.value
       .filter(item => item.project_name.indexOf(keyword.value) > -1)
-      .slice(pagination.value.limit * (pagination.value.current - 1), pagination.value.limit * pagination.value.current));
+      .slice(
+        pagination.value.limit * (pagination.value.current - 1),
+        pagination.value.limit * pagination.value.current,
+      ));
     watch(projectList, () => {
       pagination.value.count = projectList.value.length;
     }, { immediate: true });
@@ -117,6 +125,8 @@ export default defineComponent({
     padding: 20px 60px 20px 60px;
     background: #f5f7fa;
     width: 100%;
+    max-height: calc(100vh - 52px);
+    overflow: auto;
     .title {
         font-size: 16px;
         color: #313238;

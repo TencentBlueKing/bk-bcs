@@ -39,18 +39,18 @@
       <div class="workload-metric">
         <Metric
           :title="$t('CPU使用率')"
-          metric="cpu_usage"
+          :metric="['cpu_usage', 'cpu_limit']"
           :params="params"
           category="containers"
-          colors="#30d878">
+          :colors="['#30d878', '#ff5656']">
         </Metric>
         <Metric
           :title="$t('内存使用量')"
-          metric="memory_used"
+          :metric="['memory_used', 'memory_limit']"
           :params="params"
           unit="byte"
           category="containers"
-          colors="#3a84ff"
+          :colors="['#3a84ff', '#ff5656']"
           :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')">
         </Metric>
         <Metric
@@ -199,7 +199,6 @@ export default defineComponent({
     // 图表指标参数
     const params = computed(() => ({
       $namespaceId: namespace.value,
-      pod_name: pod.value,
       $containerId: name.value,
       $podId: pod.value,
     }));

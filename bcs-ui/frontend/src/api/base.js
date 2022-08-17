@@ -151,19 +151,19 @@ export const helmReleaseHistory = request('get', `${helmPrefix}/namespaces/$name
 
 // metric
 const metricPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/metrics/projects/$projectCode/clusters/$clusterId`;
-export const clusterCpuUsage = request('get', `${metricPrefix}/cpu_usage/`);
-export const clusterDiskUsage = request('get', `${metricPrefix}/disk_usage/`);
-export const clusterMemoryUsage = request('get', `${metricPrefix}/memory_usage/`);
-export const clusterOverview = request('get', `${metricPrefix}/overview/`);
-export const clusterNodeCpuUsage = request('get', `${metricPrefix}/nodes/$nodeIP/cpu_usage/`);
-export const clusterNodeDiskIOUsage = request('get', `${metricPrefix}/nodes/$nodeIP/diskio_usage/`);
-export const clusterNodeInfo = request('get', `${metricPrefix}/nodes/$nodeIP/info/`);
-export const clusterNodeMemoryUsage = request('get', `${metricPrefix}/nodes/$nodeIP/memory_usage/`);
-export const clusterNodeNetworkReceive = request('get', `${metricPrefix}/nodes/$nodeIP/network_receive/`);
-export const clusterNodeNetworkTransmit = request('get', `${metricPrefix}/nodes/$nodeIP/network_transmit/`);
-export const clusterNodeOverview = request('get', `${metricPrefix}/nodes/$nodeIP/overview/`);
-export const clusterPodMetric = request('post', `${metricPrefix}/namespaces/$namespaceId/pods/$metric/`);
-export const clusterContainersMetric = request('get', `${metricPrefix}/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric/`);
+export const clusterCpuUsage = request('get', `${metricPrefix}/cpu_usage`);
+export const clusterDiskUsage = request('get', `${metricPrefix}/disk_usage`);
+export const clusterMemoryUsage = request('get', `${metricPrefix}/memory_usage`);
+export const clusterOverview = request('get', `${metricPrefix}/overview`);
+export const clusterNodeCpuUsage = request('get', `${metricPrefix}/nodes/$nodeIP/cpu_usage`);
+export const clusterNodeDiskIOUsage = request('get', `${metricPrefix}/nodes/$nodeIP/diskio_usage`);
+export const clusterNodeInfo = request('get', `${metricPrefix}/nodes/$nodeIP/info`);
+export const clusterNodeMemoryUsage = request('get', `${metricPrefix}/nodes/$nodeIP/memory_usage`);
+export const clusterNodeNetworkReceive = request('get', `${metricPrefix}/nodes/$nodeIP/network_receive`);
+export const clusterNodeNetworkTransmit = request('get', `${metricPrefix}/nodes/$nodeIP/network_transmit`);
+export const clusterNodeOverview = request('get', `${metricPrefix}/nodes/$nodeIP/overview`);
+export const clusterPodMetric = request('post', `${metricPrefix}/namespaces/$namespaceId/pods/$metric`);
+export const clusterContainersMetric = request('get', `${metricPrefix}/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric`);
 
 export default {
   dashbordList,
