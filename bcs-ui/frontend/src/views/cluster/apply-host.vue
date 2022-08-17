@@ -49,7 +49,7 @@
             :display-key="'showName'"
             :search-key="'areaName'"
             :is-loading="isAreaLoading"
-            :disabled="defaultInfo.disabled">
+            :disabled="defaultInfo.disabled || isHostLoading">
           </bk-selector>
         </bk-form-item>
         <bk-form-item property="networkKey" :label="$t('网络类型')" :desc="defaultInfo.netWorkDesc" :required="true">
@@ -73,6 +73,8 @@
             setting-key="value"
             display-key="label"
             search-key="label"
+            :disabled="isHostLoading"
+            @item-selected="hanldeReloadHosts"
           >
           </bk-selector>
         </bk-form-item>
@@ -140,7 +142,7 @@
               </bk-selector>
             </div>
           </div>
-          <bk-button theme="primary" @click.stop="hanldeReloadHosts">{{$t('查询')}}</bk-button>
+          <bk-button theme="primary" :disabled="isHostLoading" @click.stop="hanldeReloadHosts">{{$t('查询')}}</bk-button>
         </bk-form-item>
         <bk-form-item
           ref="hostItem"
@@ -234,9 +236,8 @@ export default {
       },
       isSubmitLoading: false,
       isAreaLoading: false,
-      isHostLoading: false,
+      isHostLoading: true,
       applyDialogShow: false,
-      isFirstLoadData: true,
       areaList: [],
       vpcList: [],
       zoneList: [],
@@ -575,7 +576,7 @@ export default {
           // 默认选中第一个
           this.formdata.vpc_name = this.vpcList[0].vpcId;
         }
-        this.isFirstLoadData && this.hanldeReloadHosts();
+        this.hanldeReloadHosts();
       } catch (e) {
         console.error(e);
       }
@@ -584,9 +585,6 @@ export default {
              * 获取主机列表
              */
     async getHosts() {
-      if (this.isFirstLoadData) {
-        this.isFirstLoadData = false;
-      }
       this.$refs.applyForm && this.$refs.applyForm.$refs.hostItem && this.$refs.applyForm.$refs.hostItem.clearError();
       try {
         this.isHostLoading = true;

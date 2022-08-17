@@ -416,9 +416,9 @@ export default {
   强制删除: ['Forced delete'],
   请确保该节点已经没有运行中的容器: ['Make sure the node has no running containers'],
   更多: ['More'],
-  pod迁移: ['Pod Migration'],
+  pod驱逐: ['Pod Expulsion'],
   仅移除记录: ['Remove records only'],
-  taskgroup迁移: ['Taskgroup migration'],
+  taskgroup驱逐: ['Taskgroup Expulsion'],
   按照规则修改主机名: ['Modify the host name according to the rules'],
   安装容器服务相关的组件: ['Install container service related components'],
   选择服务器: ['Select Host'],
@@ -2203,11 +2203,11 @@ export default {
   内容: [
     'content',
   ],
-  '确认要对 {ip} 等 {num} 个节点上的Pod进行迁移': [
-    'Confirm that you need to migrate the pod on the {num} node of {ip}',
+  '确认要对 {ip} 等 {num} 个节点上的Pod进行驱逐': [
+    'Confirm that you need to expulsion the pod on the {num} node of {ip}',
   ],
-  '注：IP状态为停止调度才能做POD迁移操作': [
-    'Note: IP status is to stop scheduling to do POD migration operation',
+  '注：IP状态为停止调度才能做POD驱逐操作': [
+    'Note: IP status is to stop scheduling to do POD expulsion operation',
   ],
   'API密钥与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的API密钥权限': [
     'The API key is bound to the personal account, and the permissions control of the Blue Whale Permissions Center can be used. Click {0} to view and set your API key permissions',
@@ -2674,8 +2674,8 @@ export default {
   '如果有使用Ingress及LoadBalancer类型的Service，节点停止调度后，Service Controller会剔除LB到nodePort的映射': [
     'If there is a service that uses Ingress and LoadBARANCER type, after the node stops scheduling, the Service Controller will remove the mapping of LB to NodePort',
   ],
-  确认Pod迁移: [
-    'Confirm pod migration',
+  确认Pod驱逐: [
+    'Confirm pod expulsion',
   ],
   确认允许调度: [
     'Confirm the allowable scheduling',
@@ -2686,8 +2686,8 @@ export default {
   '确认对节点 {ip} 允许调度': [
     'Confirm allows dispatch  {ip}',
   ],
-  '确认要对节点 {ip} 上的Pod进行迁移': [
-    'Confirm that you need to migrate the pod on the node {ip}',
+  '确认要对节点 {ip} 上的Pod进行驱逐': [
+    'Confirm that you need to expulsion the pod on the node {ip}',
   ],
   '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点': [
     'The container network resources are limited, please allocate it reasonably. Under the current container network configuration, the cluster can be added at most {count} individual nodes',

@@ -292,7 +292,7 @@
                           <bk-button text @click="enableNode(node, index)">
                             {{ $t('允许调度') }}
                           </bk-button>
-                          <bk-button text class="ml10" @click="schedulerNode(node, index)">{{ $t('pod迁移') }}</bk-button>
+                          <bk-button text class="ml10" @click="schedulerNode(node, index)">{{ $t('pod驱逐') }}</bk-button>
                         </template>
                         <bk-button
                           text class="ml10" v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE'].includes(node.status)"

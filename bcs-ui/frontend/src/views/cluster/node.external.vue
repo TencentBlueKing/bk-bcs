@@ -363,7 +363,7 @@
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
                                 <a href="javascript:void(0);" class="bk-text-button" @click.stop="schedulerNode(node, index)">
-                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3) ? $t('pod迁移') : $t('taskgroup迁移')}}
+                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3) ? $t('pod驱逐') : $t('taskgroup驱逐')}}
                                 </a>
                               </li>
                               <li>
@@ -427,7 +427,7 @@
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
                                 <a href="javascript:void(0);" class="bk-text-button" @click.stop="schedulerNode(node, index)">
-                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3) ? $t('pod迁移') : $t('taskgroup迁移')}}
+                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3) ? $t('pod驱逐') : $t('taskgroup驱逐')}}
                                 </a>
                               </li>
                               <li>

@@ -126,7 +126,7 @@ export default function useNode() {
     });
     return result;
   };
-  // Pod迁移
+  // Pod驱逐
   const schedulerNode = async (params: INodesParams) => {
     const { clusterId, nodeIps = [] } = params;
     if (!clusterId || !nodeIps.length) {
@@ -139,7 +139,7 @@ export default function useNode() {
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('Pod迁移成功'),
+      message: window.i18n.t('Pod驱逐成功'),
     });
     return result;
   };

@@ -83,8 +83,8 @@
               @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
             <div
               style="height:32px;"
-              v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD迁移操作'), disabled: !podDisabled, placement: 'top' }">
-              <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('pod迁移')}}</li>
+              v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD驱逐操作'), disabled: !podDisabled, placement: 'top' }">
+              <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('pod驱逐')}}</li>
             </div>
             <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
             <li
@@ -407,7 +407,7 @@
                   {{ $t('允许调度') }}
                 </bk-button>
                 <bk-button text class="mr10" @click="handleSchedulerNode(row)">
-                  {{ $t('pod迁移') }}
+                  {{ $t('pod驱逐') }}
                 </bk-button>
               </template>
               <span
@@ -1042,11 +1042,11 @@ export default defineComponent({
         },
       });
     };
-    // Pod迁移
+    // Pod驱逐
     const handleSchedulerNode = (row) => {
       bkComfirmInfo({
-        title: $i18n.t('确认Pod迁移'),
-        subTitle: $i18n.t('确认要对节点 {ip} 上的Pod进行迁移', { ip: row.inner_ip }),
+        title: $i18n.t('确认Pod驱逐'),
+        subTitle: $i18n.t('确认要对节点 {ip} 上的Pod进行驱逐', { ip: row.inner_ip }),
         callback: async () => {
           await schedulerNode({
             clusterId: row.cluster_id,
@@ -1194,20 +1194,20 @@ export default defineComponent({
         },
       });
     };
-    // 批量Pod迁移
+    // 批量Pod驱逐
     const handleBatchPodScheduler = () => {
       if (!selections.value.length) return;
 
       if (selections.value.length > 10) {
         $bkMessage({
           theme: 'warning',
-          message: $i18n.t('最多只能批量迁移10个节点'),
+          message: $i18n.t('最多只能批量驱逐10个节点'),
         });
         return;
       }
       bkComfirmInfo({
-        title: $i18n.t('确认Pod迁移'),
-        subTitle: $i18n.t('确认要对 {ip} 等 {num} 个节点上的Pod进行迁移', {
+        title: $i18n.t('确认Pod驱逐'),
+        subTitle: $i18n.t('确认要对 {ip} 等 {num} 个节点上的Pod进行驱逐', {
           num: selections.value.length,
           ip: selections.value[0].inner_ip,
         }),

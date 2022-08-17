@@ -1487,9 +1487,9 @@ export default {
       this.schedulerDialogConf.title = ' ';
       this.schedulerDialogConf.content = this.isEn
         ? 'Confirm that you want to migrate the '
-                    + `${(this.curProject.kind === PROJECT_K8S || this.curProject.kind === PROJECT_TKE) ? 'Pod' : 'taskgroup'} on node【${node.inner_ip}】?`
+          + `${(this.curProject.kind === PROJECT_K8S || this.curProject.kind === PROJECT_TKE) ? 'Pod' : 'taskgroup'} on node【${node.inner_ip}】?`
         : `确认要对节点【${node.inner_ip}】上的`
-                    + `${(this.curProject.kind === PROJECT_K8S || this.curProject.kind === PROJECT_TKE) ? 'Pod' : 'taskgroup'}进行迁移？`;
+          + `${(this.curProject.kind === PROJECT_K8S || this.curProject.kind === PROJECT_TKE) ? 'Pod' : 'taskgroup'}进行驱逐？`;
 
       this.curNode = Object.assign({}, node);
       this.curNodeIndex = index;
