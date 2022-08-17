@@ -62,7 +62,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
-    helm-manager project-manager
+    helm-manager project-manager nodegroup-manager
 
 bcs-scenarios: kourse
 
@@ -453,6 +453,11 @@ helm-manager:pre
 	cp ${BCS_SERVICES_PATH}/bcs-helm-manager/proto/bcs-helm-manager/bcs-helm-manager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/swagger-ui/bcs-helm-manager.swagger.json
 	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
 
+
+nodegroup-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-nodegroup-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-nodegroup-manager/ && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager/bcs-nodegroup-manager ./main.go
 
 test: test-bcs-runtime
 
