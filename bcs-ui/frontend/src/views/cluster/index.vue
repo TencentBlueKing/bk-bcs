@@ -3,10 +3,10 @@
     <div class="biz-top-bar">
       <div class="biz-cluster-title">
         {{$t('集群')}}
-        <span class="cc-info">
-          （{{$t('业务')}}: {{curProject.cc_app_name}}&nbsp;&nbsp;&nbsp;{{$t('编排类型')}}: {{kindMap[curProject.kind]}}）
+        <span class="cc-info ml5">
+          {{`( ${$t('业务')}: ${curProject.cc_app_name}  ${$t('编排类型')}: ${kindMap[curProject.kind]} )`}}
         </span>
-        <span class="bk-text-button bk-default f12" @click="handleShowProjectConf">
+        <span class="bk-text-button bk-default f12 ml5" @click="handleShowProjectConf">
           <i class="bcs-icon bcs-icon-edit"></i>
         </span>
       </div>
@@ -126,7 +126,8 @@
                   <div class="progress" :class="!clusterOverviewMap[cluster.cluster_id] ? 'loading' : ''">
                     <div
                       :class="['progress-bar', item.theme]"
-                      :style="{ width: !clusterOverviewMap[cluster.cluster_id] ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
+                      :style="{ width: !clusterOverviewMap[cluster.cluster_id]
+                        ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                   </div>
                 </div>
                 <span
@@ -177,7 +178,13 @@
         <p class="title">{{$t('欢迎使用容器服务')}}</p>
         <p class="desc">{{$t('使用容器服务，蓝鲸将为您快速搭建、运维和管理容器集群，您可以轻松对容器进行启动、停止等操作，也可以查看集群、容器及服务的状态，以及使用各种组件服务。')}}</p>
         <p class="desc">
-          <a :href="PROJECT_CONFIG.doc.quickStart" class="guide-link" target="_blank">{{$t('请点击了解更多')}}<i class="bcs-icon bcs-icon-angle-double-right ml5"></i></a>
+          <a
+            :href="PROJECT_CONFIG.doc.quickStart"
+            class="guide-link"
+            target="_blank">
+            {{$t('请点击了解更多')}}
+            <i class="bcs-icon bcs-icon-angle-double-right ml5"></i>
+          </a>
         </p>
         <div class="guide-btn-group">
           <a
@@ -251,6 +258,7 @@ import { useClusterList, useClusterOverview, useClusterOperate, useTask } from '
 import StatusIcon from '@/views/dashboard/common/status-icon';
 
 export default defineComponent({
+  name: 'ClusterList',
   components: {
     ApplyHost,
     ProjectConfig,
@@ -408,7 +416,7 @@ export default defineComponent({
     const handleDeleteCluster = (cluster) => {
       curOperateCluster.value = cluster;
       setTimeout(() => {
-        clusterNoticeDialog.value && clusterNoticeDialog.value.show();
+        clusterNoticeDialog.value?.show();
       }, 0);
     };
     // 集群日志

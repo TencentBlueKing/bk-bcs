@@ -88,14 +88,14 @@ export default {
     // 权限弹窗
     bus.$on('show-apply-perm-modal', (data) => {
       if (!data) return;
-      this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(data);
+      this.$refs.bkApplyPerm?.show(data);
     });
     // 登录弹窗
     bus.$on('close-login-modal', () => {
       window.location.reload();
     });
     bus.$on('show-shared-cluster-tips', () => {
-      this.$refs.sharedClusterTips && this.$refs.sharedClusterTips.show();
+      this.$refs.sharedClusterTips?.show();
     });
     window.addEventListener('message', (event) => {
       if (event.data === 'closeLoginModal') {

@@ -67,8 +67,8 @@ export const customResourceDelete = request('delete', `${CR_API_URL}/projects/$p
 export const reschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/workloads/pods/$podId/reschedule`); // pod重新调度
 export const renderManifestPreview = request('post', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/render_manifest_preview`);
 export const fetchNodePodsData = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/nodes/$nodename/workloads/pods`);
-export const enlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/scale`) // 扩缩容
-export const batchReschedulePod = request('put',`${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/reschedule`) // 批量重新调度
+export const enlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/scale`); // 扩缩容
+export const batchReschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/reschedule`); // 批量重新调度
 
 // apply hosts
 export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/');
@@ -148,6 +148,22 @@ export const getNodeTemplateInfo = request('get', `${prefix}/clustermanager/v1/n
 // helm
 const helmPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/clusters/$clusterId`;
 export const helmReleaseHistory = request('get', `${helmPrefix}/namespaces/$namespaceId/releases/$name/history`);
+
+// metric
+const metricPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/metrics/projects/$projectCode/clusters/$clusterId`;
+export const clusterCpuUsage = request('get', `${metricPrefix}/cpu_usage/`);
+export const clusterDiskUsage = request('get', `${metricPrefix}/disk_usage/`);
+export const clusterMemoryUsage = request('get', `${metricPrefix}/memory_usage/`);
+export const clusterOverview = request('get', `${metricPrefix}/overview/`);
+export const clusterNodeCpuUsage = request('get', `${metricPrefix}/nodes/$nodeIP/cpu_usage/`);
+export const clusterNodeDiskIOUsage = request('get', `${metricPrefix}/nodes/$nodeIP/diskio_usage/`);
+export const clusterNodeInfo = request('get', `${metricPrefix}/nodes/$nodeIP/info/`);
+export const clusterNodeMemoryUsage = request('get', `${metricPrefix}/nodes/$nodeIP/memory_usage/`);
+export const clusterNodeNetworkReceive = request('get', `${metricPrefix}/nodes/$nodeIP/network_receive/`);
+export const clusterNodeNetworkTransmit = request('get', `${metricPrefix}/nodes/$nodeIP/network_transmit/`);
+export const clusterNodeOverview = request('get', `${metricPrefix}/nodes/$nodeIP/overview/`);
+export const clusterPodMetric = request('post', `${metricPrefix}/namespaces/$namespaceId/pods/$metric/`);
+export const clusterContainersMetric = request('get', `${metricPrefix}/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric/`);
 
 export default {
   dashbordList,

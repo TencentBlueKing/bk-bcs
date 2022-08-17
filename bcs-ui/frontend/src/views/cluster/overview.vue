@@ -243,11 +243,10 @@ export default {
       if (!this.curCluster.project_id || !this.curCluster.cluster_id) return;
 
       try {
-        const res = await this.$store.dispatch('cluster/clusterOverview', {
-          projectId: this.curCluster.project_id,
-          clusterId: this.curCluster.cluster_id,
+        const data = await this.$store.dispatch('metric/clusterOverview', {
+          $projectCode: this.projectCode,
+          $clusterId: this.curCluster.cluster_id,
         });
-        const data = res.data || {};
         const cpu = data.cpu_usage || {};
         this.cpuUsage = parseFloat(cpu.used || 0).toFixed(2);
         this.cpuTotal = parseFloat(cpu.total || 0).toFixed(2);
@@ -312,17 +311,17 @@ export default {
         this.memChartLoading = true;
         this.diskChartLoading = true;
         const promises = [
-          this.$store.dispatch('cluster/clusterCpuUsage', {
-            projectId: this.curCluster.project_id, // 这里用 this.curCluster 来获取是为了使计算属性生效
-            clusterId: this.curCluster.cluster_id,
+          this.$store.dispatch('metric/clusterCpuUsage', {
+            $projectCode: this.projectCode, // 这里用 this.curCluster 来获取是为了使计算属性生效
+            $clusterId: this.curCluster.cluster_id,
           }),
-          this.$store.dispatch('cluster/clusterMemUsage', {
-            projectId: this.curCluster.project_id, // 这里用 this.curCluster 来获取是为了使计算属性生效
-            clusterId: this.curCluster.cluster_id,
+          this.$store.dispatch('metric/clusterMemoryUsage', {
+            $projectCode: this.projectCode, // 这里用 this.curCluster 来获取是为了使计算属性生效
+            $clusterId: this.curCluster.cluster_id,
           }),
-          this.$store.dispatch('cluster/clusterDiskUsage', {
-            projectId: this.curCluster.project_id, // 这里用 this.curCluster 来获取是为了使计算属性生效
-            clusterId: this.curCluster.cluster_id,
+          this.$store.dispatch('metric/clusterDiskUsage', {
+            $projectCode: this.projectCode, // 这里用 this.curCluster 来获取是为了使计算属性生效
+            $clusterId: this.curCluster.cluster_id,
           }),
         ];
 
@@ -330,16 +329,16 @@ export default {
         // Promise.all 返回的顺序与 promises 数组的顺序是一致的
         // 如果为空，那么在 res.data.result 这里就是空数组
         // 如果不是空数组，那么 res.data.result 里的任何都是有数据的，所以不判断里面的了
-        this.cpuChartData.splice(0, this.cpuChartData.length, ...(res[0].data.result || []));
-        this.cpuChartResultType = res[0].data.resultType;
+        this.cpuChartData.splice(0, this.cpuChartData.length, ...(res[0].result || []));
+        this.cpuChartResultType = res[0].resultType;
         this.cpuChartLoading = false;
 
-        this.memChartData.splice(0, this.memChartData.length, ...(res[1].data.result || []));
-        this.memChartResultType = res[1].data.resultType;
+        this.memChartData.splice(0, this.memChartData.length, ...(res[1].result || []));
+        this.memChartResultType = res[1].resultType;
         this.memChartLoading = false;
 
-        this.diskChartData.splice(0, this.diskChartData.length, ...(res[2].data.result || []));
-        this.diskChartResultType = res[2].data.resultType;
+        this.diskChartData.splice(0, this.diskChartData.length, ...(res[2].result || []));
+        this.diskChartResultType = res[2].resultType;
         this.diskChartLoading = false;
       } catch (e) {
         catchErrorHandler(e, this);

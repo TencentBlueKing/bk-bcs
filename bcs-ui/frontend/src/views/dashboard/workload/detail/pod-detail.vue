@@ -39,7 +39,11 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('镜像') }}</span>
-          <span class="value" v-bk-overflow-tips="getImagesTips(manifestExt.images)">{{ manifestExt.images && manifestExt.images.join(', ') }}</span>
+          <span
+            class="value"
+            v-bk-overflow-tips="getImagesTips(manifestExt.images)">
+            {{ manifestExt.images && manifestExt.images.join(', ') }}
+          </span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('节点') }}</span>
@@ -63,8 +67,8 @@
       <div class="workload-metric">
         <Metric :title="$t('CPU使用率')" metric="cpu_usage" :params="params" category="pods" colors="#30d878"></Metric>
         <Metric
-          :title="$t('内存使用率')"
-          metric="memory_usage"
+          :title="$t('内存使用量')"
+          metric="memory_used"
           :params="params"
           unit="byte"
           category="pods"
@@ -98,7 +102,11 @@
             <bk-table-column :label="$t('操作')" width="200" :resizable="false" :show-overflow-tooltip="false">
               <template #default="{ row }">
                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
-                <bk-popover placement="bottom" theme="light dropdown" :arrow="false" v-if="row.containerID && $INTERNAL && !isSharedCluster">
+                <bk-popover
+                  placement="bottom"
+                  theme="light dropdown"
+                  :arrow="false"
+                  v-if="row.containerID && $INTERNAL && !isSharedCluster">
                   <bk-button style="cursor: default;" text class="ml10">{{ $t('日志检索') }}</bk-button>
                   <div slot="content">
                     <ul>
@@ -328,7 +336,7 @@ export default defineComponent({
     });
     const { name, namespace } = toRefs(props);
     const params = computed(() => ({
-      namespace: namespace.value,
+      $namespaceId: namespace.value,
       pod_name_list: [name.value],
     }));
 

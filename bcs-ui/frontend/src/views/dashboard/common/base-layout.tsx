@@ -88,7 +88,7 @@ export default defineComponent({
     });
 
     // crd
-    const currentCrd = ref(defaultCrd.value || sessionStorage.getItem(CUR_SELECT_CRD) || '');
+    const currentCrd = ref(defaultCrd.value || localStorage.getItem(CUR_SELECT_CRD) || '');
     const crdLoading = ref(false);
     // crd 数据
     const crdData = ref<ISubscribeData|null>(null);
@@ -115,11 +115,11 @@ export default defineComponent({
       const crd = crdData.value?.manifest?.items?.find(item => item.metadata.name === currentCrd.value);
       if (!crd) {
         currentCrd.value = crdList.value[0]?.metadata?.name;
-        sessionStorage.removeItem(CUR_SELECT_CRD);
+        localStorage.removeItem(CUR_SELECT_CRD);
       }
     };
     const handleCrdChange = async (value) => {
-      sessionStorage.setItem(CUR_SELECT_CRD, value);
+      localStorage.setItem(CUR_SELECT_CRD, value);
       handleGetTableData();
     };
     const renderCrdHeader = (h, { column }) => {
@@ -217,7 +217,7 @@ export default defineComponent({
     const { tableDataMatchSearch, searchValue } = useSearch(tableData, keys);
 
     const handleNamespaceSelected = (value) => {
-      sessionStorage.setItem(CUR_SELECT_NAMESPACE, value);
+      localStorage.setItem(CUR_SELECT_NAMESPACE, value);
       handleGetTableData();
     };
 

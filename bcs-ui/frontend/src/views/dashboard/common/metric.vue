@@ -34,7 +34,7 @@ import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
 
 export default defineComponent({
-  name: 'Metric',
+  name: 'ResourceMetric',
   components: {
     ECharts,
   },
@@ -97,7 +97,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $i18n, $store } = ctx.root;
+    const { $i18n, $store, $route } = ctx.root;
 
     const state = reactive({
       isDropdownShow: false,
@@ -168,22 +168,25 @@ export default defineComponent({
       echartsOptions.value = Object.assign(defaultChartOption(props.unit), props.options, { series });
     };
     // 获取图表数据
+    const projectCode = computed(() => $route.params.projectCode);
     const handleGetMetricData = async () => {
       const timeRange = {
         start_at: moment().subtract(state.activeTime.range, 'ms')
-          .utc(),
-        end_at: moment().utc(),
+          .utc()
+          .format(),
+        end_at: moment().utc()
+          .format(),
       };
 
       let action = '';
       switch (props.category) {
         case 'pods':
           if (!props.params) break;
-          action = 'dashboard/podMetric';
+          action = 'metric/clusterPodMetric';
           break;
         case 'containers':
           if (!props.params) break;
-          action = 'dashboard/containerMetric';
+          action = 'metric/clusterContainersMetric';
       }
       if (!action) return [];
 
@@ -192,6 +195,7 @@ export default defineComponent({
       metrics.forEach((metric) => {
         const params = {
           $metric: metric,
+          $projectCode: projectCode.value,
           ...timeRange,
           ...props.params,
         };

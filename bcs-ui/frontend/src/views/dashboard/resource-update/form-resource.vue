@@ -446,7 +446,7 @@ export default {
           theme: 'success',
           message: this.$t('创建成功'),
         });
-        sessionStorage.setItem(CUR_SELECT_NAMESPACE, this.schemaFormData.metadata?.namespace);
+        localStorage.setItem(CUR_SELECT_NAMESPACE, this.schemaFormData.metadata?.namespace);
         this.$router.push({ name: this.$store.getters.curNavName });
       }
     },

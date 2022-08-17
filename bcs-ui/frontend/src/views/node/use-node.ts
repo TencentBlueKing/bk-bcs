@@ -27,6 +27,8 @@ export interface IBatchDispatchParams {
 
 export default function useNode() {
   const projectId = computed(() => store.state.curProjectId);
+  const projectList = computed<any[]>(() => store.state.sideMenu.onlineProjectList);
+  const curProject = computed(() => projectList.value.find(item => item.project_id === projectId.value));
   const user = computed(() => store.state.user);
   // 获取节点列表
   const getNodeList = async (clusterId) => {
@@ -165,12 +167,12 @@ export default function useNode() {
       console.warn('clusterId or nodeIP or status is empty');
       return;
     }
-    const res = await store.dispatch('cluster/getNodeOverview', {
-      projectId: projectId.value,
-      clusterId,
-      nodeIp: nodeIP,
-    }).catch(() => ({ data: {} }));
-    return res.data;
+    const data = await store.dispatch('metric/clusterNodeOverview', {
+      $projectCode: curProject.value.project_code,
+      $clusterId: clusterId,
+      $nodeIP: nodeIP,
+    }).catch(() => ({}));
+    return data;
   };
   return {
     getNodeList,

@@ -55,9 +55,10 @@ export interface IOverviewMap {
  * @returns
  */
 export function useClusterOverview(ctx: SetupContext, clusterList: Ref<any[]>) {
-  const { $store } = ctx.root;
+  const { $store, $route } = ctx.root;
 
   const clusterOverviewMap = ref<IOverviewMap>({});
+  const projectCode = computed(() => $route.params.projectCode);
   // 获取当前集群的指标信息
   const getClusterOverview = (clusterId) => {
     if (!clusterOverviewMap.value[clusterId]) return null;
@@ -66,12 +67,12 @@ export function useClusterOverview(ctx: SetupContext, clusterList: Ref<any[]>) {
   };
   // 集群指标信息
   const fetchClusterOverview = async (cluster) => {
-    const res = await $store.dispatch('cluster/clusterOverview', {
-      projectId: cluster.project_id,
-      clusterId: cluster.cluster_id,
+    const data = await $store.dispatch('metric/clusterOverview', {
+      $projectCode: projectCode.value,
+      $clusterId: cluster.cluster_id,
     }).catch(() => ({ data: {} }));
-    set(clusterOverviewMap.value, cluster.cluster_id, res.data);
-    return res.data;
+    set(clusterOverviewMap.value, cluster.cluster_id, data);
+    return data;
   };
 
   watch(clusterList, (newValue) => {
