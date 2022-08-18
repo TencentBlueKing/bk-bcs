@@ -42,7 +42,8 @@
           :metric="['cpu_usage', 'cpu_limit']"
           :params="params"
           category="containers"
-          :colors="['#30d878', '#ff5656']">
+          :colors="['#30d878', '#ff5656']"
+          :series="[{ }, { areaStyle: null }]">
         </Metric>
         <Metric
           :title="$t('内存使用量')"
@@ -51,7 +52,8 @@
           unit="byte"
           category="containers"
           :colors="['#3a84ff', '#ff5656']"
-          :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')">
+          :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')"
+          :series="[{ }, { areaStyle: null }]">
         </Metric>
         <Metric
           :title="$t('磁盘IO总量')"

@@ -466,8 +466,15 @@
         <bcs-table-column
           :label="$t('描述')"
           prop="description"
-          show-overflow-tooltip
           min-width="160">
+          <template #default="{ row }">
+            <span
+              style="margin: 0;"
+              v-bk-tooltips="{
+                content: `<pre style='margin: 0'>${row.description}</pre>`,
+                disabled: activeRevision !== row.revision
+              }">{{row.description}}</span>
+          </template>
         </bcs-table-column>
       </bcs-table>
     </bcs-dialog>

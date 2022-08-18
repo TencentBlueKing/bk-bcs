@@ -95,6 +95,10 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    series: {
+      type: Array,
+      default: () => [],
+    },
   },
   setup(props, ctx) {
     const { $i18n, $store, $route } = ctx.root;
@@ -142,7 +146,8 @@ export default defineComponent({
         const list = item?.result.map((result) => {
           // series 配置
           const name = result.metric?.[metricNameProp.value];
-          return {
+          const defaultSeries = props.series[index] || {};
+          return Object.assign({
             name: suffix ? `${name} ${suffix}` : name,
             type: 'line',
             showSymbol: false,
@@ -161,7 +166,7 @@ export default defineComponent({
               },
             },
             data: result?.values || [],
-          };
+          }, defaultSeries);
         }) || [];
         series.push(...list);
       });
