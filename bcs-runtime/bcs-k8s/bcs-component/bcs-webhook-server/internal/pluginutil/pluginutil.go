@@ -21,3 +21,14 @@ import (
 func ToAdmissionResponse(err error) *v1beta1.AdmissionResponse {
 	return &v1beta1.AdmissionResponse{Result: &metav1.Status{Message: err.Error()}}
 }
+
+// ToAdmissionAllowedResponse return the allowed admission response
+func ToAdmissionAllowedResponse() *v1beta1.AdmissionResponse {
+	return &v1beta1.AdmissionResponse{
+		Allowed: true,
+		PatchType: func() *v1beta1.PatchType {
+			pt := v1beta1.PatchTypeJSONPatch
+			return &pt
+		}(),
+	}
+}
