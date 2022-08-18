@@ -10,33 +10,32 @@
  * limitations under the License.
  */
 
- package metrics
+package metrics
 
- import (
-	 "time"
- 
-	 "github.com/prometheus/client_golang/prometheus"
- )
- 
- const (
-	 BkBcsProjectManager = "bkbcs_projectmanager"
- )
- 
- var (
-	 requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		 Namespace: BkBcsProjectManager,
-		 Name:      "api_request_latency_time",
-		 Help:      "api request latency statistic for project manager api",
-		 Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0},
-	 }, []string{"handler"})
- )
- 
- func init() {
-	 prometheus.MustRegister(requestLatencyAPI)
- }
- 
- // ReportAPIRequestMetric report api request metrics
- func ReportAPIRequestMetric(handler string, started time.Time) {
-	 requestLatencyAPI.WithLabelValues(handler).Observe(time.Since(started).Seconds())
- }
- 
+import (
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+const (
+	BkBcsProjectManager = "bkbcs_projectmanager"
+)
+
+var (
+	requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: BkBcsProjectManager,
+		Name:      "api_request_latency_time",
+		Help:      "api request latency statistic for project manager api",
+		Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0},
+	}, []string{"handler"})
+)
+
+func init() {
+	prometheus.MustRegister(requestLatencyAPI)
+}
+
+// ReportAPIRequestMetric report api request metrics
+func ReportAPIRequestMetric(handler string, started time.Time) {
+	requestLatencyAPI.WithLabelValues(handler).Observe(time.Since(started).Seconds())
+}
