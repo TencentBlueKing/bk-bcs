@@ -1,8 +1,13 @@
 <template>
   <div class="detail">
-    <DetailTopNav :titles="titles" :from="from" :cluster-id="clusterId" :node-id="nodeId" :node-name="nodeName" @change="handleNavChange"></DetailTopNav>
-    <!-- <keep-alive>
-        </keep-alive> -->
+    <DetailTopNav
+      :titles="titles"
+      :from="from"
+      :cluster-id="clusterId"
+      :node-id="nodeId"
+      :node-name="nodeName"
+      @change="handleNavChange">
+    </DetailTopNav>
     <component
       :is="componentId"
       v-bind="componentProps"
@@ -26,6 +31,7 @@ export interface ITitle {
 }
 
 export default defineComponent({
+  name: 'DashboardDetail',
   components: {
     DetailTopNav,
     WorkloadDetail,
@@ -126,9 +132,8 @@ export default defineComponent({
       },
     ]);
     const componentId = ref(defaultComId);
-
-    const componentProps = computed(() => titles.value.find(item => item.id === componentId.value)?.params || {}, // 详情组件所需的参数
-    );
+    // 详情组件所需的参数
+    const componentProps = computed(() => titles.value.find(item => item.id === componentId.value)?.params || {});
 
     const handleNavChange = (item: ITitle) => {
       const { id } = item;

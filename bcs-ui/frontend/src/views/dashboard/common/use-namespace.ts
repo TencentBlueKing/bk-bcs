@@ -37,9 +37,9 @@ export default function useNamespace(ctx: SetupContext): IUseNamespace {
     namespaceData.value = data;
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
-      .find(data => data.metadata.name === sessionStorage.getItem(CUR_SELECT_NAMESPACE));
+      .find(data => data.metadata.name === localStorage.getItem(CUR_SELECT_NAMESPACE));
     namespaceValue.value = defaultSelectNamespace?.metadata?.name || namespaceList.value[0]?.metadata?.name;
-    sessionStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value);
+    localStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value);
     namespaceLoading.value = false;
     return data;
   };
@@ -71,9 +71,9 @@ export function useSelectItemsNamespace(ctx: SetupContext) {
     namespaceList.value = data.selectItems || [];
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
-      .find(data => data.value === sessionStorage.getItem(CUR_SELECT_NAMESPACE));
+      .find(data => data.value === localStorage.getItem(CUR_SELECT_NAMESPACE));
     namespaceValue.value = defaultSelectNamespace?.value || namespaceList.value[0]?.value;
-    sessionStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value);
+    localStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value);
     namespaceLoading.value = false;
     return data;
   };

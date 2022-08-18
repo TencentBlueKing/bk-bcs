@@ -43,6 +43,8 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 		AppSecret:   config.GlobalConf.App.Secret,
 		External:    !config.GlobalConf.IAM.UseGWHost,
 		GateWayHost: config.GlobalConf.IAM.GatewayHost,
+		IAMHost:     config.GlobalConf.IAM.IAMHost,
+		BkiIAMHost:  config.GlobalConf.IAM.BKPaaSHost,
 		Metric:      false,
 		Debug:       config.GlobalConf.IAM.Debug,
 	}

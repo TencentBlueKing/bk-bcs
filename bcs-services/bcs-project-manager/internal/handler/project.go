@@ -41,6 +41,7 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
+	defer recorder(ctx, "create_project", req, resp)
 	// 判断是否有创建权限
 	authUser := auth.GetAuthUserFromCtx(ctx)
 	if err := perm.CanCreateProject(authUser); err != nil {
@@ -61,6 +62,7 @@ func (p *ProjectHandler) CreateProject(ctx context.Context, req *proto.CreatePro
 
 // GetProject get project info
 func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRequest, resp *proto.ProjectResponse) error {
+	defer recorder(ctx, "get_project", req, resp)
 	// 查询项目信息
 	ga := project.NewGetAction(p.model)
 	projectInfo, err := ga.Do(ctx, req)
@@ -79,6 +81,7 @@ func (p *ProjectHandler) GetProject(ctx context.Context, req *proto.GetProjectRe
 
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
+	defer recorder(ctx, "delete_project", req, resp)
 	// 校验项目的删除权限
 	authUser := auth.GetAuthUserFromCtx(ctx)
 	if err := perm.CanDeleteProject(authUser, req.ProjectID); err != nil {
@@ -95,6 +98,7 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context, req *proto.DeletePro
 }
 
 func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
+	defer recorder(ctx, "update_project", req, resp)
 	// 校验项目的删除权限
 	authUser := auth.GetAuthUserFromCtx(ctx)
 	if err := perm.CanEditProject(authUser, req.ProjectID); err != nil {
@@ -112,6 +116,7 @@ func (p *ProjectHandler) UpdateProject(ctx context.Context, req *proto.UpdatePro
 }
 
 func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
+	defer recorder(ctx, "list_projects", req, resp)
 	la := project.NewListAction(p.model)
 	projects, e := la.Do(ctx, req)
 	if e != nil {
@@ -138,6 +143,7 @@ func (p *ProjectHandler) ListProjects(ctx context.Context, req *proto.ListProjec
 
 // ListAuthorizedProjects query authorized project info list
 func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context, req *proto.ListAuthorizedProjReq, resp *proto.ListAuthorizedProjResp) error {
+	defer recorder(ctx, "list_authorized_projects", req, resp)
 	lap := project.NewListAuthorizedProj(p.model)
 	projects, e := lap.Do(ctx, req)
 	if e != nil {

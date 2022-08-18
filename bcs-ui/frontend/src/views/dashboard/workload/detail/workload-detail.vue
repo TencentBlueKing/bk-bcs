@@ -109,8 +109,8 @@
       <div class="workload-metric" v-bkloading="{ isLoading: podLoading }">
         <Metric :title="$t('CPU使用率')" metric="cpu_usage" :params="params" category="pods" colors="#30d878"></Metric>
         <Metric
-          :title="$t('内存使用率')"
-          metric="memory_usage"
+          :title="$t('内存使用量')"
+          metric="memory_used"
           :params="params"
           unit="byte"
           category="pods"
@@ -431,7 +431,7 @@ export default defineComponent({
     const params = computed<IParams | null>(() => {
       const list = pods.value.map(item => item.metadata.name);
       return list.length
-        ? { pod_name_list: list, namespace: props.namespace }
+        ? { pod_name_list: list, $namespaceId: props.namespace }
         : null;
     });
 

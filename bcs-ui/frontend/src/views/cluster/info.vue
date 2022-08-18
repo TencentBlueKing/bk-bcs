@@ -97,19 +97,7 @@
                   </bk-button>
                 </div>
               </div>
-              <!-- <div class="row">
-                                <div class="left">
-                                    <p>{{$t('节点数量')}}</p>
-                                </div>
-                                <div class="right">{{nodeCount}}</div>
-                            </div> -->
               <template v-if="$INTERNAL">
-                <!-- <div class="row">
-                                    <div class="left">
-                                        <p>{{$t('配置')}}</p>
-                                    </div>
-                                    <div class="right">{{configInfo}}</div>
-                                </div> -->
                 <div class="row" v-if="providerType === 'tke'">
                   <div class="left">
                     <p>{{$t('网络类型')}}</p>
@@ -127,6 +115,12 @@
                   </div>
                 </div>
               </template>
+              <div class="row">
+                <div class="left">
+                  <p>{{$t('创建人')}}</p>
+                </div>
+                <div class="right">{{clusterInfo.creator || '--'}}</div>
+              </div>
               <div class="row">
                 <div class="left">
                   <p>{{$t('创建时间')}}</p>

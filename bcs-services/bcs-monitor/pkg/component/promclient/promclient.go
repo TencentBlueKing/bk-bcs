@@ -15,6 +15,7 @@ package promclient
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -26,8 +27,24 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 )
 
+// Result
+// Decode only ResultType and load Result only as RawJson since we don't know
+// structure of the Result yet.
+type Result struct {
+	Data      ResultData `json:"data"`
+	Error     string     `json:"error,omitempty"`
+	ErrorType string     `json:"errorType,omitempty"`
+	Warnings  []string   `json:"warnings,omitempty"` // Extra field supported by Thanos Querier.
+}
+
+// ResultData :
+type ResultData struct {
+	ResultType string          `json:"resultType"`
+	Result     json.RawMessage `json:"result"`
+}
+
 // QueryInstant 查询实时数据
-func QueryInstant(ctx context.Context, rawURL string, promql string, t time.Time) (model.Vector, []string, error) {
+func QueryInstant(ctx context.Context, rawURL string, header http.Header, promql string, t time.Time) (*Result, error) {
 	rawURL = strings.TrimSuffix(rawURL, "/") + "/api/v1/query"
 
 	data := map[string]string{
@@ -37,32 +54,64 @@ func QueryInstant(ctx context.Context, rawURL string, promql string, t time.Time
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetFormData(data).
+		SetHeaderMultiValues(header).
 		Post(rawURL)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if !resp.IsSuccess() {
-		return nil, nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
 	}
 
-	// Decode only ResultType and load Result only as RawJson since we don't know
-	// structure of the Result yet.
-	var m struct {
-		Data struct {
-			ResultType string          `json:"resultType"`
-			Result     json.RawMessage `json:"result"`
-		} `json:"data"`
-
-		Error     string `json:"error,omitempty"`
-		ErrorType string `json:"errorType,omitempty"`
-		// Extra field supported by Thanos Querier.
-		Warnings []string `json:"warnings"`
-	}
+	m := Result{}
 
 	if err = json.Unmarshal(resp.Body(), &m); err != nil {
-		return nil, nil, errors.Wrap(err, "unmarshal query instant response")
+		return nil, errors.Wrap(err, "unmarshal query instant response")
+	}
+
+	return &m, nil
+}
+
+// QueryRange 查询历史数据
+func QueryRange(ctx context.Context, rawURL string, header http.Header, promql string, start time.Time, end time.Time, step time.Duration) (*Result, error) {
+	data := map[string]string{
+		"query": promql,
+		"start": start.Format(time.RFC3339Nano),
+		"end":   end.Format(time.RFC3339Nano),
+		"step":  strconv.FormatInt(int64(step.Seconds()), 10) + "s",
+	}
+	rawURL = strings.TrimSuffix(rawURL, "/") + "/api/v1/query_range"
+
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetFormData(data).
+		SetHeaderMultiValues(header).
+		Post(rawURL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.IsSuccess() {
+		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+	}
+
+	m := Result{}
+
+	if err = json.Unmarshal(resp.Body(), &m); err != nil {
+		return nil, errors.Wrap(err, "unmarshal query range response")
+	}
+
+	return &m, nil
+}
+
+// QueryInstantVector 查询实时数据
+func QueryInstantVector(ctx context.Context, rawURL string, header http.Header, promql string, t time.Time) (model.Vector, []string, error) {
+	m, err := QueryInstant(ctx, rawURL, header, promql, t)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	var vectorResult model.Vector
@@ -93,40 +142,10 @@ func QueryInstant(ctx context.Context, rawURL string, promql string, t time.Time
 }
 
 // QueryRange 查询历史数据
-func QueryRange(ctx context.Context, rawURL string, promql string, start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
-	data := map[string]string{
-		"query": promql,
-		"start": start.Format(time.RFC3339Nano),
-		"end":   end.Format(time.RFC3339Nano),
-		"step":  strconv.FormatInt(int64(step.Seconds()), 10) + "s",
-	}
-	rawURL = strings.TrimSuffix(rawURL, "/") + "/api/v1/query_range"
-
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetFormData(data).
-		Post(rawURL)
-
+func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, promql string, start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
+	m, err := QueryRange(ctx, rawURL, header, promql, start, end, step)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	// Decode only ResultType and load Result only as RawJson since we don't know
-	// structure of the Result yet.
-	var m struct {
-		Data struct {
-			ResultType string          `json:"resultType"`
-			Result     json.RawMessage `json:"result"`
-		} `json:"data"`
-
-		Error     string `json:"error,omitempty"`
-		ErrorType string `json:"errorType,omitempty"`
-		// Extra field supported by Thanos Querier.
-		Warnings []string `json:"warnings"`
-	}
-
-	if err = json.Unmarshal(resp.Body(), &m); err != nil {
-		return nil, nil, errors.Wrap(err, "unmarshal query range response")
 	}
 
 	var matrixResult model.Matrix

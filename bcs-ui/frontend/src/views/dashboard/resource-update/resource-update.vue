@@ -513,7 +513,7 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('创建成功'),
         });
-        sessionStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace);
+        localStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace);
         $router.push({ name: $store.getters.curNavName });
       }
     };

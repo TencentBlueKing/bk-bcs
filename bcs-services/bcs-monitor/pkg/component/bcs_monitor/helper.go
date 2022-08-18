@@ -13,20 +13,26 @@
 package bcsmonitor
 
 import (
-	"fmt"
+	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/prometheus/common/model"
 )
 
-func getQueryURL() string {
+func getQueryURL() (string, http.Header) {
 	var url string
+	header := http.Header{}
+
 	if config.G.BCS.QueryURL != "" {
 		url = config.G.BCS.QueryURL
 	} else {
-		url = fmt.Sprintf("%s/bcsapi/v4/monitor/query", config.G.BCS.Host)
+		// 集群内, 走 service 接口
+		url = "http://bcs-monitor-query"
+
+		// url = fmt.Sprintf("%s/bcsapi/v4/monitor/query", config.G.BCS.Host)
+		// header.Add("Authorization", fmt.Sprintf("Bearer %s", config.G.BCS.Token))
 	}
-	return url
+	return url, header
 }
 
 // GetFirstValue 获取第一个值

@@ -30,13 +30,15 @@ func NewHealthz() *HealthzHandler {
 }
 
 // Ping 用于liveness
-func (h *HealthzHandler) Ping(_ context.Context, req *proto.PingRequest, resp *proto.PingResponse) error {
+func (h *HealthzHandler) Ping(ctx context.Context, req *proto.PingRequest, resp *proto.PingResponse) error {
+	defer recorder(ctx, "ping", req, resp)
 	resp.Ret = "pong"
 	return nil
 }
 
 // Healthz 用于readiness
-func (h *HealthzHandler) Healthz(_ context.Context, req *proto.HealthzRequest, resp *proto.HealthzResponse) error {
+func (h *HealthzHandler) Healthz(ctx context.Context, req *proto.HealthzRequest, resp *proto.HealthzResponse) error {
+	defer recorder(ctx, "healthz", req, resp)
 	mongoDB := store.GetMongo()
 	// 默认状态为正常
 	health := "service is ok!"

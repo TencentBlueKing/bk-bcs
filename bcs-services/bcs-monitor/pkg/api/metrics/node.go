@@ -21,21 +21,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GetNodeInfo 节点信息
-func GetNodeInfo(c *rest.Context) (interface{}, error) {
-	params := map[string]interface{}{
-		"clusterId": c.ClusterId,
-		"ip":        c.Param("ip"),
-	}
-
-	promql := `bcs:node:info{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	labelSet, err := bcsmonitor.QueryLabelSet(c.Context, c.ProjectId, promql, params, time.Now())
-	if err != nil {
-		return nil, err
-	}
-	return labelSet, nil
-}
-
 // NodeOveriewMetric 节点概览
 type NodeOveriewMetric struct {
 	ContainerCount string `json:"container_count"`
@@ -99,195 +84,141 @@ func (q *UsageQuery) GetQueryTime() (*clientutil.PromQueryTime, error) {
 	return queryTime, nil
 }
 
+// handleNodeMetric Node 处理公共函数
+func handleNodeMetric(c *rest.Context, promql string) (interface{}, error) {
+	query := &UsageQuery{}
+	if err := c.ShouldBindQuery(query); err != nil {
+		return nil, err
+	}
+
+	queryTime, err := query.GetQueryTime()
+	if err != nil {
+		return nil, err
+	}
+
+	params := map[string]interface{}{
+		"clusterId": c.ClusterId,
+		"ip":        c.Param("ip"),
+	}
+
+	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
+	if err != nil {
+		return nil, err
+	}
+	return result.Data, nil
+}
+
+// GetNodeInfo 节点信息
+// @Summary  节点信息
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /nodes/:ip/info [get]
+func GetNodeInfo(c *rest.Context) (interface{}, error) {
+	params := map[string]interface{}{
+		"clusterId": c.ClusterId,
+		"ip":        c.Param("ip"),
+	}
+
+	promql := `bcs:node:info{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
+	labelSet, err := bcsmonitor.QueryLabelSet(c.Context, c.ProjectId, promql, params, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	return labelSet, nil
+}
+
 // GetNodeOverview 查询节点概览
+// @Summary  查询节点概览
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /nodes/:ip/overview [get]
 func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
 		"ip":        c.Param("ip"),
 	}
-	overview := &NodeOveriewMetric{}
 
-	cpuPromQL := `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	cpuUsage, err := bcsmonitor.QueryValue(c.Context, c.ProjectId, cpuPromQL, params, time.Now())
+	promqlMap := map[string]string{
+		"cpu":             `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
+		"memory":          `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
+		"disk":            `bcs:node:disk:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
+		"diskio":          `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
+		"container_count": `bcs:node:container_count{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
+		"pod_count":       `bcs:node:pod_count{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
+	}
+
+	result, err := bcsmonitor.QueryMultiValues(c.Context, c.ProjectId, promqlMap, params, time.Now())
 	if err != nil {
 		return nil, err
 	}
-	overview.CPUUsage = cpuUsage
 
-	memoryPromQL := `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	memory, err := bcsmonitor.QueryValue(c.Context, c.ProjectId, memoryPromQL, params, time.Now())
-	if err != nil {
-		return nil, err
+	overview := &NodeOveriewMetric{
+		CPUUsage:       result["cpu"],
+		MemoryUsage:    result["memory"],
+		DiskUsage:      result["disk"],
+		DiskioUsage:    result["diskio"],
+		ContainerCount: result["container_count"],
+		PodCount:       result["pod_count"],
 	}
-	overview.MemoryUsage = memory
-
-	diskPromQL := `bcs:node:disk:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	disk, err := bcsmonitor.QueryValue(c.Context, c.ProjectId, diskPromQL, params, time.Now())
-	if err != nil {
-		return nil, err
-	}
-	overview.DiskUsage = disk
-
-	diskioPromQL := `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	diskio, err := bcsmonitor.QueryValue(c.Context, c.ProjectId, diskioPromQL, params, time.Now())
-	if err != nil {
-		return nil, err
-	}
-	overview.DiskioUsage = diskio
-
-	containerCountPromQL := `bcs:node:container_count{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	containerCount, err := bcsmonitor.QueryValue(c.Context, c.ProjectId, containerCountPromQL, params, time.Now())
-	if err != nil {
-		return nil, err
-	}
-	overview.ContainerCount = containerCount
-
-	podCountPromQL := `bcs:node:pod_count{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	podCount, err := bcsmonitor.QueryValue(c.Context, c.ProjectId, podCountPromQL, params, time.Now())
-	if err != nil {
-		return nil, err
-	}
-	overview.PodCount = podCount
 
 	return overview, nil
 }
 
 // GetNodeCPUUsage 查询 CPU 使用率
+// @Summary  查询 CPU 使用率
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /nodes/:ip/cpu_usage [get]
 func GetNodeCPUUsage(c *rest.Context) (interface{}, error) {
-	query := &UsageQuery{}
-	if err := c.ShouldBindQuery(query); err != nil {
-		return nil, err
-	}
+	promql := `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
 
-	queryTime, err := query.GetQueryTime()
-	if err != nil {
-		return nil, err
-	}
+	return handleNodeMetric(c, promql)
 
-	params := map[string]interface{}{
-		"clusterId": c.ClusterId,
-		"ip":        c.Param("ip"),
-	}
-
-	promql := `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	vector, _, err := bcsmonitor.QueryRangeF(c.Context, c.ProjectId, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
 }
 
 // GetNodeMemoryUsage 节点内存使用率
+// @Summary  节点内存使用率
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /nodes/:ip/memory_usage [get]
 func GetNodeMemoryUsage(c *rest.Context) (interface{}, error) {
-	query := &UsageQuery{}
-	if err := c.ShouldBindQuery(query); err != nil {
-		return nil, err
-	}
+	promql := `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
 
-	queryTime, err := query.GetQueryTime()
-	if err != nil {
-		return nil, err
-	}
+	return handleNodeMetric(c, promql)
 
-	params := map[string]interface{}{
-		"clusterId": c.ClusterId,
-		"ip":        c.Param("ip"),
-	}
-
-	promql := `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	vector, _, err := bcsmonitor.QueryRangeF(c.Context, c.ProjectId, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
 }
 
 // GetNodeNetworkTransmitUsage 节点网络发送
+// @Summary  节点网络发送
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /nodes/:ip/network_receive [get]
 func GetNodeNetworkTransmitUsage(c *rest.Context) (interface{}, error) {
-	query := &UsageQuery{}
-	if err := c.ShouldBindQuery(query); err != nil {
-		return nil, err
-	}
+	promql := `bcs:node:network_transmit{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
 
-	queryTime, err := query.GetQueryTime()
-	if err != nil {
-		return nil, err
-	}
+	return handleNodeMetric(c, promql)
 
-	params := map[string]interface{}{
-		"clusterId": c.ClusterId,
-		"ip":        c.Param("ip"),
-	}
-
-	promql := `bcs:node:network_transmit{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	vector, _, err := bcsmonitor.QueryRangeF(c.Context, c.ProjectId, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
 }
 
 // GetNodeNetworkReceiveUsage 节点网络接收
+// @Summary  节点网络接收
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /nodes/:ip/network_transmit [get]
 func GetNodeNetworkReceiveUsage(c *rest.Context) (interface{}, error) {
-	query := &UsageQuery{}
-	if err := c.ShouldBindQuery(query); err != nil {
-		return nil, err
-	}
+	promql := `bcs:node:network_receive{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
 
-	queryTime, err := query.GetQueryTime()
-	if err != nil {
-		return nil, err
-	}
+	return handleNodeMetric(c, promql)
 
-	params := map[string]interface{}{
-		"clusterId": c.ClusterId,
-		"ip":        c.Param("ip"),
-	}
-
-	promql := `bcs:node:network_receive{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	vector, _, err := bcsmonitor.QueryRangeF(c.Context, c.ProjectId, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
 }
 
 // GetNodeDiskioUsage 节点磁盘IO
+// @Summary  节点磁盘IO
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /nodes/:ip/diskio_usage [get]
 func GetNodeDiskioUsage(c *rest.Context) (interface{}, error) {
-	query := &UsageQuery{}
-	if err := c.ShouldBindQuery(query); err != nil {
-		return nil, err
-	}
+	promql := `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
 
-	queryTime, err := query.GetQueryTime()
-	if err != nil {
-		return nil, err
-	}
-
-	params := map[string]interface{}{
-		"clusterId": c.ClusterId,
-		"ip":        c.Param("ip"),
-	}
-
-	promql := `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s"}`
-	vector, _, err := bcsmonitor.QueryRangeF(c.Context, c.ProjectId, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
+	return handleNodeMetric(c, promql)
 }

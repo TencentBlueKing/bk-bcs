@@ -37,19 +37,27 @@
     </div>
     <div class="workload-detail-body">
       <div class="workload-metric">
-        <Metric :title="$t('CPU使用率')" metric="cpu_usage" :params="params" category="containers" colors="#30d878"></Metric>
         <Metric
-          :title="$t('内存使用率')"
-          metric="memory_usage"
+          :title="$t('CPU使用率')"
+          :metric="['cpu_usage', 'cpu_limit']"
+          :params="params"
+          category="containers"
+          :colors="['#30d878', '#ff5656']"
+          :series="[{ }, { areaStyle: null }]">
+        </Metric>
+        <Metric
+          :title="$t('内存使用量')"
+          :metric="['memory_used', 'memory_limit']"
           :params="params"
           unit="byte"
           category="containers"
-          colors="#3a84ff"
-          :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')">
+          :colors="['#3a84ff', '#ff5656']"
+          :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')"
+          :series="[{ }, { areaStyle: null }]">
         </Metric>
         <Metric
           :title="$t('磁盘IO总量')"
-          :metric="['disk_read', 'disk_write']"
+          :metric="['disk_read_total', 'disk_write_total']"
           :params="params"
           category="containers"
           unit="byte"
@@ -115,12 +123,14 @@
           <bk-table :data="resources">
             <bk-table-column label="Cpu">
               <template #default="{ row }">
-                {{ `requests: ${row.requests ? row.requests.cpu : '--'} | limits: ${row.limits ? row.limits.cpu : '--'}` }}
+                {{ `requests: ${
+                  row.requests ? row.requests.cpu : '--'} | limits: ${row.limits ? row.limits.cpu : '--'}` }}
               </template>
             </bk-table-column>
             <bk-table-column label="Memory">
               <template #default="{ row }">
-                {{ `requests: ${row.requests ? row.requests.memory : '--'} | limits: ${row.limits ? row.limits.memory : '--'}` }}
+                {{ `requests: ${
+                  row.requests ? row.requests.memory : '--'} | limits: ${row.limits ? row.limits.memory : '--'}` }}
               </template>
             </bk-table-column>
           </bk-table>
@@ -133,7 +143,6 @@
 /* eslint-disable camelcase */
 import { defineComponent, toRefs, computed, onMounted, ref } from '@vue/composition-api';
 import { bkOverflowTips } from 'bk-magic-vue';
-import StatusIcon from '../../common/status-icon';
 import Metric from '../../common/metric.vue';
 
 export interface IContainerDetail {
@@ -147,7 +156,6 @@ export interface IContainerDetail {
 export default defineComponent({
   name: 'ContainerDetail',
   components: {
-    StatusIcon,
     Metric,
   },
   directives: {
@@ -192,9 +200,8 @@ export default defineComponent({
 
     // 图表指标参数
     const params = computed(() => ({
-      namespace: namespace.value,
-      pod_name: pod.value,
-      container_name: name.value,
+      $namespaceId: namespace.value,
+      $containerId: name.value,
       $podId: pod.value,
     }));
 

@@ -36,12 +36,18 @@
             icon="plus-circle"
             @click.stop="addItem">
           </bk-button>
-          <bk-button
-            text
-            icon="minus-circle"
-            :disabled="length"
-            @click.stop="deleteItem(index)">
-          </bk-button>
+          <span
+            v-bk-tooltips="{
+              disabled: !disabledDeleteKeys.includes(item.key),
+              content: $t('内置污点, 不可删除')
+            }">
+            <bk-button
+              text
+              icon="minus-circle"
+              :disabled="disabledDeleteKeys.includes(item.key)"
+              @click.stop="deleteItem(index)">
+            </bk-button>
+          </span>
         </div>
       </div>
     </div>
@@ -53,7 +59,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, toRefs, PropType } from '@vue/composition-api';
 
 interface IValueItem {
   key: string;
@@ -62,14 +68,28 @@ interface IValueItem {
 }
 
 export default defineComponent({
+  name: 'NodeTaint',
   props: {
     clusterId: {
       type: String,
       required: true,
     },
     nodes: {
-      type: Array,
+      type: Array as PropType<any[]>,
       default: () => [],
+    },
+    disabledDeleteKeys: {
+      type: Array,
+      default: () => [
+        'node.kubernetes.io/not-ready',
+        'node.kubernetes.io/unreachable',
+        'node.kubernetes.io/memory-pressure',
+        'node.kubernetes.io/disk-pressure',
+        'node.kubernetes.io/pid-pressure',
+        'node.kubernetes.io/network-unavailable',
+        'node.kubernetes.io/unschedulable',
+        'node.cloudprovider.kubernetes.io/uninitialized',
+      ],
     },
   },
   setup(props, ctx) {
@@ -98,7 +118,7 @@ export default defineComponent({
       isSubmitting.value = true;
       try {
         // data是单个节点设置污点的结果，多个节点需要另外处理
-        const data = [];
+        const data: IValueItem[] = [];
         for (const item of values.value) {
           // 只提交填了key的行
           item.key && data.push(item);
@@ -130,24 +150,24 @@ export default defineComponent({
       isLoading.value = false;
       // 单个节点取值
       /* eslint-disable */
-                const curValues = data?.[nodes.value[0]?.inner_ip] || []
-                if (curValues.length) {
-                    values.value = curValues
-                }
-            })
-            return {
-                isLoading,
-                isSubmitting,
-                values,
-                effectList,
-                addItem,
-                deleteItem,
-                showAddBtn,
-                handleSubmit,
-                handleCancel
-            }
-        }
+      const curValues = data?.[nodes.value[0]?.inner_ip] || []
+      if (curValues.length) {
+        values.value = curValues
+      }
     })
+    return {
+        isLoading,
+        isSubmitting,
+        values,
+        effectList,
+        addItem,
+        deleteItem,
+        showAddBtn,
+        handleSubmit,
+        handleCancel
+    }
+  }
+})
 </script>
 
 <style lang="postcss" scoped>
@@ -188,10 +208,9 @@ export default defineComponent({
                 button {
                     font-size: 0;
                     padding: 0;
-                    color: #999999;
                     margin-left: 10px;
-                    &:hover {
-                        color: #3a84ff;
+                    &:not([disabled]) {
+                      color: #999999; 
                     }
                     /deep/ .bk-icon {
                         width: 22px;

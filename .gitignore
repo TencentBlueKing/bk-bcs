@@ -132,4 +132,4 @@ bcs-ui/support-files/iam/
 .husky
 .codecc
 
-build.yaml
+**/build.yml

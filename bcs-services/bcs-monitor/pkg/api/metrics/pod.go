@@ -22,12 +22,11 @@ import (
 // PodUsageQuery Pod 查询
 type PodUsageQuery struct {
 	UsageQuery  `json:",inline"`
-	Namespace   string   `json:"namespace"`
 	PodNameList []string `json:"pod_name_list"`
 }
 
-// PodCPUUsage :
-func PodCPUUsage(c *rest.Context) (interface{}, error) {
+// handlePodMetric Pod 处理公共函数
+func handlePodMetric(c *rest.Context, promql string) (interface{}, error) {
 	query := &PodUsageQuery{}
 	if err := c.ShouldBindJSON(query); err != nil {
 		return nil, err
@@ -40,17 +39,58 @@ func PodCPUUsage(c *rest.Context) (interface{}, error) {
 
 	params := map[string]interface{}{
 		"clusterId":   c.ClusterId,
-		"namespace":   query.Namespace,
+		"namespace":   c.Param("namespace"),
 		"podNameList": strings.Join(query.PodNameList, "|"),
 	}
 
-	promql := `bcs:pod:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s"}`
-	vector, _, err := bcsmonitor.QueryRangeF(c.Context, c.ProjectId, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
+	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
+
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
-	return vector, nil
+	return result.Data, nil
+}
+
+// PodCPUUsage Pod CPU使用率
+// @Summary  Pod CPU使用率
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /namespaces/:namespace/pods/cpu_usage [POST]
+func PodCPUUsage(c *rest.Context) (interface{}, error) {
+	promql := `bcs:pod:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+
+	return handlePodMetric(c, promql)
+}
+
+// PodMemoryUsed Pod 内存使用量
+// @Summary  Pod 内存使用量
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /namespaces/:namespace/pods/memory_used [POST]
+func PodMemoryUsed(c *rest.Context) (interface{}, error) {
+	promql := `bcs:pod:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+
+	return handlePodMetric(c, promql)
+}
+
+// PodNetworkReceive 网络接收量
+// @Summary  网络接收量
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /namespaces/:namespace/pods/network_receive [POST]
+func PodNetworkReceive(c *rest.Context) (interface{}, error) {
+	promql := `bcs:pod:network_receive{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+
+	return handlePodMetric(c, promql)
+}
+
+// PodNetworkTransmit Pod 网络发送量
+// @Summary  Pod 网络发送量
+// @Tags     Metrics
+// @Success  200  {string}  string
+// @Router   /namespaces/:namespace/pods/network_transmit [POST]
+func PodNetworkTransmit(c *rest.Context) (interface{}, error) {
+	promql := `bcs:pod:network_transmit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+
+	return handlePodMetric(c, promql)
 }

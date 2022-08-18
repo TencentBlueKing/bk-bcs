@@ -39,7 +39,7 @@ func start(cmd *cobra.Command, args []string) {
 	// 加载配置
 	config, err := config.LoadConfig(configPath)
 	if err != nil {
-		panic(fmt.Errorf("load project config failed: %v", err))
+		panic(fmt.Errorf("load project config file [%s] failed: %v", configPath, err))
 	}
 	// 初始化logging
 	logging.InitLogger(&config.Log)

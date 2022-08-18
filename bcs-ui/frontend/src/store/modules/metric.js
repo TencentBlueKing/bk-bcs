@@ -25,6 +25,21 @@
 */
 
 import http from '@/api';
+import {
+  clusterOverview,
+  clusterCpuUsage,
+  clusterMemoryUsage,
+  clusterDiskUsage,
+  clusterNodeOverview,
+  clusterNodeInfo,
+  clusterNodeCpuUsage,
+  clusterNodeNetworkReceive,
+  clusterNodeMemoryUsage,
+  clusterNodeNetworkTransmit,
+  clusterNodeDiskIOUsage,
+  clusterPodMetric,
+  clusterContainersMetric,
+} from '@/api/base';
 
 export default {
   namespaced: true,
@@ -330,6 +345,60 @@ export default {
         {},
         config,
       );
+    },
+
+    async clusterOverview(ctx, params) {
+      const data = await clusterOverview(params).catch(() => ({}));
+      return data;
+    },
+    async clusterCpuUsage(ctx, params) {
+      const data = await clusterCpuUsage(params).catch(() => ({}));
+      return data;
+    },
+    async clusterMemoryUsage(ctx, params) {
+      const data = await clusterMemoryUsage(params).catch(() => ({}));
+      return data;
+    },
+    async clusterDiskUsage(ctx, params) {
+      const data = await clusterDiskUsage(params).catch(() => ({}));
+      return data;
+    },
+    async clusterNodeOverview(ctx, params) {
+      const data = await clusterNodeOverview(params).catch(() => ({}));
+      return data;
+    },
+
+    async clusterNodeInfo(ctx, params) {
+      const data = await clusterNodeInfo(params).catch(() => ({}));
+      return data;
+    },
+    async clusterNodeCpuUsage(ctx, params) {
+      const data = await clusterNodeCpuUsage(params).catch(() => ({}));
+      return data;
+    },
+    async clusterNodeNetworkReceive(ctx, params) {
+      const data = await clusterNodeNetworkReceive(params).catch(() => ({}));
+      return data;
+    },
+    async clusterNodeMemoryUsage(ctx, params) {
+      const data = await clusterNodeMemoryUsage(params).catch(() => ({}));
+      return data;
+    },
+    async clusterNodeNetworkTransmit(ctx, params) {
+      const data = await clusterNodeNetworkTransmit(params).catch(() => ({}));
+      return data;
+    },
+    async clusterNodeDiskIOUsage(ctx, params) {
+      const data = await clusterNodeDiskIOUsage(params).catch(() => ({}));
+      return data;
+    },
+    async clusterPodMetric(ctx, params) {
+      const data = await clusterPodMetric(params).catch(() => ({}));
+      return data;
+    },
+    async clusterContainersMetric(ctx, params) {
+      const data = await clusterContainersMetric(params).catch(() => ({}));
+      return data;
     },
   },
 };

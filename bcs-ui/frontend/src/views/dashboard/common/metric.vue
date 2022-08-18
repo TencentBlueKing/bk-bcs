@@ -34,7 +34,7 @@ import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
 
 export default defineComponent({
-  name: 'Metric',
+  name: 'ResourceMetric',
   components: {
     ECharts,
   },
@@ -95,9 +95,13 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    series: {
+      type: Array,
+      default: () => [],
+    },
   },
   setup(props, ctx) {
-    const { $i18n, $store } = ctx.root;
+    const { $i18n, $store, $route } = ctx.root;
 
     const state = reactive({
       isDropdownShow: false,
@@ -142,7 +146,8 @@ export default defineComponent({
         const list = item?.result.map((result) => {
           // series 配置
           const name = result.metric?.[metricNameProp.value];
-          return {
+          const defaultSeries = props.series[index] || {};
+          return Object.assign({
             name: suffix ? `${name} ${suffix}` : name,
             type: 'line',
             showSymbol: false,
@@ -161,29 +166,32 @@ export default defineComponent({
               },
             },
             data: result?.values || [],
-          };
+          }, defaultSeries);
         }) || [];
         series.push(...list);
       });
       echartsOptions.value = Object.assign(defaultChartOption(props.unit), props.options, { series });
     };
     // 获取图表数据
+    const projectCode = computed(() => $route.params.projectCode);
     const handleGetMetricData = async () => {
       const timeRange = {
         start_at: moment().subtract(state.activeTime.range, 'ms')
-          .utc(),
-        end_at: moment().utc(),
+          .utc()
+          .format(),
+        end_at: moment().utc()
+          .format(),
       };
 
       let action = '';
       switch (props.category) {
         case 'pods':
           if (!props.params) break;
-          action = 'dashboard/podMetric';
+          action = 'metric/clusterPodMetric';
           break;
         case 'containers':
           if (!props.params) break;
-          action = 'dashboard/containerMetric';
+          action = 'metric/clusterContainersMetric';
       }
       if (!action) return [];
 
@@ -192,6 +200,7 @@ export default defineComponent({
       metrics.forEach((metric) => {
         const params = {
           $metric: metric,
+          $projectCode: projectCode.value,
           ...timeRange,
           ...props.params,
         };

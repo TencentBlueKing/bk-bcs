@@ -495,13 +495,11 @@ export default defineComponent({
              */
     const fetchNodeInfo = async () => {
       try {
-        const res = await $store.dispatch('cluster/nodeInfo', {
-          projectId: projectId.value,
-          clusterId: clusterId.value,
-          nodeId: nodeId.value,
+        const data = await $store.dispatch('metric/clusterNodeInfo', {
+          $projectCode: projectCode.value,
+          $clusterId: clusterId.value,
+          $nodeIP: nodeId.value,
         });
-
-        const data = res.data || {};
 
         nodeInfo.value.id = data.id || '';
         nodeInfo.value.provider = data.provider || '--';
@@ -531,11 +529,11 @@ export default defineComponent({
       const params = {
         startAt: '',
         endAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-        projectId: projectId.value,
-        resId: nodeId.value,
-        clusterId: clusterId.value,
+        $projectCode: projectCode.value,
+        $nodeIP: nodeId.value,
+        $clusterId: clusterId.value,
       };
-      if (!params.resId) return;
+      if (!params.$nodeIP) return;
 
       // 1 小时
       if (range === '1') {
@@ -552,32 +550,32 @@ export default defineComponent({
       try {
         if (idx === 'net') {
           const res = await Promise.all([
-            $store.dispatch('cluster/nodeNetReceive', Object.assign({}, params)),
-            $store.dispatch('cluster/nodeNetTransmit', Object.assign({}, params)),
+            $store.dispatch('metric/clusterNodeNetworkReceive', Object.assign({}, params)),
+            $store.dispatch('metric/clusterNodeNetworkTransmit', Object.assign({}, params)),
           ]);
-          renderNetChart(res[0].data.result, res[1].data.result);
+          renderNetChart(res[0].result, res[1].result);
         } else {
           let url = '';
           let renderFn = '';
           if (idx === 'cpu_summary') {
-            url = 'cluster/nodeCpuUsage';
+            url = 'metric/clusterNodeCpuUsage';
             renderFn = 'renderCpuChart';
           }
 
           if (idx === 'mem') {
-            url = 'cluster/nodeMemUsage';
+            url = 'metric/clusterNodeMemoryUsage';
             renderFn = 'renderMemChart';
           }
 
           if (idx === 'io') {
-            url = 'cluster/nodeDiskioUsage';
+            url = 'metric/clusterNodeDiskIOUsage';
             renderFn = 'renderDiskioChart';
           }
 
           const res = await $store.dispatch(url, params);
-          if (renderFn === 'renderCpuChart') renderCpuChart(res.data.result || []);
-          if (renderFn === 'renderMemChart') renderMemChart(res.data.result || []);
-          if (renderFn === 'renderDiskioChart') renderDiskioChart(res.data.result || []);
+          if (renderFn === 'renderCpuChart') renderCpuChart(res.result || []);
+          if (renderFn === 'renderMemChart') renderMemChart(res.result || []);
+          if (renderFn === 'renderDiskioChart') renderDiskioChart(res.result || []);
         }
       } catch (e) {
         catchErrorHandler(e, ctx);
@@ -1043,6 +1041,8 @@ export default defineComponent({
       extraArgs: { kubelet: '' },
     });
     const fetchNodeTemplateInfo = async () => {
+      if (!isTkeCluster.value) return;
+
       const data = await getNodeTemplateInfo({
         $innerIP: nodeId.value,
       });

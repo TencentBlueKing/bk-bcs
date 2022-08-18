@@ -39,8 +39,10 @@ func IsBKMonitorEnabled(ctx context.Context, clusterId string) (bool, error) {
 
 	for _, enableClusterId := range clusterList.ClusterIdList {
 		if enableClusterId == clusterId {
-			storage.LocalCache.Slot.Set(cacheKey, true, storage.LocalCache.DefaultExpiration)
-			return true, nil
+			if _, ok := config.G.BKMonitor.ClusterMap[enableClusterId]; ok {
+				storage.LocalCache.Slot.Set(cacheKey, true, storage.LocalCache.DefaultExpiration)
+				return true, nil
+			}
 		}
 	}
 

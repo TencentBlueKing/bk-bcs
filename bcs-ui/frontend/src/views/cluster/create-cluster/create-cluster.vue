@@ -1,5 +1,5 @@
 <template>
-  <section class="cluster">
+  <section class="cluster bcs-content-wrapper">
     <div class="mode-wrapper mt15">
       <!-- 自建集群 -->
       <div class="mode-panel" @click="handleCreateCluster">

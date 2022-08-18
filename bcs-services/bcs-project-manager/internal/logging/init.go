@@ -16,6 +16,7 @@ package logging
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -67,12 +68,18 @@ func getEncoder() zapcore.Encoder {
 }
 
 func newZapJSONLogger(conf *config.LogConfig) *zap.Logger {
-	writer, err := getWriter(conf)
-	if err != nil {
-		panic(err)
+	var writerSync zapcore.WriteSyncer
+	stdErrWriterSync := zapcore.AddSync(os.Stderr)
+	fileWriter, err := getWriter(conf)
+	if err == nil && conf.AlsoToStdErr {
+		fileWriterSync := zapcore.AddSync(fileWriter)
+		writerSync = zapcore.NewMultiWriteSyncer(stdErrWriterSync, fileWriterSync)
+	} else {
+		writerSync = stdErrWriterSync
 	}
-	w := &zapcore.BufferedWriteSyncer{
-		WS:            zapcore.AddSync(writer),
+
+	ws := &zapcore.BufferedWriteSyncer{
+		WS:            writerSync,
 		FlushInterval: time.Duration(conf.FlushInterval) * time.Second,
 	}
 
@@ -82,7 +89,7 @@ func newZapJSONLogger(conf *config.LogConfig) *zap.Logger {
 		l = zap.InfoLevel
 	}
 
-	core := zapcore.NewCore(getEncoder(), w, l)
+	core := zapcore.NewCore(getEncoder(), ws, l)
 	// 设置 error 及以上级别允许打印堆栈信息
 	// AddCallerSkip 由于对 logger 进行封装，设置 caller 记录位置往上一层
 	return zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(zap.ErrorLevel))

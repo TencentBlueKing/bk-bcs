@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	defaultFileName = "project.log"
+	defaultFileName = "bcs-project-manager.log"
 	// 默认文件大小，单位 MB
 	maxFileSize = 500
 	// 日志保留时间，单位 天
@@ -41,7 +41,7 @@ func getWriter(conf *config.LogConfig) (io.Writer, error) {
 	if _, err := os.Stat(conf.Path); os.IsNotExist(err) {
 		return nil, fmt.Errorf("file path %s is not exists", conf.Path)
 	}
-	// 文件名称，默认为 project.log
+	// 文件名称，默认为 bcs-project-manager.log
 	name := conf.Name
 	if name == "" {
 		name = defaultFileName
