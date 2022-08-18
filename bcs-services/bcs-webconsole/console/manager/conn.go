@@ -314,15 +314,11 @@ func helloMessage(source string) string {
 	var messages []string
 
 	if source == "mgr" {
-		guideMsg = []string{
-			config.G.WebConsole.GuideDocLink,
-			i18n.GetMessage("mgrGuideMessage"),
-		}
+		guideMsg = []string{i18n.GetMessage("mgrGuideMessage")}
+		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	} else {
-		guideMsg = []string{
-			config.G.WebConsole.GuideDocLink,
-			i18n.GetMessage("guideMessage"),
-		}
+		guideMsg = []string{i18n.GetMessage("guideMessage")}
+		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	}
 
 	// 两边一个#字符，加一个空格
