@@ -30,7 +30,7 @@
         </bk-table-column>
         <bk-table-column label="Ports" :resizable="false">
           <template #default="{ row }">
-            <span>{{ handleGetExtData(row.metadata.uid, 'default_ports') || '--' }}</span>
+            <span>{{ handleGetExtData(row.metadata.uid, 'defaultPorts') || '--' }}</span>
           </template>
         </bk-table-column>
         <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
