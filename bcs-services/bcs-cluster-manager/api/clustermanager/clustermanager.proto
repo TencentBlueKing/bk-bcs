@@ -828,6 +828,16 @@ service ClusterManager {
       summary : "查询Cloud 账号列表"
     };
   }
+  rpc ListCloudAccountToPerm(ListCloudAccountPermRequest) returns (ListCloudAccountPermResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/accounts"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据查询条件过滤Cloud 账号列表，如果某项条件值为空，则忽略此"
+          "条件。如果所有条件都为空，则默认查询所有账号"
+      summary : "查询Cloud 账号列表, 主要用于权限资源查询"
+    };
+  }
 
   // Cloud Resource management
   rpc GetCloudRegions(GetCloudRegionsRequest) returns (GetCloudRegionsResponse) {
@@ -891,6 +901,18 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "根据筛选条件查询Node操作系统镜像列表"
       summary : "查询Node操作系统镜像列表"
+    };
+  }
+
+  // Perm interface
+  rpc QueryPermByActionID(QueryPermByActionIDRequest) returns (QueryPermByActionIDResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/perms/actions/{actionID}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "校验用户权限,当无权限时返回无权限URL"
+      summary : "校验用户权限,当无权限时返回无权限URL"
     };
   }
 }
@@ -1692,6 +1714,55 @@ message DeleteCloudAccountResponse {
   }];
 }
 
+message ListCloudAccountPermRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudAccountPermRequest"
+      description : "查询云账号请求，如果填写了目标字段，则组合目标信息查询，如果全为空则为查询全量信息"
+    }
+  };
+
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "CloudAccount所属的项目信息，用于查询所属项目的云凭证"
+  }];
+  repeated string accountID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "accountID",
+    description: "云账号列表"
+  }];
+  string accountName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "accountName",
+    description: "查询具体cloud账号详情"
+  }];
+}
+
+message ListCloudAccountPermResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudAccountPermResponse"
+      description : "查询云账号权限数据返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated CloudAccount data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "cloud账号列表"
+  }];
+}
+
 message ListCloudAccountRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -1711,6 +1782,10 @@ message ListCloudAccountRequest {
   string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "projectID",
     description: "CloudAccount所属的项目信息，用于查询所属项目的云凭证"
+  }];
+  string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "operator",
+    description: "operator云账号权限列表"
   }];
 }
 
@@ -1744,6 +1819,10 @@ message ListCloudAccountResponse {
   repeated CloudAccountInfo data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "cloud账号列表"
+  }];
+  WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属项目的云账号权限"
   }];
 }
 
@@ -8556,5 +8635,75 @@ message SecurityGroup {
   string description = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "description",
     description : "安全组描述"
+  }];
+}
+
+message QueryPermByActionIDReqData {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "QueryPermByActionIDReqData"
+      description : "权限请求的上下文信息"
+    }
+  };
+
+  string project_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "project_id",
+    description : "项目ID"
+  }];
+  string cluster_id = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cluster_id",
+    description : "集群ID"
+  }];
+  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "命名空间名称"
+  }];
+  string template_id = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "template_id",
+    description : "模板集ID"
+  }];
+  string account_id = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "account_id",
+    description : "云账号ID"
+  }];
+  string operator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "operator",
+    description: "操作者"
+  }, (validate.rules).string = {min_len : 1}];
+}
+
+message QueryPermByActionIDRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "QueryPermByActionIDRequest"
+      description : "查询用户权限请求"
+      required : [
+        "actionID", "perm_ctx"
+      ]
+    }
+  };
+
+  string actionID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "actionID",
+    description: "权限actionID"
+  }];
+  QueryPermByActionIDReqData perm_ctx =2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "perm_ctx",
+    description: "权限请求数据"
+  }];
+}
+
+message Perms {
+  map<string, google.protobuf.Value> perms = 1;
+}
+
+message QueryPermByActionIDResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  Perms data = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description : "返回结果"
   }];
 }

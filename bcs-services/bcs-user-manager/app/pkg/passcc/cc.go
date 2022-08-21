@@ -54,6 +54,7 @@ func GetCCClient() *ClientConfig {
 	return CClient
 }
 
+// NewCCClient init client
 func NewCCClient(opt Options) *ClientConfig {
 	cli := &ClientConfig{
 		server:    opt.Server,
@@ -123,7 +124,7 @@ func (cc *ClientConfig) GetProjectSharedNamespaces(projectID, clusterID string) 
 
 	var (
 		url  = cc.server + path
-		req = &GetProjectsNamespaces{DesireAllData: 1}
+		req  = &GetProjectsNamespaces{DesireAllData: 1}
 		resp = &GetProjectsNamespacesResp{}
 	)
 
@@ -161,7 +162,6 @@ func (cc *ClientConfig) GetProjectSharedNamespaces(projectID, clusterID string) 
 	return namespaceList, nil
 }
 
-
 func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, error) {
 	if cc == nil {
 		return "", errServerNotInit
@@ -173,4 +173,3 @@ func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, err
 
 	return auth.GetAuthClient().GetAccessToken()
 }
-

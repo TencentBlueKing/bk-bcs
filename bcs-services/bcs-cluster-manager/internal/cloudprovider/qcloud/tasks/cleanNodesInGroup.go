@@ -300,7 +300,7 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	// TODO update nodes info
+	// will do update nodes info
 	err = updateNodeGroupDesiredSize(nodeGroupID, uint32(*np.DesiredNodesNum))
 	if err != nil {
 		blog.Errorf("taskID[%s] updateNodeGroupDesiredSize[%s/%d] failed: %v", taskID, nodeGroupID,

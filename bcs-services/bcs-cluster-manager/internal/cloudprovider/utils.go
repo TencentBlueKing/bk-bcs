@@ -39,7 +39,7 @@ var (
 	TaskID = "taskID"
 )
 
-// GetTaskIDFromContext
+// GetTaskIDFromContext get taskID from context
 func GetTaskIDFromContext(ctx context.Context) string {
 	if id, ok := ctx.Value(TaskID).(string); ok {
 		return id
@@ -136,7 +136,7 @@ func GetCredentialByCloudID(cloudID string) (*CommonOption, error) {
 // TaskType taskType
 type TaskType string
 
-// String() toString
+// String toString
 func (tt TaskType) String() string {
 	return string(tt)
 }
@@ -243,7 +243,7 @@ func UpdateClusterStatus(clusterID string, status string) error {
 	return nil
 }
 
-// UpdateClusterStatus set cluster status
+// UpdateCluster update cluster
 func UpdateCluster(cluster *proto.Cluster) error {
 	err := GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {

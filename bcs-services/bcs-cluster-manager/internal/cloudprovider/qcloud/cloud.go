@@ -42,7 +42,7 @@ func init() {
 type CloudInfoManager struct {
 }
 
-// ImportClusterValidate check importCluster operation
+// InitCloudClusterDefaultInfo init cloud defaultInfo
 func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster, opt *cloudprovider.InitClusterConfigOption) error {
 	// call qcloud interface to init cluster defaultConfig
 	if c == nil || cls == nil {

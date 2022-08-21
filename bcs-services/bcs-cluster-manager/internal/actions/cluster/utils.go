@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -213,14 +214,8 @@ func getAllIPList(provider string, model store.ClusterManagerModel) map[string]s
 	return ipList
 }
 
-// PermInfo for perm request
-type PermInfo struct {
-	ProjectID string
-	UserID    string
-}
-
 // GetUserClusterPermList get user cluster permission
-func GetUserClusterPermList(iam iam.PermClient, user PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
+func GetUserClusterPermList(iam iam.PermClient, user actions.PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
 	clusterPerm := cluster.NewBCSClusterPermClient(iam)
 

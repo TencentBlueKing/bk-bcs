@@ -73,7 +73,8 @@
         "iamServer": "${bcsIAMHost}",
         "bkiIamServer": "${bcsIAMbkiHost}",
         "metric": ${bcsIAMMetric},
-        "debug": ${bcsIAMDebug}
+        "debug": ${bcsIAMDebug},
+        "applyPermAddress": "${bcsIAMApplyPermAddress}"
     },
     "cloudTemplatePath": "${bcsCloudTemplatePath}",
     "debug": ${bcsClusterManagerDebug},

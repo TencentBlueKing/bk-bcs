@@ -16,7 +16,7 @@ package cloudprovider
 // TaskName xxx
 type TaskName string
 
-// String() xxx
+// String xxx
 func (tn TaskName) String() string {
 	return string(tn)
 }
@@ -24,7 +24,7 @@ func (tn TaskName) String() string {
 // StepName xx
 type StepName string
 
-// String() xxx
+// String xxx
 func (sn StepName) String() string {
 	return string(sn)
 }
@@ -49,7 +49,7 @@ var (
 // ParamKey xxx
 type ParamKey string
 
-// String() xxx
+// String xxx
 func (pk ParamKey) String() string {
 	return string(pk)
 }

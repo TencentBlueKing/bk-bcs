@@ -72,7 +72,7 @@ func (da *DeleteAction) Handle(
 		blog.Infof("project %s does not exist, No Deletion handle.", da.req.ProjectID)
 		return
 	}
-	if err := da.model.DeleteProject(da.ctx, da.req.ProjectID); err != nil {
+	if err = da.model.DeleteProject(da.ctx, da.req.ProjectID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

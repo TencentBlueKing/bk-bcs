@@ -11,44 +11,11 @@
  *
  */
 
-package utils
+package cloudaccount
 
-import "sync"
+import "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 
-// RoutinePool routine pool
-type RoutinePool struct {
-	c  chan struct{}
-	wg *sync.WaitGroup
-}
-
-// NewRoutinePool init pool
-func NewRoutinePool(maxSize int) *RoutinePool {
-	return &RoutinePool{
-		c:  make(chan struct{}, maxSize),
-		wg: new(sync.WaitGroup),
-	}
-}
-
-// Add add delta
-func (c *RoutinePool) Add(delta int) {
-	c.wg.Add(delta)
-	for i := 0; i < delta; i++ {
-		c.c <- struct{}{}
-	}
-}
-
-// Done decrease 1
-func (c *RoutinePool) Done() {
-	<-c.c
-	c.wg.Done()
-}
-
-// Close close channel
-func (c *RoutinePool) Close() {
-	close(c.c)
-}
-
-// Wait wait channel
-func (c *RoutinePool) Wait() {
-	c.wg.Wait()
-}
+const (
+	// AccountSelection account selection
+	AccountSelection iam.InstanceSelectionID = "account_list"
+)

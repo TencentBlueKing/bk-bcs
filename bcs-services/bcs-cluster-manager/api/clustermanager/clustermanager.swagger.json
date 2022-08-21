@@ -14,6 +14,57 @@
     "application/json"
   ],
   "paths": {
+    "/clustermanager/v1/accounts": {
+      "get": {
+        "summary": "查询Cloud 账号列表, 主要用于权限资源查询",
+        "description": "根据查询条件过滤Cloud 账号列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有账号",
+        "operationId": "ClusterManager_ListCloudAccountToPerm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudAccountPermResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "projectID. CloudAccount所属的项目信息，用于查询所属项目的云凭证",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云账号列表",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "accountName",
+            "description": "accountName. 查询具体cloud账号详情",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/addfederatedcluster": {
       "post": {
         "summary": "将Cluster加入联邦Cluster",
@@ -576,6 +627,13 @@
           {
             "name": "projectID",
             "description": "projectID. CloudAccount所属的项目信息，用于查询所属项目的云凭证",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. operator云账号权限列表",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3308,6 +3366,47 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerMoveNodesToGroupRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/perms/actions/{actionID}": {
+      "post": {
+        "summary": "校验用户权限,当无权限时返回无权限URL",
+        "description": "校验用户权限,当无权限时返回无权限URL",
+        "operationId": "ClusterManager_QueryPermByActionID",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerQueryPermByActionIDResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "actionID",
+            "description": "权限actionID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerQueryPermByActionIDRequest"
             }
           }
         ],
@@ -8084,6 +8183,42 @@
         "message"
       ]
     },
+    "clustermanagerListCloudAccountPermResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudAccount"
+          },
+          "description": "cloud账号列表",
+          "title": "data"
+        }
+      },
+      "description": "查询云账号权限数据返回",
+      "title": "ListCloudAccountPermResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudAccountResponse": {
       "type": "object",
       "properties": {
@@ -8111,6 +8246,11 @@
           },
           "description": "cloud账号列表",
           "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotations",
+          "description": "用户所属项目的云账号权限",
+          "title": "web_annotations"
         }
       },
       "description": "查询云账号返回",
@@ -9495,6 +9635,17 @@
       "description": "操作系统镜像",
       "title": "OsImage"
     },
+    "clustermanagerPerms": {
+      "type": "object",
+      "properties": {
+        "perms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      }
+    },
     "clustermanagerProject": {
       "type": "object",
       "properties": {
@@ -9617,6 +9768,80 @@
       },
       "description": "项目信息，整体对齐devops信息。每个业务可以有多个项目进行权限隔离",
       "title": "Project"
+    },
+    "clustermanagerQueryPermByActionIDReqData": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "project_id"
+        },
+        "cluster_id": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "cluster_id"
+        },
+        "name": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "name"
+        },
+        "template_id": {
+          "type": "string",
+          "description": "模板集ID",
+          "title": "template_id"
+        },
+        "account_id": {
+          "type": "string",
+          "description": "云账号ID",
+          "title": "account_id"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "权限请求的上下文信息",
+      "title": "QueryPermByActionIDReqData"
+    },
+    "clustermanagerQueryPermByActionIDRequest": {
+      "type": "object",
+      "properties": {
+        "actionID": {
+          "type": "string",
+          "description": "权限actionID",
+          "title": "actionID"
+        },
+        "perm_ctx": {
+          "$ref": "#/definitions/clustermanagerQueryPermByActionIDReqData",
+          "description": "权限请求数据",
+          "title": "perm_ctx"
+        }
+      },
+      "description": "查询用户权限请求",
+      "title": "QueryPermByActionIDRequest",
+      "required": [
+        "actionID",
+        "perm_ctx"
+      ]
+    },
+    "clustermanagerQueryPermByActionIDResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerPerms",
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerRegionInfo": {
       "type": "object",

@@ -122,7 +122,7 @@ type AuthInfo struct {
 	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
-// Context is a tuple of references to a cluster (how do I communicate with a kubernetes cluster), a user (how do I identify myself), and a namespace (what subset of resources do I want to work with)
+// Context is a tuple of references to a cluster
 type Context struct {
 	// Cluster is the name of the cluster for this context
 	Cluster string `json:"cluster"`
@@ -211,7 +211,7 @@ type YamlInput struct {
 	YamlContent string
 }
 
-// GetKubeConfigFromYAMLFile get kubeConfig from YAML file
+// GetKubeConfigFromYAMLBody get kubeConfig from YAML file
 func GetKubeConfigFromYAMLBody(isFile bool, input YamlInput) (*Config, error) {
 	var (
 		kubeConfig []byte

@@ -31,4 +31,3 @@ func TestClientAuth_GetAccessToken(t *testing.T) {
 
 	t.Log(token)
 }
-

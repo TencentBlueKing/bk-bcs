@@ -15,10 +15,13 @@ package account
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -28,6 +31,7 @@ import (
 type ListAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
+	iam   iam.PermClient
 
 	req              *cmproto.ListCloudAccountRequest
 	resp             *cmproto.ListCloudAccountResponse
@@ -35,9 +39,10 @@ type ListAction struct {
 }
 
 // NewListAction create list action for cluster account list
-func NewListAction(model store.ClusterManagerModel) *ListAction {
+func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAction {
 	return &ListAction{
 		model: model,
+		iam:   iam,
 	}
 }
 
@@ -61,6 +66,7 @@ func (la *ListAction) listCloudAccount() error {
 		return err
 	}
 
+	accountList := make([]string, 0)
 	// get cloud AccountInfo and relative cluster
 	for i := range cloudAccounts {
 		if !cloudAccounts[i].Enable {
@@ -79,9 +85,35 @@ func (la *ListAction) listCloudAccount() error {
 			Account:  &cloudAccounts[i],
 			Clusters: clusterIDs,
 		}
+		accountList = append(accountList, cloudAccounts[i].AccountID)
 		la.cloudAccountList = append(la.cloudAccountList, cloudAccountInfo)
 	}
+
+	// get accountList perm
+	la.getAccountListPerm(accountList)
+
 	return nil
+}
+
+func (la *ListAction) getAccountListPerm(accountList []string) {
+	if len(accountList) == 0 {
+		return
+	}
+
+	if la.req.ProjectID != "" && la.req.Operator != "" {
+		v3Perm, err := GetProjectAccountsV3Perm(la.iam, actions.PermInfo{
+			ProjectID: la.req.ProjectID,
+			UserID:    la.req.Operator,
+		}, accountList)
+		if err != nil {
+			blog.Errorf("listCluster GetProjectAccountsV3Perm failed: %v", err.Error())
+		}
+		la.resp.WebAnnotations = &cmproto.WebAnnotations{
+			Perms: v3Perm,
+		}
+	}
+
+	return
 }
 
 func (la *ListAction) setResp(code uint32, msg string) {
@@ -133,4 +165,100 @@ func shieldReturnCloudKey(key string) string {
 	}
 
 	return string(resultKeys)
+}
+
+// ListPermDataAction action for list permData account
+type ListPermDataAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+
+	req              *cmproto.ListCloudAccountPermRequest
+	resp             *cmproto.ListCloudAccountPermResponse
+	cloudAccountList []*cmproto.CloudAccount
+}
+
+// NewListPermAction create list action for project account list
+func NewListPermAction(model store.ClusterManagerModel) *ListPermDataAction {
+	return &ListPermDataAction{
+		model: model,
+	}
+}
+
+func (la *ListPermDataAction) listCloudAccount() error {
+	condEqual := make(operator.M)
+	//! we don't setting bson tag in proto file
+	//! all fields are in lowcase
+	if len(la.req.ProjectID) != 0 {
+		condEqual["projectid"] = la.req.ProjectID
+	}
+	if len(la.req.AccountName) != 0 {
+		condEqual["accountname"] = la.req.AccountName
+	}
+	condE := operator.NewLeafCondition(operator.Eq, condEqual)
+
+	condIN := make(operator.M)
+	if len(la.req.AccountID) > 0 {
+		condIN["accountid"] = la.req.AccountID
+	}
+	condI := operator.NewLeafCondition(operator.In, condIN)
+
+	cond := operator.NewBranchCondition(operator.And, condE, condI)
+	cloudAccounts, err := la.model.ListCloudAccount(la.ctx, cond, &storeopt.ListOption{})
+	if err != nil {
+		return err
+	}
+
+	// get cloud AccountInfo and relative cluster
+	for i := range cloudAccounts {
+		if !cloudAccounts[i].Enable {
+			continue
+		}
+		cloudAccounts[i].Account.SecretKey = ""
+		cloudAccounts[i].Account.SecretID = ""
+		la.cloudAccountList = append(la.cloudAccountList, &cloudAccounts[i])
+	}
+	return nil
+}
+
+func (la *ListPermDataAction) setResp(code uint32, msg string) {
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.cloudAccountList
+}
+
+func (la *ListPermDataAction) validate() error {
+	err := la.req.Validate()
+	if err != nil {
+		return err
+	}
+
+	if la.req.ProjectID == "" && len(la.req.AccountID) == 0 || len(la.req.AccountName) == 0 {
+		return fmt.Errorf("ListPermDataAction query parameter is empty")
+	}
+
+	return nil
+}
+
+// Handle handle list cluster account list
+func (la *ListPermDataAction) Handle(
+	ctx context.Context, req *cmproto.ListCloudAccountPermRequest, resp *cmproto.ListCloudAccountPermResponse) {
+	if req == nil || resp == nil {
+		blog.Errorf("list cloudAccount permData failed, req or resp is empty")
+		return
+	}
+	la.ctx = ctx
+	la.req = req
+	la.resp = resp
+
+	if err := la.validate(); err != nil {
+		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	if err := la.listCloudAccount(); err != nil {
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
 }

@@ -32,16 +32,16 @@ const (
 func NewRegistry() registry.Registry {
 	etcdEndpoints := "http://127.0.0.1:2379"
 
-	registry := etcd.NewRegistry(
+	etcdRegistry := etcd.NewRegistry(
 		registry.Addrs(etcdEndpoints),
 		registry.Secure(false),
 	)
-	registry.Init()
+	etcdRegistry.Init()
 
-	return registry
+	return etcdRegistry
 }
 
-func TestServiceDiscovery_GetRandomServiceInstance(t *testing.T) {
+func Test_GetRandomServiceInstance(t *testing.T) {
 	r := NewRegistry()
 
 	sd := NewServiceDiscovery(serviceDomain, r)

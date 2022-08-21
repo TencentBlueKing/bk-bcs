@@ -69,7 +69,7 @@ func (cm *ClusterManager) DeleteCloudAccount(ctx context.Context,
 	return nil
 }
 
-// ListCloudVPC implements interface cmproto.ClusterManagerServer
+// ListCloudAccount implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCloudAccount(ctx context.Context,
 	req *cmproto.ListCloudAccountRequest, resp *cmproto.ListCloudAccountResponse) error {
 	reqID, err := requestIDFromContext(ctx)
@@ -77,11 +77,28 @@ func (cm *ClusterManager) ListCloudAccount(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := account.NewListAction(cm.model)
+	ca := account.NewListAction(cm.model, cm.iam)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudAccount", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListCloudAccount, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudAccount, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListCloudAccountToPerm implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudAccountToPerm(ctx context.Context,
+	req *cmproto.ListCloudAccountPermRequest, resp *cmproto.ListCloudAccountPermResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := account.NewListPermAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudAccountToPerm", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudAccountToPerm, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudAccountToPerm, req %v, resp %v", reqID, req, resp)
 	return nil
 }
