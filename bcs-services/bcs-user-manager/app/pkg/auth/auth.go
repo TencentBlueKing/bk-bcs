@@ -49,7 +49,7 @@ func SetAuthClient(options Options) error {
 	return nil
 }
 
-// GetSSMClient get perm client
+// GetAuthClient get auth client
 func GetAuthClient() Auth {
 	return authClient
 }

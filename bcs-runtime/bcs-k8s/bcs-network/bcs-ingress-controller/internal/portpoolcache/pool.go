@@ -89,7 +89,7 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 				item.SetItemsStatus(itemStatus)
 				return nil
 			}
-			if item.ItemStatus.Status != itemStatus.Status {
+			if item.ItemStatus.Status != itemStatus.Status || item.ItemStatus.External != itemStatus.External {
 				item.SetItemsStatus(itemStatus)
 				return nil
 			}

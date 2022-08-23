@@ -105,6 +105,7 @@ type AutoscalerResponse struct {
 	ScaleDowns []*ScaleDownPolicy `json:"scaleDowns"`
 }
 
+// String returns the string of response
 func (res AutoscalerResponse) String() string {
 	str := "\nScaleUps: \n"
 	for _, up := range res.ScaleUps {

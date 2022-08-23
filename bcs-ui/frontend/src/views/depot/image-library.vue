@@ -128,7 +128,7 @@ export default {
     this.getFirstPage();
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -171,7 +171,7 @@ export default {
              *
              * @param {Object} e 事件对象
              */
-    enterHandler(e) {
+    enterHandler() {
       this.getFirstPage();
     },
 
@@ -232,7 +232,7 @@ export default {
              *
              * @param {Object} e 对象
              */
-    handleClick(e) {
+    handleClick() {
       this.getFirstPage();
     },
   },

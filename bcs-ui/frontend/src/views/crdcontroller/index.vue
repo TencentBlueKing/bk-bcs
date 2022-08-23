@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -448,6 +450,7 @@ export default {
         this.valueSlider.title = `${this.$t('启用组件：')}${crdcontroller.name}`;
         this.editorOptions.content = crdcontroller.default_values;
         this.editorOptions.originContent = crdcontroller.default_values;
+        // eslint-disable-next-line no-plusplus
         this.renderEditorKey++;
         this.valueSlider.isShow = true;
       } else {
@@ -655,15 +658,17 @@ export default {
              * @param  {object} crdcontroller crdcontroller
              * @param  {number} index 索引
              */
-    getCrdcontrollerStatus(crdcontroller, index) {
+    getCrdcontrollerStatus(crdcontroller) {
       if (crdcontroller.id === undefined) {
         return false;
       }
       const crdcontrollerId = crdcontroller.id;
       const clusterId = crdcontroller.cluster_id || this.searchScope;
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
 
       clearInterval(this.statusTimer[crdcontroller.id]);
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       this.statusTimer[crdcontroller.id] = setInterval(async () => {
         try {
           const data = await this.$store.dispatch('crdcontroller/clusterToolsInstalledDetail', {
@@ -694,7 +699,7 @@ export default {
         subTitle: crdcontroller.name,
         title: this.$t('确定卸载'),
         defaultInfo: true,
-        confirmFn: async (vm) => {
+        confirmFn: async () => {
           const result = await this.$store.dispatch('crdcontroller/clusterToolsUninstall', {
             $clusterId: clusterId,
             $toolId: crdcontrollerId,

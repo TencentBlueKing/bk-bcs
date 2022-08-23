@@ -5,6 +5,7 @@ import State from '../k8s-state';
 import mixinBaseList from '../mixins/mixin-base-list';
 
 export default {
+  name: 'K8SDaemonset',
   mixins: [mixinBaseList],
   data() {
     return {

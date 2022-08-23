@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -163,6 +164,13 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import secretParams from '@/json/k8s-secret.json';
 import ace from '@/components/ace-editor';
 import header from './header.vue';
@@ -173,6 +181,7 @@ import mixinBase from '@/mixins/configuration/mixin-base';
 import k8sBase from '@/mixins/configuration/k8s-base';
 
 export default {
+  name: 'K8SSecret',
   components: {
     'biz-header': header,
     'biz-tabs': tabs,

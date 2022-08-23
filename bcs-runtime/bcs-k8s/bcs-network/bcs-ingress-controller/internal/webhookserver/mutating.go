@@ -364,6 +364,7 @@ func (s *Server) generatePortsAnnotationPatch(pod *k8scorev1.Pod,
 				EndPort:               item.EndPort,
 				RsStartPort:           portEntry.port,
 				HostPort:              portEntry.hostPort,
+				External:              portPoolItemStatusList[index].External,
 			}
 			generatedPortList = append(generatedPortList, tmpPort)
 		}

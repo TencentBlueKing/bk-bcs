@@ -130,7 +130,7 @@ func NewBufferedAutoscaler(
 	var webhook Webhook
 	switch opts.WebhookMode {
 	case WebMode:
-		webhook = NewWebScaler(opts.WebhookModeConfig)
+		webhook = NewWebScaler(opts.WebhookModeConfig, opts.WebhookModeToken)
 	case ConfigMapMode:
 		webhook = NewConfigMapScaler(client, opts.WebhookModeConfig)
 	default:
@@ -297,12 +297,30 @@ func (b *BufferedAutoscaler) preRun(currentTime time.Time) ([]*corev1.Node, []*c
 		return nil, nil, nil
 	}
 
+	coresTotal, memoryTotal := calculateScaleDownCoresMemoryTotal(allNodes, currentTime)
+	metrics.UpdateClusterCPUCurrentCores(coresTotal)
+	metrics.UpdateClusterMemoryCurrentBytes(memoryTotal)
+
 	// Call CloudProvider.Refresh before any other calls to cloud provider.
+	refreshStart := time.Now()
 	err := b.AutoscalingContext.CloudProvider.Refresh()
+	metrics.UpdateDurationFromStart(metrics.CloudProviderRefresh, refreshStart)
 	if err != nil {
 		klog.Errorf("Failed to refresh cloud provider config: %v", err)
 		return nil, nil, errors.ToAutoscalerError(errors.CloudProviderError, err)
 	}
+
+	// Update node groups min/max/current after cloud provider refresh
+	for _, nodeGroup := range b.AutoscalingContext.CloudProvider.NodeGroups() {
+		metrics.UpdateNodeGroupMin(nodeGroup.Id(), nodeGroup.MinSize())
+		metrics.UpdateNodeGroupMax(nodeGroup.Id(), nodeGroup.MaxSize())
+		if cur, err := nodeGroup.TargetSize(); err == nil {
+			metrics.UpdateNodeGroupCurrent(nodeGroup.Id(), cur)
+		}
+	}
+	// reset unremovable node metrics
+	metrics.ResetUnremovableNodes()
+
 	return allNodes, readyNodes, nil
 }
 
@@ -707,6 +725,12 @@ func (b *BufferedAutoscaler) updateClusterState(allNodes []*corev1.Node,
 		return errors.ToAutoscalerError(errors.CloudProviderError, err)
 	}
 	UpdateClusterStateMetrics(b.clusterStateRegistry)
+
+	// Update node groups upcoming after cluster registry refresh
+	upcoming := b.clusterStateRegistry.GetUpcomingNodes()
+	for _, nodeGroup := range b.AutoscalingContext.CloudProvider.NodeGroups() {
+		metrics.UpdateNodeGroupUpcoming(nodeGroup.Id(), upcoming[nodeGroup.Id()])
+	}
 
 	return nil
 }

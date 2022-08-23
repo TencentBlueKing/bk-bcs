@@ -113,7 +113,7 @@ type ListRegionAction struct {
 
 // RegionData for regionInfo
 type RegionData struct {
-	Region string
+	Region     string
 	RegionName string
 }
 
@@ -145,9 +145,9 @@ func (la *ListRegionAction) listCloudRegions() error {
 
 	for _, data := range regions {
 		la.regions = append(la.regions, &cmproto.CloudRegion{
-			CloudID:              la.req.CloudID,
-			RegionName:           data.RegionName,
-			Region:               data.Region,
+			CloudID:    la.req.CloudID,
+			RegionName: data.RegionName,
+			Region:     data.Region,
 		})
 	}
 

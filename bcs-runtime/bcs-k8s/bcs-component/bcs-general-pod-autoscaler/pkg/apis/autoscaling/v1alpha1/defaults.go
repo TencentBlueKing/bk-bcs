@@ -27,7 +27,7 @@ func SetDefaults_GeneralPodAutoscaler(obj *GeneralPodAutoscaler) {
 		obj.Spec.Behavior = new(GeneralPodAutoscalerBehavior)
 	}
 
-	// set defautls for scale down behavior
+	// set defaults for scale down behavior
 	if obj.Spec.Behavior.ScaleDown == nil {
 		obj.Spec.Behavior.ScaleDown = new(GPAScalingRules)
 	}
@@ -49,7 +49,7 @@ func SetDefaults_GeneralPodAutoscaler(obj *GeneralPodAutoscaler) {
 			})
 	}
 
-	// set defautls for scale up behavior
+	// set defaults for scale up behavior
 	if obj.Spec.Behavior.ScaleUp == nil {
 		obj.Spec.Behavior.ScaleUp = new(GPAScalingRules)
 	}

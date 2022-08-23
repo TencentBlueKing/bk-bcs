@@ -36,7 +36,7 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 	}
 
 	// step login started here
-	// TODO ensure auto scaler with helm api
+	// will do ensure auto scaler with helm api
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -60,7 +60,7 @@ func DeleteAutoScalerTask(taskID string, stepName string) error {
 	}
 
 	// step login started here
-	// TODO delete auto scaler with helm api
+	// will to delete auto scaler with helm api
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

@@ -38,7 +38,9 @@
             </bk-selector>
           </div>
           <div class="left">
-            <bk-input v-model="searchKey" style="width: 240px;" clearable :placeholder="$t('输入名称搜索')" @clear="clearSearch" />
+            <bk-input
+              v-model="searchKey"
+              style="width: 240px;" clearable :placeholder="$t('输入名称搜索')" @clear="clearSearch" />
           </div>
           <div class="left">
             <bk-button type="primary" :title="$t('查询')" icon="search" @click="handleClick">
@@ -59,7 +61,8 @@
               @selection-change="handleSelectionChange">
               <bk-table-column type="selection" width="60"></bk-table-column>
               <bk-table-column
-                v-for="(column, index) in columnList" :label="(defaultColumnMap[column] && defaultColumnMap[column].label) || column"
+                v-for="(column, index) in columnList"
+                :label="(defaultColumnMap[column] && defaultColumnMap[column].label) || column"
                 :min-width="defaultColumnMap[column] ? defaultColumnMap[column].minWidth : 'auto'"
                 :key="index">
                 <template slot-scope="{ row }">
@@ -161,6 +164,7 @@ import GamestatefulsetUpdate from './gamestatefulset-update';
 import GamestatefulsetScale from './gamestatefulset-scale';
 
 export default {
+  name: 'GamestatefulSet',
   components: {
     GamestatefulsetSideslider,
     GamestatefulsetUpdate,
@@ -257,7 +261,7 @@ export default {
     });
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -301,7 +305,7 @@ export default {
              * @param {string} clusterId 集群 id
              * @param {Object} data 集群对象
              */
-    async handleChangeCluster(clusterId, data) {
+    async handleChangeCluster(clusterId) {
       this.selectedNamespaceName = '';
       this.selectedClusterId = clusterId;
       await this.getNameSpaceList();
@@ -313,7 +317,7 @@ export default {
              * @param {string} selectedNamespaceName 命名空间 name
              * @param {Object} data 命名空间对象
              */
-    handleChangeNamespace(selectedNamespaceName, data) {
+    handleChangeNamespace(selectedNamespaceName) {
       this.selectedNamespaceName = selectedNamespaceName;
     },
 
@@ -448,7 +452,7 @@ export default {
              *
              * @param {Object} e 时间对象
              */
-    async handleClick(e) {
+    async handleClick() {
       await this.fetchData();
     },
 
@@ -460,7 +464,7 @@ export default {
              *
              * @return {string} returnDesc
              */
-    update(item, index) {
+    update(item) {
       this.isShowUpdateDialog = true;
       this.updateItem = item;
     },
@@ -491,7 +495,8 @@ export default {
              *
              * @return {string} returnDesc
              */
-    async del(item, index) {
+    async del(item) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const boxStyle = {
         'margin-top': '-20px',
@@ -539,7 +544,7 @@ export default {
               },
             });
 
-            me.bkMessageInstance && me.bkMessageInstance.close();
+            me.bkMessageInstance?.close();
             me.bkMessageInstance = me.$bkMessage({
               theme: 'success',
               message: me.$t('删除成功'),
@@ -583,7 +588,7 @@ export default {
              *
              * @return {string} returnDesc
              */
-    scale(item, index) {
+    scale(item) {
       this.isShowScale = true;
       this.scaleItem = item;
     },
@@ -620,7 +625,8 @@ export default {
       // 用于区分是否已经选择过
       const hasCheckedList = checkedNodeList.map(item => item.name + item.namespace + item.cluster_id);
       if (isChecked) {
-        const checkedList = this.curPageData.filter(item => !hasCheckedList.includes(item.name + item.namespace + item.cluster_id));
+        const checkedList = this.curPageData
+          .filter(item => !hasCheckedList.includes(item.name + item.namespace + item.cluster_id));
         checkedNodeList.push(...checkedList);
         this.checkedNodeList.splice(0, this.checkedNodeList.length, ...checkedNodeList);
       } else {
@@ -651,12 +657,15 @@ export default {
         const checkedNodeList = [];
         if (row.isChecked) {
           checkedNodeList.splice(0, checkedNodeList.length, ...this.checkedNodeList);
-          if (!this.checkedNodeList.filter(checkedNode => checkedNode.name + checkedNode.namespace + checkedNode.cluster_id === row.name + row.namespace + row.cluster_id).length) {
+          if (!this.checkedNodeList
+            .filter(checkedNode => checkedNode.name + checkedNode.namespace + checkedNode.cluster_id
+          === row.name + row.namespace + row.cluster_id).length) {
             checkedNodeList.push(row);
           }
         } else {
           this.checkedNodeList.forEach((checkedNode) => {
-            if (checkedNode.name + checkedNode.namespace + checkedNode.cluster_id !== row.name + row.namespace + row.cluster_id) {
+            if (checkedNode.name + checkedNode.namespace + checkedNode.cluster_id
+            !== row.name + row.namespace + row.cluster_id) {
               checkedNodeList.push(JSON.parse(JSON.stringify(checkedNode)));
             }
           });
@@ -670,7 +679,7 @@ export default {
              */
     batchDel() {
       if (!this.checkedNodeList.length) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('还未选择GameStatefulSets'),
@@ -685,7 +694,7 @@ export default {
         repeat[item.namespace] = 1;
       }
       if (Object.keys(repeat).length > 1) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('批量删除功能只支持选中单个命名空间'),
@@ -733,7 +742,7 @@ export default {
         });
 
         this.hideBatchDelDialog();
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'success',
           message: this.$t('删除成功'),

@@ -15,7 +15,10 @@
       </app-exception>
       <div v-else class="biz-cluster-create-wrapper">
         <div class="biz-cluster-create-form-wrapper">
-          <div class="form-item" :class="isEn ? 'en' : ''" v-if="isK8sProject || isTkeProject" @mouseenter="tipsActive = 'engine'" @mouseleave="tipsActive = ''">
+          <div
+            class="form-item"
+            :class="isEn ? 'en' : ''"
+            v-if="isK8sProject || isTkeProject" @mouseenter="tipsActive = 'engine'" @mouseleave="tipsActive = ''">
             <label :class="isK8sProject || isTkeProject ? 'long' : ''">{{$t('调度引擎')}}</label>
             <div class="form-item-inner bk-button-group" style="line-height: 30px;">
               <bk-button
@@ -45,7 +48,10 @@
             </div>
           </div>
 
-          <div class="form-item bk-form-item" :class="isEn ? 'en' : ''" v-if="isK8sProject || isTkeProject" @mouseenter="tipsActive = 'version'" @mouseleave="tipsActive = ''">
+          <div
+            class="form-item bk-form-item"
+            :class="isEn ? 'en' : ''"
+            v-if="isK8sProject || isTkeProject" @mouseenter="tipsActive = 'version'" @mouseleave="tipsActive = ''">
             <label :class="isK8sProject || isTkeProject ? 'long' : ''">
               {{$t('版本')}}
             </label>
@@ -89,7 +95,9 @@
 
           <template v-if="isTkeProject">
 
-            <div class="form-item bk-form-item" :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'networdType'" @mouseleave="tipsActive = ''">
+            <div
+              class="form-item bk-form-item"
+              :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'networdType'" @mouseleave="tipsActive = ''">
               <label class="long">{{$t('网络类型')}}</label>
               <div class="form-item-inner bk-button-group">
                 <bk-button
@@ -104,7 +112,9 @@
             </div>
           </template>
 
-          <div class="form-item bk-form-item" :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'area'" @mouseleave="tipsActive = ''">
+          <div
+            class="form-item bk-form-item"
+            :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'area'" @mouseleave="tipsActive = ''">
             <label :class="isK8sProject || isTkeProject ? 'long' : ''">{{$t('所属地域')}}</label>
             <div class="form-item-inner dropdown">
               <bk-selector
@@ -123,7 +133,9 @@
 
           <template v-if="isTkeProject">
 
-            <div class="form-item bk-form-item" :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'VPC'" @mouseleave="tipsActive = ''">
+            <div
+              class="form-item bk-form-item"
+              :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'VPC'" @mouseleave="tipsActive = ''">
               <label class="long">{{$t('所属VPC')}}</label>
               <div class="form-item-inner dropdown">
                 <bk-selector
@@ -140,7 +152,9 @@
               </div>
             </div>
 
-            <div class="form-item bk-form-item" :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'netword'" @mouseleave="tipsActive = ''">
+            <div
+              class="form-item bk-form-item"
+              :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'netword'" @mouseleave="tipsActive = ''">
               <label class="long">{{$t('容器网络')}}</label>
               <div class="form-item-inner">
                 <div class="netword-area">
@@ -197,7 +211,9 @@
                     </div>
                   </div>
                   <p class="computed-rules">{{$t('计算规则: (IP数量-Service的数量)/(Master数量+Node数量)')}}</p>
-                  <i18n v-if="isShowTips" path="当前容器网络配置下，集群最多 {count} 个节点(包含Master和Node)" class="computed-rules" tag="p">
+                  <i18n
+                    v-if="isShowTips"
+                    path="当前容器网络配置下，集群最多 {count} 个节点(包含Master和Node)" class="computed-rules" tag="p">
                     <strong place="count" style="color: #222222;">{{ maxClusterCount }}</strong>
                   </i18n>
                 </div>
@@ -205,7 +221,9 @@
             </div>
           </template>
 
-          <div class="form-item" :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'master'" @mouseleave="tipsActive = ''">
+          <div
+            class="form-item"
+            :class="isEn ? 'en' : ''" @mouseenter="tipsActive = 'master'" @mouseleave="tipsActive = ''">
             <label :class="isK8sProject || isTkeProject ? 'long' : ''">{{$t('选择Master')}}</label>
             <div class="form-item-inner">
               <p style="font-size: 12px; padding-bottom: 6px;" v-if="disabledSelectMaster">{{$t('请先选择所属地域和所属VPC')}}</p>
@@ -214,7 +232,8 @@
                   class="server-select-button"
                   type="default"
                   :disabled="disabledSelectMaster"
-                  :class="[validate.host.illegal ? 'is-danger' : '', 'server-select-button', { disabled: disabledSelectMaster }]"
+                  :class="[validate.host.illegal ? 'is-danger' : '', 'server-select-button',
+                           { disabled: disabledSelectMaster }]"
                   @click="openDialog">
                   <i class="bcs-icon bcs-icon-plus"></i>
                   {{$t('选择服务器')}}
@@ -258,7 +277,10 @@
                     <td>{{host.idc_unit_name}}</td>
                     <td>{{host.svr_device_class}}</td>
                     <!-- <td>{{host.server_rack}}</td> -->
-                    <td style="padding-right: 20px;"><a href="javascript:void(0)" class="bk-text-button" @click="removeHost(host, index)">{{$t('移除')}}</a></td>
+                    <td style="padding-right: 20px;">
+                      <a
+                        href="javascript:void(0)"
+                        class="bk-text-button" @click="removeHost(host, index)">{{$t('移除')}}</a></td>
                   </tr>
                 </tbody>
               </table>
@@ -338,7 +360,9 @@
               <ul class="tips-list">
                 <li>{{$t('IP数量')}}：{{$t('集群内Pod、Service等资源所需要的网段的大小。')}}</li>
                 <li>{{$t('Service数量上限/集群')}}：{{$t('集群内需要service的数量。')}}</li>
-                <li>{{$t('Pod数量上限/节点')}}：{{$t('每个节点上pod数量上限；由于Master也占用IP资源，')}} {{$t('计算规则: (IP数量-Service的数量)/(Master数量+Node数量)')}}</li>
+                <li>
+                  {{$t('Pod数量上限/节点')}}：{{$t('每个节点上pod数量上限；由于Master也占用IP资源，')}}
+                  {{$t('计算规则: (IP数量-Service的数量)/(Master数量+Node数量)')}}</li>
               </ul>
             </div>
           </div>
@@ -390,6 +414,7 @@ import ApplyHost from './apply-host.vue';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 
 export default {
+  name: 'CreateCluster',
   components: {
     tipDialog,
     ApplyHost,
@@ -797,7 +822,7 @@ export default {
         const res = await this.$store.dispatch('cluster/getK8SConf', { projectId: this.projectId });
         const versionList = [];
         const version = res.data || [];
-        version.forEach((item, index) => {
+        version.forEach((item) => {
           if (item.version_id !== '1.8.3') {
             versionList.push({
               id: item.version_id,
@@ -852,7 +877,7 @@ export default {
 
         const versionList = [];
         const version = res.data.version_list || [];
-        version.forEach((item, index) => {
+        version.forEach((item) => {
           if (item.version_id === '1.18.4') {
             this.versionKey = item.version_id;
           }
@@ -909,7 +934,7 @@ export default {
     /**
              * 选择网络类型
              */
-    async changeNetwork(index, data) {
+    async changeNetwork() {
       this.vpcList.splice(0, this.vpcList.length, ...[]);
       await this.fetchVPC();
     },
@@ -1121,7 +1146,7 @@ export default {
         target = target.parentNode;
       }
       const checkboxNode = target.querySelector('input[type="checkbox"]');
-      checkboxNode && checkboxNode.click();
+      checkboxNode?.click();
     },
 
     /**
@@ -1130,7 +1155,7 @@ export default {
     chooseServer(hostList = []) {
       const len = hostList.length;
       if (!len) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('请选择服务器'),
@@ -1139,7 +1164,7 @@ export default {
       }
 
       if (len % 2 === 0) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('请选择奇数个服务器'),
@@ -1148,7 +1173,7 @@ export default {
       }
 
       if (this.isTkeProject && len < 3) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('最少选择三个服务器'),
@@ -1157,7 +1182,7 @@ export default {
       }
 
       if (len > 7) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('最多选择七个服务器'),
@@ -1166,7 +1191,7 @@ export default {
       }
 
       if (this.clusterType !== 'stag' && len < 3) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('正式环境最少选择三个服务器，最多选择七个服务器'),
@@ -1219,7 +1244,7 @@ export default {
       }
 
       if (msg) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: msg,
@@ -1235,7 +1260,8 @@ export default {
              * @param {Object} host 当前行的服务器
              */
     removeHost(host) {
-      const index = this.hostList.findIndex(item => item.bk_host_innerip === host.bk_host_innerip && item.bk_cloud_id === host.bk_cloud_id);
+      const index = this.hostList
+        .findIndex(item => item.bk_host_innerip === host.bk_host_innerip && item.bk_cloud_id === host.bk_cloud_id);
       if (index > -1) {
         this.hostList.splice(index, 1);
       }
@@ -1251,7 +1277,8 @@ export default {
 
       if (this.isTkeProject) {
         // (IP数量-Service的数量)/Pod数量上限每节点 - master数量 = x（向下取整）
-        this.calcNodeNum = Math.floor((this.ipNumberKey - this.serviceIpNumberKey) / this.podNumberPerNodeKey - this.hostList.length);
+        this.calcNodeNum = Math.floor((this.ipNumberKey - this.serviceIpNumberKey) / this.podNumberPerNodeKey
+        - this.hostList.length);
         this.clusterNoticeList.splice(0, this.clusterNoticeList.length, ...[
           {
             id: 1,

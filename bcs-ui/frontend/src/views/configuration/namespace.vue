@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -450,6 +452,7 @@
       :has-header="false"
       :quick-close="false"
       @cancel="delNamespaceDialogConf.isShow = false">
+      <!-- eslint-disable-next-line vue/no-useless-template-attributes-->
       <template slot="content" style="padding: 0 20px;">
         <div class="info">
           {{$t('您确定要删除Namespace: {name}吗？', { name: delNamespaceDialogConf.ns.name })}}
@@ -481,6 +484,7 @@
       :has-header="false"
       :quick-close="false"
       @cancel="delQuotaDialogConf.isShow = false">
+      <!-- eslint-disable-next-line vue/no-useless-template-attributes -->
       <template slot="content" style="padding: 0 20px;">
         <div class="info">
           {{$t('确定删除Namespace: {name}的配额？', { name: delQuotaDialogConf.ns.name })}}
@@ -503,6 +507,7 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
 import { catchErrorHandler } from '@/common/util';
 import { mapGetters } from 'vuex';
 export default {
@@ -849,6 +854,7 @@ export default {
     getDataByPage(page) {
       // 如果没有page，重置
       if (!page) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.curPage = page = 1;
       }
       let startIndex = (page - 1) * this.pageConf.pageSize;
@@ -1051,7 +1057,7 @@ export default {
              * @param {Object} ns 当前 namespace 对象
              * @param {number} index 当前 namespace 对象的索引
              */
-    async showEditNamespace(ns, index) {
+    async showEditNamespace(ns) {
       this.editNamespaceConf.isShow = true;
       // this.editNamespaceConf.loading = true
       this.editNamespaceConf.namespaceName = this.isSharedCluster ? this.filterNamespace(ns.name) : ns.name;
@@ -1186,7 +1192,7 @@ export default {
              * @param {Object} ns 当前 namespace 对象
              * @param {number} index 当前 namespace 对象的索引
              */
-    async showEditQuota(ns, index) {
+    async showEditQuota(ns) {
       this.showQuotaData = ns;
       this.editQuotaConf.isShow = true;
       this.editQuotaConf.loading = true;
@@ -1280,7 +1286,7 @@ export default {
              * @param {Object} ns 当前 namespace 对象
              * @param {number} index 当前 namespace 对象的索引
              */
-    async showDelQuota(ns, index) {
+    async showDelQuota() {
       this.delQuotaDialogConf.isShow = true;
       this.delQuotaDialogConf.ns = Object.assign({}, this.showQuotaData);
     },
@@ -1332,7 +1338,7 @@ export default {
              * @param {Object} ns 当前 namespace 对象
              * @param {number} index 当前 namespace 对象的索引
              */
-    async showDelNamespace(ns, index) {
+    async showDelNamespace(ns) {
       this.delNamespaceDialogConf.isShow = true;
       this.delNamespaceDialogConf.ns = Object.assign({}, ns);
     },

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/pkg/errors"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -101,6 +102,11 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 			}
 			pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, itemStatus)
 		}
+	}
+
+	// if portItem.external changed, update related portBinding
+	if err := pph.ensurePortBinding(pool); err != nil {
+		return true, errors.Wrapf(err, "pool[%s/%s] ensurePortBinding failed", pool.GetNamespace(), pool.GetName())
 	}
 
 	shouldRetry := false
@@ -237,4 +243,46 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 	}
 
 	return true, nil
+}
+
+// if poolItem.external changed, update related portBinding
+func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool) error {
+	for _, poolItem := range pool.Spec.PoolItems {
+		portBindingList := &networkextensionv1.PortBindingList{}
+		labelKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, pool.GetName(), pool.GetNamespace())
+		if err := pph.k8sClient.List(context.Background(), portBindingList,
+			client.MatchingLabels{labelKey: poolItem.ItemName}); err != nil {
+			return errors.Wrapf(err, "list portBinding with label['%s'='%s'] failed", labelKey, poolItem.ItemName)
+		}
+
+		for _, portBinding := range portBindingList.Items {
+			changed := false
+			cpPortBinding := portBinding.DeepCopy()
+			for idx, portBindingItem := range cpPortBinding.Spec.PortBindingList {
+				// check if same item
+				if portBindingItem.GetKey() != poolItem.GetKey() ||
+					portBindingItem.PoolName != pool.Name ||
+					portBindingItem.PoolNamespace != pool.Namespace {
+					continue
+				}
+				// check if external changed
+				if portBindingItem.External != poolItem.External {
+					cpPortBinding.Spec.PortBindingList[idx].External = poolItem.External
+					changed = true
+				}
+			}
+
+			if changed {
+				blog.Infof("pool[%s/%s].poolItem[%s] changed, update related portBinding", pool.GetNamespace(),
+					pool.GetName(), poolItem.ItemName)
+				if err := pph.k8sClient.Update(context.Background(), cpPortBinding,
+					&client.UpdateOptions{}); err != nil {
+					return errors.Wrapf(err, "update portBinding[%s/%s] failed", cpPortBinding.GetNamespace(),
+						cpPortBinding.GetName())
+				}
+			}
+		}
+	}
+
+	return nil
 }

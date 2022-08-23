@@ -352,7 +352,7 @@ func (cc *ClientConfig) transClusterToClusterSnap(cls *proto.Cluster) *CreateClu
 
 func (cc *ClientConfig) transCMClusterToCC(cluster *proto.Cluster) *ClusterParamsRequest {
 	var (
-		areaID int = 1
+		areaID = 1
 	)
 
 	if strings.Contains(cc.server, "prod") {

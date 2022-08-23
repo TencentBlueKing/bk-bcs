@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/no-useless-template-attributes -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -464,7 +466,7 @@ export default {
         });
       }
     },
-    tabActiveName(val) {
+    tabActiveName() {
       this.setTplList();
     },
     'delInstanceDialogConf.versionIds'() {
@@ -528,7 +530,7 @@ export default {
 
         setTimeout(() => {
           this.clipboardInstance = new Clipboard('.copy-btn');
-          this.clipboardInstance.on('success', (e) => {
+          this.clipboardInstance.on('success', () => {
             this.$bkMessage({
               limit: 1,
               theme: 'success',
@@ -673,6 +675,7 @@ export default {
 
         // 如果没有release，可删除
         if (!res.data.length) {
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
           const me = this;
           me.$bkInfo({
             title: this.$t('确认删除'),
@@ -721,6 +724,7 @@ export default {
              * @param {Object} template 当前模板集对象
              */
     async deleteTemplateVersion() {
+      // eslint-disable-next-line max-len
       const versions = this.delInstanceDialogConf.versions.filter(item => this.delInstanceDialogConf.versionIds.includes(item.id));
       this.isVersionDeleting = true;
       try {
@@ -796,6 +800,7 @@ export default {
     },
 
     async getReleaseByVersion() {
+      // eslint-disable-next-line max-len
       const versions = this.delInstanceDialogConf.versions.filter(item => this.delInstanceDialogConf.versionIds.includes(item.id));
       this.isReleaseLoading = true;
       try {
@@ -827,6 +832,7 @@ export default {
              * 删除命名空间弹层确认
              */
     async confirmDelVersion() {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       if (!this.delInstanceDialogConf.versionIds.length) {
         this.$bkMessage({
@@ -835,6 +841,7 @@ export default {
         });
         return;
       }
+      // eslint-disable-next-line max-len
       const versions = this.delInstanceDialogConf.versions.filter(item => this.delInstanceDialogConf.versionIds.includes(item.id));
       this.$bkInfo({
         title: this.$t('确认删除以下版本'),
@@ -859,6 +866,7 @@ export default {
           isPublic,
         });
         const data = res.data || {};
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
         const urls = (data.data || {}).urls || [];
         url = urls[0] || '';
       } catch (e) {

@@ -588,6 +588,7 @@ export default {
         keyWord = val.substring(startIndex, endIndex);
       } else if (this.searchReg.exec(val)) {
         const match = this.searchReg.exec(val);
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
         if (match && match[1]) {
           keyWord = match[1];
         }
@@ -614,6 +615,7 @@ export default {
       }, 200);
     },
     clearDefaultList() {
+      // eslint-disable-next-line vue/no-mutating-props
       this.defaultList = [];
       this.isListPanelShow = false;
     },

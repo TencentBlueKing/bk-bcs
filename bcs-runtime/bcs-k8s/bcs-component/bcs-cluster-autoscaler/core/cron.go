@@ -158,7 +158,7 @@ func getFinalMatchAndMisMatch(schedule string, currentTime time.Time, zone strin
 		match = t
 		break
 	}
-	if currentTime.Sub(misMatch).Minutes() <= 1 {
+	if currentTime.Sub(misMatch).Minutes() < 1 {
 		return &misMatch, &match, nil
 	}
 

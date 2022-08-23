@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -453,6 +455,7 @@ export default {
           projectId: this.projectId,
         });
         this.chartVersionList = res.data || [];
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
         this.curLoadBalanceChartId = (this.chartVersionList[0] || {}).id || '';
       } catch (e) {
         catchErrorHandler(e, this);
@@ -464,7 +467,7 @@ export default {
              * @param  {object} loadBalance loadBalance
              * @param  {number} index 索引
              */
-    async editLoadBalance(loadBalance, index) {
+    async editLoadBalance(loadBalance) {
       const { projectId } = this;
       const projectKind = this.curProject.kind;
       const loadBalanceId = loadBalance.id;
@@ -515,7 +518,7 @@ export default {
           });
           this.chartVersionList = res.data || [];
 
-          this.curLoadBalanceChartId = (this.chartVersionList[0] || {}).id || '';
+          this.curLoadBalanceChartId = this.chartVersionList[0]?.id || '';
         } catch (e) {
           catchErrorHandler(e, this);
         }
@@ -568,7 +571,8 @@ export default {
              * @param  {object} loadBalance loadBalance
              * @param  {number} index 索引
              */
-    async removeLoadBalance(loadBalance, index) {
+    async removeLoadBalance(loadBalance) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       const { projectId } = this;
       const projectKind = this.curProject.kind;
@@ -662,6 +666,7 @@ export default {
     getDataByPage(page) {
       // 如果没有page，重置
       if (!page) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.current = page = 1;
       }
       let startIndex = (page - 1) * this.pageConf.current;
@@ -899,12 +904,14 @@ export default {
         item.node_list = [];
         item.unsharedNum = 0;
 
+        // eslint-disable-next-line no-restricted-syntax
         for (const key in ipInfo) {
           item.node_list.push({
             id: key,
             unshared: ipInfo[key],
           });
           if (ipInfo[key]) {
+            // eslint-disable-next-line no-plusplus
             item.unsharedNum++;
           }
         }
@@ -1049,7 +1056,7 @@ export default {
       this.aceEditor = editor;
     },
 
-    yamlEditorInput(val) {
+    yamlEditorInput() {
     },
     yamlEditorBlur(val) {
       this.curLoadBalance.values = val;

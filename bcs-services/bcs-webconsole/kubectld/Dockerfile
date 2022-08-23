@@ -1,4 +1,4 @@
-FROM alpine:3.15
+FROM alpine:3.16
 
 ARG KUBECTL_VERSION=v1.22.0
 ARG HELM_VERSION=v3.6.1
@@ -29,9 +29,16 @@ RUN wget -q https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz  && \
     rm -rf helm-${HELM_VERSION}-linux-amd64.tar.gz linux-amd64 && \
     helm version
 
+# 添加 k9s 命令行
+RUN cd /tmp && wget -q https://github.com/derailed/k9s/releases/download/v0.26.3/k9s_Linux_x86_64.tar.gz && \
+    tar -xf k9s_Linux_x86_64.tar.gz && \
+    mv k9s /usr/local/bin && \
+    k9s version
+
 # 清理缓存和不符合安全规范的命令
 RUN apk del wget && \
     rm -rf /var/cache/apk/* && \
+    rm -rf /tmp/* && \
     rm -rf /sbin/apk /usr/bin/wget
 
 # 初始化 bash 配置

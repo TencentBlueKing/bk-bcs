@@ -1,7 +1,18 @@
 <template>
   <div class="biz-content">
     <BaseLayout title="Pods" kind="Pod" category="pods" type="workloads">
-      <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
+      <template
+        #default="{
+          curPageData,
+          pageConf,
+          handlePageChange,
+          handlePageSizeChange,
+          handleGetExtData,
+          gotoDetail,
+          handleSortChange,
+          handleUpdateResource,
+          handleDeleteResource
+        }">
         <bk-table
           :data="curPageData"
           :pagination="pageConf"
@@ -91,6 +102,7 @@ import BcsLog from '@/components/bcs-log/index';
 import useLog from './detail/use-log';
 
 export default defineComponent({
+  name: 'WorkloadPods',
   components: { BaseLayout, StatusIcon, BcsLog },
   setup(props, ctx) {
     const { $route, $store } = ctx.root;

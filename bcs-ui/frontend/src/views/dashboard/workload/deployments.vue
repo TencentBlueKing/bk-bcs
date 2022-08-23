@@ -41,7 +41,7 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('状态')" min-width="60">
+        <bk-table-column :label="$t('状态')" min-width="100">
           <template slot-scope="{ row }">
             <StatusIcon status="running" v-if="handleGetExtData(row.metadata.uid, 'status') === 'normal'">
               {{statusMap[handleGetExtData(row.metadata.uid, 'status')] || '--'}}

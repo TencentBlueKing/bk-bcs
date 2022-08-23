@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -1669,6 +1670,12 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
 import bkKeyer from '@/components/keyer';
 import bkModuleKeyer from '@/components/module-keyer';
 import ace from '@/components/ace-editor';
@@ -1683,6 +1690,7 @@ import containerParams from '@/json/k8s-container.json';
 import { clearObjValue } from '@/common/util';
 
 export default {
+  name: 'K8SDeployment',
   components: {
     ace,
     'bk-keyer': bkKeyer,
@@ -2326,6 +2334,7 @@ export default {
     this.initVloumeSelectets();
     // this.initMetricList()
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Validator } = require('jsonschema');
     this.appJsonValidator = new Validator();
   },
@@ -2607,6 +2616,7 @@ export default {
 
       // 调度约束
       const { nodeSelector } = jsonObj.spec.template.spec;
+      // eslint-disable-next-line no-param-reassign, no-multi-assign
       const nodeSelectorList = jsonObj.webCache.nodeSelectorList = [];
       for (const [key, value] of Object.entries(nodeSelector)) {
         nodeSelectorList.push({

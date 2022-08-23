@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -551,7 +552,8 @@ export default {
              * @param  {object} crdInstance crdInstance
              * @param  {number} index 索引
              */
-    async removeCrdInstance(crdInstance, index) {
+    async removeCrdInstance(crdInstance) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       const { projectId } = this;
       const { clusterId } = this;
@@ -608,6 +610,7 @@ export default {
       let results = [];
 
       results = list.filter((item) => {
+        // eslint-disable-next-line max-len
         if (item.name.indexOf(keyword) > -1 || item.namespace.indexOf(keyword) > -1 || item.operator.indexOf(keyword) > -1) {
           return true;
         }
@@ -650,6 +653,7 @@ export default {
     getDataByPage(page) {
       // 如果没有page，重置
       if (!page) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.current = page = 1;
       }
       let startIndex = (page - 1) * this.pageConf.limit;
@@ -740,7 +744,7 @@ export default {
              * @param  {object} nameSpace 命名空间
              * @param  {number} index 索引
              */
-    toggleSelected(nameSpace, index) {
+    toggleSelected(nameSpace) {
       nameSpace.isSelected = !nameSpace.isSelected;
       this.nameSpaceList = JSON.parse(JSON.stringify(this.nameSpaceList));
     },
@@ -935,7 +939,7 @@ export default {
       this.curCrdInstance.namespace = data.name;
     },
 
-    changeLabels(labels, data) {
+    changeLabels(labels) {
       // this.curCrdInstance.pod_selector = data
       this.curCrdInstance.labels = labels;
     },

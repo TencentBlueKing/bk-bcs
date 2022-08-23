@@ -1,6 +1,16 @@
 <template>
-  <BaseLayout title="StorageClasses" kind="StorageClass" category="storage_classes" type="storages" :show-name-space="false" :show-create="false">
-    <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleSortChange }">
+  <BaseLayout
+    title="StorageClasses"
+    kind="StorageClass" category="storage_classes" type="storages" :show-name-space="false" :show-create="false">
+    <template
+      #default="{
+        curPageData,
+        pageConf,
+        handlePageChange,
+        handlePageSizeChange,
+        handleGetExtData,
+        handleSortChange
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -45,7 +55,10 @@
         </bk-table-column>
         <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">{{ handleGetExtData(row.metadata.uid, 'age') }}</span>
+            <span
+              v-bk-tooltips="{
+                content: handleGetExtData(row.metadata.uid, 'createTime') }">
+              {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
       </bk-table>

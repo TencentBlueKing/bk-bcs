@@ -117,6 +117,7 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// do update
 	retry, err := handler.ensurePortPool(portPool)
 	if err != nil {
+		blog.Errorf("ensure portPool failed, err: %s", err.Error())
 		ppr.recordListenerEvent(portPool, k8scorev1.EventTypeWarning, "update port pool failed", err.Error())
 		return ctrl.Result{
 			Requeue:      true,

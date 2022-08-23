@@ -16,7 +16,8 @@
             <bcs-popover :delay="500" placement="bottom-start">
               <div class="value-label">{{containerInfo.host_name || '--'}}</div>
               <template slot="content">
-                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{containerInfo.host_name || '--'}}</p>
+                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                  {{containerInfo.host_name || '--'}}</p>
               </template>
             </bcs-popover>
           </div>
@@ -25,7 +26,8 @@
             <bcs-popover :delay="500" placement="bottom">
               <div class="value-label">{{containerInfo.host_ip || '--'}}</div>
               <template slot="content">
-                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{containerInfo.host_ip || '--'}}</p>
+                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                  {{containerInfo.host_ip || '--'}}</p>
               </template>
             </bcs-popover>
           </div>
@@ -34,7 +36,8 @@
             <bcs-popover :delay="500" placement="bottom">
               <div class="value-label">{{containerInfo.container_ip || '--'}}</div>
               <template slot="content">
-                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{containerInfo.container_ip || '--'}}</p>
+                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                  {{containerInfo.container_ip || '--'}}</p>
               </template>
             </bcs-popover>
           </div>
@@ -43,7 +46,8 @@
             <bcs-popover :delay="500" placement="bottom">
               <div class="value-label">{{containerInfo.container_id || '--'}}</div>
               <template slot="content">
-                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{containerInfo.container_id || '--'}}</p>
+                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                  {{containerInfo.container_id || '--'}}</p>
               </template>
             </bcs-popover>
           </div>
@@ -52,7 +56,8 @@
             <bcs-popover :delay="500" placement="bottom">
               <div class="value-label">{{containerInfo.image || '--'}}</div>
               <template slot="content">
-                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{containerInfo.image || '--'}}</p>
+                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                  {{containerInfo.image || '--'}}</p>
               </template>
             </bcs-popover>
           </div>
@@ -61,7 +66,8 @@
             <bcs-popover :delay="500" placement="bottom">
               <div class="value-label">{{containerInfo.network_mode || '--'}}</div>
               <template slot="content">
-                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{containerInfo.network_mode || '--'}}</p>
+                <p style="text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
+                  {{containerInfo.network_mode || '--'}}</p>
               </template>
             </bcs-popover>
           </div>
@@ -119,7 +125,8 @@
                         <bcs-popover placement="top" :delay="500">
                           <p class="port-protocol">{{port.protocol}}</p>
                           <template slot="content">
-                            <p style="text-align: left; white-space: normal;word-break: break-all;">{{port.protocol}}</p>
+                            <p style="text-align: left; white-space: normal;word-break: break-all;">
+                              {{port.protocol}}</p>
                           </template>
                         </bcs-popover>
                       </td>
@@ -154,7 +161,8 @@
                         <bcs-popover placement="top" :delay="500">
                           <p class="command-name">{{command.command}}</p>
                           <template slot="content">
-                            <p style="text-align: left; white-space: normal;word-break: break-all;">{{command.command}}</p>
+                            <p style="text-align: left; white-space: normal;word-break: break-all;">
+                              {{command.command}}</p>
                           </template>
                         </bcs-popover>
                       </td>
@@ -198,7 +206,8 @@
                         <bcs-popover placement="top" :delay="500">
                           <p class="volume-host">{{volume.hostPath}}</p>
                           <template slot="content">
-                            <p style="text-align: left; white-space: normal;word-break: break-all;">{{volume.hostPath}}</p>
+                            <p style="text-align: left; white-space: normal;word-break: break-all;">
+                              {{volume.hostPath}}</p>
                           </template>
                         </bcs-popover>
                       </td>
@@ -206,7 +215,8 @@
                         <bcs-popover placement="top" :delay="500">
                           <p class="volume-mount">{{volume.mountPath}}</p>
                           <template slot="content">
-                            <p style="text-align: left; white-space: normal;word-break: break-all;">{{volume.mountPath}}</p>
+                            <p style="text-align: left; white-space: normal;word-break: break-all;">
+                              {{volume.mountPath}}</p>
                           </template>
                         </bcs-popover>
                       </td>
@@ -295,7 +305,8 @@
                         <bcs-popover placement="top" :delay="500">
                           <p class="health-message">{{health.message}}</p>
                           <template slot="content">
-                            <p style="text-align: left; white-space: normal;word-break: break-all;">{{health.message}}</p>
+                            <p style="text-align: left; white-space: normal;word-break: break-all;">
+                              {{health.message}}</p>
                           </template>
                         </bcs-popover>
                       </td>
@@ -410,6 +421,7 @@ import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from '@/views/app/container-chart-opts';
 
 export default {
+  name: 'ClusterContainer',
   components: {
     chart: ECharts,
   },
@@ -462,17 +474,17 @@ export default {
   },
   async mounted() {
     await this.fetchContainerInfo();
-    this.$refs.containerCpuLine && this.$refs.containerCpuLine.showLoading({
+    this.$refs.containerCpuLine?.showLoading({
       text: this.$t('正在加载'),
       color: '#30d878',
       maskColor: 'rgba(255, 255, 255, 0.8)',
     });
-    this.$refs.containerMemLine && this.$refs.containerMemLine.showLoading({
+    this.$refs.containerMemLine?.showLoading({
       text: this.$t('正在加载'),
       color: '#30d878',
       maskColor: 'rgba(255, 255, 255, 0.8)',
     });
-    this.$refs.containerDiskLine && this.$refs.containerDiskLine.showLoading({
+    this.$refs.containerDiskLine?.showLoading({
       text: this.$t('正在加载'),
       color: '#30d878',
       maskColor: 'rgba(255, 255, 255, 0.8)',
@@ -482,7 +494,7 @@ export default {
     this.fetchContainerDisk();
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -568,7 +580,7 @@ export default {
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {
-        this.$refs.containerCpuLine && this.$refs.containerCpuLine.hideLoading();
+        this.$refs.containerCpuLine?.hideLoading();
       }
     },
 
@@ -595,7 +607,7 @@ export default {
         containerCpuChartOpts.yAxis.splice(0, containerCpuChartOpts.yAxis.length, ...[
           {
             axisLabel: {
-              formatter(value, index) {
+              formatter(value) {
                 const valueLen = String(value).length;
                 return `${Decimal(value).toPrecision(valueLen > 3 ? 3 : valueLen)}%`;
               },
@@ -636,7 +648,7 @@ export default {
         });
       });
 
-      limitList.forEach((item) => {
+      limitList.forEach(() => {
         containerCpuChartOpts.series.push({
           type: 'line',
           name: 'threshold',
@@ -654,7 +666,7 @@ export default {
 
       chartNode.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let ret = '';
 
             if (params[0].value[1] === '--') {
@@ -709,7 +721,7 @@ export default {
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {
-        this.$refs.containerMemLine && this.$refs.containerMemLine.hideLoading();
+        this.$refs.containerMemLine?.hideLoading();
       }
     },
 
@@ -737,7 +749,7 @@ export default {
         chartOpts.yAxis.splice(0, chartOpts.yAxis.length, ...[
           {
             axisLabel: {
-              formatter(value, index) {
+              formatter(value) {
                 return `${formatBytes(value)}`;
               },
             },
@@ -777,7 +789,7 @@ export default {
         });
       });
 
-      limitList.forEach((item) => {
+      limitList.forEach(() => {
         chartOpts.series.push({
           type: 'line',
           name: 'threshold',
@@ -795,7 +807,7 @@ export default {
 
       chartNode.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let ret = '';
 
             if (params[0].value[1] === '--') {
@@ -840,7 +852,7 @@ export default {
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {
-        this.$refs.containerDiskLine && this.$refs.containerDiskLine.hideLoading();
+        this.$refs.containerDiskLine?.hideLoading();
       }
     },
 
@@ -862,7 +874,7 @@ export default {
       chartOpts.yAxis.splice(0, chartOpts.yAxis.length, ...[
         {
           axisLabel: {
-            formatter(value, index) {
+            formatter(value) {
               return `${formatBytes(value)}`;
             },
           },
@@ -937,7 +949,7 @@ export default {
       const labelRead = this.$t('磁盘读数据');
       chartNode.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             if (params[0].value[1] === '--') {
               return '<div>No Data</div>';
             }

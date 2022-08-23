@@ -12,7 +12,7 @@ import monokaiTheme from './theme.json';
 import * as monaco from 'monaco-editor';
 
 self.MonacoEnvironment = {
-  getWorkerUrl(moduleId, label) {
+  getWorkerUrl() {
     return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/editor.worker.js`;
   },
 };
@@ -108,7 +108,7 @@ export default {
   },
 
   beforeDestroy() {
-    this.editor && this.editor.dispose();
+    this.editor?.dispose();
   },
 
   methods: {
@@ -172,6 +172,7 @@ export default {
 
     setFullScreen() {
       this.isFullScreen = !this.isFullScreen;
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       if (this.isFullScreen) {
         this.$nextTick(() => {

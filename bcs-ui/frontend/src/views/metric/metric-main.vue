@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -671,6 +672,7 @@ export default {
     getDataByPage(page, notLoading = false) {
       // 如果没有page，重置
       if (!page) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.current = page = 1;
       }
       this.isPageLoading = !notLoading;
@@ -701,6 +703,7 @@ export default {
              * 创建 Metric 确定按钮
              */
     async confirmCreateMetric() {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const name = me.createParams.name.trim();
       const { port } = me.createParams;
@@ -945,6 +948,7 @@ export default {
              * 编辑 Metric 确定按钮
              */
     async confirmEditMetric() {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const name = me.editParams.name.trim();
       const { port } = me.editParams;
@@ -1176,6 +1180,7 @@ export default {
              * @param {Object} metric 当前 metric 对象
              */
     async deleteMetric(metric) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
         title: this.$t('确认删除'),
@@ -1224,7 +1229,7 @@ export default {
     async pauseAndResume(metric, idx, namespaceIdList = []) {
       const idxStr = idx === 'pause' ? this.$t('暂停') : this.$t('恢复');
       const opType = idx === 'pause' ? 'pause' : 'resume';
-
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
         // title: `确认${idxStr}【${metric.name}】？`,

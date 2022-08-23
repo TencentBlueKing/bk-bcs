@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <bk-sideslider
     :is-show.sync="isVisible"
@@ -23,6 +24,7 @@
             <div class="bk-form-content flex-item">
               <div class="left">
                 <div class="bk-form-content">
+                  <!-- eslint-disable-next-line vue/no-mutating-props -->
                   <bkbcs-input style="cursor: not-allowed;" type="text" disabled :value.sync="clusterName"></bkbcs-input>
                 </div>
               </div>
@@ -198,7 +200,7 @@ export default {
   },
   watch: {
     isShow: {
-      async handler(newVal, oldVal) {
+      async handler(newVal) {
         this.isVisible = newVal;
         if (this.isVisible) {
           this.isLoading = true;
@@ -211,7 +213,7 @@ export default {
   mounted() {
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -371,14 +373,14 @@ export default {
         const key = metricParams.key.trim();
         const value = metricParams.value.trim();
         if (!key && value) {
-          this.bkMessageInstance && this.bkMessageInstance.close();
+          this.bkMessageInstance?.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
             message: this.$t('请填写参数名称'),
           });
           return;
         } if (key && !value) {
-          this.bkMessageInstance && this.bkMessageInstance.close();
+          this.bkMessageInstance?.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
             message: this.$t('请填写参数值'),

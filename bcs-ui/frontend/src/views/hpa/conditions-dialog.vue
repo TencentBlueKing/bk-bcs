@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <bk-dialog
     :is-show.sync="isVisible"
@@ -104,7 +105,7 @@ export default {
   },
   watch: {
     isShow: {
-      async handler(newVal, oldVal) {
+      async handler(newVal) {
         this.isVisible = newVal;
         if (!this.isVisible) {
           return;
@@ -174,6 +175,7 @@ export default {
     getDataByPage(page) {
       // 如果没有page，重置
       if (!page) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.current = page = 1;
       }
       let startIndex = (page - 1) * this.pageConf.limit;

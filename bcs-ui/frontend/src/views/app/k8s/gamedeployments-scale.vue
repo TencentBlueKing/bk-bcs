@@ -90,7 +90,7 @@ export default {
   },
   watch: {
     isShow: {
-      async handler(newVal, oldVal) {
+      async handler(newVal) {
         this.isVisible = newVal;
         if (!this.isVisible) {
           return;
@@ -107,7 +107,7 @@ export default {
   mounted() {
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -138,7 +138,7 @@ export default {
              */
     async confirmScale() {
       if (this.scaleNum === null || this.scaleNum === undefined || this.scaleNum === '') {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('请填写内容'),
@@ -162,7 +162,7 @@ export default {
             },
           },
         });
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'success',
           message: this.$t('扩缩容成功'),

@@ -40,7 +40,8 @@ type PortBindingItem struct {
 	EndPort               int                       `json:"endPort"`
 	RsStartPort           int                       `json:"rsStartPort"`
 	// +optional
-	HostPort bool `json:"hostPort,omitempty"`
+	HostPort bool   `json:"hostPort,omitempty"`
+	External string `json:"external,omitempty"`
 }
 
 // GetKey get port pool item key

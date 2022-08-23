@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -289,6 +290,7 @@ export default {
     }
   },
   destroyed() {
+    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
     this.bkMessageInstance && this.bkMessageInstance.close();
   },
   methods: {
@@ -458,7 +460,7 @@ export default {
              *
              * @param {Object} e 时间对象
              */
-    handleClick(e) {
+    handleClick() {
       this.pageConf.curPage = 1;
       this.fetchData({
         projId: this.projectId,

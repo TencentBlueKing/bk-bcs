@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -301,6 +302,13 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import serviceParams from '@/json/k8s-service.json';
 import bkKeyer from '@/components/keyer';
 import header from './header.vue';
@@ -312,6 +320,7 @@ import yamljs from 'js-yaml';
 import _ from 'lodash';
 
 export default {
+  name: 'K8SService',
   components: {
     'bk-keyer': bkKeyer,
     'biz-header': header,
@@ -761,6 +770,7 @@ export default {
       this.toJsonDialogConf.isShow = false;
 
       this.appLabels.forEach((label) => {
+        // eslint-disable-next-line max-len
         if (this.curService.config.webCache.link_labels && this.curService.config.webCache.link_labels.indexOf(label.id) > -1) {
           label.isSelected = true;
         } else {
@@ -978,6 +988,7 @@ export default {
           return false;
         }
         const labels = [];
+        // eslint-disable-next-line no-restricted-syntax
         for (const key in res.data) {
           const params = {
             id: `${key}:${res.data[key]}`,
@@ -985,6 +996,7 @@ export default {
             value: res.data[key],
             isSelected: false,
           };
+          // eslint-disable-next-line max-len
           if (this.curService.config.webCache.link_labels && this.curService.config.webCache.link_labels.indexOf(params.id) > -1) {
             params.isSelected = true;
           }

@@ -21,4 +21,5 @@ type Options struct {
 	BufferedResourceRatio float64
 	WebhookMode           string
 	WebhookModeConfig     string
+	WebhookModeToken      string
 }

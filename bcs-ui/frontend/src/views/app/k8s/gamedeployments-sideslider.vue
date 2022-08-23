@@ -81,7 +81,7 @@ export default {
   },
   watch: {
     isShow: {
-      async handler(newVal, oldVal) {
+      async handler(newVal) {
         this.isVisible = newVal;
         if (this.isVisible) {
           this.title = this.name;
@@ -95,7 +95,7 @@ export default {
   mounted() {
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -121,7 +121,7 @@ export default {
       }
     },
 
-    handleEditorMount(editorInstance, monacoEditor) {
+    handleEditorMount(editorInstance) {
       this.editorInstance = editorInstance;
     },
 

@@ -24,7 +24,9 @@
                 <bk-radio value="bcs_new">{{$t('新建集群')}}</bk-radio>
                 <bk-radio value="existing">
                   {{$t('导入集群')}}
-                  <i class="bcs-icon bcs-icon-question-circle" style="vertical-align: middle; cursor: pointer;" v-bk-tooltips="$t('导入已经存在的集群')"></i>
+                  <i
+                    class="bcs-icon bcs-icon-question-circle"
+                    style="vertical-align: middle; cursor: pointer;" v-bk-tooltips="$t('导入已经存在的集群')"></i>
                 </bk-radio>
               </bk-radio-group>
             </div>
@@ -44,7 +46,11 @@
           <div class="form-item bk-form-item" :class="isEn ? 'en' : ''">
             <label>{{$t('集群描述：')}}<span class="red">*</span></label>
             <div class="form-item-inner">
-              <textarea maxlength="128" v-model="description" class="bk-form-textarea" :class="validate.description.illegal ? 'is-danger' : ''" :placeholder="$t('请输入集群描述')"></textarea>
+              <textarea
+                maxlength="128"
+                v-model="description"
+                class="bk-form-textarea"
+                :class="validate.description.illegal ? 'is-danger' : ''" :placeholder="$t('请输入集群描述')"></textarea>
               <div class="is-danger biz-cluster-create-form-tip" v-if="validate.description.illegal">
                 <p class="tip-text">{{$t('必填项，不超过128个字符')}}</p>
               </div>
@@ -53,7 +59,9 @@
           <div class="form-item" :class="isEn ? 'en' : ''">
             <label>{{$t('选择Master：')}}<span class="red">*</span></label>
             <div class="form-item-inner">
-              <bk-button type="default" :class="validate.host.illegal ? 'is-danger' : ''" @click="openDialog">{{$t('选择服务器')}}</bk-button>
+              <bk-button
+                type="default"
+                :class="validate.host.illegal ? 'is-danger' : ''" @click="openDialog">{{$t('选择服务器')}}</bk-button>
               <div class="is-danger biz-cluster-create-form-tip" v-if="validate.host.illegal">
                 <p class="tip-text">{{$t('请选择服务器')}}</p>
               </div>
@@ -83,7 +91,9 @@
                       {{index + 1}}
                     </td>
                     <td>{{host.bk_host_innerip}}</td>
-                    <td><a href="javascript:void(0)" class="bk-text-button" @click="removeHost(host, index)">{{$t('移除')}}</a></td>
+                    <td><a
+                      href="javascript:void(0)"
+                      class="bk-text-button" @click="removeHost(host, index)">{{$t('移除')}}</a></td>
                   </tr>
                 </tbody>
               </table>
@@ -146,6 +156,7 @@ import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 // import { bus } from '@/common/bus'
 
 export default {
+  name: 'CreateExternalCluster',
   components: {
     tipDialog,
     IpSelector,
@@ -335,7 +346,7 @@ export default {
              */
     async getClusters() {
       try {
-        const res = await this.$store.dispatch('cluster/getClusterList', this.projectId);
+        await this.$store.dispatch('cluster/getClusterList', this.projectId);
       } catch (e) {
         console.warn(e);
       }
@@ -475,7 +486,7 @@ export default {
         target = target.parentNode;
       }
       const checkboxNode = target.querySelector('input[type="checkbox"]');
-      checkboxNode && checkboxNode.click();
+      checkboxNode?.click();
     },
 
     /**
@@ -484,7 +495,7 @@ export default {
     chooseServer(hostList = []) {
       const len = hostList.length;
       if (!len) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('请选择服务器'),
@@ -493,7 +504,7 @@ export default {
       }
 
       if (len % 2 === 0) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('请选择奇数个服务器'),
@@ -534,7 +545,7 @@ export default {
       }
 
       if (msg) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: msg,

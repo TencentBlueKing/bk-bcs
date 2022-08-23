@@ -497,7 +497,7 @@ func parseAuthToken(authInfo string) string {
 
 func verifyPermissionV1(user *models.BcsUser, req VerifyPermissionReq) (bool, string) {
 	switch req.ResourceType {
-	case "cluster", "storage":
+	case Cluster, "storage":
 		allowed, message := verifyResourceReplica(user.ID, req.ResourceType, req.Resource, req.Action)
 		blog.Infof("user %s access to type: %s, resource: %s, action: %s, permission: %t",
 			user.Name, req.ResourceType, req.Resource, req.Action, allowed)
@@ -604,7 +604,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 
 	// verify v2 permission
 	switch req.ResourceType {
-	case "cluster":
+	case Cluster:
 		resource := ClusterResource{
 			ClusterType: req.ClusterType,
 			ProjectID:   req.ProjectID,

@@ -27,7 +27,7 @@
       </div>
       <div class="basic-info-item">
         <label>Port(s)</label>
-        <span>{{ extData.default_ports || '--' }}</span>
+        <span>{{ extData.defaultPorts || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>{{ $t('创建时间') }}</label>

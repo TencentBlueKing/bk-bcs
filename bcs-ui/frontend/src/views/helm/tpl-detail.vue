@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -231,9 +232,11 @@ export default {
              * @param  {object} file 文件
              */
     getFileDetail(file) {
+      // eslint-disable-next-line no-prototype-builtins
       if (file.hasOwnProperty('value')) {
         this.curReourceFile = file;
         this.$nextTick(() => {
+          // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
           this.$refs.codeViewer && this.$refs.codeViewer.$ace && this.$refs.codeViewer.$ace.scrollToLine(1, true, true);
         });
       }
@@ -272,7 +275,7 @@ export default {
              * @param  {number} index 索引
              * @param  {object} data 数据
              */
-    async getTplDetail(index, data) {
+    async getTplDetail(index) {
       const list = [];
       const { projectId } = this;
       const version = index;
@@ -312,6 +315,7 @@ export default {
           this.curReourceFile = this.previewList[0];
 
           this.$nextTick(() => {
+            // eslint-disable-next-line max-len, @typescript-eslint/prefer-optional-chain
             this.$refs.codeViewer && this.$refs.codeViewer.$ace && this.$refs.codeViewer.$ace.scrollToLine(1, true, true);
           });
         }

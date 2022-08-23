@@ -1,8 +1,19 @@
 <template>
-  <BaseLayout title="CustomObjects" kind="CustomObject" type="crd" category="custom_objects" default-active-detail-type="yaml" show-crd :show-detail-tab="false">
+  <BaseLayout
+    title="CustomObjects"
+    kind="CustomObject" type="crd"
+    category="custom_objects"
+    default-active-detail-type="yaml" show-crd :show-detail-tab="false">
     <template
-      #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleUpdateResource, handleDeleteResource,
-                  handleSortChange, handleShowDetail, renderCrdHeader, getJsonPathValue, additionalColumns, namespaceDisabled, webAnnotations }">
+      #default="{
+        curPageData, pageConf,
+        handlePageChange, handlePageSizeChange,
+        handleGetExtData, handleUpdateResource,
+        handleDeleteResource, handleSortChange,
+        handleShowDetail, renderCrdHeader,
+        getJsonPathValue, additionalColumns,
+        namespaceDisabled, webAnnotations
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -11,10 +22,14 @@
         @sort-change="handleSortChange">
         <bk-table-column :label="$t('名称')" prop="metadata.name" sortable>
           <template #default="{ row }">
-            <bk-button class="bcs-button-ellipsis" text @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
+            <bk-button
+              class="bcs-button-ellipsis" text
+              @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" min-width="100" sortable v-if="!namespaceDisabled">
+        <bk-table-column
+          :label="$t('命名空间')"
+          prop="metadata.namespace" min-width="100" sortable v-if="!namespaceDisabled">
           <template #default="{ row }">
             {{ row.metadata.namespace || '--' }}
           </template>
@@ -34,10 +49,13 @@
         </bk-table-column>
         <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">{{ handleGetExtData(row.metadata.uid, 'age') }}</span>
+            <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">
+              {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column v-if="webAnnotations.featureFlag && webAnnotations.featureFlag.FORM_CREATE" :label="$t('编辑模式')" width="100">
+        <bk-table-column
+          v-if="webAnnotations.featureFlag && webAnnotations.featureFlag.FORM_CREATE"
+          :label="$t('编辑模式')" width="100">
           <template slot-scope="{ row }">
             <span>
               {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
@@ -53,8 +71,10 @@
             <bk-button
               class="ml10" text
               v-authority="{
-                clickable: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
-                content: webAnnotations.perms.items[row.metadata.uid] ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
+                clickable: webAnnotations.perms.items[row.metadata.uid]
+                  ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
+                content: webAnnotations.perms.items[row.metadata.uid]
+                  ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
                 disablePerms: true
               }"
               @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>

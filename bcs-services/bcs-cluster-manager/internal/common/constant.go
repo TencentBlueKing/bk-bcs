@@ -202,6 +202,10 @@ const (
 	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 31
 	// BcsErrClusterManagerCheckKubeErr cloud config error
 	BcsErrClusterManagerCheckKubeErr = bcscommon.BCSErrClusterManager + 32
+	// BcsErrClusterManagerCheckPermErr cloud config error
+	BcsErrClusterManagerCheckPermErr = bcscommon.BCSErrClusterManager + 33
+	// BcsErrClusterManagerGetPermErr cloud config error
+	BcsErrClusterManagerGetPermErr = bcscommon.BCSErrClusterManager + 34
 )
 
 // ClusterIDRange for generate clusterID range

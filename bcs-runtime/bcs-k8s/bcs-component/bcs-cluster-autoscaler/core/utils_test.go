@@ -247,11 +247,15 @@ func TestGetNodeInfosForGroups(t *testing.T) {
 	if err != nil {
 		t.Logf("SetNode failed. Error: %v", err)
 	}
+	tn1 := schedulernodeinfo.NewNodeInfo()
+	tn1.SetNode(ready1)
+	tn2 := schedulernodeinfo.NewNodeInfo()
+	tn2.SetNode(ready2)
 
 	// Cloud provider with TemplateNodeInfo implemented.
 	provider1 := testprovider.NewTestAutoprovisioningCloudProvider(
 		nil, nil, nil, nil, nil,
-		map[string]*schedulernodeinfo.NodeInfo{"ng3": tni, "ng4": tni})
+		map[string]*schedulernodeinfo.NodeInfo{"ng3": tni, "ng4": tni, "ng2": tn2, "ng1": tn1})
 	provider1.AddNodeGroup("ng1", 1, 10, 1) // Nodegroup with ready node.
 	provider1.AddNode("ng1", ready1)
 	provider1.AddNodeGroup("ng2", 1, 10, 1) // Nodegroup with ready and unready node.
@@ -287,7 +291,7 @@ func TestGetNodeInfosForGroups(t *testing.T) {
 	assert.True(t, found)
 	assertEqualNodeCapacities(t, tn, info.Node())
 
-	// Test for a nodegroup without nodes and TemplateNodeInfo not implemented by cloud proivder
+	// Test for a nodegroup without nodes and TemplateNodeInfo not implemented by cloud provider
 	res, err = getNodeInfosForGroups([]*apiv1.Node{}, nil, provider2, registry,
 		[]*appsv1.DaemonSet{}, predicateChecker, nil)
 	assert.NoError(t, err)
@@ -314,6 +318,10 @@ func TestGetNodeInfosForGroupsCache(t *testing.T) {
 	if err != nil {
 		t.Logf("SetNode failed. Error: %v", err)
 	}
+	tn1 := schedulernodeinfo.NewNodeInfo()
+	tn1.SetNode(ready1)
+	tn2 := schedulernodeinfo.NewNodeInfo()
+	tn2.SetNode(ready2)
 
 	lastDeletedGroup := ""
 	onDeleteGroup := func(id string) error {
@@ -324,7 +332,7 @@ func TestGetNodeInfosForGroupsCache(t *testing.T) {
 	// Cloud provider with TemplateNodeInfo implemented.
 	provider1 := testprovider.NewTestAutoprovisioningCloudProvider(
 		nil, nil, nil, onDeleteGroup, nil,
-		map[string]*schedulernodeinfo.NodeInfo{"ng3": tni, "ng4": tni})
+		map[string]*schedulernodeinfo.NodeInfo{"ng3": tni, "ng4": tni, "ng2": tn2, "ng1": tn1})
 	provider1.AddNodeGroup("ng1", 1, 10, 1) // Nodegroup with ready node.
 	provider1.AddNode("ng1", ready1)
 	provider1.AddNodeGroup("ng2", 1, 10, 1) // Nodegroup with ready and unready node.
@@ -434,8 +442,20 @@ func TestRemoveOldUnregisteredNodes(t *testing.T) {
 
 	ng1_1 := BuildTestNode("ng1-1", 1000, 1000)
 	ng1_1.Spec.ProviderID = "ng1-1"
+	ng1_1.Status.Addresses = []apiv1.NodeAddress{
+		{
+			Type:    apiv1.NodeInternalIP,
+			Address: "ng1-1",
+		},
+	}
 	ng1_2 := BuildTestNode("ng1-2", 1000, 1000)
 	ng1_2.Spec.ProviderID = "ng1-2"
+	ng1_2.Status.Addresses = []apiv1.NodeAddress{
+		{
+			Type:    apiv1.NodeInternalIP,
+			Address: "ng1-2",
+		},
+	}
 	provider := testprovider.NewTestCloudProvider(nil, func(nodegroup string, node string) error {
 		deletedNodes <- fmt.Sprintf("%s/%s", nodegroup, node)
 		return nil

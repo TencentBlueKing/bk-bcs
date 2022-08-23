@@ -146,15 +146,16 @@ type AlarmConfig struct {
 
 // IAMConfig for perm interface
 type IAMConfig struct {
-	SystemID      string `json:"systemID"`
-	AppCode       string `json:"appCode"`
-	AppSecret     string `json:"appSecret"`
-	External      bool   `json:"external"`
-	GatewayServer string `json:"gateWayServer"`
-	IAMServer     string `json:"iamServer"`
-	BkiIAMServer  string `json:"bkiIamServer"`
-	Metric        bool   `json:"metric"`
-	Debug         bool   `json:"debug"`
+	SystemID         string `json:"systemID"`
+	AppCode          string `json:"appCode"`
+	AppSecret        string `json:"appSecret"`
+	External         bool   `json:"external"`
+	GatewayServer    string `json:"gateWayServer"`
+	IAMServer        string `json:"iamServer"`
+	BkiIAMServer     string `json:"bkiIamServer"`
+	Metric           bool   `json:"metric"`
+	Debug            bool   `json:"debug"`
+	ApplyPermAddress string `json:"applyPermAddress"`
 }
 
 // ClusterManagerOptions options of cluster manager

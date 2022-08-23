@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -839,7 +841,7 @@ export default {
       const reg = /ip-(.+)-n\w*/;
       const match = nodeName.match(reg);
       let ip = '--';
-      if (match && match[1]) {
+      if (match?.[1]) {
         ip = match[1].replace(/-/g, '.');
       }
       return ip;
@@ -939,14 +941,14 @@ export default {
              * @param {array} selection 已经选中的行数
              * @param {object} row 当前选中的行
              */
-    handlePageSelect(selection, row) {
+    handlePageSelect(selection) {
       this.serviceSelectedList = selection;
     },
 
     /**
              * 全选
              */
-    handlePageSelectAll(selection, row) {
+    handlePageSelectAll(selection) {
       this.serviceSelectedList = selection;
     },
 
@@ -989,7 +991,7 @@ export default {
              * @param  {number} index 应用索引
              * @param  {object} data  应用
              */
-    selectAppsHandler(index, data) {
+    selectAppsHandler(index) {
       this.getPorts(index);
       this.getLabels(index);
     },
@@ -1019,7 +1021,7 @@ export default {
             isSelected: false,
           };
           console.log('this.curServiceDetail.config.webCache', this.curServiceDetail.config.webCache);
-          if (this.curServiceDetail.config.webCache.link_labels && this.curServiceDetail.config.webCache.link_labels.includes(params.id)) {
+          if (this.curServiceDetail.config.webCache.link_labels?.includes(params.id)) {
             params.isSelected = true;
           }
           labels.push(params);
@@ -1113,7 +1115,7 @@ export default {
              * @param  {object} service service
              * @param  {number} index 索引
              */
-    async showServiceDetail(service, index) {
+    async showServiceDetail(service) {
       this.serviceSlider.title = service.resourceName;
       this.curService = service;
       this.serviceSlider.isShow = true;
@@ -1282,7 +1284,7 @@ export default {
              * @param  {array} list 列表 [{key, value}...]
              * @param  {object} data 对象 {key:value...}
              */
-    updateLabelList(list, data) {
+    updateLabelList(list) {
       if (!this.curServiceDetail.config.webCache) {
         this.curServiceDetail.config.webCache = {};
       }
@@ -1294,7 +1296,7 @@ export default {
              * @param  {array} list 列表 [{key, value}...]
              * @param  {object} data 对象 {key:value...}
              */
-    updateRemarkList(list, data) {
+    updateRemarkList(list) {
       if (!this.curServiceDetail.config.webCache) {
         this.curServiceDetail.config.webCache = {};
       }
@@ -1528,7 +1530,7 @@ export default {
       }
     },
 
-    rowSelectable(row, index) {
+    rowSelectable(row) {
       return row.can_delete
                     && this.webAnnotations.perms[row.iam_ns_id]
                     && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;

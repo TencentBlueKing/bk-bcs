@@ -13,12 +13,14 @@
 package portbindingcontroller
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	netpkgcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
 )
 
@@ -48,4 +50,28 @@ func isPortBindingExpired(portBinding *networkextensionv1.PortBinding) (bool, er
 func checkPortPoolAnnotationForPod(pod *k8scorev1.Pod) bool {
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	return ok
+}
+
+// return portBindingItemList in pod annotation
+func parsePoolBindingsAnnotation(pod *k8scorev1.Pod) ([]*networkextensionv1.PortBindingItem, error) {
+	poolBindingItemList := make([]*networkextensionv1.PortBindingItem, 0)
+	poolBindingItemsStr, ok := pod.Annotations[constant.AnnotationForPortPoolBindings]
+	if !ok {
+		return poolBindingItemList, nil
+	}
+	if err := json.Unmarshal([]byte(poolBindingItemsStr), &poolBindingItemList); err != nil {
+		return poolBindingItemList, errors.Wrapf(err, "unmarshal annotation[%s]='%s' for pod '%s/%s' failed",
+			constant.AnnotationForPortPoolBindings, poolBindingItemsStr, pod.Namespace, pod.Name)
+	}
+
+	return poolBindingItemList, nil
+}
+
+// return unique ID of portBindingItem
+func genUniqueIDOfPortBindingItem(item *networkextensionv1.PortBindingItem) string {
+	if item == nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%s/%s/%s", item.PoolNamespace, item.PoolName, item.GetKey())
 }

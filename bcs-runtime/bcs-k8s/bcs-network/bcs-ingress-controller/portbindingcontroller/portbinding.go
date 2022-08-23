@@ -14,6 +14,7 @@ package portbindingcontroller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/pkg/errors"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -88,6 +90,11 @@ func (pbh *portBindingHandler) ensurePortBinding(
 			return true, err
 		}
 	}
+
+	if err := pbh.ensurePod(pod, portBinding); err != nil {
+		return true, errors.Wrapf(err, "ensurePod[%s/%s] failed", pod.GetNamespace(), pod.GetName())
+	}
+
 	return retry, nil
 }
 
@@ -140,6 +147,41 @@ func (pbh *portBindingHandler) patchPodAnnotation(pod *k8scorev1.Pod) error {
 	return nil
 }
 
+func (pbh *portBindingHandler) patchPodBindingAnnotation(
+	pod *k8scorev1.Pod, bindingItemList []*networkextensionv1.PortBindingItem,
+) error {
+	bindingItemListBytes, err := json.Marshal(bindingItemList)
+	if err != nil {
+		return errors.Wrapf(err, "marshal bindingItemList for pod '%s/%s' failed",
+			pod.GetNamespace(), pod.GetName())
+	}
+	patchStruct := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]interface{}{
+				constant.AnnotationForPortPoolBindings: string(bindingItemListBytes),
+			},
+		},
+	}
+	patchBytes, err := json.Marshal(patchStruct)
+	if err != nil {
+		return errors.Wrapf(err, "marshal patchStruct for pod '%s/%s' failed", pod.GetNamespace(), pod.GetName())
+	}
+	blog.V(5).Infof("marshaled patchStruct of pod '%s/%s', patchStruct: %s", pod.GetNamespace(),
+		pod.GetName(), string(patchBytes))
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, patchBytes)
+	updatePod := &k8scorev1.Pod{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      pod.GetName(),
+			Namespace: pod.GetNamespace(),
+		},
+	}
+	if err := pbh.k8sClient.Patch(context.Background(), updatePod, rawPatch, &client.PatchOptions{}); err != nil {
+		return errors.Wrapf(err, "patch pod %s/%s annotation status failed, patcheStruct: %s", pod.GetName(),
+			pod.GetNamespace(), string(patchBytes))
+	}
+	return nil
+}
+
 // the returned bool value indicates whether you need to retry
 func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.PortBinding) (bool, error) {
 	if portBinding == nil {
@@ -171,4 +213,45 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 	}
 
 	return !allCleaned, nil
+}
+
+func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) error {
+	portBindingItemMap := make(map[string]*networkextensionv1.PortBindingItem)
+	for _, portBindingItem := range portBinding.Spec.PortBindingList {
+		portBindingItemMap[genUniqueIDOfPortBindingItem(portBindingItem)] = portBindingItem
+	}
+
+	podPortBindingList, err := parsePoolBindingsAnnotation(pod)
+	if err != nil {
+		return errors.Wrapf(err, "parse pod annotations for bindingItems failed")
+	}
+
+	// if portBinding.External changed, update pod's annotation
+	changed := false
+	for idx, podPortBindingItem := range podPortBindingList {
+		portBindingItem, ok := portBindingItemMap[genUniqueIDOfPortBindingItem(podPortBindingItem)]
+		if !ok {
+			blog.Warnf("pod's portBindingItem(in annotation) not found in PortBinding, pod: %s/%s, item: %s",
+				pod.GetNamespace(), pod.GetName(), genUniqueIDOfPortBindingItem(podPortBindingItem))
+			continue
+		}
+		if portBindingItem == nil || podPortBindingItem == nil {
+			blog.Warnf("nil portBindingItem, pod:%s/%s", pod.GetNamespace(), pod.GetName())
+			continue
+		}
+
+		if podPortBindingItem.External != portBindingItem.External {
+			podPortBindingList[idx].External = portBindingItem.External
+			changed = true
+		}
+	}
+	if changed {
+		blog.Info("pod[%s/%s] PortBindingItem.External changed", pod.GetNamespace(), pod.GetName())
+		if err := pbh.patchPodBindingAnnotation(pod, podPortBindingList); err != nil {
+			return errors.Wrapf(err, "patch pod[%s/%s] for binding annotation failed",
+				pod.GetNamespace(), pod.GetName())
+		}
+	}
+
+	return nil
 }

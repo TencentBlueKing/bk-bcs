@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -245,7 +246,7 @@ export default {
   mounted() {
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -425,7 +426,7 @@ export default {
              *
              * @param {Object} e 事件对象
              */
-    handleClick(e) {
+    handleClick() {
       this.pageConf.curPage = 1;
       this.fetchData({
         projId: this.projId,

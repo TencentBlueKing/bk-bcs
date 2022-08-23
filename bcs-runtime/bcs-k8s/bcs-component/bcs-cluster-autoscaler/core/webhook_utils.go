@@ -199,7 +199,7 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 			}
 			candidates = append(candidates, ips...)
 		default:
-			klog.Infof("Scale down type \"%v\" is not supprted", policy.Type)
+			klog.Infof("Scale down type \"%v\" is not supported", policy.Type)
 			continue
 		}
 

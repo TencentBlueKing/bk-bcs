@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="metric-searcher">
     <template v-if="localScopeList.length && !clusterFixed">

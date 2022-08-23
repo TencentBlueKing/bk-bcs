@@ -36,10 +36,10 @@ var server = &ClientConfig{
 	appCode:   "xxx",
 	appSecret: "xxx",
 	debug:     true,
-	cache: cache.New(time.Minute*5, time.Minute*60),
+	cache:     cache.New(time.Minute*5, time.Minute*60),
 }
 
-func TestClientConfig_GetProjectSharedNamespaces(t *testing.T) {
+func TestConfig_GetSharedNamespaces(t *testing.T) {
 	token, err := server.getAccessToken(getPermServer())
 	if err != nil {
 		t.Fatal(err)

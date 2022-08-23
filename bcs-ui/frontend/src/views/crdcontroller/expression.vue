@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="bk-expression">
     <div class="biz-keys-list mb10" v-if="list.length">
@@ -156,8 +157,8 @@ export default {
     };
   },
   watch: {
-    'keyList'(val) {
-      if (this.keyList && this.keyList.length) {
+    'keyList'() {
+      if (this.keyList?.length) {
         this.list = this.keyList;
       }
     },
@@ -209,7 +210,7 @@ export default {
         const results = [];
         const keyObj = {};
         const { length } = this.list;
-        this.list.forEach((item, i) => {
+        this.list.forEach((item) => {
           if (item.key || item.values) {
             if (!keyObj[item.key]) {
               results.push(item);

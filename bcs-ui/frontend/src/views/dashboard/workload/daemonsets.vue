@@ -1,6 +1,17 @@
 <template>
   <BaseLayout title="DaemonSets" kind="DaemonSet" category="daemonsets" type="workloads">
-    <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
+    <template
+      #default="{
+        curPageData,
+        pageConf,
+        handlePageChange,
+        handlePageSizeChange,
+        handleGetExtData,
+        gotoDetail,
+        handleSortChange,
+        handleUpdateResource,
+        handleDeleteResource
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -67,6 +78,7 @@ import { defineComponent } from '@vue/composition-api';
 import BaseLayout from '@/views/dashboard/common/base-layout';
 
 export default defineComponent({
+  name: 'WorkloadDaemonsets',
   components: { BaseLayout },
 });
 </script>

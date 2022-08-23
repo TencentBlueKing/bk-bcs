@@ -15,6 +15,6 @@ package cmanager
 
 import "testing"
 
-func TestClusterManagerClient_GetProjectIDByClusterID(t *testing.T) {
+func Test_GetProjectIDByClusterID(t *testing.T) {
 
 }

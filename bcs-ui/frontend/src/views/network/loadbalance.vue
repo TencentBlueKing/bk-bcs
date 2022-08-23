@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <component v-bind:is="currentView" v-if="curProject.project_id" ref="loadbalance"></component>
 </template>

@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -1548,6 +1549,13 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import bkKeyer from '@/components/keyer';
 import ace from '@/components/ace-editor';
 import header from './header.vue';
@@ -1561,6 +1569,7 @@ import applicationParams from '@/json/k8s-job.json';
 import containerParams from '@/json/k8s-container.json';
 
 export default {
+  name: 'K8SJob',
   components: {
     ace,
     'bk-keyer': bkKeyer,
@@ -3034,6 +3043,7 @@ export default {
       this.curApplication = application;
       this.curApplicationId = application.id;
       this.initLinkLabels();
+      // eslint-disable-next-line no-plusplus
       this.renderImageIndex++;
 
       clearInterval(this.compareTimer);
@@ -3145,6 +3155,7 @@ export default {
       setTimeout(() => {
         // 切换container
         // this.resetPreContainerParams()
+        // eslint-disable-next-line no-plusplus
         this.renderImageIndex++;
         this.curContainer = container;
         this.curContainerIndex = index;

@@ -433,7 +433,7 @@ func TestDeleteClusterNodePool(t *testing.T) {
 	}
 }
 
-func TestModifyNodePoolDesiredCapacityAboutAsg(t *testing.T) {
+func TestModifyCapacityAboutAsg(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	err := cli.ModifyNodePoolDesiredCapacityAboutAsg("cls-xxx", "np-xxx", 1)
 	if err != nil {

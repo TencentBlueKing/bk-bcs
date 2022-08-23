@@ -21,6 +21,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
+// PermInfo for perm request
+type PermInfo struct {
+	ProjectID string
+	UserID    string
+}
+
 // GetCloudAndCluster get relative cloud & cluster information
 func GetCloudAndCluster(model store.ClusterManagerModel,
 	cloudID string, clusterID string) (*proto.Cloud, *proto.Cluster, error) {

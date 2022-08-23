@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -230,6 +232,7 @@
       :ext-cls="'biz-config-templateset-copy-dialog'"
       :has-header="false"
       :quick-close="false">
+      <!-- eslint-disable-next-line vue/no-useless-template-attributes -->
       <template slot="content" v-bkloading="{ isLoading: isCopying }">
         <div class="bk-form bk-form-vertical biz-instance-num-form mb20">
           <div class="bk-form-item">
@@ -268,6 +271,7 @@
       :quick-close="false"
       :ext-cls="'biz-config-templateset-del-instance-dialog'"
       @cancel="delInstanceDialogConf.isShow = false">
+      <!-- eslint-disable-next-line vue/no-useless-template-attributes -->
       <template slot="content" v-bkloading="{ isLoading: isDeleting }">
         <div class="content-inner">
           <div class="bk-form bk-form-vertical" style="margin-bottom: 20px;">
@@ -391,6 +395,7 @@
       :ext-cls="'biz-config-templateset-copy-dialog'"
       :has-header="false"
       :quick-close="false">
+      <!-- eslint-disable-next-line vue/no-useless-template-attributes -->
       <template slot="content" style="padding: 0 20px;">
         <div style="color: #63656e; font-size: 20px">
           {{$t('模板集')}}【{{delTemplateDialogConf.title}}】{{$t('版本')}}：
@@ -561,7 +566,7 @@ export default {
     window.onscroll = null;
     next();
   },
-  beforeDestroy(to, from, next) {
+  beforeDestroy() {
     window.onscroll = null;
   },
   methods: {
@@ -579,6 +584,7 @@ export default {
       if (this.scrollBottom()) {
         this.isScrollLoading = true;
 
+        // eslint-disable-next-line no-plusplus
         this.pageConf.curPage++;
         this.getTemplateList();
       }
@@ -598,6 +604,7 @@ export default {
     },
 
     scrollBottom() {
+      // eslint-disable-next-line max-len
       return document.documentElement.clientHeight + window.scrollY >= (document.documentElement.scrollHeight || document.documentElement.clientHeight);
     },
 
@@ -615,6 +622,7 @@ export default {
 
         // 如果没有实例，可删除模板集，否则调用删除实例
         if (!Object.keys(res.data.exist_version || {}).length) {
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
           const me = this;
           me.$bkInfo({
             title: this.$t('确认删除'),
@@ -713,6 +721,7 @@ export default {
              * 模板集复制提交前检测
              */
     confirmCopyTemplate() {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
 
       const copyName = me.copyName.trim();
@@ -1073,6 +1082,7 @@ export default {
              * 删除命名空间弹层确认
              */
     async confirmDelInstance() {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const list = Object.keys(this.namespaceListTmp);
 
@@ -1331,7 +1341,7 @@ export default {
       });
     },
 
-    getImportFileList(zip, folderName = '') {
+    getImportFileList(zip) {
       for (const key in zip) {
         const file = zip[key];
         // 文件

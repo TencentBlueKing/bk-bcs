@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -451,14 +453,14 @@ export default {
              * @param {array} selection 已经选中的行数
              * @param {object} row 当前选中的行
              */
-    handlePageSelect(selection, row) {
+    handlePageSelect(selection) {
       this.secretSelectedList = selection;
     },
 
     /**
              * 全选
              */
-    handlePageSelectAll(selection, row) {
+    handlePageSelectAll(selection) {
       this.secretSelectedList = selection;
     },
 
@@ -506,6 +508,7 @@ export default {
              * @param  {Object} data secret
              */
     async deleteSecrets(data) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const { projectId } = this;
 
@@ -572,6 +575,7 @@ export default {
              * @return {[type]}
              */
     async removeSecret(secret) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
         title: me.$t('确认删除'),
@@ -590,6 +594,7 @@ export default {
              * @param {Object} secret secret
              */
     async deleteSecret(Secret) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const { projectId } = me;
       const clusterId = Secret.cluster_id;
@@ -715,6 +720,7 @@ export default {
         data.key = `key-${this.secretKeyList.length}`;
       } else {
         const nameReg = /^[a-zA-Z]{1}[a-zA-Z0-9-_.]{0,254}$/;
+        // eslint-disable-next-line no-useless-escape
         const varReg = /\{\{([^\{\}]+)?\}\}/g;
 
         if (!nameReg.test(data.key.replace(varReg, 'key'))) {
@@ -766,7 +772,7 @@ export default {
              * @param  {Object} data data
              * @param  {Number} index 索引
              */
-    editKey(data, index) {
+    editKey(data) {
       data.isEdit = true;
     },
 
@@ -809,7 +815,7 @@ export default {
              * @param  {Object} secret secret
              * @param  {Number} index 索引
              */
-    async showSecretDetail(secret, index) {
+    async showSecretDetail(secret) {
       this.secretSlider.title = secret.resourceName;
       this.curSecret = secret;
       this.secretSlider.isShow = true;
@@ -977,7 +983,7 @@ export default {
       });
     },
 
-    rowSelectable(row, index) {
+    rowSelectable(row) {
       return row.can_delete
                     && this.webAnnotations.perms[row.iam_ns_id]
                     && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;

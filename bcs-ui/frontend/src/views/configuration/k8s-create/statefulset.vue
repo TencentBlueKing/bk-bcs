@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -1705,6 +1706,13 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import bkKeyer from '@/components/keyer';
 import ace from '@/components/ace-editor';
 import header from './header.vue';
@@ -1718,6 +1726,7 @@ import applicationParams from '@/json/k8s-statefulset.json';
 import containerParams from '@/json/k8s-container.json';
 
 export default {
+  name: 'StatefulSet',
   components: {
     ace,
     'bk-keyer': bkKeyer,
@@ -3296,6 +3305,7 @@ export default {
       this.updateApplicationLabel(defaultLabels, defaultLabelObject);
     },
     setCurApplication(application, index) {
+      // eslint-disable-next-line no-plusplus
       this.renderImageIndex++;
       this.curApplication = application;
       this.curApplicationId = application.id;
@@ -3415,6 +3425,7 @@ export default {
             port.protocol = 'TCP';
           }
         });
+        // eslint-disable-next-line no-plusplus
         this.renderImageIndex++;
         this.curContainer = container;
         this.curContainerIndex = index;

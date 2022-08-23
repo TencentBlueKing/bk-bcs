@@ -16,7 +16,7 @@ package auth
 // GrantType xxx
 type GrantType string
 
-// String() xxx
+// String xxx
 func (gt GrantType) String() string {
 	return string(gt)
 }

@@ -9,21 +9,31 @@
               <template v-if="sp.id === 'ip'">
                 <div class="value-container" v-if="sp.value && !sp.isEditing">
                   <div class="value">
-                    <span class="value-item" v-for="(valueArrItem, valueArrIndex) in sp.valueArr" :key="valueArrIndex">{{valueArrItem}}</span>
+                    <span
+                      class="value-item"
+                      v-for="(valueArrItem, valueArrIndex) in sp.valueArr" :key="valueArrIndex">{{valueArrItem}}</span>
                   </div>
-                  <div class="remove-search-params" @click.stop="removeSearchParams(sp, spIndex)"><i class="bcs-icon bcs-icon-close"></i></div>
+                  <div
+                    class="remove-search-params"
+                    @click.stop="removeSearchParams(sp, spIndex)"><i class="bcs-icon bcs-icon-close"></i></div>
                 </div>
                 <div class="value-container edit" v-if="sp.isEditing">
-                  <input type="text" class="input" v-model="sp.value" :ref="`editInput${spIndex}`" @blur="editInputBlurHandler($event, sp, spIndex)">
+                  <input
+                    type="text" class="input"
+                    v-model="sp.value" :ref="`editInput${spIndex}`" @blur="editInputBlurHandler($event, sp, spIndex)">
                 </div>
               </template>
               <template v-else-if="sp.id === 'labels'">
                 <div class="value-container" v-if="sp.key">
                   <div class="value">{{sp.key}}:</div>
                   <div class="value-value">
-                    <span class="value-item" v-for="(valueArrItem, valueArrIndex) in sp.valueArr" :key="valueArrIndex">{{valueArrItem}}</span>
+                    <span
+                      class="value-item"
+                      v-for="(valueArrItem, valueArrIndex) in sp.valueArr" :key="valueArrIndex">{{valueArrItem}}</span>
                   </div>
-                  <div class="remove-search-params" @click.stop="removeSearchParams(sp, spIndex)"><i class="bcs-icon bcs-icon-close"></i></div>
+                  <div
+                    class="remove-search-params"
+                    @click.stop="removeSearchParams(sp, spIndex)"><i class="bcs-icon bcs-icon-close"></i></div>
                 </div>
               </template>
               <template v-else>
@@ -31,7 +41,9 @@
                   <div class="value">
                     <span class="value-item">{{sp.value}}</span>
                   </div>
-                  <div class="remove-search-params" @click.stop="removeSearchParams(sp, spIndex)"><i class="bcs-icon bcs-icon-close"></i></div>
+                  <div
+                    class="remove-search-params"
+                    @click.stop="removeSearchParams(sp, spIndex)"><i class="bcs-icon bcs-icon-close"></i></div>
                 </div>
               </template>
             </div>
@@ -70,7 +82,9 @@
     </div>
 
     <div class="node-searcher-dropdown-menu show-enter-tip" v-show="showEnterTip">
-      <div class="node-searcher-dropdown-content" :class="showEnterTip ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
+      <div
+        class="node-searcher-dropdown-content"
+        :class="showEnterTip ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
         <ul class="node-searcher-dropdown-list">
           <li>
             <i class="bcs-icon bcs-icon-search"></i>
@@ -81,7 +95,9 @@
     </div>
 
     <div class="node-searcher-dropdown-menu label-list" v-show="showLabel">
-      <div class="node-searcher-dropdown-content" :class="showLabel ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
+      <div
+        class="node-searcher-dropdown-content"
+        :class="showLabel ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
         <ul class="node-searcher-dropdown-list">
           <li v-for="(label, labelIndex) in labelList" :key="labelIndex">
             <a href="javascript:void(0);" @click="selectLabel(label, labelIndex)">{{label.text}}</a>
@@ -101,7 +117,9 @@
     </div>
 
     <div class="node-searcher-dropdown-menu tag-list" v-show="showKey">
-      <div class="node-searcher-dropdown-content" :class="showKey ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
+      <div
+        class="node-searcher-dropdown-content"
+        :class="showKey ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
         <ul class="node-searcher-dropdown-list" v-bkloading="{ isLoading: tagLoading, opacity: 1 }">
           <template v-if="keyList && keyList.length">
             <li v-for="(k, kIndex) in keyList" :key="kIndex">
@@ -118,7 +136,9 @@
     </div>
 
     <div class="node-searcher-dropdown-menu value-list" v-show="showValue">
-      <div class="node-searcher-dropdown-content" :class="showValue ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
+      <div
+        class="node-searcher-dropdown-content"
+        :class="showValue ? 'is-show' : ''" :style="{ left: `${searcherDropdownLeft}px` }">
         <ul class="node-searcher-dropdown-list" v-bkloading="{ isLoading: tagLoading, opacity: 1 }">
           <template v-if="valueList && valueList.length">
             <li v-for="(v, vIndex) in valueList" :key="vIndex">
@@ -134,7 +154,9 @@
             </li>
           </template>
         </ul>
-        <div class="action" v-if="valueList && valueList.length && Object.keys(selectedValues).filter(v => selectedValues[v]).length">
+        <div
+          class="action"
+          v-if="valueList && valueList.length && Object.keys(selectedValues).filter(v => selectedValues[v]).length">
           <span class="btn" @click="confirmSelectValue">{{$t('确认')}}</span>
           <span class="btn" @click="cancelSelectValue">{{$t('取消')}}</span>
         </div>
@@ -241,7 +263,7 @@ export default {
     },
   },
   watch: {
-    searchParams(val) {
+    searchParams() {
       this.$nextTick(() => {
         this.allSearchParamsWidth = 0;
         const { searchParamsLi } = this.$refs;
@@ -257,7 +279,7 @@ export default {
         this.searcherDropdownLeft = this.maxLeftOffset;
       }
     },
-    params(val) {
+    params() {
       if (this.params.length) {
         this.searchParams.splice(0, this.searchParams.length, ...this.params);
       }
@@ -511,7 +533,7 @@ export default {
              *
              * @return {string} returnDesc
              */
-    searchInputBlurHandler(e) {
+    searchInputBlurHandler() {
       // const value = e.target.value.trim()
       // if (!value && !this.showKey && !this.showValue) {
       //     this.curSearchParams = null
@@ -532,7 +554,7 @@ export default {
       this.$set(this.searchParams, spIndex, sp);
       this.$nextTick(() => {
         const editInput = this.$refs[`editInput${spIndex}`];
-        if (editInput && editInput[0]) {
+        if (editInput?.[0]) {
           editInput[0].focus();
         }
       });

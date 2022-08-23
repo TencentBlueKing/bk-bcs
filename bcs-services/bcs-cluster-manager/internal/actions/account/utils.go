@@ -15,12 +15,19 @@ package account
 
 import (
 	"context"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/account"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
+
+	spb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // CloudAccount cloudID and accountID
@@ -56,4 +63,53 @@ func getRelativeClustersByAccountID(ctx context.Context, model store.ClusterMana
 	}
 
 	return clusterIDs, nil
+}
+
+// GetProjectAccountsV3Perm get iam v3 perm
+func GetProjectAccountsV3Perm(iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]*spb.Struct, error) {
+	var (
+		v3Perm map[string]map[string]interface{}
+		err    error
+	)
+
+	v3Perm, err = getUserAccountPermList(iam, user, accountList)
+	if err != nil {
+		blog.Errorf("GetProjectAccountsV3Perm failed: %v", err.Error())
+		return nil, err
+	}
+
+	// trans result for adapt front
+	v3ResultPerm := make(map[string]*spb.Struct)
+	for accountID := range v3Perm {
+		actionPerm, err := spb.NewStruct(v3Perm[accountID])
+		if err != nil {
+			return nil, err
+		}
+
+		v3ResultPerm[accountID] = actionPerm
+	}
+
+	return v3ResultPerm, nil
+}
+
+func getUserAccountPermList(iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]map[string]interface{}, error) {
+	permissions := make(map[string]map[string]interface{})
+	accountPerm := cloudaccount.NewBCSAccountPermClient(iam)
+
+	actionIDs := []string{cloudaccount.AccountUse.String(), cloudaccount.AccountManage.String()}
+	perms, err := accountPerm.GetMultiAccountMultiActionPermission(user.UserID, user.ProjectID, accountList, actionIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for accountID, perm := range perms {
+		if permissions[accountID] == nil {
+			permissions[accountID] = make(map[string]interface{})
+		}
+		for action, res := range perm {
+			permissions[accountID][action] = res
+		}
+	}
+
+	return permissions, nil
 }
