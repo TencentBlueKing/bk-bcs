@@ -290,6 +290,12 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 			result[id] = sanitizedNodeInfo
 			return true, id, nil
 		}
+		// if founded in result, but not found in cache, should add to node info cache
+		if nodeInfoCache != nil {
+			if _, found := nodeInfoCache[id]; !found {
+				return true, id, nil
+			}
+		}
 		return false, "", nil
 	}
 

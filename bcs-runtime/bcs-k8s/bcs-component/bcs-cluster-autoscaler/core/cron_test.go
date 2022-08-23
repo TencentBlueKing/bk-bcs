@@ -244,7 +244,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 				},
 			},
 		}, nil,
-	).Times(3)
+	).Times(4)
 	m.EXPECT().UpdateDesiredNode(gomock.Eq("test-ng-1"), 5).Return(nil)
 	m.EXPECT().GetPoolConfig(gomock.Eq("test-ng-2")).Return(
 		&clustermanager.AutoScalingGroup{
@@ -259,7 +259,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 				},
 			},
 		}, nil,
-	).Times(2)
+	).Times(3)
 
 	cache := bcs.NewNodeGroupCache(m.GetNodes)
 	opts := cloudprovider.NodeGroupDiscoveryOptions{
