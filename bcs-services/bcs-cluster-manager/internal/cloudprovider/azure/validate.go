@@ -11,7 +11,7 @@
  *
  */
 
-package qcloud
+package azure
 
 import (
 	"encoding/base64"
@@ -21,7 +21,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
@@ -31,7 +30,7 @@ var validateMgr sync.Once
 func init() {
 	validateMgr.Do(func() {
 		//init Cluster
-		cloudprovider.InitCloudValidateManager("qcloud", &CloudValidate{})
+		cloudprovider.InitCloudValidateManager(cloudName, &CloudValidate{})
 	})
 }
 
@@ -41,37 +40,22 @@ type CloudValidate struct {
 
 // ImportClusterValidate check importCluster operation
 func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *cloudprovider.CommonOption) error {
-	// call qcloud interface to check cluster
+	// call cloud interface to check cluster
 	if c == nil || req == nil {
 		return fmt.Errorf("%s ImportClusterValidate request is empty", cloudName)
 	}
 
-	if opt == nil {
+	if opt == nil || opt.Account == nil {
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
-	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 || len(opt.Account.ClientID) == 0 ||
+		len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
 		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
 	}
 
 	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
 		return fmt.Errorf("%s ImportClusterValidate cluster cloudID & kubeConfig empty", cloudName)
-	}
-
-	if req.CloudMode.CloudID != "" {
-		cli, err := api.NewTkeClient(opt)
-		if err != nil {
-			return fmt.Errorf("%s ImportClusterValidate getTKEClient failed: %v", cloudName, err)
-		}
-
-		_, err = cli.GetTKECluster(req.CloudMode.CloudID)
-		if err != nil {
-			return fmt.Errorf("%s ImportClusterValidate GetTKECluster[%s] failed: %v", cloudName,
-				req.CloudMode.CloudID, err)
-		}
-		blog.Infof("%s ImportClusterValidate CloudMode CloudID[%s] success", cloudName, req.CloudMode.CloudID)
-
-		return nil
 	}
 
 	if req.CloudMode.KubeConfig != "" {
@@ -102,12 +86,13 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 
 // ImportCloudAccountValidate create cloudAccount account validation
 func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error {
-	// call qcloud interface to check account
+	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ImportCloudAccountValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 || len(account.ClientID) == 0 ||
+		len(account.ClientSecret) == 0 {
 		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
 	}
 
@@ -116,12 +101,13 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 
 // GetCloudRegionZonesValidate xxx
 func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
-	// call qcloud interface to check account
+	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 || len(account.ClientID) == 0 ||
+		len(account.ClientSecret) == 0 {
 		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
 	}
 
@@ -134,12 +120,13 @@ func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZon
 
 // ListCloudRegionClusterValidate xxx
 func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
-	// call qcloud interface to check account
+	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListCloudRegionClusterValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 || len(account.ClientID) == 0 ||
+		len(account.ClientSecret) == 0 {
 		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
 	}
 
@@ -152,12 +139,13 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 
 // ListCloudSubnetsValidate xxx
 func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
-	// call qcloud interface to check account
+	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListCloudSubnetsValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 || len(account.ClientID) == 0 ||
+		len(account.ClientSecret) == 0 {
 		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
 	}
 
@@ -173,12 +161,13 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 
 // ListSecurityGroupsValidate xxx
 func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
-	// call qcloud interface to check account
+	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 || len(account.ClientID) == 0 ||
+		len(account.ClientSecret) == 0 {
 		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
 	}
 
@@ -191,12 +180,13 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 
 // ListInstanceTypeValidate xxx
 func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
-	// call qcloud interface to check account
+	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 || len(account.ClientID) == 0 ||
+		len(account.ClientSecret) == 0 {
 		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
 	}
 
@@ -209,12 +199,13 @@ func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTyp
 
 // ListCloudOsImageValidate xxx
 func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
-	// call qcloud interface to check account
+	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListCloudOsImageValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 || len(account.ClientID) == 0 ||
+		len(account.ClientSecret) == 0 {
 		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid crendential info", cloudName)
 	}
 

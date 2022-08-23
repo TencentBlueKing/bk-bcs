@@ -11,12 +11,27 @@
  *
  */
 
-package manager
+package azure
 
-import (
-	//init aws implementation registry
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud"
+import "fmt"
+
+var (
+	cloudName = "azure"
+)
+
+// task template name
+const (
+	// deleteClusterTaskTemplate bk-sops add task template
+	deleteClusterTaskTemplate = "aks-delete cluster: %s"
+)
+
+// tasks
+var (
+	// import cluster task
+	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
+	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
+
+	// delete cluster task
+	deleteAKSKEClusterTask = fmt.Sprintf("%s-deleteAKSKEClusterTask", cloudName)
+	cleanClusterDBInfoTask = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
 )

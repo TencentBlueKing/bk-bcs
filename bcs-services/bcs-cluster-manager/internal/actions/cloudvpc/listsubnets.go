@@ -58,10 +58,7 @@ func (la *ListSubnetsAction) validate() error {
 		return err
 	}
 
-	err = validate.ListCloudSubnetsValidate(la.req, &cmproto.Account{
-		SecretID:  la.account.Account.SecretID,
-		SecretKey: la.account.Account.SecretKey,
-	})
+	err = validate.ListCloudSubnetsValidate(la.req, la.account.Account)
 	if err != nil {
 		return err
 	}

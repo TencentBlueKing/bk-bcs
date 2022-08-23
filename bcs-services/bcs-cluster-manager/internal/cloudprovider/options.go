@@ -74,9 +74,7 @@ const (
 type CommonOption struct {
 	//request ID for tracing
 	RequestID string
-	//key and secret for api authentication
-	Key    string // tencentcloudSecretID
-	Secret string // tencentcloudSecretKey
+	Account   *proto.Account
 	// region information for cloudprovider
 	// region is unnecessary in some api
 	Region string

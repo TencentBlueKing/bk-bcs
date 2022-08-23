@@ -40,7 +40,7 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 		return nil, fmt.Errorf("blueking CreateCluster cluster opt or cloud is empty")
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("blueking CreateCluster opt lost valid crendential info")
 	}
 
@@ -71,11 +71,11 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 		return nil, fmt.Errorf("blueking ImportCluster cluster is empty")
 	}
 
-	if opt == nil || opt.Cloud == nil {
+	if opt == nil || opt.Cloud == nil || opt.Account == nil {
 		return nil, fmt.Errorf("blueking ImportCluster cluster opt or cloud is empty")
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("blueking CreateCluster opt lost valid crendential info")
 	}
 

@@ -26,13 +26,13 @@ import (
 
 // NewASClient init as client
 func NewASClient(opt *cloudprovider.CommonOption) (*ASClient, error) {
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(opt.Region) == 0 {
 		return nil, cloudprovider.ErrCloudRegionLost
 	}
-	credential := common.NewCredential(opt.Key, opt.Secret)
+	credential := common.NewCredential(opt.Account.SecretID, opt.Account.SecretKey)
 	cpf := profile.NewClientProfile()
 
 	cli, err := as.NewClient(credential, opt.Region, cpf)

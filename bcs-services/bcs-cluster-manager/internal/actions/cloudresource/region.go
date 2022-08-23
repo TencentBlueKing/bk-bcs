@@ -15,6 +15,7 @@ package cloudresource
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -55,10 +56,10 @@ func (ga *GetCloudRegionsAction) listCloudRegions() error {
 	}
 
 	regionList, err := nodeMgr.GetCloudRegions(&cloudprovider.CommonOption{
-		Key:    ga.account.Account.SecretID,
-		Secret: ga.account.Account.SecretKey,
+		Account: ga.account.Account,
 		// Region trick data, cloud need underlying dependence
 		Region: defaultRegion,
+
 		CommonConf: cloudprovider.CloudConf{
 			CloudInternalEnable: ga.cloud.ConfInfo.CloudInternalEnable,
 			CloudDomain:         ga.cloud.ConfInfo.CloudDomain,
@@ -95,10 +96,7 @@ func (ga *GetCloudRegionsAction) validate() error {
 	if err != nil {
 		return err
 	}
-	err = validate.ImportCloudAccountValidate(&cmproto.Account{
-		SecretID:  ga.account.Account.SecretID,
-		SecretKey: ga.account.Account.SecretKey,
-	})
+	err = validate.ImportCloudAccountValidate(ga.account.Account)
 	if err != nil {
 		return err
 	}
@@ -172,9 +170,8 @@ func (ga *GetCloudRegionZonesAction) listCloudRegionZones() error {
 	}
 
 	zoneList, err := nodeMgr.GetZoneList(&cloudprovider.CommonOption{
-		Key:    ga.account.Account.SecretID,
-		Secret: ga.account.Account.SecretKey,
-		Region: ga.req.Region,
+		Account: ga.account.Account,
+		Region:  ga.req.Region,
 		CommonConf: cloudprovider.CloudConf{
 			CloudInternalEnable: ga.cloud.ConfInfo.CloudInternalEnable,
 			CloudDomain:         ga.cloud.ConfInfo.CloudDomain,
@@ -212,10 +209,7 @@ func (ga *GetCloudRegionZonesAction) validate() error {
 		return err
 	}
 
-	err = validate.GetCloudRegionZonesValidate(ga.req, &cmproto.Account{
-		SecretID:  ga.account.Account.SecretID,
-		SecretKey: ga.account.Account.SecretKey,
-	})
+	err = validate.GetCloudRegionZonesValidate(ga.req, ga.account.Account)
 	if err != nil {
 		return err
 	}

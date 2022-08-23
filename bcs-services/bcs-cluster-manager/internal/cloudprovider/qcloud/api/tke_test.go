@@ -19,8 +19,10 @@ import (
 	"testing"
 	"time"
 
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 	cloudtke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -28,8 +30,10 @@ import (
 
 func getClient(region string) *TkeClient {
 	cli, _ := NewTkeClient(&cloudprovider.CommonOption{
-		Key:    os.Getenv(TencentCloudSecretIDEnv),
-		Secret: os.Getenv(TencentCloudSecretKeyEnv),
+		Account: &cmproto.Account{
+			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+		},
 		Region: region,
 	})
 

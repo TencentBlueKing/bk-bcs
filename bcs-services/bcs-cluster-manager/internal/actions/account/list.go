@@ -79,7 +79,7 @@ func (la *ListAction) listCloudAccount() error {
 		if err != nil {
 			blog.Errorf("getRelativeClustersByAccountID[%s] failed: %v", cloudAccounts[i].AccountID, err)
 		}
-		cloudAccounts[i].Account.SecretKey = shieldReturnCloudKey(cloudAccounts[i].Account.SecretKey)
+		cloudAccounts[i].Account = shieldCloudSecret(cloudAccounts[i].Account)
 
 		cloudAccountInfo := &cmproto.CloudAccountInfo{
 			Account:  &cloudAccounts[i],
@@ -146,25 +146,31 @@ func (la *ListAction) Handle(
 	return
 }
 
-// shieldReturnCloudKey return key by '***'
-func shieldReturnCloudKey(key string) string {
-	keyBytes := []byte(key)
-	if len(keyBytes) <= 4 {
-		return string(keyBytes)
-	}
-	size := len(keyBytes)
+// shieldCloudSecret return secret by '***'
+func shieldCloudSecret(account *cmproto.Account) *cmproto.Account {
+	shield := func(key string) string {
+		keyBytes := []byte(key)
+		if len(keyBytes) <= 4 {
+			return string(keyBytes)
+		}
+		size := len(keyBytes)
 
-	resultKeys := make([]byte, 0)
-	for i := range keyBytes {
-		if i < 2 || i >= (size-2) {
-			resultKeys = append(resultKeys, keyBytes[i])
-			continue
+		resultKeys := make([]byte, 0)
+		for i := range keyBytes {
+			if i < 2 || i >= (size-2) {
+				resultKeys = append(resultKeys, keyBytes[i])
+				continue
+			}
+
+			resultKeys = append(resultKeys, '*')
 		}
 
-		resultKeys = append(resultKeys, '*')
+		return string(resultKeys)
 	}
 
-	return string(resultKeys)
+	account.SecretKey = shield(account.SecretKey)
+	account.ClientSecret = shield(account.ClientSecret)
+	return account
 }
 
 // ListPermDataAction action for list permData account

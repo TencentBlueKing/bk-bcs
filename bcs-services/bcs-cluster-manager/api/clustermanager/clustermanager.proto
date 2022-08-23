@@ -1361,6 +1361,11 @@ message Credential {
 
   string key = 1;
   string secret = 2;
+  string subscriptionID = 3;
+  string tenantID = 4;
+  string resourceGroupName = 5;
+  string clientID = 6;
+  string clientSecret = 7;
 }
 
 message BKOpsPlugin {
@@ -1512,6 +1517,26 @@ message Account {
   string secretKey = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "secretKey",
     description: "腾讯云账号secretKey"
+  }];
+  string subscriptionID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subscriptionID",
+    description: "Azure 订阅ID"
+  }];
+  string tenantID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "tenantID",
+    description: "Azure 租户ID"
+  }];
+  string resourceGroupName = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure 资源组名称"
+  }];
+  string clientID = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clientID",
+    description: "Azure Service Principal ClientID"
+  }];
+  string clientSecret = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clientSecret",
+    description: "Azure Service Principal ClientSecret"
   }];
 }
 

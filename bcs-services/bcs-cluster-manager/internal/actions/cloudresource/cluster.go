@@ -53,9 +53,8 @@ func (la *ListCloudClusterAction) listCloudRegions() error {
 
 	clusterList, err := clsMgr.ListCluster(&cloudprovider.ListClusterOption{
 		CommonOption: cloudprovider.CommonOption{
-			Key:    la.account.Account.SecretID,
-			Secret: la.account.Account.SecretKey,
-			Region: la.req.Region,
+			Account: la.account.Account,
+			Region:  la.req.Region,
 			CommonConf: cloudprovider.CloudConf{
 				CloudInternalEnable: la.cloud.ConfInfo.CloudInternalEnable,
 				CloudDomain:         la.cloud.ConfInfo.CloudDomain,
@@ -94,10 +93,7 @@ func (la *ListCloudClusterAction) validate() error {
 		return err
 	}
 
-	err = validate.ListCloudRegionClusterValidate(la.req, &cmproto.Account{
-		SecretID:  la.account.Account.SecretID,
-		SecretKey: la.account.Account.SecretKey,
-	})
+	err = validate.ListCloudRegionClusterValidate(la.req, la.account.Account)
 	if err != nil {
 		return err
 	}

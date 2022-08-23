@@ -53,7 +53,7 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 		return nil, fmt.Errorf("qcloud CreateCluster cluster opt or cloud is empty")
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
 	}
 
@@ -88,7 +88,7 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 		return nil, fmt.Errorf("qcloud ImportCluster cluster opt or cloud is empty")
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
 	}
 
@@ -118,7 +118,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 		return nil, fmt.Errorf("qcloud DeleteCluster cluster is empty")
 	}
 
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud DeleteCluster cluster lost oprion")
 	}
 
@@ -156,7 +156,7 @@ func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNo
 
 // ListCluster get cloud cluster list by region
 func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.CloudClusterInfo, error) {
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud ListCluster cluster lost operation")
 	}
 
@@ -176,13 +176,13 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, cls := range clusters {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
-			ClusterID:            *cls.ClusterId,
-			ClusterName:          *cls.ClusterName,
-			ClusterDescription:   *cls.ClusterDescription,
-			ClusterVersion:       *cls.ClusterVersion,
-			ClusterOS:            *cls.ClusterOs,
-			ClusterType:          *cls.ClusterType,
-			ClusterStatus:        *cls.ClusterStatus,
+			ClusterID:          *cls.ClusterId,
+			ClusterName:        *cls.ClusterName,
+			ClusterDescription: *cls.ClusterDescription,
+			ClusterVersion:     *cls.ClusterVersion,
+			ClusterOS:          *cls.ClusterOs,
+			ClusterType:        *cls.ClusterType,
+			ClusterStatus:      *cls.ClusterStatus,
 		})
 	}
 
@@ -198,7 +198,7 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt
 		return nil, fmt.Errorf("qcloud AddNodesToCluster nodes is empty")
 	}
 
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud AddNodesToCluster cluster lost operation")
 	}
 
@@ -235,7 +235,7 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 		return nil, fmt.Errorf("qcloud DeleteNodesFromCluster nodes is empty")
 	}
 
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud DeleteNodesFromCluster cluster lost operation")
 	}
 

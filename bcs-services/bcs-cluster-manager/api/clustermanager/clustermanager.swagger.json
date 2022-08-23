@@ -4041,6 +4041,31 @@
           "type": "string",
           "description": "腾讯云账号secretKey",
           "title": "secretKey"
+        },
+        "subscriptionID": {
+          "type": "string",
+          "description": "Azure 订阅ID",
+          "title": "subscriptionID"
+        },
+        "tenantID": {
+          "type": "string",
+          "description": "Azure 租户ID",
+          "title": "tenantID"
+        },
+        "resourceGroupName": {
+          "type": "string",
+          "description": "Azure 资源组名称",
+          "title": "resourceGroupName"
+        },
+        "clientID": {
+          "type": "string",
+          "description": "Azure Service Principal ClientID",
+          "title": "clientID"
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Azure Service Principal ClientSecret",
+          "title": "clientSecret"
         }
       },
       "description": "用于存储不同cloud的账号信息，不同cloud格式兼容处理",
@@ -6655,6 +6680,21 @@
           "type": "string"
         },
         "secret": {
+          "type": "string"
+        },
+        "subscriptionID": {
+          "type": "string"
+        },
+        "tenantID": {
+          "type": "string"
+        },
+        "resourceGroupName": {
+          "type": "string"
+        },
+        "clientID": {
+          "type": "string"
+        },
+        "clientSecret": {
           "type": "string"
         }
       },
