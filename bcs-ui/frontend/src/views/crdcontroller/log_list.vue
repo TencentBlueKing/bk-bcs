@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -101,6 +102,7 @@
                       <p class="key mb5">{{$t('匹配标签')}}：</p>
                       <p class="value">
                         <ul class="key-list">
+                          <!-- eslint-disable vue/no-use-v-if-with-v-for -->
                           <li class="mb5" v-for="(value, key, labelIndex) in row.selector.match_labels" :key="labelIndex" v-if="labelIndex < 2">
                             <span class="key f12 m0" style="cursor: default;">{{key || '--'}}</span>
                             <span class="value f12 m0" style="cursor: default;">{{value || '--'}}</span>
@@ -775,6 +777,9 @@
 </template>
 
 <script>
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-this-alias */
 import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
 import bkExpression from './expression';
@@ -949,9 +954,11 @@ export default {
             }
           });
         } else if (data.log_source_type === 'selected_labels') {
+          // eslint-disable-next-line no-prototype-builtins
           if (!data.selector.hasOwnProperty('match_labels')) {
             data.selector.match_labels = {};
           }
+          // eslint-disable-next-line no-prototype-builtins
           if (!data.selector.hasOwnProperty('match_expressions')) {
             data.selector.match_expressions = [];
           }
@@ -1176,7 +1183,7 @@ export default {
       this.curCrdInstance.selector.match_labels = obj;
     },
 
-    updateExpressions(list, data) {
+    updateExpressions(list) {
       this.curCrdInstance.selector.match_expressions = list;
     },
 
@@ -1295,7 +1302,7 @@ export default {
              * @param  {object} crdInstance crdInstance
              * @param  {number} index 索引
              */
-    async removeCrdInstance(crdInstance, index) {
+    async removeCrdInstance(crdInstance) {
       const self = this;
       const { projectId } = this;
       const { clusterId } = this;
@@ -1366,6 +1373,7 @@ export default {
     getDataByPage(page) {
       // 如果没有page，重置
       if (!page) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.current = page = 1;
       }
       let startIndex = (page - 1) * this.pageConf.limit;
@@ -1483,7 +1491,7 @@ export default {
              * @param  {object} nameSpace 命名空间
              * @param  {number} index 索引
              */
-    toggleSelected(nameSpace, index) {
+    toggleSelected(nameSpace) {
       nameSpace.isSelected = !nameSpace.isSelected;
       this.nameSpaceList = JSON.parse(JSON.stringify(this.nameSpaceList));
     },
@@ -1787,7 +1795,7 @@ export default {
       this.curCrdInstance.namespace = data.name;
     },
 
-    changeLabels(labels, data) {
+    changeLabels(labels) {
       // this.curCrdInstance.pod_selector = data
       this.curCrdInstance.labels = labels;
     },

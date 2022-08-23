@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-top-bar" :style="{ marginBottom: (isNewTemplate) ? '0px' : '55px' }">
     <i class="biz-back bcs-icon bcs-icon-arrows-left" @click="beforeLeave"></i>
@@ -380,6 +381,14 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable max-len */
+/* eslint-disable no-useless-escape */
 import yamljs from 'js-yaml';
 import applyPerm from '@/mixins/apply-perm';
 import base64 from 'base-64';
@@ -387,6 +396,7 @@ import { isObject } from '@/common/util';
 import shlex from 'shlex';
 
 export default {
+  name: 'HeaderIndex',
   mixins: [applyPerm],
   data() {
     return {
@@ -622,7 +632,8 @@ export default {
     },
     withoutCurVersionList() {
       // 去掉草稿和当前版本
-      return this.$store.state.k8sTemplate.versionList.filter(item => item.show_version_id !== -1 && item.show_version_id !== this.curShowVersionId);
+      return this.$store.state.k8sTemplate.versionList
+        .filter(item => item.show_version_id !== -1 && item.show_version_id !== this.curShowVersionId);
     },
     imageList() {
       return this.$store.state.k8sTemplate.imageList;

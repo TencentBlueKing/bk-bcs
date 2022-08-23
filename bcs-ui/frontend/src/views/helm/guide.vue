@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <bk-sideslider
     :is-show.sync="visibility"
@@ -5,6 +6,7 @@
     :width="900"
     :quick-close="true">
     <div slot="content">
+      <!-- eslint-disable-next-line vue/no-v-html -->
       <div v-html="markdown" class="biz-markdown-content" id="markdown"></div>
     </div>
   </bk-sideslider>
@@ -66,6 +68,7 @@ export default {
         if (aIndex < 0) {
           tokens[idx].attrPush(['target', '_blank']);
         } else {
+          // eslint-disable-next-line no-param-reassign
           tokens[idx].attrs[aIndex][1] = '_blank';
         }
         return defaultRender(tokens, idx, options, env, self);
@@ -77,7 +80,7 @@ export default {
 };
 </script>
 
-<style>
+<style lang="postcss">
     .biz-markdown-content {
         pre {
             padding: 0;

@@ -42,7 +42,8 @@ export default defineComponent({
     ignoreKeys: { type: [Array, String], default: () => '' },
   },
   setup(props, ctx) {
-    const { value, diffEditor, width, height, original, language, theme, options, readonly, ignoreKeys } = toRefs(props);
+    const { value, diffEditor, width, height,
+      original, language, theme, options, readonly, ignoreKeys } = toRefs(props);
     const editorRef = ref<any>(null);
     const editorErr = ref<any>('');
     // diff统计

@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="bk-form biz-configuration-form">
     <div class="bk-form-item">
@@ -238,6 +239,7 @@ export default {
     curLabelList() {
       const list = [];
       // 如果有缓存直接使用
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       if (this.curIngress.config.webCache && this.curIngress.config.webCache.labelListCache) {
         return this.curIngress.config.webCache.labelListCache;
       }
@@ -259,6 +261,7 @@ export default {
     curRemarkList() {
       const list = [];
       // 如果有缓存直接使用
+      // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
       if (this.curIngress.config.webCache && this.curIngress.config.webCache.remarkListCache) {
         return this.curIngress.config.webCache.remarkListCache;
       }
@@ -293,7 +296,7 @@ export default {
         secretName: '',
       });
     },
-    removeTls(index, curTls) {
+    removeTls(index) {
       this.curIngress.config.spec.tls.splice(index, 1);
     },
     togglePanel() {
@@ -345,7 +348,7 @@ export default {
     handlerSelectService(pathRule) {
       pathRule.backend.servicePort = '';
     },
-    checkService(pathRule) {
+    checkService() {
       const { rules } = this.curIngress.config.spec;
       for (const rule of rules) {
         const { paths } = rule.http;
@@ -369,7 +372,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="postcss" scoped>
     @import '@/css/variable.css';
     @import '@/css/mixins/clearfix.css';
 

@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="apply-host-wrapper" v-if="$INTERNAL">
     <div class="apply-host-btn">
@@ -56,11 +57,19 @@
           <div class="bk-button-group">
             <bcs-button
               :disabled="defaultInfo.networkKey && defaultInfo.networkKey !== 'overlay'"
-              :class="{ 'active': formdata.networkKey === 'overlay', 'network-btn': true, 'network-zIndex': defaultInfo.networkKey === 'overlay' }"
+              :class="{
+                'active': formdata.networkKey === 'overlay',
+                'network-btn': true,
+                'network-zIndex': defaultInfo.networkKey === 'overlay'
+              }"
               @click="formdata.networkKey = 'overlay'">overlay</bcs-button>
             <bcs-button
               :disabled="defaultInfo.networkKey && defaultInfo.networkKey !== 'underlay'"
-              :class="{ 'active': formdata.networkKey === 'underlay', 'network-btn': true, 'network-zIndex': defaultInfo.networkKey === 'underlay' }"
+              :class="{
+                'active': formdata.networkKey === 'underlay',
+                'network-btn': true,
+                'network-zIndex': defaultInfo.networkKey === 'underlay'
+              }"
               @click="formdata.networkKey = 'underlay'">underlay</bcs-button>
           </div>
         </bk-form-item>
@@ -171,8 +180,12 @@
                   </span>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('机型')" prop="model" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
-              <bk-table-column :label="$t('规格')" prop="specifications" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+              <bk-table-column
+                :label="$t('机型')"
+                prop="model" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+              <bk-table-column
+                :label="$t('规格')"
+                prop="specifications" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
               <bk-table-column :label="$t('园区')" prop="zone" key="zone">
                 <template>
                   {{ zoneName }}
@@ -202,7 +215,10 @@
           <a href="wxwork://message/?username=dommyzhang" style="color: #3A84FF;" place="name">dommyzhang</a>
         </i18n>
         <bk-button theme="primary" :loading="isSubmitLoading" @click.stop="handleSubmitApply">{{$t('确定')}}</bk-button>
-        <bk-button theme="default" :disabled="isSubmitLoading" @click.stop="handleApplyHostClose">{{$t('取消')}}</bk-button>
+        <bk-button
+          theme="default"
+          :disabled="isSubmitLoading"
+          @click.stop="handleApplyHostClose">{{$t('取消')}}</bk-button>
       </template>
     </bcs-dialog>
   </div>
@@ -392,7 +408,7 @@ export default {
       val && val !== old && this.changeNetwork();
     },
     'formdata.cvm_type'() {
-      this.$refs.applyForm && this.$refs.applyForm.$refs.hostItem && this.$refs.applyForm.$refs.hostItem.clearError();
+      this.$refs.applyForm?.$refs.hostItem?.clearError();
     },
     'formdata.region': {
       immediate: true,
@@ -493,7 +509,7 @@ export default {
     /**
              * 选择网络类型
              */
-    async changeNetwork(index, data) {
+    async changeNetwork() {
       this.vpcList = [];
       await this.fetchVPC();
     },
@@ -585,7 +601,7 @@ export default {
              * 获取主机列表
              */
     async getHosts() {
-      this.$refs.applyForm && this.$refs.applyForm.$refs.hostItem && this.$refs.applyForm.$refs.hostItem.clearError();
+      this.$refs.applyForm?.$refs.hostItem?.clearError();
       try {
         this.isHostLoading = true;
         const res = await this.$store.dispatch('cluster/getSCRHosts', {

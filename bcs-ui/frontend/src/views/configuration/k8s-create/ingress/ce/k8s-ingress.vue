@@ -6,7 +6,18 @@
           <div class="bk-form-item is-required">
             <label class="bk-label" style="width: 130px;">{{$t('名称')}}：</label>
             <div class="bk-form-content" style="margin-left: 130px;">
-              <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('请输入30个字符以内')" style="width: 310px;" v-model="curIngress.config.metadata.name" maxlength="30" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+              <input
+                type="text"
+                :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]"
+                :placeholder="$t('请输入30个字符以内')"
+                style="width: 310px;"
+                v-model="curIngress.config.metadata.name"
+                maxlength="30"
+                name="applicationName"
+                v-validate="{
+                  required: true,
+                  regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
+                }">
             </div>
             <div class="bk-form-tip is-danger" style="margin-left: 130px;" v-if="errors.has('applicationName')">
               <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
@@ -17,7 +28,9 @@
 
       <div class="bk-form-item">
         <div class="bk-form-content" style="margin-left: 130px;">
-          <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isTlsPanelShow }]" @click.stop.prevent="toggleTlsPanel">
+          <button
+            :class="['bk-text-button f12 mb10 pl0', { 'rotate': isTlsPanelShow }]"
+            @click.stop.prevent="toggleTlsPanel">
             {{$t('TLS设置')}}<i class="bk-icon icon-angle-double-down ml5"></i>
           </button>
           <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isPanelShow }]" @click.stop.prevent="togglePanel">
@@ -57,7 +70,9 @@
                         <button class="action-btn ml5" @click.stop.prevent="addTls">
                           <i class="bk-icon icon-plus"></i>
                         </button>
-                        <button class="action-btn" v-if="curIngress.config.spec.tls.length > 1" @click.stop.prevent="removeTls(index, computer)">
+                        <button
+                          class="action-btn"
+                          v-if="curIngress.config.spec.tls.length > 1" @click.stop.prevent="removeTls(index, computer)">
                           <i class="bk-icon icon-minus"></i>
                         </button>
                       </td>
@@ -91,10 +106,14 @@
       <div class="biz-part-header" style="margin-left: 130px;">
         <div class="bk-button-group">
           <div class="item" v-for="(rule, index) in curIngress.config.spec.rules" :key="index">
-            <button :class="['bk-button bk-default is-outline', { 'is-selected': curRuleIndex === index }]" @click.stop="setCurRule(rule, index)">
+            <button
+              :class="['bk-button bk-default is-outline', { 'is-selected': curRuleIndex === index }]"
+              @click.stop="setCurRule(rule, index)">
               {{rule.host || $t('未命名')}}
             </button>
-            <span class="bk-icon icon-close-circle" @click.stop="removeRule(index)" v-if="curIngress.config.spec.rules.length > 1"></span>
+            <span
+              class="bk-icon icon-close-circle" @click.stop="removeRule(index)"
+              v-if="curIngress.config.spec.rules.length > 1"></span>
           </div>
           <bk-tooltip ref="containerTooltip" :content="$t('添加Rule')" placement="top">
             <button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalRule">
@@ -111,7 +130,13 @@
         <div class="bk-form-item is-required">
           <label class="bk-label" style="width: 130px;">{{$t('主机名')}}：</label>
           <div class="bk-form-content" style="margin-left: 130px;">
-            <input type="text" :class="['bk-form-input']" :placeholder="$t('请输入30个字符以内')" style="width: 310px;" v-model="curRule.host" maxlength="30" name="ruleName">
+            <input
+              type="text" :class="['bk-form-input']"
+              :placeholder="$t('请输入30个字符以内')"
+              style="width: 310px;"
+              v-model="curRule.host"
+              maxlength="30"
+              name="ruleName">
           </div>
         </div>
         <div class="bk-form-item">
@@ -160,7 +185,10 @@
                     <button class="action-btn ml5" @click.stop.prevent="addRulePath">
                       <i class="bk-icon icon-plus"></i>
                     </button>
-                    <button class="action-btn" v-if="curRule.http.paths.length > 1" @click.stop.prevent="removeRulePath(pathRule, index)">
+                    <button
+                      class="action-btn"
+                      v-if="curRule.http.paths.length > 1"
+                      @click.stop.prevent="removeRulePath(pathRule, index)">
                       <i class="bk-icon icon-minus"></i>
                     </button>
                   </td>
@@ -262,7 +290,7 @@ export default {
     curLabelList() {
       const list = [];
       // 如果有缓存直接使用
-      if (this.curIngress.config.webCache && this.curIngress.config.webCache.labelListCache) {
+      if (this.curIngress.config.webCache?.labelListCache) {
         return this.curIngress.config.webCache.labelListCache;
       }
       const { labels } = this.curIngress.config.metadata;
@@ -283,7 +311,7 @@ export default {
     curRemarkList() {
       const list = [];
       // 如果有缓存直接使用
-      if (this.curIngress.config.webCache && this.curIngress.config.webCache.remarkListCache) {
+      if (this.curIngress.config.webCache?.remarkListCache) {
         return this.curIngress.config.webCache.remarkListCache;
       }
       const { annotations } = this.curIngress.config.metadata;
@@ -342,7 +370,7 @@ export default {
         certId: '',
       });
     },
-    removeTls(index, curTls) {
+    removeTls(index) {
       this.curIngress.config.spec.tls.splice(index, 1);
     },
     togglePanel() {
@@ -394,7 +422,7 @@ export default {
     handlerSelectService(pathRule) {
       pathRule.backend.servicePort = '';
     },
-    checkService(pathRule) {
+    checkService() {
       const { rules } = this.curIngress.config.spec;
       for (const rule of rules) {
         const { paths } = rule.http;

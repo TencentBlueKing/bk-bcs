@@ -56,18 +56,33 @@
                 </bk-button>
               </span>
               <template v-if="$INTERNAL && curClusterInPage.providerType === 'tke'">
-                <apply-host theme="primary" style="display: inline-block;" :cluster-id="clusterId" :is-backfill="true" />
+                <apply-host
+                  theme="primary"
+                  style="display: inline-block;"
+                  :cluster-id="clusterId" :is-backfill="true" />
               </template>
               <bcs-popover v-if="!allowBatch" :content="dontAllowBatchMsg" placement="top">
-                <bk-dropdown-menu :align="'center'" ref="toggleFilterDropdownMenu" class="batch-operate-dropdown" :disabled="true">
-                  <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button batch-operate" :class="!allowBatch ? 'disabled' : ''">
+                <bk-dropdown-menu
+                  :align="'center'"
+                  ref="toggleFilterDropdownMenu"
+                  class="batch-operate-dropdown"
+                  :disabled="true">
+                  <a
+                    href="javascript:void(0);"
+                    slot="dropdown-trigger"
+                    class="bk-text-button batch-operate"
+                    :class="!allowBatch ? 'disabled' : ''">
                     <span class="label">{{$t('批量操作')}}</span>
                     <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down"></i>
                   </a>
                 </bk-dropdown-menu>
               </bcs-popover>
               <bk-dropdown-menu v-else :align="'center'" ref="toggleFilterDropdownMenu" class="batch-operate-dropdown">
-                <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button batch-operate" :class="!allowBatch ? 'disabled' : ''">
+                <a
+                  href="javascript:void(0);"
+                  slot="dropdown-trigger"
+                  class="bk-text-button batch-operate"
+                  :class="!allowBatch ? 'disabled' : ''">
                   <span class="label">{{$t('批量操作')}}</span>
                   <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down"></i>
                 </a>
@@ -86,7 +101,6 @@
                   </li>
                   <li>
                     <a class="action" href="javascript:void(0)" @click="batchOperate('4')">{{$t('重新添加')}}</a>
-                    <!-- <a href="javascript:void(0)" v-else class="action disabled" :title="$t('所选节点均处于初始化失败状态时才允许此操作')">{{$t('重新添加')}}</a> -->
                   </li>
                 </ul>
               </bk-dropdown-menu>
@@ -97,7 +111,11 @@
                 </a>
                 <ul class="bk-dropdown-list" slot="dropdown-content">
                   <li>
-                    <a href="javascript:void(0)" @click="copyIp('selected')" class="selected" :class="!allowBatch ? 'disabled' : ''">{{$t('复制所选IP')}}</a>
+                    <a
+                      href="javascript:void(0)"
+                      @click="copyIp('selected')"
+                      class="selected"
+                      :class="!allowBatch ? 'disabled' : ''">{{$t('复制所选IP')}}</a>
                   </li>
                   <li>
                     <a href="javascript:void(0)" @click="copyIp('cur-page')" class="cur-page">{{$t('复制当前页IP')}}</a>
@@ -114,7 +132,11 @@
               </div>
               <span class="close-wrapper">
                 <template v-if="$refs.searcher && $refs.searcher.searchParams && $refs.searcher.searchParams.length">
-                  <bk-button class="bk-button bk-default is-outline is-icon" :title="$t('清除')" style="border: 1px solid #c4c6cc;" @click="clearSearchParams">
+                  <bk-button
+                    class="bk-button bk-default is-outline is-icon"
+                    :title="$t('清除')"
+                    style="border: 1px solid #c4c6cc;"
+                    @click="clearSearchParams">
                     <i class="bcs-icon bcs-icon-close"></i>
                   </bk-button>
                 </template>
@@ -131,12 +153,17 @@
               </span>
             </div>
             <div class="biz-cluster-node-table-wrapper" v-bkloading="{ isLoading: isPageLoading, zIndex: 500 }">
-              <table class="bk-table has-table-hover biz-table" :style="{ borderBottomWidth: nodeList.length ? '1px' : 0 }">
+              <table
+                class="bk-table has-table-hover biz-table"
+                :style="{ borderBottomWidth: nodeList.length ? '1px' : 0 }">
                 <thead>
                   <tr>
                     <!-- k8s 10 列、tke 9 列 -->
                     <th style="width: 3%; text-align: center; padding: 0; padding-left: 20px;">
-                      <bk-checkbox name="check-all-node" v-model="isCheckCurPageAllNode" @change="checkAllNode(...arguments)" />
+                      <bk-checkbox
+                        name="check-all-node"
+                        v-model="isCheckCurPageAllNode"
+                        @change="checkAllNode(...arguments)" />
                     </th>
                     <th style="width: 10%; padding-left: 10px;">{{$t('主机名/IP')}}</th>
                     <th style="width: 8%;">{{$t('状态')}}</th>
@@ -212,10 +239,10 @@
                     <tr v-for="(node, index) in curNodeList" :key="index">
                       <!-- 全选 -->
                       <td style="width: 3%; text-align: center; padding: 0; padding-left: 20px;">
-                        <!-- <label class="bk-form-checkbox" style="margin-top: 6px;">
-                                                    <input type="checkbox" name="check-node" v-model="node.isChecked" @click="checkNode(node, index)" />
-                                                </label> -->
-                        <bk-checkbox name="check-node" v-model="node.isChecked" @change="checkNode(node, ...arguments)" />
+                        <bk-checkbox
+                          name="check-node"
+                          v-model="node.isChecked"
+                          @change="checkNode(node, ...arguments)" />
                       </td>
                       <!-- 节点IP -->
                       <td class="pl10">
@@ -709,6 +736,7 @@ import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import StatusIcon from '@/views/dashboard/common/status-icon.tsx';
 
 export default {
+  name: 'NodeList',
   components: {
     RingCell,
     LoadingCell,

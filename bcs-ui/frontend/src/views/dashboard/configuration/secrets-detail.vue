@@ -59,7 +59,7 @@ export default defineComponent({
       default: () => ({}),
     },
   },
-  setup(props, ctx) {
+  setup() {
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];
 

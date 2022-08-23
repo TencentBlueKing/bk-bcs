@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/no-v-html -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content" v-bkloading="{ isLoading: createInstanceLoading, zIndex: 100 }">
     <div class="biz-top-bar">
@@ -402,6 +404,8 @@
 </template>
 
 <script>
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
 import MarkdownIt from 'markdown-it';
 import yamljs from 'js-yaml';
 import path2tree from '@/common/path2tree';
@@ -876,7 +880,7 @@ export default {
              * @param  {number} index 索引
              * @param  {object} data 数据
              */
-    async getTplDetail(index, data) {
+    async getTplDetail(index) {
       const list = [];
       const { projectId } = this;
       const version = index;
@@ -1177,7 +1181,7 @@ export default {
       if (this.errorDialogConf.message) {
         this.$nextTick(() => {
           this.clipboardInstance = new Clipboard('#error-copy-btn');
-          this.clipboardInstance.on('success', (e) => {
+          this.clipboardInstance.on('success', () => {
             this.$bkMessage({
               theme: 'success',
               message: this.$t('复制成功'),

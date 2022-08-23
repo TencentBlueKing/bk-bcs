@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -1569,6 +1570,9 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
 import bkKeyer from '@/components/keyer';
 import ace from '@/components/ace-editor';
 import header from './header.vue';
@@ -1582,6 +1586,7 @@ import applicationParams from '@/json/k8s-daemonset.json';
 import containerParams from '@/json/k8s-container.json';
 
 export default {
+  name: 'DaemonSet',
   components: {
     ace,
     'bk-keyer': bkKeyer,
@@ -2223,6 +2228,7 @@ export default {
     this.initVloumeSelectets();
     // this.initMetricList()
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Validator } = require('jsonschema');
     this.appJsonValidator = new Validator();
   },
@@ -2425,6 +2431,7 @@ export default {
 
       // 调度约束
       const { nodeSelector } = jsonObj.spec.template.spec;
+      // eslint-disable-next-line no-param-reassign, no-multi-assign
       const nodeSelectorList = jsonObj.webCache.nodeSelectorList = [];
       for (const [key, value] of Object.entries(nodeSelector)) {
         nodeSelectorList.push({
@@ -2758,6 +2765,7 @@ export default {
 
       // 调度约束
       if (webCache.nodeSelectorList) {
+        // eslint-disable-next-line no-multi-assign
         const nodeSelector = appConfig.spec.template.spec.nodeSelector = {};
         const { nodeSelectorList } = webCache;
         nodeSelectorList.forEach((item) => {
@@ -2806,6 +2814,7 @@ export default {
                 break;
 
               case 'hostPath':
+                // eslint-disable-next-line no-case-declarations
                 const item = {
                   name: volume.name,
                   hostPath: {
@@ -2820,6 +2829,7 @@ export default {
 
               case 'configMap':
                 // 针对已经存的configmap处理
+                // eslint-disable-next-line no-case-declarations
                 let volumeSource = volume.source;
                 if (volume.is_exist) {
                   volumeSource = volume.source.split(':')[0];
@@ -3085,6 +3095,7 @@ export default {
       this.updateApplicationLabel(defaultLabels, defaultLabelObject);
     },
     setCurApplication(application, index) {
+      // eslint-disable-next-line no-plusplus
       this.renderImageIndex++;
       this.curApplication = application;
       this.curApplicationId = application.id;
@@ -3200,6 +3211,7 @@ export default {
       setTimeout(() => {
         // 切换container
         // this.resetPreContainerParams()
+        // eslint-disable-next-line no-plusplus
         this.renderImageIndex++;
         this.curContainer = container;
         this.curContainerIndex = index;
@@ -3244,6 +3256,7 @@ export default {
       this.daemonsets.splice(index, 1);
     },
     removeApplication(application, index) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       const { projectId } = this;
       const version = this.curVersion;
@@ -3536,19 +3549,19 @@ export default {
         data.arg_value = '';
       }
     },
-    updateNodeSelectorList(list, data) {
+    updateNodeSelectorList(list) {
       if (!this.curApplication.config.webCache) {
         this.curApplication.config.webCache = {};
       }
       this.curApplication.config.webCache.nodeSelectorList = list;
     },
-    updateApplicationRemark(list, data) {
+    updateApplicationRemark(list) {
       if (!this.curApplication.config.webCache) {
         this.curApplication.config.webCache = {};
       }
       this.curApplication.config.webCache.remarkListCache = list;
     },
-    updateApplicationImageSecrets(list, data) {
+    updateApplicationImageSecrets(list) {
       const secrets = [];
       list.forEach((item) => {
         secrets.push({
@@ -3919,11 +3932,11 @@ export default {
       const { projectId } = this;
       const version = this.curVersion;
       const portId = item.id;
-      this.$store.dispatch('k8sTemplate/checkPortIsLink', { projectId, version, portId }).then((res) => {
+      this.$store.dispatch('k8sTemplate/checkPortIsLink', { projectId, version, portId }).then(() => {
         this.curContainer.ports.splice(index, 1);
       });
     },
-    selectVolumeType(volumeItem) {
+    selectVolumeType() {
       // volumeItem.name = ''
       // volumeItem.mountPath = ''
       // let data = Object.assign([], this.curContainer.volumeMounts)
@@ -4032,7 +4045,7 @@ export default {
             ];
           }
         }
-      }, (res) => {
+      }, () => {
         this.curApplicationLinkLabels = [];
       });
     },

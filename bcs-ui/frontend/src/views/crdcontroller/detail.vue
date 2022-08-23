@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -116,14 +117,18 @@
       :is-show.sync="updateConfirmDialog.isShow"
       @cancel="hideConfirmDialog">
       <template slot="content">
-        <p class="biz-tip mb5 tl" style="color: #666;" v-if="yamlDiffEditorOptions.isDiff">{{$t('Values 内容发生如下变化，请确认后再点击“确定”更新')}}</p>
+        <p
+          class="biz-tip mb5 tl" style="color: #666;"
+          v-if="yamlDiffEditorOptions.isDiff">{{$t('Values 内容发生如下变化，请确认后再点击“确定”更新')}}</p>
         <div class="difference-code">
           <div class="editor-header" v-if="yamlDiffEditorOptions.isDiff">
             <div>当前内容</div>
             <div>更新内容</div>
           </div>
 
-          <div :class="['diff-editor-box', { 'editor-fullscreen': yamlDiffEditorOptions.fullScreen }]" style="position: relative;">
+          <div
+            :class="['diff-editor-box', { 'editor-fullscreen': yamlDiffEditorOptions.fullScreen }]"
+            style="position: relative;">
             <monaco-editor
               ref="yamlEditor"
               class="editor"
@@ -268,6 +273,7 @@ export default {
       }
       this.updateConfirmDialog.isShow = true;
       setTimeout(() => {
+        // eslint-disable-next-line no-plusplus
         this.differenceKey++;
       }, 0);
     },
@@ -298,7 +304,7 @@ export default {
       this.updateInstanceLoading = true;
       try {
         const curVersion = this.chartVersionsList.find(i => i.version === this.curApp.chart_version);
-        const chartUrl = curVersion && curVersion.urls[0];
+        const chartUrl = curVersion?.urls[0];
         const clusterId = this.curClusterId;
         const crdId = this.curApp.tool_info.id;
         const result = await this.$store.dispatch('crdcontroller/clusterToolsUpgrade', {

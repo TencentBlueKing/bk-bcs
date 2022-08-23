@@ -18,7 +18,9 @@
     </bk-form-item>
     <bk-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
       <bcs-select v-model="formData.region" :loading="regionLoading" searchable :clearable="false">
-        <bcs-option v-for="item in regionList" :key="item.region" :id="item.region" :name="item.regionName"></bcs-option>
+        <bcs-option
+          v-for="item in regionList"
+          :key="item.region" :id="item.region" :name="item.regionName"></bcs-option>
       </bcs-select>
     </bk-form-item>
     <bk-form-item :label="$t('所属VPC')" property="vpcID" error-display-type="normal" required>
@@ -258,7 +260,7 @@ export default defineComponent({
       ],
       network: [
         {
-          validator(val) {
+          validator() {
             const network = formData.value.networkSettings;
             return Object.keys(network).every(key => !!network[key]);
           },

@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -209,6 +210,12 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
 import hpaParams from '@/json/k8s-hpa.json';
 import ace from '@/components/ace-editor';
 import header from './header.vue';
@@ -220,6 +227,7 @@ import k8sBase from '@/mixins/configuration/k8s-base';
 import { catchErrorHandler } from '@/common/util';
 
 export default {
+  name: 'K8SHPA',
   components: {
     'biz-header': header,
     'biz-tabs': tabs,

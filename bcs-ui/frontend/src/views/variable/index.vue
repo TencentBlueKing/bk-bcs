@@ -1,3 +1,6 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
+<!-- eslint-disable vue/no-useless-template-attributes -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -635,6 +638,7 @@ export default {
              * @param {Object} data 变量
              */
     removeVar(data) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       this.$bkInfo({
         title: this.$t('确认删除'),
@@ -1044,8 +1048,9 @@ export default {
 
     handleFileInput(e) {
       const { fileInput } = this.$refs;
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
-      if (fileInput.files && fileInput.files.length) {
+      if (fileInput.files?.length) {
         const file = fileInput.files[0];
         if (window.FileReader) {
           const reader = new FileReader();
@@ -1065,7 +1070,7 @@ export default {
                 });
                 self.refresh();
               })
-                .catch((e) => {
+                .catch(() => {
                 });
             }
           };
@@ -1155,7 +1160,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="postcss" scoped>
     @import './index.css';
     /deep/ .bk-form-radio {
         & + .bk-form-radio {

@@ -1,6 +1,17 @@
 <template>
   <BaseLayout title="Jobs" kind="Job" category="jobs" type="workloads">
-    <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
+    <template
+      #default="{
+        curPageData,
+        pageConf,
+        handlePageChange,
+        handlePageSizeChange,
+        handleGetExtData,
+        gotoDetail,
+        handleSortChange,
+        handleUpdateResource,
+        handleDeleteResource
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -58,6 +69,7 @@ import { defineComponent } from '@vue/composition-api';
 import BaseLayout from '@/views/dashboard/common/base-layout';
 
 export default defineComponent({
+  name: 'WorkloadJobs',
   components: { BaseLayout },
 });
 </script>

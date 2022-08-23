@@ -1,6 +1,17 @@
 <template>
   <BaseLayout title="CronJobs" kind="CronJob" category="cronjobs" type="workloads">
-    <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
+    <template
+      #default="{
+        curPageData,
+        pageConf,
+        handlePageChange,
+        handlePageSizeChange,
+        handleGetExtData,
+        gotoDetail,
+        handleSortChange,
+        handleUpdateResource,
+        handleDeleteResource
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -66,6 +77,7 @@ import { defineComponent } from '@vue/composition-api';
 import BaseLayout from '@/views/dashboard/common/base-layout';
 
 export default defineComponent({
+  name: 'WorkloadCronjobs',
   components: { BaseLayout },
 });
 </script>

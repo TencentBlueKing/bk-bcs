@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content" v-bkloading="{ isLoading: showLoading, opacity: 1 }">
     <div class="biz-top-bar">
@@ -163,7 +164,8 @@ export default {
         this.tableHeight = window.innerHeight - 20 - 219 - 20 - 20 - 10;
       }
     });
-    self.addEventListener('scroll', async (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    self.addEventListener('scroll', async () => {
       if (this.showScrollLoading || this.isBeforeDestroy || this.tagCount < 10) {
         return;
       }
@@ -180,7 +182,7 @@ export default {
     this.isBeforeDestroy = true;
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     backImageLibrary() {

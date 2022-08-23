@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <component v-bind:is="currentView" ref="service"></component>
 </template>
@@ -8,7 +9,7 @@ import globalMixin from '@/mixins/global';
 
 export default {
   beforeRouteLeave(to, from, next) {
-    this.$refs.service && this.$refs.service.leaveCallback();
+    this.$refs.service?.leaveCallback();
     next(true);
   },
   components: {

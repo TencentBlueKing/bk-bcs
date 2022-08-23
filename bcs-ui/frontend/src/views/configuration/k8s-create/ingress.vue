@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <biz-header
@@ -102,11 +103,18 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable no-multi-assign */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-this-alias */
 import header from './header.vue';
 import tabs from './tabs.vue';
 import ingressParams from '@/json/k8s-ingress.json';
 
 export default {
+  name: 'K8SIngress',
   components: {
     'biz-header': header,
     'biz-tabs': tabs,

@@ -35,7 +35,7 @@ import ContentHeader from '@/views/content-header.vue';
 import { isProjectExit } from '@/api/base';
 
 export default defineComponent({
-  name: 'Home',
+  name: 'BcsHome',
   components: {
     SideNav,
     SideTerminal,
@@ -91,7 +91,7 @@ export default defineComponent({
         project_code: _projectCode,
         with_perms: false,
       });
-      if (projectData && projectData.length) {
+      if (projectData?.length) {
         // 项目存在，但是无权限
         const location = $router.resolve({
           name: '403',

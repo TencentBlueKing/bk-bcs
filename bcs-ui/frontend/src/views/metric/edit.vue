@@ -22,6 +22,7 @@
                 <span class="tip">{{$t('选择Service以获取Label')}}</span>
               </label>
               <div class="bk-form-content">
+                <!-- eslint-disable-next-line vue/no-mutating-props -->
                 <bk-input :disabled="true" v-model="clusterName" />
               </div>
             </div>
@@ -43,6 +44,7 @@
                     <bk-input style="width: 235px;" :disabled="true" :value="key" />
                     <span class="operator">=</span>
                     <bk-input style="width: 235px;" :disabled="true" :value="keyValueData[key]" />
+                    <!-- eslint-disable-next-line max-len -->
                     <bk-checkbox class="ml10" :value="!!editParams.selector[key]" @change="valueChange(arguments[0], key)"></bk-checkbox>
                   </div>
                 </div>
@@ -187,7 +189,7 @@ export default {
   },
   watch: {
     isShow: {
-      async handler(newVal, oldVal) {
+      async handler(newVal) {
         this.isVisible = newVal;
         if (newVal) {
           // this.isLoading = true
@@ -220,7 +222,7 @@ export default {
   mounted() {
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
     /**
@@ -376,14 +378,14 @@ export default {
         const key = metricParams.key.trim();
         const value = metricParams.value.trim();
         if (!key && value) {
-          this.bkMessageInstance && this.bkMessageInstance.close();
+          this.bkMessageInstance?.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
             message: this.$t('请填写参数名称'),
           });
           return;
         } if (key && !value) {
-          this.bkMessageInstance && this.bkMessageInstance.close();
+          this.bkMessageInstance?.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
             message: this.$t('请填写参数值'),

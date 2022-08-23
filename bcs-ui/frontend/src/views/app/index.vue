@@ -74,6 +74,7 @@ const customobjects = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/customobjects');
 
 export default {
+  name: 'DetailIndex',
   components: {
 
     deployments,

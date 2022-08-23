@@ -24,6 +24,7 @@ export default {
         searchParamsList: this.searchParamsList,
       };
       if (needConfirm) {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const me = this;
         const h = me.$createElement;
         me.$bkInfo({

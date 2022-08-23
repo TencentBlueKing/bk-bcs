@@ -18,6 +18,7 @@ export default {
       type: String,
       default: 'bk-spin-loading-primary',
     },
+    // eslint-disable-next-line vue/no-reserved-props
     style: {
       type: Object,
       default: () => ({

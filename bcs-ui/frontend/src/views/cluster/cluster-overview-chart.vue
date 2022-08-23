@@ -72,7 +72,7 @@ export default {
             },
             axisLabel: {
               color: '#868b97',
-              formatter(value, index) {
+              formatter(value) {
                 if (String(parseInt(value, 10)).length === 10) {
                   value = `${parseInt(value, 10)}000`;
                 }
@@ -107,7 +107,7 @@ export default {
             },
             axisLabel: {
               color: '#868b97',
-              formatter(value, index) {
+              formatter(value) {
                 return `${value.toFixed(1)}%`;
               },
             },
@@ -160,7 +160,7 @@ export default {
             },
             axisLabel: {
               color: '#868b97',
-              formatter(value, index) {
+              formatter(value) {
                 if (String(parseInt(value, 10)).length === 10) {
                   value = `${parseInt(value, 10)}000`;
                 }
@@ -195,7 +195,7 @@ export default {
             },
             axisLabel: {
               color: '#868b97',
-              formatter(value, index) {
+              formatter(value) {
                 return `${(value).toFixed(1)}%`;
               },
             },
@@ -250,7 +250,7 @@ export default {
             },
             axisLabel: {
               color: '#868b97',
-              formatter(value, index) {
+              formatter(value) {
                 if (String(parseInt(value, 10)).length === 10) {
                   value = `${parseInt(value, 10)}000`;
                 }
@@ -285,7 +285,7 @@ export default {
             },
             axisLabel: {
               color: '#868b97',
-              formatter(value, index) {
+              formatter(value) {
                 return `${(value).toFixed(1)}%`;
               },
             },
@@ -327,7 +327,7 @@ export default {
     //     },
     //     immediate: true
     // }
-    data(v) {
+    data() {
       setTimeout(() => {
         this.renderMatrixChart(this.data);
       }, 0);
@@ -347,7 +347,7 @@ export default {
   mounted() {
     if (this.showLoading) {
       const { chartNode } = this.$refs;
-      chartNode && chartNode.showLoading({
+      chartNode?.showLoading({
         text: this.$t('正在加载中...'),
         color: '#30d878',
         maskColor: 'rgba(255, 255, 255, 0.8)',
@@ -362,7 +362,7 @@ export default {
   },
   methods: {
     resizeHandler() {
-      this.$refs.chartNode && this.$refs.chartNode.resize();
+      this.$refs.chartNode?.resize();
     },
 
     /**
@@ -449,7 +449,7 @@ export default {
 
       chartNode.mergeOptions({
         tooltip: {
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let date = params[0].value[0];
             if (String(parseInt(date, 10)).length === 10) {
               date = `${parseInt(date, 10)}000`;

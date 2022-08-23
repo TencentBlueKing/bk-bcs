@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-tab-header">
     <div class="tab-wrapper bk-badge-wrapper">
@@ -128,6 +129,7 @@ import clickoutside from '@/directives/clickoutside';
 import { catchErrorHandler } from '@/common/util';
 
 export default {
+  name: 'K8STabs',
   directives: {
     clickoutside,
   },
@@ -249,7 +251,7 @@ export default {
   watch: {
     varList() {
       this.clipboardInstance = new Clipboard('.var-copy-btn');
-      this.clipboardInstance.on('success', (e) => {
+      this.clipboardInstance.on('success', () => {
         this.$bkMessage({
           theme: 'success',
           message: this.$t('复制成功'),
@@ -265,6 +267,7 @@ export default {
     this.initVarList();
   },
   beforeDestroy() {
+    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
     if (this.clipboardInstance && this.clipboardInstance.off) {
       this.clipboardInstance.off('success');
     }
@@ -286,7 +289,7 @@ export default {
              * @param  {string} target 资源名
              */
     toggleRouter(target) {
-      if (this.clipboardInstance && this.clipboardInstance.off) {
+      if (this.clipboardInstance?.off) {
         this.clipboardInstance.off('success');
       }
       if (this.routerName === target) {

@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -362,6 +364,7 @@
 </template>
 
 <script>
+/* eslint-disable @typescript-eslint/prefer-optional-chain  */
 import yamljs from 'js-yaml';
 import ace from '@/components/ace-editor';
 import { catchErrorHandler } from '@/common/util';
@@ -667,7 +670,7 @@ export default {
           this.tplsetVerIndex = this.curShowVersionId;
 
           // 根据已经选中的版本来查找资源列表
-          this.tplsetVerList.forEach((item, index) => {
+          this.tplsetVerList.forEach((item) => {
             if (item.show_version_id === this.tplsetVerIndex) {
               this.changeTplset(item.show_version_id, item);
             }
@@ -949,6 +952,7 @@ export default {
         });
         this.existList.splice(0, this.existList.length, ...existList);
         this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list);
+        // eslint-disable-next-line max-len
         this.candidateNamespaceList = this.isSharedCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared);
       } catch (e) {
         console.error(e);
@@ -1380,7 +1384,7 @@ export default {
              * @param {Object} ns 当前点击的 namespace 对象
              * @param {number} index 当前点击的 namespace 对象的索引
              */
-    async previewNamespaceByForm(ns, index, forceSelect) {
+    async previewNamespaceByForm(ns, index) {
       if (!this.checkParams()) return false;
 
       this.resetNamespacePreview();
@@ -1430,7 +1434,7 @@ export default {
               lbServiceListInPageTmp[key] = {};
             }
             const tmp = [];
-            lbData.forEach((item, index) => {
+            lbData.forEach((item) => {
               tmp.push({
                 service: key,
                 ...item,
@@ -1617,8 +1621,8 @@ export default {
       this.previewList.splice(0, this.previewList.length, ...previewList);
       this.$nextTick(() => {
         this.previewList.forEach((preview, previewIndex) => {
-          this.editorConfig.editors[previewIndex]
-                            && this.editorConfig.editors[previewIndex].session.setScrollTop(scrollTopList[previewIndex]);
+          // eslint-disable-next-line max-len
+          this.editorConfig.editors[previewIndex] && this.editorConfig.editors[previewIndex].session.setScrollTop(scrollTopList[previewIndex]);
         });
       });
     },
@@ -1793,7 +1797,7 @@ export default {
              *
              * @param {index} index 索引，标识当前是第几个 tab 的 ace editor
              */
-    setFullScreen(index) {
+    setFullScreen() {
       this.editorConfig.fullScreen = true;
     },
 
@@ -1851,6 +1855,7 @@ export default {
              */
     async createInstanceByYaml() {
       if (!this.checkInstanceParams()) return false;
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const ns = me.selectedNamespaceList[0];
       me.$bkInfo({
@@ -1962,6 +1967,7 @@ export default {
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
         title: me.$t('确认创建'),
@@ -2042,6 +2048,7 @@ export default {
              */
     goTemplateset(needConfirm) {
       if (needConfirm) {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const me = this;
         const h = me.$createElement;
         me.$bkInfo({

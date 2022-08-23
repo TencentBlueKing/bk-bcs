@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <bcs-dialog
     :value="value"

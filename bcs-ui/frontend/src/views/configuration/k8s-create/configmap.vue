@@ -35,7 +35,9 @@
               <div class="biz-configuration-topbar">
                 <div class="biz-list-operation">
                   <div class="item" v-for="(configmap, index) in configmaps" :key="configmap.id">
-                    <bk-button :class="['bk-button', { 'bk-primary': curConfigmap.id === configmap.id }]" @click.stop="setCurConfigmap(configmap, index)">
+                    <bk-button
+                      :class="['bk-button', { 'bk-primary': curConfigmap.id === configmap.id }]"
+                      @click.stop="setCurConfigmap(configmap, index)">
                       {{(configmap && configmap.config.metadata.name) || $t('未命名')}}
                       <span class="biz-update-dot" v-show="configmap.isEdited"></span>
                     </bk-button>
@@ -52,7 +54,9 @@
 
               <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
                 <div class="bk-form biz-configuration-form">
-                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('导入YAML')}}</a>
+                  <a
+                    href="javascript:void(0);" class="bk-text-button from-json-btn"
+                    @click.stop.prevent="showJsonPanel">{{$t('导入YAML')}}</a>
 
                   <bk-sideslider
                     :is-show.sync="toJsonDialogConf.isShow"
@@ -62,9 +66,16 @@
                     :quick-close="false"
                     @hidden="closeToJson">
                     <div slot="content" style="position: relative;">
-                      <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('导入')}}</bk-button>
-                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
+                      <div
+                        class="biz-log-box"
+                        :style="{ height: `${winHeight - 60}px` }"
+                        v-bkloading="{ isLoading: toJsonDialogConf.loading }">
+                        <bk-button
+                          class="bk-button bk-primary save-json-btn"
+                          @click.stop.prevent="saveApplicationJson">{{$t('导入')}}</bk-button>
+                        <bk-button
+                          class="bk-button bk-default hide-json-btn"
+                          @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
                         <ace
                           :value="editorConfig.value"
                           :width="editorConfig.width"
@@ -81,7 +92,18 @@
                   <div class="bk-form-item is-required">
                     <label class="bk-label" style="width: 105px;">{{$t('名称')}}：</label>
                     <div class="bk-form-content" style="margin-left: 105px;">
-                      <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('configmapName') }]" :placeholder="$t('请输入64个以内的字符')" style="width: 310px;" maxlength="64" v-model="curConfigmap.config.metadata.name" name="configmapName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+                      <input
+                        type="text"
+                        :class="['bk-form-input',{ 'is-danger': errors.has('configmapName') }]"
+                        :placeholder="$t('请输入64个以内的字符')"
+                        style="width: 310px;"
+                        maxlength="64"
+                        v-model="curConfigmap.config.metadata.name"
+                        name="configmapName"
+                        v-validate="{
+                          required: true,
+                          regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
+                        }">
                       <div class="bk-form-tip" v-if="errors.has('configmapName')">
                         <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
                       </div>
@@ -93,7 +115,10 @@
                       <div class="bk-form-content" style="margin-left: 105px;">
                         <div class="biz-list-operation">
                           <div class="item" v-for="(data, index) in curConfigmap.configmapKeyList" :key="index">
-                            <bk-button :class="['bk-button', { 'bk-primary': curKeyIndex === index }]" @click.stop.prevent="setCurKey(data, index)" v-if="!data.isEdit">
+                            <bk-button
+                              :class="['bk-button', { 'bk-primary': curKeyIndex === index }]"
+                              @click.stop.prevent="setCurKey(data, index)"
+                              v-if="!data.isEdit">
                               {{data.key || $t('未命名')}}
                             </bk-button>
                             <bkbcs-input
@@ -106,8 +131,12 @@
                               :list="varList"
                               @blur="setKey(data, index)">
                             </bkbcs-input>
-                            <span class="bcs-icon bcs-icon-edit" v-show="!data.isEdit" @click.stop.prevent="editKey(data, index)"></span>
-                            <span class="bcs-icon bcs-icon-close" v-show="!data.isEdit" @click.stop.prevent="removeKey(data, index)"></span>
+                            <span
+                              class="bcs-icon bcs-icon-edit" v-show="!data.isEdit"
+                              @click.stop.prevent="editKey(data, index)"></span>
+                            <span
+                              class="bcs-icon bcs-icon-close" v-show="!data.isEdit"
+                              @click.stop.prevent="removeKey(data, index)"></span>
                           </div>
                           <bcs-popover ref="keyTooltip" :content="$t('添加Key')" placement="top">
                             <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
@@ -153,6 +182,7 @@ import k8sBase from '@/mixins/configuration/k8s-base';
 import { catchErrorHandler } from '@/common/util';
 
 export default {
+  name: 'ConfigMap',
   components: {
     'biz-header': header,
     'biz-tabs': tabs,
@@ -261,7 +291,7 @@ export default {
       this.curKeyParams = data;
       this.curKeyIndex = index;
     },
-    editKey(data, index) {
+    editKey(data) {
       data.isEdit = true;
     },
     removeKey(data, index) {
@@ -278,6 +308,7 @@ export default {
         data.key = `key-${this.curConfigmap.configmapKeyList.length}`;
       } else {
         const nameReg = /^[a-zA-Z]{1}[a-zA-Z0-9-_.]{0,254}$/;
+        // eslint-disable-next-line no-useless-escape
         const varReg = /\{\{([^\{\}]+)?\}\}/g;
 
         if (!nameReg.test(data.key.replace(varReg, 'key'))) {
@@ -338,7 +369,7 @@ export default {
       // 同步上一个键值
       const params = {};
       const keys = this.curConfigmap.configmapKeyList;
-      if (keys && keys.length) {
+      if (keys?.length) {
         keys.forEach((item) => {
           params[item.key] = item.content;
         });
@@ -432,6 +463,7 @@ export default {
       this.configmaps.splice(index, 1);
     },
     removeConfigmap(configmap, index) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       const { projectId } = this;
       const version = this.curVersion;
@@ -500,13 +532,13 @@ export default {
       }
     },
     initResource(data) {
-      if (data.configmaps && data.configmaps.length) {
+      if (data.configmaps?.length) {
         this.setCurConfigmap(data.configmaps[0], 0);
-      } else if (data.configmap && data.configmap.length) {
+      } else if (data.configmap?.length) {
         this.setCurConfigmap(data.configmap[0], 0);
       }
     },
-    exportToYaml(data) {
+    exportToYaml() {
       this.$router.push({
         name: 'K8sYamlTemplateset',
         params: {
@@ -531,7 +563,7 @@ export default {
       const keys = this.curConfigmap.configmapKeyList;
       const appConfig = JSON.parse(JSON.stringify(this.curConfigmap.config));
 
-      if (keys && keys.length) {
+      if (keys?.length) {
         keys.forEach((item) => {
           keyObj[item.key] = item.content;
         });
@@ -621,7 +653,7 @@ export default {
       }
 
       const annot = editor.getSession().getAnnotations();
-      if (annot && annot.length) {
+      if (annot?.length) {
         editor.gotoLine(annot[0].row, annot[0].column, true);
         return false;
       }

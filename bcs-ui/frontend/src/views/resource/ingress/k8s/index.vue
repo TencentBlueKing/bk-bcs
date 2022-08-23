@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -663,6 +665,7 @@ export default {
              * @param  {object} data ingresses
              */
     async deleteIngresses(data) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const { projectId } = this;
 
@@ -697,6 +700,7 @@ export default {
              * @param  {object} ingress ingress
              */
     async removeIngress(ingress) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
         title: me.$t('确认删除'),
@@ -715,6 +719,7 @@ export default {
              * @param  {object} ingress ingress
              */
     async deleteIngress(ingress) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       const { projectId } = me;
       const clusterId = ingress.cluster_id;
@@ -749,7 +754,7 @@ export default {
              * @param  {object} ingress object
              * @param  {number} index 索引
              */
-    showIngressDetail(ingress, index) {
+    showIngressDetail(ingress) {
       this.ingressSlider.title = ingress.resourceName;
       this.curIngress = ingress;
       this.ingressSlider.isShow = true;
@@ -861,6 +866,7 @@ export default {
              */
     getDataByPage(page) {
       if (page < 1) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.current = page = 1;
       }
       let startIndex = (page - 1) * this.pageConf.limit;
@@ -900,6 +906,7 @@ export default {
     },
 
     async showIngressEditDialog(ingress) {
+      // eslint-disable-next-line no-prototype-builtins
       if (!ingress.data.spec.hasOwnProperty('tls')) {
         ingress.data.spec.tls = [
           {
@@ -917,7 +924,7 @@ export default {
       }
       const ingressClone = JSON.parse(JSON.stringify(ingress));
       ingressClone.data.spec.tls.forEach((item) => {
-        if (item.hosts && item.hosts.join) {
+        if (item.hosts?.join) {
           item.hosts = item.hosts.join(',');
         }
       });
@@ -968,7 +975,7 @@ export default {
         secretName: '',
       });
     },
-    removeTls(index, curTls) {
+    removeTls(index) {
       this.curEditedIngress.config.spec.tls.splice(index, 1);
     },
     setCurRule(rule, index) {
@@ -1123,6 +1130,7 @@ export default {
             return false;
           }
 
+          // eslint-disable-next-line no-prototype-builtins
           if (path.backend.serviceName && !this.linkServices.hasOwnProperty(path.backend.serviceName)) {
             megPrefix += this.$t('{host}中路径组：', { host: rule.host });
             this.$bkMessage({
@@ -1147,6 +1155,7 @@ export default {
       params.config.metadata.labels = this.$refs.labelKeyer.getKeyObject();
 
       // 如果不是变量，转为数组形式
+      // eslint-disable-next-line no-useless-escape
       const varReg = /\{\{([^\{\}]+)?\}\}/g;
       params.config.spec.tls.forEach((item) => {
         if (!varReg.test(item.hosts)) {
@@ -1205,14 +1214,14 @@ export default {
              * @param {array} selection 已经选中的行数
              * @param {object} row 当前选中的行
              */
-    handlePageSelect(selection, row) {
+    handlePageSelect(selection) {
       this.ingressSelectedList = selection;
     },
 
     /**
              * 全选
              */
-    handlePageSelectAll(selection, row) {
+    handlePageSelectAll(selection) {
       this.ingressSelectedList = selection;
     },
 
@@ -1223,7 +1232,7 @@ export default {
     handlerSelectCert(computer, index, data) {
       computer.certType = data.certType;
     },
-    rowSelectable(row, index) {
+    rowSelectable(row) {
       return row.can_delete
                     && this.webAnnotations.perms[row.iam_ns_id]
                     && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;

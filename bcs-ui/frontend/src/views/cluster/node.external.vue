@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -33,8 +34,14 @@
             <i class="icon-cc icon-cc-machine"></i>{{$t('集群信息')}}
           </div>
         </div>
-        <div class="biz-cluster-tab-content" v-bkloading="{ isLoading: isInitLoading, opacity: 1 }" :style="{ height: isInitLoading ? '300px' : 'auto' }">
-          <div class="biz-cluster-node-tip" v-if="curClusterInPage.type === 'k8s' || curProject.kind === 3">{{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集或使用Helm部署服务')}}</div>
+        <div
+          class="biz-cluster-tab-content"
+          v-bkloading="{ isLoading: isInitLoading, opacity: 1 }" :style="{ height: isInitLoading ? '300px' : 'auto' }">
+          <div
+            class="biz-cluster-node-tip"
+            v-if="curClusterInPage.type === 'k8s' || curProject.kind === 3">
+            {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集或使用Helm部署服务')}}
+          </div>
           <div class="biz-cluster-node-tip" v-else>{{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务')}}</div>
           <div class="biz-cluster-node-content" v-if="!isInitLoading">
             <div class="biz-cluster-node-header">
@@ -49,15 +56,31 @@
                 <span>{{$t('添加节点')}}</span>
               </button>
               <bk-tooltip v-if="!allowBatch" :content="dontAllowBatchMsg" placement="top">
-                <bk-dropdown-menu :align="'center'" ref="toggleFilterDropdownMenu" class="batch-operate-dropdown" :disabled="true">
-                  <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button batch-operate" :class="!allowBatch ? 'disabled' : ''">
+                <bk-dropdown-menu
+                  :align="'center'"
+                  ref="toggleFilterDropdownMenu"
+                  class="batch-operate-dropdown"
+                  :disabled="true">
+                  <a
+                    href="javascript:void(0);"
+                    slot="dropdown-trigger"
+                    class="bk-text-button batch-operate"
+                    :class="!allowBatch ? 'disabled' : ''">
                     <span class="label">{{$t('批量操作')}}</span>
                     <i class="bk-icon icon-angle-down dropdown-menu-angle-down"></i>
                   </a>
                 </bk-dropdown-menu>
               </bk-tooltip>
-              <bk-dropdown-menu v-else :align="'center'" ref="toggleFilterDropdownMenu" class="batch-operate-dropdown">
-                <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button batch-operate" :class="!allowBatch ? 'disabled' : ''">
+              <bk-dropdown-menu
+                v-else
+                :align="'center'"
+                ref="toggleFilterDropdownMenu"
+                class="batch-operate-dropdown">
+                <a
+                  href="javascript:void(0);"
+                  slot="dropdown-trigger"
+                  class="bk-text-button batch-operate"
+                  :class="!allowBatch ? 'disabled' : ''">
                   <span class="label">{{$t('批量操作')}}</span>
                   <i class="bk-icon icon-angle-down dropdown-menu-angle-down"></i>
                 </a>
@@ -75,8 +98,16 @@
                     <a class="action" href="javascript:void(0)" @click="exportNode">{{$t('导出')}}</a>
                   </li>
                   <li>
-                    <a class="action" href="javascript:void(0)" @click="batchOperate('4')" v-if="isBatchReInstall">{{$t('重新添加')}}</a>
-                    <a href="javascript:void(0)" v-else class="action disabled" :title="$t('所选节点均处于初始化失败状态时才允许此操作')">{{$t('重新添加')}}</a>
+                    <a
+                      class="action"
+                      href="javascript:void(0)"
+                      @click="batchOperate('4')"
+                      v-if="isBatchReInstall">{{$t('重新添加')}}</a>
+                    <a
+                      href="javascript:void(0)"
+                      v-else
+                      class="action disabled"
+                      :title="$t('所选节点均处于初始化失败状态时才允许此操作')">{{$t('重新添加')}}</a>
                   </li>
                 </ul>
               </bk-dropdown-menu>
@@ -87,7 +118,11 @@
                 </a>
                 <ul class="bk-dropdown-list" slot="dropdown-content">
                   <li>
-                    <a href="javascript:void(0)" @click="copyIp('selected')" class="selected" :class="!allowBatch ? 'disabled' : ''">{{$t('复制所选IP')}}</a>
+                    <a
+                      href="javascript:void(0)"
+                      @click="copyIp('selected')"
+                      class="selected"
+                      :class="!allowBatch ? 'disabled' : ''">{{$t('复制所选IP')}}</a>
                   </li>
                   <li>
                     <a href="javascript:void(0)" @click="copyIp('cur-page')" class="cur-page">{{$t('复制当前页IP')}}</a>
@@ -122,13 +157,21 @@
                 </bk-tooltip>
               </span>
             </div>
-            <div class="biz-cluster-node-table-wrapper" v-bkloading="{ isLoading: isPageLoading, opacity: 1, zIndex: 500 }">
-              <table class="bk-table has-table-hover biz-table" :style="{ borderBottomWidth: nodeList.length ? '1px' : 0 }">
+            <div
+              class="biz-cluster-node-table-wrapper"
+              v-bkloading="{ isLoading: isPageLoading, opacity: 1, zIndex: 500 }">
+              <table
+                class="bk-table has-table-hover biz-table"
+                :style="{ borderBottomWidth: nodeList.length ? '1px' : 0 }">
                 <thead>
                   <tr>
                     <th style="width: 3%; text-align: center; padding: 0; padding-left: 20px;">
                       <label class="bk-form-checkbox">
-                        <input type="checkbox" name="check-all-node" v-model="isCheckCurPageAllNode" @click="checkAllNode($event)" />
+                        <input
+                          type="checkbox"
+                          name="check-all-node"
+                          v-model="isCheckCurPageAllNode"
+                          @click="checkAllNode($event)" />
                       </label>
                     </th>
                     <th style="width: 12%; padding-left: 10px;">{{$t('主机名/IP')}}</th>
@@ -205,7 +248,10 @@
                     <tr v-for="(node, index) in nodeList" :key="index">
                       <td style="width: 3%; text-align: center; padding: 0; padding-left: 20px;">
                         <label class="bk-form-checkbox">
-                          <input type="checkbox" name="check-node" v-model="node.isChecked" @click="checkNode(node, index)" />
+                          <input
+                            type="checkbox"
+                            name="check-node"
+                            v-model="node.isChecked" @click="checkNode(node, index)" />
                         </label>
                       </td>
                       <!--
@@ -218,8 +264,15 @@
                           {{node.inner_ip}}
                         </td>
                         <td>
-                          <div class="biz-status-node"><loading-cell :style="{ left: 0 }" :ext-cls="['bk-spin-loading-mini', 'bk-spin-loading-danger']"></loading-cell></div>
-                          {{node.status === 'initializing' || node.status === 'so_initializing' || node.status === 'initial_checking' ? $t('初始化中') : $t('删除中')}}
+                          <div class="biz-status-node">
+                            <loading-cell
+                              :style="{ left: 0 }"
+                              :ext-cls="['bk-spin-loading-mini', 'bk-spin-loading-danger']">
+                            </loading-cell>
+                          </div>
+                          {{node.status === 'initializing'
+                            || node.status === 'so_initializing'
+                            || node.status === 'initial_checking' ? $t('初始化中') : $t('删除中')}}
                         </td>
                         <td></td>
                         <td></td>
@@ -228,7 +281,9 @@
                         <td></td>
                         <td v-if="curClusterInPage.type === 'k8s'"></td>
                         <td style="text-align: left;">
-                          <a href="javascript:void(0);" class="bk-text-button" @click.stop="showLog(node)">{{$t('查看日志')}}</a>
+                          <a
+                            href="javascript:void(0);"
+                            class="bk-text-button" @click.stop="showLog(node)">{{$t('查看日志')}}</a>
                           <bk-dropdown-menu class="dropdown-menu ml10" :align="'center'" ref="dropdown">
                             <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
                               {{$t('更多')}}
@@ -236,7 +291,9 @@
                             </a>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="showRecordRemove(node, index)">
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button" @click.stop="showRecordRemove(node, index)">
                                   {{$t('仅移除记录')}}
                                 </a>
                               </li>
@@ -244,55 +301,77 @@
                           </bk-dropdown-menu>
                         </td>
                       </template>
-
-                      <!--
-                                                初始化失败: initial_failed, so_init_failed, check_failed, bke_failed, schedule_failed
-                                                操作: 查看日志，删除，重试（重试初始化）
-
-                                                删除失败: delete_failed
-                                                操作: 查看日志，删除
-
-                                                删除失败: remove_failed
-                                                操作: 查看日志，重试（重试删除）
-                                            -->
                       <template v-if="failStatus.includes(node.status)">
                         <td style="padding-left: 10px;">
-                          <a href="javascript:void(0)" class="bk-text-button" @click="goNodeOverview(node)">{{node.inner_ip}}</a>
+                          <a
+                            href="javascript:void(0)"
+                            class="bk-text-button"
+                            @click="goNodeOverview(node)">{{node.inner_ip}}</a>
                         </td>
                         <td>
                           <div class="biz-status-node"><i class="node danger"></i></div>
-                          {{node.status === 'initial_failed' || node.status === 'so_init_failed' || node.status === 'check_failed' || node.status === 'bke_failed' || node.status === 'schedule_failed' ? $t('初始化失败') : $t('删除失败')}}
+                          {{node.status === 'initial_failed'
+                            || node.status === 'so_init_failed'
+                            || node.status === 'check_failed'
+                            || node.status === 'bke_failed'
+                            || node.status === 'schedule_failed' ? $t('初始化失败') : $t('删除失败')}}
                         </td>
                         <td>{{node.containerCount}}</td>
                         <template v-if="curClusterInPage.type === 'k8s'">
                           <td>{{node.podCount}}</td>
                         </template>
                         <template>
-                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined"><ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell></td>
+                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined">
+                            <ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.memMetric !== null && node.memMetric !== undefined"><ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell></td>
+                          <td v-if="node.memMetric !== null && node.memMetric !== undefined">
+                            <ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined"><ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined">
+                            <ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
 
                         <template>
-                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined"><ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined">
+                            <ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
 
                         <td style="text-align: left;">
-                          <a href="javascript:void(0);" class="bk-text-button" @click.stop="showLog(node)">{{$t('查看日志')}}</a>
+                          <a
+                            href="javascript:void(0);"
+                            class="bk-text-button"
+                            @click.stop="showLog(node)">{{$t('查看日志')}}</a>
                           <template v-if="node.status === 'delete_failed'">
-                            <a href="javascript:void(0);" class="bk-text-button" @click.stop="delFailedNode(node, index)">{{$t('删除')}}</a>
-                            <a href="javascript:void(0);" class="bk-text-button" @click.stop="showFaultRemove(node, index)">{{$t('故障移除')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              @click.stop="delFailedNode(node, index)">{{$t('删除')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              @click.stop="showFaultRemove(node, index)">{{$t('故障移除')}}</a>
                           </template>
                           <template v-else-if="node.status === 'remove_failed'">
-                            <a href="javascript:void(0);" class="bk-text-button" @click.stop="reTryDel(node, index)">{{$t('重试')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              @click.stop="reTryDel(node, index)">{{$t('重试')}}</a>
                           </template>
                           <template v-else>
-                            <a href="javascript:void(0);" class="bk-text-button" @click.stop="showDelNode(node, index)">{{$t('删除')}}</a>
-                            <a href="javascript:void(0);" class="bk-text-button" @click.stop="reInitializationNode(node, index)">{{$t('重试')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              @click.stop="showDelNode(node, index)">{{$t('删除')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              @click.stop="reInitializationNode(node, index)">{{$t('重试')}}</a>
                           </template>
                           <bk-dropdown-menu class="dropdown-menu ml10" :align="'center'" ref="dropdown">
                             <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
@@ -301,7 +380,10 @@
                             </a>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="showRecordRemove(node, index)">
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button"
+                                  @click.stop="showRecordRemove(node, index)">
                                   {{$t('仅移除记录')}}
                                 </a>
                               </li>
@@ -316,7 +398,10 @@
                                             -->
                       <template v-if="node.status === 'to_removed'">
                         <td style="padding-left: 10px;">
-                          <a href="javascript:void(0)" class="bk-text-button" @click="goNodeOverview(node)">{{node.inner_ip}}</a>
+                          <a
+                            href="javascript:void(0)"
+                            class="bk-text-button"
+                            @click="goNodeOverview(node)">{{node.inner_ip}}</a>
                         </td>
                         <td>
                           <div class="biz-status-node"><i class="node warning"></i></div>
@@ -327,20 +412,31 @@
                           <td>{{node.podCount}}</td>
                         </template>
                         <template>
-                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined"><ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell></td>
+                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined">
+                            <ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.memMetric !== null && node.memMetric !== undefined"><ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell></td>
+                          <td v-if="node.memMetric !== null && node.memMetric !== undefined">
+                            <ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined"><ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined">
+                            <ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
 
                         <template>
-                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined"><ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined">
+                            <ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
                         <td>
-                          <a href="javascript:void(0);" class="bk-text-button" @click.stop="enableNode(node, index)">{{$t('允许调度')}}</a>
+                          <a
+                            href="javascript:void(0);"
+                            class="bk-text-button"
+                            @click.stop="enableNode(node, index)">{{$t('允许调度')}}</a>
                           <template v-if="curClusterInPage.state === 'existing'">
                             <bk-tooltip style="margin: 0 15px;" :content="$t('导入的集群不允许删除操作')" placement="top-end">
                               <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('删除')}}</a>
@@ -353,7 +449,11 @@
                             <bk-tooltip style="margin: 0 15px;" :content="$t('请确保该节点已经没有运行中的容器')" placement="top-end">
                               <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('删除')}}</a>
                             </bk-tooltip>
-                            <a href="javascript:void(0);" class="bk-text-button" style="margin-right: 15px;" @click.stop="showForceDelNode(node, index)">{{$t('强制删除')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              style="margin-right: 15px;"
+                              @click.stop="showForceDelNode(node, index)">{{$t('强制删除')}}</a>
                           </template>
                           <bk-dropdown-menu class="dropdown-menu" :align="'center'" ref="dropdown">
                             <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
@@ -362,12 +462,19 @@
                             </a>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="schedulerNode(node, index)">
-                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3) ? $t('pod驱逐') : $t('taskgroup驱逐')}}
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button"
+                                  @click.stop="schedulerNode(node, index)">
+                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3)
+                                    ? $t('pod驱逐') : $t('taskgroup驱逐')}}
                                 </a>
                               </li>
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="showRecordRemove(node, index)">
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button"
+                                  @click.stop="showRecordRemove(node, index)">
                                   {{$t('仅移除记录')}}
                                 </a>
                               </li>
@@ -382,7 +489,10 @@
                                             -->
                       <template v-if="node.status === 'removable'">
                         <td style="padding-left: 10px;">
-                          <a href="javascript:void(0)" class="bk-text-button" @click="goNodeOverview(node)">{{node.inner_ip}}</a>
+                          <a
+                            href="javascript:void(0)"
+                            class="bk-text-button"
+                            @click="goNodeOverview(node)">{{node.inner_ip}}</a>
                         </td>
                         <td>
                           <div class="biz-status-node"><i class="node warning"></i></div>
@@ -393,20 +503,31 @@
                           <td>{{node.podCount}}</td>
                         </template>
                         <template>
-                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined"><ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell></td>
+                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined">
+                            <ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.memMetric !== null && node.memMetric !== undefined"><ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell></td>
+                          <td v-if="node.memMetric !== null && node.memMetric !== undefined">
+                            <ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined"><ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined">
+                            <ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
 
                         <template>
-                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined"><ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined">
+                            <ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
                         <td style="text-align: left;">
-                          <a href="javascript:void(0);" class="bk-text-button" @click.stop="enableNode(node, index)">{{$t('允许调度')}}</a>
+                          <a
+                            href="javascript:void(0);"
+                            class="bk-text-button"
+                            @click.stop="enableNode(node, index)">{{$t('允许调度')}}</a>
                           <template v-if="curClusterInPage.state === 'existing'">
                             <bk-tooltip style="margin: 0 15px;" :content="$t('导入的集群不允许删除操作')" placement="top-end">
                               <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('删除')}}</a>
@@ -416,8 +537,15 @@
                             </bk-tooltip>
                           </template>
                           <template v-else>
-                            <a href="javascript:void(0);" class="bk-text-button" @click.stop="showDelNode(node, index)">{{$t('删除')}}</a>
-                            <a href="javascript:void(0);" class="bk-text-button" style="margin-right: 15px;" @click.stop="showForceDelNode(node, index)">{{$t('强制删除')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              @click.stop="showDelNode(node, index)">{{$t('删除')}}</a>
+                            <a
+                              href="javascript:void(0);"
+                              class="bk-text-button"
+                              style="margin-right: 15px;"
+                              @click.stop="showForceDelNode(node, index)">{{$t('强制删除')}}</a>
                           </template>
                           <bk-dropdown-menu class="dropdown-menu" :align="'center'" ref="dropdown">
                             <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
@@ -426,12 +554,19 @@
                             </a>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="schedulerNode(node, index)">
-                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3) ? $t('pod驱逐') : $t('taskgroup驱逐')}}
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button"
+                                  @click.stop="schedulerNode(node, index)">
+                                  {{(curClusterInPage.type === 'k8s' || curProject.kind === 3)
+                                    ? $t('pod驱逐') : $t('taskgroup驱逐')}}
                                 </a>
                               </li>
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="showRecordRemove(node, index)">
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button"
+                                  @click.stop="showRecordRemove(node, index)">
                                   {{$t('仅移除记录')}}
                                 </a>
                               </li>
@@ -446,7 +581,10 @@
                                             -->
                       <template v-if="node.status === 'not_ready'">
                         <td style="padding-left: 10px;">
-                          <a href="javascript:void(0)" class="bk-text-button" @click="goNodeOverview(node)">{{node.inner_ip}}</a>
+                          <a
+                            href="javascript:void(0)"
+                            class="bk-text-button"
+                            @click="goNodeOverview(node)">{{node.inner_ip}}</a>
                         </td>
                         <td>
                           <div class="biz-status-node"><i class="node danger"></i></div>
@@ -457,23 +595,32 @@
                           <td>{{node.podCount}}</td>
                         </template>
                         <template>
-                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined"><ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell></td>
+                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined">
+                            <ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.memMetric !== null && node.memMetric !== undefined"><ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell></td>
+                          <td v-if="node.memMetric !== null && node.memMetric !== undefined">
+                            <ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined"><ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined">
+                            <ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
 
                         <template>
-                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined"><ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined">
+                            <ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
 
                         <td style="text-align: left;">
-                          <!-- <a href="javascript:void(0);" class="bk-text-button" @click.stop="showDelNode(node, index)">{{$t('删除')}}</a>
-                                                    <a href="javascript:void(0);" class="bk-text-button" @click.stop="showForceDelNode(node, index)">{{$t('强制删除')}}</a> -->
-                          <a href="javascript:void(0);" class="bk-text-button" @click.stop="showFaultRemove(node, index)">{{$t('故障移除')}}</a>
+                          <a
+                            href="javascript:void(0);"
+                            class="bk-text-button"
+                            @click.stop="showFaultRemove(node, index)">{{$t('故障移除')}}</a>
                           <bk-dropdown-menu class="dropdown-menu ml10" :align="'center'" ref="dropdown">
                             <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
                               {{$t('更多')}}
@@ -481,7 +628,10 @@
                             </a>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="showRecordRemove(node, index)">
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button"
+                                  @click.stop="showRecordRemove(node, index)">
                                   {{$t('仅移除记录')}}
                                 </a>
                               </li>
@@ -499,7 +649,10 @@
                                             -->
                       <template v-if="node.status === 'normal' || node.status === 'unnormal'">
                         <td style="padding-left: 10px;">
-                          <a href="javascript:void(0)" class="bk-text-button" @click="goNodeOverview(node)">{{node.inner_ip}}</a>
+                          <a
+                            href="javascript:void(0)"
+                            class="bk-text-button"
+                            @click="goNodeOverview(node)">{{node.inner_ip}}</a>
                         </td>
                         <td v-if="node.status === 'normal'">
                           <div class="biz-status-node"><i class="node success"></i></div>
@@ -514,18 +667,29 @@
                           <td>{{node.podCount}}</td>
                         </template>
                         <template>
-                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined"><ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell></td>
+                          <td v-if="node.cpuMetric !== null && node.cpuMetric !== undefined">
+                            <ring-cell :percent="node.cpuMetric" :fill-color="'#3ede78'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.memMetric !== null && node.memMetric !== undefined"><ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell></td>
+                          <td v-if="node.memMetric !== null && node.memMetric !== undefined">
+                            <ring-cell :percent="node.memMetric" :fill-color="'#3c96ff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined"><ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskMetric !== null && node.diskMetric !== undefined">
+                            <ring-cell :percent="node.diskMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
-                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined"><ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell></td>
+                          <td v-if="node.diskioMetric !== null && node.diskioMetric !== undefined">
+                            <ring-cell :percent="node.diskioMetric" :fill-color="'#853cff'"></ring-cell>
+                          </td>
                           <td v-else><loading-cell></loading-cell></td>
                         </template>
 
                         <td style="text-align: left;">
-                          <a href="javascript:void(0);" class="bk-text-button" @click.stop="stopNode(node, index)">{{$t('停止调度')}}</a>
+                          <a
+                            href="javascript:void(0);"
+                            class="bk-text-button"
+                            @click.stop="stopNode(node, index)">{{$t('停止调度')}}</a>
                           <bk-dropdown-menu class="dropdown-menu ml10" :align="'center'" ref="dropdown">
                             <a href="javascript:void(0);" slot="dropdown-trigger" class="bk-text-button">
                               {{$t('更多')}}
@@ -533,7 +697,10 @@
                             </a>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                               <li>
-                                <a href="javascript:void(0);" class="bk-text-button" @click.stop="showRecordRemove(node, index)">
+                                <a
+                                  href="javascript:void(0);"
+                                  class="bk-text-button"
+                                  @click.stop="showRecordRemove(node, index)">
                                   {{$t('仅移除记录')}}
                                 </a>
                               </li>
@@ -617,11 +784,18 @@
                   </span>
                 </p>
               </template>
-              <div v-if="op.status.toLowerCase() === 'success'" style="margin: 0 0 5px 0; color: #34d97b; font-size: 14px; font-weight: 700; margin-left: 20px;">
+              <div
+                v-if="op.status.toLowerCase() === 'success'"
+                style="margin: 0 0 5px 0; color: #34d97b; font-size: 14px; font-weight: 700; margin-left: 20px;">
                 {{$t('操作成功')}}
               </div>
-              <div v-else-if="op.status.toLowerCase() === 'failed'" style="margin: 0 0 5px 0; color: #e64d34; font-size: 14px; font-weight: 700; margin-left: 20px;">
-                {{$t('操作失败')}}<span style="margin-left: 10px;" v-if="op.taskUrl"><a :href="op.taskUrl" class="bk-text-button" target="_blank">{{$t('查看详情')}}</a></span>
+              <div
+                v-else-if="op.status.toLowerCase() === 'failed'"
+                style="margin: 0 0 5px 0; color: #e64d34; font-size: 14px; font-weight: 700; margin-left: 20px;">
+                {{$t('操作失败')}}
+                <span style="margin-left: 10px;" v-if="op.taskUrl">
+                  <a :href="op.taskUrl" class="bk-text-button" target="_blank">{{$t('查看详情')}}</a>
+                </span>
               </div>
               <div style="margin: 10px 0px 5px 13px; font-size: 10px;" v-else>
                 <div class="bk-spin-loading bk-spin-loading-small bk-spin-loading-primary">
@@ -726,7 +900,10 @@
             </button>
           </template>
           <template v-else>
-            <button type="button" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary" @click="reInitializationConfirm">
+            <button
+              type="button"
+              class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
+              @click="reInitializationConfirm">
               {{$t('确定')}}
             </button>
             <button type="button" class="bk-dialog-btn bk-dialog-btn-cancel" @click="reInitializationCancel">
@@ -979,6 +1156,7 @@ import nodeSearcher from './searcher';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 
 export default {
+  name: 'NodeExternal',
   components: {
     RingCell,
     LoadingCell,

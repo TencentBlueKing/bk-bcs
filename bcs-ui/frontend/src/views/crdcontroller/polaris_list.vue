@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -487,6 +488,7 @@ export default defineComponent({
     const getDataByPage = (page) => {
       // 如果没有page，重置
       if (!page) {
+        // eslint-disable-next-line no-multi-assign
         state.pageConf.current = page = 1;
       }
       let startIndex = (page - 1) * state.pageConf.limit;
@@ -642,7 +644,7 @@ export default defineComponent({
              * @param  {object} crdInstance crdInstance
              * @param  {number} index 索引
              */
-    const removeCrdInstance = async (crdInstance, index) => {
+    const removeCrdInstance = async (crdInstance) => {
       const { crdKind } = state;
       const crdId = crdInstance.id;
 

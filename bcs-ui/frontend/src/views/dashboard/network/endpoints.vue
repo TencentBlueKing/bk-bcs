@@ -1,6 +1,13 @@
 <template>
   <BaseLayout title="Endpoints" kind="Endpoints" category="endpoints" type="networks">
-    <template #default="{ curPageData, pageConf, handlePageChange, handlePageSizeChange, handleGetExtData, handleShowDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
+    <template
+      #default="{
+        curPageData, pageConf,
+        handlePageChange, handlePageSizeChange,
+        handleGetExtData, handleShowDetail,
+        handleSortChange,handleUpdateResource,
+        handleDeleteResource
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -9,7 +16,9 @@
         @sort-change="handleSortChange">
         <bk-table-column :label="$t('名称')" prop="metadata.name" sortable>
           <template #default="{ row }">
-            <bk-button class="bcs-button-ellipsis" text @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
+            <bk-button
+              class="bcs-button-ellipsis" text
+              @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" sortable></bk-table-column>
@@ -20,7 +29,8 @@
         </bk-table-column>
         <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">{{ handleGetExtData(row.metadata.uid, 'age') }}</span>
+            <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">
+              {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('操作')" :resizable="false" width="150">
@@ -46,6 +56,7 @@ import BaseLayout from '@/views/dashboard/common/base-layout';
 import EndpointsDetail from './endpoints-detail.vue';
 
 export default defineComponent({
+  name: 'NetworkEndpoints',
   components: { BaseLayout, EndpointsDetail },
 });
 </script>

@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
     <div class="biz-top-bar">
@@ -292,14 +294,14 @@ export default {
              * @param {array} selection 已经选中的行数
              * @param {object} row 当前选中的行
              */
-    handlePageSelect(selection, row) {
+    handlePageSelect(selection) {
       this.hpaSelectedList = selection;
     },
 
     /**
              * 全选
              */
-    handlePageSelectAll(selection, row) {
+    handlePageSelectAll(selection) {
       this.hpaSelectedList = selection;
     },
 
@@ -351,6 +353,7 @@ export default {
              */
     getDataByPage(page) {
       if (page < 1) {
+        // eslint-disable-next-line no-multi-assign
         this.pageConf.curPage = page = 1;
       }
       let startIndex = (page - 1) * this.pageConf.pageSize;
@@ -435,6 +438,7 @@ export default {
              * @param  {object} HPA HPA
              */
     async removeHPA(HPA) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
 
       this.$bkInfo({
@@ -524,7 +528,7 @@ export default {
              *
              * @return {string} returnDesc
              */
-    showConditions(item, index) {
+    showConditions(item) {
       this.isShowConditions = true;
       this.rowItem = item;
     },
@@ -539,7 +543,7 @@ export default {
       }, 300);
     },
 
-    rowSelectable(row, index) {
+    rowSelectable(row) {
       return row.can_delete;
     },
     handleGotoAppDetail(row) {

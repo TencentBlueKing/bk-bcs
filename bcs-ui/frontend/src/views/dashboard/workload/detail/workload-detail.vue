@@ -403,7 +403,7 @@ export default defineComponent({
     const isBatchReschedule = ref(false);
     const curPodRowData = ref<any>([]);
     // 表格选中的pods数据
-    const selectPods = ref([])
+    const selectPods = ref<any[]>([]);
     // pods数据
     const pods = computed(() => (workloadPods.value?.manifest?.items || []).map(item => ({
       ...item,

@@ -24,7 +24,9 @@
         </monaco-editor>
         <div class="tip">
           <i class="bcs-icon bcs-icon-alarm-insufficient" style="font-size: 16px;"></i>
-          <span>{{$t('此操作相当于kubectl patch gamestatefulset {name} -n {namespace} --type=\'json\' -p=\'\{文本中的内容\}\'', { name: renderItem.name, namespace: renderItem.namespace })}}</span>
+          <span>
+            {{$t('此操作相当于kubectl patch gamestatefulset {name} -n {namespace} --type=\'json\' -p=\'\{文本中的内容\}\'',
+                 { name: renderItem.name, namespace: renderItem.namespace })}}</span>
         </div>
       </div>
     </template>
@@ -101,7 +103,7 @@ export default {
   },
   watch: {
     isShow: {
-      async handler(newVal, oldVal) {
+      async handler(newVal) {
         this.isVisible = newVal;
         if (!this.isVisible) {
           return;
@@ -115,10 +117,10 @@ export default {
     },
   },
   destroyed() {
-    this.bkMessageInstance && this.bkMessageInstance.close();
+    this.bkMessageInstance?.close();
   },
   methods: {
-    handleEditorMount(editorInstance, monacoEditor) {
+    handleEditorMount(editorInstance) {
       this.editorContent = `[
     {
         "op": "replace",
@@ -145,7 +147,7 @@ export default {
     async confirm() {
       const editorContent = this.editorContent.trim();
       if (!editorContent) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('请填写内容'),
@@ -158,7 +160,7 @@ export default {
         editorContentObj = JSON.parse(this.editorContent);
       } catch (e) {
         console.warn(e);
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
           message: this.$t('请填写正确的JSON格式字符串'),
@@ -178,7 +180,7 @@ export default {
             patch_type: 'application/json-patch+json',
           },
         });
-        this.bkMessageInstance && this.bkMessageInstance.close();
+        this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'success',
           message: this.$t('更新成功'),

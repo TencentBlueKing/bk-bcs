@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable vue/no-mutating-props -->
 <template>
   <div class="biz-data-searcher">
     <template v-if="localScopeList.length">
