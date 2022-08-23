@@ -14,13 +14,20 @@
 package iam
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/TencentBlueKing/iam-go-sdk/metric"
+	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,7 +41,18 @@ type PermClient interface {
 	GetToken() (string, error)
 	IsBasicAuthAllowed(user BkUser) error
 	GetApplyURL(request ApplicationRequest, relatedResources []ApplicationAction, user BkUser) (string, error)
+	// perm management API
+	CreateGradeManagers(ctx context.Context, request GradeManagerRequest) (uint64, error)
+	CreateUserGroup(ctx context.Context, gradeManagerID uint64, request CreateUserGroupRequest) ([]uint64, error)
+	DeleteUserGroup(ctx context.Context, groupID uint64) error
+	AddUserGroupMembers(ctx context.Context, groupID uint64, request AddGroupMemberRequest) error
+	DeleteUserGroupMembers(ctx context.Context, groupID uint64, request DeleteGroupMemberRequest) error
+	CreateUserGroupPolicies(ctx context.Context, groupID uint64, request AuthorizationScope) error
 }
+
+var (
+	defaultTimeOut = time.Second * 60
+)
 
 // Options for init IAM client
 type Options struct {
@@ -117,8 +135,10 @@ func NewIamClient(opt *Options) (PermClient, error) {
 	}
 
 	if opt.External {
+		// true directCAll + ESB API
 		client.cli = iam.NewIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.IAMHost, opt.BkiIAMHost)
 	} else {
+		// false APIGW
 		client.cli = iam.NewAPIGatewayIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.GateWayHost)
 	}
 
@@ -132,6 +152,27 @@ func NewIamClient(opt *Options) (PermClient, error) {
 type BkUser struct {
 	BkToken    string
 	BkUserName string
+}
+
+func (ic *iamClient) generateGateWayAuth(bkUserName string) (string, error) {
+	if ic == nil {
+		return "", ErrServerNotInit
+	}
+
+	auth := &AuthInfo{
+		BkAppCode:   ic.opt.AppCode,
+		BkAppSecret: ic.opt.AppSecret,
+	}
+	if len(bkUserName) > 0 {
+		auth.BkUserName = bkUserName
+	}
+
+	userAuth, err := json.Marshal(auth)
+	if err != nil {
+		return "", err
+	}
+
+	return string(userAuth), nil
 }
 
 // IsAllowedWithoutResource query signal action permission without resource(cache use withoutResource or managerPerm)
@@ -247,4 +288,289 @@ func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []
 	}
 
 	return url, nil
+}
+
+// GradeManagers 分级管理员相关接口
+// CreateGradeManagers create gradeManagers
+func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManagerRequest) (uint64, error) {
+	if ic == nil {
+		return 0, ErrServerNotInit
+	}
+
+	var (
+		_    = "CreateGradeManagers"
+		path = "/api/v1/open/management/grade_managers/"
+	)
+
+	var (
+		url  = ic.opt.GateWayHost + path
+		resp = &GradeManagerResponse{}
+	)
+
+	auth, err := ic.generateGateWayAuth("")
+	if err != nil {
+		blog.Errorf("CreateGradeManagers generateGateWayAuth failed: %v", err)
+		return 0, err
+	}
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
+
+	if len(errs) != 0 {
+		blog.Errorf("CreateGradeManagers gorequest errors=`%s`", errs)
+		return 0, errs[0]
+	}
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("CreateGradeManagers API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return 0, errMsg
+	}
+
+	blog.Infof("CreateGradeManagers[%s:%s] successful", request.System, request.Name)
+	return resp.Data.ID, nil
+}
+
+// UserGroup 用户组相关接口
+
+// CreateGradeManagers create gradeManagers
+func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64, request CreateUserGroupRequest) ([]uint64, error) {
+	if ic == nil {
+		return nil, ErrServerNotInit
+	}
+
+	var (
+		_    = "CreateUserGroup"
+		path = fmt.Sprintf("/api/v1/open/management/grade_managers/%v/groups/", gradeManagerID)
+	)
+
+	var (
+		url  = ic.opt.GateWayHost + path
+		resp = &CreateUserGroupResponse{}
+	)
+
+	auth, err := ic.generateGateWayAuth("")
+	if err != nil {
+		blog.Errorf("CreateUserGroup generateGateWayAuth failed: %v", err)
+		return nil, err
+	}
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
+
+	if len(errs) != 0 {
+		blog.Errorf("CreateUserGroup gorequest errors=`%s`", errs)
+		return nil, errs[0]
+	}
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("CreateUserGroup API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return nil, errMsg
+	}
+
+	blog.Infof("CreateUserGroup[%s:%v] successful", ic.opt.SystemID, gradeManagerID)
+	return resp.Data, nil
+}
+
+// DeleteUserGroup delete userGroup
+func (ic *iamClient) DeleteUserGroup(ctx context.Context, groupID uint64) error {
+	if ic == nil {
+		return ErrServerNotInit
+	}
+
+	var (
+		_    = "DeleteUserGroup"
+		path = fmt.Sprintf("/api/v1/open/management/groups/%v/", groupID)
+	)
+
+	var (
+		url  = ic.opt.GateWayHost + path
+		resp = &BaseResponse{}
+	)
+
+	auth, err := ic.generateGateWayAuth("")
+	if err != nil {
+		blog.Errorf("DeleteUserGroup generateGateWayAuth failed: %v", err)
+		return err
+	}
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		EndStruct(resp)
+
+	if len(errs) != 0 {
+		blog.Errorf("DeleteUserGroup gorequest errors=`%s`", errs)
+		return errs[0]
+	}
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("DeleteUserGroup API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return errMsg
+	}
+
+	blog.Infof("DeleteUserGroup[%s:%v] successful", ic.opt.SystemID, groupID)
+	return nil
+}
+
+// AddUserGroupMembers add user group members
+func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, request AddGroupMemberRequest) error {
+	if ic == nil {
+		return ErrServerNotInit
+	}
+
+	var (
+		_    = "AddUserGroupMembers"
+		path = fmt.Sprintf("/api/v1/open/management/groups/%v/members/", groupID)
+	)
+
+	var (
+		url  = ic.opt.GateWayHost + path
+		resp = &AddGroupMemberResponse{}
+	)
+
+	auth, err := ic.generateGateWayAuth("")
+	if err != nil {
+		blog.Errorf("AddUserGroupMembers generateGateWayAuth failed: %v", err)
+		return err
+	}
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
+
+	if len(errs) != 0 {
+		blog.Errorf("AddUserGroupMembers gorequest errors=`%s`", errs)
+		return errs[0]
+	}
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("AddUserGroupMembers API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return errMsg
+	}
+
+	blog.Infof("AddUserGroupMembers[%s:%v] successful", ic.opt.SystemID, groupID)
+	return nil
+}
+
+// DeleteUserGroupMembers delete user group members
+func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64, request DeleteGroupMemberRequest) error {
+	if ic == nil {
+		return ErrServerNotInit
+	}
+
+	var (
+		_    = "DeleteUserGroupMembers"
+		path = fmt.Sprintf("/api/v1/open/management/groups/%v/members/", groupID)
+	)
+
+	var (
+		url  = ic.opt.GateWayHost + path
+		resp = &BaseResponse{}
+	)
+
+	auth, err := ic.generateGateWayAuth("")
+	if err != nil {
+		blog.Errorf("DeleteUserGroupMembers generateGateWayAuth failed: %v", err)
+		return err
+	}
+	if request.Type == "" {
+		request.Type = string(User)
+	}
+	if len(request.IDs) == 0 {
+		return fmt.Errorf("DeleteUserGroupMembers paras IDs empty")
+	}
+
+	result, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(url).
+		Query(fmt.Sprintf("type=%s", request.Type)).
+		Query(fmt.Sprintf("ids=%s", strings.Join(request.IDs, ","))).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		EndStruct(resp)
+
+	if len(errs) != 0 {
+		blog.Errorf("DeleteUserGroupMembers gorequest errors=`%s`", errs)
+		return errs[0]
+	}
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("DeleteUserGroupMembers API error: code[%v], err[%s]",
+			result.StatusCode, resp.Message)
+		return errMsg
+	}
+
+	blog.Infof("DeleteUserGroupMembers[%s:%v] successful", ic.opt.SystemID, groupID)
+	return nil
+}
+
+// CreateUserGroupPolicies create group policies
+func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64, request AuthorizationScope) error {
+	if ic == nil {
+		return ErrServerNotInit
+	}
+
+	var (
+		_    = "CreateUserGroupPolicies"
+		path = fmt.Sprintf("/api/v1/open/management/groups/%v/policies/", groupID)
+	)
+
+	var (
+		url  = ic.opt.GateWayHost + path
+		resp = &BaseResponse{}
+	)
+
+	auth, err := ic.generateGateWayAuth("")
+	if err != nil {
+		blog.Errorf("CreateUserGroupPolicies generateGateWayAuth failed: %v", err)
+		return err
+	}
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
+
+	if len(errs) != 0 {
+		blog.Errorf("CreateUserGroupPolicies gorequest errors=`%s`", errs)
+		return errs[0]
+	}
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("CreateUserGroupPolicies API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return errMsg
+	}
+
+	blog.Infof("CreateUserGroupPolicies[%s:%s] successful", request.System, groupID)
+	return nil
 }
