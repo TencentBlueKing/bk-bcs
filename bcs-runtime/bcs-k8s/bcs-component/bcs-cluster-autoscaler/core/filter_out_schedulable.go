@@ -126,6 +126,7 @@ func filterOutSchedulableByPacking(unschedulableCandidates []*apiv1.Pod, nodes [
 
 	klog.V(4).Infof("%v other pods marked as unschedulable can be scheduled.",
 		len(unschedulableCandidates)-len(unschedulablePods))
+	klog.V(4).Infof("%v pods remained unschedulable.", len(unschedulablePods))
 	return unschedulablePods
 }
 

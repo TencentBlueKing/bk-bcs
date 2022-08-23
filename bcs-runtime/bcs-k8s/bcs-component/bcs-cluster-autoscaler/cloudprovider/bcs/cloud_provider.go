@@ -116,6 +116,7 @@ func (cloud *Provider) GetAvailableGPUTypes() map[string]struct{} {
 	return availableGPUTypes
 }
 
+// Cleanup cleans up open resources before the cloud provider is destroyed, or does nothing if not available.
 func (cloud *Provider) Cleanup() error {
 	return nil
 }
