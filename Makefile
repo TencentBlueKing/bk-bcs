@@ -422,7 +422,7 @@ cluster-resources:pre
 	# i18n files
 	cp ${BCS_SERVICES_PATH}/cluster-resources/pkg/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/cluster-resources/lc_msgs.yaml
 	# go build
-	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy -compat=1.17 && go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
+	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy -compat=1.17 && CGO_ENABLED=0 go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
 
 # end of bcs-service section
 
