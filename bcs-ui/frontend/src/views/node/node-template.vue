@@ -58,7 +58,12 @@
         quick-close
         width="800">
         <div slot="content">
-          <NodeTemplateDetail :data="currentRow"></NodeTemplateDetail>
+          <NodeTemplateDetail
+            :data="currentRow"
+            operate
+            @delete="handleDeleteDetail"
+            @cancel="showDetail = false">
+          </NodeTemplateDetail>
         </div>
       </bcs-sideslider>
     </div>
@@ -139,6 +144,11 @@ export default defineComponent({
       currentRow.value = row;
       showDetail.value = true;
     };
+
+    function handleDeleteDetail() {
+      showDetail.value = false;
+      handleNodeTemplateList();
+    }
     onMounted(() => {
       handleNodeTemplateList();
     });
@@ -155,6 +165,7 @@ export default defineComponent({
       handleDelete,
       handleAddTemplate,
       handleShowDetail,
+      handleDeleteDetail,
     };
   },
 });

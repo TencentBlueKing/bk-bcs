@@ -130,11 +130,7 @@
                         ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                   </div>
                 </div>
-                <span
-                  v-bk-tooltips="{
-                    disabled: cluster.clusterCategory !== 'importer',
-                    content: $t('kubeconfig导入集群，节点管理功能不可用')
-                  }">
+                <span>
                   <bk-button
                     class="add-node-btn"
                     v-authority="{
@@ -148,9 +144,8 @@
                         cluster_id: cluster.clusterID
                       }
                     }"
-                    :disabled="cluster.clusterCategory === 'importer'"
                     @click="goNodeInfo(cluster)">
-                    <span>{{$t('添加节点')}}</span>
+                    <span>{{$t('节点管理')}}</span>
                   </bk-button>
                 </span>
               </template>

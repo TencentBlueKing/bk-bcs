@@ -45,13 +45,6 @@
               @click="handleAddNode"
             >{{$t('添加节点')}}</bcs-button>
           </span>
-          <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
-            <apply-host
-              class="mr10"
-              theme="primary"
-              :cluster-id="localClusterId"
-              :is-backfill="true" />
-          </template>
         </template>
         <bcs-dropdown-menu
           :disabled="!selections.length"
@@ -80,10 +73,10 @@
                 disabled: !isImportCluster,
                 content: $t('kubeconfig导入集群，节点管理功能不可用')
               }"
-              @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
+              @click="handleBatchReAddNodes">{{$t('失败重试')}}</li>
             <div
               style="height:32px;"
-              v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD驱逐操作'), disabled: !podDisabled, placement: 'top' }">
+              v-bk-tooltips="{ content: $t('IP状态为停止调度才能做POD驱逐操作'), disabled: !podDisabled, placement: 'top' }">
               <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('pod驱逐')}}</li>
             </div>
             <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
@@ -112,6 +105,12 @@
             </li>
           </ul>
         </bcs-dropdown-menu>
+        <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && !nodeMenu">
+          <bcs-divider style="margin: 0 15px" direction="vertical"></bcs-divider>
+          <apply-host
+            :cluster-id="localClusterId"
+            :is-backfill="true" />
+        </template>
       </div>
       <div class="right">
         <ClusterSelect
@@ -368,7 +367,7 @@
             ></RingCell>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="260">
+        <bcs-table-column :label="$t('操作')" width="160">
           <template #default="{ row }">
             <div
               class="node-operate-wrapper"
@@ -383,10 +382,6 @@
                   cluster_id: localClusterId
                 }
               }">
-              <template v-if="row.status === 'RUNNING'">
-                <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
-                <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
-              </template>
               <bk-button
                 class="mr10"
                 text
@@ -394,6 +389,14 @@
                 v-if="row.status === 'RUNNING'">
                 {{ $t('停止调度') }}
               </bk-button>
+              <template v-else-if="row.status === 'REMOVABLE'">
+                <bk-button text class="mr10" @click="handleEnableNode(row)">
+                  {{ $t('允许调度') }}
+                </bk-button>
+                <bk-button text class="mr10" @click="handleSchedulerNode(row)">
+                  {{ $t('pod驱逐') }}
+                </bk-button>
+              </template>
               <bk-button
                 class="mr10"
                 text
@@ -402,33 +405,40 @@
               >
                 {{$t('查看日志')}}
               </bk-button>
-              <template v-if="row.status === 'REMOVABLE'">
-                <bk-button text class="mr10" @click="handleEnableNode(row)">
-                  {{ $t('允许调度') }}
-                </bk-button>
-                <bk-button text class="mr10" @click="handleSchedulerNode(row)">
-                  {{ $t('pod驱逐') }}
-                </bk-button>
-              </template>
-              <span
-                v-bk-tooltips="{
-                  disabled: !isImportCluster,
-                  content: $t('kubeconfig导入集群，节点管理功能不可用')
-                }">
-                <bk-button
-                  text class="mr10"
-                  v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
-                  :disabled="isImportCluster"
-                  @click="handleDeleteNode(row)"
-                >
-                  {{ $t('删除') }}
-                </bk-button>
-              </span>
               <bk-button
                 text
                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
                 @click="handleRetry(row)"
               >{{ $t('重试') }}</bk-button>
+              <bk-popover
+                placement="bottom"
+                theme="light dropdown"
+                :arrow="false">
+                <span class="more-operate"><i class="bcs-icon bcs-icon-more"></i></span>
+                <template #content>
+                  <ul class="bcs-dropdown-list">
+                    <template v-if="row.status === 'RUNNING'">
+                      <li class="bcs-dropdown-item" @click="handleSetLabel(row)">
+                        {{$t('设置标签')}}
+                      </li>
+                      <li class="bcs-dropdown-item" @click="handleSetTaint(row)">
+                        {{$t('设置污点')}}
+                      </li>
+                    </template>
+                    <li
+                      :class="['bcs-dropdown-item', { disabled: isImportCluster }]"
+                      v-bk-tooltips="{
+                        disabled: !isImportCluster,
+                        content: $t('kubeconfig导入集群，节点管理功能不可用')
+                      }"
+                      v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                      @click="handleDeleteNode(row)"
+                    >
+                      {{ $t('删除') }}
+                    </li>
+                  </ul>
+                </template>
+              </bk-popover>
             </div>
           </template>
         </bcs-table-column>
@@ -1077,6 +1087,7 @@ export default defineComponent({
     ]);
     const curDeleteRows = ref<any[]>([]);
     const handleDeleteNode = async (row) => {
+      if (isImportCluster.value) return;
       curDeleteRows.value = [row];
       removeNodeDialog.value.title = $i18n.t('确认要删除节点【{innerIp}】？', {
         innerIp: row.inner_ip,
@@ -1482,6 +1493,24 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
+>>> .more-operate {
+  font-size: 18px;
+  font-weight: bold;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #979ba5;
+  position: relative;
+  top: 1px;
+  &:hover {
+    background: #ddd;
+    color: #3a84ff
+  }
+}
 .cluster-node-wrapper {
     margin: 0 20px;
     border: 1px solid #dfe0e5;

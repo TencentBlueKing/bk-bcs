@@ -2206,7 +2206,7 @@ export default {
   '确认要对 {ip} 等 {num} 个节点上的Pod进行驱逐': [
     'Confirm that you need to expulsion the pod on the {num} node of {ip}',
   ],
-  '注：IP状态为停止调度才能做POD驱逐操作': [
+  'IP状态为停止调度才能做POD驱逐操作': [
     'Note: IP status is to stop scheduling to do POD expulsion operation',
   ],
   'API密钥与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的API密钥权限': [

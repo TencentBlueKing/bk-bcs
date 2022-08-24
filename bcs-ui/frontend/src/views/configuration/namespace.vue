@@ -395,7 +395,14 @@
                 <label class="bk-label label">
                   {{$t('命名空间配额')}}
                 </label>
-                <bcs-switcher v-model="enableQuota"></bcs-switcher>
+                <bcs-switcher
+                  v-model="enableQuota"
+                  :disabled="isSharedCluster && enableQuota"
+                  v-bk-tooltips="{
+                    content: $t('共享集群不支持关闭配额'),
+                    disabled: !(isSharedCluster && enableQuota)
+                  }"
+                ></bcs-switcher>
                 <span class="ml5">{{ enableQuota ? $t('已开启') : $t('未开启') }}</span>
               </div>
             </div>

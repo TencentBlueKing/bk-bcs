@@ -58,7 +58,7 @@
               <div class="value-label">{{nodeInfo.sysname}}</div>
             </bcs-popover>
           </div>
-          <template v-if="isTkeCluster">
+          <!-- <template v-if="isTkeCluster">
             <div class="header-item">
               <div class="key-label">{{$t('节点模板：')}}</div>
               <bcs-popover
@@ -77,7 +77,7 @@
                 {{nodeTemplateInfo.extraArgs.kubelet}}
               </div>
             </div>
-          </template>
+          </template> -->
         </div>
         <div class="biz-cluster-node-overview-chart-wrapper">
           <div class="biz-cluster-node-overview-chart">
@@ -425,7 +425,7 @@ import { useSelectItemsNamespace } from '@/views/dashboard/common/use-namespace'
 import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from './node-overview-chart-opts';
-import { getNodeTemplateInfo } from '@/api/base';
+// import { getNodeTemplateInfo } from '@/api/base';
 
 export default defineComponent({
   components: {  StatusIcon, BcsLog, ECharts },
@@ -1036,21 +1036,21 @@ export default defineComponent({
     const handleNamespaceSelected = (val) => {
       namespaceValue.value = val;
     };
-    const nodeTemplateInfo = ref({
-      name: '',
-      extraArgs: { kubelet: '' },
-    });
-    const fetchNodeTemplateInfo = async () => {
-      if (!isTkeCluster.value) return;
+    // const nodeTemplateInfo = ref({
+    //   name: '',
+    //   extraArgs: { kubelet: '' },
+    // });
+    // const fetchNodeTemplateInfo = async () => {
+    //   if (!isTkeCluster.value) return;
 
-      const data = await getNodeTemplateInfo({
-        $innerIP: nodeId.value,
-      });
-      nodeTemplateInfo.value = data?.nodeTemplate || {
-        name: '',
-        extraArgs: { kubelet: '' },
-      };
-    };
+    //   const data = await getNodeTemplateInfo({
+    //     $innerIP: nodeId.value,
+    //   });
+    //   nodeTemplateInfo.value = data?.nodeTemplate || {
+    //     name: '',
+    //     extraArgs: { kubelet: '' },
+    //   };
+    // };
 
     onMounted(async () => {
       // eslint-disable-next-line max-len, no-multi-assign
@@ -1081,7 +1081,7 @@ export default defineComponent({
         maskColor: 'rgba(255, 255, 255, 0.8)',
       });
 
-      fetchNodeTemplateInfo();
+      // fetchNodeTemplateInfo();
       fetchNodeInfo();
       fetchDataK8S('cpu_summary', '1');
       fetchDataK8S('mem', '1');
@@ -1094,7 +1094,7 @@ export default defineComponent({
     });
 
     return {
-      nodeTemplateInfo,
+      // nodeTemplateInfo,
       isTkeCluster,
       memoryLine,
       networkLine,
