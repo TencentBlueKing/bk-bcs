@@ -16,7 +16,8 @@
       "confInfo": {
         "cloudInternalEnable": false,
         "disableCreateCluster": true,
-        "disableImportCluster": false
+        "disableImportCluster": false,
+        "disableNodeGroup": false
       },
       "osManagement": {
         "availableVersion": ["default"],
@@ -54,7 +55,8 @@
       "confInfo": {
         "cloudInternalEnable": false,
         "disableCreateCluster": true,
-        "disableImportCluster": false
+        "disableImportCluster": false,
+        "disableNodeGroup": true
       },
       "osManagement": {
         "availableVersion": ["default"],
@@ -98,7 +100,8 @@
       "confInfo": {
         "cloudInternalEnable": false,
         "disableCreateCluster": false,
-        "disableImportCluster": true
+        "disableImportCluster": true,
+        "disableNodeGroup": true
       },
       "clusterManagement": {
         "availableVersion": ["v1.14.3-tk8s-v1.1-1"],

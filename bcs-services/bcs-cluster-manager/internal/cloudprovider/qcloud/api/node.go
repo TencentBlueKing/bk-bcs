@@ -21,7 +21,6 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -643,7 +642,7 @@ func (nm *NodeManager) DescribeZoneInstanceConfigInfos(zone, instanceFamily, ins
 			t.NodeType = *v.InstanceType
 		}
 		if v.TypeName != nil {
-			t.NodeFamily = *v.TypeName
+			t.TypeName = *v.TypeName
 		}
 		if v.InstanceFamily != nil {
 			t.NodeFamily = *v.InstanceFamily
@@ -816,8 +815,11 @@ func (nm *NodeManager) DescribeImages(imageType string, opt *cloudprovider.Commo
 
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	if provider == cmcommon.MarketImageProvider {
-		return imageOsList, nil
+	os := make([]*proto.OsImage, 0)
+	for _, v := range ImageOsList {
+		if provider == v.Provider {
+			os = append(os, v)
+		}
 	}
-	return nm.DescribeImages(provider, opt)
+	return os, nil
 }

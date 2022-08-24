@@ -242,6 +242,11 @@ func (ca *CreateAction) validate() error {
 		return fmt.Errorf("lost kubernetes version in request")
 	}
 
+	// check masterIP
+	if len(ca.req.Master) == 0 {
+		return fmt.Errorf("lost kubernetes cluster masterIP")
+	}
+
 	// default not handle systemReinstall
 	ca.req.SystemReinstall = true
 

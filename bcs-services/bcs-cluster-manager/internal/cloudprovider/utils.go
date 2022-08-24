@@ -150,18 +150,19 @@ var (
 	DeleteNodeGroup TaskType = "DeleteNodeGroup"
 	// MoveNodesToNodeGroup task
 	MoveNodesToNodeGroup TaskType = "MoveNodesToNodeGroup"
-
 	// SwitchNodeGroupAutoScaling task
 	SwitchNodeGroupAutoScaling TaskType = "SwitchNodeGroupAutoScaling"
-
 	// UpdateNodeGroupDesiredNode task
 	UpdateNodeGroupDesiredNode TaskType = "UpdateNodeGroupDesiredNode"
+	// CleanNodeGroupNodes task
+	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
+	// UpdateAutoScalingOption task
+	UpdateAutoScalingOption TaskType = "UpdateAutoScalingOption"
+	// SwitchAutoScalingOptionStatus task
+	SwitchAutoScalingOptionStatus TaskType = "SwitchAutoScalingOptionStatus"
 
 	// ApplyInstanceMachinesTask apply instance subTask
 	ApplyInstanceMachinesTask TaskType = "ApplyInstanceMachinesTask"
-
-	// CleanNodeGroupNodes task
-	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
 )
 
 // GetTaskType getTaskType by cloud

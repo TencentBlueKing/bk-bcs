@@ -158,24 +158,47 @@ type IAMConfig struct {
 	ApplyPermAddress string `json:"applyPermAddress"`
 }
 
+// BCSAppConfig for bcs-app
+type BCSAppConfig struct {
+	Server     string `json:"server"`
+	AppCode    string `json:"appCode"`
+	AppSecret  string `json:"appSecret"`
+	BkUserName string `json:"bkUserName"`
+	Enable     bool   `json:"enable"`
+	Debug      bool   `json:"debug"`
+}
+
+// AutoScaler Config for autoscaler
+type AutoScaler struct {
+	ChartName        string `json:"chartName"`
+	ReleaseName      string `json:"releaseName"`
+	ReleaseNamespace string `json:"releaseNamespace"`
+	IsPublicRepo     bool   `json:"isPublicRepo"`
+	BCSAPIGateway    string `json:"bcsApiGateway"`
+	Token            string `json:"token"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
-	Etcd              EtcdOption            `json:"etcd"`
-	Swagger           SwaggerConfig         `json:"swagger"`
-	Tunnel            TunnelConfig          `json:"tunnel"`
-	BcsLog            LogConfig             `json:"bcslog"`
-	Mongo             MongoConfig           `json:"mongo"`
-	Broker            BrokerConfig          `json:"broker"`
-	BKOps             BKOpsConfig           `json:"bkOps"`
-	Cmdb              CmdbConfig            `json:"cmdb"`
-	ResourceManager   ResourceManagerConfig `json:"resource"`
-	CloudTemplatePath string                `json:"cloudTemplatePath"`
-	Ssm               SsmConfig             `json:"ssm"`
-	Passcc            PassConfig            `json:"passcc"`
-	UserManager       UserConfig            `json:"user"`
-	Alarm             AlarmConfig           `json:"alarm"`
-	IAM               IAMConfig             `json:"iam_config"`
-	Debug             bool                  `json:"debug"`
+	Etcd               EtcdOption            `json:"etcd"`
+	Swagger            SwaggerConfig         `json:"swagger"`
+	Tunnel             TunnelConfig          `json:"tunnel"`
+	BcsLog             LogConfig             `json:"bcslog"`
+	Mongo              MongoConfig           `json:"mongo"`
+	Broker             BrokerConfig          `json:"broker"`
+	BKOps              BKOpsConfig           `json:"bkOps"`
+	Cmdb               CmdbConfig            `json:"cmdb"`
+	ResourceManager    ResourceManagerConfig `json:"resource"`
+	CloudTemplatePath  string                `json:"cloudTemplatePath"`
+	Ssm                SsmConfig             `json:"ssm"`
+	Passcc             PassConfig            `json:"passcc"`
+	UserManager        UserConfig            `json:"user"`
+	Alarm              AlarmConfig           `json:"alarm"`
+	IAM                IAMConfig             `json:"iam_config"`
+	BCSAppConfig       BCSAppConfig          `json:"bcsapp"`
+	AutoScaler         AutoScaler            `json:"autoScaler"`
+	ResourceSchemaPath string                `json:"resourceSchemaPath"`
+	Debug              bool                  `json:"debug"`
 	ServerConfig
 	ClientConfig
 }

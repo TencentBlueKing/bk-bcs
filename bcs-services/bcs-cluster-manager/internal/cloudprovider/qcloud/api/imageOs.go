@@ -18,18 +18,48 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
-// market images
+// ImageOsList image os list
 // 没有特定接口，按照 tke 节点池页面数据硬编码
-var imageOsList = []*proto.OsImage{
+var ImageOsList = []*proto.OsImage{
 	{
-		Alias:           "CentOS 7.2 64bit",
+		Alias:           "TencentOS Server 3.1 (TK4)",
 		Arch:            "x86_64",
-		ImageID:         "img-rkiynh11",
+		ImageID:         "img-eb30mz89",
 		OsCustomizeType: "GENERAL",
-		OsName:          "centos7.2x86_64",
-		SeriesName:      "centos7.2x86_64",
+		OsName:          "tlinux3.1x86_64",
+		SeriesName:      "TencentOS Server 3.1 (TK4)",
 		Status:          "NORMAL",
-		Provider:        common.MarketImageProvider,
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "TencentOS Server 2.4",
+		Arch:            "x86_64",
+		ImageID:         "img-hdt9xxkt",
+		OsCustomizeType: "GENERAL",
+		OsName:          "tlinux2.4x86_64",
+		SeriesName:      "TencentOS Server 2.4",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "Ubuntu Server 20.04.1 LTS 64bit",
+		Arch:            "x86_64",
+		ImageID:         "img-22trbn9x",
+		OsCustomizeType: "GENERAL",
+		OsName:          "ubuntu20.04x86_64",
+		SeriesName:      "ubuntu20.04x86_64",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "Ubuntu Server 18.04.1 LTS 64bit",
+		Arch:            "x86_64",
+		ImageID:         "img-pi0ii46r",
+		OsCustomizeType: "GENERAL",
+		OsName:          "ubuntu18.04.1x86_64",
+		SeriesName:      "ubuntu18.04.1x86_64",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
 	},
 	{
 		Alias:           "Ubuntu Server 16.04.1 LTS 64bit",
@@ -39,7 +69,47 @@ var imageOsList = []*proto.OsImage{
 		OsName:          "ubuntu16.04.1 LTSx86_64",
 		SeriesName:      "ubuntu16.04.1 LTSx86_64",
 		Status:          "NORMAL",
-		Provider:        common.MarketImageProvider,
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "CentOS 8.0 64bit",
+		Arch:            "x86_64",
+		ImageID:         "img-25szkc8t",
+		OsCustomizeType: "GENERAL",
+		OsName:          "centos8.0x86_64",
+		SeriesName:      "centos8.0x86_64",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "CentOS 7.8 64bit",
+		Arch:            "x86_64",
+		ImageID:         "img-3la7wgnt",
+		OsCustomizeType: "GENERAL",
+		OsName:          "centos7.8.0_x64",
+		SeriesName:      "centos7.8.0_x64",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "CentOS 7.6 64bit",
+		Arch:            "x86_64",
+		ImageID:         "img-9qabwvbn",
+		OsCustomizeType: "GENERAL",
+		OsName:          "centos7.6.0_x64",
+		SeriesName:      "centos7.6.0_x64",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "CentOS 7.2 64bit",
+		Arch:            "x86_64",
+		ImageID:         "img-rkiynh11",
+		OsCustomizeType: "GENERAL",
+		OsName:          "centos7.2x86_64",
+		SeriesName:      "centos7.2x86_64",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
 	},
 	// https://console.cloud.tencent.com/cvm/image/detail?rid=1&id=img-fv2263iz
 	{

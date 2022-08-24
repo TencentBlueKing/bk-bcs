@@ -73,8 +73,6 @@ func newtask() *Task {
 
 	// autoScaler task
 	task.works[ensureAutoScalerTask] = tasks.EnsureAutoScalerTask
-	task.works[deleteAutoScalerTask] = tasks.DeleteAutoScalerTask
-	task.works[updateNodeGroupAutoScalingDBTask] = tasks.UpdateNodeGroupAutoScalingDBTask
 
 	// create nodeGroup task
 	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
@@ -997,7 +995,25 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 	task.Steps[deleteNodeGroupTask] = deleteStep
 	task.StepSequence = append(task.StepSequence, deleteNodeGroupTask)
 
-	// step2. update node group info in DB
+	// step2. ensure autoscaler to remove this nodegroup
+	if group.EnableAutoscale {
+		ensureAutoScalerStep := &proto.Step{
+			Name:       ensureAutoScalerTask,
+			System:     "api",
+			Params:     make(map[string]string),
+			Retry:      3,
+			Start:      nowStr,
+			Status:     cloudprovider.TaskStatusNotStarted,
+			TaskMethod: ensureAutoScalerTask,
+			TaskName:   fmt.Sprintf("从集群 AutoScaler 移除 NodeGroup[%s]", group.NodeGroupID),
+		}
+		ensureAutoScalerStep.Params["ClusterID"] = group.ClusterID
+		ensureAutoScalerStep.Params["NodeGroupID"] = group.NodeGroupID
+		ensureAutoScalerStep.Params["CloudID"] = group.Provider
+
+		task.Steps[ensureAutoScalerTask] = ensureAutoScalerStep
+		task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+	}
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -1159,6 +1175,7 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 		Steps:          make(map[string]*proto.Step),
 		StepSequence:   make([]string, 0),
 		ClusterID:      group.ClusterID,
+		NodeGroupID:    group.NodeGroupID,
 		ProjectID:      group.ProjectID,
 		Creator:        group.Creator,
 		Updater:        group.Updater,
@@ -1176,7 +1193,7 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 		Name:       ensureAutoScalerTask,
 		System:     "api",
 		Params:     make(map[string]string),
-		Retry:      0,
+		Retry:      3,
 		Start:      nowStr,
 		Status:     cloudprovider.TaskStatusNotStarted,
 		TaskMethod: ensureAutoScalerTask,
@@ -1189,28 +1206,129 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 	task.Steps[ensureAutoScalerTask] = ensureStep
 	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
 
-	// step2. update node group info in DB
-	dbStep := &proto.Step{
-		Name:       updateNodeGroupAutoScalingDBTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      0,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: updateNodeGroupAutoScalingDBTask,
-		TaskName:   "更新任务状态",
-	}
-	dbStep.Params["ClusterID"] = group.ClusterID
-	dbStep.Params["NodeGroupID"] = group.NodeGroupID
-	dbStep.Params["CloudID"] = group.Provider
-
-	task.Steps[updateNodeGroupAutoScalingDBTask] = dbStep
-	task.StepSequence = append(task.StepSequence, updateNodeGroupAutoScalingDBTask)
-
 	// set current step
 	if len(task.StepSequence) == 0 {
 		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.SwitchNodeGroupAutoScaling.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.SwitchNodeGroupAutoScalingJob.String()
+	return task, nil
+}
+
+// BuildUpdateAutoScalingOptionTask build update auto scaler option task
+func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+	// validate request params
+	if scalingOption == nil {
+		return nil, fmt.Errorf("BuildUpdateAutoScalingOptionTask scaling option info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildUpdateAutoScalingOptionTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateAutoScalingOption),
+		TaskName:       "更新集群自动扩缩容配置",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      scalingOption.ClusterID,
+		ProjectID:      scalingOption.ProjectID,
+		Creator:        scalingOption.Creator,
+		Updater:        scalingOption.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateAutoScalingOptionTemplate, scalingOption.ClusterID)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	ensureStep := &proto.Step{
+		Name:       ensureAutoScalerTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      3,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: ensureAutoScalerTask,
+		TaskName:   "安装/更新 AutoScaler",
+	}
+	ensureStep.Params["ClusterID"] = scalingOption.ClusterID
+	ensureStep.Params["CloudID"] = scalingOption.Provider
+
+	task.Steps[ensureAutoScalerTask] = ensureStep
+	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateAutoScalingOptionTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateAutoScalingOptionJob.String()
+	return task, nil
+}
+
+// BuildSwitchAutoScalingOptionStatusTask build switch auto scaler option status task
+func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+	// validate request params
+	if scalingOption == nil {
+		return nil, fmt.Errorf("BuildSwitchAutoScalingOptionStatusTask scalingOption info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildSwitchAutoScalingOptionStatusTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.SwitchAutoScalingOptionStatus),
+		TaskName:       "开启/关闭集群自动扩缩容",
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      scalingOption.ClusterID,
+		ProjectID:      scalingOption.ProjectID,
+		Creator:        scalingOption.Creator,
+		Updater:        scalingOption.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(switchAutoScalingOptionStatusTemplate, scalingOption.ClusterID)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	ensureStep := &proto.Step{
+		Name:       ensureAutoScalerTask,
+		System:     "api",
+		Params:     make(map[string]string),
+		Retry:      3,
+		Start:      nowStr,
+		Status:     cloudprovider.TaskStatusNotStarted,
+		TaskMethod: ensureAutoScalerTask,
+		TaskName:   "安装/更新 AutoScaler",
+	}
+	ensureStep.Params["ClusterID"] = scalingOption.ClusterID
+	ensureStep.Params["CloudID"] = scalingOption.Provider
+
+	task.Steps[ensureAutoScalerTask] = ensureStep
+	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildSwitchAutoScalingOptionStatusTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.SwitchAutoScalingOptionStatusJob.String()
 	return task, nil
 }

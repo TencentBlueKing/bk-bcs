@@ -215,3 +215,22 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 
 	return nil
 }
+
+// CreateNodeGroupValidate xxx
+func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
+	// call cloud interface to check account
+	if c == nil || opt.Account == nil {
+		return fmt.Errorf("%s CreateNodeGroupValidate request is empty", cloudName)
+	}
+
+	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 || len(opt.Account.ClientID) == 0 ||
+		len(opt.Account.ClientSecret) == 0 {
+		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}

@@ -24,7 +24,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	uuidTool "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 // CreateAction action for create namespace
@@ -135,7 +135,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 
 // GenerateProjectID build project ID
 func GenerateProjectID() string {
-	uuid := uuidTool.NewV4()
+	uuid := uuid.New()
 	buf := make([]byte, 32)
 	hex.Encode(buf[:], uuid[:])
 	return string(buf[:])

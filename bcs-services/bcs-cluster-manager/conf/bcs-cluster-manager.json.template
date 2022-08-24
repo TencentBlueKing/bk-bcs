@@ -75,7 +75,24 @@
         "metric": ${bcsIAMMetric},
         "debug": ${bcsIAMDebug}
     },
+    "bcsapp": {
+        "server": "${bcsAppServer}",
+        "appCode": "${bcsAppAppCode}",
+        "appSecret": "${bcsAppAppSecret}",
+        "bkUserName": "${bcsAppBkUsername}",
+        "enable": ${bcsAppEnable},
+        "debug": ${bcsAppDebug}
+    },
+    "autoScaler": {
+        "chartName": "${bcsCAChartName}",
+        "releaseName": "${bcsCAReleaseName}",
+        "releaseNamespace": "${bcsCAReleaseNamespace}",
+        "isPublicRepo": ${bcsCAIsPublicRepo},
+        "bcsApiGateway": "${bcsCAApiGateway}",
+        "token": "${bcsCAToken}"
+    },
     "cloudTemplatePath": "${bcsCloudTemplatePath}",
+    "resourceSchemaPath": "${bcsResourceSchemaPath}",
     "debug": ${bcsClusterManagerDebug},
     "address": "${localIp}",
     "port": ${bcsClusterManagerPort},
