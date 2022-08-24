@@ -80,13 +80,6 @@ func (g *GetReleaseHistoryAction) getHistory() error {
 		return nil
 	}
 
-	if len(history) == 0 {
-		blog.Errorf("get release history failed, target not found, clusterID: %s namespace: %s, name: %s",
-			clusterID, namespace, name)
-		g.setResp(common.ErrHelmManagerGetActionFailed, "release not found", nil)
-		return nil
-	}
-
 	rh := make([]*helmmanager.ReleaseHistory, 0)
 	for _, v := range history {
 		rh = append(rh, v.Transfer2HistoryProto())

@@ -2,10 +2,11 @@
   "swagger": "2.0",
   "info": {
     "title": "Helm Manager API Doc",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
+  "basePath": "/bcsapi/v4",
   "schemes": [
-    "http"
+    "https"
   ],
   "consumes": [
     "application/json"
@@ -98,7 +99,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/chart/{projectID}/{repository}/{name}/detail/{version}": {
@@ -159,7 +161,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/chart/{projectID}/{repository}/{name}/version": {
@@ -229,7 +232,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history": {
@@ -346,7 +350,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail": {
@@ -393,7 +398,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install": {
@@ -448,7 +454,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/rollback": {
@@ -503,7 +510,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/uninstall": {
@@ -558,7 +566,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/release/{clusterID}/{namespace}/{name}/upgrade": {
@@ -613,7 +622,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/repository/{projectID}": {
@@ -691,7 +701,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       },
       "delete": {
         "summary": "批量删除仓库",
@@ -730,7 +741,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     },
     "/helmmanager/v1/repository/{projectID}/{name}": {
@@ -770,7 +782,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       },
       "delete": {
         "summary": "删除仓库",
@@ -816,7 +829,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       },
       "post": {
         "summary": "创建仓库",
@@ -862,7 +876,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       },
       "put": {
         "summary": "更新仓库",
@@ -908,7 +923,8 @@
         ],
         "tags": [
           "HelmManager"
-        ]
+        ],
+        "deprecated": true
       }
     }
   },
@@ -2294,5 +2310,17 @@
         }
       }
     }
-  }
+  },
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ]
 }

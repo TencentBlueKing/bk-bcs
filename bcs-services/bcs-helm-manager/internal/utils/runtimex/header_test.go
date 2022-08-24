@@ -10,11 +10,20 @@
  * limitations under the License.
  */
 
-package headerkey
+package runtimex
 
-const (
-	// RequestIDKey ...
-	RequestIDKey = "X-Request-Id"
-	// UsernameKey ...
-	UsernameKey = "X-Bcs-Username"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
+
+func TestCustomMatcher(t *testing.T) {
+	ret, _ := CustomHeaderMatcher(contextx.RequestIDHeaderKey)
+	assert.Equal(t, contextx.RequestIDHeaderKey, ret)
+
+	ret, _ = CustomHeaderMatcher("Content-Type")
+	assert.Equal(t, "grpcgateway-Content-Type", ret)
+}

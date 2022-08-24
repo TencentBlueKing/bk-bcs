@@ -23,8 +23,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/mapx"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 )
 
 const (

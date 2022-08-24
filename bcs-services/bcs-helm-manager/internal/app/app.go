@@ -53,8 +53,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/envx"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/runtimex"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/envx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/pkg/middleware/auth"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -332,6 +332,7 @@ func (hm *HelmManager) initMicro() error {
 }
 
 func (hm *HelmManager) initHTTPService() error {
+	router := mux.NewRouter()
 	rmMux := ggRuntime.NewServeMux(
 		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
@@ -354,24 +355,22 @@ func (hm *HelmManager) initHTTPService() error {
 		blog.Errorf("register http service failed, err %s", err.Error())
 		return fmt.Errorf("register http service failed, err %s", err.Error())
 	}
-
-	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", rmMux)
-	blog.Info("register grpc service handler to path /")
 
-	originMux := http.NewServeMux()
-	originMux.Handle("/", router)
+	mux := http.NewServeMux()
 	if len(hm.opt.Swagger.Dir) != 0 {
 		blog.Info("swagger doc is enabled")
-		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(hm.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+		mux.HandleFunc("/helmmanager/swagger/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, path.Join(hm.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/helmmanager/swagger/")))
 		})
 	}
+	mux.Handle("/", router)
+	blog.Info("register grpc service handler to path /")
 
 	httpAddr := hm.opt.Address + ":" + strconv.Itoa(int(hm.opt.HTTPPort))
 	hm.httpServer = &http.Server{
 		Addr:    httpAddr,
-		Handler: originMux,
+		Handler: mux,
 	}
 	go func() {
 		var err error

@@ -20,15 +20,14 @@ import (
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/headerkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 )
 
 // RequestIDWrapper get or generate request id
 func RequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		ctx = context.WithValue(ctx, ctxkey.RequestIDKey, getRequestID(ctx))
+		ctx = context.WithValue(ctx, contextx.RequestIDContextKey, getRequestID(ctx))
 		return fn(ctx, req, rsp)
 	}
 }
@@ -40,7 +39,7 @@ func getRequestID(ctx context.Context) string {
 		return stringx.GenUUID()
 	}
 	// 当request id不存在或者为空时，生成id
-	requestID, ok := md.Get(headerkey.RequestIDKey)
+	requestID, ok := md.Get(contextx.RequestIDHeaderKey)
 	if !ok || requestID == "" {
 		return stringx.GenUUID()
 	}

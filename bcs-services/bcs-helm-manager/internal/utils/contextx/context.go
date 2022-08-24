@@ -10,16 +10,12 @@
  * limitations under the License.
  */
 
-package ctxkey
+package contextx
 
-// ContextKey ...
-type ContextKey string
+import "context"
 
-const (
-	// RequestIDKey 请求的requestID
-	RequestIDKey ContextKey = "requestID"
-	// TraceIDKey 链路跟踪需要的trace id
-	TraceIDKey ContextKey = "traceID"
-	// UsernameKey 用户名
-	UsernameKey ContextKey = "username"
-)
+// GetRequestIDFromCtx 通过 ctx 获取 requestID
+func GetRequestIDFromCtx(ctx context.Context) string {
+	id, _ := ctx.Value(RequestIDContextKey).(string)
+	return id
+}

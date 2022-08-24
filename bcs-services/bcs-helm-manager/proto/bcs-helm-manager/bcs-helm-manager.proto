@@ -10,9 +10,26 @@ import "validate/validate.proto";
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
     info: {
         title: "Helm Manager API Doc"
-        version: "0.1.0"
+        version: "0.2.0"
     };
-    schemes: HTTP
+    base_path: "/bcsapi/v4"
+    security_definitions: {
+		security: {
+			key: "ApiKeyAuth";
+			value: {
+				type: TYPE_API_KEY;
+				in: IN_HEADER;
+				name: "Authorization";
+			};
+		}
+	};
+	security: {
+		security_requirement: {
+			key: "ApiKeyAuth";
+			value: {};
+		}
+	};
+    schemes: HTTPS
     consumes: "application/json"
     produces: "application/json"
 };
@@ -38,6 +55,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "创建仓库"
             summary: "创建仓库"
+            deprecated: true
         };
     }
     rpc UpdateRepository(UpdateRepositoryReq) returns (UpdateRepositoryResp) {
@@ -48,6 +66,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "更新仓库"
             summary: "更新仓库"
+            deprecated: true
         };
     }
     rpc GetRepository(GetRepositoryReq) returns (GetRepositoryResp) {
@@ -57,6 +76,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询仓库"
             summary: "查询仓库"
+            deprecated: true
         };
     }
     rpc DeleteRepository(DeleteRepositoryReq) returns (DeleteRepositoryResp) {
@@ -67,6 +87,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "删除仓库"
             summary: "删除仓库"
+            deprecated: true
         };
     }
     rpc ListRepository(ListRepositoryReq) returns (ListRepositoryResp) {
@@ -76,6 +97,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询仓库列表"
             summary: "查询仓库列表"
+            deprecated: true
         };
     }
     rpc DeleteRepositories(DeleteRepositoriesReq) returns (DeleteRepositoriesResp) {
@@ -86,6 +108,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "批量删除仓库"
             summary: "批量删除仓库"
+            deprecated: true
         };
     }
 
@@ -97,6 +120,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "批量查询chart包"
             summary: "批量查询chart包"
+            deprecated: true
         };
     }
     rpc ListChartVersion(ListChartVersionReq) returns (ListChartVersionResp) {
@@ -106,6 +130,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询chart包的版本列表"
             summary: "查询chart包的版本列表"
+            deprecated: true
         };
     }
     rpc GetChartDetail(GetChartDetailReq) returns (GetChartDetailResp) {
@@ -115,6 +140,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询指定版本的chart包详细信息"
             summary: "查询指定版本的chart包详细信息"
+            deprecated: true
         };
     }
 
@@ -126,6 +152,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询指定集群的chart release信息"
             summary: "查询指定集群的chart release信息"
+            deprecated: true
         };
     }
     rpc GetReleaseDetail(GetReleaseDetailReq) returns (GetReleaseDetailResp) {
@@ -135,6 +162,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询指定release的详细信息"
             summary: "查询指定release详细信息"
+            deprecated: true
         };
     }
     rpc InstallRelease(InstallReleaseReq) returns (InstallReleaseResp) {
@@ -145,6 +173,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "执行指定集群的chart release install"
             summary: "执行指定集群的chart release install"
+            deprecated: true
         };
     }
     rpc UninstallRelease(UninstallReleaseReq) returns (UninstallReleaseResp) {
@@ -155,6 +184,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "执行指定集群的chart release uninstall"
             summary: "执行指定集群的chart release uninstall"
+            deprecated: true
         };
     }
     rpc UpgradeRelease(UpgradeReleaseReq) returns (UpgradeReleaseResp) {
@@ -165,6 +195,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "执行指定集群的chart release upgrade"
             summary: "执行指定集群的chart release upgrade"
+            deprecated: true
         };
     }
     rpc RollbackRelease(RollbackReleaseReq) returns (RollbackReleaseResp) {
@@ -175,6 +206,7 @@ service HelmManager {
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "执行指定集群的chart release rollback"
             summary: "执行指定集群的chart release rollback"
+            deprecated: true
         };
     }
     rpc GetReleaseHistory(GetReleaseHistoryReq) returns (GetReleaseHistoryResp) {

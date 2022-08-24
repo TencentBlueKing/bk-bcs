@@ -10,22 +10,22 @@
  * limitations under the License.
  */
 
-package runtimex
+package contextx
 
-import (
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+// ContextKey ...
+type ContextKey string
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/headerkey"
+const (
+	// RequestIDContextKey 请求的requestID
+	RequestIDContextKey ContextKey = "requestID"
+	// TraceIDContextKey 链路跟踪需要的trace id
+	TraceIDContextKey ContextKey = "traceID"
+	// UsernamContextKey 用户名
+	UsernamContextKey ContextKey = "username"
 )
 
-// CustomHeaderMatcher for http header
-func CustomHeaderMatcher(key string) (string, bool) {
-	switch key {
-	case headerkey.RequestIDKey:
-		return headerkey.RequestIDKey, true
-	case headerkey.UsernameKey:
-		return headerkey.UsernameKey, true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
-	}
-}
+// HeaderKey string
+const (
+	// RequestIDKey ...
+	RequestIDHeaderKey = "X-Request-Id"
+)

@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	goReq "github.com/parnurzeal/gorequest"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 )
 
 // Request request third api client
