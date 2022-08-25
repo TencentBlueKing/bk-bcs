@@ -24,14 +24,14 @@
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('内存：')}}</div>
-            <bcs-popover :content="nodeInfo.memory" placement="bottom">
-              <div class="value-label">{{nodeInfo.memory}}</div>
+            <bcs-popover :content="formatBytes(nodeInfo.memory, 0)" placement="bottom">
+              <div class="value-label">{{formatBytes(nodeInfo.memory, 0)}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('存储：')}}</div>
-            <bcs-popover :content="nodeInfo.disk" placement="bottom">
-              <div class="value-label">{{nodeInfo.disk}}</div>
+            <bcs-popover :content="formatBytes(nodeInfo.disk, 0)" placement="bottom">
+              <div class="value-label">{{formatBytes(nodeInfo.disk, 0)}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
@@ -495,25 +495,11 @@ export default defineComponent({
              */
     const fetchNodeInfo = async () => {
       try {
-        const data = await $store.dispatch('metric/clusterNodeInfo', {
+        nodeInfo.value = await $store.dispatch('metric/clusterNodeInfo', {
           $projectCode: projectCode.value,
           $clusterId: clusterId.value,
           $nodeIP: nodeId.value,
-        });
-
-        nodeInfo.value.id = data.id || '';
-        nodeInfo.value.provider = data.provider || '--';
-        nodeInfo.value.dockerVersion = data.dockerVersion || '--';
-        nodeInfo.value.osVersion = data.osVersion || '--';
-        nodeInfo.value.domainname = data.domainname || '--';
-        nodeInfo.value.machine = data.machine || '--';
-        nodeInfo.value.nodename = data.nodename || '--';
-        nodeInfo.value.release = data.release || '--';
-        nodeInfo.value.sysname = data.sysname || '--';
-        nodeInfo.value.version = data.version || '--';
-        nodeInfo.value.cpu_count = data.cpu_count || '--';
-        nodeInfo.value.memory = data.memory ? formatBytes(data.memory, 0) : '--';
-        nodeInfo.value.disk = data.disk ? formatBytes(data.disk, 0) : '--';
+        }) || {};
       } catch (e) {
         catchErrorHandler(e, ctx);
       }
@@ -599,7 +585,7 @@ export default defineComponent({
 
       data.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
         });
         curCpuChartOptsK8S.series.push({
           type: 'line',
@@ -660,7 +646,7 @@ export default defineComponent({
 
       data.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
         });
         curMemChartOptsK8S.series.push({
           type: 'line',
@@ -721,7 +707,7 @@ export default defineComponent({
 
       data.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
         });
         curDiskioChartOptsK8S.series.push({
           type: 'line',
@@ -799,7 +785,7 @@ export default defineComponent({
 
       dataReceive.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
           d.push('receive');
         });
         curNetworkChartOptsK8S.series.push({
@@ -823,7 +809,7 @@ export default defineComponent({
 
       dataTransmit.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
           d.push('transmit');
         });
         curNetworkChartOptsK8S.series.push({
@@ -1137,6 +1123,7 @@ export default defineComponent({
       handleDeleteResource,
       handleUpdateResource,
       handleNamespaceSelected,
+      formatBytes,
     };
   },
 });

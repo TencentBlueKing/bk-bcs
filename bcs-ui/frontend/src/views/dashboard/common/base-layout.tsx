@@ -217,7 +217,7 @@ export default defineComponent({
     const { tableDataMatchSearch, searchValue } = useSearch(tableData, keys);
 
     const handleNamespaceSelected = (value) => {
-      localStorage.setItem(CUR_SELECT_NAMESPACE, value);
+      localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, value);
       handleGetTableData();
     };
 

@@ -508,40 +508,12 @@
     <bk-sideslider
       :is-show.sync="logSideDialogConf.isShow"
       :title="logSideDialogConf.title"
-      :width="640"
+      :width="860"
       @hidden="closeLog"
       :quick-close="true">
       <div slot="content">
         <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
-          <bk-table :data="logSideDialogConf.taskData">
-            <bk-table-column :label="$t('步骤')" prop="taskName" width="160">
-              <template #default="{ row }">
-                <span class="task-name">
-                  <span class="bcs-ellipsis">
-                    {{row.taskName}}
-                  </span>
-                  <i
-                    class="bcs-icon bcs-icon-fenxiang"
-                    v-if="row.params && row.params.taskUrl"
-                    @click="handleGotoSops(row)"></i>
-                </span>
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('状态')" prop="status" width="120">
-              <template #default="{ row }">
-                <div class="log-wrapper-status" v-if="row.status === 'RUNNING'">
-                  <loading-cell
-                    :style="{ left: 0, margin: 0 }"
-                    :ext-cls="['bk-spin-loading-mini', 'bk-spin-loading-danger']"></loading-cell>
-                  <span class="ml5">{{ $t('运行中') }}</span>
-                </div>
-                <StatusIcon :status="row.status" :status-color-map="taskStatusColorMap" v-else>
-                  {{ taskStatusTextMap[row.status.toLowerCase()] }}
-                </StatusIcon>
-              </template>
-            </bk-table-column>
-            <bk-table-column min-width="120" :label="$t('内容')" prop="message"></bk-table-column>
-          </bk-table>
+          <TaskList :data="logSideDialogConf.taskData"></TaskList>
         </div>
       </div>
     </bk-sideslider>
@@ -568,7 +540,7 @@ import { defineComponent, ref, PropType, onMounted, watch, set, computed } from 
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
-import { nodeStatusColorMap, nodeStatusMap, taskStatusTextMap, taskStatusColorMap } from '@/common/constant';
+import { nodeStatusColorMap, nodeStatusMap } from '@/common/constant';
 import useNode from './use-node';
 import useTableSetting from './use-table-setting';
 import usePage from '@/views/dashboard/common/use-page';
@@ -586,6 +558,7 @@ import ApplyHost from '@/views/cluster/apply-host.vue';
 import { TranslateResult } from 'vue-i18n';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import useDefaultClusterId from './use-default-clusterId';
+import TaskList from './task-list.vue';
 
 export default defineComponent({
   name: 'NodeList',
@@ -600,6 +573,7 @@ export default defineComponent({
     tipDialog,
     ApplyHost,
     IpSelector,
+    TaskList,
   },
   props: {
     selectedFields: {
@@ -1401,10 +1375,6 @@ export default defineComponent({
       }
       return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum);
     });
-    // 跳转标准运维
-    const handleGotoSops = (row) => {
-      window.open(row.params.taskUrl);
-    };
 
     onMounted(async () => {
       await handleGetNodeData();
@@ -1418,8 +1388,6 @@ export default defineComponent({
       maxRemainNodesCount,
       isSingleCluster,
       curSelectedCluster,
-      taskStatusTextMap,
-      taskStatusColorMap,
       logSideDialogConf,
       showIpSelector,
       removeNodeDialog,
@@ -1487,7 +1455,6 @@ export default defineComponent({
       webAnnotations,
       curProject,
       isImportCluster,
-      handleGotoSops,
     };
   },
 });
@@ -1654,15 +1621,6 @@ export default defineComponent({
     width: 100%;
     /deep/ .bk-tooltip-ref {
         display: block;
-    }
-}
-.task-name {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    i {
-        color: #3a84ff;
-        cursor: pointer;
     }
 }
 </style>
