@@ -140,7 +140,7 @@ func CanEditProject(authUser auth.AuthUser, projectID string) error {
 	return nil
 }
 
-// CanEditProject ...
+// CanDeleteProject ...
 func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, DeleteAction) {
@@ -158,6 +158,30 @@ func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 	}
 	if !canDelete {
 		return errorx.NewPermDeniedErr(applyUrl, "projectDelete", canDelete, err.Error())
+	}
+	return nil
+}
+
+// CanCreateVariable ...
+func CanCreateVariable(authUser auth.AuthUser, projectCode string) error {
+	// 判断是否校验权限
+	if canExemptClientPerm(authUser.ClientID, CreateAction) {
+		return nil
+	}
+
+	// 判断是否有创建权限
+	permClient, err := NewPermClient()
+	if err != nil {
+		return errorx.NewIAMClientErr(err)
+	}
+	// TODO: 是否校验至少需要有项目查看权限
+	// TODO: 是否只能用 projectID，不能用 projectCode
+	canView, applyUrl, err := permClient.CanViewProject(authUser.Username, projectCode)
+	if err != nil {
+		return errorx.NewRequestIAMErr(applyUrl, "projectView", canView, err)
+	}
+	if !canView {
+		return errorx.NewPermDeniedErr(applyUrl, "projectView", canView)
 	}
 	return nil
 }

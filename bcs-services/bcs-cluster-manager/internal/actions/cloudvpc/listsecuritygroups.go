@@ -58,10 +58,7 @@ func (la *ListSecurityGroupsAction) validate() error {
 		return err
 	}
 
-	err = validate.ListSecurityGroupsValidate(la.req, &cmproto.Account{
-		SecretID:  la.account.Account.SecretID,
-		SecretKey: la.account.Account.SecretKey,
-	})
+	err = validate.ListSecurityGroupsValidate(la.req, la.account.Account)
 	if err != nil {
 		return err
 	}

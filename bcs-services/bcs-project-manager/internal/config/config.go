@@ -17,9 +17,9 @@ package config
 import (
 	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
+	
+	"gopkg.in/yaml.v2"
 )
 
 // EtcdConfig 依赖的 etcd 服务的配置
@@ -117,7 +117,7 @@ type ClientActionExemptPermConfig struct {
 	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt perm for client id action, example: [{clientID: bcs-inner, actions: [create, view]}]"`
 }
 
-// 请求的 CMDB 服务配置
+// CMDBConfig 请求的 CMDB 服务配置
 type CMDBConfig struct {
 	BKSupplierAccount string `yaml:"bkSupplierAccount" usage:"developer account"`
 	Host              string `yaml:"host" usage:"access cmdb api host"`
@@ -126,9 +126,15 @@ type CMDBConfig struct {
 	Debug             bool   `yaml:"debug" usage:"debug"`
 }
 
-// 请求的 bcs cc 服务配置
+// BCSGatewayConfig 请求的 bcs cc 服务配置
 type BCSCCConfig struct {
 	Host string `yaml:"host" usage:"access bcs cc api host"`
+}
+
+// BCSGatewayConfig BCS 网关配置
+type BCSGatewayConfig struct {
+	Host  string `yaml:"host" usage:"bcs api gateway host"`
+	Token string `yaml:"token" usage:"bcs api gateway token"`
 }
 
 // ProjectConfig 项目的配置信息
@@ -145,6 +151,7 @@ type ProjectConfig struct {
 	CMDB                   CMDBConfig                   `yaml:"cmdb"`
 	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`
 	App                    AppConfig                    `yaml:"app"`
+	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
 }
 
 func (conf *ProjectConfig) initServerAddress() error {

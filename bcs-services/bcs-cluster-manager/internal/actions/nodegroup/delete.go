@@ -209,7 +209,7 @@ func (da *DeleteAction) Handle(
 		}(),
 		Message:    fmt.Sprintf("集群%s删除节点池%s", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:     req.Operator,
-		CreateTime: time.Now().String(),
+		CreateTime: time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("DeleteNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
@@ -390,7 +390,7 @@ func (da *RemoveNodeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s节点池%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       da.group.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("RemoveNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
@@ -614,7 +614,7 @@ func (da *CleanNodesAction) Handle(
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("集群%s节点池%s删除节点%v", da.group.ClusterID, da.group.NodeGroupID, da.req.Nodes),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("CleanNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)

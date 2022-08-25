@@ -244,6 +244,8 @@ type CloudValidateManager interface {
 	ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error
 	// ListCloudImageOsValidate list tke image os validate
 	ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error
+	// CreateNodeGroupValidate create node group validate
+	CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *CommonOption) error
 }
 
 // ClusterManager cloud interface for kubernetes cluster management
@@ -278,7 +280,7 @@ type NodeGroupManager interface {
 	// UpdateNodeGroup update specified nodegroup configuration
 	UpdateNodeGroup(group *proto.NodeGroup, opt *CommonOption) error
 	// GetNodesInGroup get all nodes belong to NodeGroup
-	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.Node, error)
+	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.NodeGroupNode, error)
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 
@@ -300,7 +302,9 @@ type NodeGroupManager interface {
 	// UpdateAutoScalingOption update cluster autoscaling option, cloudprovider will update
 	// cluster-autoscaler configuration in backgroup according cloudprovider implementation.
 	// Implementation is optional.
-	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *DeleteScalingOption) (*proto.Task, error)
+	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task, error)
+	// SwitchAutoScalingOptionStatus switch cluster autoscaling option enable auto scaling status
+	SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *CommonOption) (*proto.Task, error)
 }
 
 // VPCManager cloud interface for vpc management
@@ -316,7 +320,6 @@ type TaskManager interface {
 	Name() string
 	// GetAllTask get all register task for worker running
 	GetAllTask() map[string]interface{}
-
 
 	// specific cloud different implement
 
@@ -335,6 +338,10 @@ type TaskManager interface {
 	BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
 	// BuildSwitchNodeGroupAutoScalingTask switch nodegroup autoscaling
 	BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
+	// BuildUpdateAutoScalingOptionTask update cluster autoscaling option
+	BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task, error)
+	// BuildSwitchAutoScalingOptionStatusTask switch cluster autoscaling option enable auto scaling status
+	BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *CommonOption) (*proto.Task, error)
 
 	// ClusterManager taskList
 

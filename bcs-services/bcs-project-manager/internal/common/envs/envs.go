@@ -21,5 +21,5 @@ import (
 // 以下变量值可通过环境变量指定
 var (
 	// LocalIP 服务运行 Pod IP，用于向etcd注册服务
-	LocalIP = stringx.GetEnv("LOCAL_IP", "")
+	LocalIP = stringx.GetEnv("localIp", "")
 )

@@ -16,12 +16,14 @@ package handler
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/nodegroup"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // CreateNodeGroup implements interface cmproto.ClusterManagerServer
@@ -149,15 +151,43 @@ func (cm *ClusterManager) CleanNodesInGroup(ctx context.Context,
 	return nil
 }
 
-// ListNodesInGroup implements interface cmproto.ClusterManagerServer
-func (cm *ClusterManager) ListNodesInGroup(ctx context.Context,
-	req *cmproto.GetNodeGroupRequest, resp *cmproto.ListNodesInGroupResponse) error {
+// CleanNodesInGroupV2 implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CleanNodesInGroupV2(ctx context.Context,
+	req *cmproto.CleanNodesInGroupV2Request, resp *cmproto.CleanNodesInGroupV2Response) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {
 		return err
 	}
 	start := time.Now()
-	ca := nodegroup.NewListNodesAction(cm.model)
+	// 新的缩容接口从 query 拿参数，但主体逻辑使用 v1 的缩容接口，为了遵守 HTTP DELETE 规范，
+	// 不从 body 传参
+	ca := nodegroup.NewCleanNodesAction(cm.model)
+	newReq := &cmproto.CleanNodesInGroupRequest{
+		ClusterID:   req.ClusterID,
+		Nodes:       strings.Split(req.Nodes, ","),
+		NodeGroupID: req.NodeGroupID,
+		Operator:    req.Operator,
+	}
+	newResp := &cmproto.CleanNodesInGroupResponse{}
+	ca.Handle(ctx, newReq, newResp)
+	resp.Code = newResp.Code
+	resp.Data = newResp.Data
+	resp.Message = newResp.Message
+	resp.Result = newResp.Result
+	metrics.ReportAPIRequestMetric("CleanNodesInGroupV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CleanNodesInGroupV2, req %v, resp %v", reqID, utils.ToJSONString(req), resp)
+	return nil
+}
+
+// ListNodesInGroup implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListNodesInGroup(ctx context.Context,
+	req *cmproto.ListNodesInGroupRequest, resp *cmproto.ListNodesInGroupResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := nodegroup.NewListNodesAction(cm.model, cm.kubeOp)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListNodesInGroup", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListNodesInGroup, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",

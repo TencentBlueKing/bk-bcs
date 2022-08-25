@@ -13,52 +13,52 @@
           <div class="header-item">
             <div class="key-label">IP：</div>
             <bcs-popover :content="nodeId" placement="bottom">
-              <div class="value-label">{{nodeId}}</div>
+              <div class="value-label">{{nodeId || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">CPU：</div>
             <bcs-popover :content="nodeInfo.cpu_count" placement="bottom">
-              <div class="value-label">{{nodeInfo.cpu_count}}</div>
+              <div class="value-label">{{nodeInfo.cpu_count || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('内存：')}}</div>
-            <bcs-popover :content="nodeInfo.memory" placement="bottom">
-              <div class="value-label">{{nodeInfo.memory}}</div>
+            <bcs-popover :content="formatBytes(nodeInfo.memory, 0)" placement="bottom">
+              <div class="value-label">{{formatBytes(nodeInfo.memory, 0) || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('存储：')}}</div>
-            <bcs-popover :content="nodeInfo.disk" placement="bottom">
-              <div class="value-label">{{nodeInfo.disk}}</div>
+            <bcs-popover :content="formatBytes(nodeInfo.disk, 0)" placement="bottom">
+              <div class="value-label">{{formatBytes(nodeInfo.disk, 0) || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('IP来源：')}}</div>
             <bcs-popover :content="nodeInfo.provider" placement="bottom">
-              <div class="value-label">{{nodeInfo.provider}}</div>
+              <div class="value-label">{{nodeInfo.provider || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('内核：')}}</div>
             <bcs-popover :content="nodeInfo.release" placement="bottom">
-              <div class="value-label">{{nodeInfo.release}}</div>
+              <div class="value-label">{{nodeInfo.release || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">Docker：</div>
             <bcs-popover :content="nodeInfo.dockerVersion" placement="bottom">
-              <div class="value-label">{{nodeInfo.dockerVersion}}</div>
+              <div class="value-label">{{nodeInfo.dockerVersion || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('操作系统：')}}</div>
             <bcs-popover :content="nodeInfo.sysname" placement="bottom">
-              <div class="value-label">{{nodeInfo.sysname}}</div>
+              <div class="value-label">{{nodeInfo.sysname || '--'}}</div>
             </bcs-popover>
           </div>
-          <template v-if="isTkeCluster">
+          <!-- <template v-if="isTkeCluster">
             <div class="header-item">
               <div class="key-label">{{$t('节点模板：')}}</div>
               <bcs-popover
@@ -77,7 +77,7 @@
                 {{nodeTemplateInfo.extraArgs.kubelet}}
               </div>
             </div>
-          </template>
+          </template> -->
         </div>
         <div class="biz-cluster-node-overview-chart-wrapper">
           <div class="biz-cluster-node-overview-chart">
@@ -425,7 +425,7 @@ import { useSelectItemsNamespace } from '@/views/dashboard/common/use-namespace'
 import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from './node-overview-chart-opts';
-import { getNodeTemplateInfo } from '@/api/base';
+// import { getNodeTemplateInfo } from '@/api/base';
 
 export default defineComponent({
   components: {  StatusIcon, BcsLog, ECharts },
@@ -495,25 +495,11 @@ export default defineComponent({
              */
     const fetchNodeInfo = async () => {
       try {
-        const data = await $store.dispatch('metric/clusterNodeInfo', {
+        nodeInfo.value = await $store.dispatch('metric/clusterNodeInfo', {
           $projectCode: projectCode.value,
           $clusterId: clusterId.value,
           $nodeIP: nodeId.value,
-        });
-
-        nodeInfo.value.id = data.id || '';
-        nodeInfo.value.provider = data.provider || '--';
-        nodeInfo.value.dockerVersion = data.dockerVersion || '--';
-        nodeInfo.value.osVersion = data.osVersion || '--';
-        nodeInfo.value.domainname = data.domainname || '--';
-        nodeInfo.value.machine = data.machine || '--';
-        nodeInfo.value.nodename = data.nodename || '--';
-        nodeInfo.value.release = data.release || '--';
-        nodeInfo.value.sysname = data.sysname || '--';
-        nodeInfo.value.version = data.version || '--';
-        nodeInfo.value.cpu_count = data.cpu_count || '--';
-        nodeInfo.value.memory = data.memory ? formatBytes(data.memory, 0) : '--';
-        nodeInfo.value.disk = data.disk ? formatBytes(data.disk, 0) : '--';
+        }) || {};
       } catch (e) {
         catchErrorHandler(e, ctx);
       }
@@ -527,8 +513,9 @@ export default defineComponent({
              */
     const fetchDataK8S = async (idx, range) => {
       const params = {
-        startAt: '',
-        endAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        start_at: '',
+        end_at: moment().utc()
+          .format(),
         $projectCode: projectCode.value,
         $nodeIP: nodeId.value,
         $clusterId: clusterId.value,
@@ -537,14 +524,17 @@ export default defineComponent({
 
       // 1 小时
       if (range === '1') {
-        params.startAt = moment().subtract(1, 'hours')
-          .format('YYYY-MM-DD HH:mm:ss');
+        params.start_at = moment().subtract(1, 'hours')
+          .utc()
+          .format();
       } else if (range === '2') { // 24 小时
-        params.startAt = moment().subtract(1, 'days')
-          .format('YYYY-MM-DD HH:mm:ss');
+        params.start_at = moment().subtract(1, 'days')
+          .utc()
+          .format();
       } else if (range === '3') { // 近 7 天
-        params.startAt = moment().subtract(7, 'days')
-          .format('YYYY-MM-DD HH:mm:ss');
+        params.start_at = moment().subtract(7, 'days')
+          .utc()
+          .format();
       }
 
       try {
@@ -599,7 +589,7 @@ export default defineComponent({
 
       data.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
         });
         curCpuChartOptsK8S.series.push({
           type: 'line',
@@ -660,7 +650,7 @@ export default defineComponent({
 
       data.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
         });
         curMemChartOptsK8S.series.push({
           type: 'line',
@@ -721,7 +711,7 @@ export default defineComponent({
 
       data.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
         });
         curDiskioChartOptsK8S.series.push({
           type: 'line',
@@ -799,7 +789,7 @@ export default defineComponent({
 
       dataReceive.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
           d.push('receive');
         });
         curNetworkChartOptsK8S.series.push({
@@ -823,7 +813,7 @@ export default defineComponent({
 
       dataTransmit.forEach((item) => {
         item.values.forEach((d) => {
-          d[0] = parseInt(`${d[0]}000`, 10);
+          d[0] = parseInt(d[0], 10) * 1000;
           d.push('transmit');
         });
         curNetworkChartOptsK8S.series.push({
@@ -1036,21 +1026,21 @@ export default defineComponent({
     const handleNamespaceSelected = (val) => {
       namespaceValue.value = val;
     };
-    const nodeTemplateInfo = ref({
-      name: '',
-      extraArgs: { kubelet: '' },
-    });
-    const fetchNodeTemplateInfo = async () => {
-      if (!isTkeCluster.value) return;
+    // const nodeTemplateInfo = ref({
+    //   name: '',
+    //   extraArgs: { kubelet: '' },
+    // });
+    // const fetchNodeTemplateInfo = async () => {
+    //   if (!isTkeCluster.value) return;
 
-      const data = await getNodeTemplateInfo({
-        $innerIP: nodeId.value,
-      });
-      nodeTemplateInfo.value = data?.nodeTemplate || {
-        name: '',
-        extraArgs: { kubelet: '' },
-      };
-    };
+    //   const data = await getNodeTemplateInfo({
+    //     $innerIP: nodeId.value,
+    //   });
+    //   nodeTemplateInfo.value = data?.nodeTemplate || {
+    //     name: '',
+    //     extraArgs: { kubelet: '' },
+    //   };
+    // };
 
     onMounted(async () => {
       // eslint-disable-next-line max-len, no-multi-assign
@@ -1081,7 +1071,7 @@ export default defineComponent({
         maskColor: 'rgba(255, 255, 255, 0.8)',
       });
 
-      fetchNodeTemplateInfo();
+      // fetchNodeTemplateInfo();
       fetchNodeInfo();
       fetchDataK8S('cpu_summary', '1');
       fetchDataK8S('mem', '1');
@@ -1094,7 +1084,7 @@ export default defineComponent({
     });
 
     return {
-      nodeTemplateInfo,
+      // nodeTemplateInfo,
       isTkeCluster,
       memoryLine,
       networkLine,
@@ -1137,6 +1127,7 @@ export default defineComponent({
       handleDeleteResource,
       handleUpdateResource,
       handleNamespaceSelected,
+      formatBytes,
     };
   },
 });

@@ -37,6 +37,8 @@ import (
 	grpcCred "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/handler"
@@ -49,16 +51,17 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// Project describe a project instance
+// ProjectService describe a project instance
 type ProjectService struct {
 	opt *conf.ProjectConfig
 
 	// mongo DB options
 	model store.ProjectModel
 
-	microSvc  microSvc.Service
-	microRgt  microRgt.Registry
-	discovery *discovery.ModuleDiscovery
+	microSvc         microSvc.Service
+	microRgt         microRgt.Registry
+	discovery        *discovery.ModuleDiscovery
+	clusterDiscovery *discovery.ModuleDiscovery
 
 	// http service
 	httpServer *http.Server
@@ -96,6 +99,7 @@ func (p *ProjectService) Init() error {
 		p.initMicro,
 		p.initHttpService,
 		p.initMetric,
+		p.initClientGroup,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -188,7 +192,11 @@ func (p *ProjectService) initRegistry() error {
 
 func (p *ProjectService) initDiscovery() error {
 	p.discovery = discovery.NewModuleDiscovery(config.ServiceDomain, p.microRgt)
-	logging.Info("init discovery for project service successfully")
+	logging.Info("init discovery for project manager successfully")
+	// enable discovery cluster manager module
+	p.clusterDiscovery = discovery.NewModuleDiscovery(config.ClusterManagerDomain, p.microRgt)
+	clustermanager.SetClusterManagerClient(p.clientTLSConfig, p.clusterDiscovery)
+	logging.Info("init discovery for cluster manager successfully")
 	return nil
 }
 
@@ -211,9 +219,13 @@ func (p *ProjectService) initMicro() error {
 		microSvc.RegisterInterval(25*time.Second), // add interval to config
 		microSvc.Context(p.ctx),
 		microSvc.AfterStart(func() error {
+			if err := p.clusterDiscovery.Start(); err != nil {
+				return err
+			}
 			return p.discovery.Start()
 		}),
 		microSvc.BeforeStop(func() error {
+			p.clusterDiscovery.Stop()
 			p.discovery.Stop()
 			return nil
 		}),
@@ -228,6 +240,11 @@ func (p *ProjectService) initMicro() error {
 
 	// project handler
 	if err := proto.RegisterBCSProjectHandler(svc.Server(), handler.NewProject(p.model)); err != nil {
+		logging.Error("register handler failed, err: %s", err.Error())
+		return err
+	}
+	// 添加变量相关的handler
+	if err := proto.RegisterVariableHandler(svc.Server(), handler.NewVariable(p.model)); err != nil {
 		logging.Error("register handler failed, err: %s", err.Error())
 		return err
 	}
@@ -287,6 +304,16 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register healthz gateway failed, err %s", err.Error())
+		return err
+	}
+	// 注册变量相关 endpoint
+	if err := proto.RegisterVariableGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register variable gateway failed, err %s", err.Error())
 		return err
 	}
 	return nil
@@ -355,5 +382,11 @@ func (p *ProjectService) initMetric() error {
 			p.stopCh <- struct{}{}
 		}
 	}()
+	return nil
+}
+
+func (p *ProjectService) initClientGroup() error {
+	logging.Info("init client group")
+	clientset.SetClientGroup(p.opt.BcsGateway.Host, p.opt.BcsGateway.Token)
 	return nil
 }

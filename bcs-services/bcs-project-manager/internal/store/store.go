@@ -17,11 +17,13 @@ package store
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
+	vd "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	vv "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 // ProjectModel project interface
@@ -33,15 +35,30 @@ type ProjectModel interface {
 	UpdateProject(ctx context.Context, project *project.Project) error
 	ListProjects(ctx context.Context, cond *operator.Condition, opt *page.Pagination) ([]project.Project, int64, error)
 	ListProjectByIDs(ctx context.Context, ids []string, opt *page.Pagination) ([]project.Project, int64, error)
+
+	CreateVariableDefinition(ctx context.Context, entity *vd.VariableDefinition) error
+	UpdateVariableDefinition(ctx context.Context, entity *vd.VariableDefinition) error
+	GetVariableDefinition(ctx context.Context, variableID string) (*vd.VariableDefinition, error)
+	GetVariableDefinitionByKey(ctx context.Context, projectCode, key string) (*vd.VariableDefinition, error)
+	ListVariableDefinitions(ctx context.Context,
+		cond *operator.Condition, opt *page.Pagination) ([]vd.VariableDefinition, int64, error)
+
+	CreateVariableValue(ctx context.Context, vv *vv.VariableValue) error
+	GetVariableValue(ctx context.Context,
+		projectCode, variableID, clusterID, namespace, scope string) (*vv.VariableValue, error)
 }
 
 type modelSet struct {
 	*project.ModelProject
+	*vd.ModelVariableDefinition
+	*vv.ModelVariableValue
 }
 
 // New new project model
 func New(db drivers.DB) ProjectModel {
 	return &modelSet{
-		ModelProject: project.New(db),
+		ModelProject:            project.New(db),
+		ModelVariableDefinition: vd.New(db),
+		ModelVariableValue:      vv.New(db),
 	}
 }

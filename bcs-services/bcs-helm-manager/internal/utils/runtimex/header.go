@@ -13,20 +13,22 @@
 package runtimex
 
 import (
-	"testing"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/headerkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/pkg/middleware/auth"
 )
 
-func TestCustomMatcher(t *testing.T) {
-	ret, _ := CustomHeaderMatcher(headerkey.RequestIDKey)
-	assert.Equal(t, headerkey.RequestIDKey, ret)
-
-	ret, _ = CustomHeaderMatcher(headerkey.UsernameKey)
-	assert.Equal(t, headerkey.UsernameKey, ret)
-
-	ret, _ = CustomHeaderMatcher("Content-Type")
-	assert.Equal(t, "grpcgateway-Content-Type", ret)
+// CustomHeaderMatcher for http header
+func CustomHeaderMatcher(key string) (string, bool) {
+	switch key {
+	case contextx.RequestIDHeaderKey:
+		return contextx.RequestIDHeaderKey, true
+	case auth.CustomUsernameHeaderKey:
+		return auth.CustomUsernameHeaderKey, true
+	case auth.InnerClientHeaderKey:
+		return auth.CustomUsernameHeaderKey, true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
 }

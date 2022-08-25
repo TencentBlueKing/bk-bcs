@@ -43,6 +43,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common/marshal"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
@@ -561,9 +562,11 @@ func CustomMatcher(key string) (string, bool) {
 func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(CustomMatcher),
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-			OrigName:     true,
-			EmitDefaults: true,
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &marshal.JSONBcs{
+			JSONPb: &runtime.JSONPb{
+				OrigName:     true,
+				EmitDefaults: true,
+			},
 		}),
 	)
 	grpcDialOpts := []grpc.DialOption{}
@@ -709,6 +712,7 @@ func (cm *ClusterManager) initMicro() error {
 		KubeClient: cm.k8sops,
 		Locker:     cm.locker,
 		IAMClient:  cm.iamClient,
+		CmOptions:  cm.opt,
 	})
 	// Register handler
 	cmproto.RegisterClusterManagerHandler(microService.Server(), cm.serverHandler)

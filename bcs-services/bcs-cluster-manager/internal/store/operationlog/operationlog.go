@@ -166,3 +166,9 @@ func (m *ModelOperationLog) ListOperationLog(ctx context.Context, cond *operator
 
 	return logList, nil
 }
+
+// CountOperationLog count operationLog
+func (m *ModelOperationLog) CountOperationLog(ctx context.Context, cond *operator.Condition) (
+	int64, error) {
+	return m.db.Table(m.tableName).Find(cond).Count(ctx)
+}

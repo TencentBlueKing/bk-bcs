@@ -27,7 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/pkg/middleware/auth"
 )
 
@@ -142,7 +142,7 @@ func CheckUserPerm(req server.Request, username string) (bool, error) {
 
 	action, ok := ActionPermissions[req.Method()]
 	if !ok {
-		return false, errors.New("action is not supported")
+		return false, errors.New("operation has not authorized")
 	}
 
 	if len(resourceID.ProjectCode) > 0 && len(resourceID.ProjectID) == 0 {

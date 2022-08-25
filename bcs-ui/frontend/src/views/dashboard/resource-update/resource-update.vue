@@ -482,6 +482,7 @@ export default defineComponent({
         handleResetEditorErr();
       }
     };
+    const clusterId = computed(() => $store.state.curClusterId);
     const handleCreateResource = async () => {
       let result = false;
       if (type.value === 'crd') {
@@ -513,7 +514,7 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('创建成功'),
         });
-        localStorage.setItem(CUR_SELECT_NAMESPACE, detail.value.metadata?.namespace);
+        localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, detail.value.metadata?.namespace);
         $router.push({ name: $store.getters.curNavName });
       }
     };

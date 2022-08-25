@@ -92,6 +92,8 @@ var (
 	SuccessClusterNodeIDsKey ParamKey = "successClusterNodeIDs"
 	// FailedClusterNodeIDsKey xxx
 	FailedClusterNodeIDsKey ParamKey = "failedClusterNodeIDs"
+	// DeleteModeKey xxx
+	DeleteModeKey ParamKey = "deleteMode"
 
 	// JobTypeKey xxx
 	JobTypeKey ParamKey = "jobType"

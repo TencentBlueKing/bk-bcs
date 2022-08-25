@@ -130,11 +130,7 @@
                         ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                   </div>
                 </div>
-                <span
-                  v-bk-tooltips="{
-                    disabled: cluster.clusterCategory !== 'importer',
-                    content: $t('kubeconfig导入集群，节点管理功能不可用')
-                  }">
+                <span>
                   <bk-button
                     class="add-node-btn"
                     v-authority="{
@@ -148,9 +144,8 @@
                         cluster_id: cluster.clusterID
                       }
                     }"
-                    :disabled="cluster.clusterCategory === 'importer'"
                     @click="goNodeInfo(cluster)">
-                    <span>{{$t('添加节点')}}</span>
+                    <span>{{$t('节点管理')}}</span>
                   </bk-button>
                 </span>
               </template>
@@ -212,22 +207,12 @@
     <bcs-sideslider
       :is-show.sync="showLogDialog"
       :title="curOperateCluster && curOperateCluster.cluster_id"
-      :width="640"
+      :width="860"
       quick-close
       @hidden="handleCloseLog">
       <template #content>
         <div class="log-wrapper">
-          <bk-table :data="taskData">
-            <bk-table-column :label="$t('步骤')" prop="taskName"></bk-table-column>
-            <bk-table-column :label="$t('状态')" prop="status">
-              <template #default="{ row }">
-                <StatusIcon :status="row.status" :status-color-map="statusColorMap">
-                  {{ taskStatusTextMap[row.status.toLowerCase()] }}
-                </StatusIcon>
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('内容')" prop="message"></bk-table-column>
-          </bk-table>
+          <TaskList :data="taskData"></TaskList>
         </div>
       </template>
     </bcs-sideslider>
@@ -255,7 +240,7 @@ import ProjectConfig from '@/views/project/project-config.vue';
 import tipDialog from '@/components/tip-dialog/index.vue';
 import applyPerm from '@/mixins/apply-perm';
 import { useClusterList, useClusterOverview, useClusterOperate, useTask } from './use-cluster';
-import StatusIcon from '@/views/dashboard/common/status-icon';
+import TaskList from '../node/task-list.vue';
 
 export default defineComponent({
   name: 'ClusterList',
@@ -263,7 +248,7 @@ export default defineComponent({
     ApplyHost,
     ProjectConfig,
     tipDialog,
-    StatusIcon,
+    TaskList,
   },
   mixins: [applyPerm],
   setup(props, ctx) {

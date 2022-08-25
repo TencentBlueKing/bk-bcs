@@ -136,10 +136,12 @@ export default defineComponent({
         }));
       }
       // 添加一组空值
-      keyValueData.value.push({
-        key: '',
-        value: '',
-      });
+      if (!keyValueData.value.length) {
+        keyValueData.value.push({
+          key: '',
+          value: '',
+        });
+      }
     }, { immediate: true });
 
     const handleAddKeyValue = (index) => {

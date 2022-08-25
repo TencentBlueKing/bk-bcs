@@ -85,6 +85,8 @@ export default {
       this.isLoading = true;
       const res = await this.$store.dispatch('app/getVersionsLogList', this.projectId);
       this.list = res.data || [];
+      // 按发布日期顺序排序
+      this.list.sort((a, b) => (b.date).split('-').join('') * 1 - a.date.split('-').join('') * 1)
       this.latestBcsVerSion = this.list[0]?.version || '';
       this.isLoading = false;
       const curBcsVerSion = localStorage.getItem('bcs_supermen');
@@ -179,6 +181,7 @@ export default {
         }
         .version-wraper {
             overflow-y: hidden;
+            overflow-x: hidden;
             max-height: 520px;
             width: 180px;
             &:hover {

@@ -17,6 +17,8 @@ package config
 const (
 	// ServiceDomain 域名，用于注册到APISIX
 	ServiceDomain = "project.bkbcs.tencent.com"
+	// ClusterManagerDomain 用于发现 ClusterManager 服务
+	ClusterManagerDomain = "clustermanager.bkbcs.tencent.com"
 	// DefaultConfigPath 配置路径
 	DefaultConfigPath = "./bcs-project-manager.yaml"
 	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport

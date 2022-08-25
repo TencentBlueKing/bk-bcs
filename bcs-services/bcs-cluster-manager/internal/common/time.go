@@ -10,11 +10,21 @@
  * limitations under the License.
  */
 
-package headerkey
+package common
 
-const (
-	// RequestIDKey ...
-	RequestIDKey = "X-Request-Id"
-	// UsernameKey ...
-	UsernameKey = "X-Bcs-Username"
+import (
+	"time"
 )
+
+// LocalTimeFormat is the format of local time
+const LocalTimeFormat = "2006-01-02 15:04:05"
+
+// Format3399ToLocalTime format time to local time
+// "2006-01-02T15:04:05Z07:00" to "2006-01-02 15:04:05"
+func Format3399ToLocalTime(t string) (string, error) {
+	tt, err := time.Parse(time.RFC3339, t)
+	if err != nil {
+		return t, err
+	}
+	return tt.Format(LocalTimeFormat), nil
+}

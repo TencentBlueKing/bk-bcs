@@ -115,3 +115,8 @@ func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTyp
 func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
 	return nil
 }
+
+// CreateNodeGroupValidate xxx
+func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
+	return nil
+}

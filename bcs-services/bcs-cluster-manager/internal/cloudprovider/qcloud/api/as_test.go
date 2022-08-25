@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
@@ -36,8 +37,10 @@ const (
 
 func getASClient(region string) *ASClient {
 	cli, err := NewASClient(&cloudprovider.CommonOption{
-		Key:    os.Getenv(TencentCloudSecretIDEnv),
-		Secret: os.Getenv(TencentCloudSecretKeyEnv),
+		Account: &cmproto.Account{
+			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+		},
 		Region: region,
 	})
 	if err != nil {

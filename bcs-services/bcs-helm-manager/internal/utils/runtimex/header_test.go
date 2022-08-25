@@ -10,16 +10,20 @@
  * limitations under the License.
  */
 
-package ctxkey
+package runtimex
 
-// ContextKey ...
-type ContextKey string
+import (
+	"testing"
 
-const (
-	// RequestIDKey 请求的requestID
-	RequestIDKey ContextKey = "requestID"
-	// TraceIDKey 链路跟踪需要的trace id
-	TraceIDKey ContextKey = "traceID"
-	// UsernameKey 用户名
-	UsernameKey ContextKey = "username"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
+
+func TestCustomMatcher(t *testing.T) {
+	ret, _ := CustomHeaderMatcher(contextx.RequestIDHeaderKey)
+	assert.Equal(t, contextx.RequestIDHeaderKey, ret)
+
+	ret, _ = CustomHeaderMatcher("Content-Type")
+	assert.Equal(t, "grpcgateway-Content-Type", ret)
+}

@@ -77,6 +77,19 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	if len(ua.req.Name) != 0 {
 		group.Name = ua.req.Name
 	}
+	ua.modifyNodeGroupAutoScaling(group)
+	ua.modifyNodeGroupLaunchTemplate(group)
+	ua.modifyNodeGroupNodeTemplate(group)
+	group.Labels = ua.req.Labels
+	group.Taints = ua.req.Taints
+	group.Tags = ua.req.Tags
+	if len(ua.req.NodeOS) != 0 {
+		group.NodeOS = ua.req.NodeOS
+	}
+	ua.group = group
+}
+
+func (ua *UpdateAction) modifyNodeGroupAutoScaling(group *cmproto.NodeGroup) {
 	if ua.req.AutoScaling != nil {
 		if ua.req.AutoScaling.MaxSize != 0 {
 			group.AutoScaling.MaxSize = ua.req.AutoScaling.MaxSize
@@ -98,6 +111,9 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 			group.AutoScaling.ScalingMode = ua.req.AutoScaling.ScalingMode
 		}
 	}
+}
+
+func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) {
 	if ua.req.LaunchTemplate != nil {
 		if ua.req.LaunchTemplate.InstanceType != "" {
 			group.LaunchTemplate.InstanceType = ua.req.LaunchTemplate.InstanceType
@@ -129,6 +145,9 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		group.LaunchTemplate.IsMonitorService = ua.req.LaunchTemplate.IsMonitorService
 		group.LaunchTemplate.IsSecurityService = ua.req.LaunchTemplate.IsSecurityService
 	}
+}
+
+func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 	if ua.req.NodeTemplate != nil {
 		if ua.req.NodeTemplate.NodeTemplateID != "" {
 			group.NodeTemplate.NodeTemplateID = ua.req.NodeTemplate.NodeTemplateID
@@ -144,9 +163,6 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		}
 		if ua.req.NodeTemplate.MountTarget != "" {
 			group.NodeTemplate.MountTarget = ua.req.NodeTemplate.MountTarget
-		}
-		if ua.req.NodeTemplate.UserScript != "" {
-			group.NodeTemplate.UserScript = ua.req.NodeTemplate.UserScript
 		}
 		if ua.req.NodeTemplate.DataDisks != nil {
 			group.NodeTemplate.DataDisks = ua.req.NodeTemplate.DataDisks
@@ -173,13 +189,6 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
 		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
 	}
-	group.Labels = ua.req.Labels
-	group.Taints = ua.req.Taints
-	group.Tags = ua.req.Tags
-	if len(ua.req.NodeOS) != 0 {
-		group.NodeOS = ua.req.NodeOS
-	}
-	ua.group = group
 }
 
 func (ua *UpdateAction) getRelativeResource() error {
@@ -321,7 +330,7 @@ func (ua *UpdateAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
 		OpUser:       req.Updater,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	}); err != nil {
 		blog.Errorf("UpdateNodeGroup[%s] CreateOperationLog failed: %v", ua.req.NodeGroupID, err)
 	}
@@ -458,7 +467,7 @@ func (ua *MoveNodeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s移入节点至节点池%s", ua.cluster.ClusterID, req.NodeGroupID),
 		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("MoveNodesToGroup[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -684,6 +693,7 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 
 func (ua *UpdateDesiredNodeAction) updateNodeGroupDesiredSize(desiredNode uint32) error {
 	ua.group.AutoScaling.DesiredSize = desiredNode
+	ua.group.Updater = ua.req.Operator
 
 	// update DesiredSize in local storage
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
@@ -746,8 +756,8 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		ResourceID:   req.NodeGroupID,
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群%s扩容节点池%s节点数至%v", ua.cluster.ClusterID, req.NodeGroupID, req.DesiredNode),
-		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().String(),
+		OpUser:       req.Operator,
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNode[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -817,7 +827,7 @@ func (ua *UpdateDesiredSizeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新集群%s节点池%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("UpdateGroupDesiredSize[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)

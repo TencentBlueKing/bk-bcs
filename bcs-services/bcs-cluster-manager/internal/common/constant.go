@@ -144,6 +144,8 @@ const (
 	StatusAddNodesFailed = "ADD-FAILURE"
 	//StatusRemoveNodesFailed status remove nodes failed
 	StatusRemoveNodesFailed = "REMOVE-FAILURE"
+	// StatusNodeRemovable node is removable
+	StatusNodeRemovable = "REMOVABLE"
 
 	// StatusDeleteNodeGroupFailed xxx
 	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"
@@ -153,6 +155,17 @@ const (
 	StatusCreateNodeGroupFailed = "CREATE-FAILURE"
 	// StatusNodeGroupUpdating xxx
 	StatusNodeGroupUpdating = "UPDATING"
+	// StatusNodeGroupUpdateFailed xxx
+	StatusNodeGroupUpdateFailed = "UPDATE-FAILURE"
+
+	// StatusAutoScalingOptionNormal normal status
+	StatusAutoScalingOptionNormal = "NORMAL"
+	// StatusAutoScalingOptionUpdating updating status
+	StatusAutoScalingOptionUpdating = "UPDATING"
+	// StatusAutoScalingOptionUpdateFailed update failed status
+	StatusAutoScalingOptionUpdateFailed = "UPDATE-FAILURE"
+	// StatusAutoScalingOptionStopped stopped status
+	StatusAutoScalingOptionStopped = "STOPPED"
 )
 
 const (
@@ -230,4 +243,9 @@ const (
 	PublicImageProvider = "PUBLIC_IMAGE"
 	// 市场镜像
 	MarketImageProvider = "MARKET_IMAGE"
+)
+
+// ContentType
+const (
+	MIMEJSONOrigin = "application/json+origin"
 )

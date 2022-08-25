@@ -537,6 +537,491 @@ message ListAuthorizedProjResp{
   }];
 }
 
+service Variable {
+  rpc CreateVariable(CreateVariableRequest) returns (CreateVariableResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/project/{projectCode}/variable"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建变量"
+      summary : "创建变量"
+    };
+  }
+  rpc UpdateVariable(UpdateVariableRequest) returns (UpdateVariableResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/project/{projectCode}/variable/{variableID}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新变量"
+      summary : "更新变量"
+    };
+  }
+  rpc ListVariableDefinitions(ListVariableDefinitionsRequest) returns (ListVariableDefinitionsResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/project/{projectCode}/variable/definitions"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取项目下所有变量定义"
+      summary : "获取项目下所有变量定义"
+    };
+  }
+  rpc ListClusterVariables(ListClusterVariablesRequest) returns (ListClusterVariablesResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取所有集群的变量值"
+      summary : "获取所有集群的变量值"
+    };
+  }
+  rpc ListNamespaceVariables(ListNamespaceVariablesRequest) returns (ListNamespaceVariablesResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取项目所有命名空间的变量值"
+      summary : "获取项目所有命名空间的变量值"
+    };
+  }
+}
+
+
+message CreateVariableRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateVariableRequest"
+      description : "创建变量请求"
+      required : [
+        "projectCode",
+        "name",
+        "key"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "变量名称, 长度不能超过32字符"
+  }, (validate.rules).string = {max_len: 32}];
+  string key = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "key", 
+    description: "变量 key，项目内唯一，长度不能超过64字符"
+  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"}];
+  string scope = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "name", 
+      description: "变量作用域，取值范围：global, cluster, namespace"
+  }, (validate.rules).string = {in: ["global", "cluster", "namespace"]}];
+  string default = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "default", 
+    description: "变量默认值"
+  }];
+  string desc = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc", 
+    description: "变量说明与描述, 限制在100字符以内"
+  }];
+}
+
+message CreateVariableResponse {
+  string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "id", 
+    description: "变量 id"
+  }];
+  string projectCode = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "变量名称, 长度不能超过32字符"
+  }];
+  string key = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "key", 
+    description: "变量 key, 项目内唯一, 长度不能超过64字符"
+  }];
+  string scope = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "name", 
+      description: "变量作用域, 取值范围: global, cluster, namespace"
+  }];
+  string default = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "default", 
+    description: "变量默认值"
+  }];
+  string desc = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc", 
+    description: "变量说明与描述, 限制在100字符以内"
+  }];
+  string category = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "category", 
+    description: "变量类型, 取值范围: sys, custom"
+  }];
+}
+
+message UpdateVariableRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateVariableRequest"
+      description : "更新变量请求"
+      required : [
+        "projectCode",
+        "variableID"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string variableID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "变量名称, 长度不能超过32字符"
+  }, (validate.rules).string = {max_len: 32}];
+  string key = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "key", 
+    description: "变量 key, 项目内唯一, 长度不能超过64字符"
+  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"}];
+  string scope = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "name", 
+      description: "变量作用域, 取值范围: global, cluster, namespace"
+  }, (validate.rules).string = {in: ["global", "cluster", "namespace"]}];
+  string default = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "default", 
+    description: "变量默认值"
+  }];
+  string desc = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc", 
+    description: "变量说明与描述, 限制在100字符以内"
+  }];
+}
+
+message UpdateVariableResponse {
+  string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "id",
+    description: "变量 id"
+  }];
+  string projectCode = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "变量名称, 长度不能超过32字符"
+  }];
+  string key = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "key", 
+    description: "变量 key, 项目内唯一, 长度不能超过64字符"
+  }];
+  string scope = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "name", 
+      description: "变量作用域, 取值范围: global, cluster, namespace"
+  }];
+  string default = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "default", 
+    description: "变量默认值"
+  }];
+  string desc = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc", 
+    description: "变量说明与描述, 限制在100字符以内"
+  }];
+  string category = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "category", 
+    description: "变量类型, 取值范围: sys, custom"
+  }];
+}
+
+message ListVariableDefinitionsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListVariableDefinitionRequest"
+      description : "获取项目下所有变量定义请求"
+      required : [
+        "projectCode"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string scope = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "scope", 
+      description: "变量作用域, 取值范围: global, cluster, namespace"
+  }];
+  string searchKey = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "searchKey", 
+    description: "变量key, 通过此字段模糊查询项目变量"
+  }];
+  int64 offset = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "offset", 
+    description: "分页数据, 表示第几页"
+  }];
+  int64 limit = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit", 
+    description: "分页数据, 每页数量"
+  }];
+  bool all = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "all", 
+    description: "是否查询全量数据"
+  }];
+}
+
+message ListVariableDefinitionsResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ListVariableDefinitionData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回变量定义列表信息, 包含总量及变量定义列表"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message ListClusterVariablesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterVariablesRequest"
+      description : "获取项目下集群变量值请求"
+      required : [
+        "projectCode",
+        "variableID"
+      ]
+    }
+  };
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }, (validate.rules).string = {min_len: 2, max_len: 64}];
+  string variableID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "variableID", 
+    description: "变量 id"
+  }, (validate.rules).string = {max_len: 32, pattern: "^[a-zA-Z][a-zA-Z0-9-]*$"}];
+}
+
+message ListClusterVariablesResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ListClusterVariablesData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回集群列表信息"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message ListNamespaceVariablesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNamespaceVariablesRequest"
+      description : "获取项目下命名空间变量值请求"
+      required : [
+        "projectCode",
+        "variableID"
+      ]
+    }
+  };
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string variableID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "variableID", 
+    description: "变量 id"
+  }, (validate.rules).string = {max_len: 32, pattern: "^[a-zA-Z][a-zA-Z0-9-]*$"}];
+}
+
+message ListNamespaceVariablesResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ListNamespaceVariablesData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回命名空间列表信息"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message VariableDefinition {
+  string id = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "id", 
+    description: "变量定义ID"
+  }];
+  string key = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "key", 
+    description: "变量 key"
+  }];
+  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "变量名称"
+  }];
+  string default = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "default", 
+    description: "变量默认键值对"
+  }];
+  string defaultValue = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "default", 
+    description: "变量默认值"
+  }];
+  string scope = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scope", 
+    description: "变量作用域, 取值范围: global, cluster, namespace"
+  }];
+  string scopeName = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scopeName", 
+    description: "变量作用域名称, 取值范围: 全局变量, 集群变量, 明明空间变量"
+  }];
+  string category = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "category", 
+    description: "类型, 取值范围: sys/custom"
+  }];
+  string categoryName = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "categoryName", 
+    description: "类型名称, 取值范围: 系统内置/自定义"
+  }];
+  string desc = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc", 
+    description: "变量说明与描述, 限制在100字符以内"
+  }];
+  string created = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "created", 
+    description: "创建时间, 格式: yyyy-MM-dd hh:mm:ss"
+  }];
+  string updated = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updated", 
+    description: "修改时间, 格式: yyyy-MM-dd hh:mm:ss"
+  }];
+  string creator = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "creator", 
+    description: "创建人"
+  }];
+  string updater = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater", 
+    description: "修改人"
+  }];
+}
+
+message ClusterVariable {
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID", 
+    description: "集群ID"
+  }];
+  string clusterName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterName", 
+    description: "集群名称"
+  }];
+  string value = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "value", 
+    description: "变量在该集群的值"
+  }];
+}
+
+message NamespaceVariable {
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID", 
+    description: "集群ID"
+  }];
+  string clusterName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterName", 
+    description: "集群名称"
+  }];
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace", 
+    description: "命名空间"
+  }];
+  string value = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "value", 
+    description: "变量在该命名空间的值"
+  }];
+}
+
+message ListVariableDefinitionData {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListVariableDefinitionData"
+      description : "项目列表数据"
+    }
+  };
+
+  uint32 total = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total", 
+    description: "总量"
+  }];
+  repeated VariableDefinition results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "results", 
+    description: "变量定义数据"
+  }];
+}
+
+message ListClusterVariablesData {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterVariablesData"
+      description : "集群变量列表数据"
+    }
+  };
+
+  uint32 total = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total", 
+    description: "总量"
+  }];
+  repeated ClusterVariable results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "results", 
+    description: "集群变量数据"
+  }];
+}
+
+message ListNamespaceVariablesData {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNamespaceVariablesData"
+      description : "集群变量列表数据"
+    }
+  };
+
+  uint32 total = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total", 
+    description: "总量"
+  }];
+  repeated NamespaceVariable results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "results", 
+    description: "集群变量数据"
+  }];
+}
+
 service Healthz {
   rpc Healthz(HealthzRequest) returns (HealthzResponse) {
     option (google.api.http) = {

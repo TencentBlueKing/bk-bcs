@@ -155,7 +155,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		return nil, fmt.Errorf("BuildCreateClusterTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.CreateClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateClusterJob.String()
 
 	return task, nil
 }
@@ -220,7 +220,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams["operator"] = opt.Operator
-	task.CommonParams["JobType"] = cloudprovider.ImportClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.ImportClusterJob.String()
 
 	return task, nil
 }
@@ -309,7 +309,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 		return nil, fmt.Errorf("BuildDeleteClusterTask task StepSequence empty")
 	}
 	task.CurrentStep = task.StepSequence[0]
-	task.CommonParams["JobType"] = cloudprovider.DeleteClusterJob.String()
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteClusterJob.String()
 
 	return task, nil
 }
@@ -418,8 +418,8 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	task.CommonParams["operator"] = opt.Operator
 	task.CommonParams["user"] = opt.Operator
 
-	task.CommonParams["JobType"] = cloudprovider.AddNodeJob.String()
-	task.CommonParams["NodeIPs"] = strings.Join(nodeIPs, ",")
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.AddNodeJob.String()
+	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 
 	return task, nil
 }
@@ -518,8 +518,8 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	}
 	task.CurrentStep = task.StepSequence[0]
 
-	task.CommonParams["JobType"] = cloudprovider.DeleteNodeJob.String()
-	task.CommonParams["NodeIPs"] = strings.Join(nodeIPs, ",")
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteNodeJob.String()
+	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 
 	return task, nil
 }
@@ -574,5 +574,15 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 
 // BuildSwitchNodeGroupAutoScalingTask switch nodegroup auto scaling
 func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildUpdateAutoScalingOptionTask update auto scaling option
+func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildSwitchAutoScalingOptionStatusTask switch auto scaling option status
+func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

@@ -68,11 +68,18 @@
         <bcs-exception type="empty" scene="part" v-else></bcs-exception>
       </bcs-tab-panel>
     </bcs-tab>
+    <div class="mt15" v-if="operate">
+      <bcs-button theme="primary" @click="handleEditTemplate">{{$t('编辑')}}</bcs-button>
+      <bcs-button @click="handleDeleteTemplate">{{$t('删除')}}</bcs-button>
+      <!-- <bcs-button @click="handleCancel">{{$t('取消')}}</bcs-button> -->
+    </div>
   </div>
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
 import $store from '@/store/index';
+import $router from '@/router/index';
+import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   props: {
@@ -81,8 +88,13 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    operate: {
+      type: Boolean,
+      default: false,
+    },
   },
-  setup(props) {
+  setup(props, ctx) {
+    const { $bkInfo, $bkMessage } = ctx.root;
     const loading = ref(false);
     const curProject = computed(() => $store.state.curProject);
     const user = computed(() => $store.state.user);
@@ -128,8 +140,44 @@ export default defineComponent({
         value: params.value[key],
       })));
 
+    function handleEditTemplate() {
+      $router.push({
+        name: 'editNodeTemplate',
+        params: {
+          nodeTemplateID: props.data.nodeTemplateID,
+        },
+      });
+    }
+    function handleDeleteTemplate() {
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        subTitle: props.data.name,
+        title: $i18n.t('确认删除配置模版？'),
+        defaultInfo: true,
+        confirmFn: async () => {
+          loading.value = true;
+          const result = await $store.dispatch('clustermanager/deleteNodeTemplate', {
+            $nodeTemplateId: props.data.nodeTemplateID,
+          });
+          if (result) {
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('删除成功'),
+            });
+            ctx.emit('delete');
+          }
+          loading.value = false;
+        },
+      });
+    }
+
+    function handleCancel() {
+      ctx.emit('cancel');
+    }
+
     onMounted(() => {
-      handleGetbkSopsList();
+      params.value.template_id && handleGetbkSopsList();
     });
 
     return {
@@ -137,6 +185,9 @@ export default defineComponent({
       kubeletData,
       paramsList,
       currentSops,
+      handleEditTemplate,
+      handleDeleteTemplate,
+      handleCancel,
     };
   },
 });

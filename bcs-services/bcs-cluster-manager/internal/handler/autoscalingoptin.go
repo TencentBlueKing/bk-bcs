@@ -103,3 +103,18 @@ func (cm *ClusterManager) ListAutoScalingOption(ctx context.Context,
 	blog.V(5).Infof("reqID: %s, action: ListAutoScalingOption, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// UpdateAutoScalingStatus implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateAutoScalingStatus(ctx context.Context,
+	req *cmproto.UpdateAutoScalingStatusRequest, resp *cmproto.UpdateAutoScalingStatusResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := autoscalingoption.NewUpdateAutoScalingStatusAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateAutoScalingStatus", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateAutoScalingStatus, req %v, resp %v", reqID, req, resp)
+	return nil
+}

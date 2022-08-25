@@ -318,6 +318,7 @@ func generateInstanceAdvancedSet(request *InstanceAdvancedSettings) *tke.Instanc
 		MountTarget:     common.StringPtr(request.MountTarget),
 		DockerGraphPath: common.StringPtr(request.DockerGraphPath),
 		Unschedulable:   request.Unschedulable,
+		UserScript:      common.StringPtr(request.UserScript),
 		Labels: func() []*tke.Label {
 			if len(request.Labels) == 0 {
 				return nil

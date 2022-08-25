@@ -131,6 +131,7 @@ type ClusterManagerModel interface {
 	DeleteOperationLogByResourceID(ctx context.Context, resourceIndex string) error
 	DeleteOperationLogByResourceType(ctx context.Context, resType string) error
 	ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.OperationLog, error)
+	CountOperationLog(ctx context.Context, cond *operator.Condition) (int64, error)
 
 	//project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error

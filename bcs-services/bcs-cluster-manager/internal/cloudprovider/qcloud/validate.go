@@ -16,6 +16,7 @@ package qcloud
 import (
 	"encoding/base64"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -50,7 +51,7 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
 	}
 
@@ -220,6 +221,28 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 
 	if len(req.Region) == 0 {
 		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// CreateNodeGroupValidate xxx
+func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
+	}
+
+	// simply check instanceType conf info
+	if req.LaunchTemplate.CPU == 0 || req.LaunchTemplate.Mem == 0 {
+		return fmt.Errorf("validateLaunchTemplate cpu/mem empty")
+	}
+	// check internetAccess conf info
+	if req.LaunchTemplate.InternetAccess != nil {
+		bandwidth, _ := strconv.Atoi(req.LaunchTemplate.InternetAccess.InternetMaxBandwidth)
+		if req.LaunchTemplate.InternetAccess.PublicIPAssigned && bandwidth == 0 {
+			return fmt.Errorf("validateLaunchTemplate internetAccess bandwidth empty")
+		}
 	}
 
 	return nil

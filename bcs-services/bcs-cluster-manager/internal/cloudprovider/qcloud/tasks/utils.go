@@ -204,13 +204,19 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 }
 
 // updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
-func updateNodeGroupCloudNodeGroupID(nodeGroupID string, cloudNodeGroupID string) error {
+func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeGroup) error {
 	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
 		return err
 	}
 
-	group.CloudNodeGroupID = cloudNodeGroupID
+	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
+	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
+		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
+	}
+	if group.LaunchTemplate != nil {
+		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
+	}
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
 	if err != nil {
 		return err

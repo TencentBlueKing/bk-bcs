@@ -8,16 +8,15 @@
           {{ authTips.content }}
         </div>
       </bk-popover>
-      <bk-popover placement="bottom" v-else-if="applyHostButton.disabled" transfer>
+      <!-- <bk-popover placement="bottom" v-else-if="applyHostButton.disabled" transfer>
         <span class="bk-default bk-button-normal bk-button is-disabled">{{$t('申请服务器')}}</span>
         <div slot="content" style="width: 220px;">
           {{ applyHostButton.tips }}
         </div>
-      </bk-popover>
+      </bk-popover> -->
       <bk-button
         v-else
         :theme="theme"
-        :disabled="applyHostButton.disabled"
         @click="handleOpenApplyHost">
         {{$t('申请服务器')}}
       </bk-button>
@@ -31,8 +30,15 @@
       render-directive="if"
       header-position="left"
       ext-cls="apply-host-dialog">
-      <bk-alert type="info" class="mb20" v-if="applyHostButton.tips">
-        <template #title><div v-html="applyHostButton.tips"></div></template>
+      <bk-alert type="info" class="mb20">
+        <template #title>
+          <a
+            :href="PROJECT_CONFIG.doc.applyRecords"
+            target="_blank"
+            class="bk-button-text bk-primary"
+            style="font-size: 12px;"
+          >{{$t('查看资源申请记录')}}</a>
+        </template>
       </bk-alert>
       <bk-form
         ext-cls="apply-form"
@@ -120,7 +126,7 @@
             :value.sync="formdata.replicas"
             :min="1"
             :max="50"
-            :ex-style="{ 'width': '325px' }"
+            :ex-style="{ 'width': '100%' }"
             :placeholder="$t('请输入')">
           </bk-number-input>
         </bk-form-item>
@@ -155,7 +161,7 @@
         </bk-form-item>
         <bk-form-item
           ref="hostItem"
-          style="flex: 0 0 100%;"
+          style="flex: 0 0 100%;margin-bottom: 0px"
           label=""
           :label-width="1"
           v-bkloading="{ isLoading: isHostLoading }"
@@ -225,6 +231,7 @@
 </template>
 
 <script>
+/* eslint-disable max-len */
 import { request } from '@/api/request';
 export default {
   props: {
@@ -246,10 +253,10 @@ export default {
       zoneName: '',
       cvmData: {},
       timer: null,
-      applyHostButton: {
-        disabled: true,
-        tips: '',
-      },
+      // applyHostButton: {
+      //   disabled: true,
+      //   tips: '',
+      // },
       isSubmitLoading: false,
       isAreaLoading: false,
       isHostLoading: true,
@@ -442,7 +449,7 @@ export default {
         disabled: true,
       };
     }
-    this.getApplyHostStatus();
+    // this.getApplyHostStatus();
     this.fetchDiskType();
   },
   beforeDestroy() {
@@ -695,40 +702,40 @@ export default {
     handleApplyHostClose() {
       this.applyDialogShow = false;
       clearTimeout(this.timer) && (this.timer = null);
-      this.getApplyHostStatus();
+      // this.getApplyHostStatus();
     },
 
     /**
              * 查看主机申请状态
              */
-    async getApplyHostStatus() {
-      try {
-        const res = await this.$store.dispatch('cluster/checkApplyHostStatus', { projectId: this.projectId });
-        const data = res.data || {};
-        const { status } = data;
-        if (status && status !== 'FINISHED') {
-          const tipsContentMap = {
-            RUNNING: this.$t('主机申请中'),
-          };
-          this.applyHostButton.tips = `${tipsContentMap[status] || this.$t('项目下存在主机申请失败的单据，请联系申请者【{name}】或', { name: data.operator })}
-                        <a href="${window.BCS_CONFIG?.host?.SRC_IED_HOST}" target="_blank" style="color: #3a84ff;">${this.$t('查看详情')}</a>`;
-        } else {
-          this.applyHostButton.tips = '';
-        }
-        this.applyHostButton.disabled = status === 'RUNNING';
-        if (this.timer) {
-          clearTimeout(this.timer);
-          this.timer = null;
-        }
-        if (status === 'RUNNING') {
-          this.timer = setTimeout(() => {
-            this.getApplyHostStatus();
-          }, 15000);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    },
+    // async getApplyHostStatus() {
+    //   try {
+    //     const res = await this.$store.dispatch('cluster/checkApplyHostStatus', { projectId: this.projectId });
+    //     const data = res.data || {};
+    //     const { status } = data;
+    //     if (status && status !== 'FINISHED') {
+    //       const tipsContentMap = {
+    //         RUNNING: this.$t('主机申请中'),
+    //       };
+    //       this.applyHostButton.tips = `${tipsContentMap[status] || this.$t('项目下存在主机申请失败的单据，请联系申请者【{name}】或', { name: data.operator })}
+    //                     <a href="${window.BCS_CONFIG?.host?.SRC_IED_HOST}" target="_blank" style="color: #3a84ff;">${this.$t('查看详情')}</a>`;
+    //     } else {
+    //       this.applyHostButton.tips = '';
+    //     }
+    //     this.applyHostButton.disabled = status === 'RUNNING';
+    //     if (this.timer) {
+    //       clearTimeout(this.timer);
+    //       this.timer = null;
+    //     }
+    //     if (status === 'RUNNING') {
+    //       this.timer = setTimeout(() => {
+    //         this.getApplyHostStatus();
+    //       }, 15000);
+    //     }
+    //   } catch (e) {
+    //     console.error(e);
+    //   }
+    // },
     async getCvmCapacity() {
       if (!this.formdata.zone_id || !this.formdata.region || !this.$INTERNAL) return;
       this.isHostLoading = true;

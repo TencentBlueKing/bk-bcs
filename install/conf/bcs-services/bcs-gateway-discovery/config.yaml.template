@@ -34,7 +34,7 @@ nginx_config:
 plugin_attr:
   log-rotate:
     interval: 3600    # rotate interval (unit: second)
-    max_kept: 360     # max number of log files will be kept
+    max_kept: 168     # max number of log files will be kept
     enable_compression: false    # enable log file compression(gzip) or not, default false
   prometheus:
     export_uri: /apisix/prometheus/metrics

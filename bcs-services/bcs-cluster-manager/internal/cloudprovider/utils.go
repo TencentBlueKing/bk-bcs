@@ -72,19 +72,25 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 	option := &CommonOption{}
 	// get credential from cloud
 	if data.Cloud.CloudCredential != nil {
-		option.Key = data.Cloud.CloudCredential.Key
-		option.Secret = data.Cloud.CloudCredential.Secret
+		option.Account = &proto.Account{
+			SecretID:          data.Cloud.CloudCredential.Key,
+			SecretKey:         data.Cloud.CloudCredential.Secret,
+			SubscriptionID:    data.Cloud.CloudCredential.SubscriptionID,
+			TenantID:          data.Cloud.CloudCredential.TenantID,
+			ResourceGroupName: data.Cloud.CloudCredential.ResourceGroupName,
+			ClientID:          data.Cloud.CloudCredential.ClientID,
+			ClientSecret:      data.Cloud.CloudCredential.ClientSecret,
+		}
 	}
 
 	// if credential not exist cloud, get from cluster account
-	if len(option.Key) == 0 && data.AccountID != "" {
+	if option.Account == nil && data.AccountID != "" {
 		// try to get credential in cluster
 		account, err := GetStorageModel().GetCloudAccount(context.Background(), data.Cloud.CloudID, data.AccountID)
 		if err != nil {
 			return nil, fmt.Errorf("GetCloudAccount failed: %v", err)
 		}
-		option.Key = account.Account.SecretID
-		option.Secret = account.Account.SecretKey
+		option.Account = account.Account
 	}
 
 	// set cloud basic confInfo
@@ -108,29 +114,12 @@ func checkCloudCredentialValidate(cloud *proto.Cloud, option *CommonOption) erro
 	if err != nil {
 		return err
 	}
-	err = validate.ImportCloudAccountValidate(&proto.Account{
-		SecretID:  option.Key,
-		SecretKey: option.Secret,
-	})
+	err = validate.ImportCloudAccountValidate(option.Account)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// GetCredentialByCloudID get credentialInfo by cloudID
-func GetCredentialByCloudID(cloudID string) (*CommonOption, error) {
-	cloud, err := GetStorageModel().GetCloud(context.Background(), cloudID)
-	if err != nil {
-		return nil, fmt.Errorf("GetCredentialByCloudID getCloud failed: %v", err)
-	}
-
-	option := &CommonOption{}
-	option.Key = cloud.CloudCredential.Key
-	option.Secret = cloud.CloudCredential.Secret
-
-	return option, nil
 }
 
 // TaskType taskType
@@ -161,18 +150,19 @@ var (
 	DeleteNodeGroup TaskType = "DeleteNodeGroup"
 	// MoveNodesToNodeGroup task
 	MoveNodesToNodeGroup TaskType = "MoveNodesToNodeGroup"
-
 	// SwitchNodeGroupAutoScaling task
 	SwitchNodeGroupAutoScaling TaskType = "SwitchNodeGroupAutoScaling"
-
 	// UpdateNodeGroupDesiredNode task
 	UpdateNodeGroupDesiredNode TaskType = "UpdateNodeGroupDesiredNode"
+	// CleanNodeGroupNodes task
+	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
+	// UpdateAutoScalingOption task
+	UpdateAutoScalingOption TaskType = "UpdateAutoScalingOption"
+	// SwitchAutoScalingOptionStatus task
+	SwitchAutoScalingOptionStatus TaskType = "SwitchAutoScalingOptionStatus"
 
 	// ApplyInstanceMachinesTask apply instance subTask
 	ApplyInstanceMachinesTask TaskType = "ApplyInstanceMachinesTask"
-
-	// CleanNodeGroupNodes task
-	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
 )
 
 // GetTaskType getTaskType by cloud
@@ -419,6 +409,22 @@ func UpdateNodeStatusByInstanceID(instanceID, status string) error {
 	node.Status = status
 
 	err = GetStorageModel().UpdateNode(context.Background(), node)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateClusterSystemID set cluster systemID
+func UpdateClusterSystemID(clusterID string, systemID string) error {
+	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+	if err != nil {
+		return err
+	}
+
+	cluster.SystemID = systemID
+	err = GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
 		return err
 	}

@@ -25,3 +25,13 @@ const (
 	// NodeGroupLifeStateDeleted node group life state deleted
 	NodeGroupLifeStateDeleted = "deleted"
 )
+
+// InternetChargeType
+const (
+	// InternetChargeTypeBandwidthPrepaid 带宽预付费
+	InternetChargeTypeBandwidthPrepaid = "BANDWIDTH_PREPAID"
+	// InternetChargeTypeBandwidthPostpaidByHour 带宽按小时后付费
+	InternetChargeTypeBandwidthPostpaidByHour = "BANDWIDTH_POSTPAID_BY_HOUR"
+	// InternetChargeTypeTrafficPostpaidByHour 按流量付费
+	InternetChargeTypeTrafficPostpaidByHour = "TRAFFIC_POSTPAID_BY_HOUR"
+)

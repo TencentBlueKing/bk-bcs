@@ -84,7 +84,7 @@
         <bk-button class="btn" theme="primary" :loading="creating" @click="showConfirmDialog">{{$t('创建')}}</bk-button>
         <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
       </div>
-      <IpSelector v-model="showIpSelector" @confirm="handleChooseServer"></IpSelector>
+      <IpSelector v-model="showIpSelector" :ip-list="ipList" @confirm="handleChooseServer"></IpSelector>
       <tipDialog
         ref="confirmDialog"
         icon="bcs-icon bcs-icon-exclamation-triangle"
@@ -100,7 +100,7 @@
 
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, watch } from '@vue/composition-api';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import FormGroup from './form-group.vue';
 import FormMode from './form-mode.vue';
@@ -172,19 +172,13 @@ export default defineComponent({
         ipErrorTips.value = $i18n.t('仅支持数量为3,5和7个');
         return false;
       }
+      ipErrorTips.value = '';
       return true;
     };
+    watch(ipList, () => {
+      validateServer(ipList.value);
+    });
     const handleChooseServer = (data = []) => {
-      const validate = validateServer(data);
-      if (!validate) {
-        showIpSelector.value = true;
-        $bkMessage({
-          theme: 'error',
-          message: ipErrorTips.value,
-        });
-        return;
-      }
-      ipErrorTips.value = '';
       ipList.value = data;
       showIpSelector.value = false;
     };

@@ -31,6 +31,11 @@ type PermManager struct {
 	iamClient iam.PermClient
 }
 
+// NewBCSPermManagerClient init perm manager client
+func NewBCSPermManagerClient(cli iam.PermClient) *PermManager {
+	return &PermManager{iamClient: cli}
+}
+
 // CreateProjectGradeManager create project grade manager
 func (pm *PermManager) CreateProjectGradeManager(ctx context.Context, users []string, info *GradeManagerInfo) (uint64, error) {
 	if pm == nil {

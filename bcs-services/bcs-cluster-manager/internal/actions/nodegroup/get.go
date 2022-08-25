@@ -14,6 +14,7 @@ package nodegroup
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -64,8 +65,7 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	// remove sensitive password in response
-	group = removeSensitiveInfo(group)
+	group = ga.pruneNodeGroup(group)
 	resp.Data = group
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
@@ -74,6 +74,21 @@ func (ga *GetAction) Handle(
 func removeSensitiveInfo(group *cmproto.NodeGroup) *cmproto.NodeGroup {
 	if group != nil && group.LaunchTemplate != nil {
 		group.LaunchTemplate.InitLoginPassword = ""
+	}
+	return group
+}
+
+func (ga *GetAction) pruneNodeGroup(group *cmproto.NodeGroup) *cmproto.NodeGroup {
+	// remove sensitive password in response
+	group = removeSensitiveInfo(group)
+
+	// decode userscript
+	if group.NodeTemplate != nil && group.NodeTemplate.UserScript != "" {
+		userScript, err := base64.StdEncoding.DecodeString(group.NodeTemplate.UserScript)
+		if err != nil {
+			blog.Warnf("decode nodegroup %s user script failed, err: %s", group.NodeGroupID, err.Error())
+		}
+		group.NodeTemplate.UserScript = string(userScript)
 	}
 	return group
 }

@@ -625,3 +625,12 @@ export const chainable = (obj, path, defaultValue = undefined) => {
   const result = travel(/[,[\]]+?/) || travel(/[,[\].]+?/);
   return result === undefined || result === obj ? defaultValue : result;
 };
+
+export const timeDelta = (start, end) => {
+  if (!start || !end) return;
+
+  const time = (new Date(end).getTime() - new Date(start).getTime()) / 1000;
+  const m = Math.floor(time / 60);
+  const s = time - m * 60;
+  return `${m ? `${m}m ` : ''}${s ? `${s}s ` : ''}`;
+};

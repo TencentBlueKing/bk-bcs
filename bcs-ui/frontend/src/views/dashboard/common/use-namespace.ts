@@ -28,6 +28,7 @@ export default function useNamespace(ctx: SetupContext): IUseNamespace {
     manifest: {},
     manifestExt: {},
   });
+  const clusterId = computed(() => $store.state.curClusterId);
   // 命名空间数据
   const namespaceList = computed(() => namespaceData.value.manifest.items || []);
 
@@ -37,9 +38,9 @@ export default function useNamespace(ctx: SetupContext): IUseNamespace {
     namespaceData.value = data;
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
-      .find(data => data.metadata.name === localStorage.getItem(CUR_SELECT_NAMESPACE));
+      .find(data => data.metadata.name === localStorage.getItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`));
     namespaceValue.value = defaultSelectNamespace?.metadata?.name || namespaceList.value[0]?.metadata?.name;
-    localStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value);
+    localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, namespaceValue.value);
     namespaceLoading.value = false;
     return data;
   };
@@ -71,9 +72,9 @@ export function useSelectItemsNamespace(ctx: SetupContext) {
     namespaceList.value = data.selectItems || [];
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
-      .find(data => data.value === localStorage.getItem(CUR_SELECT_NAMESPACE));
+      .find(data => data.value === localStorage.getItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`));
     namespaceValue.value = defaultSelectNamespace?.value || namespaceList.value[0]?.value;
-    localStorage.setItem(CUR_SELECT_NAMESPACE, namespaceValue.value);
+    localStorage.setItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`, namespaceValue.value);
     namespaceLoading.value = false;
     return data;
   };

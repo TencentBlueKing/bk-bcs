@@ -43,7 +43,7 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -90,6 +90,11 @@ func (ng *NodeGroup) DeleteAutoScalingOption(scalingOption *proto.ClusterAutoSca
 // UpdateAutoScalingOption update cluster autoscaling option, cloudprovider will update
 // cluster-autoscaler configuration in backgroup according cloudprovider implementation.
 // Implementation is optional.
-func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.DeleteScalingOption) (*proto.Task, error) {
+func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// SwitchAutoScalingOptionStatus switch cluster autoscaling option status
+func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

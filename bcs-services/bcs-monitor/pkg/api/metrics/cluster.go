@@ -19,6 +19,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
+const (
+	PROVIDER = `provider="BCS_SYSTEM"`
+)
+
 // Usage 使用量
 type Usage struct {
 	Used  string `json:"used"`
@@ -40,7 +44,10 @@ type ClusterOverviewMetric struct {
 
 // handleClusterMetric Cluster 处理公共函数
 func handleClusterMetric(c *rest.Context, promql string) (interface{}, error) {
-	params := map[string]interface{}{"clusterId": c.ClusterId}
+	params := map[string]interface{}{
+		"clusterId": c.ClusterId,
+		"provider":  PROVIDER,
+	}
 
 	end := time.Now()
 	start := end.Add(-time.Hour)
@@ -57,15 +64,18 @@ func handleClusterMetric(c *rest.Context, promql string) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /overview [get]
 func GetClusterOverview(c *rest.Context) (interface{}, error) {
-	params := map[string]interface{}{"clusterId": c.ClusterId}
+	params := map[string]interface{}{
+		"clusterId": c.ClusterId,
+		"provider":  PROVIDER,
+	}
 
 	promqlMap := map[string]string{
-		"cpu_used":     `bcs:cluster:cpu:used{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
-		"cpu_total":    `bcs:cluster:cpu:total{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
-		"memory_used":  `bcs:cluster:memory:used{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
-		"memory_total": `bcs:cluster:memory:total{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
-		"disk_used":    `bcs:cluster:disk:used{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
-		"disk_total":   `bcs:cluster:disk:total{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`,
+		"cpu_used":     `bcs:cluster:cpu:used{cluster_id="%<clusterId>s", %<provider>s}`,
+		"cpu_total":    `bcs:cluster:cpu:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"memory_used":  `bcs:cluster:memory:used{cluster_id="%<clusterId>s", %<provider>s}`,
+		"memory_total": `bcs:cluster:memory:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"disk_used":    `bcs:cluster:disk:used{cluster_id="%<clusterId>s", %<provider>s}`,
+		"disk_total":   `bcs:cluster:disk:total{cluster_id="%<clusterId>s", %<provider>s}`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(c.Context, c.ProjectId, promqlMap, params, time.Now())
@@ -97,7 +107,7 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /cpu_usage [get]
 func ClusterCPUUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:cluster:cpu:usage{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:cluster:cpu:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
 	return handleClusterMetric(c, promql)
 
@@ -109,7 +119,7 @@ func ClusterCPUUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /memory_usage [get]
 func ClusterMemoryUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:cluster:memory:usage{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:cluster:memory:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
 	return handleClusterMetric(c, promql)
 }
@@ -120,7 +130,7 @@ func ClusterMemoryUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /disk_usage [get]
 func ClusterDiskUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:cluster:disk:usage{cluster_id="%<clusterId>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:cluster:disk:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
 	return handleClusterMetric(c, promql)
 }

@@ -128,7 +128,7 @@ end
 function TokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
     local payload = bcs_token_user_map_cache(credential.user_token, nil, get_username_by_TokenAuthentication_jwt, jwt_str)
     if not payload or not payload.sub_type then
-      core.log.warn("no username can be found for token " .. req.user_token .. ",payload: " .. core.json.encode(payload, true))
+      core.log.warn("no username can be found for token " .. credential.user_token .. ",payload: " .. core.json.encode(payload, true))
     end
     local retV = {}
     retV["usertype"] = payload.sub_type
@@ -165,7 +165,7 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
     local key = nil
     if conf.bkapigw_jwt_verify_key_map and conf.bkapigw_jwt_verify_key_map[jwt_obj.header.kid] then
         key = conf.bkapigw_jwt_verify_key_map[jwt_obj.header.kid]
-    else if conf.bkapigw_jwt_verify_key then
+    elseif conf.bkapigw_jwt_verify_key then
         key = conf.bkapigw_jwt_verify_key
     end
     if not key then

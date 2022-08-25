@@ -261,6 +261,198 @@ func (h *bCSProjectHandler) ListAuthorizedProjects(ctx context.Context, in *List
 	return h.BCSProjectHandler.ListAuthorizedProjects(ctx, in, out)
 }
 
+// Api Endpoints for Variable service
+
+func NewVariableEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		&api.Endpoint{
+			Name:    "Variable.CreateVariable",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variable"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.UpdateVariable",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/{variableID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.ListVariableDefinitions",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/definitions"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.ListClusterVariables",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.ListNamespaceVariables",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Variable service
+
+type VariableService interface {
+	CreateVariable(ctx context.Context, in *CreateVariableRequest, opts ...client.CallOption) (*CreateVariableResponse, error)
+	UpdateVariable(ctx context.Context, in *UpdateVariableRequest, opts ...client.CallOption) (*UpdateVariableResponse, error)
+	ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, opts ...client.CallOption) (*ListVariableDefinitionsResponse, error)
+	ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, opts ...client.CallOption) (*ListClusterVariablesResponse, error)
+	ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, opts ...client.CallOption) (*ListNamespaceVariablesResponse, error)
+}
+
+type variableService struct {
+	c    client.Client
+	name string
+}
+
+func NewVariableService(name string, c client.Client) VariableService {
+	return &variableService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *variableService) CreateVariable(ctx context.Context, in *CreateVariableRequest, opts ...client.CallOption) (*CreateVariableResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.CreateVariable", in)
+	out := new(CreateVariableResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) UpdateVariable(ctx context.Context, in *UpdateVariableRequest, opts ...client.CallOption) (*UpdateVariableResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.UpdateVariable", in)
+	out := new(UpdateVariableResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, opts ...client.CallOption) (*ListVariableDefinitionsResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.ListVariableDefinitions", in)
+	out := new(ListVariableDefinitionsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, opts ...client.CallOption) (*ListClusterVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.ListClusterVariables", in)
+	out := new(ListClusterVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, opts ...client.CallOption) (*ListNamespaceVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.ListNamespaceVariables", in)
+	out := new(ListNamespaceVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Variable service
+
+type VariableHandler interface {
+	CreateVariable(context.Context, *CreateVariableRequest, *CreateVariableResponse) error
+	UpdateVariable(context.Context, *UpdateVariableRequest, *UpdateVariableResponse) error
+	ListVariableDefinitions(context.Context, *ListVariableDefinitionsRequest, *ListVariableDefinitionsResponse) error
+	ListClusterVariables(context.Context, *ListClusterVariablesRequest, *ListClusterVariablesResponse) error
+	ListNamespaceVariables(context.Context, *ListNamespaceVariablesRequest, *ListNamespaceVariablesResponse) error
+}
+
+func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...server.HandlerOption) error {
+	type variable interface {
+		CreateVariable(ctx context.Context, in *CreateVariableRequest, out *CreateVariableResponse) error
+		UpdateVariable(ctx context.Context, in *UpdateVariableRequest, out *UpdateVariableResponse) error
+		ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, out *ListVariableDefinitionsResponse) error
+		ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, out *ListClusterVariablesResponse) error
+		ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, out *ListNamespaceVariablesResponse) error
+	}
+	type Variable struct {
+		variable
+	}
+	h := &variableHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.CreateVariable",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variable"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.UpdateVariable",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/{variableID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.ListVariableDefinitions",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/definitions"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.ListClusterVariables",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.ListNamespaceVariables",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Variable{h}, opts...))
+}
+
+type variableHandler struct {
+	VariableHandler
+}
+
+func (h *variableHandler) CreateVariable(ctx context.Context, in *CreateVariableRequest, out *CreateVariableResponse) error {
+	return h.VariableHandler.CreateVariable(ctx, in, out)
+}
+
+func (h *variableHandler) UpdateVariable(ctx context.Context, in *UpdateVariableRequest, out *UpdateVariableResponse) error {
+	return h.VariableHandler.UpdateVariable(ctx, in, out)
+}
+
+func (h *variableHandler) ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, out *ListVariableDefinitionsResponse) error {
+	return h.VariableHandler.ListVariableDefinitions(ctx, in, out)
+}
+
+func (h *variableHandler) ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, out *ListClusterVariablesResponse) error {
+	return h.VariableHandler.ListClusterVariables(ctx, in, out)
+}
+
+func (h *variableHandler) ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, out *ListNamespaceVariablesResponse) error {
+	return h.VariableHandler.ListNamespaceVariables(ctx, in, out)
+}
+
 // Api Endpoints for Healthz service
 
 func NewHealthzEndpoints() []*api.Endpoint {

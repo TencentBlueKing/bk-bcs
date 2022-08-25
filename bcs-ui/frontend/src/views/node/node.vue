@@ -45,13 +45,6 @@
               @click="handleAddNode"
             >{{$t('添加节点')}}</bcs-button>
           </span>
-          <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke'">
-            <apply-host
-              class="mr10"
-              theme="primary"
-              :cluster-id="localClusterId"
-              :is-backfill="true" />
-          </template>
         </template>
         <bcs-dropdown-menu
           :disabled="!selections.length"
@@ -80,10 +73,10 @@
                 disabled: !isImportCluster,
                 content: $t('kubeconfig导入集群，节点管理功能不可用')
               }"
-              @click="handleBatchReAddNodes">{{$t('重新添加')}}</li>
+              @click="handleBatchReAddNodes">{{$t('失败重试')}}</li>
             <div
               style="height:32px;"
-              v-bk-tooltips="{ content: $t('注：IP状态为停止调度才能做POD驱逐操作'), disabled: !podDisabled, placement: 'top' }">
+              v-bk-tooltips="{ content: $t('IP状态为停止调度才能做POD驱逐操作'), disabled: !podDisabled, placement: 'top' }">
               <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('pod驱逐')}}</li>
             </div>
             <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
@@ -112,6 +105,12 @@
             </li>
           </ul>
         </bcs-dropdown-menu>
+        <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && !nodeMenu">
+          <bcs-divider style="margin: 0 15px" direction="vertical"></bcs-divider>
+          <apply-host
+            :cluster-id="localClusterId"
+            :is-backfill="true" />
+        </template>
       </div>
       <div class="right">
         <ClusterSelect
@@ -368,7 +367,7 @@
             ></RingCell>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="260">
+        <bcs-table-column :label="$t('操作')" width="160">
           <template #default="{ row }">
             <div
               class="node-operate-wrapper"
@@ -383,10 +382,6 @@
                   cluster_id: localClusterId
                 }
               }">
-              <template v-if="row.status === 'RUNNING'">
-                <bk-button text class="mr10" @click="handleSetLabel(row)">{{$t('设置标签')}}</bk-button>
-                <bk-button text class="mr10" @click="handleSetTaint(row)">{{$t('设置污点')}}</bk-button>
-              </template>
               <bk-button
                 class="mr10"
                 text
@@ -394,6 +389,14 @@
                 v-if="row.status === 'RUNNING'">
                 {{ $t('停止调度') }}
               </bk-button>
+              <template v-else-if="row.status === 'REMOVABLE'">
+                <bk-button text class="mr10" @click="handleEnableNode(row)">
+                  {{ $t('允许调度') }}
+                </bk-button>
+                <bk-button text class="mr10" @click="handleSchedulerNode(row)">
+                  {{ $t('pod驱逐') }}
+                </bk-button>
+              </template>
               <bk-button
                 class="mr10"
                 text
@@ -402,33 +405,40 @@
               >
                 {{$t('查看日志')}}
               </bk-button>
-              <template v-if="row.status === 'REMOVABLE'">
-                <bk-button text class="mr10" @click="handleEnableNode(row)">
-                  {{ $t('允许调度') }}
-                </bk-button>
-                <bk-button text class="mr10" @click="handleSchedulerNode(row)">
-                  {{ $t('pod驱逐') }}
-                </bk-button>
-              </template>
-              <span
-                v-bk-tooltips="{
-                  disabled: !isImportCluster,
-                  content: $t('kubeconfig导入集群，节点管理功能不可用')
-                }">
-                <bk-button
-                  text class="mr10"
-                  v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
-                  :disabled="isImportCluster"
-                  @click="handleDeleteNode(row)"
-                >
-                  {{ $t('删除') }}
-                </bk-button>
-              </span>
               <bk-button
                 text
                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
                 @click="handleRetry(row)"
               >{{ $t('重试') }}</bk-button>
+              <bk-popover
+                placement="bottom"
+                theme="light dropdown"
+                :arrow="false">
+                <span class="more-operate"><i class="bcs-icon bcs-icon-more"></i></span>
+                <template #content>
+                  <ul class="bcs-dropdown-list">
+                    <template v-if="row.status === 'RUNNING'">
+                      <li class="bcs-dropdown-item" @click="handleSetLabel(row)">
+                        {{$t('设置标签')}}
+                      </li>
+                      <li class="bcs-dropdown-item" @click="handleSetTaint(row)">
+                        {{$t('设置污点')}}
+                      </li>
+                    </template>
+                    <li
+                      :class="['bcs-dropdown-item', { disabled: isImportCluster }]"
+                      v-bk-tooltips="{
+                        disabled: !isImportCluster,
+                        content: $t('kubeconfig导入集群，节点管理功能不可用')
+                      }"
+                      v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                      @click="handleDeleteNode(row)"
+                    >
+                      {{ $t('删除') }}
+                    </li>
+                  </ul>
+                </template>
+              </bk-popover>
             </div>
           </template>
         </bcs-table-column>
@@ -498,40 +508,12 @@
     <bk-sideslider
       :is-show.sync="logSideDialogConf.isShow"
       :title="logSideDialogConf.title"
-      :width="640"
+      :width="860"
       @hidden="closeLog"
       :quick-close="true">
       <div slot="content">
         <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
-          <bk-table :data="logSideDialogConf.taskData">
-            <bk-table-column :label="$t('步骤')" prop="taskName" width="160">
-              <template #default="{ row }">
-                <span class="task-name">
-                  <span class="bcs-ellipsis">
-                    {{row.taskName}}
-                  </span>
-                  <i
-                    class="bcs-icon bcs-icon-fenxiang"
-                    v-if="row.params && row.params.taskUrl"
-                    @click="handleGotoSops(row)"></i>
-                </span>
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('状态')" prop="status" width="120">
-              <template #default="{ row }">
-                <div class="log-wrapper-status" v-if="row.status === 'RUNNING'">
-                  <loading-cell
-                    :style="{ left: 0, margin: 0 }"
-                    :ext-cls="['bk-spin-loading-mini', 'bk-spin-loading-danger']"></loading-cell>
-                  <span class="ml5">{{ $t('运行中') }}</span>
-                </div>
-                <StatusIcon :status="row.status" :status-color-map="taskStatusColorMap" v-else>
-                  {{ taskStatusTextMap[row.status.toLowerCase()] }}
-                </StatusIcon>
-              </template>
-            </bk-table-column>
-            <bk-table-column min-width="120" :label="$t('内容')" prop="message"></bk-table-column>
-          </bk-table>
+          <TaskList :data="logSideDialogConf.taskData"></TaskList>
         </div>
       </div>
     </bk-sideslider>
@@ -558,7 +540,7 @@ import { defineComponent, ref, PropType, onMounted, watch, set, computed } from 
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
-import { nodeStatusColorMap, nodeStatusMap, taskStatusTextMap, taskStatusColorMap } from '@/common/constant';
+import { nodeStatusColorMap, nodeStatusMap } from '@/common/constant';
 import useNode from './use-node';
 import useTableSetting from './use-table-setting';
 import usePage from '@/views/dashboard/common/use-page';
@@ -576,6 +558,7 @@ import ApplyHost from '@/views/cluster/apply-host.vue';
 import { TranslateResult } from 'vue-i18n';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import useDefaultClusterId from './use-default-clusterId';
+import TaskList from './task-list.vue';
 
 export default defineComponent({
   name: 'NodeList',
@@ -590,6 +573,7 @@ export default defineComponent({
     tipDialog,
     ApplyHost,
     IpSelector,
+    TaskList,
   },
   props: {
     selectedFields: {
@@ -1077,6 +1061,7 @@ export default defineComponent({
     ]);
     const curDeleteRows = ref<any[]>([]);
     const handleDeleteNode = async (row) => {
+      if (isImportCluster.value) return;
       curDeleteRows.value = [row];
       removeNodeDialog.value.title = $i18n.t('确认要删除节点【{innerIp}】？', {
         innerIp: row.inner_ip,
@@ -1390,10 +1375,6 @@ export default defineComponent({
       }
       return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum);
     });
-    // 跳转标准运维
-    const handleGotoSops = (row) => {
-      window.open(row.params.taskUrl);
-    };
 
     onMounted(async () => {
       await handleGetNodeData();
@@ -1407,8 +1388,6 @@ export default defineComponent({
       maxRemainNodesCount,
       isSingleCluster,
       curSelectedCluster,
-      taskStatusTextMap,
-      taskStatusColorMap,
       logSideDialogConf,
       showIpSelector,
       removeNodeDialog,
@@ -1476,12 +1455,29 @@ export default defineComponent({
       webAnnotations,
       curProject,
       isImportCluster,
-      handleGotoSops,
     };
   },
 });
 </script>
 <style lang="postcss" scoped>
+>>> .more-operate {
+  font-size: 18px;
+  font-weight: bold;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #979ba5;
+  position: relative;
+  top: 1px;
+  &:hover {
+    background: #ddd;
+    color: #3a84ff
+  }
+}
 .cluster-node-wrapper {
     margin: 0 20px;
     border: 1px solid #dfe0e5;
@@ -1625,15 +1621,6 @@ export default defineComponent({
     width: 100%;
     /deep/ .bk-tooltip-ref {
         display: block;
-    }
-}
-.task-name {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    i {
-        color: #3a84ff;
-        cursor: pointer;
     }
 }
 </style>
