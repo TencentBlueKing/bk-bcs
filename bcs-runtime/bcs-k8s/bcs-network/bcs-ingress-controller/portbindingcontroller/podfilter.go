@@ -28,8 +28,6 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -37,6 +35,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // PodFilter filter for pod event
@@ -93,10 +94,12 @@ func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterfa
 	}, portBinding)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			blog.Warnf("failed find portbinding related to updated pod, event %+v", e)
+			blog.Warnf("not found portbinding '%s/%s' related to updated pod",
+				pod.GetNamespace(), pod.GetName())
 			return
 		}
-		blog.Errorf("failed to get portbinding related to updated pod, err %s", err.Error())
+		blog.Errorf("failed to get portbinding '%s/%s' related to updated pod: %s",
+			pod.GetNamespace(), pod.GetName(), err.Error())
 		return
 	}
 

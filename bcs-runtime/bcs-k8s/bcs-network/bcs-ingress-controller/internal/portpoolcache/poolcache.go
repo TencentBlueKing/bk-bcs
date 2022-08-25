@@ -20,7 +20,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-// Cache cache for ports in port pools
+// Cache for ports in port pools
 type Cache struct {
 	sync.Mutex
 	portPoolMap map[string]*CachePool
