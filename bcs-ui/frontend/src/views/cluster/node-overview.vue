@@ -514,7 +514,8 @@ export default defineComponent({
     const fetchDataK8S = async (idx, range) => {
       const params = {
         start_at: '',
-        end_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+        end_at: moment().utc()
+          .format(),
         $projectCode: projectCode.value,
         $nodeIP: nodeId.value,
         $clusterId: clusterId.value,
@@ -524,13 +525,16 @@ export default defineComponent({
       // 1 小时
       if (range === '1') {
         params.start_at = moment().subtract(1, 'hours')
-          .format('YYYY-MM-DD HH:mm:ss');
+          .utc()
+          .format();
       } else if (range === '2') { // 24 小时
         params.start_at = moment().subtract(1, 'days')
-          .format('YYYY-MM-DD HH:mm:ss');
+          .utc()
+          .format();
       } else if (range === '3') { // 近 7 天
         params.start_at = moment().subtract(7, 'days')
-          .format('YYYY-MM-DD HH:mm:ss');
+          .utc()
+          .format();
       }
 
       try {
