@@ -13,49 +13,49 @@
           <div class="header-item">
             <div class="key-label">IP：</div>
             <bcs-popover :content="nodeId" placement="bottom">
-              <div class="value-label">{{nodeId}}</div>
+              <div class="value-label">{{nodeId || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">CPU：</div>
             <bcs-popover :content="nodeInfo.cpu_count" placement="bottom">
-              <div class="value-label">{{nodeInfo.cpu_count}}</div>
+              <div class="value-label">{{nodeInfo.cpu_count || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('内存：')}}</div>
             <bcs-popover :content="formatBytes(nodeInfo.memory, 0)" placement="bottom">
-              <div class="value-label">{{formatBytes(nodeInfo.memory, 0)}}</div>
+              <div class="value-label">{{formatBytes(nodeInfo.memory, 0) || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('存储：')}}</div>
             <bcs-popover :content="formatBytes(nodeInfo.disk, 0)" placement="bottom">
-              <div class="value-label">{{formatBytes(nodeInfo.disk, 0)}}</div>
+              <div class="value-label">{{formatBytes(nodeInfo.disk, 0) || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('IP来源：')}}</div>
             <bcs-popover :content="nodeInfo.provider" placement="bottom">
-              <div class="value-label">{{nodeInfo.provider}}</div>
+              <div class="value-label">{{nodeInfo.provider || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('内核：')}}</div>
             <bcs-popover :content="nodeInfo.release" placement="bottom">
-              <div class="value-label">{{nodeInfo.release}}</div>
+              <div class="value-label">{{nodeInfo.release || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">Docker：</div>
             <bcs-popover :content="nodeInfo.dockerVersion" placement="bottom">
-              <div class="value-label">{{nodeInfo.dockerVersion}}</div>
+              <div class="value-label">{{nodeInfo.dockerVersion || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
             <div class="key-label">{{$t('操作系统：')}}</div>
             <bcs-popover :content="nodeInfo.sysname" placement="bottom">
-              <div class="value-label">{{nodeInfo.sysname}}</div>
+              <div class="value-label">{{nodeInfo.sysname || '--'}}</div>
             </bcs-popover>
           </div>
           <!-- <template v-if="isTkeCluster">
@@ -513,8 +513,8 @@ export default defineComponent({
              */
     const fetchDataK8S = async (idx, range) => {
       const params = {
-        startAt: '',
-        endAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        start_at: '',
+        end_at: moment().format('YYYY-MM-DD HH:mm:ss'),
         $projectCode: projectCode.value,
         $nodeIP: nodeId.value,
         $clusterId: clusterId.value,
@@ -523,13 +523,13 @@ export default defineComponent({
 
       // 1 小时
       if (range === '1') {
-        params.startAt = moment().subtract(1, 'hours')
+        params.start_at = moment().subtract(1, 'hours')
           .format('YYYY-MM-DD HH:mm:ss');
       } else if (range === '2') { // 24 小时
-        params.startAt = moment().subtract(1, 'days')
+        params.start_at = moment().subtract(1, 'days')
           .format('YYYY-MM-DD HH:mm:ss');
       } else if (range === '3') { // 近 7 天
-        params.startAt = moment().subtract(7, 'days')
+        params.start_at = moment().subtract(7, 'days')
           .format('YYYY-MM-DD HH:mm:ss');
       }
 
