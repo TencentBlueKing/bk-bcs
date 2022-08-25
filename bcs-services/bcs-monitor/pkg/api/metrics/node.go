@@ -40,8 +40,8 @@ type UsageQuery struct {
 
 // parseTime 兼容前端多个格式
 func parseTime(rawTime string) (time.Time, error) {
+	// 和前端约定, 只支持这种带时区的格式
 	formats := []string{
-		"2006-01-02 15:04:05",
 		"2006-01-02T15:04:05Z",
 	}
 
