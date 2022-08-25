@@ -24,6 +24,7 @@ import (
 const (
 	IGNORE_DEVICE_TYPE = "iso9660|tmpfs|udf" // 磁盘统计 忽略的设备类型, 数据来源蓝鲸监控主机查询规则
 	DISK_MOUNTPOINT    = "/data"             // 数据盘目录
+	PROVIDER           = `provider="BK_MONITOR"`
 )
 
 // BKMonitor :
@@ -42,9 +43,10 @@ func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterI
 	}
 
 	params := map[string]interface{}{
-		"clusterId":   clusterId,
-		"ip":          nodeMatch,
-		"device_type": IGNORE_DEVICE_TYPE,
+		"clusterId":  clusterId,
+		"ip":         nodeMatch,
+		"deviceType": IGNORE_DEVICE_TYPE,
+		"provider":   PROVIDER,
 	}
 
 	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
@@ -57,56 +59,56 @@ func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterI
 
 // GetClusterCPUTotal 获取集群CPU核心总量
 func (m *BKMonitor) GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", provider="BK_MONITOR"})`
+	promql := `count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsed 获取CPU核心使用量
 func (m *BKMonitor) GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", provider="BK_MONITOR"}) / 100`
+	promql := `sum(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s}) / 100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsed 获取CPU核心使用率
 func (m *BKMonitor) GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", provider="BK_MONITOR"}) / 100`
+	promql := `sum(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s}) / count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUTotal 获取集群CPU核心总量
 func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", provider="BK_MONITOR"})`
+	promql := `sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterMemoryUsed 获取集群内存使用量
 func (m *BKMonitor) GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(bkmonitor:system:mem:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", provider="BK_MONITOR"})`
+	promql := `sum(bkmonitor:system:mem:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterMemoryUsage 获取内存使用率
 func (m *BKMonitor) GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `(sum(bkmonitor:system:mem:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", provider="BK_MONITOR"}) / sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", provider="BK_MONITOR"})) * 100`
+	promql := `(sum(bkmonitor:system:mem:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s}) / sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s})) * 100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterDiskTotal 集群磁盘总量
 func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<device_type>s", provider="BK_MONITOR"})`
+	promql := `sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<deviceType>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterDiskUsed 集群磁盘使用
 func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(bkmonitor:system:disk:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<device_type>s", provider="BK_MONITOR"})`
+	promql := `sum(bkmonitor:system:disk:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<deviceType>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -114,8 +116,8 @@ func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectId, clusterId
 // GetClusterDiskUsage 集群磁盘使用率
 func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(bkmonitor:system:disk:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<device_type>s", provider="BK_MONITOR"}) /
-		sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<device_type>s", provider="BK_MONITOR"}) * 100`
+		sum(bkmonitor:system:disk:used{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<deviceType>s", %<provider>s}) /
+		sum(bkmonitor:system:disk:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", device_type!~"%<deviceType>s", %<provider>s}) * 100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }

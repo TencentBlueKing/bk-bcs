@@ -15,10 +15,11 @@ package metrics
 import (
 	"time"
 
+	"github.com/pkg/errors"
+
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
-	"github.com/pkg/errors"
 )
 
 // NodeOveriewMetric 节点概览
@@ -99,6 +100,7 @@ func handleNodeMetric(c *rest.Context, promql string) (interface{}, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
 		"ip":        c.Param("ip"),
+		"provider":  PROVIDER,
 	}
 
 	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
@@ -117,9 +119,10 @@ func GetNodeInfo(c *rest.Context) (interface{}, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
 		"ip":        c.Param("ip"),
+		"provider":  PROVIDER,
 	}
 
-	promql := `bcs:node:info{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:node:info{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 	labelSet, err := bcsmonitor.QueryLabelSet(c.Context, c.ProjectId, promql, params, time.Now())
 	if err != nil {
 		return nil, err
@@ -136,15 +139,16 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
 		"ip":        c.Param("ip"),
+		"provider":  PROVIDER,
 	}
 
 	promqlMap := map[string]string{
-		"cpu":             `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
-		"memory":          `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
-		"disk":            `bcs:node:disk:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
-		"diskio":          `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
-		"container_count": `bcs:node:container_count{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
-		"pod_count":       `bcs:node:pod_count{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`,
+		"cpu":             `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
+		"memory":          `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
+		"disk":            `bcs:node:disk:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
+		"diskio":          `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
+		"container_count": `bcs:node:container_count{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
+		"pod_count":       `bcs:node:pod_count{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(c.Context, c.ProjectId, promqlMap, params, time.Now())
@@ -170,7 +174,7 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /nodes/:ip/cpu_usage [get]
 func GetNodeCPUUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
 	return handleNodeMetric(c, promql)
 
@@ -182,7 +186,7 @@ func GetNodeCPUUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /nodes/:ip/memory_usage [get]
 func GetNodeMemoryUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
 	return handleNodeMetric(c, promql)
 
@@ -194,7 +198,7 @@ func GetNodeMemoryUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /nodes/:ip/network_receive [get]
 func GetNodeNetworkTransmitUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:node:network_transmit{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:node:network_transmit{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
 	return handleNodeMetric(c, promql)
 
@@ -206,7 +210,7 @@ func GetNodeNetworkTransmitUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /nodes/:ip/network_transmit [get]
 func GetNodeNetworkReceiveUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:node:network_receive{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:node:network_receive{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
 	return handleNodeMetric(c, promql)
 
@@ -218,7 +222,7 @@ func GetNodeNetworkReceiveUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /nodes/:ip/diskio_usage [get]
 func GetNodeDiskioUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
 	return handleNodeMetric(c, promql)
 }

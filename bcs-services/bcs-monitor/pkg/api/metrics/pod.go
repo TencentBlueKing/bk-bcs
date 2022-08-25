@@ -41,6 +41,7 @@ func handlePodMetric(c *rest.Context, promql string) (interface{}, error) {
 		"clusterId":   c.ClusterId,
 		"namespace":   c.Param("namespace"),
 		"podNameList": strings.Join(query.PodNameList, "|"),
+		"provider":    PROVIDER,
 	}
 
 	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
@@ -57,7 +58,7 @@ func handlePodMetric(c *rest.Context, promql string) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/:namespace/pods/cpu_usage [POST]
 func PodCPUUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:pod:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:pod:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`
 
 	return handlePodMetric(c, promql)
 }
@@ -68,7 +69,7 @@ func PodCPUUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/:namespace/pods/memory_used [POST]
 func PodMemoryUsed(c *rest.Context) (interface{}, error) {
-	promql := `bcs:pod:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:pod:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`
 
 	return handlePodMetric(c, promql)
 }
@@ -79,7 +80,7 @@ func PodMemoryUsed(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/:namespace/pods/network_receive [POST]
 func PodNetworkReceive(c *rest.Context) (interface{}, error) {
-	promql := `bcs:pod:network_receive{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:pod:network_receive{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`
 
 	return handlePodMetric(c, promql)
 }
@@ -90,7 +91,7 @@ func PodNetworkReceive(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/:namespace/pods/network_transmit [POST]
 func PodNetworkTransmit(c *rest.Context) (interface{}, error) {
-	promql := `bcs:pod:network_transmit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:pod:network_transmit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`
 
 	return handlePodMetric(c, promql)
 }

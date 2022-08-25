@@ -42,6 +42,7 @@ func handleContainerMetric(c *rest.Context, promql string) (interface{}, error) 
 		"namespace":     c.Param("namespace"),
 		"podName":       c.Param("pod"),
 		"containerName": c.Param("container"),
+		"provider":      PROVIDER,
 	}
 
 	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, queryTime.Start, queryTime.End, queryTime.Step)
@@ -58,7 +59,7 @@ func handleContainerMetric(c *rest.Context, promql string) (interface{}, error) 
 // @Success  200  {string}  string
 // @Router   /namespaces/namespace/pods/:pod/containers/:container/cpu_usage [GET]
 func ContainerCPUUsage(c *rest.Context) (interface{}, error) {
-	promql := `bcs:container:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:container:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
 
 	return handleContainerMetric(c, promql)
 
@@ -70,7 +71,7 @@ func ContainerCPUUsage(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/namespace/pods/:pod/containers/:container/memory_used [GET]
 func ContainerMemoryUsed(c *rest.Context) (interface{}, error) {
-	promql := `bcs:container:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:container:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
 
 	return handleContainerMetric(c, promql)
 }
@@ -81,7 +82,7 @@ func ContainerMemoryUsed(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/namespace/pods/:pod/containers/:container/cpu_limit [GET]
 func ContainerCPULimit(c *rest.Context) (interface{}, error) {
-	promql := `bcs:container:cpu_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:container:cpu_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
 
 	return handleContainerMetric(c, promql)
 }
@@ -92,7 +93,7 @@ func ContainerCPULimit(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/namespace/pods/:pod/containers/:container/memory_limit [GET]
 func ContainerMemoryLimit(c *rest.Context) (interface{}, error) {
-	promql := `bcs:container:memory_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:container:memory_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
 
 	return handleContainerMetric(c, promql)
 
@@ -104,7 +105,7 @@ func ContainerMemoryLimit(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/namespace/pods/:pod/containers/:container/disk_read_total [GET]
 func ContainerDiskReadTotal(c *rest.Context) (interface{}, error) {
-	promql := `bcs:container:disk_read_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:container:disk_read_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
 
 	return handleContainerMetric(c, promql)
 
@@ -116,7 +117,7 @@ func ContainerDiskReadTotal(c *rest.Context) (interface{}, error) {
 // @Success  200  {string}  string
 // @Router   /namespaces/namespace/pods/:pod/containers/:container/disk_write_total [GET]
 func ContainerDiskWriteTotal(c *rest.Context) (interface{}, error) {
-	promql := `bcs:container:disk_write_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", provider="BCS_SYSTEM"}`
+	promql := `bcs:container:disk_write_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
 
 	return handleContainerMetric(c, promql)
 }

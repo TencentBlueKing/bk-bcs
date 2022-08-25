@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	DISK_FSTYPE     = "ext[234]|btrfs|xfs|zfs" // 磁盘统计 允许的文件系统
-	DISK_MOUNTPOINT = "/|/data"                // 磁盘统计 允许的挂载目录
+	DISK_FSTYPE     = "ext[234]|btrfs|xfs|zfs"                                                                            // 磁盘统计 允许的文件系统
+	DISK_MOUNTPOINT = "/|/data"                                                                                           // 磁盘统计 允许的挂载目录
+	PROVIDER        = `prometheus=~"thanos/po-kube-prometheus-stack-prometheus|thanos/po-prometheus-operator-prometheus"` // 查询限制
 )
 
 // Prometheus
@@ -47,6 +48,7 @@ func (m *Prometheus) handleClusterMetric(ctx context.Context, projectId, cluster
 		"instance":   nodeMatch,
 		"fstype":     DISK_FSTYPE,
 		"mountpoint": DISK_MOUNTPOINT,
+		"provider":   PROVIDER,
 	}
 
 	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
@@ -59,22 +61,22 @@ func (m *Prometheus) handleClusterMetric(ctx context.Context, projectId, cluster
 
 // GetClusterCPUTotal 获取集群CPU核心总量
 func (p *Prometheus) GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode="idle", instance=~"%<instance>s"}))`
+	promql := `sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode="idle", instance=~"%<instance>s", %<provider>s}))`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsed 获取CPU核心使用量
 func (p *Prometheus) GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", instance=~"%<instance>s"}[2m]))`
+	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", instance=~"%<instance>s", %<provider>s}[2m]))`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsage 获取CPU核心使用量
 func (p *Prometheus) GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", instance=~"%<instance>s"}[2m])) /
-        sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode="idle", instance=~"%<instance>s"})) *
+	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", instance=~"%<instance>s", %<provider>s}[2m])) /
+        sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode="idle", instance=~"%<instance>s", %<provider>s})) *
         100`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
@@ -82,30 +84,30 @@ func (p *Prometheus) GetClusterCPUUsage(ctx context.Context, projectId, clusterI
 
 // GetClusterMemoryTotal 获取集群内存总量
 func (p *Prometheus) GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"})`
+	promql := `sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s})`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterMemoryUsed 获取内存使用量
 func (p *Prometheus) GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
-        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
-        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
-        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) +
-        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}))`
+	promql := `(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) +
+        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}))`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterMemoryUsage 获取内存使用率
 func (p *Prometheus) GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
-        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
-        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) -
-        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) +
-        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"})) /
-        sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s"}) *
+	promql := `(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) +
+        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s})) /
+        sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) *
         100`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
@@ -113,24 +115,24 @@ func (p *Prometheus) GetClusterMemoryUsage(ctx context.Context, projectId, clust
 
 // GetClusterDiskTotal 获取集群磁盘总量
 func (p *Prometheus) GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"})`
+	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterDiskUsed 获取集群磁盘使用量
 func (p *Prometheus) GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}) -
-        sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"})`
+	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
+        sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUUsed 获取CPU核心使用量
 func (p *Prometheus) GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `(sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}) -
-		sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"})) /
-        sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}) *
+	promql := `(sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
+		sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) /
+        sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) *
         100`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
