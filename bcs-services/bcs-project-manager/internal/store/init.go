@@ -19,9 +19,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )
 
 var mongoInitOnce sync.Once

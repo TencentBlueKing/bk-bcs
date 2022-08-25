@@ -17,13 +17,13 @@ package iam
 import (
 	"fmt"
 
-	"github.com/parnurzeal/gorequest"
-
-	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+
+	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/parnurzeal/gorequest"
 )
 
 var (

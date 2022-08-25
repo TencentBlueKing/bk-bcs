@@ -21,9 +21,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gopkg.in/natefinch/lumberjack.v2"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
+
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (

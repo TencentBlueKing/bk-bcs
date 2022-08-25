@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/parnurzeal/gorequest"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+
+	"github.com/parnurzeal/gorequest"
 )
 
 var (

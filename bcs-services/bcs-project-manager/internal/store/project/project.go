@@ -213,7 +213,7 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 		finder = finder.WithStart(pagination.Offset * pagination.Limit)
 	}
 	if pagination.Limit == 0 {
-		finder = finder.WithLimit(page.DefaultProjectLimit)
+		finder = finder.WithLimit(page.DefaultPageLimit)
 	} else {
 		finder = finder.WithLimit(pagination.Limit)
 	}
