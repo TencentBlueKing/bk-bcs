@@ -275,35 +275,41 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	if dimension == "" {
 		dimension = types.DimensionMinute
 	}
+	metricStartTime := getStartTime(dimension)
 	pipeline := make([]map[string]interface{}, 0)
-	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
 	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
 		ClusterIDKey: request.ClusterID,
 		DimensionKey: dimension,
 		NamespaceKey: request.Namespace,
 		MetricTimeKey: map[string]interface{}{
-			"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			"$gte": primitive.NewDateTimeFromTime(metricStartTime),
 		},
-	}})
-	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":          0,
-		"metrics":      1,
-		"business_id":  1,
-		"project_id":   1,
-		"project_code": 1,
-		"namespace":    1,
-		"cluster_id":   1,
-		"label":        1,
-	}}, map[string]interface{}{"$group": map[string]interface{}{
-		"_id":          nil,
-		"cluster_id":   map[string]interface{}{"$first": "$cluster_id"},
-		"namespace":    map[string]interface{}{"$first": "$namespace"},
-		"project_id":   map[string]interface{}{"$first": "$project_id"},
-		"business_id":  map[string]interface{}{"$max": "$business_id"},
-		"metrics":      map[string]interface{}{"$push": "$metrics"},
-		"label":        map[string]interface{}{"$max": "$label"},
-		"project_code": map[string]interface{}{"$max": "$project_code"},
-	}})
+	}}, map[string]interface{}{"$unwind": "$metrics"},
+		map[string]interface{}{"$match": map[string]interface{}{
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+			},
+		}},
+		map[string]interface{}{"$project": map[string]interface{}{
+			"_id":          0,
+			"metrics":      1,
+			"business_id":  1,
+			"project_id":   1,
+			"project_code": 1,
+			"namespace":    1,
+			"cluster_id":   1,
+			"label":        1,
+		}}, map[string]interface{}{"$group": map[string]interface{}{
+			"_id":          nil,
+			"cluster_id":   map[string]interface{}{"$first": "$cluster_id"},
+			"namespace":    map[string]interface{}{"$first": "$namespace"},
+			"project_id":   map[string]interface{}{"$first": "$project_id"},
+			"business_id":  map[string]interface{}{"$max": "$business_id"},
+			"metrics":      map[string]interface{}{"$push": "$metrics"},
+			"label":        map[string]interface{}{"$max": "$label"},
+			"project_code": map[string]interface{}{"$max": "$project_code"},
+		}},
+	)
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &namespaceMetricsMap)
 	if err != nil {
 		blog.Errorf("find namespace data fail, err:%v", err)

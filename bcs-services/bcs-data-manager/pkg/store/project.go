@@ -183,15 +183,15 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	if dimension == "" {
 		dimension = types.DimensionDay
 	}
+	metricStartTime := getStartTime(dimension)
 	projectMetricsMap := make([]*types.ProjectData, 0)
 	pipeline := make([]map[string]interface{}, 0)
-	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
 	if request.Project != "" {
 		pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
 			ProjectIDKey: request.Project,
 			DimensionKey: dimension,
 			MetricTimeKey: map[string]interface{}{
-				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
 			},
 		}})
 	} else if request.Business != "" {
@@ -199,26 +199,32 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 			BusinessIDKey: request.Business,
 			DimensionKey:  dimension,
 			MetricTimeKey: map[string]interface{}{
-				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
 			},
 		}})
 	}
-
-	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":          0,
-		"project_id":   1,
-		"project_code": 1,
-		"business_id":  1,
-		"metrics":      1,
-		"label":        1,
-	}}, map[string]interface{}{"$group": map[string]interface{}{
-		"_id":          nil,
-		"project_id":   map[string]interface{}{"$first": "$project_id"},
-		"project_code": map[string]interface{}{"$max": "$project_code"},
-		"business_id":  map[string]interface{}{"$max": "$business_id"},
-		"metrics":      map[string]interface{}{"$push": "$metrics"},
-		"label":        map[string]interface{}{"$max": "$label"},
-	}})
+	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"},
+		map[string]interface{}{"$match": map[string]interface{}{
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+			},
+		}}, map[string]interface{}{"$project": map[string]interface{}{
+			"_id":          0,
+			"project_id":   1,
+			"project_code": 1,
+			"business_id":  1,
+			"metrics":      1,
+			"label":        1,
+		}}, map[string]interface{}{"$group": map[string]interface{}{
+			"_id":          nil,
+			"project_id":   map[string]interface{}{"$first": "$project_id"},
+			"project_code": map[string]interface{}{"$max": "$project_code"},
+			"business_id":  map[string]interface{}{"$max": "$business_id"},
+			"metrics":      map[string]interface{}{"$push": "$metrics"},
+			"label":        map[string]interface{}{"$max": "$label"},
+		}},
+	)
+	pipeline = append(pipeline)
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &projectMetricsMap)
 	if err != nil {
 		blog.Errorf("find project data fail, err:%v", err)

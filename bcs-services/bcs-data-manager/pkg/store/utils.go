@@ -125,6 +125,19 @@ func getStartTime(dimension string) time.Time {
 	}
 }
 
+func getMinCreateTime(dimension string) time.Time {
+	switch dimension {
+	case types.DimensionDay:
+		return time.Now().AddDate(0, -1, 0)
+	case types.DimensionHour:
+		return time.Now().AddDate(0, 0, -1)
+	case types.DimensionMinute:
+		return time.Now().Add((-2) * time.Hour)
+	default:
+		return time.Now()
+	}
+}
+
 func distinctSlice(key string, slice *[]map[string]string) []string {
 	tempResult := make([]string, 0)
 	result := make([]string, 0)

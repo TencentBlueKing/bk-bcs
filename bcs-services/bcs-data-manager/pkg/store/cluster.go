@@ -277,17 +277,23 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	clusterMetricsMap := make([]*types.ClusterData, 0)
-
+	metricStartTime := getStartTime(dimension)
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline,
-		map[string]interface{}{"$unwind": "$metrics"},
 		map[string]interface{}{"$match": map[string]interface{}{
 			ClusterIDKey: request.ClusterID,
 			DimensionKey: dimension,
 			MetricTimeKey: map[string]interface{}{
-				"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
 			},
-		}}, map[string]interface{}{"$project": map[string]interface{}{
+		}},
+		map[string]interface{}{"$unwind": "$metrics"},
+		map[string]interface{}{"$match": map[string]interface{}{
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+			},
+		}},
+		map[string]interface{}{"$project": map[string]interface{}{
 			"_id":          0,
 			"metrics":      1,
 			"cluster_id":   1,
@@ -301,7 +307,7 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 			"project_id":   map[string]interface{}{"$first": "$project_id"},
 			"business_id":  map[string]interface{}{"$max": "$business_id"},
 			"metrics":      map[string]interface{}{"$push": "$metrics"},
-			"label":        map[string]interface{}{"$first": "$label"},
+			"label":        map[string]interface{}{"$max": "$label"},
 			"project_code": map[string]interface{}{"$max": "$project_code"},
 		}})
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &clusterMetricsMap)

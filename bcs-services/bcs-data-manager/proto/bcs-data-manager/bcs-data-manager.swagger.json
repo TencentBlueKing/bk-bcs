@@ -227,137 +227,6 @@
         ]
       }
     },
-    "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}": {
-      "get": {
-        "summary": "查询workload list",
-        "description": "查询指定ClusterID、命名空间、类型的模块资源列表信息",
-        "operationId": "DataManager_GetWorkloadInfoList",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/datamanagerGetWorkloadInfoListResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "clusterID",
-            "description": "集群ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "description": "命名空间名字",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "workloadType",
-            "description": "模块类型",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "dimension",
-            "description": "dimension. 时间维度，minute，hour，day",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "page",
-            "description": "page. 页数",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "size",
-            "description": "size. 页面大小",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "DataManager"
-        ]
-      }
-    },
-    "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}/{workloadName}": {
-      "get": {
-        "summary": "查询workload",
-        "description": "查询指定ClusterID、命名空间、类型和名称的模块资源信息",
-        "operationId": "DataManager_GetWorkloadInfo",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/datamanagerGetWorkloadInfoResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "clusterID",
-            "description": "集群ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "description": "命名空间名字",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "workloadType",
-            "description": "模块类型",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "workloadName",
-            "description": "模块名称",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "dimension",
-            "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "DataManager"
-        ]
-      }
-    },
     "/datamanager/v1/podautoscaler": {
       "get": {
         "summary": "查询某个podAutoscaler",
@@ -683,6 +552,137 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/workload": {
+      "get": {
+        "summary": "查询workload",
+        "description": "查询指定ClusterID、命名空间、类型和名称的模块资源信息",
+        "operationId": "DataManager_GetWorkloadInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace. 命名空间名字",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "workloadType. 模块类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadName",
+            "description": "workloadName. 模块名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，dimension为空时返回最新的一条数据，project粒度只支持day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
+    },
+    "/datamanager/v1/workloads": {
+      "get": {
+        "summary": "查询workload list",
+        "description": "查询指定ClusterID、命名空间、类型的模块资源列表信息",
+        "operationId": "DataManager_GetWorkloadInfoList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetWorkloadInfoListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace. 命名空间名字",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workloadType",
+            "description": "workloadType. 模块类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "description": "dimension. 时间维度，minute，hour，day",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [

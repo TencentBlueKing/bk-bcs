@@ -83,7 +83,7 @@ service DataManager {
   }
   rpc GetWorkloadInfoList(GetWorkloadInfoListRequest) returns (GetWorkloadInfoListResponse) {
     option (google.api.http) = {
-      get: "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}"
+      get: "/datamanager/v1/workloads"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询指定ClusterID、命名空间、类型的模块资源列表信息"
@@ -92,7 +92,7 @@ service DataManager {
   }
   rpc GetWorkloadInfo(GetWorkloadInfoRequest) returns (GetWorkloadInfoResponse) {
     option (google.api.http) = {
-      get: "/datamanager/v1/clusters/{clusterID}/namespaces/{namespace}/{workloadType}/{workloadName}"
+      get: "/datamanager/v1/workload"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询指定ClusterID、命名空间、类型和名称的模块资源信息"

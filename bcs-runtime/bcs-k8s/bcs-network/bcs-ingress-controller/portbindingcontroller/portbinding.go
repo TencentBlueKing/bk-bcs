@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -48,7 +49,7 @@ func newPortBindingHandler(ctx context.Context, k8sClient client.Client) *portBi
 func (pbh *portBindingHandler) ensurePortBinding(
 	pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) (bool, error) {
 	if portBinding == nil {
-		blog.Warnf("port binding is empty")
+		blog.Warnf("port binding for pod '%s/%s' is empty", pod.GetNamespace(), pod.GetName())
 		return false, nil
 	}
 	var newBindingStatusList []*networkextensionv1.PortBindingStatusItem

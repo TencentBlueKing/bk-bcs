@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
@@ -71,7 +72,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 
 	lbObjList, err := ppih.getCloudListenersByRegionIDs(lbIDs)
 	if err != nil {
-		blog.Infof("port pool item %s become %s, get loadbalancer info of %v failed, err %s",
+		blog.Warnf("port pool item %s become %s, get loadbalancer info of %v failed, err %s",
 			item.ItemName, constant.PortPoolItemStatusNotReady, lbIDs, err.Error())
 		retItemStatus.Status = constant.PortPoolItemStatusNotReady
 		retItemStatus.Message = fmt.Sprintf("get loadbalancer info of %v failed, err %s", lbIDs, err.Error())
@@ -176,7 +177,7 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "")
 		}
 		if err != nil {
-			return nil, fmt.Errorf("describe lb %s info failed, err %s", lbID, err.Error())
+			return nil, fmt.Errorf("describe lb '%s/%s' info failed, err %s", tmpRegion, lbID, err.Error())
 		}
 
 		retLbs = append(retLbs, &netextv1.IngressLoadBalancer{
