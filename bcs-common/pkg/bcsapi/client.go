@@ -42,6 +42,8 @@ type Config struct {
 	Gateway bool
 	// etcd registry config for bcs modules
 	Etcd registry.CMDOptions
+	// Header for request header
+	Header map[string]string
 }
 
 // BasicResponse basic http response for bkbcs

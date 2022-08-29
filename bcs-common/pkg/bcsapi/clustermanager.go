@@ -52,6 +52,9 @@ func NewClusterManager(config *Config) cm.ClusterManagerClient {
 	if len(config.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)
 	}
+	for k, v := range config.Header {
+		header[k] = v
+	}
 	md := metadata.New(header)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
