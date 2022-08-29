@@ -149,7 +149,7 @@
 import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
 import Ace from '@/components/ace-editor';
 import useGoHome from '@/common/use-gohome';
-import useConfig from '@/common/use-config';
+import { useConfig } from '@/common/use-app';
 import useFormLabel from '@/common/use-form-label';
 
 export default defineComponent({

@@ -63,7 +63,7 @@ import usePage from '@/views/dashboard/common/use-page';
 import * as ace from '@/components/ace-editor';
 import fullScreen from '@/directives/full-screen';
 import yamljs from 'js-yaml';
-import useConfig from '@/common/use-config';
+import { useConfig } from '@/common/use-app';
 
 export default defineComponent({
   name: 'CreateCluster',

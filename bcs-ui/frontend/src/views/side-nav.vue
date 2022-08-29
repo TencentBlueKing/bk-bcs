@@ -52,7 +52,7 @@ import clusterSelector from '@/components/cluster-selector/index.vue';
 import menuConfig, { IMenuItem, ISpecialMenuItem } from '@/store/menu';
 import { BCS_CLUSTER } from '@/common/constant';
 import useGoHome from '@/common/use-gohome';
-import useConfig from '@/common/use-config';
+import { useConfig } from '@/common/use-app';
 
 export default defineComponent({
   name: 'SideNav',

@@ -98,26 +98,28 @@
             <div class="left">
               <label class="bk-label label">{{$t('采集周期（秒）')}}：<span class="red">*</span></label>
               <div class="bk-form-content">
-                <bk-number-input
+                <bk-input
                   class="text-input-half"
-                  :value.sync="createParams.interval"
+                  v-model="createParams.interval"
+                  type="number"
                   :min="0"
                   :max="999999999"
                   :debounce-timer="0"
                   :placeholder="$t('请输入')">
-                </bk-number-input>
+                </bk-input>
               </div>
             </div>
             <div class="right">
               <label class="bk-label label">{{$t('允许最大Sample数')}}：<span class="red">*</span></label>
               <div class="bk-form-content">
-                <bk-number-input
+                <bk-input
                   class="text-input-half"
-                  :value.sync="createParams.sample_limit"
+                  v-model="createParams.sample_limit"
+                  type="number"
                   :min="0"
                   :debounce-timer="0"
                   :placeholder="$t('请输入')">
-                </bk-number-input>
+                </bk-input>
               </div>
             </div>
           </div>
