@@ -39,17 +39,17 @@ var (
 )
 
 var (
-	//ApplicationThreadNum goroutine number for Application channel
+	// ApplicationThreadNum goroutine number for Application channel
 	ApplicationThreadNum int
-	//TaskgroupThreadNum goroutine number for taskgroup channel
+	// TaskgroupThreadNum goroutine number for taskgroup channel
 	TaskgroupThreadNum int
-	//ExportserviceThreadNum goroutine number for exportservice channel
+	// ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
-	//DeploymentThreadNum goroutine number for deployment channel
+	// DeploymentThreadNum goroutine number for deployment channel
 	DeploymentThreadNum int
 )
 
-//NewEtcdCluster create mesos cluster
+// NewEtcdCluster create mesos cluster
 func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage, netservice *service.InnerService) cluster.Cluster {
 	blog.Info("etcd cluster(%s) will be created ...", cfg.ClusterID)
 
@@ -67,7 +67,7 @@ func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage, netservice *servic
 		existCallback:  make(map[string]cluster.DataExister),
 	}
 
-	//mesos watch initialize
+	// mesos watch initialize
 	if err := mesos.initialize(); err != nil {
 		blog.Error("etcd cluster initialize failed, %s", err.Error())
 		return nil
@@ -75,21 +75,21 @@ func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage, netservice *servic
 	return mesos
 }
 
-//EtcdCluster cluster implements all cluster interface
+// EtcdCluster cluster implements all cluster interface
 type EtcdCluster struct {
 	kubeconfig        string
 	factory           informers.SharedInformerFactory
-	clusterID         string                         //watch cluster id
-	connCxt           context.Context                //context for client disconnected
-	cancel            context.CancelFunc             //cancel func when client disconnected
-	reportCallback    map[string]cluster.ReportFunc  //report map for handling registery data type
-	existCallback     map[string]cluster.DataExister //check data exist in local cache
-	storage           storage.Storage                //storage interface for remote Storage, like CC
+	clusterID         string                         // watch cluster id
+	connCxt           context.Context                // context for client disconnected
+	cancel            context.CancelFunc             // cancel func when client disconnected
+	reportCallback    map[string]cluster.ReportFunc  // report map for handling registery data type
+	existCallback     map[string]cluster.DataExister // check data exist in local cache
+	storage           storage.Storage                // storage interface for remote Storage, like CC
 	netservice        *service.InnerService
-	app               *AppWatch           //watch for application
-	taskGroup         *TaskGroupWatch     //watch for taskgroup
-	exportSvr         *ExportServiceWatch //watch for exportservice
-	Status            string              //curr status
+	app               *AppWatch           // watch for application
+	taskGroup         *TaskGroupWatch     // watch for taskgroup
+	exportSvr         *ExportServiceWatch // watch for exportservice
+	Status            string              // curr status
 	configmap         *ConfigMapWatch
 	secret            *SecretWatch
 	service           *ServiceWatch
@@ -211,7 +211,7 @@ func (ms *EtcdCluster) initialize() error {
 	ms.stopCh = make(chan struct{})
 	factory := informers.NewSharedInformerFactory(bkbcsClientset, time.Minute*5)
 	ms.factory = factory
-	//init factory informers
+	// init factory informers
 	ms.factory.Bkbcs().V2().BcsConfigMaps().Informer()
 	ms.factory.Bkbcs().V2().Applications().Informer()
 	ms.factory.Bkbcs().V2().Deployments().Informer()
@@ -226,14 +226,14 @@ func (ms *EtcdCluster) initialize() error {
 	ms.factory.WaitForCacheSync(ms.stopCh)
 	blog.Infof("EtcdCluster SharedInformerFactory sync data to cache done")
 
-	//register ReporterHandler
+	// register ReporterHandler
 	if err := ms.registerReportHandler(); err != nil {
 		blog.Error("Mesos cluster register report handler err:%s", err.Error())
 		return err
 	}
 
 	ms.connCxt, ms.cancel = context.WithCancel(context.Background())
-	//create datatype watch
+	// create datatype watch
 	if err := ms.createDatTypeWatch(); err != nil {
 		blog.Error("Mesos cluster create wathers err:%s", err.Error())
 		return err
@@ -244,7 +244,7 @@ func (ms *EtcdCluster) initialize() error {
 	return nil
 }
 
-//ReportData report data to reportHandler, handle all data independently
+// ReportData report data to reportHandler, handle all data independently
 func (ms *EtcdCluster) ReportData(data *types.BcsSyncData) error {
 	callBack, ok := ms.reportCallback[data.DataType]
 	if !ok {
@@ -336,13 +336,13 @@ func (ms *EtcdCluster) reportIPPoolStaticDetail(data *types.BcsSyncData) error {
 	return nil
 }
 
-//reportTaskGroup
+// reportTaskGroup xxx
 func (ms *EtcdCluster) reportTaskGroup(data *types.BcsSyncData) error {
 
 	taskgroup := data.Item.(*schedtypes.TaskGroup)
 	blog.V(3).Infof("mesos cluster report taskgroup(%s) for action(%s)", taskgroup.ID, data.Action)
 
-	//post to ExportService first
+	// post to ExportService first
 	ms.exportSvr.postData(data)
 	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("TaskGroup sync dispatch failed: %+v", err)
@@ -351,7 +351,7 @@ func (ms *EtcdCluster) reportTaskGroup(data *types.BcsSyncData) error {
 	return nil
 }
 
-//reportApplication
+// reportApplication xxx
 func (ms *EtcdCluster) reportApplication(data *types.BcsSyncData) error {
 
 	app := data.Item.(*schedtypes.Application)
@@ -364,7 +364,7 @@ func (ms *EtcdCluster) reportApplication(data *types.BcsSyncData) error {
 	return nil
 }
 
-//reportExportService
+// reportExportService xxx
 func (ms *EtcdCluster) reportExportService(data *types.BcsSyncData) error {
 
 	blog.V(3).Infof("mesos cluster report service for action(%s)", data.Action)
@@ -376,18 +376,18 @@ func (ms *EtcdCluster) reportExportService(data *types.BcsSyncData) error {
 	return nil
 }
 
-//Run running cluster watch
+// Run running cluster watch
 func (ms *EtcdCluster) Run(cxt context.Context) {
 	blog.Info("etcd cluster run ...")
 }
 
-//Sync ask cluster to sync data to local cache
+// Sync ask cluster to sync data to local cache
 func (ms *EtcdCluster) Sync(tp string) error {
 	blog.Info("etcd cluster sync ...")
 	return nil
 }
 
-//Stop ask cluster stopped
+// Stop ask cluster stopped
 func (ms *EtcdCluster) Stop() {
 	blog.Info("etcd cluster stop ...")
 	blog.Info("EtcdCluster stop exportsvr watcher...")
@@ -399,7 +399,7 @@ func (ms *EtcdCluster) Stop() {
 	time.Sleep(2 * time.Second)
 }
 
-//GetClusterStatus get synchronization status
+// GetClusterStatus get synchronization status
 func (ms *EtcdCluster) GetClusterStatus() string {
 	return ms.Status
 }

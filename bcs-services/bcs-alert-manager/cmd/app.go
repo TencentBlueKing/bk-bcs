@@ -123,7 +123,8 @@ func (am *AlertManager) initSvrCliTLSConfig() error {
 		blog.Infof("initServerTLSConfig successful")
 	}
 
-	if len(am.options.CertConfig.CAFile) != 0 && len(am.options.CertConfig.ClientCertFile) != 0 && len(am.options.ClientKeyFile) != 0 {
+	if len(am.options.CertConfig.CAFile) != 0 && len(am.options.CertConfig.ClientCertFile) != 0 &&
+		len(am.options.ClientKeyFile) != 0 {
 		tlsClientConfig, err := ssl.ClientTslConfVerity(am.options.CAFile, am.options.ClientCertFile,
 			am.options.ClientKeyFile, static.ClientCertPwd)
 		if err != nil {
@@ -138,6 +139,7 @@ func (am *AlertManager) initSvrCliTLSConfig() error {
 	return nil
 }
 
+// initConsumers xxx
 // init consumer & run consumer
 func (am *AlertManager) initConsumers() error {
 	if am == nil {
@@ -157,6 +159,7 @@ func (am *AlertManager) initConsumers() error {
 	return nil
 }
 
+// initRegistry xxx
 // init micro etcd registry
 func (am *AlertManager) initRegistry() error {
 	if am == nil {
@@ -196,6 +199,7 @@ func (am *AlertManager) initRegistry() error {
 	return nil
 }
 
+// initPProf xxx
 // init HTTP Service
 func (am *AlertManager) initPProf(router *mux.Router) {
 	if am == nil {
@@ -216,6 +220,7 @@ func (am *AlertManager) initPProf(router *mux.Router) {
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
+// initServerSwaggerFile xxx
 // init swagger server file
 func (am *AlertManager) initServerSwaggerFile(mux *http.ServeMux) {
 	if am == nil {
@@ -236,6 +241,7 @@ func (am *AlertManager) serveSwaggerFile(w http.ResponseWriter, r *http.Request)
 	http.ServeFile(w, r, swaggerFile)
 }
 
+// initMetrics xxx
 // init prometheus metrics handler
 func (am *AlertManager) initMetrics(router *mux.Router) {
 	blog.Infof("init metrics handler")
@@ -251,6 +257,7 @@ func customMatcher(key string) (string, bool) {
 	}
 }
 
+// initHTTPGateWay xxx
 // init httpGateWay trans grpc to http
 func (am *AlertManager) initHTTPGateWay(router *mux.Router) error {
 	if am == nil {
@@ -290,6 +297,7 @@ func (am *AlertManager) initHTTPGateWay(router *mux.Router) error {
 	return nil
 }
 
+// initMainHTTPServer xxx
 // init main http server
 func (am *AlertManager) initMainHTTPServer() error {
 	if am == nil {
@@ -328,6 +336,7 @@ func (am *AlertManager) initMainHTTPServer() error {
 	return nil
 }
 
+// initExtraHTTPServer xxx
 // init extra http server(metrics, serverSwagger, pprof)
 func (am *AlertManager) initExtraHTTPServer() error {
 	if am == nil {
@@ -362,6 +371,7 @@ func (am *AlertManager) initExtraHTTPServer() error {
 	return nil
 }
 
+// initMicroService xxx
 // init microService for grpc
 func (am *AlertManager) initMicroService() error {
 	if am == nil {

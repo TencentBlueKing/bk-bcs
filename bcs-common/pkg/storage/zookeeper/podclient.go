@@ -114,7 +114,7 @@ func convertToAppNode(pushFunc PushWatchEventFn) map[int]*Layer {
 	return layerConfig
 }
 
-//NewPodClient create pod client for bcs-scheduler in
+// NewPodClient create pod client for bcs-scheduler in
 func NewPodClient(config *ZkConfig) (*PodClient, error) {
 	if len(config.Hosts) == 0 {
 		return nil, fmt.Errorf("Lost zookeeper server info")
@@ -128,7 +128,7 @@ func NewPodClient(config *ZkConfig) (*PodClient, error) {
 	if config.ObjectNewFunc == nil {
 		return nil, fmt.Errorf("Lost Object New function")
 	}
-	//create client for zookeeper
+	// create client for zookeeper
 	c := zkclient.NewZkClient(config.Hosts)
 	if err := c.ConnectEx(time.Second * 3); err != nil {
 		return nil, fmt.Errorf("podclient zookeeper connect: %s", err)
@@ -143,17 +143,17 @@ func NewPodClient(config *ZkConfig) (*PodClient, error) {
 	return s, nil
 }
 
-//PodClient implements storage interface with zookeeper client, all operations
-//are based on one object data types, but data may be stored at different levels of nodes.
+// PodClient implements storage interface with zookeeper client, all operations
+// are based on one object data types, but data may be stored at different levels of nodes.
 type PodClient struct {
-	config      *ZkConfig          //configuration for nsclient
-	prefixPath  string             //zookeeper storage prefix, like bcs/mesh/v1/datatype
-	client      *zkclient.ZkClient //http client
-	codec       meta.Codec         //json encoder/decoder
-	objectNewFn meta.ObjectNewFn   //injection for new object
+	config      *ZkConfig          // configuration for nsclient
+	prefixPath  string             // zookeeper storage prefix, like bcs/mesh/v1/datatype
+	client      *zkclient.ZkClient // http client
+	codec       meta.Codec         // json encoder/decoder
+	objectNewFn meta.ObjectNewFn   // injection for new object
 }
 
-//Create implements storage interface
+// Create implements storage interface
 func (s *PodClient) Create(cxt context.Context, key string, obj meta.Object, ttl int) (out meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("zk podclient lost object key")
@@ -163,7 +163,7 @@ func (s *PodClient) Create(cxt context.Context, key string, obj meta.Object, ttl
 		return nil, fmt.Errorf("lost object data")
 	}
 	fullPath := path.Join(s.prefixPath, key)
-	//check history node's data
+	// check history node's data
 	exist, eerr := s.client.Exist(fullPath)
 	if eerr != nil {
 		blog.V(3).Infof("zk podclient check %s old Object failed, %s", fullPath, eerr)
@@ -180,7 +180,7 @@ func (s *PodClient) Create(cxt context.Context, key string, obj meta.Object, ttl
 			}
 		}
 	}
-	//create new data
+	// create new data
 	targetBytes, err := s.codec.Encode(obj)
 	if err != nil {
 		blog.V(3).Infof("zk podclient encode %s object to json failed, %s", fullPath, err)
@@ -194,11 +194,11 @@ func (s *PodClient) Create(cxt context.Context, key string, obj meta.Object, ttl
 	return out, nil
 }
 
-//Delete implements storage interface
-//for http api operation, there are three situations for key
-//* if key likes apis/v1/dns, clean all dns data under version v1
-//* if key likes apis/v1/dns/namespace/bmsf-system, delete all data under namespace
-//* if key likes apis/v1/dns/namespace/bmsf-system/data, delete detail data
+// Delete implements storage interface
+// for http api operation, there are three situations for key
+// * if key likes apis/v1/dns, clean all dns data under version v1
+// * if key likes apis/v1/dns/namespace/bmsf-system, delete all data under namespace
+// * if key likes apis/v1/dns/namespace/bmsf-system/data, delete detail data
 // in this version, no delete objects reply
 func (s *PodClient) Delete(ctx context.Context, key string) (obj meta.Object, err error) {
 	if len(key) != 0 {
@@ -208,7 +208,7 @@ func (s *PodClient) Delete(ctx context.Context, key string) (obj meta.Object, er
 		return nil, fmt.Errorf("error format key, cannot end with /")
 	}
 	fullPath := path.Join(s.prefixPath, key)
-	//delete all children under this node
+	// delete all children under this node
 	if err := s.recursiveDelete(fullPath); err != nil {
 		blog.Errorf("zk podclient delete fullpath resource %s failed, %s", fullPath, err)
 		return nil, err
@@ -231,7 +231,7 @@ func (s *PodClient) recursiveDelete(p string) error {
 		blog.V(3).Infof("zk podclient delete leaf node %s successfully", p)
 		return nil
 	}
-	//we got children here
+	// we got children here
 	for _, child := range children {
 		childpath := path.Join(p, child)
 		if err := s.recursiveDelete(childpath); err != nil {
@@ -242,17 +242,18 @@ func (s *PodClient) recursiveDelete(p string) error {
 	return nil
 }
 
-//Watch implements storage interface
-//* if key empty, watch all data
-//* if key is namespace, watch all data under namespace
-//* if key is namespace/name, watch detail data based-on application
-//watch is Stopped when any error occure, close event channel immediatly
-//param cxt: context for background running, not used, only reserved now
-//param version: data version, not used, reserved
-//param selector: selector for target object data
-//return:
+// Watch implements storage interface
+// * if key empty, watch all data
+// * if key is namespace, watch all data under namespace
+// * if key is namespace/name, watch detail data based-on application
+// watch is Stopped when any error occure, close event channel immediatly
+// param cxt: context for background running, not used, only reserved now
+// param version: data version, not used, reserved
+// param selector: selector for target object data
+// return:
 //  watch: watch implementation for changing event, need to Stop manually
-func (s *PodClient) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+func (s *PodClient) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface,
+	error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key formate")
 	}
@@ -264,7 +265,7 @@ func (s *PodClient) Watch(cxt context.Context, key, version string, selector sto
 	level := strings.Count(key, "/")
 	var layerConfig map[int]*Layer
 	if len(key) == 0 {
-		//data type path watch, watch all pod data
+		// data type path watch, watch all pod data
 		layerConfig = convertToAppData(podwatch.pushWatchEventFn)
 	} else if level == 0 {
 		layerConfig = convertToAppNS(podwatch.pushWatchEventFn)
@@ -277,21 +278,22 @@ func (s *PodClient) Watch(cxt context.Context, key, version string, selector sto
 		return nil, err
 	}
 	podwatch.nodeWatch = nodewatch
-	//running watch
+	// running watch
 	go podwatch.run()
 	return podwatch, nil
 }
 
-//WatchList implements storage interface
-//Watch & WatchList are the same for http api
-func (s *PodClient) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+// WatchList implements storage interface
+// Watch & WatchList are the same for http api
+func (s *PodClient) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface,
+	error) {
 	return s.Watch(ctx, key, version, selector)
 }
 
-//Get implements storage interface
-//get exactly data object from http event storage. so key must be resource fullpath
-//param cxt: not used
-//param version: reserved for future
+// Get implements storage interface
+// get exactly data object from http event storage. so key must be resource fullpath
+// param cxt: not used
+// param version: reserved for future
 func (s *PodClient) Get(cxt context.Context, key, version string, ignoreNotFound bool) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
@@ -321,12 +323,12 @@ func (s *PodClient) Get(cxt context.Context, key, version string, ignoreNotFound
 	return target, nil
 }
 
-//List implements storage interface
-//list all data under prefixPath/key, there may be several data type under children
-//nodes of prefixPath, we use selector to filt all types of data.
-//param cxt: context for cancel, not used now
-//param key: key only can be empty, namespace or namespace/{name}
-//param selector: data filter
+// List implements storage interface
+// list all data under prefixPath/key, there may be several data type under children
+// nodes of prefixPath, we use selector to filt all types of data.
+// param cxt: context for cancel, not used now
+// param key: key only can be empty, namespace or namespace/{name}
+// param selector: data filter
 func (s *PodClient) List(cxt context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key format")
@@ -345,7 +347,7 @@ func (s *PodClient) List(cxt context.Context, key string, selector storage.Selec
 		}
 	}
 	blog.V(3).Infof("zk podclient begins to list %s", fullPath)
-	//detecte all data nodes for reading detail contents
+	// detecte all data nodes for reading detail contents
 	nodes, err := s.getDataNode(fullPath, keyLvl, 3)
 	if err != nil {
 		blog.V(3).Infof("zk podclient got all childrens under %s failed, %s", fullPath, err)
@@ -357,12 +359,12 @@ func (s *PodClient) List(cxt context.Context, key string, selector storage.Selec
 	}
 	var outs []meta.Object
 	for _, node := range nodes {
-		//get node content from zookeeper
+		// get node content from zookeeper
 		rawBytes, _, err := s.client.GetEx(node)
 		if err != nil {
 			if err == zkclient.ErrNoNode {
-				//data consistency problem here, maybe node is deleted after we
-				//got it, just skip disappearing nodes
+				// data consistency problem here, maybe node is deleted after we
+				// got it, just skip disappearing nodes
 				blog.V(3).Infof("zk podclient find %s lost when getting contents", node)
 				continue
 			}
@@ -384,14 +386,14 @@ func (s *PodClient) List(cxt context.Context, key string, selector storage.Selec
 	return outs, nil
 }
 
-//Close storage conenction, clean resource
-//warnning: if you want to Close client, you have better close Watch first
+// Close storage conenction, clean resource
+// warnning: if you want to Close client, you have better close Watch first
 func (s *PodClient) Close() {
 	blog.V(3).Infof("podclient zookeeper event storage %s exit.", s.prefixPath)
 	s.client.Close()
 }
 
-//getLeafNode recursive get all leaf nodes
+// getDataNode recursive get all leaf nodes
 func (s *PodClient) getDataNode(node string, now, target int) ([]string, error) {
 	if len(node) == 0 {
 		return nil, fmt.Errorf("empty node")
@@ -426,7 +428,7 @@ func (s *PodClient) getDataNode(node string, now, target int) ([]string, error) 
 	return dataNodes, nil
 }
 
-//newPodWatch create zookeeper watch
+// newPodWatch create zookeeper watch
 func newPodWatch(basic string, config *ZkConfig, c *zkclient.ZkClient, se storage.Selector) *podWatch {
 	w := &podWatch{
 		selfpath:    basic,
@@ -438,9 +440,9 @@ func newPodWatch(basic string, config *ZkConfig, c *zkclient.ZkClient, se storag
 	return w
 }
 
-//podWatch wrapper for zookeeper all pod data
+// podWatch wrapper for zookeeper all pod data
 type podWatch struct {
-	selfpath    string //zookeeper path
+	selfpath    string // zookeeper path
 	config      *ZkConfig
 	selector    storage.Selector
 	nodeWatch   NodeWatch
@@ -448,14 +450,14 @@ type podWatch struct {
 	isStop      bool
 }
 
-//Stop watch channel
+// Stop watch channel
 func (e *podWatch) Stop() {
 	e.isStop = true
 	e.nodeWatch.Stop()
 	close(e.dataChannel)
 }
 
-//WatchEvent get watch events, if watch stopped/error, watch must close
+// WatchEvent get watch events, if watch stopped/error, watch must close
 // channel and exit, watch user must read channel like
 // e, ok := <-channel
 func (e *podWatch) WatchEvent() <-chan watch.Event {
@@ -463,14 +465,15 @@ func (e *podWatch) WatchEvent() <-chan watch.Event {
 }
 
 func (e *podWatch) run() {
-	//just running node watch
+	// just running node watch
 	e.nodeWatch.Run()
 }
 
-//addEvent dispatch event to client
-//param eventType: zookeeper event type
-//param nodepath: pod data path
-//param rawBytes: raw json bytes
+// pushWatchEventFn xxx
+// addEvent dispatch event to client
+// param eventType: zookeeper event type
+// param nodepath: pod data path
+// param rawBytes: raw json bytes
 func (e *podWatch) pushWatchEventFn(eventType watch.EventType, nodepath string, rawBytes []byte) {
 	if e.isStop {
 		return
@@ -485,18 +488,18 @@ func (e *podWatch) pushWatchEventFn(eventType watch.EventType, nodepath string, 
 		}
 		event.Data = target
 	}
-	//check deletion eventType
+	// check deletion eventType
 	if eventType == watch.EventDeleted {
-		//deletion, this event is especial because
-		//no data can obtain from zookeeper, we only know that node is deleted.
-		//so we construct empty data for this object from nodepath
+		// deletion, this event is especial because
+		// no data can obtain from zookeeper, we only know that node is deleted.
+		// so we construct empty data for this object from nodepath
 		nodes := strings.Split(nodepath, "/")
 		if len(nodes) < 3 {
 			blog.Errorf("zk podwatch match error path in zookeeper, %s", nodepath)
 			return
 		}
 		target := e.config.ObjectNewFunc()
-		//fix(DeveloperJim): construting name from nodepath
+		// fix(DeveloperJim): construting name from nodepath
 		target.SetNamespace(nodes[len(nodes)-3])
 		parts := strings.Split(nodes[len(nodes)-1], ".")
 		if len(parts) < 4 {
@@ -509,7 +512,7 @@ func (e *podWatch) pushWatchEventFn(eventType watch.EventType, nodepath string, 
 		zkFlag["bk-bcs-inner-storage"] = "bkbcs-zookeeper"
 		target.SetAnnotations(zkFlag)
 		event.Data = target
-		//only for debug
+		// only for debug
 		blog.V(3).Infof("zk client podwatch %s/%s is delete, path %s", target.GetNamespace(), target.GetName(), nodepath)
 	}
 	if e.selector != nil {

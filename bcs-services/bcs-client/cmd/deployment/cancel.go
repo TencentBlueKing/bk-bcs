@@ -22,6 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewCancelCommand xxx
 func NewCancelCommand() cli.Command {
 	return cli.Command{
 		Name:  "cancel",

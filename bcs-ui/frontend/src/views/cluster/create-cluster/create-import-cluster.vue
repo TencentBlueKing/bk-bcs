@@ -1,21 +1,21 @@
 <template>
-  <section class="create-import-cluster bcs-content-wrapper">
-    <bcs-form
+  <section class="create-import-cluster" bcs-content-wrapper>
+    <BkForm
       :label-width="labelWidth"
       :model="importClusterInfo"
       :rules="formRules"
       class="import-form"
       ref="importFormRef">
-      <bcs-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
+      <BkFormItem :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
         <bk-input v-model="importClusterInfo.clusterName"></bk-input>
-      </bcs-form-item>
-      <bcs-form-item :label="$t('导入方式')">
+      </BkFormItem>
+      <BkFormItem :label="$t('导入方式')">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
           <bk-radio class="btn-group-first" value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
           <bk-radio value="provider">{{$t('云服务商')}}</bk-radio>
         </bk-radio-group>
-      </bcs-form-item>
-      <bcs-form-item :label="$t('集群环境')" required v-if="$INTERNAL">
+      </BkFormItem>
+      <BkFormItem :label="$t('集群环境')" required v-if="$INTERNAL">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.environment">
           <bk-radio class="btn-group-first" value="debug">
             {{ $t('测试环境') }}
@@ -24,12 +24,12 @@
             {{ $t('正式环境') }}
           </bk-radio>
         </bk-radio-group>
-      </bcs-form-item>
-      <bcs-form-item :label="$t('集群描述')">
+      </BkFormItem>
+      <BkFormItem :label="$t('集群描述')">
         <bk-input v-model="importClusterInfo.description" type="textarea"></bk-input>
-      </bcs-form-item>
+      </BkFormItem>
       <template v-if="importClusterInfo.importType === 'provider'">
-        <bcs-form-item
+        <BkFormItem
           :label="$t('云服务商')"
           property="provider"
           error-display-type="normal"
@@ -46,8 +46,8 @@
               :name="item.name">
             </bcs-option>
           </bcs-select>
-        </bcs-form-item>
-        <bcs-form-item :label="$t('云凭证')" property="accountID" error-display-type="normal" required>
+        </BkFormItem>
+        <BkFormItem :label="$t('云凭证')" property="accountID" error-display-type="normal" required>
           <bcs-select
             :loading="accountsLoading"
             class="w640"
@@ -67,8 +67,8 @@
               </div>
             </template>
           </bcs-select>
-        </bcs-form-item>
-        <bcs-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
+        </BkFormItem>
+        <BkFormItem :label="$t('所属区域')" property="region" error-display-type="normal" required>
           <bcs-select
             :loading="regionLoading"
             class="w640"
@@ -82,8 +82,8 @@
               :name="item.regionName">
             </bcs-option>
           </bcs-select>
-        </bcs-form-item>
-        <bcs-form-item :label="$t('TKE集群ID')" property="cloudID" error-display-type="normal" required>
+        </BkFormItem>
+        <BkFormItem :label="$t('TKE集群ID')" property="cloudID" error-display-type="normal" required>
           <bcs-select
             class="w640" searchable
             :clearable="false"
@@ -96,9 +96,9 @@
               :name="item.clusterName">
             </bcs-option>
           </bcs-select>
-        </bcs-form-item>
+        </BkFormItem>
       </template>
-      <bcs-form-item
+      <BkFormItem
         :label="$t('集群kubeconfig')"
         property="yaml"
         error-display-type="normal"
@@ -120,15 +120,19 @@
           v-model="importClusterInfo.yaml"
           :show-gutter="false"
         ></Ace>
-      </bcs-form-item>
-      <bcs-form-item class="mt16" v-if="importClusterInfo.importType === 'kubeconfig'">
+      </BkFormItem>
+      <BkFormItem class="mt16" v-if="importClusterInfo.importType === 'kubeconfig'">
         <bk-button
           theme="primary"
           :loading="testLoading"
           @click="handleTest">{{$t('kubeconfig可用性测试')}}</bk-button>
-      </bcs-form-item>
-      <bcs-form-item class="mt32">
-        <span v-bk-tooltips="{ content: $t('请先测试kubeconfig可用性'), disabled: isTestSuccess }">
+      </BkFormItem>
+      <BkFormItem class="mt32">
+        <span
+          v-bk-tooltips="{
+            content: $t('请先测试kubeconfig可用性'),
+            disabled: isTestSuccess || importClusterInfo.importType === 'provider'
+          }">
           <bk-button
             class="btn"
             theme="primary"
@@ -141,21 +145,25 @@
           class="btn"
           @click="handleCancel"
         >{{$t('取消')}}</bk-button>
-      </bcs-form-item>
-    </bcs-form>
+      </BkFormItem>
+    </BkForm>
   </section>
 </template>
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
 import Ace from '@/components/ace-editor';
 import useGoHome from '@/common/use-gohome';
-import useConfig from '@/common/use-config';
+import { useConfig } from '@/common/use-app';
 import useFormLabel from '@/common/use-form-label';
+import BkForm from 'bk-magic-vue/lib/form';
+import BkFormItem from 'bk-magic-vue/lib/form-item';
 
 export default defineComponent({
   name: 'CreateImportCluster',
   components: {
     Ace,
+    BkForm,
+    BkFormItem,
   },
   setup(props, ctx) {
     const { $router, $bkMessage, $i18n, $route, $store } = ctx.root;
@@ -241,8 +249,7 @@ export default defineComponent({
 
     // 云服务商
     const templateList = ref<any[]>([]);
-    const availableTemplateList = computed(() => templateList.value
-      .filter(item => !item?.confInfo?.disableImportCluster));
+    const availableTemplateList = computed(() => templateList.value.filter(item => !item?.confInfo?.disableImportCluster));
     const templateLoading = ref(false);
     const handleGetCloudList = async () => {
       templateLoading.value = true;
@@ -283,7 +290,7 @@ export default defineComponent({
 
       clusterLoading.value = true;
       clusterList.value = await $store.dispatch('clustermanager/cloudClusterList', {
-        $regionId: importClusterInfo.value.region,
+        region: importClusterInfo.value.region,
         $cloudId: importClusterInfo.value.provider,
         accountID: importClusterInfo.value.accountID,
       });
@@ -294,15 +301,21 @@ export default defineComponent({
       type === 'provider' && !templateList.value.length && handleGetCloudList();
     });
     watch(() => importClusterInfo.value.provider, () => {
+      importClusterInfo.value.accountID = '';
       handleGetCloudAccounts();
+      importClusterInfo.value.region = '';
       getRegionList();
+      importClusterInfo.value.cloudID = '';
       handleGetClusterList();
     });
     watch(() => importClusterInfo.value.accountID, () => {
+      importClusterInfo.value.region = '';
       getRegionList();
+      importClusterInfo.value.cloudID = '';
       handleGetClusterList();
     });
     watch(() => importClusterInfo.value.region, () => {
+      importClusterInfo.value.cloudID = '';
       handleGetClusterList();
     });
     watch(() => importClusterInfo.value.yaml, () => {
@@ -400,48 +413,48 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 /deep/ .mt16 {
-    margin-top: 16px;
+  margin-top: 16px;
 }
 /deep/ .mt32 {
-    margin-top: 32px;
+  margin-top: 32px;
 }
 .create-import-cluster {
-    padding: 24px;
-    /deep/ .w640 {
-        width: 640px;
-        background: #fff;
-    }
-    /deep/ .bk-input-text {
-        width: 640px;
-    }
-    /deep/ .bk-textarea-wrapper {
-        width: 640px;
-        height: 80px;
-    }
-    /deep/ .cube-config {
-        max-width: 1000px;
-    }
-    /deep/ .btn {
-        width: 88px;
-    }
-    /deep/ .file-input {
-        position: absolute;
-        opacity: 0;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-    }
+  padding: 24px;
+  /deep/ .w640 {
+      width: 640px;
+      background: #fff;
+  }
+  /deep/ .bk-input-text {
+      width: 640px;
+  }
+  /deep/ .bk-textarea-wrapper {
+      width: 640px;
+      height: 80px;
+  }
+  /deep/ .cube-config {
+      max-width: 1000px;
+  }
+  /deep/ .btn {
+      width: 88px;
+  }
+  /deep/ .file-input {
+      position: absolute;
+      opacity: 0;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+  }
 }
 .import-cluster-dialog {
-    padding: 0 4px 24px 4px;
-    .title {
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 14px
-    }
+  padding: 0 4px 24px 4px;
+  .title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px
+  }
 }
 /deep/ .btn-group-first {
-    min-width: 100px;
+  min-width: 100px;
 }
 </style>

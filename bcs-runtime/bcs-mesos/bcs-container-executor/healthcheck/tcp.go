@@ -23,7 +23,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-//NewTCPChecker create TCP checker
+// NewTCPChecker create TCP checker
 func NewTCPChecker(container string, port int, mechanism *TimeMechanism, notify FailureNotify) (Checker, error) {
 	if mechanism.IntervalSeconds <= mechanism.TimeoutSeconds {
 		return nil, fmt.Errorf("Interval Seconds must larger than Timeout Seconds")
@@ -49,29 +49,30 @@ func NewTCPChecker(container string, port int, mechanism *TimeMechanism, notify 
 	return check, nil
 }
 
-//TCPChecker create check for tcp port check
+// TCPChecker create check for tcp port check
 type TCPChecker struct {
 	CheckerStat
-	container string             //name for container
-	ipaddr    string             //ip address to check
-	port      int                //port to check
-	isPause   bool               //status for pause
-	cxt       context.Context    //context to control exit
-	canceler  context.CancelFunc //canceler
-	mechanism *TimeMechanism     //time config for checker
-	notify    FailureNotify      //callback when unhealthy
+	container string             // name for container
+	ipaddr    string             // ip address to check
+	port      int                // port to check
+	isPause   bool               // status for pause
+	cxt       context.Context    // context to control exit
+	canceler  context.CancelFunc // canceler
+	mechanism *TimeMechanism     // time config for checker
+	notify    FailureNotify      // callback when unhealthy
 }
 
+// IsStarting xxx
 func (check *TCPChecker) IsStarting() bool {
 	return check.Started
 }
 
-//SetHost setting host / ipaddress
+// SetHost setting host / ipaddress
 func (check *TCPChecker) SetHost(host string) {
 	check.ipaddr = host
 }
 
-//Start start checker, must running in indivisual goroutine
+// Start start checker, must running in indivisual goroutine
 func (check *TCPChecker) Start() {
 	check.Started = true
 	check.StartPoint = time.Now()
@@ -113,12 +114,12 @@ func (check *TCPChecker) check() {
 	}
 }
 
-//Stop stop checker
+// Stop stop checker
 func (check *TCPChecker) Stop() {
 	check.canceler()
 }
 
-//ReCheck ask checker to check
+// ReCheck ask checker to check
 func (check *TCPChecker) ReCheck() bool {
 	dest := check.ipaddr + ":" + strconv.Itoa(check.port)
 	con, err := net.DialTimeout("tcp", dest, time.Duration(int64(check.mechanism.TimeoutSeconds))*time.Second)
@@ -129,24 +130,24 @@ func (check *TCPChecker) ReCheck() bool {
 	return true
 }
 
-//Pause pause check
+// Pause pause check
 func (check *TCPChecker) Pause() error {
 	check.isPause = true
 	return nil
 }
 
-//Resume arouse checker
+// Resume arouse checker
 func (check *TCPChecker) Resume() error {
 	check.isPause = false
 	return nil
 }
 
-//Name get check name
+// Name get check name
 func (check *TCPChecker) Name() string {
 	return TcpHealthcheck
 }
 
-//Relation checker relative to container
+// Relation checker relative to container
 func (check *TCPChecker) Relation() string {
 	return check.container
 }

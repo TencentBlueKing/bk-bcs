@@ -22,6 +22,7 @@ import (
 	"os"
 )
 
+// ReadFile xxx
 func ReadFile(filepath string) ([]byte, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
@@ -36,6 +37,7 @@ func ReadFile(filepath string) ([]byte, error) {
 	return data, nil
 }
 
+// FileMd5 xxx
 func FileMd5(filepath string) (string, error) {
 	f, err := os.Open(filepath)
 	if err != nil {

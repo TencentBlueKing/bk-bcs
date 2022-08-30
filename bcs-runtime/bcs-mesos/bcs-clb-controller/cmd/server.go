@@ -53,26 +53,32 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 	// option for clb controller server process
 	serverCmd.Flags().IntVar(&port, "port", 18080, "port for clb controller server")
-	serverCmd.Flags().StringVar(&serviceRegistry, "serviceRegistry", "kubernetes", "service registry for clb controller, available: [kubernetes, custom, mesos]")
+	serverCmd.Flags().StringVar(&serviceRegistry, "serviceRegistry", "kubernetes",
+		"service registry for clb controller, available: [kubernetes, custom, mesos]")
 	serverCmd.Flags().StringVar(&clbName, "clbname", "", "lb name for qcloud clb")
 	serverCmd.Flags().StringVar(&netType, "netType", "private", "network type for clb, available: [private, public]")
-	serverCmd.Flags().StringVar(&backendIPType, "backendIPType", "", "backend pod ip network type, available: [overlay, underlay]")
+	serverCmd.Flags().StringVar(&backendIPType, "backendIPType", "",
+		"backend pod ip network type, available: [overlay, underlay]")
 
 	serverCmd.Flags().IntVar(&updateInterval, "updateInterval", 5, "interval for update operations")
 	// for kube registry
-	serverCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "kubeconfig for access kube-apiserver, if empty, use in-cluster config, default: empty")
+	serverCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "",
+		"kubeconfig for access kube-apiserver, if empty, use in-cluster config, default: empty")
 	serverCmd.Flags().IntVar(&syncPeriod, "syncPeriod", 60, "period for synchronize k8s services")
 
 	// log option
 	serverCmd.Flags().StringVar(&logDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	serverCmd.Flags().Uint64Var(&logMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
-	serverCmd.Flags().IntVar(&logMaxNum, "log_max_num", 10, "Max num of log file. The oldest will be removed if there is a extra file created.")
+	serverCmd.Flags().IntVar(&logMaxNum, "log_max_num", 10,
+		"Max num of log file. The oldest will be removed if there is a extra file created.")
 	serverCmd.Flags().BoolVar(&toStdErr, "logtostderr", false, "log to standard error instead of files")
 	serverCmd.Flags().BoolVar(&alsoToStdErr, "alsologtostderr", false, "log to standard error as well as files")
 	serverCmd.Flags().Int32Var(&verbosity, "v", 0, "log level for V logs")
 	serverCmd.Flags().StringVar(&stdErrThreshold, "stderrthreshold", "2", "logs at or above this threshold go to stderr")
-	serverCmd.Flags().StringVar(&vModule, "vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
-	serverCmd.Flags().StringVar(&traceLocation, "log_backtrace_at", "", "when logging hits line file:N, emit a stack trace")
+	serverCmd.Flags().StringVar(&vModule, "vmodule", "",
+		"comma-separated list of pattern=N settings for file-filtered logging")
+	serverCmd.Flags().StringVar(&traceLocation, "log_backtrace_at", "",
+		"when logging hits line file:N, emit a stack trace")
 }
 
 func validateArgs() bool {
@@ -134,7 +140,7 @@ the server watch k8s services and clbIngresses to generate clb listener`,
 			SyncPeriod:      syncPeriod,
 		}
 
-		//TODO: to create server with metric
+		// TODO: to create server with metric
 
 		blog.Infof("create new processor with option %v", clbCtrlOption)
 		proc, err := processor.NewProcessor(clbCtrlOption)
@@ -146,7 +152,8 @@ the server watch k8s services and clbIngresses to generate clb listener`,
 		blog.Infof("init loadbalancer with name %s, nettype %s", clbCtrlOption.ClbName, clbCtrlOption.NetType)
 		err = proc.Init()
 		if err != nil {
-			blog.Errorf("init loadbalancer with name %s, nettype %s, err %s", clbCtrlOption.ClbName, clbCtrlOption.NetType, err.Error())
+			blog.Errorf("init loadbalancer with name %s, nettype %s, err %s", clbCtrlOption.ClbName, clbCtrlOption.NetType,
+				err.Error())
 			os.Exit(1)
 		}
 

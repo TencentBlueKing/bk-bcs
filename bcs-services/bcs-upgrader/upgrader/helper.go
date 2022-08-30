@@ -36,6 +36,7 @@ type HelperOpt struct {
 	config options.HttpCliConfig
 }
 
+// HelperName xxx
 // Name is the method of Helper to implement interface UpgradeHelper
 func (h *Helper) HelperName() string {
 	return "bcs-upgrade-helper"

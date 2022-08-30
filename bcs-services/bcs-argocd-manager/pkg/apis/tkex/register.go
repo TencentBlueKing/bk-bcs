@@ -13,6 +13,8 @@
 package tkex
 
 const (
+	// GroupName TODO
 	GroupName = "tkex.tencent.com"
-	Version   = "v1alpha1"
+	// Version TODO
+	Version = "v1alpha1"
 )

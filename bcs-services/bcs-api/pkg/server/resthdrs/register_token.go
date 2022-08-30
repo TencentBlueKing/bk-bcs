@@ -26,6 +26,7 @@ import (
 	"time"
 )
 
+// ListRegisterTokens xxx
 func ListRegisterTokens(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()
@@ -46,6 +47,7 @@ func ListRegisterTokens(request *restful.Request, response *restful.Response) {
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// CreateRegisterToken xxx
 func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()

@@ -76,14 +76,17 @@ func newBufferedAutoscalerProcessorCallbacks() *bufferedAutoscalerProcessorCallb
 	return callbacks
 }
 
+// DisableScaleDownForLoop xxx
 func (callbacks *bufferedAutoscalerProcessorCallbacks) DisableScaleDownForLoop() {
 	callbacks.disableScaleDownForLoop = true
 }
 
+// SetExtraValue xxx
 func (callbacks *bufferedAutoscalerProcessorCallbacks) SetExtraValue(key string, value interface{}) {
 	callbacks.extraValues[key] = value
 }
 
+// GetExtraValue xxx
 func (callbacks *bufferedAutoscalerProcessorCallbacks) GetExtraValue(key string) (value interface{}, found bool) {
 	value, found = callbacks.extraValues[key]
 	return
@@ -643,6 +646,7 @@ func (b *BufferedAutoscaler) nodeGroupsByID() map[string]cloudprovider.NodeGroup
 	return nodeGroups
 }
 
+// filterOutYoungPods xxx
 // don't consider pods newer than newPodScaleUpDelay seconds old as unschedulable
 func (b *BufferedAutoscaler) filterOutYoungPods(allUnschedulablePods []*corev1.Pod,
 	currentTime time.Time) []*corev1.Pod {

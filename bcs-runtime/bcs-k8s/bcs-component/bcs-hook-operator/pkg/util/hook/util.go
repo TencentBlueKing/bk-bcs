@@ -27,6 +27,7 @@ var hookStatusOrder = []v1alpha1.HookPhase{
 	v1alpha1.HookPhaseFailed,
 }
 
+// IsTerminating xxx
 func IsTerminating(run *v1alpha1.HookRun) bool {
 	if run.Spec.Terminate {
 		return true
@@ -40,6 +41,7 @@ func IsTerminating(run *v1alpha1.HookRun) bool {
 	return false
 }
 
+// GetResult xxx
 func GetResult(run *v1alpha1.HookRun, metricName string) *v1alpha1.MetricResult {
 	for _, result := range run.Status.MetricResults {
 		if result.Name == metricName {
@@ -49,6 +51,7 @@ func GetResult(run *v1alpha1.HookRun, metricName string) *v1alpha1.MetricResult 
 	return nil
 }
 
+// SetResult xxx
 func SetResult(run *v1alpha1.HookRun, result v1alpha1.MetricResult) {
 	for i, r := range run.Status.MetricResults {
 		if r.Name == result.Name {
@@ -59,6 +62,7 @@ func SetResult(run *v1alpha1.HookRun, result v1alpha1.MetricResult) {
 	run.Status.MetricResults = append(run.Status.MetricResults, result)
 }
 
+// MetricCompleted xxx
 func MetricCompleted(run *v1alpha1.HookRun, metricName string) bool {
 	if result := GetResult(run, metricName); result != nil {
 		return result.Phase.Completed()
@@ -66,6 +70,7 @@ func MetricCompleted(run *v1alpha1.HookRun, metricName string) bool {
 	return false
 }
 
+// LastMeasurement xxx
 func LastMeasurement(run *v1alpha1.HookRun, metricName string) *v1alpha1.Measurement {
 	if result := GetResult(run, metricName); result != nil {
 		totalMeasurements := len(result.Measurements)
@@ -77,6 +82,7 @@ func LastMeasurement(run *v1alpha1.HookRun, metricName string) *v1alpha1.Measure
 	return nil
 }
 
+// IsWorse xxx
 func IsWorse(current, new v1alpha1.HookPhase) bool {
 	currentIndex := 0
 	newIndex := 0

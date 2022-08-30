@@ -130,7 +130,8 @@ func GetCustomCondition(req *restful.Request) *operator.Condition {
 				var innerErr error
 				t, innerErr = time.Parse("2006-01-02T15:04:05.000Z", valueList[0])
 				if innerErr != nil {
-					blog.Errorf("Unrecognized update time (%s) format, neither timestamp in seconds format nor time expression like 2006-01-02T15:04:05.000Z", valueList[0])
+					blog.Errorf(
+						"Unrecognized update time (%s) format, neither timestamp in seconds format nor time expression like 2006-01-02T15:04:05.000Z", valueList[0])
 					break
 				}
 			} else {

@@ -20,47 +20,66 @@ import (
 )
 
 const (
-	BcsStorageDynamicTypeApplication        = "application"
-	BcsStorageDynamicTypeProcess            = "process"
-	BcsStorageDynamicTypeTaskGroup          = "taskgroup"
-	BcsStorageDynamicTypeConfigMap          = "configmap"
-	BcsStorageDynamicTypeSecret             = "secret"
-	BcsStorageDynamicTypeService            = "service"
-	BcsStorageDynamicTypeEndpoint           = "endpoint"
-	BcsStorageDynamicTypeDeployment         = "deployment"
-	BcsStorageDynamicTypeNamespace          = "namespace"
-	BcsStorageDynamicTypeIPPoolStatic       = "ippoolstatic"
+	// BcsStorageDynamicTypeApplication xxx
+	BcsStorageDynamicTypeApplication = "application"
+	// BcsStorageDynamicTypeProcess xxx
+	BcsStorageDynamicTypeProcess = "process"
+	// BcsStorageDynamicTypeTaskGroup xxx
+	BcsStorageDynamicTypeTaskGroup = "taskgroup"
+	// BcsStorageDynamicTypeConfigMap xxx
+	BcsStorageDynamicTypeConfigMap = "configmap"
+	// BcsStorageDynamicTypeSecret xxx
+	BcsStorageDynamicTypeSecret = "secret"
+	// BcsStorageDynamicTypeService xxx
+	BcsStorageDynamicTypeService = "service"
+	// BcsStorageDynamicTypeEndpoint xxx
+	BcsStorageDynamicTypeEndpoint = "endpoint"
+	// BcsStorageDynamicTypeDeployment xxx
+	BcsStorageDynamicTypeDeployment = "deployment"
+	// BcsStorageDynamicTypeNamespace xxx
+	BcsStorageDynamicTypeNamespace = "namespace"
+	// BcsStorageDynamicTypeIPPoolStatic xxx
+	BcsStorageDynamicTypeIPPoolStatic = "ippoolstatic"
+	// BcsStorageDynamicTypeIPPoolStaticDetail xxx
 	BcsStorageDynamicTypeIPPoolStaticDetail = "ippoolstaticdetail"
 )
 
+// ApplicationSet xxx
 type ApplicationSet struct {
 	Data status.BcsReplicaControllerStatus `json:"data"`
 }
 
+// ProcessSet xxx
 type ProcessSet struct {
 	Data status.BcsReplicaControllerStatus `json:"data"`
 }
 
+// TaskGroupSet xxx
 type TaskGroupSet struct {
 	Data status.BcsPodStatus `json:"data"`
 }
 
+// ConfigMapSet xxx
 type ConfigMapSet struct {
 	Data status.BcsConfigMap `json:"data"`
 }
 
+// SecretSet xxx
 type SecretSet struct {
 	Data status.BcsSecret `json:"data"`
 }
 
+// ServiceSet xxx
 type ServiceSet struct {
 	Data status.BcsService `json:"data"`
 }
 
+// EndpointSet xxx
 type EndpointSet struct {
 	Data status.BcsEndpoint `json:"data"`
 }
 
+// DeploymentSet xxx
 type DeploymentSet struct {
 	Data deploymentType.Deployment `json:"data"`
 }
@@ -77,71 +96,106 @@ type IPPoolStaticDetail struct {
 	Data []*netservicetypes.NetPool `json:"data"`
 }
 
+// ApplicationList xxx
 type ApplicationList []*ApplicationSet
+
+// ProcessList xxx
 type ProcessList []*ProcessSet
+
+// TaskGroupList xxx
 type TaskGroupList []*TaskGroupSet
+
+// ConfigMapList xxx
 type ConfigMapList []*ConfigMapSet
+
+// SecretList xxx
 type SecretList []*SecretSet
+
+// ServiceList xxx
 type ServiceList []*ServiceSet
+
+// EndpointList xxx
 type EndpointList []*EndpointSet
+
+// DeploymentList xxx
 type DeploymentList []*DeploymentSet
+
+// IPPoolStaticList xxx
 type IPPoolStaticList []*IPPoolStatic
+
+// IPPoolStaticDetailList xxx
 type IPPoolStaticDetailList []*IPPoolStaticDetail
 
 // Len in list-sort for ApplicationList
-func (l ApplicationList) Len() int           { return len(l) }
+func (l ApplicationList) Len() int { return len(l) }
+
 // Less in list-sort for ApplicationList
 func (l ApplicationList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+
 // Swap in list-sort for ApplicationList
-func (l ApplicationList) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l ApplicationList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // Len in list-sort for ProcessList
-func (l ProcessList) Len() int               { return len(l) }
+func (l ProcessList) Len() int { return len(l) }
+
 // Less in list-sort for ProcessList
-func (l ProcessList) Less(i, j int) bool     { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l ProcessList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+
 // Swap in list-sort for ProcessList
-func (l ProcessList) Swap(i, j int)          { l[i], l[j] = l[j], l[i] }
+func (l ProcessList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // Len in list-sort for TaskGroupList
-func (l TaskGroupList) Len() int             { return len(l) }
+func (l TaskGroupList) Len() int { return len(l) }
+
 // Less in list-sort for TaskGroupList
-func (l TaskGroupList) Less(i, j int) bool   { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l TaskGroupList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+
 // Swap in list-sort for TaskGroupList
-func (l TaskGroupList) Swap(i, j int)        { l[i], l[j] = l[j], l[i] }
+func (l TaskGroupList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // Len in list-sort for ConfigMapList
-func (l ConfigMapList) Len() int             { return len(l) }
+func (l ConfigMapList) Len() int { return len(l) }
+
 // Less in list-sort for ConfigMapList
-func (l ConfigMapList) Less(i, j int) bool   { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l ConfigMapList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+
 // Swap in list-sort for ConfigMapList
-func (l ConfigMapList) Swap(i, j int)        { l[i], l[j] = l[j], l[i] }
+func (l ConfigMapList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // Len in list-sort for SecretList
-func (l SecretList) Len() int                { return len(l) }
+func (l SecretList) Len() int { return len(l) }
+
 // Less in list-sort for SecretList
-func (l SecretList) Less(i, j int) bool      { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l SecretList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+
 // Swap in list-sort for SecretList
-func (l SecretList) Swap(i, j int)           { l[i], l[j] = l[j], l[i] }
+func (l SecretList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // Len in list-sort for ServiceList
-func (l ServiceList) Len() int               { return len(l) }
+func (l ServiceList) Len() int { return len(l) }
+
 // Less in list-sort for ServiceList
-func (l ServiceList) Less(i, j int) bool     { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l ServiceList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+
 // Swap in list-sort for ServiceList
-func (l ServiceList) Swap(i, j int)          { l[i], l[j] = l[j], l[i] }
+func (l ServiceList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // Len in list-sort for EndpointList
-func (l EndpointList) Len() int              { return len(l) }
+func (l EndpointList) Len() int { return len(l) }
+
 // Less in list-sort for EndpointList
-func (l EndpointList) Less(i, j int) bool    { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l EndpointList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+
 // Swap in list-sort for EndpointList
-func (l EndpointList) Swap(i, j int)         { l[i], l[j] = l[j], l[i] }
+func (l EndpointList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // Len in list-sort for DeploymentList
-func (l DeploymentList) Len() int            { return len(l) }
+func (l DeploymentList) Len() int { return len(l) }
+
 // Less in list-sort for DeploymentList
 func (l DeploymentList) Less(i, j int) bool {
 	return l[i].Data.ObjectMeta.NameSpace > l[j].Data.ObjectMeta.NameSpace
 }
+
 // Swap in list-sort for DeploymentList
 func (l DeploymentList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }

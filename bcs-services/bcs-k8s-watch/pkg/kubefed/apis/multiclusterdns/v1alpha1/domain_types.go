@@ -20,7 +20,7 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Domain
+// Domain xxx
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:path=domains
 type Domain struct {

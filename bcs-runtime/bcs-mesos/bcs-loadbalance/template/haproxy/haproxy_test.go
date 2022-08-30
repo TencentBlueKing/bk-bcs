@@ -100,7 +100,7 @@ func TestRenderTemplate(t *testing.T) {
 		config.generateRenderData()
 		var err error
 		var tmpl *template.Template
-		//loading template file
+		// loading template file
 		tmpl, err = template.ParseFiles("../../image/config/haproxy.cfg.template")
 		if err != nil {
 			t.Error(err.Error())

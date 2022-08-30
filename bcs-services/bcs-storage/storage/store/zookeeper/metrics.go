@@ -39,7 +39,7 @@ func init() {
 	prometheus.MustRegister(operatorLatency)
 }
 
-//reportAPIMetrics report all zookeeper operation metrics
+// reportZKMetrics report all zookeeper operation metrics
 func reportZKMetrics(method, status string, started time.Time) {
 	operatorTotal.WithLabelValues(method, status).Inc()
 	go operatorLatency.WithLabelValues(method, status).Observe(time.Since(started).Seconds())

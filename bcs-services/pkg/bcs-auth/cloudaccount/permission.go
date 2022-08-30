@@ -31,7 +31,8 @@ func NewBCSAccountPermClient(cli iam.PermClient) *BCSCloudAccountPerm {
 }
 
 // CanManageCloudAccount check user manageAccount perm
-func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user string, projectID string, accountID string) (bool, string, error) {
+func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user string, projectID string, accountID string) (bool, string,
+	error) {
 	if bcp == nil {
 		return false, "", utils.ErrServerNotInited
 	}
@@ -53,7 +54,8 @@ func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user string, projectID str
 		ProjectID: projectID, AccountID: accountID}.BuildResourceNodes()
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
 
-	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{accountNode, projectNode})
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{accountNode,
+		projectNode})
 	if err != nil {
 		return false, "", err
 	}
@@ -94,7 +96,8 @@ func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user string, projectID str
 }
 
 // CanUseCloudAccount check user use cloudAccount perm
-func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user string, projectID string, accountID string) (bool, string, error) {
+func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user string, projectID string, accountID string) (bool, string,
+	error) {
 	if bcp == nil {
 		return false, "", utils.ErrServerNotInited
 	}
@@ -116,7 +119,8 @@ func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user string, projectID string
 		ProjectID: projectID, AccountID: accountID}.BuildResourceNodes()
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
 
-	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{accountNode, projectNode})
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{accountNode,
+		projectNode})
 	if err != nil {
 		return false, "", err
 	}
@@ -157,7 +161,8 @@ func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user string, projectID string
 }
 
 // GetMultiAccountMultiActionPermission only support same instanceSelection
-func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPermission(user, projectID string, accountIDs []string, actionIDs []string) (map[string]map[string]bool, error) {
+func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPermission(user, projectID string, accountIDs []string,
+	actionIDs []string) (map[string]map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited
 	}
@@ -176,7 +181,8 @@ func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPermission(user, proje
 }
 
 // GenerateIAMApplicationURL build permission URL
-func (bcp *BCSCloudAccountPerm) GenerateIAMApplicationURL(systemID string, applications []iam.ApplicationAction) (string, error) {
+func (bcp *BCSCloudAccountPerm) GenerateIAMApplicationURL(systemID string, applications []iam.ApplicationAction) (
+	string, error) {
 	if bcp == nil {
 		return iam.IamAppURL, utils.ErrServerNotInited
 	}

@@ -23,23 +23,24 @@ import (
 
 // ClusterInterface 集群 API 元信息 需要实现的方法
 type ClusterInterface interface {
-	GetAPIVersions(ctx context.Context) (*metav1.APIVersions, error)                                          // api 返回
-	ServerCoreV1Resources(ctx context.Context) (*metav1.APIResourceList, error)                               // api/v1 返回
-	GetServerGroups(ctx context.Context) (*metav1.APIGroupList, error)                                        // apis 返回
-	ServerResourcesForGroupVersion(ctx context.Context, groupVersion string) (*metav1.APIResourceList, error) // apis/{group}/{version} 返回
+	GetAPIVersions(ctx context.Context) (*metav1.APIVersions, error)            // api 返回
+	ServerCoreV1Resources(ctx context.Context) (*metav1.APIResourceList, error) // api/v1 返回
+	GetServerGroups(ctx context.Context) (*metav1.APIGroupList, error)          // apis 返回
+	ServerResourcesForGroupVersion(ctx context.Context, groupVersion string) (*metav1.APIResourceList,
+		error) // apis/{group}/{version} 返回
 }
 
-// ClusterHandler
+// ClusterHandler xxx
 type ClusterHandler struct {
 	handler ClusterInterface
 }
 
-// NewClusterHandler
+// NewClusterHandler xxx
 func NewClusterHandler(handler ClusterInterface) *ClusterHandler {
 	return &ClusterHandler{handler: handler}
 }
 
-// Service Resource Verb Handler
+// Serve Resource Verb Handler
 func (h *ClusterHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object

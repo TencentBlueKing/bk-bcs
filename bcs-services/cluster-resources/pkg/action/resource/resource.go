@@ -53,7 +53,8 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 }
 
 // List 请求某类资源（指定命名空间）下的所有资源列表，按指定 format 格式化后返回
-func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1.ListOptions) (*structpb.Struct, error) {
+func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1.ListOptions) (*structpb.Struct,
+	error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
@@ -61,7 +62,8 @@ func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1
 }
 
 // Get 请求某个资源详情，按指定 Format 格式化后返回
-func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts metav1.GetOptions) (*structpb.Struct, error) {
+func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts metav1.GetOptions) (*structpb.Struct,
+	error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
@@ -166,7 +168,7 @@ func (m *ResMgr) Delete(ctx context.Context, namespace, name string, opts metav1
 	return resp.BuildDeleteAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, opts)
 }
 
-// 访问权限检查（如共享集群禁用等）
+// checkAccess 访问权限检查（如共享集群禁用等）
 func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map[string]interface{}) error {
 	clusterInfo, err := cluster.GetClusterInfo(ctx, m.ClusterID)
 	if err != nil {

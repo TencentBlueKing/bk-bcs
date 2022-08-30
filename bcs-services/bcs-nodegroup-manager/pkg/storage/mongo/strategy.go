@@ -83,7 +83,8 @@ func (m *ModelStrategy) ListNodeGroupStrategies(opt *storage.ListOptions) ([]*st
 }
 
 // GetNodeGroupStrategy 通过name查询单个NodeGroupMgrStrategy
-func (m *ModelStrategy) GetNodeGroupStrategy(name string, opt *storage.GetOptions) (*storage.NodeGroupMgrStrategy, error) {
+func (m *ModelStrategy) GetNodeGroupStrategy(name string, opt *storage.GetOptions) (*storage.NodeGroupMgrStrategy,
+	error) {
 	ctx := context.Background()
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {

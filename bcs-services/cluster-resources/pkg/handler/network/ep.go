@@ -26,7 +26,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// ListEP ...
+// ListEP xxx
 func (h *Handler) ListEP(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -42,7 +42,7 @@ func (h *Handler) ListEP(
 	return err
 }
 
-// GetEP ...
+// GetEP xxx
 func (h *Handler) GetEP(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -58,7 +58,7 @@ func (h *Handler) GetEP(
 	return err
 }
 
-// CreateEP ...
+// CreateEP xxx
 func (h *Handler) CreateEP(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -68,7 +68,7 @@ func (h *Handler) CreateEP(
 	return err
 }
 
-// UpdateEP ...
+// UpdateEP xxx
 func (h *Handler) UpdateEP(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -78,7 +78,7 @@ func (h *Handler) UpdateEP(
 	return err
 }
 
-// DeleteEP ...
+// DeleteEP xxx
 func (h *Handler) DeleteEP(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -72,7 +73,7 @@ func RunMetric(conf *config.UserMgrConfig) {
 	blog.Infof("run metric ok")
 }
 
-//ReportRequestAPIMetrics report API request metrics
+// ReportRequestAPIMetrics report API request metrics
 func ReportRequestAPIMetrics(handler, method, status string, started time.Time) {
 	requestCount.WithLabelValues(handler, method, status).Inc()
 	requestLatency.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())

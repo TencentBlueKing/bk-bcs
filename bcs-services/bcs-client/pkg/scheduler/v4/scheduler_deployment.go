@@ -18,14 +18,17 @@ import (
 	"net/http"
 )
 
+// ResumeDeployment xxx
 func (bs *bcsScheduler) ResumeDeployment(clusterID, namespace, name string) error {
 	return bs.resumeDeployment(clusterID, namespace, name)
 }
 
+// CancelDeployment xxx
 func (bs *bcsScheduler) CancelDeployment(clusterID, namespace, name string) error {
 	return bs.cancelDeployment(clusterID, namespace, name)
 }
 
+// PauseDeployment xxx
 func (bs *bcsScheduler) PauseDeployment(clusterID, namespace, name string) error {
 	return bs.pauseDeployment(clusterID, namespace, name)
 }

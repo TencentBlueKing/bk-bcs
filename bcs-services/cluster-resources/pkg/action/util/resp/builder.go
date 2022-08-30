@@ -27,7 +27,8 @@ import (
 )
 
 // NewRespDataBuilder 根据 Format 类型，生成不同的 Retrieve 请求响应数据生成器
-func NewRespDataBuilder(ctx context.Context, manifest map[string]interface{}, kind, format string) (DataBuilder, error) {
+func NewRespDataBuilder(ctx context.Context, manifest map[string]interface{}, kind, format string) (DataBuilder,
+	error) {
 	switch format {
 	case action.DefaultFormat, action.ManifestFormat:
 		return &ManifestRespBuilder{ctx: ctx, manifest: manifest, kind: kind}, nil
@@ -47,7 +48,7 @@ type ManifestRespBuilder struct {
 	kind     string
 }
 
-// BuildList ...
+// BuildList xxx
 func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 	manifestExt := map[string]interface{}{}
 	formatFunc := formatter.GetFormatFunc(b.kind)
@@ -59,7 +60,7 @@ func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 	return map[string]interface{}{"manifest": b.manifest, "manifestExt": manifestExt}, nil
 }
 
-// Build ...
+// Build xxx
 func (b *ManifestRespBuilder) Build() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"manifest":    b.manifest,
@@ -74,12 +75,12 @@ type FormDataRespBuilder struct {
 	kind     string
 }
 
-// BuildList ...
+// BuildList xxx
 func (b *FormDataRespBuilder) BuildList() (map[string]interface{}, error) {
 	return nil, errorx.New(errcode.Unsupported, "FormDataRespBuilder.BuildList is unsupported")
 }
 
-// Build ...
+// Build xxx
 func (b *FormDataRespBuilder) Build() (map[string]interface{}, error) {
 	parseFunc, err := parser.GetResParseFunc(b.ctx, b.kind)
 	if err != nil {
@@ -97,7 +98,7 @@ type SelectItemsRespBuilder struct {
 	kind     string
 }
 
-// BuildList ...
+// BuildList xxx
 func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
 	// 取每个 K8S 资源的名称，作为下拉框选项
 	selectItems := []interface{}{}
@@ -110,7 +111,7 @@ func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
 	return map[string]interface{}{"selectItems": selectItems}, nil
 }
 
-// Build ...
+// Build xxx
 func (b *SelectItemsRespBuilder) Build() (map[string]interface{}, error) {
 	return nil, errorx.New(errcode.Unsupported, "SelectItemsRespBuilder.Build is unsupported")
 }

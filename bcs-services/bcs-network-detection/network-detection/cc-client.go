@@ -24,10 +24,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
 )
 
-//CmdbClient client for cmdb
+// CmdbClient client for cmdb
 type CmdbClient struct {
 	conf *config.Config
-	//esb client
+	// esb client
 	esb *esb.EsbClient
 }
 
@@ -37,7 +37,7 @@ func NewCmdbClient(conf *config.Config) (*CmdbClient, error) {
 		conf: conf,
 	}
 
-	//new esb client
+	// new esb client
 	var err error
 	cmdb.esb, err = esb.NewEsbClient(conf.AppCode, conf.AppSecret, conf.Operator, conf.EsbUrl)
 	if err != nil {
@@ -49,7 +49,7 @@ func NewCmdbClient(conf *config.Config) (*CmdbClient, error) {
 
 func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo) error {
 	payload := make(map[string]interface{})
-	//init request cmdb payload info
+	// init request cmdb payload info
 	payload["header_on"] = 0
 	payload["output_type"] = "json"
 	payload["host_std_key_values"] = map[string]string{
@@ -60,13 +60,13 @@ func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo) error {
 	payload["method"] = "getTopoModuleHostList"
 	payload["host_std_req_column"] = []string{"IDC", "serverRack", "ModuleName", "IDCUnit"}
 
-	//request cmdb through esb
+	// request cmdb through esb
 	by, err := c.esb.RequestEsb(http.MethodPost, "/component/compapi/cc/get_query_info", payload)
 	if err != nil {
 		return err
 	}
 
-	//Unmarshal CmdbHostInfo
+	// Unmarshal CmdbHostInfo
 	var hosts []*types.CmdbHostInfo
 	err = json.Unmarshal(by, &hosts)
 	if err != nil {
@@ -77,7 +77,7 @@ func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo) error {
 		return fmt.Errorf("node %s not found, response(%s)", node.Ip, string(by))
 	}
 
-	//update node info
+	// update node info
 	node.Idc = hosts[0].IDC
 	node.Module = hosts[0].ModuleName
 	node.IdcUnit = hosts[0].IDCUnit

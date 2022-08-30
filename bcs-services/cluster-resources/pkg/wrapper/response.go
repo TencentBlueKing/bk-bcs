@@ -59,12 +59,12 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 	}
 }
 
-// 获取 Context 中的 RequestID
+// getRequestID 获取 Context 中的 RequestID
 func getRequestID(ctx context.Context) string {
 	return fmt.Sprintf("%s", ctx.Value(ctxkey.RequestIDKey))
 }
 
-// 根据不同的错误类型，获取错误信息 & 错误码
+// getRespMsgCode 根据不同的错误类型，获取错误信息 & 错误码
 func getRespMsgCode(err interface{}) (string, int32) {
 	if err == nil {
 		return "OK", errcode.NoErr
@@ -82,7 +82,7 @@ func getRespMsgCode(err interface{}) (string, int32) {
 	}
 }
 
-// 根据不同错误类型，更新 Data 字段信息
+// genNewRespData 根据不同错误类型，更新 Data 字段信息
 func genNewRespData(err interface{}) *structpb.Struct {
 	switch e := err.(type) {
 	case *perm.IAMPermError:

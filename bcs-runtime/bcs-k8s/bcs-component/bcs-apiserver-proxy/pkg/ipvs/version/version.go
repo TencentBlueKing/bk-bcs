@@ -11,6 +11,7 @@
  *
  */
 
+// Package version xxx
 package version
 
 import (
@@ -33,7 +34,8 @@ var (
 	// versionMatchRE splits a version string into numeric and "extra" parts
 	versionMatchRE = regexp.MustCompile(`^\s*v?([0-9]+(?:\.[0-9]+)*)(.*)*$`)
 	// extraMatchRE splits the "extra" part of versionMatchRE into semver pre-release and build metadata; it does not validate the "no leading zeroes" constraint for pre-release
-	extraMatchRE = regexp.MustCompile(`^(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?\s*$`)
+	extraMatchRE = regexp.MustCompile(
+		`^(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?\s*$`)
 )
 
 func parse(str string, semver bool) (*Version, error) {
@@ -274,6 +276,7 @@ func (v *Version) compareInternal(other *Version) int {
 	return 0
 }
 
+// onlyZeros xxx
 // returns false if array contain any non-zero element
 func onlyZeros(array []uint) bool {
 	for _, num := range array {

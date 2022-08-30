@@ -116,6 +116,7 @@ func initQueueClient(queueConf config.QueueConfig) (msgqueue.MessageQueue, error
 	return queueClient, nil
 }
 
+// parseQueueArguments xxx
 // https://github.com/streadway/amqp/blob/master/channel.go
 // amqp channel.go: QueueDeclare limit value type: nil, bool, byte, int, int16, int32, int64, float32, float64, string, []byte, Decimal, time.Time
 func parseQueueArguments(queueArguments map[string]interface{}) map[string]interface{} {

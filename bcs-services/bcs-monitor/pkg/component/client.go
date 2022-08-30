@@ -112,7 +112,7 @@ func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
 	return nil
 }
 
-// GetClient
+// GetClient xxx
 func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {

@@ -113,8 +113,13 @@ func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGro
 // taskSorter bia name of []TaskGroup
 type taskSorter []*types.TaskGroup
 
-func (s taskSorter) Len() int      { return len(s) }
+// Len 用于排序
+func (s taskSorter) Len() int { return len(s) }
+
+// Swap 用于排序
 func (s taskSorter) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+// Less 用于排序
 func (s taskSorter) Less(i, j int) bool {
 
 	// for index of taskgroup, example for 0,1,2,3...
@@ -124,6 +129,7 @@ func (s taskSorter) Less(i, j int) bool {
 	return a < b
 }
 
+// FetchTaskgroupByIndex xxx
 func (store *managerStore) FetchTaskgroupByIndex(runAs, appID string, index int) (*types.TaskGroup, error) {
 	taskgroups, err := store.ListTaskGroups(runAs, appID)
 	if err != nil {
@@ -139,6 +145,7 @@ func (store *managerStore) FetchTaskgroupByIndex(runAs, appID string, index int)
 	return taskgroups[index], nil
 }
 
+// FetchTaskgroupByName xxx
 func (store *managerStore) FetchTaskgroupByName(runAs, appID string, name string) (*types.TaskGroup, error) {
 	taskgroups, err := store.ListTaskGroups(runAs, appID)
 	if err != nil {
@@ -202,7 +209,7 @@ func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup,
 	return store.FetchDBTaskGroup(taskGroupID)
 }
 
-// FetchTaskGroup fetch a types.TaskGroup
+// FetchDBTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 
 	path, err := createTaskGroupPath(taskGroupID)
@@ -244,6 +251,7 @@ func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGrou
 	return &taskGroup, nil
 }
 
+// ListClusterTaskgroups xxx
 // list mesos cluster taskgroups, include: application、deployment...
 func (store *managerStore) ListClusterTaskgroups() ([]*types.TaskGroup, error) {
 	apps, err := store.ListAllApplications()

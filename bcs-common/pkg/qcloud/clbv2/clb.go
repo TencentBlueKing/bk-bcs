@@ -18,7 +18,7 @@ import (
 	"net/url"
 )
 
-//DescribeLBInput query LoadBalance instance info in clb
+// DescribeLBInput query LoadBalance instance info in clb
 type DescribeLBInput struct {
 	APIMeta         `url:",inline"`
 	Forward         int    `url:"forward,omitempty"`
@@ -28,14 +28,14 @@ type DescribeLBInput struct {
 	ProjectID       int    `url:"projectId,omitempty"`
 }
 
-//DescribeLBOutput DescribeLB result
+// DescribeLBOutput DescribeLB result
 type DescribeLBOutput struct {
 	Response     `json:",inline"`
 	TotalCount   int               `json:"totalCount"`
 	LoadBalances []LoadBalanceInfo `json:"loadBalancerSet"`
 }
 
-//LoadBalanceInfo sub info of DescribeLBResp
+// LoadBalanceInfo sub info of DescribeLBResp
 type LoadBalanceInfo struct {
 	CreateTime       string   `json:"createTime"`
 	LoadBalancerID   string   `json:"loadBalancerId"`
@@ -54,7 +54,7 @@ type LoadBalanceInfo struct {
 	StatusTime       string   `json:"statusTime"`
 }
 
-//DescribeListenerInput query LoadBalance listener info in clb
+// DescribeListenerInput query LoadBalance listener info in clb
 type DescribeListenerInput struct {
 	APIMeta          `url:",inline"`
 	ListenerID       string `url:"listenerIds.0,omitempty"`
@@ -63,7 +63,7 @@ type DescribeListenerInput struct {
 	Protocol         int    `url:"protocol,omitempty"`
 }
 
-//DescribeListenerOutput DescribeListener result
+// DescribeListenerOutput DescribeListener result
 type DescribeListenerOutput struct {
 	Response  `json:",inline"`
 	Listeners []ListenerInfo `json:"listenerSet"`
@@ -84,7 +84,7 @@ type DescribeForwardLBListenersOutput struct {
 	Listeners []ListenerInfo `json:"listenerSet"`
 }
 
-//ListenerInfo sub info of DescribeListenerResp
+// ListenerInfo sub info of DescribeListenerResp
 type ListenerInfo struct {
 	LoadBalancerPort int        `json:"loadBalancerPort"`
 	EndPort          int        `json:"endPort"`
@@ -97,7 +97,7 @@ type ListenerInfo struct {
 	Rules            []RuleInfo `json:"rules"`
 }
 
-//RuleInfo sub info of ListenerInfo
+// RuleInfo sub info of ListenerInfo
 type RuleInfo struct {
 	LocationID      string `json:"locationId"`
 	Domain          string `json:"domain"`
@@ -114,7 +114,7 @@ type RuleInfo struct {
 	HTTPCheckMethod string `json:"httpCheckMethod"`
 }
 
-//CreateLBInput create clb instance info
+// CreateLBInput create clb instance info
 type CreateLBInput struct {
 	APIMeta          `url:",inline"`
 	Forward          int    `url:"forward,omitempty"`
@@ -125,7 +125,7 @@ type CreateLBInput struct {
 	VpcID            string `url:"vpcId,omitempty"`
 }
 
-//CreateLBOutput create lb result
+// CreateLBOutput create lb result
 type CreateLBOutput struct {
 	Response          `json:",inline"`
 	UnLoadBalancerIds map[string][]string `json:"unLoadBalancerIds"`
@@ -133,7 +133,7 @@ type CreateLBOutput struct {
 	DealIds           []string            `json:"dealIds"`
 }
 
-//CreateSeventhLayerListenerInput create 7 layer listener info
+// CreateSeventhLayerListenerInput create 7 layer listener info
 type CreateSeventhLayerListenerInput struct {
 	APIMeta                   `url:",inline"`
 	ListenersCertID           string `url:"listeners.0.certId,omitempty"`
@@ -150,16 +150,16 @@ type CreateSeventhLayerListenerInput struct {
 	LoadBalanceID             string `url:"loadBalancerId,omitempty"`
 }
 
-//CreateSeventhLayerListenerOutput create 7 layer listener response
+// CreateSeventhLayerListenerOutput create 7 layer listener response
 type CreateSeventhLayerListenerOutput struct {
 	Response    `json:",inline"`
 	ListenerIds []string `json:"listenerIds"`
 }
 
-//CreateForwardLBFourthLayerListenersInput create 4 lay listener info
-//4层协议没有加密证书
-//文档地址 https://cloud.tencent.com/document/api/214/9001
-//没有摘取的值都是用默认值
+// CreateForwardLBFourthLayerListenersInput create 4 lay listener info
+// 4层协议没有加密证书
+// 文档地址 https://cloud.tencent.com/document/api/214/9001
+// 没有摘取的值都是用默认值
 type CreateForwardLBFourthLayerListenersInput struct {
 	APIMeta                   `url:",inline"`
 	ListenersListenerName     string `url:"listeners.0.listenerName"`
@@ -262,7 +262,7 @@ type ModifyForwardLBRulesDomainOutput struct {
 	AsynchronousBaseResponse `json:",inline"`
 }
 
-//RegisterInstancesWithForwardLBSeventhListenerInput register instance info 7 layer
+// RegisterInstancesWithForwardLBSeventhListenerInput register instance info 7 layer
 type RegisterInstancesWithForwardLBSeventhListenerInput struct {
 	APIMeta       `url:",inline"`
 	Backends      BackendTargetList
@@ -272,12 +272,12 @@ type RegisterInstancesWithForwardLBSeventhListenerInput struct {
 	URL           string `url:"url,omitempty"`
 }
 
-//RegisterInstancesWithForwardLBSeventhListenerOutput register instance response
+// RegisterInstancesWithForwardLBSeventhListenerOutput register instance response
 type RegisterInstancesWithForwardLBSeventhListenerOutput struct {
 	AsynchronousBaseResponse
 }
 
-//BackendTarget backend to be registered with loadbalance
+// BackendTarget backend to be registered with loadbalance
 type BackendTarget struct {
 	BackendsInstanceID string
 	BackendsIP         string
@@ -285,10 +285,10 @@ type BackendTarget struct {
 	BackendsWeight     int
 }
 
-//BackendTargetList backend list
+// BackendTargetList backend list
 type BackendTargetList []BackendTarget
 
-//EncodeValues encode backend target info into url format
+// EncodeValues encode backend target info into url format
 func (btl BackendTargetList) EncodeValues(key string, urlv *url.Values) error {
 	for i, v := range btl {
 		if len(v.BackendsInstanceID) != 0 {
@@ -303,7 +303,7 @@ func (btl BackendTargetList) EncodeValues(key string, urlv *url.Values) error {
 	return nil
 }
 
-//RegisterInstancesWithForwardLBFourthListenerInput regitster instance info 4 layer
+// RegisterInstancesWithForwardLBFourthListenerInput regitster instance info 4 layer
 type RegisterInstancesWithForwardLBFourthListenerInput struct {
 	APIMeta       `url:",inline"`
 	Backends      BackendTargetList
@@ -311,22 +311,22 @@ type RegisterInstancesWithForwardLBFourthListenerInput struct {
 	LoadBalanceID string `url:"loadBalancerId,omitempty"`
 }
 
-//RegisterInstancesWithForwardLBFourthListenerOutput register 4 layer result
+// RegisterInstancesWithForwardLBFourthListenerOutput register 4 layer result
 type RegisterInstancesWithForwardLBFourthListenerOutput struct {
 	AsynchronousBaseResponse
 }
 
-//DeregisterInstancesFromForwardLBFourthListenerInput deregister 4 layer info
+// DeregisterInstancesFromForwardLBFourthListenerInput deregister 4 layer info
 type DeregisterInstancesFromForwardLBFourthListenerInput struct {
 	RegisterInstancesWithForwardLBFourthListenerInput
 }
 
-//DeregisterInstancesFromForwardLBFourthListenerOutput deregister 4 layer result
+// DeregisterInstancesFromForwardLBFourthListenerOutput deregister 4 layer result
 type DeregisterInstancesFromForwardLBFourthListenerOutput struct {
 	AsynchronousBaseResponse
 }
 
-//DeregisterInstancesFromForwardLBSeventhListenerInput deregister 7 layer target info
+// DeregisterInstancesFromForwardLBSeventhListenerInput deregister 7 layer target info
 type DeregisterInstancesFromForwardLBSeventhListenerInput struct {
 	APIMeta       `url:",inline"`
 	Backends      BackendTargetList
@@ -335,24 +335,24 @@ type DeregisterInstancesFromForwardLBSeventhListenerInput struct {
 	LocationID    string `url:"locationIds.0,omitempty"`
 }
 
-//DeregisterInstancesFromForwardLBSeventhListenerOutput deregister 7 layer result
+// DeregisterInstancesFromForwardLBSeventhListenerOutput deregister 7 layer result
 type DeregisterInstancesFromForwardLBSeventhListenerOutput struct {
 	AsynchronousBaseResponse
 }
 
-//ModifyForwardFourthBackendsInput modify 4 layer backends weight input
+// ModifyForwardFourthBackendsInput modify 4 layer backends weight input
 type ModifyForwardFourthBackendsInput struct {
 	LoadbalanceID string `json:"loadBalancerId"`
 	ListenerID    string `json:"listenerId"`
 	Backends      BackendTargetList
 }
 
-//ModifyForwardFourthBackendsOutput modify 4 layer backends weight output
+// ModifyForwardFourthBackendsOutput modify 4 layer backends weight output
 type ModifyForwardFourthBackendsOutput struct {
 	AsynchronousBaseResponse
 }
 
-//ModifyForwardSeventhBackendsInput modify 7 layer backends weight input
+// ModifyForwardSeventhBackendsInput modify 7 layer backends weight input
 type ModifyForwardSeventhBackendsInput struct {
 	LoadbalanceID string `json:"loadBalancerId"`
 	ListenerID    string `json:"listenerId"`
@@ -360,35 +360,35 @@ type ModifyForwardSeventhBackendsInput struct {
 	Backends      BackendTargetList
 }
 
-//ModifyForwardSeventhBackendsOutput modify 7 layer backends weight output
+// ModifyForwardSeventhBackendsOutput modify 7 layer backends weight output
 type ModifyForwardSeventhBackendsOutput struct {
 	AsynchronousBaseResponse
 }
 
-//AsynchronousBaseResponse base async response
+// AsynchronousBaseResponse base async response
 type AsynchronousBaseResponse struct {
 	Response  `json:",inline"`
 	RequestID int `json:"requestId"`
 }
 
-//DescribeLoadBalancersTaskResultInput describe lb task result input
+// DescribeLoadBalancersTaskResultInput describe lb task result input
 type DescribeLoadBalancersTaskResultInput struct {
 	APIMeta   `url:",inline"`
 	RequestID int `url:"requestId,omitempty"`
 }
 
-//DescribeLoadBalancersTaskResultOutput describe lb task result output
+// DescribeLoadBalancersTaskResultOutput describe lb task result output
 type DescribeLoadBalancersTaskResultOutput struct {
 	Response `json:",inline"`
 	Data     TaskStatus `json:"data"`
 }
 
-//TaskStatus task status of lb task
+// TaskStatus task status of lb task
 type TaskStatus struct {
 	Status int `json:"status"`
 }
 
-//CreateForwardLBListenerRulesInput input of create forward loadbalance listener
+// CreateForwardLBListenerRulesInput input of create forward loadbalance listener
 type CreateForwardLBListenerRulesInput struct {
 	APIMeta       `url:",inline"`
 	ListenerID    string `url:"listenerId,omitempty"`
@@ -402,7 +402,7 @@ type CreateForwardLBListenerRulesInput struct {
 	// RuleURL           string `url:"rules.0.url,omitempty"`
 }
 
-//RuleCreateInfo rule info for creation
+// RuleCreateInfo rule info for creation
 type RuleCreateInfo struct {
 	RuleDomain        string
 	RuleURL           string
@@ -416,10 +416,10 @@ type RuleCreateInfo struct {
 	RuleSessionExpire int
 }
 
-//RuleCreateInfoList rule list
+// RuleCreateInfoList rule list
 type RuleCreateInfoList []RuleCreateInfo
 
-//EncodeValues encode rule info list
+// EncodeValues encode rule info list
 func (list RuleCreateInfoList) EncodeValues(key string, urlv *url.Values) error {
 	for i, v := range list {
 		urlv.Set(fmt.Sprintf("rules.%d.domain", i), fmt.Sprintf("%v", v.RuleDomain))
@@ -440,12 +440,12 @@ func (list RuleCreateInfoList) EncodeValues(key string, urlv *url.Values) error 
 	return nil
 }
 
-//CreateForwardLBListenerRulesOutput create forward lb listener rule result
+// CreateForwardLBListenerRulesOutput create forward lb listener rule result
 type CreateForwardLBListenerRulesOutput struct {
 	AsynchronousBaseResponse
 }
 
-//DeleteForwardLBListenerRulesInput input of delete loadbalance listener rule
+// DeleteForwardLBListenerRulesInput input of delete loadbalance listener rule
 type DeleteForwardLBListenerRulesInput struct {
 	APIMeta        `url:",inline"`
 	LoadBalanceID  string `url:"loadBalancerId"`
@@ -455,13 +455,13 @@ type DeleteForwardLBListenerRulesInput struct {
 	Url            string `url:"url,omitempty"`
 }
 
-//RuleID rule id
+// RuleID rule id
 type RuleID string
 
-//RuleIDList rule id list
+// RuleIDList rule id list
 type RuleIDList []RuleID
 
-//EncodeValues encode rule id list
+// EncodeValues encode rule id list
 func (list RuleIDList) EncodeValues(key string, urlv *url.Values) error {
 	for i, v := range list {
 		urlv.Set(fmt.Sprintf("locationIds.%d", i), string(v))
@@ -469,12 +469,12 @@ func (list RuleIDList) EncodeValues(key string, urlv *url.Values) error {
 	return nil
 }
 
-//DeleteForwardLBListenerRulesOutput output of delete loadbalance listener rule
+// DeleteForwardLBListenerRulesOutput output of delete loadbalance listener rule
 type DeleteForwardLBListenerRulesOutput struct {
 	AsynchronousBaseResponse
 }
 
-//CreateSecurityGroupInput info to create security group
+// CreateSecurityGroupInput info to create security group
 type CreateSecurityGroupInput struct {
 	APIMeta   `url:",inline"`
 	SgName    string `url:"sgName,omitempty"`
@@ -482,41 +482,41 @@ type CreateSecurityGroupInput struct {
 	ProjectID int    `url:"projectId,omitempty"`
 }
 
-//CreateSecurityGroupOutput create security group api response
+// CreateSecurityGroupOutput create security group api response
 type CreateSecurityGroupOutput struct {
 	Code    int             `json:"code"`
 	Message string          `json:"message"`
 	SgInfo  SecureGroupInfo `json:"data"`
 }
 
-//SecureGroupInfo security group info
+// SecureGroupInfo security group info
 type SecureGroupInfo struct {
 	SgID     string `json:"sgId"`
 	SgName   string `json:"sgName"`
 	SgRemark string `json:"sgRemark"`
 }
 
-//DescribeSecurityGroupPolicysInput describe security group policys info
+// DescribeSecurityGroupPolicysInput describe security group policys info
 type DescribeSecurityGroupPolicysInput struct {
 	APIMeta `url:",inline"`
 	SgID    string `url:"sgId,omitempty"`
 }
 
-//DescribeSecurityGroupPolicysOutput get describe security group policy result
+// DescribeSecurityGroupPolicysOutput get describe security group policy result
 type DescribeSecurityGroupPolicysOutput struct {
 	Code    int               `json:"code"`
 	Message string            `json:"message"`
 	Data    IngressEgressData `json:"data"`
 }
 
-//IngressEgressData include ingress and egress information
+// IngressEgressData include ingress and egress information
 type IngressEgressData struct {
 	SgID         string                   `json:"sgId"`
 	IngressInfos []SecurityGroupGressInfo `json:"ingress"`
 	EgressInfos  []SecurityGroupGressInfo `json:"egress"`
 }
 
-//SecurityGroupGressInfo ingress/egress information
+// SecurityGroupGressInfo ingress/egress information
 type SecurityGroupGressInfo struct {
 	Index         int    `json:"index"`
 	AddressModule string `json:"addressModule"`
@@ -530,7 +530,7 @@ type SecurityGroupGressInfo struct {
 	Version       int    `json:"version"`
 }
 
-//CreateSecurityGroupPolicyInput create security group policy input info
+// CreateSecurityGroupPolicyInput create security group policy input info
 type CreateSecurityGroupPolicyInput struct {
 	APIMeta             `url:",inline"`
 	Direction           string `url:"direction,omitempty"`
@@ -546,13 +546,13 @@ type CreateSecurityGroupPolicyInput struct {
 	SgID                string `url:"sgId,omitempty"`
 }
 
-//CreateSecurityGroupPolicyOutput create security group policy result
+// CreateSecurityGroupPolicyOutput create security group policy result
 type CreateSecurityGroupPolicyOutput struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
-//ModifySingleSecurityGroupPolicyInput modify security group policy input
+// ModifySingleSecurityGroupPolicyInput modify security group policy input
 type ModifySingleSecurityGroupPolicyInput struct {
 	APIMeta          `url:",inline"`
 	Direction        string `url:"direction,omitempty"`
@@ -565,28 +565,28 @@ type ModifySingleSecurityGroupPolicyInput struct {
 	SgId             string `url:"sgId,omitempty"`
 }
 
-//ModifySingleSecurityGroupPolicyOutput modify security group policy output
+// ModifySingleSecurityGroupPolicyOutput modify security group policy output
 type ModifySingleSecurityGroupPolicyOutput struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
-//DeleteForwardLBListenerInput delete listener api input
+// DeleteForwardLBListenerInput delete listener api input
 type DeleteForwardLBListenerInput struct {
 	APIMeta       `url:",inline"`
 	ListenerID    string `url:"listenerId,omitempty"`
 	LoadBalanceID string `url:"loadBalancerId,omitempty"`
 }
 
-//DeleteForwardLBListenerOutput delete listener api output
+// DeleteForwardLBListenerOutput delete listener api output
 type DeleteForwardLBListenerOutput struct {
 	AsynchronousBaseResponse
 }
 
-//ModifySecurityGroupsOfInstanceInput modify security group of cvm instance
-//doc: https://cloud.tencent.com/document/api/213/9381
-//SecurityGroups1 string `url:"SecurityGroups.0,omitempty"`
-//SecurityGroups2 string `url:"SecurityGroups.1,omitempty"`
+// ModifySecurityGroupsOfInstanceInput modify security group of cvm instance
+// doc: https://cloud.tencent.com/document/api/213/9381
+// SecurityGroups1 string `url:"SecurityGroups.0,omitempty"`
+// SecurityGroups2 string `url:"SecurityGroups.1,omitempty"`
 type ModifySecurityGroupsOfInstanceInput struct {
 	APIMeta        `url:",inline"`
 	InstanceID     string `url:"InstanceIds.0,omitempty"`
@@ -594,10 +594,10 @@ type ModifySecurityGroupsOfInstanceInput struct {
 	Version        string `url:"Version,omitempty"`
 }
 
-//SecurityGroupList security group list
+// SecurityGroupList security group list
 type SecurityGroupList []string
 
-//EncodeValues encode security group list info into url format
+// EncodeValues encode security group list info into url format
 func (sgs SecurityGroupList) EncodeValues(key string, urlv *url.Values) error {
 	for i, v := range sgs {
 		primary := fmt.Sprintf("SecurityGroups.%d", i)
@@ -606,7 +606,7 @@ func (sgs SecurityGroupList) EncodeValues(key string, urlv *url.Values) error {
 	return nil
 }
 
-//DescribeForwardLBBackendsInput list clb targets
+// DescribeForwardLBBackendsInput list clb targets
 type DescribeForwardLBBackendsInput struct {
 	APIMeta          `url:",inline"`
 	ListenerID       string `url:"listenerIds.0,omitempty"`
@@ -615,13 +615,13 @@ type DescribeForwardLBBackendsInput struct {
 	Protocol         int    `url:"protocol,omitempty"`
 }
 
-//DescribeForwardLBBackendsOutput describe forward lb backend response
+// DescribeForwardLBBackendsOutput describe forward lb backend response
 type DescribeForwardLBBackendsOutput struct {
 	Response
 	Data []ListenerDetail `json:"data"`
 }
 
-//CommonInfo common information
+// CommonInfo common information
 type CommonInfo struct {
 	LoadBalancerPort int    `json:"loadBalancerPort"`
 	Protocol         int    `json:"protocol"`
@@ -629,14 +629,14 @@ type CommonInfo struct {
 	ListenerID       string `json:"listenerId"`
 }
 
-//ListenerDetail one listener datail
+// ListenerDetail one listener datail
 type ListenerDetail struct {
 	CommonInfo
 	Rules    []RuleDetail     `json:"rules,omitempty"`
 	Backends []InstanceDetail `json:"backends,omitempty"`
 }
 
-//RuleDetail describe one listener rule info
+// RuleDetail describe one listener rule info
 type RuleDetail struct {
 	LocationID string           `json:"locationId"`
 	Domain     string           `json:"domain"`
@@ -644,7 +644,7 @@ type RuleDetail struct {
 	Backends   []InstanceDetail `json:"backends"`
 }
 
-//InstanceDetail one backend detail information
+// InstanceDetail one backend detail information
 type InstanceDetail struct {
 	InstanceName   string   `json:"instanceName"`
 	LanIP          string   `json:"lanIp"`

@@ -91,7 +91,8 @@ func (m *ModelAction) ListNodeGroupAction(nodeGroupID string,
 }
 
 // GetNodeGroupAction get NodeGroupAction by nodegroupID and event
-func (m *ModelAction) GetNodeGroupAction(nodeGroupID, event string, opt *storage.GetOptions) (*storage.NodeGroupAction, error) {
+func (m *ModelAction) GetNodeGroupAction(nodeGroupID, event string, opt *storage.GetOptions) (*storage.NodeGroupAction,
+	error) {
 	if nodeGroupID == "" || event == "" {
 		return nil, fmt.Errorf("request param illegal, nodegroupID and event cannot be empty")
 	}

@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -27,10 +28,10 @@ const initialMinVal = 999999
 
 // Metrics used to collect prom metrics for hook operator
 type Metrics struct {
-	hookrunExecDurationMaxVal float64 //save the max execution duration(seconds) value of hookrun
-	hookrunExecDurationMinVal float64 //save the min execution duration(seconds) value of hookrun
-	metricExecDurationMaxVal  float64 //save the max execution duration(seconds) value of metric for a hookrun
-	metricExecDurationMinVal  float64 //save the min execution duration(seconds) value of metric for a hookrun
+	hookrunExecDurationMaxVal float64 // save the max execution duration(seconds) value of hookrun
+	hookrunExecDurationMinVal float64 // save the min execution duration(seconds) value of hookrun
+	metricExecDurationMaxVal  float64 // save the max execution duration(seconds) value of metric for a hookrun
+	metricExecDurationMinVal  float64 // save the min execution duration(seconds) value of metric for a hookrun
 
 	// reconcileDuration is reconcile duration(seconds) for hook operator
 	reconcileDuration *prometheus.HistogramVec

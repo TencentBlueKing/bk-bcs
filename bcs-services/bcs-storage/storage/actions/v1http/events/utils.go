@@ -264,7 +264,8 @@ func insert(req *restful.Request) error {
 		}
 	}
 
-	hasIndex, err := store.GetDB().Table(tablePrefix+data[clusterIDTag].(string)).HasIndex(req.Request.Context(), eventTimeTag)
+	hasIndex, err := store.GetDB().Table(tablePrefix+data[clusterIDTag].(string)).HasIndex(req.Request.Context(),
+		eventTimeTag)
 
 	if err != nil {
 		return fmt.Errorf("failed to get index, err %s", err.Error())

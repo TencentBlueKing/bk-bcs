@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -29,7 +30,7 @@ import (
 func Run(op *options.Option) error {
 	conf := &config.Config{}
 	setConfig(conf, op)
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
@@ -61,7 +62,7 @@ func setConfig(conf *config.Config, op *options.Option) {
 	conf.ClientCert = &types.CertConfig{
 		CertPasswd: static.ClientCertPwd,
 	}
-	//server cert directoty
+	// server cert directoty
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ServerKeyFile != "" {
 
@@ -71,7 +72,7 @@ func setConfig(conf *config.Config, op *options.Option) {
 		conf.ServerCert.IsSSL = true
 	}
 
-	//client cert directoty
+	// client cert directoty
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ClientKeyFile != "" {
 

@@ -127,8 +127,8 @@ type repository struct {
 	Configuration *repositoryRemoteSettings `json:"configuration"`
 
 	// 未使用到的参数
-	//StorageCredentialsKey string      `json:"storageCredentialsKey"`
-	//Quota                 int64       `json:"quota"`
+	// StorageCredentialsKey string      `json:"storageCredentialsKey"`
+	// Quota                 int64       `json:"quota"`
 }
 
 func (r *repository) load(rp *repo.Repository) *repository {

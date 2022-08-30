@@ -25,13 +25,13 @@ import (
 	"github.com/google/go-querystring/query"
 )
 
-//Client basic signature https client
+// Client basic signature https client
 type Client struct {
-	URL       string //https url info
-	SecretKey string //secret key for api signature
+	URL       string // https url info
+	SecretKey string // secret key for api signature
 }
 
-//NewClient constructor function
+// NewClient constructor function
 func NewClient(url, secretKey string) *Client {
 	return &Client{
 		URL:       url,
@@ -39,21 +39,21 @@ func NewClient(url, secretKey string) *Client {
 	}
 }
 
-//GetRequest create get request to qcloud api service
-//return:
+// GetRequest create get request to qcloud api service
+// return:
 //	[]byte: http response body
 //	error: err info if do
 func (q *Client) GetRequest(obj interface{}) ([]byte, error) {
-	//signature with all detail request data
+	// signature with all detail request data
 	signature, err := Signature(q.SecretKey, "GET", strings.Replace(q.URL, "https://", "", -1), obj)
 	if err != nil {
 		blog.Errorf("Qcloud signature failed, %s", err)
 		return nil, err
 	}
-	//setting signature for request
+	// setting signature for request
 	v := reflect.ValueOf(obj).Elem()
 	v.FieldByName("Signature").SetString(signature)
-	//desc.Signature = signature
+	// desc.Signature = signature
 	value, _ := query.Values(obj)
 	request := value.Encode()
 	link := fmt.Sprintf("%s?%s", q.URL, request)
@@ -73,24 +73,24 @@ func (q *Client) GetRequest(obj interface{}) ([]byte, error) {
 	return body, nil
 }
 
-//PostRequest create get request to vpc service
-//return:
+// PostRequest create get request to vpc service
+// return:
 //	[]byte: http response body
 //	error: err info if do
 func (q *Client) PostRequest(obj interface{}) ([]byte, error) {
-	//signature with all detail request data
+	// signature with all detail request data
 	signature, err := Signature(q.SecretKey, "POST", strings.Replace(q.URL, "https://", "", -1), obj)
 	if err != nil {
 		blog.Errorf("Qcloud signature failed, %s", err)
 		return nil, err
 	}
-	//setting signature for request
+	// setting signature for request
 	v := reflect.ValueOf(obj).Elem()
 	v.FieldByName("Signature").SetString(signature)
-	//desc.Signature = signature
+	// desc.Signature = signature
 	value, _ := query.Values(obj)
 	request := value.Encode()
-	//blog.Infof("Post detail: %s", request)
+	// blog.Infof("Post detail: %s", request)
 	response, err := http.Post(q.URL, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(request)))
 	if err != nil {
 		blog.Errorf("Post request failed, %s", err)

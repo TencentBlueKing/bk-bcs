@@ -104,12 +104,12 @@ var (
 	subscribableClusterScopedKinds = []string{res.NS, res.PV, res.SC, res.CRD}
 )
 
-// 若不是指定订阅的原生类型，则假定其是自定义资源
+// maybeCobjKind 若不是指定订阅的原生类型，则假定其是自定义资源
 func maybeCobjKind(kind string) bool {
 	return !slice.StringInSlice(kind, subscribableNativeKinds)
 }
 
-// 在 Context 中注入 Project，Cluster 信息
+// injectProjClusterInfo 在 Context 中注入 Project，Cluster 信息
 func injectProjClusterInfo(ctx context.Context, req *clusterRes.SubscribeReq) (context.Context, error) {
 	projInfo, err := project.GetProjectInfo(ctx, req.ProjectID)
 	if err != nil {
@@ -128,7 +128,7 @@ func injectProjClusterInfo(ctx context.Context, req *clusterRes.SubscribeReq) (c
 	return ctx, nil
 }
 
-// 订阅 API 参数校验
+// validateSubscribeParams 订阅 API 参数校验
 func validateSubscribeParams(ctx context.Context, req *clusterRes.SubscribeReq) error {
 	if maybeCobjKind(req.Kind) {
 		// 不支持订阅的原生资源，可以通过要求指定 ApiVersion，CRDName 等的后续检查限制住
@@ -160,7 +160,7 @@ func validateSubscribeParams(ctx context.Context, req *clusterRes.SubscribeReq) 
 	return nil
 }
 
-// 获取某类资源对应的 watcher
+// genResWatcher 获取某类资源对应的 watcher
 func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Interface, error) {
 	clusterConf := res.NewClusterConfig(req.ClusterID)
 

@@ -78,6 +78,7 @@ func (c *connection) tunnelWriter() io.Writer {
 	return chanWriter{conn: c, C: c.buf}
 }
 
+// Close xxx
 func (c *connection) Close() error {
 	c.session.closeConnection(c.connID, io.EOF)
 	return nil
@@ -89,6 +90,7 @@ func (c *connection) copyData(b []byte) int {
 	return n
 }
 
+// Read 用于常见IO
 func (c *connection) Read(b []byte) (int, error) {
 	if len(b) == 0 {
 		return 0, nil
@@ -117,6 +119,7 @@ func (c *connection) Read(b []byte) (int, error) {
 	return n, nil
 }
 
+// Write 用于常见IO
 func (c *connection) Write(b []byte) (int, error) {
 	c.Lock()
 	if c.err != nil {
@@ -142,14 +145,17 @@ func (c *connection) writeErr(err error) {
 	}
 }
 
+// LocalAddr xxx
 func (c *connection) LocalAddr() net.Addr {
 	return c.addr
 }
 
+// RemoteAddr xxx
 func (c *connection) RemoteAddr() net.Addr {
 	return c.addr
 }
 
+// SetDeadline xxx
 func (c *connection) SetDeadline(t time.Time) error {
 	if err := c.SetReadDeadline(t); err != nil {
 		return err
@@ -157,10 +163,12 @@ func (c *connection) SetDeadline(t time.Time) error {
 	return c.SetWriteDeadline(t)
 }
 
+// SetReadDeadline xxx
 func (c *connection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
+// SetWriteDeadline xxx
 func (c *connection) SetWriteDeadline(t time.Time) error {
 	c.writeDeadline = t
 	return nil
@@ -171,10 +179,12 @@ type addr struct {
 	address string
 }
 
+// Network xxx
 func (a addr) Network() string {
 	return a.proto
 }
 
+// String 用于打印
 func (a addr) String() string {
 	return a.address
 }
@@ -184,6 +194,7 @@ type chanWriter struct {
 	C    chan []byte
 }
 
+// Write 用于常见IO
 func (c chanWriter) Write(buf []byte) (int, error) {
 	c.conn.Lock()
 	defer c.conn.Unlock()

@@ -290,24 +290,6 @@ def with_code_wrapper(func):
     return func
 
 
-def make_bkmonitor_url(project: dict) -> str:
-    """蓝鲸监控跳转链接"""
-    if not project:
-        return ""
-
-    url = f"{getattr(settings,'BKMONITOR_HOST', '')}/?bizId={project['cc_app_id']}#/k8s"
-    return url
-
-
-def make_bklog_url(project: dict) -> str:
-    """蓝鲸日志平台跳转链接"""
-    if not project:
-        return ""
-
-    url = f"{getattr(settings, 'BKLOG_HOST', '')}/#/retrieve/?bizId={project['cc_app_id']}"
-    return url
-
-
 class VueTemplateView(APIView):
     """
     # TODO 重构优化逻辑
@@ -410,13 +392,22 @@ class VueTemplateView(APIView):
 
         request_domain = request.get_host().split(':')[0]
         session_cookie_domain = get_cookie_domain_by_host(settings.SESSION_COOKIE_DOMAIN, request_domain)
+
+        # 蓝鲸监控域名
+        # 前端拼接地址 url规则: {BKMONITOR_HOST}/?bizId={cc_app_id}#/k8s"
+        bkmonitor_host = getattr(settings, 'BKMONITOR_HOST', '')
+
+        # 日志平台域名
+        # 前端拼接地址 url规则: {BKLOG_HOST}/#/retrieve/?bizId={cc_app_id}"
+        bklog_host = getattr(settings, 'BKLOG_HOST', '')
+
         context = {
             "DEVOPS_HOST": settings.DEVOPS_HOST,
             "DEVOPS_BCS_HOST": settings.DEVOPS_BCS_HOST,
             "DEVOPS_BCS_API_URL": settings.DEVOPS_BCS_API_URL,
             "DEVOPS_ARTIFACTORY_HOST": settings.DEVOPS_ARTIFACTORY_HOST,
-            "BKMONITOR_URL": make_bkmonitor_url(project),  # 蓝鲸监控跳转链接
-            "BKLOG_URL": make_bklog_url(project),  # 日志平台跳转链接
+            "BKMONITOR_HOST": bkmonitor_host,
+            "BKLOG_HOST": bklog_host,
             "LOGIN_FULL": settings.LOGIN_FULL,
             "RUN_ENV": settings.RUN_ENV,
             # 去除末尾的 /, 前端约定

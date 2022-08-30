@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package nodegroup xxx
 package nodegroup
 
 import (
@@ -28,8 +29,8 @@ import (
 
 const (
 	tableName = "nodegroup"
-	//! we don't setting bson tag in proto file,
-	//! all struct key in mongo is lowcase in default
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
 	tableKey                   = "nodegroupid"
 	clusterIDKey               = "clusterid"
 	defaultNodeGroupListLength = 1000
@@ -65,6 +66,7 @@ func New(db drivers.DB) *ModelNodeGroup {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelNodeGroup) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

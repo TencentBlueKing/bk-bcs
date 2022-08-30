@@ -110,11 +110,11 @@ func (s *Scheduler) deploymentCheckTick(ns string, name string, recover bool) bo
 		return false
 	}
 
-	//restart current rolling
+	// restart current rolling
 	if recover == true {
 		deployment.IsInRolling = false
 	}
-	//change check time
+	// change check time
 	deployment.CheckTime = time.Now().Unix()
 	s.store.SaveDeployment(deployment)
 
@@ -504,7 +504,7 @@ func (s *Scheduler) isRollingStartFinished(app *types.Application, rollingNum in
 		return false
 	}
 
-	//add pod status check
+	// add pod status check
 	taskGroups, err := s.store.ListTaskGroups(app.RunAs, app.ID)
 	if err != nil {
 		blog.Error("list taskgroup(%s:%s) for rolling start check error:%s",
@@ -632,7 +632,7 @@ func (s *Scheduler) innerScaleApplication(runAs, appID string, instances uint64)
 	return nil
 }
 
-//InnerDeleteApplication delete application, specially for deployment
+// InnerDeleteApplication delete application, specially for deployment
 func (s *Scheduler) InnerDeleteApplication(runAs, appID string, enforce bool) error {
 	blog.Info("inner delete application(%s.%s), enforce(%t)", runAs, appID, enforce)
 

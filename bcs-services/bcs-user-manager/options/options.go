@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -35,7 +36,7 @@ type UserManagerOptions struct {
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
 	TKE             TKEOptions      `json:"tke"`
 	PeerToken       string          `json:"peer_token" value:"" usage:"peer token to authorize with each other, only used to websocket peer"`
-	//go-micro etcd registry feature support
+	// go-micro etcd registry feature support
 	Etcd         registry.CMDOptions `json:"etcdRegistry"`
 	InsecureEtcd bool                `json:"insecure_etcd" value:"false" usage:"if true, will use insecure etcd registry"`
 	// token notify feature
@@ -78,7 +79,7 @@ type IAMConfig struct {
 	ServerDebug bool `json:"server_debug"`
 }
 
-//TKEOptions tke api option
+// TKEOptions tke api option
 type TKEOptions struct {
 	SecretId  string `json:"secret_id" value:"" usage:"tke user account secret id"`
 	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`

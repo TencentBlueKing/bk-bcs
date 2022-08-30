@@ -22,6 +22,7 @@ import (
 	"sort"
 )
 
+// FetchApplication xxx
 func (s *Scheduler) FetchApplication(ns, name string, kind bcstype.BcsDataType) (string, error) {
 	blog.V(3).Infof("fetch application (%s.%s)", ns, name)
 
@@ -44,6 +45,7 @@ func (s *Scheduler) FetchApplication(ns, name string, kind bcstype.BcsDataType) 
 	return string(reply), nil
 }
 
+// FetchApplicationVersion xxx
 func (s *Scheduler) FetchApplicationVersion(ns, name, versionID string) (string, error) {
 	blog.V(3).Infof("fetch application (%s.%s) version (%s)", ns, name, versionID)
 

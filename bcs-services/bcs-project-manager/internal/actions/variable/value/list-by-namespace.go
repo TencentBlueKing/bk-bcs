@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ListNamespaceVariablesAction ...
+// ListNamespaceVariablesAction xxx
 type ListNamespaceVariablesAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -44,7 +44,7 @@ func NewListNamespaceVariablesAction(model store.ProjectModel) *ListNamespaceVar
 	}
 }
 
-// Do ...
+// Do xxx
 func (la *ListNamespaceVariablesAction) Do(ctx context.Context,
 	req *proto.ListNamespaceVariablesRequest) ([]*proto.NamespaceVariable, error) {
 	la.ctx = ctx

@@ -31,7 +31,7 @@ import (
 // ImportClusterNodesTask call aksInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
 func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err

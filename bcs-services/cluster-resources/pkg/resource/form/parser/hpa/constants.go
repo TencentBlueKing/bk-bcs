@@ -15,23 +15,23 @@
 package hpa
 
 const (
-	// HPAMetricTypeRes ...
+	// HPAMetricTypeRes TODO
 	HPAMetricTypeRes = "Resource"
-	// HPAMetricTypeContainerRes ...
+	// HPAMetricTypeContainerRes TODO
 	HPAMetricTypeContainerRes = "ContainerResource"
-	// HPAMetricTypeExternal ...
+	// HPAMetricTypeExternal TODO
 	HPAMetricTypeExternal = "External"
-	// HPAMetricTypeObject ...
+	// HPAMetricTypeObject TODO
 	HPAMetricTypeObject = "Object"
-	// HPAMetricTypePod ...
+	// HPAMetricTypePod TODO
 	HPAMetricTypePod = "Pods"
 )
 
 const (
-	// HPATargetTypeUtilization ...
+	// HPATargetTypeUtilization TODO
 	HPATargetTypeUtilization = "Utilization"
-	// HPATargetTypeValue ...
+	// HPATargetTypeValue TODO
 	HPATargetTypeValue = "Value"
-	// HPATargetTypeAverageValue ...
+	// HPATargetTypeAverageValue TODO
 	HPATargetTypeAverageValue = "AverageValue"
 )

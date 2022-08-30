@@ -18,14 +18,17 @@ import (
 	"sync"
 )
 
+// SetV xxx
 func SetV(level Level) {
 	logging.verbosity.Set(strconv.Itoa(int(level)))
 }
 
 var once sync.Once
 
+// InitLogs xxx
 // Init glog from commandline params
-func InitLogs(toStderr, alsoToStderr bool, verbose int32, stdErrThreshold, vModule, traceLocation, dir string, maxSize uint64, maxNum int) {
+func InitLogs(toStderr, alsoToStderr bool, verbose int32, stdErrThreshold, vModule, traceLocation, dir string,
+	maxSize uint64, maxNum int) {
 	once.Do(func() {
 		logging.toStderr = toStderr
 		logging.alsoToStderr = alsoToStderr

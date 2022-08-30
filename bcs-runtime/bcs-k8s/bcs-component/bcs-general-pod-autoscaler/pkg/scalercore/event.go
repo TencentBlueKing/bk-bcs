@@ -32,7 +32,7 @@ func (e *EventScaler) Run(stopCh <-chan struct{}) error {
 	return nil
 }
 
-//GetReplicas get replicas
+// GetReplicas get replicas
 func (e *EventScaler) GetReplicas(*autoscalingv1.GeneralPodAutoscaler, int32) (int32, error) {
 	return 0, nil
 }

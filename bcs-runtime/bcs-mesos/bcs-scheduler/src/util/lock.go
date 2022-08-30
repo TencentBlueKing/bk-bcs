@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
+// Lock xxx
 var Lock *ObjectLock
 
 func init() {
@@ -29,11 +30,13 @@ func init() {
 	}
 }
 
+// ObjectLock xxx
 type ObjectLock struct {
 	rw    sync.RWMutex
 	locks map[string]*sync.RWMutex
 }
 
+// Lock xxx
 func (l *ObjectLock) Lock(obj interface{}, key string) {
 	k := fmt.Sprintf("%s.%s", reflect.TypeOf(obj).Name(), key)
 	l.rw.RLock()
@@ -56,6 +59,7 @@ func (l *ObjectLock) Lock(obj interface{}, key string) {
 	return
 }
 
+// UnLock xxx
 func (l *ObjectLock) UnLock(obj interface{}, key string) {
 	k := fmt.Sprintf("%s.%s", reflect.TypeOf(obj).Name(), key)
 	l.rw.RLock()

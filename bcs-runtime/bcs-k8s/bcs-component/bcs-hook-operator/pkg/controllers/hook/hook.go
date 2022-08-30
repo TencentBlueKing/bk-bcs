@@ -11,6 +11,7 @@
  *
  */
 
+// Package hook xxx
 package hook
 
 import (
@@ -77,9 +78,10 @@ func NewHookController(
 		hookRunLister:      hookRunInformer.Lister(),
 		hookRunSynced:      hookRunInformer.Informer().HasSynced,
 		recorder:           recorder,
-		queue:              workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.HookRunController),
-		metrics:            metrics.NewMetrics(),
-		hostIP:             os.Getenv("HOST_IP"),
+		queue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
+			constants.HookRunController),
+		metrics: metrics.NewMetrics(),
+		hostIP:  os.Getenv("HOST_IP"),
 	}
 
 	providerFactory := providers.ProviderFactory{
@@ -97,6 +99,7 @@ func NewHookController(
 	return controller
 }
 
+// Run xxx
 func (hc *HookController) Run(workers int, stopCh <-chan struct{}) error {
 	defer utilruntime.HandleCrash()
 	defer hc.queue.ShutDown()
@@ -158,6 +161,7 @@ func (hc *HookController) enqueueHookRun(obj interface{}) {
 	hc.queue.Add(key)
 }
 
+// enqueueHookRunAfter xxx
 // obj could be an HookRun, or a DeletionFinalStateUnknown marker item.
 func (hc *HookController) enqueueHookRunAfter(obj interface{}, after time.Duration) {
 	key, err := controller.KeyFunc(obj)

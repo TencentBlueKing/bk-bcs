@@ -480,7 +480,7 @@ func Test_GetClusterAutoscalerReview(t *testing.T) {
 					UpdatedTime:        time.Now(),
 					IsDeleted:          false,
 				}, nil)
-				//storageCli.On("GetNodeGroupAction", "testNodegroup", storage.ScaleDownState, &storage.GetOptions{}).Return(nil, nil)
+				// storageCli.On("GetNodeGroupAction", "testNodegroup", storage.ScaleDownState, &storage.GetOptions{}).Return(nil, nil)
 				storageCli.On("UpdateNodeGroupAction", mock.Anything, mock.Anything).Return(nil, nil)
 				storageCli.On("UpdateNodeGroup", mock.Anything, &storage.UpdateOptions{}).Return(nil, nil)
 			},
@@ -658,8 +658,8 @@ func Test_GetClusterAutoscalerReview(t *testing.T) {
 				}, nil)
 				storageCli.On("GetNodeGroupAction", "testNodegroup", storage.ScaleUpState, &storage.GetOptions{}).Return(nil, nil)
 				storageCli.On("GetNodeGroupAction", "testNodegroup", storage.ScaleDownState, &storage.GetOptions{}).Return(nil, nil)
-				//storageCli.On("UpdateNodeGroupAction", mock.Anything, mock.Anything).Return(nil, nil)
-				//storageCli.On("UpdateNodeGroup", mock.Anything, &storage.UpdateOptions{}).Return(nil, nil)
+				// storageCli.On("UpdateNodeGroupAction", mock.Anything, mock.Anything).Return(nil, nil)
+				// storageCli.On("UpdateNodeGroup", mock.Anything, &storage.UpdateOptions{}).Return(nil, nil)
 			},
 		},
 	}

@@ -11,6 +11,7 @@
  *
  */
 
+// Package store xxx
 package store
 
 import (
@@ -18,5 +19,6 @@ import (
 )
 
 var (
+	// ErrNoFound xxx
 	ErrNoFound = errors.New("store: Not Found")
 )

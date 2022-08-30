@@ -31,6 +31,7 @@ type storageError struct {
 	Code    int
 }
 
+// Error 用于错误处理
 func (se *storageError) Error() string {
 	return se.Message
 }
@@ -125,7 +126,7 @@ func (w *Watcher) Connect(storageURL []string) (err error) {
 	return
 }
 
-// connect: Try to connect the url list, if they are all unreachable, then return
+// connect : Try to connect the url list, if they are all unreachable, then return
 // eventWatchNoURLAvailable error.
 func (w *Watcher) connect() (err error) {
 	body := &bytes.Buffer{}
@@ -147,7 +148,7 @@ func (w *Watcher) connect() (err error) {
 	return eventWatchNoURLAvailable
 }
 
-// Waiting for flushed response body. If the connection break(EOF) and it is
+// watching for flushed response body. If the connection break(EOF) and it is
 // not closed, then reconnect automatically. If reconnect failed, then return
 // eventWatchNoUrlAvailable error.
 func (w *Watcher) watching() {

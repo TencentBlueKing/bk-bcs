@@ -19,7 +19,9 @@ import (
 	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 )
 
-func FilterCurrentHookRuns(hookRuns []*hookv1alpha1.HookRun, set *gstsv1alpha1.GameStatefulSet) ([]*hookv1alpha1.HookRun, []*hookv1alpha1.HookRun) {
+// FilterCurrentHookRuns xxx
+func FilterCurrentHookRuns(hookRuns []*hookv1alpha1.HookRun, set *gstsv1alpha1.GameStatefulSet) (
+	[]*hookv1alpha1.HookRun, []*hookv1alpha1.HookRun) {
 	return commonhookutil.FilterHookRuns(hookRuns, func(hr *hookv1alpha1.HookRun) bool {
 		if hr.Name == set.Status.Canary.CurrentStepHookRun {
 			return true

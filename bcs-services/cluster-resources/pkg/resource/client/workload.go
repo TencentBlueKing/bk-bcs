@@ -37,23 +37,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
-// PodClient ...
+// PodClient xxx
 type PodClient struct {
 	ResClient
 }
 
-// NewPodClient ...
+// NewPodClient xxx
 func NewPodClient(ctx context.Context, conf *res.ClusterConf) *PodClient {
 	podRes, _ := res.GetGroupVersionResource(ctx, conf, res.Po, "")
 	return &PodClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
-// NewPodCliByClusterID ...
+// NewPodCliByClusterID xxx
 func NewPodCliByClusterID(ctx context.Context, clusterID string) *PodClient {
 	return NewPodClient(ctx, res.NewClusterConfig(clusterID))
 }
 
-// List ...
+// List xxx
 func (c *PodClient) List(
 	ctx context.Context, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
@@ -97,7 +97,7 @@ func (c *PodClient) ListAllPods(
 	return ret.UnstructuredContent(), nil
 }
 
-// 非直接关联 Pod 的资源，找到下层直接关联的子资源
+// getPodOwnerRefs 非直接关联 Pod 的资源，找到下层直接关联的子资源
 func (c *PodClient) getPodOwnerRefs(
 	ctx context.Context, clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
@@ -124,7 +124,7 @@ func (c *PodClient) getPodOwnerRefs(
 	return ownerRefs, nil
 }
 
-// 根据 OwnerReferences 过滤关联的子资源
+// filterByOwnerRefs 根据 OwnerReferences 过滤关联的子资源
 func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
@@ -189,7 +189,7 @@ func (c *PodClient) ListPodRelatedRes(
 	return manifest, nil
 }
 
-// 获取 Pod 关联的某种资源的名称列表
+// getPodRelatedResNameList 获取 Pod 关联的某种资源的名称列表
 func (c *PodClient) getPodRelatedResNameList(
 	ctx context.Context, namespace, podName, resKind string,
 ) ([]string, error) {

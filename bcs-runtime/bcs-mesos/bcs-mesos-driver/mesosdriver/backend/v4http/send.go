@@ -22,10 +22,11 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
+// SendMessageApplication xxx
 func (s *Scheduler) SendMessageApplication(ns, name, taskgroupId string, body []byte) (string, error) {
 	blog.Info("send message to application (%s.%s) taskgroup (%s) param(%s)", ns, name, taskgroupId, string(body))
 
-	//encoding the parameter of sending message
+	// encoding the parameter of sending message
 	var param SendMsgOpeParam
 	if err := json.Unmarshal(body, &param); err != nil {
 		blog.Error("parse sending message operation parameters failed, err(%s)", err.Error())
@@ -44,7 +45,7 @@ func (s *Scheduler) SendMessageApplication(ns, name, taskgroupId string, body []
 	var sendData []byte
 	var reply string
 	var rpyErr error
-	//deal with different message type
+	// deal with different message type
 	switch param.MsgType {
 	case "local":
 		sendData, reply, rpyErr = s.makeMsg_Local(msgData)
@@ -54,8 +55,9 @@ func (s *Scheduler) SendMessageApplication(ns, name, taskgroupId string, body []
 		sendData, reply, rpyErr = s.makeMsg_Signal(msgData)
 	case "env-key":
 		sendData, reply, rpyErr = s.makeMsg_EnvKey(msgData)
-	default: //unkown message type
-		blog.Error("unkown message type(%s) which will be sent to application(%s) under runAs(%s)", param.MsgType, param.Name, param.RunAs)
+	default: // unkown message type
+		blog.Error("unkown message type(%s) which will be sent to application(%s) under runAs(%s)", param.MsgType, param.Name,
+			param.RunAs)
 		err = bhttp.InternalError(common.BcsErrMesosDriverSendMsgUnknowType, common.BcsErrMesosDriverSendMsgUnknowTypeStr)
 		return err.Error(), err
 	}
@@ -195,14 +197,14 @@ func (s *Scheduler) makeMsg_EnvKey(data []byte) ([]byte, string, error) {
 
 	envKey, _ := js.Get("env-key").String()
 	envValue, _ := js.Get("env-value").String()
-	//ifRep, _ := js.Get("append").Bool()
+	// ifRep, _ := js.Get("append").Bool()
 
 	var msg types.BcsMessage
 	msg.Type = types.Msg_ENV.Enum()
 	msg.Env = &types.Msg_Env{
 		Name:  &envKey,
 		Value: &envValue,
-		//Rep:   ifRep,
+		// Rep:   ifRep,
 	}
 
 	msgData, err := json.Marshal(&msg)

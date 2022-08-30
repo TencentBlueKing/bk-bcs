@@ -38,7 +38,7 @@ type MesosDriver interface {
 // MesosDriverClientConfig mesos driver client configuration
 type MesosDriverClientConfig struct {
 	ZkAddr string
-	//http client cert config
+	// http client cert config
 	ClientCert *commtypes.CertConfig
 }
 
@@ -46,21 +46,21 @@ type MesosDriverClientConfig struct {
 type MesosDriverClient struct {
 	conf *MesosDriverClientConfig
 
-	//to discovery mesos driver address
+	// to discovery mesos driver address
 	moduleDiscovery moduleDiscovery.ModuleDiscovery
-	//http client
+	// http client
 	cli *httpclient.HttpClient
 }
 
-//NewMesosDriverClient new MesosDriverClient object
+// NewMesosDriverClient new MesosDriverClient object
 func NewMesosDriverClient(conf *MesosDriverClientConfig) (*MesosDriverClient, error) {
 	m := &MesosDriverClient{
 		conf: conf,
 	}
 
 	var err error
-	//start module discovery to discovery mesos driver
-	//moduleDiscovery.GetModuleServers(module) can return server information
+	// start module discovery to discovery mesos driver
+	// moduleDiscovery.GetModuleServers(module) can return server information
 	m.moduleDiscovery, err = moduleDiscovery.NewDiscoveryV2(
 		m.conf.ZkAddr,
 		[]string{commtypes.BCS_MODULE_MESOSAPISERVER})
@@ -69,9 +69,9 @@ func NewMesosDriverClient(conf *MesosDriverClientConfig) (*MesosDriverClient, er
 	}
 	blog.Infof("NewDiscoveryV2 done")
 
-	//init http client
+	// init http client
 	m.cli = httpclient.NewHttpClient()
-	//if https
+	// if https
 	if m.conf.ClientCert != nil && m.conf.ClientCert.IsSSL {
 		blog.Infof("NetworkDetection http client cert ssl")
 		m.cli.SetTlsVerity(m.conf.ClientCert.CAFile, m.conf.ClientCert.CertFile, m.conf.ClientCert.KeyFile,
@@ -82,9 +82,10 @@ func NewMesosDriverClient(conf *MesosDriverClientConfig) (*MesosDriverClient, er
 	return m, nil
 }
 
-//get module address
-//clusterid, example BCS-MESOS-10001
-//return first parameter: module address, example 127.0.0.1:8090
+// getModuleAddr xxx
+// get module address
+// clusterid, example BCS-MESOS-10001
+// return first parameter: module address, example 127.0.0.1:8090
 func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 	serv, err := m.moduleDiscovery.GetRandModuleServer(commtypes.BCS_MODULE_MESOSAPISERVER)
 	if err != nil {
@@ -92,7 +93,7 @@ func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 			m.conf.ZkAddr, commtypes.BCS_MODULE_MESOSAPISERVER, err.Error())
 		return "", err
 	}
-	//serv is string object
+	// serv is string object
 	data, _ := serv.(string)
 	var servInfo *commtypes.BcsMesosApiserverInfo
 	err = json.Unmarshal([]byte(data), &servInfo)
@@ -104,7 +105,7 @@ func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 	return fmt.Sprintf("%s://%s:%d", servInfo.Scheme, servInfo.IP, servInfo.Port), nil
 }
 
-//UpdateAgentExtendedResources update agent external resources
+// UpdateAgentExtendedResources update agent external resources
 func (m *MesosDriverClient) UpdateAgentExtendedResources(clusterID string, er *commtypes.ExtendedResource) error {
 	by, _ := json.Marshal(er)
 	_, err := m.requestMesosApiserver(clusterID, http.MethodPut, "agentsettings/extendedresource", by)
@@ -116,7 +117,7 @@ func (m *MesosDriverClient) UpdateAgentExtendedResources(clusterID string, er *c
 	return nil
 }
 
-//GetNodes get cluster all nodes
+// GetNodes get cluster all nodes
 func (m *MesosDriverClient) GetNodes(clusterid string) ([]*types.NodeInfo, error) {
 	by, err := m.requestMesosApiserver(clusterid, http.MethodGet, "cluster/resources", nil)
 	if err != nil {
@@ -124,7 +125,7 @@ func (m *MesosDriverClient) GetNodes(clusterid string) ([]*types.NodeInfo, error
 		return nil, err
 	}
 
-	//Unmarshal BcsClusterResource
+	// Unmarshal BcsClusterResource
 	var resource *commtypes.BcsClusterResource
 	err = json.Unmarshal(by, &resource)
 	if err != nil {
@@ -132,7 +133,7 @@ func (m *MesosDriverClient) GetNodes(clusterid string) ([]*types.NodeInfo, error
 		return nil, err
 	}
 
-	//create NodeInfo Object
+	// create NodeInfo Object
 	nodes := make([]*types.NodeInfo, 0)
 	for _, agent := range resource.Agents {
 		node := &types.NodeInfo{
@@ -144,14 +145,14 @@ func (m *MesosDriverClient) GetNodes(clusterid string) ([]*types.NodeInfo, error
 	return nodes, nil
 }
 
-//CeateDeployment deploy application
+// CeateDeployment deploy application
 func (m *MesosDriverClient) CeateDeployment(clusterid string, deploy []byte) error {
 	_, err := m.requestMesosApiserver(clusterid, http.MethodPost, "namespaces/bcs-system/deployments", deploy)
 
 	return err
 }
 
-//FetchDeployment fetch application
+// FetchDeployment fetch application
 func (m *MesosDriverClient) FetchDeployment(deploy *types.DeployDetection) (interface{}, error) {
 	by, err := m.requestMesosApiserver(deploy.Clusterid, http.MethodGet,
 		fmt.Sprintf("/namespaces/bcs-system/applications"), nil)
@@ -176,20 +177,21 @@ func (m *MesosDriverClient) FetchDeployment(deploy *types.DeployDetection) (inte
 	return nil, fmt.Errorf("Not found")
 }
 
-//FetchPods fetch application't pods
+// FetchPods fetch application't pods
 func (m *MesosDriverClient) FetchPods(clusterid, ns, name string) ([]byte, error) {
 	by, err := m.requestMesosApiserver(clusterid, http.MethodGet,
 		fmt.Sprintf("/namespaces/%s/applications/%s/taskgroups", ns, name), nil)
 	return by, err
 }
 
-//method=http.method: POST、GET、PUT、DELETE
-//request url = address/url
-//payload is request body
-//if error!=nil, then request mesos failed, errom.Error() is failed message
-//if error==nil, []byte is response body information
+// requestMesosApiserver xxx
+// method=http.method: POST、GET、PUT、DELETE
+// request url = address/url
+// payload is request body
+// if error!=nil, then request mesos failed, errom.Error() is failed message
+// if error==nil, []byte is response body information
 func (m *MesosDriverClient) requestMesosApiserver(clusterid, method, url string, payload []byte) ([]byte, error) {
-	//get mesos api address
+	// get mesos api address
 	addr, err := m.getModuleAddr(clusterid)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster %s mesosapi failed: %s", clusterid, err.Error())
@@ -215,13 +217,13 @@ func (m *MesosDriverClient) requestMesosApiserver(clusterid, method, url string,
 		return nil, err
 	}
 
-	//unmarshal response.body
+	// unmarshal response.body
 	var result *commtypes.APIResponse
 	err = json.Unmarshal(by, &result)
 	if err != nil {
 		return nil, fmt.Errorf("Unmarshal body(%s) failed: %s", string(by), err.Error())
 	}
-	//if result.Result==false, then request failed
+	// if result.Result==false, then request failed
 	if !result.Result {
 		return nil, fmt.Errorf("request %s failed: %s", uri, result.Message)
 	}

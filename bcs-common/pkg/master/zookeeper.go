@@ -29,7 +29,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-//NewZookeeperMaster create zk master
+// NewZookeeperMaster create zk master
 func NewZookeeperMaster(hosts []string, path string, self *bcstypes.ServerInfo) (Master, error) {
 	if len(hosts) == 0 {
 		return nil, fmt.Errorf("empty zookeeper host")
@@ -53,23 +53,23 @@ func NewZookeeperMaster(hosts []string, path string, self *bcstypes.ServerInfo) 
 	return zk, nil
 }
 
-//ZookeeperMaster implementation for master in zookeeper
+// ZookeeperMaster implementation for master in zookeeper
 type ZookeeperMaster struct {
-	zkHosts    []string             //zk host info
-	parentPath string               //parent path in zk
-	selfPath   string               //self node
-	isMaster   bool                 //master status
-	healthy    bool                 //status
-	exitCancel context.CancelFunc   //exit func
-	exitCxt    context.Context      //exit context
-	self       *bcstypes.ServerInfo //self server info
-	client     *zkclient.ZkClient   //zk client from common
+	zkHosts    []string             // zk host info
+	parentPath string               // parent path in zk
+	selfPath   string               // self node
+	isMaster   bool                 // master status
+	healthy    bool                 // status
+	exitCancel context.CancelFunc   // exit func
+	exitCxt    context.Context      // exit context
+	self       *bcstypes.ServerInfo // self server info
+	client     *zkclient.ZkClient   // zk client from common
 }
 
-//Init init stage, like create connection
+// Init init stage, like create connection
 func (zk *ZookeeperMaster) Init() error {
 	zk.isMaster = false
-	//create connection to zookeeper
+	// create connection to zookeeper
 	zk.client = zkclient.NewZkClient(zk.zkHosts)
 	if err := zk.client.ConnectEx(time.Second * 10); err != nil {
 		return fmt.Errorf("Init failed when connect zk, %s", err.Error())
@@ -77,30 +77,30 @@ func (zk *ZookeeperMaster) Init() error {
 	return nil
 }
 
-//Finit init stage, like create connection
+// Finit init stage, like create connection
 func (zk *ZookeeperMaster) Finit() {
-	//close connection to zookeeper
+	// close connection to zookeeper
 	if zk.client != nil {
 		zk.client.Close()
 	}
 	zk.client = nil
 }
 
-//Register registery information to storage
+// Register registery information to storage
 func (zk *ZookeeperMaster) Register() error {
 	if err := zk.createSelfNode(); err != nil {
 		return err
 	}
-	//create event loop for master flag
+	// create event loop for master flag
 	go zk.masterLoop()
 	go zk.healthLoop()
 	return nil
 
 }
 
-//Clean clean self node
+// Clean clean self node
 func (zk *ZookeeperMaster) Clean() error {
-	//delete self node
+	// delete self node
 	zk.exitCancel()
 	if len(zk.selfPath) > 0 || zk.client != nil {
 		zk.client.Del(zk.selfPath, 0)
@@ -109,12 +109,12 @@ func (zk *ZookeeperMaster) Clean() error {
 	return nil
 }
 
-//IsMaster check if self is master or not
+// IsMaster check if self is master or not
 func (zk *ZookeeperMaster) IsMaster() bool {
 	return zk.isMaster
 }
 
-//CheckSelfNode check self node exist, and data correct
+// CheckSelfNode check self node exist, and data correct
 func (zk *ZookeeperMaster) CheckSelfNode() (bool, error) {
 	if zk.client == nil {
 		return false, fmt.Errorf("zookeeper do not Init")
@@ -152,12 +152,12 @@ func (zk *ZookeeperMaster) CheckSelfNode() (bool, error) {
 	return found, nil
 }
 
-//GetAllNodes get all server nodes
+// GetAllNodes get all server nodes
 func (zk *ZookeeperMaster) GetAllNodes() ([]*bcstypes.ServerInfo, error) {
 	return nil, nil
 }
 
-//GetPath setting self info, now is ip address & port
+// GetPath setting self info, now is ip address & port
 func (zk *ZookeeperMaster) GetPath() string {
 	return zk.selfPath
 }
@@ -186,7 +186,7 @@ func (zk *ZookeeperMaster) createSelfNode() error {
 
 func (zk *ZookeeperMaster) masterLoop() {
 	zk.healthy = true
-	//watch parent path for children changed
+	// watch parent path for children changed
 	children, _, evChannel, err := zk.client.ChildrenW(zk.parentPath)
 	if err != nil {
 		blog.Errorf("zookeeper master watch %s  all nodes failed, %s", zk.parentPath, err.Error())
@@ -200,9 +200,9 @@ func (zk *ZookeeperMaster) masterLoop() {
 		zk.isMaster = false
 		return
 	}
-	//watch works
+	// watch works
 	nodes := zk.sortNodes(children)
-	//check self is master
+	// check self is master
 	var nodepath string
 	if strings.HasSuffix(zk.parentPath, "/") {
 		nodepath = zk.parentPath + nodes[0]
@@ -225,7 +225,7 @@ func (zk *ZookeeperMaster) masterLoop() {
 			return
 		}
 		if info.IP == zk.self.IP && info.Port == zk.self.Port && info.Pid == zk.self.Pid {
-			//self is Master
+			// self is Master
 			zk.isMaster = true
 			blog.Infof("#######Status chanaged, Self ndoe become Master#############")
 		} else {
@@ -241,7 +241,7 @@ func (zk *ZookeeperMaster) masterLoop() {
 		return
 	case event := <-evChannel:
 		if event.Type == zktype.EventNodeChildrenChanged {
-			//check master status
+			// check master status
 			go zk.masterLoop()
 			return
 		}
@@ -255,8 +255,8 @@ func (zk *ZookeeperMaster) masterLoop() {
 			go zk.masterLoop()
 			return
 		}
-		//other events, include connection broken
-		//depend on health check loop to recovery
+		// other events, include connection broken
+		// depend on health check loop to recovery
 	}
 	zk.healthy = false
 }

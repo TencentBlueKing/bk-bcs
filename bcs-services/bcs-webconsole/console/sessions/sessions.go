@@ -11,6 +11,7 @@
  *
  */
 
+// Package sessions xxx
 package sessions
 
 import (
@@ -50,12 +51,13 @@ func NewStore() *redisStore {
 	return &redisStore{client: redisClient, key: key, scope: "internal"}
 }
 
-// WebSocket 类型
+// WebSocketScope 类型
 func (rs *redisStore) WebSocketScope() *redisStore {
 	rs.scope = "websocket"
 	return rs
 }
 
+// OpenAPIScope xxx
 // OpenAPI 类型
 func (rs *redisStore) OpenAPIScope() *redisStore {
 	rs.scope = "openapi"
@@ -128,7 +130,7 @@ func (rs *redisStore) Cleanup(ctx context.Context) error {
 	return nil
 }
 
-// sessionIdGenerator
+// sessionIdGenerator xxx
 func sessionIdGenerator() string {
 	uid := uuid.New().String()
 	requestId := strings.Replace(uid, "-", "", -1)

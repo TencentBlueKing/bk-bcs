@@ -11,6 +11,7 @@
  *
  */
 
+// Package proxier xxx
 package proxier
 
 import (
@@ -60,11 +61,13 @@ type ReverseProxyDispatcher struct {
 	wsTunnelMutateLock sync.RWMutex
 }
 
+// ClusterHandlerInstance xxx
 type ClusterHandlerInstance struct {
 	ServerAddress string
 	Handler       http.Handler
 }
 
+// NewReverseProxyDispatcher xxx
 func NewReverseProxyDispatcher(clusterVarName, subPathVarName string) *ReverseProxyDispatcher {
 	return &ReverseProxyDispatcher{
 		ClusterVarName:    clusterVarName,
@@ -75,6 +78,7 @@ func NewReverseProxyDispatcher(clusterVarName, subPathVarName string) *ReversePr
 	}
 }
 
+// DefaultReverseProxyDispatcher xxx
 var DefaultReverseProxyDispatcher = NewReverseProxyDispatcher("cluster_identifier", "sub_path")
 
 // Initialize the required components for dispatcher
@@ -85,6 +89,7 @@ func (f *ReverseProxyDispatcher) Initialize() {
 	f.credentialBackends = append(f.credentialBackends, credentials.GFixtureCredentialBackend)
 }
 
+// ServeHTTP 用于HTTP服务
 func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	start := time.Now()
@@ -226,7 +231,8 @@ func (f *ReverseProxyDispatcher) InitializeUpstreamServer(clusterId string, serv
 // InitializeHandlerForCluster was called when a cluster channel is requested for the first time. There are also
 // other cases when we may also need to re-establish the apiserver connection. This includes apiserver connection
 // failure or apiserver addresses's major changes.
-func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string, req *http.Request) (*ClusterHandlerInstance, error) {
+func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string,
+	req *http.Request) (*ClusterHandlerInstance, error) {
 
 	// Query for the cluster credentials
 	clusterCredentials := f.GetClusterCredentials(clusterId)
@@ -260,6 +266,7 @@ func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string, r
 
 }
 
+// StartClusterAddressesPoller xxx
 func (f *ReverseProxyDispatcher) StartClusterAddressesPoller(clusterId string) {
 	refreshTicker := time.NewTicker(60 * time.Second)
 	defer refreshTicker.Stop()
@@ -288,7 +295,7 @@ func (f *ReverseProxyDispatcher) StartClusterAddressesPoller(clusterId string) {
 	}
 }
 
-// delHandlerStoreByClusterId used when delete the cluster or switch available server
+// DelHandlerStoreByClusterId used when delete the cluster or switch available server
 func (f *ReverseProxyDispatcher) DelHandlerStoreByClusterId(clusterId string) {
 	defer f.handlerMutateLock.Unlock()
 	f.handlerMutateLock.Lock()
@@ -329,10 +336,12 @@ func (f *ReverseProxyDispatcher) ExtractPathPrefix(req *http.Request) string {
 
 type responder struct{}
 
+// Error 用于错误处理
 func (r *responder) Error(w http.ResponseWriter, req *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
+// NewProxyHandlerFromConfig xxx
 // NewProxyHandler creates a new proxy handler to a single api server based on the given kube config object
 func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler, error) {
 
@@ -399,6 +408,7 @@ func makeUpgradeTransport(config *rest.Config, keepalive time.Duration) (proxy.U
 	return proxy.NewUpgradeRequestRoundTripper(rt, upgrader), nil
 }
 
+// stripLeaveSlash xxx
 // like http.StripPrefix, but always leaves an initial slash. (so that our
 // regexps will work.)
 func stripLeaveSlash(prefix string, h http.Handler) http.Handler {

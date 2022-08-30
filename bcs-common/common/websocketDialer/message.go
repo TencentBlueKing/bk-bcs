@@ -175,6 +175,7 @@ func newServerMessage(reader io.Reader) (*message, error) {
 	return m, nil
 }
 
+// Err xxx
 func (m *message) Err() error {
 	if m.err != nil {
 		return m.err
@@ -193,6 +194,7 @@ func (m *message) Err() error {
 	return m.err
 }
 
+// Bytes xxx
 func (m *message) Bytes() []byte {
 	return append(m.header(), m.bytes...)
 }
@@ -209,15 +211,18 @@ func (m *message) header() []byte {
 	return buf[:offset]
 }
 
+// Read 用于常见IO
 func (m *message) Read(p []byte) (int, error) {
 	return m.body.Read(p)
 }
 
+// WriteTo xxx
 func (m *message) WriteTo(wsConn *wsConn) (int, error) {
 	err := wsConn.WriteMessage(websocket.BinaryMessage, m.Bytes())
 	return len(m.bytes), err
 }
 
+// String 用于打印
 func (m *message) String() string {
 	switch m.messageType {
 	case Data:

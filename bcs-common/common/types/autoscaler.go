@@ -18,43 +18,50 @@ import (
 	"time"
 )
 
+// AutoscalerTargetRefKind xxx
 type AutoscalerTargetRefKind = string
 
 const (
-	AutoscalerTargetRefDeployment  AutoscalerTargetRefKind = "deployment"
+	// AutoscalerTargetRefDeployment xxx
+	AutoscalerTargetRefDeployment AutoscalerTargetRefKind = "deployment"
+	// AutoscalerTargetRefApplication xxx
 	AutoscalerTargetRefApplication AutoscalerTargetRefKind = "application"
 )
 
+// BcsAutoscaler xxx
 type BcsAutoscaler struct {
 	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata"`
-	//specification
+	// specification
 	Spec *BcsAutoscalerSpec
-	//status
+	// status
 	Status *BcsAutoscalerStatus
 }
 
+// BcsAutoscalerSpec xxx
 type BcsAutoscalerSpec struct {
-	//target application
+	// target application
 	ScaleTargetRef *TargetRef
-	//min instance
+	// min instance
 	MinInstance uint
-	//max instance
+	// max instance
 	MaxInstance uint
-	//autoscale target metric infos
+	// autoscale target metric infos
 	MetricsTarget []*AutoscalerMetricTarget `json:"metrics"`
 }
 
+// AutoscalerMetricTarget xxx
 type AutoscalerMetricTarget struct {
 	Type MetricSourceType
-	//metric name
+	// metric name
 	Name string
 	// description info
 	Description string
-	//autoscale metric target value
+	// autoscale metric target value
 	Target *AutoscalerMetricValue
 }
 
+// MetricSourceType xxx
 type MetricSourceType string
 
 const (
@@ -63,67 +70,76 @@ const (
 	// scale target (e.g. CPU or memory).  Such metrics are built in to
 	// mesos, and have special scaling options on top of those available
 	// to normal per-taskgroup metrics (the "taskgroups" source).
-	//target kind = AutoscalerMetricAverageUtilization
+	// target kind = AutoscalerMetricAverageUtilization
 	ResourceMetricSourceType MetricSourceType = "Resource"
 	// TaskgroupsMetricSourceType is a metric describing each taskgroup in the current scale
 	// target (for example, transactions-processed-per-second).  The values
 	// will be averaged together before being compared to the target value.
-	//target kind = AutoscalerMetricTargetAverageValue
+	// target kind = AutoscalerMetricTargetAverageValue
 	TaskgroupsMetricSourceType MetricSourceType = "Taskgroup"
 	// ExternalMetricSourceType is a global metric that is not associated
 	// with any mesos object. It allows autoscaling based on information
 	// coming from components running outside of cluster
 	// (for example length of queue in cloud messaging service, or
 	// QPS from loadbalancer running outside of cluster).
-	//target kind = AutoscalerMetricTargetValue
+	// target kind = AutoscalerMetricTargetValue
 	ExternalMetricSourceType MetricSourceType = "External"
 )
 
+// AutoscalerMetricValue xxx
 type AutoscalerMetricValue struct {
 	Type AutoscalerMetricKind
 
-	//kind = AutoscalerMetricAverageUtilization
+	// kind = AutoscalerMetricAverageUtilization
 	AverageUtilization float32 `json:"averageUtilization,omitempty"`
-	//kind = AutoscalerMetricTargetAverageValue
+	// kind = AutoscalerMetricTargetAverageValue
 	AverageValue float32 `json:"targetAverageValue,omitempty"`
-	//kind = AutoscalerMetricTargetValue
+	// kind = AutoscalerMetricTargetValue
 	Value float32 `json:"targetValue,omitempty"`
 }
 
+// AutoscalerMetricKind xxx
 type AutoscalerMetricKind string
 
 const (
-	//describing each pod in the current scale target (e.g. CPU or memory), The values will be averaged
-	//together before being compared to the target
+	// AutoscalerMetricAverageUtilization xxx
+	// describing each pod in the current scale target (e.g. CPU or memory), The values will be averaged
+	// together before being compared to the target
 	AutoscalerMetricAverageUtilization AutoscalerMetricKind = "AverageUtilization"
-	//The values will be averaged together pods before being compared to the target value
+	// AutoscalerMetricTargetAverageValue xxx
+	// The values will be averaged together pods before being compared to the target value
 	AutoscalerMetricTargetAverageValue AutoscalerMetricKind = "AverageValue"
-	//value is the target value of the metric
+	// AutoscalerMetricTargetValue xxx
+	// value is the target value of the metric
 	AutoscalerMetricTargetValue AutoscalerMetricKind = "Value"
 )
 
+// BcsAutoscalerStatus xxx
 type BcsAutoscalerStatus struct {
-	//autoscale application number, default: 0
+	// autoscale application number, default: 0
 	ScaleNumber uint
-	//last time scale application
+	// last time scale application
 	LastScaleTime time.Time
 
 	LastScaleOPeratorType AutoscalerOperatorType
-	//current instance numbers
+	// current instance numbers
 	CurrentInstance uint
-	//desired instance numbers
+	// desired instance numbers
 	DesiredInstance uint
-	//status
+	// status
 	CurrentMetrics []*AutoscalerMetricCurrent
-	//target ref status
+	// target ref status
 	TargetRefStatus string
 }
 
 const (
+	// TargetRefStatusNone xxx
 	TargetRefStatusNone = "none"
 )
 
-func (scaler *BcsAutoscaler) GetSpecifyCurrentMetrics(soucreType MetricSourceType, name string) (*AutoscalerMetricCurrent, error) {
+// GetSpecifyCurrentMetrics xxx
+func (scaler *BcsAutoscaler) GetSpecifyCurrentMetrics(soucreType MetricSourceType,
+	name string) (*AutoscalerMetricCurrent, error) {
 	if scaler.Status == nil || len(scaler.Status.CurrentMetrics) == 0 {
 		return nil, fmt.Errorf("Metrics type %s name %s not found", soucreType, name)
 	}
@@ -137,33 +153,40 @@ func (scaler *BcsAutoscaler) GetSpecifyCurrentMetrics(soucreType MetricSourceTyp
 	return nil, fmt.Errorf("Metrics type %s name %s not found", soucreType, name)
 }
 
+// AutoscalerOperatorType xxx
 type AutoscalerOperatorType string
 
 const (
-	AutoscalerOperatorNone      AutoscalerOperatorType = "none"
-	AutoscalerOperatorScaleUp   AutoscalerOperatorType = "scaleUp"
+	// AutoscalerOperatorNone xxx
+	AutoscalerOperatorNone AutoscalerOperatorType = "none"
+	// AutoscalerOperatorScaleUp xxx
+	AutoscalerOperatorScaleUp AutoscalerOperatorType = "scaleUp"
+	// AutoscalerOperatorScaleDown xxx
 	AutoscalerOperatorScaleDown AutoscalerOperatorType = "scaleDown"
 )
 
+// AutoscalerMetricCurrent xxx
 type AutoscalerMetricCurrent struct {
 	Type MetricSourceType
-	//metric name
+	// metric name
 	Name string
 	// description info
 	Description string
-	//autoscaler current metrics
+	// autoscaler current metrics
 	Current *AutoscalerMetricValue
-	//timestamp
+	// timestamp
 	Timestamp time.Time
 }
 
+// GetUuid xxx
 func (scaler *BcsAutoscaler) GetUuid() string {
 	uuid := fmt.Sprintf("%s_%s_%d", scaler.NameSpace, scaler.Name, scaler.CreationTimestamp.Unix())
 	return uuid
 }
 
+// InitAutoscalerStatus xxx
 func (scaler *BcsAutoscaler) InitAutoscalerStatus() {
-	//scaler.CreationTimestamp = time.Now()
+	// scaler.CreationTimestamp = time.Now()
 	scaler.Spec.ScaleTargetRef.Namespace = scaler.ObjectMeta.NameSpace
 	currents := make([]*AutoscalerMetricCurrent, 0)
 	for _, target := range scaler.Spec.MetricsTarget {

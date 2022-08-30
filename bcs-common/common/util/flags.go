@@ -35,7 +35,7 @@ func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 func WarnWordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	if strings.Contains(name, "_") {
 		nname := strings.Replace(name, "_", "-", -1)
-		//glog.Warningf("%s is DEPRECATED and will be removed in a future version. Use %s instead.", name, nname)
+		// glog.Warningf("%s is DEPRECATED and will be removed in a future version. Use %s instead.", name, nname)
 
 		return pflag.NormalizedName(nname)
 	}
@@ -64,7 +64,7 @@ func InitFlags() {
 		os.Exit(0)
 	}
 
-	//add handler if flag include --version/-v
+	// add handler if flag include --version/-v
 	if *ver {
 		version.ShowVersion()
 		os.Exit(0)

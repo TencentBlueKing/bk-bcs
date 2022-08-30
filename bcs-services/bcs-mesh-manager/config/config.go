@@ -11,46 +11,47 @@
  *
  */
 
+// Package config xxx
 package config
 
 import "crypto/tls"
 
 // Config all config item for bcs-mesh-manager
 type Config struct {
-	//IstioOperator Docker Hub
+	// IstioOperator Docker Hub
 	DockerHub string
-	//Istio Operator Charts
+	// Istio Operator Charts
 	IstioOperatorCharts string
-	//IstioOperator cr
+	// IstioOperator cr
 	IstioConfiguration string
-	//bcs api-gateway address
+	// bcs api-gateway address
 	ServerAddress string
-	//api-gateway usertoken
+	// api-gateway usertoken
 	UserToken string
-	//address
+	// address
 	Address string
-	//port, grpc port, http port +1
+	// port, grpc port, http port +1
 	Port uint
-	//metrics port
+	// metrics port
 	MetricsPort string
-	//etcd servers
+	// etcd servers
 	EtcdServers string
-	//etcd cert file
+	// etcd cert file
 	EtcdCertFile string
-	//etcd key file
+	// etcd key file
 	EtcdKeyFile string
-	//etcd ca file
+	// etcd ca file
 	EtcdCaFile string
-	//server ca file
+	// server ca file
 	ServerCaFile string
-	//server key file
+	// server key file
 	ServerKeyFile string
-	//server cert file
+	// server cert file
 	ServerCertFile string
-	//is ssl
+	// is ssl
 	IsSsl bool
-	//tls config
+	// tls config
 	TLSConf *tls.Config
-	//kubeconfig
+	// kubeconfig
 	Kubeconfig string
 }

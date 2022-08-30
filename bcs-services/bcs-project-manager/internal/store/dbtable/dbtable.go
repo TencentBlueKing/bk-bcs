@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package dbtable xxx
 package dbtable
 
 import (
@@ -21,6 +22,7 @@ import (
 )
 
 const (
+	// DataTableNamePrefix xxx
 	DataTableNamePrefix = "bcsproject_"
 )
 

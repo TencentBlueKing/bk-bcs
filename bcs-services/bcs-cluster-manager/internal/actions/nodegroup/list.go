@@ -137,7 +137,7 @@ func (la *ListNodesAction) getRelativeResource() error {
 	}
 	la.group = group
 
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	cluster, err := la.model.GetCluster(la.ctx, la.group.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when list nodes in group", la.group.ClusterID)

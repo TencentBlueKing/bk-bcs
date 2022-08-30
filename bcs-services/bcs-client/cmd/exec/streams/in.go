@@ -27,6 +27,7 @@ type In struct {
 	in io.ReadCloser
 }
 
+// Read 用于常见IO
 func (i *In) Read(p []byte) (int, error) {
 	return i.in.Read(p)
 }

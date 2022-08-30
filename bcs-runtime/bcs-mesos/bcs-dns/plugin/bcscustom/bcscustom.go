@@ -11,6 +11,7 @@
  *
  */
 
+// Package bcscustom xxx
 package bcscustom
 
 import (
@@ -51,7 +52,8 @@ type BcsCustom struct {
 }
 
 // Services implements the coredns.plugin.ServiceBackend interface.
-func (bc *BcsCustom) Services(state request.Request, exact bool, opt plugin.Options) (services []msg.Service, err error) {
+func (bc *BcsCustom) Services(state request.Request, exact bool, opt plugin.Options) (services []msg.Service,
+	err error) {
 	return bc.EtcdPlugin.Services(state, exact, opt)
 }
 

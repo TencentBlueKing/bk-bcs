@@ -81,4 +81,7 @@ class K8SIngressControllerViewSet(viewsets.ViewSet, HelmReleaseMixin):
             return Response(version_detail)
 
         version_detail["files"] = release.release.chartVersionSnapshot.files
+        # values 配置应该使用 release 的而不是特定版本 chart 默认的
+        version_detail["files"][f"{self.chart_name}/values.yaml"] = release.release.valuefile
+
         return Response(version_detail)

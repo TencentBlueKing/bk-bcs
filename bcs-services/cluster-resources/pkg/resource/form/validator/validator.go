@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package validator xxx
 package validator
 
 import (
@@ -35,12 +36,12 @@ type FormDataValidator struct {
 	kind       string
 }
 
-// New ...
+// New xxx
 func New(ctx context.Context, formData map[string]interface{}, apiVersion, kind string) *FormDataValidator {
 	return &FormDataValidator{ctx: ctx, formData: formData, apiVersion: apiVersion, kind: kind}
 }
 
-// Validate ...
+// Validate xxx
 func (v *FormDataValidator) Validate() error {
 	for _, f := range []func() error{
 		// 1. 检查资源版本
@@ -88,7 +89,7 @@ func (v *FormDataValidator) validateMetadata() error {
 	return nil
 }
 
-// 检查 k-v 列表中是否存在重复的 key
+// checkDuplicateKey 检查 k-v 列表中是否存在重复的 key
 func checkDuplicateKey(kvList []interface{}, errMsg string) error {
 	keys := set.NewStringSet()
 	for _, kv := range kvList {

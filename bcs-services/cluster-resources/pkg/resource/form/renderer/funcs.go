@@ -35,6 +35,7 @@ const RecursionMaxNums = 100
 // TmplRandomNameLength 模板随机名称长度
 const TmplRandomNameLength = 12
 
+// newTmplFuncMap xxx
 // ref: https://github.com/helm/helm/blob/a499b4b179307c267bdf3ec49b880e3dbd2a5591/pkg/engine/funcs.go#L44
 func newTmplFuncMap() template.FuncMap {
 	f := sprig.TxtFuncMap()
@@ -67,7 +68,7 @@ func toYaml(v interface{}) string {
 	return strings.TrimSuffix(string(data), "\n")
 }
 
-// 模板初始化（含挂载 include 方法等）
+// initTemplate 模板初始化（含挂载 include 方法等）
 func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 	funcMap := newTmplFuncMap()
 	tmpl, err := template.New(

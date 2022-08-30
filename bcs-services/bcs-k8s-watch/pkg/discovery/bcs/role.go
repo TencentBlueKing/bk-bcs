@@ -21,8 +21,11 @@ import (
 type Role int
 
 const (
+	// RoleNobody xxx
 	RoleNobody Role = iota
+	// RoleLeader xxx
 	RoleLeader
+	// RoleSlave xxx
 	RoleSlave
 )
 
@@ -30,8 +33,11 @@ const (
 type ActionType int
 
 const (
+	// ActionTypeMakeNobody xxx
 	ActionTypeMakeNobody ActionType = iota
+	// ActionTypeMakeLeader xxx
 	ActionTypeMakeLeader
+	// ActionTypeMakeSlave xxx
 	ActionTypeMakeSlave
 )
 
@@ -55,7 +61,7 @@ func NewRoleState(role Role) RoleState {
 	return nil
 }
 
-//
+// NobodyState xxx
 // State transition for Nobody State
 // NobodyState
 type NobodyState struct{}
@@ -77,7 +83,7 @@ func (s NobodyState) OnMakeSlave(elector *LeaderElector) {
 	go elector.callbacks.OnStoppedLeading()
 }
 
-//
+// LeaderState xxx
 // State transition for Leader State
 // LeaderState
 type LeaderState struct{}
@@ -108,7 +114,7 @@ func (s LeaderState) stopLeading(elector *LeaderElector, targetRole Role) {
 	go elector.callbacks.OnStoppedLeading()
 }
 
-//
+// SlaveState xxx
 // State transition for Slave State
 // SlaveState
 type SlaveState struct{}

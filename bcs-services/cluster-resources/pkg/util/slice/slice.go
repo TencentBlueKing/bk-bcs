@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package slice xxx
 package slice
 
 // StringInSlice 判断字符串是否存在 Slice 中

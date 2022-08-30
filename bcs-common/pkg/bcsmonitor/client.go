@@ -46,11 +46,11 @@ type BcsMonitorClient struct {
 type BcsMonitorClientOpt struct {
 	Schema   string
 	Endpoint string
-	UserName string //basic auth username
-	Password string //basic auth password
+	UserName string // basic auth username
+	Password string // basic auth password
 }
 
-//Requester is the interface to do request
+// Requester is the interface to do request
 type Requester interface {
 	DoRequest(url, method string, header http.Header, data []byte) ([]byte, error)
 }
@@ -59,6 +59,7 @@ type requester struct {
 	httpCli *httpclient.HttpClient
 }
 
+// DoRequest xxx
 func (r *requester) DoRequest(url, method string, header http.Header, data []byte) ([]byte, error) {
 	rsp, err := r.httpCli.Request(url, method, header, data)
 	if err != nil {
@@ -68,6 +69,7 @@ func (r *requester) DoRequest(url, method string, header http.Header, data []byt
 	return rsp, nil
 }
 
+// NewRequester xxx
 func NewRequester() Requester {
 	return &requester{
 		httpCli: httpclient.NewHttpClient(),

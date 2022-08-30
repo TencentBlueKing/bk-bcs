@@ -46,7 +46,7 @@ type PermDetail struct {
 	ApplyURL  string `structs:"applyURL"`
 }
 
-// AnnoFunc ...
+// AnnoFunc xxx
 type AnnoFunc func(*Annotations)
 
 // Annotations Web 注解，参考结构：
@@ -121,7 +121,7 @@ func (a Annotations) ToPbStruct() (*spb.Struct, error) {
 	return pbstruct.Map2pbStruct(annos)
 }
 
-// NewAnnos ...
+// NewAnnos xxx
 func NewAnnos(funcs ...AnnoFunc) Annotations {
 	annos := Annotations{
 		Perms: Perms{

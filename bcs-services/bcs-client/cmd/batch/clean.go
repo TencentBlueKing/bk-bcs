@@ -29,7 +29,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewCleanCommand sub command clean all  registration
+// NewCleanCommand sub command clean all  registration
 func NewCleanCommand() cli.Command {
 	return cli.Command{
 		Name:  "clean",
@@ -64,16 +64,16 @@ func NewCleanCommand() cli.Command {
 
 type deleteFunc func(clusterID, namespace, name string, enforce bool) error
 
-//clean multiple mesos json resources to bcs-scheduler
+// clean multiple mesos json resources to bcs-scheduler
 func clean(cxt *utils.ClientContext) error {
-	//step: check parameter from command line
+	// step: check parameter from command line
 	if err := cxt.MustSpecified(utils.OptionClusterID); err != nil {
 		return err
 	}
 	var data []byte
 	var err error
 	if !cxt.IsSet(utils.OptionFile) {
-		//reading all data from stdin
+		// reading all data from stdin
 		data, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		data, err = cxt.FileData()
@@ -84,19 +84,19 @@ func clean(cxt *utils.ClientContext) error {
 	if len(data) == 0 {
 		return fmt.Errorf("failed to clean: no available resource datas")
 	}
-	//step: reading json object from input(file or stdin)
+	// step: reading json object from input(file or stdin)
 	metaList := metastream.NewMetaStream(bytes.NewReader(data), cxt.String("format"))
 	if metaList.Length() == 0 {
 		return fmt.Errorf("failed to clean: No correct format resource")
 	}
-	//step: initialize storage client & scheduler client
+	// step: initialize storage client & scheduler client
 	storage := v1.NewBcsStorage(utils.GetClientOption())
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
 
-	//step: delete all resource according json list
+	// step: delete all resource according json list
 	for metaList.HasNext() {
 		info := metaInfo{}
-		//step: check json object from parsing
+		// step: check json object from parsing
 		info.apiVersion, info.kind, err = metaList.GetResourceKind()
 		if err != nil {
 			fmt.Printf("apply partial failed, %s, continue...\n", err.Error())
@@ -107,9 +107,9 @@ func clean(cxt *utils.ClientContext) error {
 			fmt.Printf("apply partial failed, %s, continue...\n", err.Error())
 			continue
 		}
-		//info.rawJson = metaList.GetRawJSON()
+		// info.rawJson = metaList.GetRawJSON()
 		info.clusterID = cxt.ClusterID()
-		//step: inspect resource object from storage
+		// step: inspect resource object from storage
 		//	if resource exist, delete resource in bcs-scheduler, print object status from response
 		//	otherwise, do nothing~
 		var inspectStatus error
@@ -139,7 +139,7 @@ func clean(cxt *utils.ClientContext) error {
 				return scheduler.DeleteCustomResourceDefinition(cluster, name)
 			}
 		default:
-			//unkown type, try custom resource
+			// unkown type, try custom resource
 			crdapiVersion, plural, crdErr := utils.GetCustomResourceTypeByKind(scheduler, cxt.ClusterID(), info.kind)
 			if err != nil {
 				fmt.Printf("resource %s/%s %s clean failed, %s\n", info.apiVersion, info.kind, info.name, crdErr.Error())
@@ -157,7 +157,7 @@ func clean(cxt *utils.ClientContext) error {
 
 func cleanSpecifiedResource(inspectStatus error, delfunc deleteFunc, info *metaInfo) {
 	if inspectStatus == nil {
-		//no error when inspect, it means data exist
+		// no error when inspect, it means data exist
 		if err := delfunc(info.clusterID, info.namespace, info.name, false); err != nil {
 			fmt.Printf("resource %s/%s %s clean failed, %s\n", info.apiVersion, info.kind, info.name, err.Error())
 		} else {

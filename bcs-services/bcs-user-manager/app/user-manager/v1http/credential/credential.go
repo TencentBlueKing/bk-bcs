@@ -11,6 +11,7 @@
  *
  */
 
+// Package credential xxx
 package credential
 
 import (
@@ -78,7 +79,8 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to update cluster [%s] credential: %s", clusterID, err.Error())
-		message := fmt.Sprintf("errcode: %d, can not update credentials, error: %s", common.BcsErrApiInternalDbError, err.Error())
+		message := fmt.Sprintf("errcode: %d, can not update credentials, error: %s", common.BcsErrApiInternalDbError,
+			err.Error())
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}

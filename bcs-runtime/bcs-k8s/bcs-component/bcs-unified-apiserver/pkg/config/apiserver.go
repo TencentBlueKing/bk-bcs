@@ -14,7 +14,9 @@
 package config
 
 const (
+	// BcsStorageMode TODO
 	BcsStorageMode = "bcs-storage"
+	// KubernetesMode TODO
 	KubernetesMode = "kubernetes"
 )
 

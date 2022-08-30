@@ -11,6 +11,7 @@
  *
  */
 
+// Package client xxx
 package client
 
 import (
@@ -22,7 +23,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-//NewClientSet create k8s clientset
+// NewClientSet create k8s clientset
 func NewClientSet(KubeMasterURL string, TLSConfig options.TLSConfig) *kubernetes.Clientset {
 
 	glog.V(3).Infof("k8sConfig.Master is set: %s", KubeMasterURL)

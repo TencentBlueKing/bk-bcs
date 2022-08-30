@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
-// PermCtx ...
+// PermCtx xxx
 type PermCtx struct {
 	Username    string
 	ProjectID   string
@@ -32,7 +32,7 @@ type PermCtx struct {
 	forceRaise  bool
 }
 
-// NewPermCtx ...
+// NewPermCtx xxx
 func NewPermCtx(username, projectID, clusterID, namespace string) *PermCtx {
 	return &PermCtx{
 		Username:    username,
@@ -43,7 +43,7 @@ func NewPermCtx(username, projectID, clusterID, namespace string) *PermCtx {
 	}
 }
 
-// Validate ...
+// Validate xxx
 func (c *PermCtx) Validate(actionIDs []string) error {
 	if c.Username == "" || c.ProjectID == "" || c.ClusterID == "" {
 		return errorx.New(errcode.ValidateErr, "ctx validate failed: Username/ProjectID/ClusterID required")
@@ -60,27 +60,27 @@ func (c *PermCtx) Validate(actionIDs []string) error {
 	return nil
 }
 
-// GetProjID ...
+// GetProjID xxx
 func (c *PermCtx) GetProjID() string {
 	return c.ProjectID
 }
 
-// GetClusterID ...
+// GetClusterID xxx
 func (c *PermCtx) GetClusterID() string {
 	return c.ClusterID
 }
 
-// GetResID ...
+// GetResID xxx
 func (c *PermCtx) GetResID() string {
 	return c.NamespaceID
 }
 
-// GetUsername ...
+// GetUsername xxx
 func (c *PermCtx) GetUsername() string {
 	return c.Username
 }
 
-// GetParentChain ...
+// GetParentChain xxx
 func (c *PermCtx) GetParentChain() []perm.IAMRes {
 	return []perm.IAMRes{
 		{ResType: perm.ResTypeProj, ResID: c.ProjectID},
@@ -88,22 +88,22 @@ func (c *PermCtx) GetParentChain() []perm.IAMRes {
 	}
 }
 
-// SetForceRaise ...
+// SetForceRaise xxx
 func (c *PermCtx) SetForceRaise() {
 	c.forceRaise = true
 }
 
-// ForceRaise ...
+// ForceRaise xxx
 func (c *PermCtx) ForceRaise() bool {
 	return c.forceRaise
 }
 
-// ToMap ...
+// ToMap xxx
 func (c *PermCtx) ToMap() map[string]interface{} {
 	return structs.Map(c)
 }
 
-// FromMap ...
+// FromMap xxx
 func (c *PermCtx) FromMap(m map[string]interface{}) perm.Ctx {
 	if username, ok := m["Username"]; ok {
 		c.Username = username.(string)

@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -33,7 +34,7 @@ func GetGlobalConfig() *UserMgrConfig {
 	return userManagerConfig
 }
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile     string
 	CertFile   string
@@ -42,7 +43,7 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
-//UserMgrConfig is a configuration of bcs-user-manager
+// UserMgrConfig is a configuration of bcs-user-manager
 type UserMgrConfig struct {
 	Address         string
 	Port            uint
@@ -76,13 +77,13 @@ type UserMgrConfig struct {
 }
 
 var (
-	//Tke option for sync tke cluster credentials
+	// Tke option for sync tke cluster credentials
 	Tke options.TKEOptions
-	//CliTls for
+	// CliTls for
 	CliTls *tls.Config
 )
 
-//NewUserMgrConfig create a config object
+// NewUserMgrConfig create a config object
 func NewUserMgrConfig() *UserMgrConfig {
 	return &UserMgrConfig{
 		Address: "127.0.0.1",

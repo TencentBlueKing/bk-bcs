@@ -291,14 +291,15 @@
                               <bk-input class="list-input" :placeholder="$t('请输入')" v-model="port.name" />
                             </td>
                             <td>
-                              <bk-number-input
-                                :value.sync="port.port"
+                              <bk-input
+                                v-model="port.port"
+                                type="number"
                                 :min="1"
                                 :max="65535"
                                 :hide-operation="true"
                                 :ex-style="{ 'width': '100px' }"
                                 :placeholder="$t('请输入')">
-                              </bk-number-input>
+                              </bk-input>
                             </td>
                             <td>
                               <bk-selector
@@ -325,15 +326,16 @@
                               </bk-selector>
                             </td>
                             <td>
-                              <bk-number-input
+                              <bk-input
                                 :disabled="curServiceDetail.config.spec.type !== 'NodePort'"
-                                :value.sync="port.nodePort"
+                                v-model="port.nodePort"
+                                type="number"
                                 :min="0"
                                 :max="32767"
                                 :hide-operation="true"
-                                :ex-style="{ 'width': '100px' }"
+                                :style="{ 'width': '100px' }"
                                 :placeholder="$t('请输入')">
-                              </bk-number-input>
+                              </bk-input>
                             </td>
                             <td>
                               <bk-button class="action-btn" @click.stop.prevent="addPort" v-show="curServiceDetail.config.spec.ports.length < appPortList.length">

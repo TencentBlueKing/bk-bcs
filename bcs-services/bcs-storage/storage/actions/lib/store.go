@@ -250,6 +250,7 @@ func (a *Store) DeleteIndex(ctx context.Context, resourceType string, indexName 
 	return nil
 }
 
+// Count xxx
 // Get get something from db according to request
 func (a *Store) Count(ctx context.Context, resourceType string, opt *StoreGetOption) (int64, error) {
 	const (

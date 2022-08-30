@@ -42,8 +42,8 @@ func NewListAction(model store.ClusterManagerModel) *ListAction {
 
 func (la *ListAction) listCloudVPC() error {
 	condM := make(operator.M)
-	//! we don't setting bson tag in proto file
-	//! all fields are in lowcase
+	// ! we don't setting bson tag in proto file
+	// ! all fields are in lowcase
 	if len(la.req.CloudID) != 0 {
 		condM["cloudid"] = la.req.CloudID
 	}

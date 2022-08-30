@@ -14,6 +14,7 @@
 package version
 
 const (
+	// PlatformName xxx
 	PlatformName = "bcs"
 )
 
@@ -23,11 +24,15 @@ var (
 )
 
 const (
-	InnerEdition         = "inner_edition"
+	// InnerEdition xxx
+	InnerEdition = "inner_edition"
+	// CommunicationEdition xxx
 	CommunicationEdition = "communication_edition"
-	EnterpriseEdition    = "enterprise_edition"
+	// EnterpriseEdition xxx
+	EnterpriseEdition = "enterprise_edition"
 )
 
+// GetEdition xxx
 func GetEdition() string {
 	return BcsEdition
 }

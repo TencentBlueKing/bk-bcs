@@ -11,6 +11,7 @@
  *
  */
 
+// Package user xxx
 package user
 
 import (
@@ -56,7 +57,8 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("CreateAdminUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create user [%s]: %s", user.Name, err.Error())
-		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError, user.Name, err)
+		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError,
+			user.Name, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
@@ -113,7 +115,8 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create user [%s]: %s", user.Name, err.Error())
-		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError, user.Name, err)
+		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError,
+			user.Name, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
@@ -170,7 +173,8 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("CreatePlainUser", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create user [%s]: %s", user.Name, err.Error())
-		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError, user.Name, err)
+		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError,
+			user.Name, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
@@ -211,7 +215,8 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("invalid expire_time, failed to atoi: %s", err.Error())
-		message := fmt.Sprintf("errcode: %d, invalid expire_time, failed to atoi: %s", common.BcsErrApiBadRequest, err.Error())
+		message := fmt.Sprintf("errcode: %d, invalid expire_time, failed to atoi: %s", common.BcsErrApiBadRequest,
+			err.Error())
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
@@ -249,7 +254,8 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to refresh usertoken [%s]: %s", user.Name, err.Error())
-		message := fmt.Sprintf("errcode: %d, failed to refresh usertoken [%s], error: %s", common.BcsErrApiInternalDbError, userName, err)
+		message := fmt.Sprintf("errcode: %d, failed to refresh usertoken [%s], error: %s", common.BcsErrApiInternalDbError,
+			userName, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
@@ -285,7 +291,8 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to refresh usertoken [%s]: %s", user.Name, err.Error())
-		message := fmt.Sprintf("errcode: %d, failed to refresh usertoken [%s], error: %s", common.BcsErrApiInternalDbError, userName, err)
+		message := fmt.Sprintf("errcode: %d, failed to refresh usertoken [%s], error: %s", common.BcsErrApiInternalDbError,
+			userName, err)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}

@@ -21,10 +21,12 @@ import (
 	"strings"
 )
 
+// QCloudArg xxx
 type QCloudArg interface {
 	EncodeStructWithPrefix(prefix string, val reflect.Value, v *url.Values) error
 }
 
+// EncodeStruct xxx
 func EncodeStruct(i interface{}, v *url.Values) error {
 	val := reflect.ValueOf(i)
 	return encodeStructWithPrefix("", val, v)
@@ -88,6 +90,7 @@ func encodeStructWithPrefix(prefix string, val reflect.Value, v *url.Values) err
 
 type tagOptions []string
 
+// Contains xxx
 func (tOpts tagOptions) Contains(opt string) bool {
 	for _, o := range tOpts {
 		if o == opt {

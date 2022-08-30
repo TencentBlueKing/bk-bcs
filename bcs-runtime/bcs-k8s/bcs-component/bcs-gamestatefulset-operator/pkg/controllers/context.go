@@ -67,14 +67,17 @@ func newCanaryCtx(set *gstsv1alpha1.GameStatefulSet, hrList []*hookv1alpha1.Hook
 	}
 }
 
+// CurrentHookRuns xxx
 func (cCtx *canaryContext) CurrentHookRuns() []*hookv1alpha1.HookRun {
 	return cCtx.currentHrs
 }
 
+// OtherHookRuns xxx
 func (cCtx *canaryContext) OtherHookRuns() []*hookv1alpha1.HookRun {
 	return cCtx.otherHrs
 }
 
+// SetCurrentHookRuns xxx
 func (cCtx *canaryContext) SetCurrentHookRuns(ars []*hookv1alpha1.HookRun) {
 	cCtx.currentHrs = ars
 	currStepAr := commonhookutil.GetCurrentStepHookRun(ars)
@@ -84,10 +87,12 @@ func (cCtx *canaryContext) SetCurrentHookRuns(ars []*hookv1alpha1.HookRun) {
 
 }
 
+// AddPauseCondition xxx
 func (cCtx *canaryContext) AddPauseCondition(reason hookv1alpha1.PauseReason) {
 	cCtx.pauseReasons = append(cCtx.pauseReasons, reason)
 }
 
+// HasAddPause xxx
 func (cCtx *canaryContext) HasAddPause() bool {
 	return len(cCtx.pauseReasons) > 0
 }

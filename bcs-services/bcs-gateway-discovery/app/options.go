@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 )
 
-//NewServerOptions create default ServerOptions
+// NewServerOptions create default ServerOptions
 func NewServerOptions() *ServerOptions {
 	return &ServerOptions{
 		Etcd: EtcdRegistry{
@@ -43,6 +43,7 @@ type EtcdRegistry struct {
 	Key         string `json:"etcd_key" value:"" usage:"etcd registry tls key file"`
 }
 
+// Redis xxx
 type Redis struct {
 	RedisHost     string `json:"redis_host" value:"" usage:"redis host"`
 	RedisPassword string `json:"redis_password" value:"" usage:"redis password"`
@@ -50,7 +51,7 @@ type Redis struct {
 	RedisDatabase int    `json:"redis_database" value:"0" usage:"redis database"`
 }
 
-//ServerOptions command flags for gateway-discovery
+// ServerOptions command flags for gateway-discovery
 type ServerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -60,7 +61,7 @@ type ServerOptions struct {
 	conf.LogConfig
 	conf.ProcessConfig
 	IPv6Mode bool `json:"ipv6_mode" value:"false" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed." mapstructure:"ipv6_mode"`
-	//gateway admin api info
+	// gateway admin api info
 	AdminAPI              string `json:"admin_api" value:"127.0.0.1:8001" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed. custom cert/key comes from client_cert_file/client_key_file" mapstructure:"admin_api" `
 	AdminToken            string `json:"amdin_token" value:"" usage:"api-gateway admin api token"`
 	AdminType             string `json:"admin_type" value:"apisix" usage:"select apisix or kong as gateway"`
@@ -73,7 +74,7 @@ type ServerOptions struct {
 	Redis Redis        `json:"redis"`
 }
 
-//Valid check if necessary parameter is setting correctly
+// Valid check if necessary parameter is setting correctly
 func (opt *ServerOptions) Valid() error {
 	if len(opt.AdminAPI) == 0 {
 		return fmt.Errorf("Lost admin api setting")
@@ -88,7 +89,7 @@ func (opt *ServerOptions) Valid() error {
 		if len(opt.Etcd.Address) == 0 {
 			return fmt.Errorf("Lost etcd address information")
 		}
-		//enable etcd registry feature, we have to ensure tls config
+		// enable etcd registry feature, we have to ensure tls config
 		if len(opt.Etcd.Cert) == 0 || len(opt.Etcd.CA) == 0 ||
 			len(opt.Etcd.Key) == 0 {
 			return fmt.Errorf("Lost etcd tls config when enable etcd registry feature")
@@ -111,10 +112,10 @@ func (opt *ServerOptions) GetEtcdRegistryTLS() (*tls.Config, error) {
 	return config, nil
 }
 
-//GetClientTLS construct client tls configuration
+// GetClientTLS construct client tls configuration
 func (opt *ServerOptions) GetClientTLS() (*tls.Config, error) {
 	if len(opt.CertConfig.CAFile) != 0 && len(opt.CertConfig.ClientCertFile) == 0 {
-		//work with CA, and verify Server certification
+		// work with CA, and verify Server certification
 		config, err := ssl.ClientTslConfVerityServer(opt.CertConfig.CAFile)
 		if err != nil {
 			blog.Errorf("gateway-discovery tls with only CA failed, %s", err.Error())
@@ -122,7 +123,7 @@ func (opt *ServerOptions) GetClientTLS() (*tls.Config, error) {
 		}
 		return config, nil
 	}
-	//tls with CA/ClientCert/ClientKey
+	// tls with CA/ClientCert/ClientKey
 	if len(opt.CertConfig.CAFile) != 0 && len(opt.CertConfig.ClientCertFile) != 0 &&
 		len(opt.CertConfig.ClientKeyFile) != 0 {
 		config, err := ssl.ClientTslConfVerity(opt.CertConfig.CAFile, opt.CertConfig.ClientCertFile,

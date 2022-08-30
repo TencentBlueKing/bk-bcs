@@ -32,7 +32,7 @@ func RequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	}
 }
 
-// 获取 request id
+// getRequestID 获取 request id
 func getRequestID(ctx context.Context) string {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {

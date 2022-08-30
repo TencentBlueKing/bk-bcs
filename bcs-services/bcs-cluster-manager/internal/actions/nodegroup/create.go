@@ -49,7 +49,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	cluster, err := ca.model.GetCluster(ca.ctx, ca.req.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when create NodeGroup", ca.req.ClusterID)

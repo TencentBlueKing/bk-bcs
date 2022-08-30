@@ -11,6 +11,7 @@
  *
  */
 
+// Package upgrader xxx
 package upgrader
 
 import (
@@ -67,7 +68,7 @@ func NewUpgrader(op *options.UpgraderOptions) (*Upgrader, error) {
 	return s, nil
 }
 
-// initHTTPServer init all http service
+// initHTTPService init all http service
 func (u *Upgrader) initHTTPService() error {
 	u.initUpgraderService()
 
@@ -98,6 +99,7 @@ func (u *Upgrader) initPprofService() {
 	u.httpServer.RegisterWebServer("", nil, action)
 }
 
+// initMongoClient xxx
 // init mongo client
 func (u *Upgrader) initMongoClient() error {
 	if len(u.opt.MongoAddress) == 0 {

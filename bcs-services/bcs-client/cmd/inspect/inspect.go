@@ -11,6 +11,7 @@
  *
  */
 
+// Package inspect xxx
 package inspect
 
 import (
@@ -21,7 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewInspectCommand inspect sub command, get specified resource details
+// NewInspectCommand inspect sub command, get specified resource details
 func NewInspectCommand() cli.Command {
 	return cli.Command{
 		Name:  "inspect",
@@ -80,7 +81,7 @@ func inspect(c *utils.ClientContext) error {
 	case "meshcluster":
 		return inspectMeshCluster(c)
 	default:
-		//unkown type, try Custom Resource
+		// unkown type, try Custom Resource
 		return inspectCustomResource(c)
 	}
 }

@@ -11,13 +11,14 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//ServerOption is option in flags
+// ServerOption is option in flags
 type ServerOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -44,12 +45,13 @@ type ServerOption struct {
 	CloudNetserviceClientKeyFile  string `json:"cloud_netservice_client_key_file" value:"" usage:"client key file for accessing cloud netservice"`
 }
 
-//NewServerOption create a ServerOption object
+// NewServerOption create a ServerOption object
 func NewServerOption() *ServerOption {
 	s := ServerOption{}
 	return &s
 }
 
+// Parse xxx
 func Parse(ops *ServerOption) error {
 	conf.Parse(ops)
 	return nil

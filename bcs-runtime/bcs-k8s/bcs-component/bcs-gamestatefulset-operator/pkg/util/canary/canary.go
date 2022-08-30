@@ -11,6 +11,7 @@
  *
  */
 
+// Package canary xxx
 package canary
 
 import (
@@ -98,7 +99,8 @@ func ResetCurrentStepIndex(set *gstsv1alpha1.GameStatefulSet) *int32 {
 }
 
 // GetPauseCondition get pause condition with a pause reason
-func GetPauseCondition(set *gstsv1alpha1.GameStatefulSet, reason hookv1alpha1.PauseReason) *hookv1alpha1.PauseCondition {
+func GetPauseCondition(set *gstsv1alpha1.GameStatefulSet,
+	reason hookv1alpha1.PauseReason) *hookv1alpha1.PauseCondition {
 	for i := range set.Status.PauseConditions {
 		cond := set.Status.PauseConditions[i]
 		if cond.Reason == reason {

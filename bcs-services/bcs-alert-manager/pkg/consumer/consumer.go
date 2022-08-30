@@ -11,6 +11,7 @@
  *
  */
 
+// Package consumer xxx
 package consumer
 
 import (

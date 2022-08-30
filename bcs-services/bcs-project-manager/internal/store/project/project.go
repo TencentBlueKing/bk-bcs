@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package project xxx
 package project
 
 import (
@@ -50,7 +51,7 @@ var (
 	}
 )
 
-// Project ...
+// Project xxx
 type Project struct {
 	CreateTime  string `json:"createTime" bson:"createTime"`
 	UpdateTime  string `json:"updateTime" bson:"updateTime"`
@@ -94,6 +95,7 @@ func New(db drivers.DB) *ModelProject {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelProject) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

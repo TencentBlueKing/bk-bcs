@@ -19,6 +19,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewExportCommand xxx
 func NewExportCommand() cli.Command {
 	return cli.Command{
 		Name:  "export",

@@ -19,9 +19,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
-//SendToApplication send message to all tasks of the specified application
-func (b *backend) SendToApplication(runAs, appID string, msg *types.BcsMessage) ([]*types.TaskGroupOpResult, []*types.TaskGroupOpResult, error) {
-	//var succ, fail []*types.TaskGroup
+// SendToApplication send message to all tasks of the specified application
+func (b *backend) SendToApplication(runAs, appID string, msg *types.BcsMessage) ([]*types.TaskGroupOpResult,
+	[]*types.TaskGroupOpResult, error) {
+	// var succ, fail []*types.TaskGroup
 	var succ, fail []*types.TaskGroupOpResult
 	b.store.LockApplication(runAs + "." + appID)
 	defer b.store.UnLockApplication(runAs + "." + appID)
@@ -56,7 +57,7 @@ func (b *backend) SendToApplication(runAs, appID string, msg *types.BcsMessage) 
 	return succ, fail, nil
 }
 
-//SendToApplicationTaskGroup send message to tasks of the specified taskgroup with taskgroup id
+// SendToApplicationTaskGroup send message to tasks of the specified taskgroup with taskgroup id
 func (b *backend) SendToApplicationTaskGroup(runAs, appID string, taskGroupID string, msg *types.BcsMessage) error {
 
 	b.store.LockApplication(runAs + "." + appID)

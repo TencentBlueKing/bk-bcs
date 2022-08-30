@@ -378,7 +378,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 
 // getNodeInfos finds NodeInfos for all nodes
 func getNodeInfos(listers kube_util.ListerRegistry) (map[string]*schedulernodeinfo.NodeInfo, errors.AutoscalerError) {
-	//results := make(map[string]*schedulernodeinfo.NodeInfo)
+	// results := make(map[string]*schedulernodeinfo.NodeInfo)
 
 	podsForNodes, typeErr := getPodsForNodes(listers)
 	if typeErr != nil {
@@ -537,6 +537,7 @@ func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 	return newNode, nil
 }
 
+// removeOldUnregisteredNodes xxx
 // Removes unregistered nodes if needed. Returns true if anything was removed and error if such occurred.
 func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNode, context *context.AutoscalingContext,
 	currentTime time.Time, logRecorder *utils.LogEventRecorder) (bool, error) {
@@ -580,6 +581,7 @@ func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNod
 	return removedAny, nil
 }
 
+// fixNodeGroupSize xxx
 // Sets the target size of node groups to the current number of nodes in them
 // if the difference was constant for a prolonged time. Returns true if managed
 // to fix something.

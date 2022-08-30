@@ -29,18 +29,18 @@ const (
 )
 
 const (
-	// HookTmplMetricTypeWeb ...
+	// HookTmplMetricTypeWeb TODO
 	HookTmplMetricTypeWeb = "web"
-	// HookTmplMetricTypeProm ...
+	// HookTmplMetricTypeProm TODO
 	HookTmplMetricTypeProm = "prometheus"
-	// HookTmplMetricTypeK8S ...
+	// HookTmplMetricTypeK8S TODO
 	HookTmplMetricTypeK8S = "kubernetes"
 )
 
 const (
-	// DefaultGWorkloadMaxSurge ...
+	// DefaultGWorkloadMaxSurge TODO
 	DefaultGWorkloadMaxSurge = 0
-	// DefaultGWorkloadMaxUnavailable ...
+	// DefaultGWorkloadMaxUnavailable TODO
 	DefaultGWorkloadMaxUnavailable = 20
 	// DefaultGWorkloadGracePeriodSecs 默认优雅更新时间
 	DefaultGWorkloadGracePeriodSecs = 30

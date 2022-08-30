@@ -19,10 +19,10 @@ import (
 	"time"
 
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	//"fmt"
+	// "fmt"
 )
 
-//executor or task default resources limits
+// executor or task default resources limits
 const (
 	CPUS_PER_EXECUTOR = 0.01
 	CPUS_PER_TASK     = 1
@@ -43,7 +43,7 @@ const (
 	OPERATION_UPDATE     = "UPDATE"
 )
 
-//operation status
+// operation status
 const (
 	OPERATION_STATUS_INIT    = "INIT"
 	OPERATION_STATUS_FINISH  = "FINISH"
@@ -56,7 +56,7 @@ const (
 	Ext_TaskState_TASK_RESTARTING int32 = 101
 )
 
-//app status
+// app status
 const (
 	APP_STATUS_STAGING       = "Staging"
 	APP_STATUS_DEPLOYING     = "Deploying"
@@ -69,7 +69,7 @@ const (
 	APP_STATUS_ABNORMAL      = "Abnormal"
 )
 
-//task status
+// task status
 const (
 	TASK_STATUS_STAGING  = "Staging"
 	TASK_STATUS_STARTING = "Starting"
@@ -86,7 +86,7 @@ const (
 	TASK_STATUS_UNKOWN = "Unknown"
 )
 
-//taskgroup status
+// taskgroup status
 const (
 	TASKGROUP_STATUS_STAGING  = "Staging"
 	TASKGROUP_STATUS_STARTING = "Starting"
@@ -103,7 +103,7 @@ const (
 	TASKGROUP_STATUS_UNKNOWN = "Unknown"
 )
 
-//Version for api resources application or deployment
+// Version for api resources application or deployment
 type Version struct {
 	ID            string
 	Name          string
@@ -122,16 +122,16 @@ type Version struct {
 	Mode        string
 }
 
-//Resource describe resources needed by a task
+// Resource describe resources needed by a task
 type Resource struct {
 	Cpus float64
 	Mem  float64
 	Disk float64
-	//IOTps  uint32 //default times per second
-	//IOBps  uint32 //default MB/s
+	// IOTps  uint32 //default times per second
+	// IOBps  uint32 //default MB/s
 }
 
-//CheckAndDefaultResource check the resource of each container, if no resource, set default value
+// CheckAndDefaultResource check the resource of each container, if no resource, set default value
 func (version *Version) CheckAndDefaultResource() error {
 
 	for index, container := range version.Container {
@@ -150,7 +150,8 @@ func (version *Version) CheckAndDefaultResource() error {
 	return nil
 }
 
-//check application constraints whether is valid
+// CheckConstraints xxx
+// check application constraints whether is valid
 func (version *Version) CheckConstraints() bool {
 	if version.Constraints == nil {
 		return true
@@ -186,7 +187,7 @@ func (version *Version) CheckConstraints() bool {
 	return true
 }
 
-//AllCpus return taskgroup will use cpu resources
+// AllCpus return taskgroup will use cpu resources
 func (version *Version) AllCpus() float64 {
 	var allCpus float64
 	allCpus = 0
@@ -196,7 +197,7 @@ func (version *Version) AllCpus() float64 {
 	return allCpus + float64(CPUS_PER_EXECUTOR)
 }
 
-//AllMems return taskgroup will use memory resource
+// AllMems return taskgroup will use memory resource
 func (version *Version) AllMems() float64 {
 	var allMem float64
 	allMem = 0
@@ -206,7 +207,7 @@ func (version *Version) AllMems() float64 {
 	return allMem + float64(MEM_PER_EXECUTOR)
 }
 
-//AllDisk return taskgroup will use disk resources
+// AllDisk return taskgroup will use disk resources
 func (version *Version) AllDisk() float64 {
 	var allDisk float64
 	allDisk = 0
@@ -216,7 +217,7 @@ func (version *Version) AllDisk() float64 {
 	return allDisk + float64(DISK_PER_EXECUTOR)
 }
 
-//AllResource return  taskgroup used cpu, memory, disk resources
+// AllResource return  taskgroup used cpu, memory, disk resources
 func (version *Version) AllResource() *Resource {
 	return &Resource{
 		Cpus: version.AllCpus(),
@@ -225,15 +226,15 @@ func (version *Version) AllResource() *Resource {
 	}
 }
 
-//IsResourceFit return if resource is fit for version
-//func (version *Version) IsResourceFit(r Resource) bool {
+// IsResourceFit return if resource is fit for version
+// func (version *Version) IsResourceFit(r Resource) bool {
 //	if version.AllCpus() <= r.Cpus && version.AllMems() <= r.Mem && version.AllDisk() <= r.Disk {
 //		return true
 //	}
 //	return false
-//}
+// }
 
-//Container for Version
+// Container for Version
 type Container struct {
 	Type      string
 	Docker    *Docker
@@ -246,11 +247,11 @@ type Container struct {
 
 	HealthChecks []*commtypes.HealthCheck
 
-	//network flow limit
+	// network flow limit
 	NetLimit *commtypes.NetLimit
 }
 
-//Docker for container
+// Docker for container
 type Docker struct {
 	Hostname        string
 	ForcePullImage  bool
@@ -267,13 +268,13 @@ type Docker struct {
 	Privileged      bool
 }
 
-//Parameter for container
+// Parameter for container
 type Parameter struct {
 	Key   string
 	Value string
 }
 
-//PortMapping for container
+// PortMapping for container
 type PortMapping struct {
 	ContainerPort int32
 	HostPort      int32
@@ -281,14 +282,14 @@ type PortMapping struct {
 	Protocol      string
 }
 
-//Volume for container
+// Volume for container
 type Volume struct {
 	ContainerPath string
 	HostPath      string
 	Mode          string
 }
 
-//UpdatePolicy for container
+// UpdatePolicy for container
 type UpdatePolicy struct {
 	UpdateDelay  int32
 	MaxRetries   int32
@@ -296,7 +297,7 @@ type UpdatePolicy struct {
 	Action       string
 }
 
-//HealthCheck for container
+// HealthCheck for container
 type HealthCheck struct {
 	ID                     string
 	Address                string
@@ -316,12 +317,12 @@ type HealthCheck struct {
 	ConsecutiveFailures    uint32
 }
 
-//Command for container
+// Command for container
 type Command struct {
 	Value string
 }
 
-//Task for container
+// Task for container
 type Task struct {
 	ID              string
 	Name            string
@@ -357,11 +358,11 @@ type Task struct {
 	Uris              []string
 	LastUpdateTime    int64
 	Message           string
-	//network flow limit
+	// network flow limit
 	NetLimit *commtypes.NetLimit
 }
 
-// taskgroup describes the implements of multiple tasks
+// TaskGroup describes the implements of multiple tasks
 type TaskGroup struct {
 	ID              string
 	Name            string
@@ -383,7 +384,7 @@ type TaskGroup struct {
 	UpdateTime      int64
 	ReschededTimes  int
 	LastReschedTime int64
-	//we should replace the next three BcsXXX, using ObjectMeta.Labels directly
+	// we should replace the next three BcsXXX, using ObjectMeta.Labels directly
 	BcsAppID       string
 	BcsSetID       string
 	BcsModuleID    string
@@ -394,74 +395,74 @@ type TaskGroup struct {
 	BcsMessages    map[int64]*BcsMessage
 }
 
-//GetName for ObjectMeta
+// GetName for ObjectMeta
 func (om *TaskGroup) GetName() string {
 	return om.Name
 }
 
-//SetName set object name
+// SetName set object name
 func (om *TaskGroup) SetName(name string) {
 	om.Name = name
 }
 
-//GetNamespace for ObjectMeta
+// GetNamespace for ObjectMeta
 func (om *TaskGroup) GetNamespace() string {
 	return om.ObjectMeta.NameSpace
 }
 
-//SetNamespace set object namespace
+// SetNamespace set object namespace
 func (om *TaskGroup) SetNamespace(ns string) {
 	om.ObjectMeta.NameSpace = ns
 }
 
-//GetCreationTimestamp get create timestamp
+// GetCreationTimestamp get create timestamp
 func (om *TaskGroup) GetCreationTimestamp() time.Time {
 	return om.ObjectMeta.CreationTimestamp
 }
 
-//SetCreationTimestamp set creat timestamp
+// SetCreationTimestamp set creat timestamp
 func (om *TaskGroup) SetCreationTimestamp(timestamp time.Time) {
 	om.ObjectMeta.CreationTimestamp = timestamp
 }
 
-//GetLabels for ObjectMeta
+// GetLabels for ObjectMeta
 func (om *TaskGroup) GetLabels() map[string]string {
 	return om.ObjectMeta.Labels
 }
 
-//SetLabels set objec labels
+// SetLabels set objec labels
 func (om *TaskGroup) SetLabels(labels map[string]string) {
 	om.ObjectMeta.Labels = labels
 }
 
-//GetAnnotations for ObjectMeta
+// GetAnnotations for ObjectMeta
 func (om *TaskGroup) GetAnnotations() map[string]string {
 	return om.ObjectMeta.Annotations
 }
 
-//SetAnnotations get annotation name
+// SetAnnotations get annotation name
 func (om *TaskGroup) SetAnnotations(annotation map[string]string) {
 	om.ObjectMeta.Annotations = annotation
 }
 
-//GetClusterName get cluster name
+// GetClusterName get cluster name
 func (om *TaskGroup) GetClusterName() string {
 	return om.ObjectMeta.ClusterName
 }
 
-//SetClusterName set cluster name
+// SetClusterName set cluster name
 func (om *TaskGroup) SetClusterName(clusterName string) {
 	om.ObjectMeta.ClusterName = clusterName
 }
 
-//PortMappings for container
+// PortMappings for container
 type PortMappings struct {
 	Port     uint32
 	Protocol string
 	Name     string
 }
 
-//Application for container
+// Application for container
 type Application struct {
 	ID               string
 	Name             string
@@ -478,7 +479,7 @@ type Application struct {
 	Mode             string
 	LastUpdateTime   int64
 
-	//we should replace the next three BcsXXX, using ObjectMeta.Labels directly
+	// we should replace the next three BcsXXX, using ObjectMeta.Labels directly
 	BcsAppID    string
 	BcsSetID    string
 	BcsModuleID string
@@ -487,67 +488,67 @@ type Application struct {
 	Pods    []*commtypes.BcsPodIndex
 }
 
-//GetName for ObjectMeta
+// GetName for ObjectMeta
 func (om *Application) GetName() string {
 	return om.Name
 }
 
-//SetName set object name
+// SetName set object name
 func (om *Application) SetName(name string) {
 	om.Name = name
 }
 
-//GetNamespace for ObjectMeta
+// GetNamespace for ObjectMeta
 func (om *Application) GetNamespace() string {
 	return om.ObjectMeta.NameSpace
 }
 
-//SetNamespace set object namespace
+// SetNamespace set object namespace
 func (om *Application) SetNamespace(ns string) {
 	om.ObjectMeta.NameSpace = ns
 }
 
-//GetCreationTimestamp get create timestamp
+// GetCreationTimestamp get create timestamp
 func (om *Application) GetCreationTimestamp() time.Time {
 	return om.ObjectMeta.CreationTimestamp
 }
 
-//SetCreationTimestamp set creat timestamp
+// SetCreationTimestamp set creat timestamp
 func (om *Application) SetCreationTimestamp(timestamp time.Time) {
 	om.ObjectMeta.CreationTimestamp = timestamp
 }
 
-//GetLabels for ObjectMeta
+// GetLabels for ObjectMeta
 func (om *Application) GetLabels() map[string]string {
 	return om.ObjectMeta.Labels
 }
 
-//SetLabels set objec labels
+// SetLabels set objec labels
 func (om *Application) SetLabels(labels map[string]string) {
 	om.ObjectMeta.Labels = labels
 }
 
-//GetAnnotations for ObjectMeta
+// GetAnnotations for ObjectMeta
 func (om *Application) GetAnnotations() map[string]string {
 	return om.ObjectMeta.Annotations
 }
 
-//SetAnnotations get annotation name
+// SetAnnotations get annotation name
 func (om *Application) SetAnnotations(annotation map[string]string) {
 	om.ObjectMeta.Annotations = annotation
 }
 
-//GetClusterName get cluster name
+// GetClusterName get cluster name
 func (om *Application) GetClusterName() string {
 	return om.ObjectMeta.ClusterName
 }
 
-//SetClusterName set cluster name
+// SetClusterName set cluster name
 func (om *Application) SetClusterName(clusterName string) {
 	om.ObjectMeta.ClusterName = clusterName
 }
 
-//Operation for application
+// Operation for application
 type Operation struct {
 	ID             string
 	RunAs          string
@@ -559,10 +560,12 @@ type Operation struct {
 	ErrorStr       string
 }
 
+// OperationIndex xxx
 type OperationIndex struct {
 	Operation string
 }
 
+// Agent xxx
 // mesos slave info
 type Agent struct {
 	Key          string
@@ -570,66 +573,67 @@ type Agent struct {
 	AgentInfo    *mesos_master.Response_GetAgents_Agent
 }
 
-//GetName for ObjectMeta
+// GetName for ObjectMeta
 func (om *Agent) GetName() string {
 	return om.Key
 }
 
-//SetName set object name
+// SetName set object name
 func (om *Agent) SetName(name string) {
 	om.Key = name
 }
 
-//GetNamespace for ObjectMeta
+// GetNamespace for ObjectMeta
 func (om *Agent) GetNamespace() string {
 	return ""
 }
 
-//SetNamespace set object namespace
+// SetNamespace set object namespace
 func (om *Agent) SetNamespace(ns string) {
 	//
 }
 
-//GetCreationTimestamp get create timestamp
+// GetCreationTimestamp get create timestamp
 func (om *Agent) GetCreationTimestamp() time.Time {
 	return time.Now()
 }
 
-//SetCreationTimestamp set creat timestamp
+// SetCreationTimestamp set creat timestamp
 func (om *Agent) SetCreationTimestamp(timestamp time.Time) {
 	//
 }
 
-//GetLabels for ObjectMeta
+// GetLabels for ObjectMeta
 func (om *Agent) GetLabels() map[string]string {
 	return nil
 }
 
-//SetLabels set objec labels
+// SetLabels set objec labels
 func (om *Agent) SetLabels(labels map[string]string) {
 	//
 }
 
-//GetAnnotations for ObjectMeta
+// GetAnnotations for ObjectMeta
 func (om *Agent) GetAnnotations() map[string]string {
 	return nil
 }
 
-//SetAnnotations get annotation name
+// SetAnnotations get annotation name
 func (om *Agent) SetAnnotations(annotation map[string]string) {
 	//
 }
 
-//GetClusterName get cluster name
+// GetClusterName get cluster name
 func (om *Agent) GetClusterName() string {
 	return ""
 }
 
-//SetClusterName set cluster name
+// SetClusterName set cluster name
 func (om *Agent) SetClusterName(clusterName string) {
 	//
 }
 
+// GetAgentIP xxx
 func (om *Agent) GetAgentIP() string {
 	if om.AgentInfo == nil || om.AgentInfo.AgentInfo == nil {
 		return ""
@@ -646,6 +650,7 @@ func (om *Agent) GetAgentIP() string {
 	return ""
 }
 
+// Check xxx
 type Check struct {
 	ID          string   `json:"id"`
 	Protocol    string   `json:"protocol"`
@@ -661,12 +666,14 @@ type Check struct {
 	AppID       string   `json:"app_id"`
 }
 
+// DataClass xxx
 type DataClass struct {
 	Resources *Resource
 	Msgs      []*BcsMessage
 	NetLimit  *commtypes.NetLimit
 }
 
+// DeploymentDef xxx
 type DeploymentDef struct {
 	ObjectMeta commtypes.ObjectMeta      `json:"metadata"`
 	Selector   map[string]string         `json:"selector,omitempty"`
@@ -675,20 +682,30 @@ type DeploymentDef struct {
 }
 
 const (
-	DEPLOYMENT_STATUS_DEPLOYING             = "Deploying"
-	DEPLOYMENT_STATUS_RUNNING               = "Running"
-	DEPLOYMENT_STATUS_ROLLINGUPDATE         = "Update"
-	DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED  = "UpdatePaused"
+	// DEPLOYMENT_STATUS_DEPLOYING xxx
+	DEPLOYMENT_STATUS_DEPLOYING = "Deploying"
+	// DEPLOYMENT_STATUS_RUNNING xxx
+	DEPLOYMENT_STATUS_RUNNING = "Running"
+	// DEPLOYMENT_STATUS_ROLLINGUPDATE xxx
+	DEPLOYMENT_STATUS_ROLLINGUPDATE = "Update"
+	// DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED xxx
+	DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED = "UpdatePaused"
+	// DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND xxx
 	DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND = "UpdateSuspend"
-	DEPLOYMENT_STATUS_DELETING              = "Deleting"
+	// DEPLOYMENT_STATUS_DELETING xxx
+	DEPLOYMENT_STATUS_DELETING = "Deleting"
 )
 
 const (
-	DEPLOYMENT_OPERATION_NIL    = ""
+	// DEPLOYMENT_OPERATION_NIL xxx
+	DEPLOYMENT_OPERATION_NIL = ""
+	// DEPLOYMENT_OPERATION_DELETE xxx
 	DEPLOYMENT_OPERATION_DELETE = "DELETE"
-	DEPLOYMENT_OPERATION_START  = "START"
+	// DEPLOYMENT_OPERATION_START xxx
+	DEPLOYMENT_OPERATION_START = "START"
 )
 
+// Deployment xxx
 type Deployment struct {
 	ObjectMeta      commtypes.ObjectMeta        `json:"metadata"`
 	Selector        map[string]string           `json:"selector,omitempty"`
@@ -703,11 +720,13 @@ type Deployment struct {
 	Message         string                      `json:"message"`
 }
 
+// DeploymentReferApplication xxx
 type DeploymentReferApplication struct {
 	ApplicationName        string `json:"name"`
 	CurrentTargetInstances int    `json:"curr_target_instances"`
 }
 
+// AgentSchedInfo xxx
 type AgentSchedInfo struct {
 	HostName   string  `json:"host_name"`
 	DeltaCPU   float64 `json:"delta_cpu"`

@@ -37,8 +37,10 @@ const (
 
 // Storage interface definition for bcs-storage
 type Storage interface {
+	// QueryMesosTaskgroup TODO
 	// search all taskgroup by clusterID
 	QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, error)
+	// QueryK8SPod TODO
 	// query all pod information in specified cluster
 	QueryK8SPod(cluster, namespace string) ([]*storage.Pod, error)
 	// GetIPPoolDetailInfo get all underlay ip information
@@ -58,7 +60,7 @@ type Storage interface {
 	QueryK8SNamespace(cluster string) ([]*storage.Namespace, error)
 	// QueryK8SDeployment query all deployment in specified cluster
 	QueryK8SDeployment(cluster, namespace string) ([]*storage.Deployment, error)
-	// QueryK8SDaemonset query all daemonset in specified cluster
+	// QueryK8SDaemonSet query all daemonset in specified cluster
 	QueryK8SDaemonSet(cluster, namespace string) ([]*storage.DaemonSet, error)
 	// QueryK8SStatefulSet query all statefulset in specified cluster
 	QueryK8SStatefulSet(cluster, namespace string) ([]*storage.StatefulSet, error)
@@ -80,9 +82,9 @@ type Storage interface {
 	QueryK8sResourceQuota(cluster, namespace string) ([]*storage.ResourceQuota, error)
 	// QueryMesosNamespace query all namespace in specified cluster
 	QueryMesosNamespace(cluster string) ([]*storage.MesosNamespace, error)
-	//QueryMesosDeployment query all deployment in specified cluster
+	// QueryMesosDeployment query all deployment in specified cluster
 	QueryMesosDeployment(cluster string) ([]*storage.MesosDeployment, error)
-	//QueryMesosApplication query all application in specified cluster
+	// QueryMesosApplication query all application in specified cluster
 	QueryMesosApplication(cluster string) ([]*storage.MesosApplication, error)
 }
 
@@ -138,7 +140,7 @@ func (c *StorageCli) QueryK8sPvc(cluster, namespace string) ([]*storage.Pvc, err
 	}
 
 	if len(pvcs) == 0 {
-		//No pvc data retrieve from bcs-storage
+		// No pvc data retrieve from bcs-storage
 		blog.V(5).Infof("query kubernetes empty pvcs in cluster %s", cluster)
 		return nil, nil
 	}
@@ -201,7 +203,7 @@ func (c *StorageCli) QueryK8sResourceQuota(cluster, namespace string) ([]*storag
 	}
 
 	if len(quotas) == 0 {
-		//No quota data retrieve from bcs-storage
+		// No quota data retrieve from bcs-storage
 		blog.V(5).Infof("query kubernetes empty quotas in cluster %s", cluster)
 		return nil, nil
 	}
@@ -622,7 +624,7 @@ func (c *StorageCli) query(cluster, subPath string) (*BasicResponse, error) {
 // getRequestPath get storage query URL prefix
 func (c *StorageCli) getRequestPath() string {
 	if c.Config.Gateway {
-		//format bcs-api-gateway path
+		// format bcs-api-gateway path
 		return fmt.Sprintf("%s%s/", gatewayPrefix, types.BCS_MODULE_STORAGE)
 	}
 	return fmt.Sprintf("/%s/", storagePath)
@@ -654,7 +656,7 @@ func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, 
 	}
 
 	if len(taskgroups) == 0 {
-		//No taskgroup data retrieve from bcs-storage
+		// No taskgroup data retrieve from bcs-storage
 		blog.V(5).Infof("query mesos empty taskgroups in cluster %s", cluster)
 		return nil, nil
 	}
@@ -686,14 +688,14 @@ func (c *StorageCli) QueryK8SPod(cluster, namespace string) ([]*storage.Pod, err
 	}
 
 	if len(pods) == 0 {
-		//No pod data retrieve from bcs-storage
+		// No pod data retrieve from bcs-storage
 		blog.V(5).Infof("query kubernetes empty pods in cluster %s", cluster)
 		return nil, nil
 	}
 	return pods, nil
 }
 
-//GetIPPoolDetailInfo get all underlay ip information
+// GetIPPoolDetailInfo get all underlay ip information
 func (c *StorageCli) GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, error) {
 	if len(clusterID) == 0 {
 		return nil, fmt.Errorf("lost cluster Id")
@@ -711,7 +713,7 @@ func (c *StorageCli) GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, e
 	if !response.Result {
 		return nil, fmt.Errorf(response.Message)
 	}
-	//parse response.Data according to specified interface
+	// parse response.Data according to specified interface
 	detailResponse := make([]*storage.IPPoolDetailResponse, 0)
 	if err := json.Unmarshal(response.Data, &detailResponse); err != nil {
 		return nil, fmt.Errorf("decode response data failed, %s", err.Error())

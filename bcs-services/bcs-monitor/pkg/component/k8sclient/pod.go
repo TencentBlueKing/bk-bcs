@@ -112,7 +112,8 @@ func (l *LogWithPreviousLink) MakePreviousLink(projectId, clusterId, namespace, 
 	}
 
 	u := *config.G.Web.BaseURL
-	u.Path = path.Join(u.Path, fmt.Sprintf("/%s/projects/%s/clusters/%s/namespaces/%s/pods/%s/logs", config.APIServicePrefix, projectId, clusterId, namespace, podname))
+	u.Path = path.Join(u.Path, fmt.Sprintf("/%s/projects/%s/clusters/%s/namespaces/%s/pods/%s/logs",
+		config.APIServicePrefix, projectId, clusterId, namespace, podname))
 
 	query := url.Values{}
 	query.Set("started_at", sinceTime.Format(time.RFC3339Nano))

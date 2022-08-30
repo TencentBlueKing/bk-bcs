@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package discovery xxx
 package discovery
 
 import (
@@ -20,7 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
-	
+
 	"github.com/micro/go-micro/v2/registry"
 )
 

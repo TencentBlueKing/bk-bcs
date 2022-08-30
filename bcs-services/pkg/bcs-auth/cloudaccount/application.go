@@ -90,7 +90,8 @@ func BuildAccountApplicationInstance(accountAppAction AccountApplicationAction) 
 }
 
 // BuildAccountSameInstanceApplication for same instanceSelection
-func BuildAccountSameInstanceApplication(isCreate bool, actionIDs []string, data []ProjectAccountData) []iam.ApplicationAction {
+func BuildAccountSameInstanceApplication(isCreate bool, actionIDs []string,
+	data []ProjectAccountData) []iam.ApplicationAction {
 	applications := make([]iam.ApplicationAction, 0)
 
 	for i := range actionIDs {

@@ -46,7 +46,8 @@ type ExtraTokenHandler struct {
 
 // NewExtraTokenHandler creates a new ExtraTokenHandler
 func NewExtraTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenNotifyStore, cache cache.Cache,
-	jwtClient jwt.BCSJWTAuthentication, clusterClient *cmanager.ClusterManagerClient, cmdbClient *cmdb.Client) *ExtraTokenHandler {
+	jwtClient jwt.BCSJWTAuthentication, clusterClient *cmanager.ClusterManagerClient,
+	cmdbClient *cmdb.Client) *ExtraTokenHandler {
 	return &ExtraTokenHandler{
 		tokenStore:    tokenStore,
 		notifyStore:   notifyStore,

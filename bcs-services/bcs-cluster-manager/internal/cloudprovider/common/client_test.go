@@ -88,7 +88,7 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 		}
 
 		data, err := cli.GetTaskStatus("", req, &StartTaskRequest{
-			//Scope: "cmdb_biz",
+			// Scope: "cmdb_biz",
 		})
 		if err != nil {
 			fmt.Printf("RunBKsopsJob GetTaskStatus failed: %v", err)

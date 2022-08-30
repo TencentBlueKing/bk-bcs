@@ -35,6 +35,7 @@ var (
 	errServerNotInit = errors.New("server not inited")
 )
 
+// CClient xxx
 var CClient *ClientConfig
 
 // SetCCClient set pass-cc client

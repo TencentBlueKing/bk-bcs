@@ -11,6 +11,7 @@
  *
  */
 
+// Package zk xxx
 /*
 Package store implements the interface for db operations and objects storage, currently using ZK
 

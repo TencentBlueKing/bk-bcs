@@ -12,19 +12,31 @@
 
 package rest
 
+// Verb xxx
 // K8S 的操作类型
 type Verb string
 
 const (
-	ListVerb        = "list"
+	// ListVerb xxx
+	ListVerb = "list"
+	// ListAsTableVerb xxx
 	ListAsTableVerb = "listAsTable" // kubectl 列表返回
-	GetVerb         = "get"
-	GetLogsVerb     = "getLogs"    // pod 标准输出
-	GetAsTableVerb  = "getAsTable" // kubectl 列表返回
-	CreateVerb      = "create"
-	UpdateVerb      = "update"
-	PatchVerb       = "patch"
-	DeleteVerb      = "delete"
-	WatchVerb       = "watch"
-	ExecVerb        = "exec" // pod remotecommand
+	// GetVerb xxx
+	GetVerb = "get"
+	// GetLogsVerb xxx
+	GetLogsVerb = "getLogs" // pod 标准输出
+	// GetAsTableVerb xxx
+	GetAsTableVerb = "getAsTable" // kubectl 列表返回
+	// CreateVerb xxx
+	CreateVerb = "create"
+	// UpdateVerb xxx
+	UpdateVerb = "update"
+	// PatchVerb xxx
+	PatchVerb = "patch"
+	// DeleteVerb xxx
+	DeleteVerb = "delete"
+	// WatchVerb xxx
+	WatchVerb = "watch"
+	// ExecVerb xxx
+	ExecVerb = "exec" // pod remotecommand
 )

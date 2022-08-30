@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 )
 
+// Storage xxx
 type Storage interface {
 	ListApplication(clusterID string, condition url.Values) (ApplicationList, error)
 	ListProcess(clusterID string, condition url.Values) (ProcessList, error)
@@ -48,7 +49,9 @@ type Storage interface {
 }
 
 const (
-	BcsStorageListDynamicURI    = "%s/bcsapi/v4/storage/query/mesos/dynamic/clusters/%s/%s"
+	// BcsStorageListDynamicURI xxx
+	BcsStorageListDynamicURI = "%s/bcsapi/v4/storage/query/mesos/dynamic/clusters/%s/%s"
+	// BcsStorageInspectDynamicURI xxx
 	BcsStorageInspectDynamicURI = "%s/bcsapi/v4/storage/mesos/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s/%s"
 )
 
@@ -57,6 +60,7 @@ type bcsStorage struct {
 	requester     utils.ApiRequester
 }
 
+// NewBcsStorage xxx
 func NewBcsStorage(options types.ClientOptions) Storage {
 	return &bcsStorage{
 		bcsApiAddress: options.BcsApiAddress,
@@ -64,6 +68,7 @@ func NewBcsStorage(options types.ClientOptions) Storage {
 	}
 }
 
+// ListApplication xxx
 func (bs *bcsStorage) ListApplication(clusterID string, condition url.Values) (ApplicationList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeApplication, condition)
 	if err != nil {
@@ -75,6 +80,7 @@ func (bs *bcsStorage) ListApplication(clusterID string, condition url.Values) (A
 	return result, err
 }
 
+// ListProcess xxx
 func (bs *bcsStorage) ListProcess(clusterID string, condition url.Values) (ProcessList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeProcess, condition)
 	if err != nil {
@@ -86,6 +92,7 @@ func (bs *bcsStorage) ListProcess(clusterID string, condition url.Values) (Proce
 	return result, err
 }
 
+// ListTaskGroup xxx
 func (bs *bcsStorage) ListTaskGroup(clusterID string, condition url.Values) (TaskGroupList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeTaskGroup, condition)
 	if err != nil {
@@ -97,6 +104,7 @@ func (bs *bcsStorage) ListTaskGroup(clusterID string, condition url.Values) (Tas
 	return result, err
 }
 
+// ListConfigMap xxx
 func (bs *bcsStorage) ListConfigMap(clusterID string, condition url.Values) (ConfigMapList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeConfigMap, condition)
 	if err != nil {
@@ -108,6 +116,7 @@ func (bs *bcsStorage) ListConfigMap(clusterID string, condition url.Values) (Con
 	return result, err
 }
 
+// ListSecret xxx
 func (bs *bcsStorage) ListSecret(clusterID string, condition url.Values) (SecretList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeSecret, condition)
 	if err != nil {
@@ -119,6 +128,7 @@ func (bs *bcsStorage) ListSecret(clusterID string, condition url.Values) (Secret
 	return result, err
 }
 
+// ListService xxx
 func (bs *bcsStorage) ListService(clusterID string, condition url.Values) (ServiceList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeService, condition)
 	if err != nil {
@@ -130,6 +140,7 @@ func (bs *bcsStorage) ListService(clusterID string, condition url.Values) (Servi
 	return result, err
 }
 
+// ListEndpoint xxx
 func (bs *bcsStorage) ListEndpoint(clusterID string, condition url.Values) (EndpointList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeEndpoint, condition)
 	if err != nil {
@@ -141,6 +152,7 @@ func (bs *bcsStorage) ListEndpoint(clusterID string, condition url.Values) (Endp
 	return result, err
 }
 
+// ListDeployment xxx
 func (bs *bcsStorage) ListDeployment(clusterID string, condition url.Values) (DeploymentList, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeDeployment, condition)
 	if err != nil {
@@ -152,6 +164,7 @@ func (bs *bcsStorage) ListDeployment(clusterID string, condition url.Values) (De
 	return result, err
 }
 
+// ListNamespace xxx
 func (bs *bcsStorage) ListNamespace(clusterID string, condition url.Values) ([]string, error) {
 	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeNamespace, condition)
 	if err != nil {
@@ -187,6 +200,7 @@ func (bs *bcsStorage) ListIPPoolStaticDetail(clusterID string, condition url.Val
 	return result, err
 }
 
+// InspectApplication xxx
 func (bs *bcsStorage) InspectApplication(clusterID, namespace, name string) (*ApplicationSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeApplication, name)
 	if err != nil {
@@ -198,6 +212,7 @@ func (bs *bcsStorage) InspectApplication(clusterID, namespace, name string) (*Ap
 	return &result, err
 }
 
+// InspectProcess xxx
 func (bs *bcsStorage) InspectProcess(clusterID, namespace, name string) (*ProcessSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeProcess, name)
 	if err != nil {
@@ -209,6 +224,7 @@ func (bs *bcsStorage) InspectProcess(clusterID, namespace, name string) (*Proces
 	return &result, err
 }
 
+// InspectTaskGroup xxx
 func (bs *bcsStorage) InspectTaskGroup(clusterID, namespace, name string) (*TaskGroupSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeTaskGroup, name)
 	if err != nil {
@@ -220,6 +236,7 @@ func (bs *bcsStorage) InspectTaskGroup(clusterID, namespace, name string) (*Task
 	return &result, err
 }
 
+// InspectConfigMap xxx
 func (bs *bcsStorage) InspectConfigMap(clusterID, namespace, name string) (*ConfigMapSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeConfigMap, name)
 	if err != nil {
@@ -231,6 +248,7 @@ func (bs *bcsStorage) InspectConfigMap(clusterID, namespace, name string) (*Conf
 	return &result, err
 }
 
+// InspectSecret xxx
 func (bs *bcsStorage) InspectSecret(clusterID, namespace, name string) (*SecretSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeSecret, name)
 	if err != nil {
@@ -242,6 +260,7 @@ func (bs *bcsStorage) InspectSecret(clusterID, namespace, name string) (*SecretS
 	return &result, err
 }
 
+// InspectService xxx
 func (bs *bcsStorage) InspectService(clusterID, namespace, name string) (*ServiceSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeService, name)
 	if err != nil {
@@ -253,6 +272,7 @@ func (bs *bcsStorage) InspectService(clusterID, namespace, name string) (*Servic
 	return &result, err
 }
 
+// InspectEndpoint xxx
 func (bs *bcsStorage) InspectEndpoint(clusterID, namespace, name string) (*EndpointSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeEndpoint, name)
 	if err != nil {
@@ -264,6 +284,7 @@ func (bs *bcsStorage) InspectEndpoint(clusterID, namespace, name string) (*Endpo
 	return &result, err
 }
 
+// InspectDeployment xxx
 func (bs *bcsStorage) InspectDeployment(clusterID, namespace, name string) (*DeploymentSet, error) {
 	data, err := bs.inspectResource(clusterID, namespace, BcsStorageDynamicTypeDeployment, name)
 	if err != nil {

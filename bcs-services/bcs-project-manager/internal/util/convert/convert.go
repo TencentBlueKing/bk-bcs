@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package convert xxx
 package convert
 
 import (
@@ -52,7 +53,7 @@ func MapBool2pbStruct(m map[string]map[string]bool) *spb.Struct {
 	}
 }
 
-// InterfaceToValue
+// InterfaceToValue xxx
 func InterfaceToValue(v interface{}) *spb.Value {
 	switch v := v.(type) {
 	case nil:

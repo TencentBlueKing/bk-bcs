@@ -21,19 +21,33 @@ import (
 type HelmManagerError uint32
 
 const (
+	// ErrHelmManagerSuccess TODO
 	ErrHelmManagerSuccess HelmManagerError = iota
+	// ErrHelmManagerReqOrRespEmpty TODO
 	ErrHelmManagerReqOrRespEmpty
+	// ErrHelmManagerRequestParamInvalid TODO
 	ErrHelmManagerRequestParamInvalid
+	// ErrHelmManagerCreateActionFailed TODO
 	ErrHelmManagerCreateActionFailed
+	// ErrHelmManagerUpdateActionFailed TODO
 	ErrHelmManagerUpdateActionFailed
+	// ErrHelmManagerGetActionFailed TODO
 	ErrHelmManagerGetActionFailed
+	// ErrHelmManagerListActionFailed TODO
 	ErrHelmManagerListActionFailed
+	// ErrHelmManagerDeleteActionFailed TODO
 	ErrHelmManagerDeleteActionFailed
+	// ErrHelmManagerInstallActionFailed TODO
 	ErrHelmManagerInstallActionFailed
+	// ErrHelmManagerUninstallActionFailed TODO
 	ErrHelmManagerUninstallActionFailed
+	// ErrHelmManagerUpgradeActionFailed TODO
 	ErrHelmManagerUpgradeActionFailed
+	// ErrHelmManagerRollbackActionFailed TODO
 	ErrHelmManagerRollbackActionFailed
+	// ErrHelmManagerAuthFailed TODO
 	ErrHelmManagerAuthFailed
+	// ErrHelmManagerRequestComponentFailed TODO
 	ErrHelmManagerRequestComponentFailed
 )
 

@@ -72,7 +72,7 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 	return err
 }
 
-// 根据不同的错误类型，获取错误信息 & 错误码
+// getMsgCode 根据不同的错误类型，获取错误信息 & 错误码
 func getMsgCode(err interface{}) (string, uint32) {
 	if err == nil {
 		return errorx.SuccessMsg, errorx.Success
@@ -87,7 +87,7 @@ func getMsgCode(err interface{}) (string, uint32) {
 	}
 }
 
-// 获取错误信息 & 错误码 & 权限信息
+// getMsgCodePerm 获取错误信息 & 错误码 & 权限信息
 func getMsgCodePerm(err interface{}) (string, uint32, map[string]interface{}) {
 	if err != nil {
 		if e, ok := err.(*errorx.PermissionDeniedError); ok {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package manager xxx
 package manager
 
 import (
@@ -36,6 +37,7 @@ import (
 )
 
 const (
+	// ProcessHeartBeatPeriodSeconds xxx
 	ProcessHeartBeatPeriodSeconds = 600
 )
 
@@ -53,6 +55,7 @@ type manager struct {
 	conf *config.Config
 }
 
+// NewManager xxx
 func NewManager(conf *config.Config) Manager {
 	m := &manager{
 		processInfos: make(map[string]*types.ProcessInfo, 0),
@@ -64,6 +67,7 @@ func NewManager(conf *config.Config) Manager {
 	return m
 }
 
+// Init xxx
 func (m *manager) Init() error {
 	processInfos, err := m.store.GetAllProcessInfos()
 	if err != nil {
@@ -80,11 +84,13 @@ func (m *manager) Init() error {
 	return nil
 }
 
+// Start xxx
 func (m *manager) Start() {
-	//check process status
+	// check process status
 	go m.loopCheckProcess()
 }
 
+// GetConfig xxx
 func (m *manager) GetConfig() *config.Config {
 	return m.conf
 }
@@ -124,6 +130,7 @@ func (m *manager) unLockObjectKey(key string) {
 	myLock.Unlock()
 }
 
+// HeartBeat xxx
 func (m *manager) HeartBeat(heartbeat *types.HeartBeat) {
 	m.Lock()
 	defer m.Unlock()
@@ -145,6 +152,7 @@ func (m *manager) HeartBeat(heartbeat *types.HeartBeat) {
 	return
 }
 
+// CreateProcess xxx
 func (m *manager) CreateProcess(processInfo *types.ProcessInfo) error {
 	m.Lock()
 	defer m.Unlock()
@@ -185,6 +193,7 @@ func (m *manager) CreateProcess(processInfo *types.ProcessInfo) error {
 	return nil
 }
 
+// InspectProcessStatus xxx
 func (m *manager) InspectProcessStatus(processId string) (*types.ProcessStatusInfo, error) {
 	m.RLock()
 	defer m.RUnlock()
@@ -197,6 +206,7 @@ func (m *manager) InspectProcessStatus(processId string) (*types.ProcessStatusIn
 	return process.StatusInfo, nil
 }
 
+// StopProcess xxx
 func (m *manager) StopProcess(processId string, timeout int) error {
 	m.RLock()
 	processInfo, ok := m.processInfos[processId]
@@ -237,7 +247,7 @@ func (m *manager) StopProcess(processId string, timeout int) error {
 	if err != nil {
 		blog.Errorf("stop process %s work_dir %s exec stopcmd %s stderr %s error %s", processInfo.Id,
 			processInfo.WorkDir, processInfo.StopCmd, buf.String(), err.Error())
-		//processInfo.StatusInfo.Status = types.ProcessStatusRunning
+		// processInfo.StatusInfo.Status = types.ProcessStatusRunning
 		if buf.String() != "" {
 			processInfo.StatusInfo.Message = buf.String()
 		} else {
@@ -251,7 +261,7 @@ func (m *manager) StopProcess(processId string, timeout int) error {
 	}
 
 	ticker := time.NewTicker(time.Second * time.Duration(timeout))
-	//loop check proc
+	// loop check proc
 ForResp:
 	for {
 		var proc *os.Process
@@ -278,7 +288,7 @@ ForResp:
 				blog.Infof("enforce kill -9 process %s pid %d success", processInfo.Id, processInfo.StatusInfo.Pid)
 				proc.Release()
 			}
-			break ForResp //break loop check proc
+			break ForResp // break loop check proc
 
 		default:
 			proc, _, err = m.processIsOk(processInfo)
@@ -298,7 +308,7 @@ ForResp:
 
 	}
 
-	//if process pid not exist,then stop success
+	// if process pid not exist,then stop success
 	_, _, err = m.processIsOk(processInfo)
 	if err != nil {
 		blog.Infof("stop process %s pid %d success", processInfo.Id, processInfo.StatusInfo.Pid)
@@ -312,7 +322,8 @@ ForResp:
 	}
 
 	processInfo.StatusInfo.Status = types.ProcessStatusRunning
-	processInfo.StatusInfo.Message = fmt.Sprintf("stop process %s pid %d failed", processInfo.Id, processInfo.StatusInfo.Pid)
+	processInfo.StatusInfo.Message = fmt.Sprintf("stop process %s pid %d failed", processInfo.Id,
+		processInfo.StatusInfo.Pid)
 	err = m.store.StoreProcessInfo(processInfo)
 	if err != nil {
 		blog.Errorf("store processInfo %s error %s", processInfo.Id, err.Error())
@@ -322,6 +333,7 @@ ForResp:
 	return fmt.Errorf("stop process %s pid %d failed", processInfo.Id, processInfo.StatusInfo.Pid)
 }
 
+// DeleteProcess xxx
 func (m *manager) DeleteProcess(processId string) error {
 	m.Lock()
 	defer m.Unlock()
@@ -361,7 +373,7 @@ func (m *manager) symlinkWorkdir(processInfo *types.ProcessInfo) error {
 	}
 
 	uriPack := processInfo.Uris[0]
-	//whether uripack.outputdir exists
+	// whether uripack.outputdir exists
 	_, err := os.Stat(uriPack.OutputDir)
 	if err != nil {
 		blog.Errorf("process %s stat file %s error %s", processInfo.Id, uriPack.User, err.Error())
@@ -421,7 +433,7 @@ func (m *manager) startProcess(processInfo *types.ProcessInfo) {
 		Env:  processInfo.Envs,
 	}
 
-	//lookup proc user, example user00
+	// lookup proc user, example user00
 	if processInfo.User != "" {
 		u, err := user.Lookup(processInfo.User)
 		if err != nil {
@@ -438,9 +450,10 @@ func (m *manager) startProcess(processInfo *types.ProcessInfo) {
 	buf := bytes.NewBuffer(make([]byte, 1024))
 	cmd.Stderr = buf
 	err = cmd.Run()
-	//_,err := os.StartProcess(processInfo.StartCmd,processInfo.Argv,attr)
+	// _,err := os.StartProcess(processInfo.StartCmd,processInfo.Argv,attr)
 	if err != nil {
-		blog.Errorf("start process %s startcmd %s stderr %s error %s", processInfo.Id, processInfo.StartCmd, buf.String(), err.Error())
+		blog.Errorf("start process %s startcmd %s stderr %s error %s", processInfo.Id, processInfo.StartCmd, buf.String(),
+			err.Error())
 		processInfo.StatusInfo.Status = types.ProcessStatusStopped
 		if buf.String() != "" {
 			processInfo.StatusInfo.Message = buf.String()
@@ -472,7 +485,7 @@ func (m *manager) loopCheckProcess() {
 
 		m.Lock()
 		for _, process := range m.processInfos {
-			//todo
+			// todo
 			/*if time.Now().Unix()-process.ExecutorHeartBeatTime>ProcessHeartBeatPeriodSeconds {
 				if process.StatusInfo.Status==types.ProcessStatusStopped {
 					blog.Errorf("process %s status %s heartbeat timeout, and delete it",process.Id,

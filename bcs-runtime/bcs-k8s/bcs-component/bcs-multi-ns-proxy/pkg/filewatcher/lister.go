@@ -94,13 +94,13 @@ func NewSecretLister(kubeconfig, secretName, secretNamespace string) (*SecretLis
 			return nil, fmt.Errorf("use incluster config to list secret failed, err %s", err.Error())
 		}
 	} else {
-		//parse configuration
+		// parse configuration
 		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			return nil, err
 		}
 	}
-	//initialize k8s client
+	// initialize k8s client
 	cliset, err := k8scorecliset.NewForConfig(restConfig)
 	if err != nil {
 		return nil, err

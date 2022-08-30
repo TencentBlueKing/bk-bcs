@@ -42,23 +42,23 @@ const (
 )
 
 type service struct {
-	name        string     //service name
-	namespace   string     //namespace
-	clusterIP   []string   //cluter ip for loadbalance proxy, reserved
-	serviceport []endport  //port for cluster ip. reserved
-	endpoints   []endpoint //ip & port
+	name        string     // service name
+	namespace   string     // namespace
+	clusterIP   []string   // cluter ip for loadbalance proxy, reserved
+	serviceport []endport  // port for cluster ip. reserved
+	endpoints   []endpoint // ip & port
 }
 
 type endpoint struct {
-	addr     string    //endpoint address
-	endports []endport //port for exposed in endpoint
+	addr     string    // endpoint address
+	endports []endport // port for exposed in endpoint
 }
 
 type endport struct {
-	name     string //port name
-	port     string //container port
-	hport    string //host port
-	protocol string //protocol
+	name     string // port name
+	port     string // container port
+	hport    string // host port
+	protocol string // protocol
 }
 
 // Records looks up services in bcs. If exact is true, it will lookup
@@ -75,15 +75,15 @@ func (bcs *BcsScheduler) records(req recordRequest) ([]msg.Service, error) {
 		if req.IsPodDNS() {
 			return nil, fmt.Errorf("unsupported wirdchard match in pod dns")
 		}
-		//we get wildchard in domain request, so we need
-		//iterator all endpoints to find name matched
+		// we get wildchard in domain request, so we need
+		// iterator all endpoints to find name matched
 		list, err := bcs.wildChardRecords(req)
 		if err != nil {
 			return nil, err
 		}
 		svcList = append(svcList, list...)
 	} else {
-		//get domain by namespace/service directly
+		// get domain by namespace/service directly
 		localSvc, err := bcs.svcRecords(req)
 		if err != nil {
 			return nil, err
@@ -91,7 +91,7 @@ func (bcs *BcsScheduler) records(req recordRequest) ([]msg.Service, error) {
 		svcList = append(svcList, *localSvc)
 	}
 	if len(svcList) == 0 {
-		//not endpoints info found in cache
+		// not endpoints info found in cache
 		log.Printf("[WARN] DNSlookup found no service record for request %v", req)
 		return nil, errNoItems
 	}
@@ -115,7 +115,7 @@ func (bcs *BcsScheduler) svcRecords(req recordRequest) (*service, error) {
 		name:      req.serviceName,
 		namespace: req.namespace,
 	}
-	//checking if service is in ClusterMode
+	// checking if service is in ClusterMode
 	bcsSvc := bcs.svcCache.GetServiceByEndpoint(bcsEndpoint)
 	if bcsSvc != nil && (bcsSvc.Spec.Type == serviceTypeClusterIP || bcsSvc.Spec.Type == serviceTypeIntegration) {
 		if req.IsPodDNS() {
@@ -127,7 +127,7 @@ func (bcs *BcsScheduler) svcRecords(req recordRequest) (*service, error) {
 		}
 		localSvc.endpoints = append(localSvc.endpoints, endpoints...)
 	} else {
-		//get service ip address list
+		// get service ip address list
 		for _, end := range bcsEndpoint.Endpoints {
 			if req.IsPodDNS() {
 				if req.podname != end.Target.Name {
@@ -158,7 +158,7 @@ func (bcs *BcsScheduler) wildChardRecords(req recordRequest) ([]service, error) 
 			name:      req.serviceName,
 			namespace: req.namespace,
 		}
-		//checking if service is in ClusterIP Mode
+		// checking if service is in ClusterIP Mode
 		bcsSvc := bcs.svcCache.GetServiceByEndpoint(epItem)
 		if bcsSvc != nil && bcsSvc.Spec.Type == serviceTypeClusterIP {
 			endpoints, err := bcs.formatClusterIPSvc(bcsSvc, req)
@@ -168,7 +168,7 @@ func (bcs *BcsScheduler) wildChardRecords(req recordRequest) ([]service, error) 
 			localSvc.endpoints = append(localSvc.endpoints, endpoints...)
 
 		} else {
-			//get service ip address list
+			// get service ip address list
 			for _, end := range epItem.Endpoints {
 				ep := bcs.formatBcsEndpoint(end, req)
 				localSvc.endpoints = append(localSvc.endpoints, ep)
@@ -204,7 +204,7 @@ func (bcs *BcsScheduler) recordsForNS(r recordRequest, svcs *[]msg.Service) erro
 }
 
 func (bcs *BcsScheduler) selfDNSRecord() dns.A {
-	//get local ip address & default dns name
+	// get local ip address & default dns name
 	addrList := util.GetIPAddress()
 	var self dns.A
 	if len(addrList) == 0 {
@@ -215,13 +215,13 @@ func (bcs *BcsScheduler) selfDNSRecord() dns.A {
 	return self
 }
 
-//formatToMessage format inner service struct to etcd service message
+// formatToMessage format inner service struct to etcd service message
 func (bcs *BcsScheduler) formatToMessage(svcs []service, req recordRequest) (records []msg.Service) {
 	for _, svc := range svcs {
 		domainpart := svc.name + "." + svc.namespace + ".svc." + req.zone
 		for _, end := range svc.endpoints {
 			if len(end.endports) > 0 {
-				//we get port info, for SRV
+				// we get port info, for SRV
 				for _, port := range end.endports {
 					iport, err := strconv.Atoi(port.port)
 					if err != nil {
@@ -235,7 +235,7 @@ func (bcs *BcsScheduler) formatToMessage(svcs []service, req recordRequest) (rec
 					records = append(records, s)
 				}
 			} else {
-				//only for typeA ?!
+				// only for typeA ?!
 				s := msg.Service{
 					Key:  msg.Path(domainpart, defaultStoragePrefix),
 					Host: end.addr,
@@ -248,7 +248,7 @@ func (bcs *BcsScheduler) formatToMessage(svcs []service, req recordRequest) (rec
 	return records
 }
 
-//formatBcsEndpoint format bcs endpoint to local endpoint
+// formatBcsEndpoint format bcs endpoint to local endpoint
 func (bcs *BcsScheduler) formatBcsEndpoint(end bcstypes.Endpoint, req recordRequest) endpoint {
 	endpt := endpoint{}
 	if "bridge" == strings.ToLower(end.NetworkMode) || "host" == strings.ToLower(end.NetworkMode) {
@@ -256,7 +256,7 @@ func (bcs *BcsScheduler) formatBcsEndpoint(end bcstypes.Endpoint, req recordRequ
 	} else {
 		endpt.addr = end.ContainerIP
 	}
-	//check port & protocol info for SRV
+	// check port & protocol info for SRV
 	for _, port := range end.Ports {
 		if !isWildchard(port.Protocol) && strings.ToLower(port.Protocol) != req.protocol {
 			continue
@@ -274,7 +274,8 @@ func (bcs *BcsScheduler) formatBcsEndpoint(end bcstypes.Endpoint, req recordRequ
 	return endpt
 }
 
-//formatBcsService format bcs service to local endpoint when BcsService under ClusterIP mode
+// formatClusterIPSvc xxx
+// formatBcsService format bcs service to local endpoint when BcsService under ClusterIP mode
 func (bcs *BcsScheduler) formatClusterIPSvc(svc *bcstypes.BcsService, req recordRequest) ([]endpoint, error) {
 	eps := make([]endpoint, 0)
 
@@ -358,14 +359,16 @@ func (bcs *BcsScheduler) dealRecursiveDNSWithClusterIP(state request.Request) ([
 				(*state.Req).Question[0].Name = originName
 				dnsMsg, err := bcs.Lookup(state, state.Name(), state.QType())
 				if nil != err {
-					log.Printf("[ERROR] mode: ClusterIP, recursive lookup service, name: %s domain[%s] recored faild, err :%v", state.Name(), domain, err)
+					log.Printf("[ERROR] mode: ClusterIP, recursive lookup service, name: %s domain[%s] recored faild, err :%v",
+						state.Name(), domain, err)
 					continue
 				}
-				//log.Printf("[DEBUG] recursive lookup service, name: %s, domain: %s success. msg: %+v", state.Name(), domain, dnsMsg)
+				// log.Printf("[DEBUG] recursive lookup service, name: %s, domain: %s success. msg: %+v", state.Name(), domain, dnsMsg)
 				for _, answer := range dnsMsg.Answer {
 					A, yes := answer.(*dns.A)
 					if !yes {
-						log.Printf("[WARN] can not convert recursive response to dns.A type, source name: %s, domain name: %s", state.Name(), domain)
+						log.Printf("[WARN] can not convert recursive response to dns.A type, source name: %s, domain name: %s",
+							state.Name(), domain)
 						continue
 					}
 					// revise the domain to the original request name.
@@ -375,7 +378,7 @@ func (bcs *BcsScheduler) dealRecursiveDNSWithClusterIP(state request.Request) ([
 				continue
 
 			case "Integration":
-				//log.Printf("[DEBUG] -> run svc with Integration mode, request:%s.", domain)
+				// log.Printf("[DEBUG] -> run svc with Integration mode, request:%s.", domain)
 				qualifiedName, _ := bcs.getQualifiedQuestionName(domain, dns.TypeA)
 				if !bcs.inCurrentZone(qualifiedName) {
 					log.Printf("[WARN] unsupported request[%s] with svc Integration mode.", domain)
@@ -393,7 +396,8 @@ func (bcs *BcsScheduler) dealRecursiveDNSWithClusterIP(state request.Request) ([
 				for _, r := range records {
 					A, yes := r.(*dns.A)
 					if !yes {
-						log.Printf("[WARN] can not convert recursive response to dns.A type, qualifed name: %s, domain name: %s", qualifiedName, domain)
+						log.Printf("[WARN] can not convert recursive response to dns.A type, qualifed name: %s, domain name: %s",
+							qualifiedName, domain)
 						continue
 					}
 					// revise the domain to the original request name.
@@ -422,7 +426,8 @@ func (bcs *BcsScheduler) dealRecursiveDNSWithClusterIP(state request.Request) ([
 		for _, a := range interceptor.Msg.Answer {
 			A, yes := a.(*dns.A)
 			if !yes {
-				log.Printf("[WARN] can not convert recursive response to dns.A type, source name: %s, domain name: %s", state.Name(), domain)
+				log.Printf("[WARN] can not convert recursive response to dns.A type, source name: %s, domain name: %s",
+					state.Name(), domain)
 				continue
 			}
 			// revise the domain to the original request name.

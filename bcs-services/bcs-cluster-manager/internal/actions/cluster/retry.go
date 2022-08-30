@@ -57,7 +57,8 @@ func (ra *RetryCreateAction) validate(cluster *cmproto.Cluster) error {
 }
 
 // Handle retry create cluster request
-func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreateClusterReq, resp *cmproto.RetryCreateClusterResp) {
+func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreateClusterReq,
+	resp *cmproto.RetryCreateClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("retry createCluster failed, req or resp is empty")
 		return
@@ -103,7 +104,7 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 	// step2: call cloud provider cluster_manager feature to create cluster task
 	if err = ra.model.UpdateCluster(ctx, cls); err != nil {
 		blog.Errorf("update Cluster %s information to store failed, %s", cls.ClusterID, err.Error())
-		//other db operation error
+		// other db operation error
 		ra.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

@@ -146,7 +146,7 @@ func (eh *SyncEventHandler) backgroundBatchSync() {
 				return
 			}
 
-			//fmt.Println(alertReqDataList)
+			// fmt.Println(alertReqDataList)
 			err := eh.alertClient.SendAlarmInfoToAlertServer(alertReqDataList, time.Second*10)
 			if err != nil {
 				glog.Errorf("event handler backgroundSync sendEvenDataToAlert failed: %v", err)
@@ -158,7 +158,8 @@ func (eh *SyncEventHandler) backgroundBatchSync() {
 	}
 }
 
-func (eh *SyncEventHandler) transEventMetaToAlertData(eventMeta msgqueue.HandlerData) (map[string]string, map[string]string) {
+func (eh *SyncEventHandler) transEventMetaToAlertData(eventMeta msgqueue.HandlerData) (map[string]string,
+	map[string]string) {
 	if eh == nil {
 		return nil, nil
 	}
@@ -331,7 +332,8 @@ func validateResourceType(resourceType string) bool {
 
 // Consume subscribe Event queue & backgroundSync
 func (eh *SyncEventHandler) Consume(ctx context.Context, sub msgqueue.MessageQueue) error {
-	unSub, _ := sub.Subscribe(msgqueue.HandlerWrap("event-handler", eh.HandleQueueEvent), eh.filters, msgqueue.EventSubscribeType)
+	unSub, _ := sub.Subscribe(msgqueue.HandlerWrap("event-handler", eh.HandleQueueEvent), eh.filters,
+		msgqueue.EventSubscribeType)
 
 	eh.unSub = func() {
 		unSub.Unsubscribe()

@@ -46,7 +46,7 @@ func NewDiscovery(modules []string, handler EventHandler, r registry.Registry) D
 		microRegistry: r,
 		eventHandler:  handler,
 	}
-	//initialize all module watch goroutines
+	// initialize all module watch goroutines
 	md.ctx, md.stopFunc = context.WithCancel(context.Background())
 	for _, m := range modules {
 		md.moduleFilter[m] = m
@@ -59,19 +59,19 @@ type MicroDiscovery struct {
 	sync.RWMutex
 	ctx      context.Context
 	stopFunc context.CancelFunc
-	//module name that we expect watch, this is short name
+	// module name that we expect watch, this is short name
 	moduleFilter map[string]string
 	// all modules information from micro registry
 	// modules cache key is fullName, for example 30002.mesosdriver.bkbcs.tencent.com, storage.bkbcs.tencent.com
 	modules map[string]*registry.Service
-	//event callback
+	// event callback
 	eventHandler  EventHandler
 	microRegistry registry.Registry
 }
 
 // Start init all necessary resource
 func (d *MicroDiscovery) Start() error {
-	//list all modules name
+	// list all modules name
 	svcs, err := d.ListAllServer()
 	if err != nil {
 		blog.Errorf("MicroDiscovery list all service failed, %s", err.Error())
@@ -91,7 +91,7 @@ func (d *MicroDiscovery) Start() error {
 }
 
 // GetModuleServer module: modules.BCSModuleScheduler
-//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver, storage
+// if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver, storage
 func (d *MicroDiscovery) GetModuleServer(module string) (*registry.Service, error) {
 	fullName := fmt.Sprintf("%s%s", module, defaultDomain)
 	d.RLock()
@@ -104,14 +104,15 @@ func (d *MicroDiscovery) GetModuleServer(module string) (*registry.Service, erro
 	return svc, nil
 }
 
+// innerGetService xxx
 // getService get registry service information and store in local cache
-//@param: module, full name in registry, like meshmanager.bkbcs.tencent.com, 10003.mesosdriver.bkbcs.tencent.com
-//@return: registry service, including all different version Node, empty if error
+// @param: module, full name in registry, like meshmanager.bkbcs.tencent.com, 10003.mesosdriver.bkbcs.tencent.com
+// @return: registry service, including all different version Node, empty if error
 func (d *MicroDiscovery) innerGetService(module string) (*registry.Service, error) {
 	if !strings.Contains(module, defaultDomain) {
 		return nil, fmt.Errorf("lost domain `bkbcs.tencent.com`")
 	}
-	//first, get details from registry
+	// first, get details from registry
 	svcs, err := d.microRegistry.GetService(module)
 	if err == registry.ErrNotFound {
 		blog.Warnf("discovery found no module %s under registry, clean local cache.", module)
@@ -146,7 +147,7 @@ func (d *MicroDiscovery) innerGetService(module string) (*registry.Service, erro
 }
 
 // GetRandomServerInstance get random one instance of server
-//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver, storage
+// if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver, storage
 func (d *MicroDiscovery) GetRandomServerInstance(module string) (*registry.Node, error) {
 	fullName := fmt.Sprintf("%s%s", module, defaultDomain)
 	d.RLock()
@@ -169,7 +170,7 @@ func (d *MicroDiscovery) GetRandomServerInstance(module string) (*registry.Node,
 	return svc.Nodes[selected], nil
 }
 
-//ListAllServer list all registered server information
+// ListAllServer list all registered server information
 func (d *MicroDiscovery) ListAllServer() ([]*registry.Service, error) {
 	svcList, err := d.microRegistry.ListServices()
 	if err != nil {
@@ -181,17 +182,17 @@ func (d *MicroDiscovery) ListAllServer() ([]*registry.Service, error) {
 		return nil, nil
 	}
 	svcMap := make(map[string]*registry.Service)
-	//merge all instance for same service and filter modules that we don't watch
+	// merge all instance for same service and filter modules that we don't watch
 	for _, svc := range svcList {
 		shortName := strings.ReplaceAll(svc.Name, defaultDomain, "")
 		IDName := strings.Split(shortName, ".")
 		module := IDName[len(IDName)-1]
-		//check module filter
+		// check module filter
 		if _, ok := d.moduleFilter[module]; !ok {
 			blog.V(5).Infof("module %s is not expected now, skip in list", svc.Name)
 			continue
 		}
-		//same service with different version nodes
+		// same service with different version nodes
 		if local, ok := svcMap[svc.Name]; ok {
 			blog.V(3).Infof("module %s merge operation, verison: %s", svc.Name, svc.Version)
 			local.Nodes = append(local.Nodes, svc.Nodes...)
@@ -211,7 +212,7 @@ func (d *MicroDiscovery) ListAllServer() ([]*registry.Service, error) {
 }
 
 // AddModuleWatch add new watch for specified module, Discovery will cache watched module info
-//@param: module, bkbcs module name, such as meshmanager, logmanager, storage etc.
+// @param: module, bkbcs module name, such as meshmanager, logmanager, storage etc.
 func (d *MicroDiscovery) AddModuleWatch(module string) error {
 	// check if we already watch this module
 	d.Lock()
@@ -228,7 +229,7 @@ func (d *MicroDiscovery) AddModuleWatch(module string) error {
 func (d *MicroDiscovery) DeleteModuleWatch(module string) error {
 	d.Lock()
 	defer d.Unlock()
-	//clean expected module info for stopping event notification
+	// clean expected module info for stopping event notification
 	delete(d.moduleFilter, module)
 	return nil
 }
@@ -250,7 +251,7 @@ func (d *MicroDiscovery) Stop() {
 // according specified module names
 // @param ctx, context for exit control
 func (d *MicroDiscovery) worker(ctx context.Context) {
-	//check if discovery is stopped
+	// check if discovery is stopped
 	select {
 	case <-ctx.Done():
 		blog.V(3).Infof("discovery is ready to exit...")
@@ -262,7 +263,7 @@ func (d *MicroDiscovery) worker(ctx context.Context) {
 	watcher, err := d.microRegistry.Watch(registry.WatchContext(ctx))
 	if err != nil {
 		blog.Errorf("discovery create watcher for all registry modules failed, %s. retry after a tick", err.Error())
-		//retry after
+		// retry after
 		<-time.After(time.Second * 3)
 		go d.worker(ctx)
 		return
@@ -309,7 +310,7 @@ func (d *MicroDiscovery) handleEvent(r *registry.Result) {
 		blog.Warnf("discovery do not expect module %s[%s] event, skip", fullName, shortName)
 		return
 	}
-	//check event handler
+	// check event handler
 	if d.eventHandler != nil {
 		d.eventHandler(shortName)
 	}

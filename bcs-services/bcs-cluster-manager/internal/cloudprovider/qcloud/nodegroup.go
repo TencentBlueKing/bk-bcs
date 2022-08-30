@@ -35,7 +35,7 @@ var groupMgr sync.Once
 
 func init() {
 	groupMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitNodeGroupManager(cloudName, &NodeGroup{})
 	})
 }
@@ -130,7 +130,8 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	return nil
 }
 
-func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string) *tke.ModifyClusterNodePoolRequest {
+func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup,
+	clusterID string) *tke.ModifyClusterNodePoolRequest {
 	// modify nodegroup
 	req := tke.NewModifyClusterNodePoolRequest()
 	req.ClusterId = &clusterID
@@ -146,13 +147,14 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, 
 	if group.NodeTemplate != nil {
 		req.Unschedulable = common.Int64Ptr(int64(group.NodeTemplate.UnSchedulable))
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID !=
+		"" {
 		req.OsName = &group.LaunchTemplate.ImageInfo.ImageID
 	}
 	return req
 }
 
-// 根据需要修改 asg
+// generateModifyAutoScalingGroupInput 根据需要修改 asg
 func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup) *as.ModifyAutoScalingGroupRequest {
 	req := as.NewModifyAutoScalingGroupRequest()
 	if group.AutoScaling == nil {
@@ -171,7 +173,8 @@ func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup)
 	return req
 }
 
-func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGroup) *as.UpgradeLaunchConfigurationRequest {
+func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(
+	group *proto.NodeGroup) *as.UpgradeLaunchConfigurationRequest {
 	req := as.NewUpgradeLaunchConfigurationRequest()
 	if group.LaunchTemplate == nil || group.LaunchTemplate.InternetAccess == nil {
 		blog.Warnf("group launch template is nil, %v", utils.ToJSONString(group))
@@ -238,7 +241,8 @@ func (ng *NodeGroup) updateImageInfo(group *proto.NodeGroup) error {
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode,
+	error) {
 	if group.ClusterID == "" || group.NodeGroupID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
@@ -377,7 +381,8 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 
 	// check incoming nodes
 	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(opt.Cluster.ClusterID, group.NodeGroupID,
-		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode), cloudprovider.TaskStatusRunning,
+		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode),
+		cloudprovider.TaskStatusRunning,
 		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed: %v", err)
@@ -398,9 +403,10 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
 			group.NodeGroupID, current, desired)
 		return &cloudprovider.ScalingResponse{
-			ScalingUp:    0,
-			CapableNodes: nodeNames,
-		}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current, desired)
+				ScalingUp:    0,
+				CapableNodes: nodeNames,
+			}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current,
+				desired)
 	}
 
 	// current scale nodeNum

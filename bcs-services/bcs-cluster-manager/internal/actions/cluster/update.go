@@ -306,7 +306,8 @@ func (ua *UpdateNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles update nodes request
-func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeRequest, resp *cmproto.UpdateNodeResponse) {
+func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeRequest,
+	resp *cmproto.UpdateNodeResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("update cluster node failed, req or resp is empty")
 		return
@@ -447,7 +448,7 @@ func (ua *AddNodesAction) saveNodesToStorage(status string) error {
 }
 
 func (ua *AddNodesAction) checkNodeInCluster() error {
-	//check if nodes are already in cluster
+	// check if nodes are already in cluster
 	nodeStatus := []string{common.StatusRunning, common.StatusInitialization, common.StatusDeleting}
 	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": ua.cluster.ClusterID})
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": nodeStatus})
@@ -476,7 +477,7 @@ func (ua *AddNodesAction) checkNodeInCluster() error {
 	return nil
 }
 
-// getCloudProjectInfo get cluster/cloud/project info
+// getClusterBasicInfo get cluster/cloud/project info
 func (ua *AddNodesAction) getClusterBasicInfo() error {
 	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
 	if err != nil {
@@ -589,7 +590,7 @@ func (ua *AddNodesAction) validate() error {
 		blog.Infof("add Nodes %v to NodeGroup %s when AddNodesToCluster %s",
 			ua.req.Nodes, ua.req.NodeGroupID, ua.req.ClusterID,
 		)
-		//try to get nodegroup
+		// try to get nodegroup
 		nodeGroup, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 		if err != nil {
 			blog.Errorf("get NodeGroup %s failed when AddNodesToCluster, %s", ua.req.NodeGroupID, err.Error())
@@ -658,7 +659,8 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 			ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return
 		}
-		blog.Infof("only create nodes %v information to local storage under cluster %s successfully", req.Nodes, req.ClusterID)
+		blog.Infof("only create nodes %v information to local storage under cluster %s successfully", req.Nodes,
+			req.ClusterID)
 		ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 		return
 	}

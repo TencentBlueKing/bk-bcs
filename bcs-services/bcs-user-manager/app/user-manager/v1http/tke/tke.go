@@ -11,6 +11,7 @@
  *
  */
 
+// Package tke xxx
 package tke
 
 import (
@@ -30,23 +31,27 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// AddTkeCidrForm xxx
 type AddTkeCidrForm struct {
 	Vpc      string    `json:"vpc" validate:"required"`
 	TkeCidrs []TkeCidr `json:"tke_cidrs" validate:"required"`
 }
 
+// TkeCidr xxx
 type TkeCidr struct {
 	Cidr     string `json:"cidr" validate:"required"`
 	IpNumber uint   `json:"ip_number" validate:"required"`
 	Status   string `json:"status"`
 }
 
+// ApplyTkeCidrForm xxx
 type ApplyTkeCidrForm struct {
 	Vpc      string `json:"vpc" validate:"required"`
 	Cluster  string `json:"cluster" validate:"required"`
 	IpNumber uint   `json:"ip_number" validate:"required"`
 }
 
+// ApplyTkeCidrResult xxx
 type ApplyTkeCidrResult struct {
 	Vpc      string `json:"vpc" validate:"required"`
 	Cidr     string `json:"cidr" validate:"required"`
@@ -54,6 +59,7 @@ type ApplyTkeCidrResult struct {
 	Status   string `json:"status"`
 }
 
+// ReleaseTkeCidrForm xxx
 type ReleaseTkeCidrForm struct {
 	Vpc     string `json:"vpc" validate:"required"`
 	Cidr    string `json:"cidr" validate:"required"`
@@ -131,7 +137,8 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	// no more available cidr
 	if tkeCidr == nil {
 		metrics.ReportRequestAPIMetrics("ApplyTkeCidr", request.Request.Method, metrics.ErrStatus, start)
-		blog.Warnf("Apply cidr ipNumber %d for cluster %s in vpc %s failed, no available cidr any more", form.IpNumber, form.Cluster, form.Vpc)
+		blog.Warnf("Apply cidr ipNumber %d for cluster %s in vpc %s failed, no available cidr any more", form.IpNumber,
+			form.Cluster, form.Vpc)
 		message := fmt.Sprintf("errcode: %d, apply cidr failed, no available cidr any more", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -209,7 +216,8 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Cluster)
+	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr,
+		tkeCidr.IpNumber, tkeCidr.Cluster)
 	data := utils.CreateResponseData(nil, "success", nil)
 	response.Write([]byte(data))
 

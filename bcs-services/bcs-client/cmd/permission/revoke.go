@@ -27,7 +27,7 @@ func revokePermission(c *utils.ClientContext) error {
 	var data []byte
 	var err error
 	if !c.IsSet(utils.OptionFile) {
-		//reading all data from stdin
+		// reading all data from stdin
 		data, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		data, err = c.FileData()

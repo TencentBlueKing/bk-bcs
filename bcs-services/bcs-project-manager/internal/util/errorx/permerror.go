@@ -29,32 +29,32 @@ type PermissionDeniedError struct {
 	hasPerm  bool
 }
 
-// Error ...
+// Error xxx
 func (e *PermissionDeniedError) Error() string {
 	return e.msg
 }
 
-// Code ...
+// Code xxx
 func (e *PermissionDeniedError) Code() uint32 {
 	return e.code
 }
 
-// ApplyUrl ...
+// ApplyUrl xxx
 func (e *PermissionDeniedError) ApplyUrl() string {
 	return e.applyUrl
 }
 
-// ActionID ...
+// ActionID xxx
 func (e *PermissionDeniedError) ActionID() string {
 	return e.actionID
 }
 
-// HasPerm ...
+// HasPerm xxx
 func (e *PermissionDeniedError) HasPerm() bool {
 	return e.hasPerm
 }
 
-// NewPermDeniedErr ...
+// NewPermDeniedErr xxx
 func NewPermDeniedErr(applyUrl string, actionID string, hasPerm bool, msg ...string) *PermissionDeniedError {
 	return &PermissionDeniedError{
 		code:     PermDeniedErr,

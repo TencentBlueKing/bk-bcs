@@ -71,6 +71,7 @@ func (b *backend) EnableAgent(IP string) error {
 	return b.store.SaveAgentSetting(&agentNew)
 }
 
+// TaintAgents xxx
 func (b *backend) TaintAgents(agents []*commtypes.BcsClusterAgentSetting) error {
 	for _, o := range agents {
 		err := b.taintAgent(o)
@@ -112,7 +113,7 @@ func (b *backend) taintAgent(o *commtypes.BcsClusterAgentSetting) error {
 	return nil
 }
 
-//QueryAgentSetting by IP address
+// QueryAgentSetting by IP address
 func (b *backend) QueryAgentSetting(IP string) (*commtypes.BcsClusterAgentSetting, error) {
 
 	agent, err := b.store.FetchAgentSetting(IP)
@@ -124,7 +125,7 @@ func (b *backend) QueryAgentSetting(IP string) (*commtypes.BcsClusterAgentSettin
 	return agent, nil
 }
 
-//QueryAgentSettingList by IP address list
+// QueryAgentSettingList by IP address list
 func (b *backend) QueryAgentSettingList(IPs []string) ([]*commtypes.BcsClusterAgentSetting, int, error) {
 
 	IPList := IPs
@@ -153,7 +154,7 @@ func (b *backend) QueryAgentSettingList(IPs []string) ([]*commtypes.BcsClusterAg
 	return agents, comm.BcsSuccess, nil
 }
 
-//DeleteAgentSettingList clean agent setting by IP address list
+// DeleteAgentSettingList clean agent setting by IP address list
 /*func (b *backend) DeleteAgentSettingList(IPs []string) (int, error) {
 
 	for _, IP := range IPs {
@@ -170,7 +171,7 @@ func (b *backend) QueryAgentSettingList(IPs []string) ([]*commtypes.BcsClusterAg
 	return comm.BcsSuccess, nil
 }*/
 
-//SetAgentSettingList setting agent by detail info
+// SetAgentSettingList setting agent by detail info
 func (b *backend) SetAgentSettingList(agents []*commtypes.BcsClusterAgentSetting) (int, error) {
 
 	for _, agent := range agents {
@@ -209,6 +210,7 @@ func (b *backend) setAgentSetting(agent *commtypes.BcsClusterAgentSetting) error
 	return nil
 }
 
+// DisableAgentList xxx
 func (b *backend) DisableAgentList(IPs []string) (int, error) {
 	for _, IP := range IPs {
 		err := b.DisableAgent(IP)
@@ -220,7 +222,7 @@ func (b *backend) DisableAgentList(IPs []string) (int, error) {
 	return comm.BcsSuccess, nil
 }
 
-//EnableAgentList enable agent schedulable by IP address list
+// EnableAgentList enable agent schedulable by IP address list
 func (b *backend) EnableAgentList(IPs []string) (int, error) {
 
 	for _, IP := range IPs {
@@ -233,6 +235,7 @@ func (b *backend) EnableAgentList(IPs []string) (int, error) {
 	return comm.BcsSuccess, nil
 }
 
+// UpdateExtendedResources xxx
 func (b *backend) UpdateExtendedResources(ex *commtypes.ExtendedResource) error {
 	util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, ex.InnerIP)
 	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, ex.InnerIP)
@@ -257,7 +260,7 @@ func (b *backend) UpdateExtendedResources(ex *commtypes.ExtendedResource) error 
 	return b.store.SaveAgentSetting(agent)
 }
 
-//UpdateAgentSettingList update agent setting by details
+// UpdateAgentSettingList update agent setting by details
 /*func (b *backend) UpdateAgentSettingList(update *commtypes.BcsClusterAgentSettingUpdate) (int, error) {
 
 	if len(update.IPs) <= 0 {

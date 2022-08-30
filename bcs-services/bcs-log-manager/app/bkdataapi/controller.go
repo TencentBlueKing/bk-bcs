@@ -95,7 +95,7 @@ func (c *BKDataController) initKubeConfig() error {
 		return err
 	}
 
-	//internal clientset for informer BKDataApiConfig Crd
+	// internal clientset for informer BKDataApiConfig Crd
 	if c.BkDataAPIConfigClientset == nil {
 		c.BkDataAPIConfigClientset, err = internalclientset.NewForConfig(restConf)
 		if err != nil {
@@ -110,7 +110,7 @@ func (c *BKDataController) initKubeConfig() error {
 	c.BkDataAPIConfigInformerFactory.Start(c.StopCh)
 	// Wait for all caches to sync.
 	c.BkDataAPIConfigInformerFactory.WaitForCacheSync(c.StopCh)
-	//add k8s resources event handler functions
+	// add k8s resources event handler functions
 	c.BkDataAPIConfigInformer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: c.handleAddBKDataAPIConfig,
@@ -152,6 +152,7 @@ func (c *BKDataController) createBKDataAPIConfig() error {
 	return nil
 }
 
+// handleAddBKDataAPIConfig xxx
 // TODO: 资源销毁
 func (c *BKDataController) handleAddBKDataAPIConfig(obj interface{}) {
 	// get BKDataClientConfig from crd
@@ -230,7 +231,8 @@ func (c *BKDataController) respondFailed(conf *bcsv1.BKDataApiConfig, errin erro
 	conf.Spec.Response = resp
 	_, err := c.BkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(conf.GetNamespace()).Update(conf)
 	if err != nil {
-		blog.Errorf("Update BKDataApiConfig failed: %s, crd info: %+v, bkdataapi return value: %s", err.Error(), *conf, errin.Error())
+		blog.Errorf("Update BKDataApiConfig failed: %s, crd info: %+v, bkdataapi return value: %s", err.Error(), *conf,
+			errin.Error())
 	}
 }
 
@@ -243,6 +245,7 @@ func (c *BKDataController) respondOK(conf *bcsv1.BKDataApiConfig, retstr string)
 	conf.Spec.Response = resp
 	_, err := c.BkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(conf.GetNamespace()).Update(conf)
 	if err != nil {
-		blog.Errorf("Update BKDataApiConfig failed: %s, crd info: %+v, bkdataapi return value: %s", err.Error(), *conf, retstr)
+		blog.Errorf("Update BKDataApiConfig failed: %s, crd info: %+v, bkdataapi return value: %s", err.Error(), *conf,
+			retstr)
 	}
 }

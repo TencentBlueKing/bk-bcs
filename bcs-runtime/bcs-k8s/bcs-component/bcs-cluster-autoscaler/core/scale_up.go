@@ -244,6 +244,7 @@ type skippedReasons struct {
 	message []string
 }
 
+// Reasons xxx
 func (sr *skippedReasons) Reasons() []string {
 	return sr.message
 }

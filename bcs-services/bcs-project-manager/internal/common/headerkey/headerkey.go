@@ -12,9 +12,12 @@
  * limitations under the License.
  */
 
+// Package headerkey xxx
 package headerkey
 
 const (
+	// RequestIDKey xxx
 	RequestIDKey = "X-Request-Id"
-	UsernameKey  = "X-Project-Username"
+	// UsernameKey xxx
+	UsernameKey = "X-Project-Username"
 )

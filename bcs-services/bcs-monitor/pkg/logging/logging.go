@@ -11,6 +11,7 @@
  *
  */
 
+// Package logging xxx
 package logging
 
 import (

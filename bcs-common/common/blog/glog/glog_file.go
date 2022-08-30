@@ -36,6 +36,7 @@ import (
 // logMaxSize is the maximum size of a log file in bytes.
 var logMaxSize uint64 = 500 * 1024 * 1024
 
+// MaxSize xxx
 func MaxSize() uint64 {
 	return logMaxSize
 }
@@ -43,6 +44,7 @@ func MaxSize() uint64 {
 // logMaxNum is the maximum of log files for one thread.
 var logMaxNum = 10
 
+// MaxNum xxx
 func MaxNum() int {
 	return logMaxNum
 }
@@ -57,8 +59,13 @@ type fileInfo struct {
 // sorting a list of fileInfo
 type fileInfoList []fileInfo
 
-func (b fileInfoList) Len() int           { return len(b) }
-func (b fileInfoList) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
+// Len 用于排序
+func (b fileInfoList) Len() int { return len(b) }
+
+// Swap 用于排序
+func (b fileInfoList) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+
+// Less 用于排序
 func (b fileInfoList) Less(i, j int) bool { return b[i].timestamp < b[j].timestamp }
 
 // fileBlock is a block of chain in logKeeper.

@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package discovery xxx
 package discovery
 
 import (
@@ -27,10 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
-// EventHandler ...
+// EventHandler xxx
 type EventHandler func(svcs []*registry.Service)
 
-// ServiceDiscovery ...
+// ServiceDiscovery xxx
 type ServiceDiscovery struct {
 	sync.RWMutex
 	serviceName string
@@ -41,7 +42,7 @@ type ServiceDiscovery struct {
 	cancel      context.CancelFunc
 }
 
-// NewServiceDiscovery ...
+// NewServiceDiscovery xxx
 func NewServiceDiscovery(serviceName string, rtr registry.Registry) *ServiceDiscovery {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &ServiceDiscovery{
@@ -72,7 +73,7 @@ func (d *ServiceDiscovery) Start() error {
 	return nil
 }
 
-// 持续监听 Etcd 事件，及时更新指定模块的 Services
+// watch 持续监听 Etcd 事件，及时更新指定模块的 Services
 // nolint:cyclop
 func (d *ServiceDiscovery) watch(ctx context.Context) {
 	select {

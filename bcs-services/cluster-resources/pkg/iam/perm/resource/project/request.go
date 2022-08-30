@@ -21,17 +21,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 )
 
-// ResRequest ...
+// ResRequest xxx
 type ResRequest struct {
 	ResType string
 }
 
-// NewResRequest ...
+// NewResRequest xxx
 func NewResRequest() *ResRequest {
 	return &ResRequest{ResType: perm.ResTypeProj}
 }
 
-// MakeResources ...
+// MakeResources xxx
 func (r *ResRequest) MakeResources(resIDs []string) []bkiam.ResourceNode {
 	resources := []bkiam.ResourceNode{}
 	for _, id := range resIDs {
@@ -45,12 +45,12 @@ func (r *ResRequest) MakeResources(resIDs []string) []bkiam.ResourceNode {
 	return resources
 }
 
-// MakeAttribute ...
+// MakeAttribute xxx
 func (r *ResRequest) MakeAttribute(_ string) map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-// FormMap ...
+// FormMap xxx
 func (r *ResRequest) FormMap(_ map[string]interface{}) perm.ResRequest {
 	return r
 }

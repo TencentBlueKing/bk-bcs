@@ -30,10 +30,10 @@ func (sn StepName) String() string {
 }
 
 var (
-	// CreateNodeGroup task
+	// CreateNodeGroupTask task
 	CreateNodeGroupTask TaskName = "创建节点池"
 
-	// UpdateDesiredNodes task
+	// UpdateDesiredNodesTask task
 	UpdateDesiredNodesTask TaskName = "扩容节点池"
 	// ApplyInstanceMachinesStep step
 	ApplyInstanceMachinesStep StepName = "申请节点任务"
@@ -72,21 +72,24 @@ var (
 	// OperatorKey xxx
 	OperatorKey ParamKey = "operator"
 
+	// NodeIPsKey TODO
 	// Task Common Instance
 	// NodeIPsKey xxx
 	NodeIPsKey ParamKey = "nodeIPs"
-	// NodeIPsKey xxx
+	// NodeIDsKey xxx
 	NodeIDsKey ParamKey = "nodeIDs"
 
 	// DynamicNodeIPListKey xxx
 	DynamicNodeIPListKey ParamKey = "NodeIPList"
 
+	// SuccessNodeIDsKey TODO
 	// CVM Instance
 	// SuccessNodeIDsKey xxx
 	SuccessNodeIDsKey ParamKey = "successNodeIDs"
 	// FailedNodeIDsKey xxx
 	FailedNodeIDsKey ParamKey = "failedNodeIDs"
 
+	// SuccessClusterNodeIDsKey TODO
 	// cloud cluster success & failed Instance
 	// SuccessClusterNodeIDsKey xxx
 	SuccessClusterNodeIDsKey ParamKey = "successClusterNodeIDs"

@@ -19,12 +19,12 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//initMesosWebconsole init webconsole proxy, including normal http proxy & websocket proxy
+// initMesosWebconsole init webconsole proxy, including normal http proxy & websocket proxy
 func (s *Scheduler) initMesosWebconsole() {
 	s.consoleProxy = webconsole.NewWebconsoleProxy(s.config.MesosWebconsoleProxyPort, s.config.ClientCert)
 }
 
-//webconsoleForwarding forwarding webconsole information to specified host
+// webconsoleForwarding forwarding webconsole information to specified host
 func (s *Scheduler) webconsoleForwarding(req *restful.Request, resp *restful.Response) {
 	// name := req.PathParameter("name")
 	// kubeURL := defaultCRDURL

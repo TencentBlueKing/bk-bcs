@@ -28,36 +28,39 @@ import (
 )
 
 type bcsMesosScaler struct {
-	//hpa controller config
+	// hpa controller config
 	config *config.Config
 
-	//http bcs client
+	// http bcs client
 	cli *httpclient.HttpClient
 
-	//mesos driver address:port
+	// mesos driver address:port
 	currmesosdriver string
 }
 
+// NewBcsMesosScalerController xxx
 func NewBcsMesosScalerController(config *config.Config) ScalerProcess {
 	scaler := &bcsMesosScaler{
 		config: config,
 	}
 
-	//init http client
+	// init http client
 	scaler.initCli()
-	//start discovery mesos driver
+	// start discovery mesos driver
 	go scaler.discvMesosdriver()
 	return scaler
 }
 
-//scale deployment
+// ScaleDeployment xxx
+// scale deployment
 func (r *bcsMesosScaler) ScaleDeployment(namespace, name string, instance uint) error {
 	uri := fmt.Sprintf("/namespaces/%s/deployments/%s/scale/%d", namespace, name, instance)
 	_, err := r.requestMesosdriverV4("PUT", uri, nil)
 	return err
 }
 
-//scale application
+// ScaleApplication xxx
+// scale application
 func (r *bcsMesosScaler) ScaleApplication(namespace, name string, instance uint) error {
 	uri := fmt.Sprintf("/namespaces/%s/applications/%s/scale/%d", namespace, name, instance)
 	_, err := r.requestMesosdriverV4("PUT", uri, nil)
@@ -161,7 +164,8 @@ func (r *bcsMesosScaler) discvMesosdriver() {
 				}
 
 				if i == 0 {
-					currMesosdriver = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+					currMesosdriver = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(
+						serverInfo.ServerInfo.Port))
 				}
 			}
 

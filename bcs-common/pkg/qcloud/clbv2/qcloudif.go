@@ -18,14 +18,17 @@ import (
 	"fmt"
 )
 
-//APIInterface qcloud api interface
+// APIInterface qcloud api interface
 type APIInterface interface {
-	DescribeLoadBalanceTaskResult(input *DescribeLoadBalancersTaskResultInput) (*DescribeLoadBalancersTaskResultOutput, error)
-	//clb v2
+	DescribeLoadBalanceTaskResult(input *DescribeLoadBalancersTaskResultInput) (*DescribeLoadBalancersTaskResultOutput,
+		error)
+	// CreateLoadBalance TODO
+	// clb v2
 	CreateLoadBalance(input *CreateLBInput) (*CreateLBOutput, error)
 	DescribeLoadBalance(input *DescribeLBInput) (*DescribeLBOutput, error)
 	Create7LayerListener(input *CreateSeventhLayerListenerInput) (*CreateSeventhLayerListenerOutput, error)
-	Create4LayerListener(input *CreateForwardLBFourthLayerListenersInput) (*CreateForwardLBFourthLayerListenersOutput, error)
+	Create4LayerListener(input *CreateForwardLBFourthLayerListenersInput) (*CreateForwardLBFourthLayerListenersOutput,
+		error)
 	DescribeListener(input *DescribeListenerInput) (*DescribeListenerOutput, error)
 	DescribeForwardLBListeners(input *DescribeForwardLBListenersInput) (*DescribeForwardLBListenersOutput, error)
 	DescribeForwardLBBackends(input *DescribeForwardLBBackendsInput) (*DescribeForwardLBBackendsOutput, error)
@@ -33,28 +36,34 @@ type APIInterface interface {
 	Modify7LayerListener(input *ModifyForwardLBSeventhListenerInput) (*ModifyForwardLBSeventhListenerOutput, error)
 	Modify4LayerListener(input *ModifyForwardLBFourthListenerInput) (*ModifyForwardLBFourthListenerOutput, error)
 
-	RegInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (*RegisterInstancesWithForwardLBFourthListenerOutput, error)
-	DeRegInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (*DeregisterInstancesFromForwardLBFourthListenerOutput, error)
-	RegInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (*RegisterInstancesWithForwardLBSeventhListenerOutput, error)
-	DeRegInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (*DeregisterInstancesFromForwardLBSeventhListenerOutput, error)
+	RegInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (
+		*RegisterInstancesWithForwardLBFourthListenerOutput, error)
+	DeRegInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (
+		*DeregisterInstancesFromForwardLBFourthListenerOutput, error)
+	RegInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (
+		*RegisterInstancesWithForwardLBSeventhListenerOutput, error)
+	DeRegInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (
+		*DeregisterInstancesFromForwardLBSeventhListenerOutput, error)
 	ModifyForward4LayerBackendsWeight(input *ModifyForwardFourthBackendsInput) (*ModifyForwardFourthBackendsOutput, error)
-	ModifyForward7LayerBackendsWeight(input *ModifyForwardSeventhBackendsInput) (*ModifyForwardSeventhBackendsOutput, error)
+	ModifyForward7LayerBackendsWeight(input *ModifyForwardSeventhBackendsInput) (*ModifyForwardSeventhBackendsOutput,
+		error)
 	CreateRules(input *CreateForwardLBListenerRulesInput) (*CreateForwardLBListenerRulesOutput, error)
 	DeleteRules(input *DeleteForwardLBListenerRulesInput) (*DeleteForwardLBListenerRulesOutput, error)
 	ModifyRuleDomain(input *ModifyForwardLBRulesDomainInput) (*ModifyForwardLBRulesDomainOutput, error)
 	ModifyRuleProbe(input *ModifyLoadBalancerRulesProbeInput) (*ModifyLoadBalancerRulesProbeOutput, error)
-	//cvm
+	// DescribeCVMInstance TODO
+	// cvm
 	DescribeCVMInstance(input *DescribeCVMInstanceInput) (*DescribeCVMInstanceOutput, error)
 	DescribeCVMInstanceV3(input *DescribeCVMInstanceV3Input) (*DescribeCVMInstanceV3Output, error)
 }
 
-//API api implements APIInterface
+// API api implements APIInterface
 type API struct {
 	LBClient  *Client
 	CVMClient *Client
 }
 
-//NewAPI new api
+// NewAPI new api
 func NewAPI(lbClient *Client, cvmClient *Client) APIInterface {
 	return &API{
 		LBClient:  lbClient,
@@ -62,8 +71,9 @@ func NewAPI(lbClient *Client, cvmClient *Client) APIInterface {
 	}
 }
 
-//DescribeLoadBalanceTaskResult describe lb task result
-func (api *API) DescribeLoadBalanceTaskResult(input *DescribeLoadBalancersTaskResultInput) (*DescribeLoadBalancersTaskResultOutput, error) {
+// DescribeLoadBalanceTaskResult describe lb task result
+func (api *API) DescribeLoadBalanceTaskResult(input *DescribeLoadBalancersTaskResultInput) (
+	*DescribeLoadBalancersTaskResultOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -76,7 +86,7 @@ func (api *API) DescribeLoadBalanceTaskResult(input *DescribeLoadBalancersTaskRe
 	return output, nil
 }
 
-//CreateLoadBalance create lb
+// CreateLoadBalance create lb
 func (api *API) CreateLoadBalance(input *CreateLBInput) (*CreateLBOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
@@ -90,7 +100,7 @@ func (api *API) CreateLoadBalance(input *CreateLBInput) (*CreateLBOutput, error)
 	return output, nil
 }
 
-//DescribeLoadBalance describe lb
+// DescribeLoadBalance describe lb
 func (api *API) DescribeLoadBalance(input *DescribeLBInput) (*DescribeLBOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
@@ -104,8 +114,9 @@ func (api *API) DescribeLoadBalance(input *DescribeLBInput) (*DescribeLBOutput, 
 	return output, nil
 }
 
-//Create7LayerListener create http or https listener
-func (api *API) Create7LayerListener(input *CreateSeventhLayerListenerInput) (*CreateSeventhLayerListenerOutput, error) {
+// Create7LayerListener create http or https listener
+func (api *API) Create7LayerListener(input *CreateSeventhLayerListenerInput) (*CreateSeventhLayerListenerOutput,
+	error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -118,8 +129,9 @@ func (api *API) Create7LayerListener(input *CreateSeventhLayerListenerInput) (*C
 	return output, nil
 }
 
-//Create4LayerListener create tcp or udp listener
-func (api *API) Create4LayerListener(input *CreateForwardLBFourthLayerListenersInput) (*CreateForwardLBFourthLayerListenersOutput, error) {
+// Create4LayerListener create tcp or udp listener
+func (api *API) Create4LayerListener(input *CreateForwardLBFourthLayerListenersInput) (
+	*CreateForwardLBFourthLayerListenersOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -132,7 +144,7 @@ func (api *API) Create4LayerListener(input *CreateForwardLBFourthLayerListenersI
 	return output, nil
 }
 
-//DescribeListener describe listener info
+// DescribeListener describe listener info
 func (api *API) DescribeListener(input *DescribeListenerInput) (*DescribeListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
@@ -176,7 +188,7 @@ func (api *API) DescribeForwardLBBackends(input *DescribeForwardLBBackendsInput)
 	return output, nil
 }
 
-//DeleteListener delete listener
+// DeleteListener delete listener
 func (api *API) DeleteListener(input *DeleteForwardLBListenerInput) (*DeleteForwardLBListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
@@ -191,7 +203,8 @@ func (api *API) DeleteListener(input *DeleteForwardLBListenerInput) (*DeleteForw
 }
 
 // Modify7LayerListener modify 7 layer listener ssl config
-func (api *API) Modify7LayerListener(input *ModifyForwardLBSeventhListenerInput) (*ModifyForwardLBSeventhListenerOutput, error) {
+func (api *API) Modify7LayerListener(input *ModifyForwardLBSeventhListenerInput) (*ModifyForwardLBSeventhListenerOutput,
+	error) {
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
 		return nil, fmt.Errorf("GetRequest failed, err %s", err.Error())
@@ -204,7 +217,8 @@ func (api *API) Modify7LayerListener(input *ModifyForwardLBSeventhListenerInput)
 }
 
 // Modify4LayerListener modify 4 layer listener session config and health check config
-func (api *API) Modify4LayerListener(input *ModifyForwardLBFourthListenerInput) (*ModifyForwardLBFourthListenerOutput, error) {
+func (api *API) Modify4LayerListener(input *ModifyForwardLBFourthListenerInput) (*ModifyForwardLBFourthListenerOutput,
+	error) {
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
 		return nil, fmt.Errorf("GetRequest failed, err %s", err.Error())
@@ -216,8 +230,9 @@ func (api *API) Modify4LayerListener(input *ModifyForwardLBFourthListenerInput) 
 	return output, nil
 }
 
-//RegInstancesWith4LayerListener register instance with 4 layer listener
-func (api *API) RegInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (*RegisterInstancesWithForwardLBFourthListenerOutput, error) {
+// RegInstancesWith4LayerListener register instance with 4 layer listener
+func (api *API) RegInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (
+	*RegisterInstancesWithForwardLBFourthListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -230,8 +245,9 @@ func (api *API) RegInstancesWith4LayerListener(input *RegisterInstancesWithForwa
 	return output, nil
 }
 
-//DeRegInstancesWith4LayerListener deregister instance with 4 layer listener
-func (api *API) DeRegInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (*DeregisterInstancesFromForwardLBFourthListenerOutput, error) {
+// DeRegInstancesWith4LayerListener deregister instance with 4 layer listener
+func (api *API) DeRegInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (
+	*DeregisterInstancesFromForwardLBFourthListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -244,8 +260,9 @@ func (api *API) DeRegInstancesWith4LayerListener(input *DeregisterInstancesFromF
 	return output, nil
 }
 
-//RegInstancesWith7LayerListener register instance with 7 layer listener
-func (api *API) RegInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (*RegisterInstancesWithForwardLBSeventhListenerOutput, error) {
+// RegInstancesWith7LayerListener register instance with 7 layer listener
+func (api *API) RegInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (
+	*RegisterInstancesWithForwardLBSeventhListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -258,8 +275,9 @@ func (api *API) RegInstancesWith7LayerListener(input *RegisterInstancesWithForwa
 	return output, nil
 }
 
-//DeRegInstancesWith7LayerListener deregister instance with 7 layer listener
-func (api *API) DeRegInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (*DeregisterInstancesFromForwardLBSeventhListenerOutput, error) {
+// DeRegInstancesWith7LayerListener deregister instance with 7 layer listener
+func (api *API) DeRegInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (
+	*DeregisterInstancesFromForwardLBSeventhListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -272,8 +290,9 @@ func (api *API) DeRegInstancesWith7LayerListener(input *DeregisterInstancesFromF
 	return output, nil
 }
 
-//ModifyForward4LayerBackendsWeight modify 4 layer listener backends weight
-func (api *API) ModifyForward4LayerBackendsWeight(input *ModifyForwardFourthBackendsInput) (*ModifyForwardFourthBackendsOutput, error) {
+// ModifyForward4LayerBackendsWeight modify 4 layer listener backends weight
+func (api *API) ModifyForward4LayerBackendsWeight(input *ModifyForwardFourthBackendsInput) (
+	*ModifyForwardFourthBackendsOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -286,8 +305,9 @@ func (api *API) ModifyForward4LayerBackendsWeight(input *ModifyForwardFourthBack
 	return output, nil
 }
 
-//ModifyForward7LayerBackendsWeight modify 7 layer listener backends weight
-func (api *API) ModifyForward7LayerBackendsWeight(input *ModifyForwardSeventhBackendsInput) (*ModifyForwardSeventhBackendsOutput, error) {
+// ModifyForward7LayerBackendsWeight modify 7 layer listener backends weight
+func (api *API) ModifyForward7LayerBackendsWeight(input *ModifyForwardSeventhBackendsInput) (
+	*ModifyForwardSeventhBackendsOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -300,7 +320,7 @@ func (api *API) ModifyForward7LayerBackendsWeight(input *ModifyForwardSeventhBac
 	return output, nil
 }
 
-//CreateRules create lb listener rule
+// CreateRules create lb listener rule
 func (api *API) CreateRules(input *CreateForwardLBListenerRulesInput) (*CreateForwardLBListenerRulesOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
@@ -314,7 +334,7 @@ func (api *API) CreateRules(input *CreateForwardLBListenerRulesInput) (*CreateFo
 	return output, nil
 }
 
-//DeleteRules delete lb listener rule
+// DeleteRules delete lb listener rule
 func (api *API) DeleteRules(input *DeleteForwardLBListenerRulesInput) (*DeleteForwardLBListenerRulesOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
@@ -354,7 +374,7 @@ func (api *API) ModifyRuleProbe(input *ModifyLoadBalancerRulesProbeInput) (*Modi
 	return output, nil
 }
 
-//DescribeCVMInstance describe cvm instance info
+// DescribeCVMInstance describe cvm instance info
 func (api *API) DescribeCVMInstance(input *DescribeCVMInstanceInput) (*DescribeCVMInstanceOutput, error) {
 
 	dataBytes, err := api.CVMClient.GetRequest(input)
@@ -368,7 +388,7 @@ func (api *API) DescribeCVMInstance(input *DescribeCVMInstanceInput) (*DescribeC
 	return output, nil
 }
 
-//DescribeCVMInstanceV3 describe cvm instance api v3
+// DescribeCVMInstanceV3 describe cvm instance api v3
 func (api *API) DescribeCVMInstanceV3(input *DescribeCVMInstanceV3Input) (*DescribeCVMInstanceV3Output, error) {
 
 	dataBytes, err := api.CVMClient.GetRequest(input)

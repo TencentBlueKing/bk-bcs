@@ -31,17 +31,21 @@ import (
 )
 
 const (
+	// DefaultKubeURLPrefix xxx
 	DefaultKubeURLPrefix = "k8sdriver/v4"
-	MetricPort           = 9090
-	ModuleName           = "k8s-driver"
+	// MetricPort xxx
+	MetricPort = 9090
+	// ModuleName xxx
+	ModuleName = "k8s-driver"
 )
 
+// DriverServer xxx
 type DriverServer struct {
 	RootWebContainer *restful.Container
 	Options          *options.KubeDriverServerOptions
 }
 
-//NewDriverServer Create a new DriverServer instance
+// NewDriverServer Create a new DriverServer instance
 func NewDriverServer(o *options.KubeDriverServerOptions) DriverServer {
 	return DriverServer{
 		RootWebContainer: restful.NewContainer(),
@@ -49,7 +53,7 @@ func NewDriverServer(o *options.KubeDriverServerOptions) DriverServer {
 	}
 }
 
-//StartServer start driver server
+// StartServer start driver server
 func StartServer(o *options.KubeDriverServerOptions) error {
 	clusterID, err := GetClusterID(o)
 	if err != nil {

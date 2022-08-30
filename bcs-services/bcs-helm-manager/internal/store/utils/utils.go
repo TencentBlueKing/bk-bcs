@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -19,6 +20,7 @@ import (
 )
 
 const (
+	// DataTableNamePrefix xxx
 	DataTableNamePrefix = "bcshelmmanager_"
 )
 

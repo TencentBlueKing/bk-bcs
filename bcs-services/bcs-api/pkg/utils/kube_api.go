@@ -38,11 +38,13 @@ func NewNotFound(qualifiedResource schema.GroupResource, name string, message st
 	return status
 }
 
+// NewForbidden xxx
 func NewForbidden(qualifiedResource schema.GroupResource, name string, err error) *errors.StatusError {
 	status := errors.NewForbidden(qualifiedResource, name, err)
 	return status
 }
 
+// NewInternalError xxx
 func NewInternalError(err error) *errors.StatusError {
 	status := errors.NewInternalError(err)
 	return status

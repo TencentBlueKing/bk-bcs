@@ -37,7 +37,8 @@ type nodeZkDiscovery struct {
 }
 
 // NewNodeZkDiscovery new nodeZkDiscovery for discovery node cadvisor targets
-func NewNodeZkDiscovery(zkAddr []string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
+func NewNodeZkDiscovery(zkAddr []string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery,
+	error) {
 	disc := &nodeZkDiscovery{
 		zkAddr:         zkAddr,
 		promFilePrefix: promFilePrefix,
@@ -59,6 +60,7 @@ func NewNodeZkDiscovery(zkAddr []string, promFilePrefix, module string, cadvisor
 	return disc, nil
 }
 
+// Start xxx
 func (disc *nodeZkDiscovery) Start() error {
 	var err error
 	disc.nodeController, err = commDiscovery.NewNodeController(disc.zkAddr, disc)
@@ -118,10 +120,12 @@ func (disc *nodeZkDiscovery) GetPromSdConfigFile(module string) string {
 	return path.Join(disc.promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName))
 }
 
+// RegisterEventFunc xxx
 func (disc *nodeZkDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	disc.eventHandler = handleFunc
 }
 
+// OnAdd xxx
 func (disc *nodeZkDiscovery) OnAdd(obj interface{}) {
 	if !disc.initSuccess {
 		return
@@ -130,6 +134,7 @@ func (disc *nodeZkDiscovery) OnAdd(obj interface{}) {
 	disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 }
 
+// OnUpdate xxx
 // if on update event, then don't need to update sd config
 func (disc *nodeZkDiscovery) OnUpdate(old, cur interface{}) {
 	if !disc.initSuccess {
@@ -137,6 +142,7 @@ func (disc *nodeZkDiscovery) OnUpdate(old, cur interface{}) {
 	}
 }
 
+// OnDelete xxx
 func (disc *nodeZkDiscovery) OnDelete(obj interface{}) {
 	if !disc.initSuccess {
 		return

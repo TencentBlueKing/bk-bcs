@@ -108,6 +108,7 @@ func (c *Client) Stop() error {
 	return nil
 }
 
+// resolveServices xxx
 // resolve services
 func (c *Client) resolveServices(svcStrs []string) error {
 	blog.V(3).Infof("discovery bkcmdb-synchronizer [%+v]", svcStrs)
@@ -128,6 +129,7 @@ func (c *Client) resolveServices(svcStrs []string) error {
 	return nil
 }
 
+// checkMasterStatus xxx
 // check master status
 func (c *Client) checkMasterStatus() {
 	for {
@@ -147,7 +149,7 @@ func (c *Client) checkMasterStatus() {
 	}
 }
 
-// registerService
+// registerService xxx
 func (c *Client) registerService() error {
 	data, err := json.Marshal(c.svcInfo)
 	if err != nil {
@@ -159,7 +161,7 @@ func (c *Client) registerService() error {
 	return c.rd.RegisterAndWatchService(path, data)
 }
 
-// getServicePath
+// getServicePath xxx
 func (c *Client) getServicePath() string {
 	return filepath.Join(types.BCS_SERV_BASEPATH, types.BCS_MODULE_BKCMDB_SYNCHRONIZER, c.zkSubPath)
 }

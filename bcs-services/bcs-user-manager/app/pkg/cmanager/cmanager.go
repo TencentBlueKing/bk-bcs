@@ -11,6 +11,7 @@
  *
  */
 
+// Package cmanager xxx
 package cmanager
 
 import (

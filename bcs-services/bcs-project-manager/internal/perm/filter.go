@@ -59,14 +59,14 @@ func ListAuthorizedProjectIDs(username string) ([]string, error) {
 	return ids, nil
 }
 
-// 生成 iam request
+// makeIAMRequest 生成 iam request
 func makeIAMRequest(username, actionID string) iam.Request {
 	subject := iam.Subject{Type: "user", ID: username}
 	action := iam.Action{ID: actionID}
 	return iam.NewRequest(bcsIAM.SystemIDBKBCS, subject, action, nil)
 }
 
-// 生成查询策略
+// makeIAMPolicy 生成查询策略
 func makeIAMPolicy(iamReq iam.Request) (map[string]interface{}, error) {
 	backendClient := iamBackendClient.NewIAMBackendClient(
 		config.GlobalConf.IAM.GatewayHost,
@@ -103,7 +103,7 @@ func makeFilter(policy map[string]interface{}) (map[string]interface{}, error) {
 	}
 }
 
-// 解析 content, 仅处理嵌套的第一级
+// parseContent 解析 content, 仅处理嵌套的第一级
 func parseContent(c []iamExpr.ExprCell) map[string]interface{} {
 	var ids []interface{}
 	for _, expr := range c {

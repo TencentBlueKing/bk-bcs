@@ -26,12 +26,12 @@ const (
 
 // OAuthRequest auth request
 type OAuthRequest struct {
-	//EnvName now "prod", "test" are available
+	// EnvName now "prod", "test" are available
 	EnvName string `json:"env_name"`
-	//code & secret are for PaaS authorization
+	// code & secret are for PaaS authorization
 	AppCode   string `json:"app_code"`
 	AppSecret string `json:"app_secret"`
-	//default client_credentials
+	// default client_credentials
 	GrantType string `json:"grant_type"`
 }
 

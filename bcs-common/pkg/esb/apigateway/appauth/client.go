@@ -22,9 +22,9 @@ import (
 
 // Config item for BlueKing Auth Center
 type Config struct {
-	//Hosts AuthCenter hosts, without http/https, default is http
+	// Hosts AuthCenter hosts, without http/https, default is http
 	Hosts []string
-	//config for https
+	// config for https
 	TLSConfig *tls.Config
 	AppCode   string
 	AppSecret string
@@ -32,14 +32,14 @@ type Config struct {
 
 // Client BlueKing Auth Center interface difinition
 type Client interface {
-	//GetAccessToken get specified environmental BK PaaS access token
+	// GetAccessToken get specified environmental BK PaaS access token
 	// by App identifier. Access token expires in 180 days
 	GetAccessToken(env string) (string, error)
 }
 
 // NewAuthClient create authClient instance
 func NewAuthClient(cfg *Config) (Client, error) {
-	//validate config
+	// validate config
 	if len(cfg.Hosts) == 0 {
 		return nil, fmt.Errorf("Lost hosts config item(required)")
 	}
@@ -75,7 +75,7 @@ type authClient struct {
 	client *paasclient.RESTClient
 }
 
-//GetAccessToken get specified environmental BK PaaS access token
+// GetAccessToken get specified environmental BK PaaS access token
 func (c *authClient) GetAccessToken(env string) (string, error) {
 	if !(env == PaasOAuthEnvProd || env == PaasOAuthEnvTest) {
 		return "", fmt.Errorf("Error Environment")

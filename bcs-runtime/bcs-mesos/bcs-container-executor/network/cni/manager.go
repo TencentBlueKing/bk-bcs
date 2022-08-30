@@ -24,12 +24,12 @@ import (
 	"github.com/containernetworking/cni/libcni"
 )
 
-//NewNetManager create cni plugin manager
+// NewNetManager create cni plugin manager
 func NewNetManager(binpath, confpath string) network.NetManager {
 	if confpath == "" {
 		return nil
 	}
-	//check confpath exist
+	// check confpath exist
 	if exist, _ := util.FileExists(confpath); !exist {
 		return nil
 	}
@@ -41,17 +41,17 @@ func NewNetManager(binpath, confpath string) network.NetManager {
 	return manager
 }
 
-//PluginManager manager for all cni plugins
+// PluginManager manager for all cni plugins
 type PluginManager struct {
-	binDir  string                           //executable binary  directory for CNI plugin
-	confDir string                           //config directory for CNI configuration
-	plugins map[string]network.NetworkPlugin //all plugins
+	binDir  string                           // executable binary  directory for CNI plugin
+	confDir string                           // config directory for CNI configuration
+	plugins map[string]network.NetworkPlugin // all plugins
 }
 
-//Init loading all configuration in directory
+// Init loading all configuration in directory
 func (manager *PluginManager) Init() error {
 	logs.Infof("CNI plugin manager init plugin's configuration under %s\n", manager.confDir)
-	//list all .json or .conf file
+	// list all .json or .conf file
 	confFiles, err := libcni.ConfFiles(manager.confDir, []string{".conf", ".json"})
 	if err != nil {
 		logs.Errorf("CNI plugin manager load configuration in %s faile: %s\n", manager.confDir, err.Error())
@@ -61,16 +61,16 @@ func (manager *PluginManager) Init() error {
 		logs.Infof("No CNI configuration in %s\n", manager.confDir)
 		return nil
 	}
-	//reading all configuration & create CNIPlugin
+	// reading all configuration & create CNIPlugin
 	for _, file := range confFiles {
 		pluginName, plugin := NewPlugin(manager.binDir, file)
 		if plugin == nil {
 			logs.Errorf("CNI plugin manager create plugin by config file %s failed!\n", file)
-			//return fmt.Errorf("Create %s plugin error", file)
+			// return fmt.Errorf("Create %s plugin error", file)
 			continue
 		}
 		if _, ok := manager.plugins[pluginName]; ok {
-			//plugin name conflict, init failed
+			// plugin name conflict, init failed
 			logs.Errorf("CNI plugin named %s conflict in config file %s\n", pluginName, file)
 			return fmt.Errorf("conflict plugin name: %s", file)
 		}
@@ -84,12 +84,12 @@ func (manager *PluginManager) Init() error {
 	return nil
 }
 
-//Stop manager stop if necessary
+// Stop manager stop if necessary
 func (manager *PluginManager) Stop() {
-	//empty
+	// empty
 }
 
-//GetPlugin get plugin by name
+// GetPlugin get plugin by name
 func (manager *PluginManager) GetPlugin(name string) network.NetworkPlugin {
 	if plugin, ok := manager.plugins[name]; ok {
 		return plugin
@@ -97,7 +97,7 @@ func (manager *PluginManager) GetPlugin(name string) network.NetworkPlugin {
 	return nil
 }
 
-//AddPlugin Add plugin to manager dynamic if necessary
+// AddPlugin Add plugin to manager dynamic if necessary
 func (manager *PluginManager) AddPlugin(name string, plugin network.NetworkPlugin) error {
 	if _, ok := manager.plugins[name]; ok {
 		return fmt.Errorf("conflict plugin with name %s", name)
@@ -106,7 +106,7 @@ func (manager *PluginManager) AddPlugin(name string, plugin network.NetworkPlugi
 	return nil
 }
 
-//SetUpPod for setting Pod network interface
+// SetUpPod for setting Pod network interface
 func (manager *PluginManager) SetUpPod(podInfo container.Pod) error {
 	logs.Infof("CNI plugin manager ADD pod %s network with %s\n", podInfo.GetContainerID(), podInfo.GetNetworkName())
 	if podInfo.GetNetworkName() == "none" {
@@ -122,17 +122,19 @@ func (manager *PluginManager) SetUpPod(podInfo container.Pod) error {
 
 	if plugin, ok := manager.plugins[podInfo.GetNetworkName()]; ok {
 		if pErr := plugin.SetUpPod(podInfo); pErr != nil {
-			logs.Errorf("CNI plugin %s/%s SetUpPod %s err: %s\n", podInfo.GetNetworkName(), plugin.Name(), podInfo.GetContainerID(), pErr.Error())
+			logs.Errorf("CNI plugin %s/%s SetUpPod %s err: %s\n", podInfo.GetNetworkName(), plugin.Name(),
+				podInfo.GetContainerID(), pErr.Error())
 			return pErr
 		}
-		logs.Infof("CNI plugin manager ADD pod %s network with %s success.\n", podInfo.GetContainerID(), podInfo.GetNetworkName())
+		logs.Infof("CNI plugin manager ADD pod %s network with %s success.\n", podInfo.GetContainerID(),
+			podInfo.GetNetworkName())
 		return nil
 	}
 	logs.Errorf("CNI plugin Manager get no plugin named %s\n", podInfo.GetNetworkName())
 	return fmt.Errorf("No CNI plugin name called %s", podInfo.GetNetworkName())
 }
 
-//TearDownPod for release pod network resource
+// TearDownPod for release pod network resource
 func (manager *PluginManager) TearDownPod(podInfo container.Pod) error {
 	logs.Infof("CNI plugin manager DEL pod %s network with %s\n", podInfo.GetContainerID(), podInfo.GetNetworkName())
 	if podInfo.GetNetworkName() == "host" || podInfo.GetNetworkName() == "none" {
@@ -141,10 +143,12 @@ func (manager *PluginManager) TearDownPod(podInfo container.Pod) error {
 	}
 	if plugin, ok := manager.plugins[podInfo.GetNetworkName()]; ok {
 		if pErr := plugin.TearDownPod(podInfo); pErr != nil {
-			logs.Errorf("CNI plugin %s/%s TearDownPod %s err: %s\n", podInfo.GetNetworkName(), plugin.Name(), podInfo.GetContainerID(), pErr.Error())
+			logs.Errorf("CNI plugin %s/%s TearDownPod %s err: %s\n", podInfo.GetNetworkName(), plugin.Name(),
+				podInfo.GetContainerID(), pErr.Error())
 			return pErr
 		}
-		logs.Infof("CNI plugin manager DEL pod %s network with %s success.\n", podInfo.GetContainerID(), podInfo.GetNetworkName())
+		logs.Infof("CNI plugin manager DEL pod %s network with %s success.\n", podInfo.GetContainerID(),
+			podInfo.GetNetworkName())
 		return nil
 	}
 	logs.Errorf("CNI plugin Manager get no plugin named %s\n", podInfo.GetNetworkName())

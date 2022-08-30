@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParsePo ...
+// ParsePo xxx
 func ParsePo(manifest map[string]interface{}) map[string]interface{} {
 	po := model.Po{}
 	common.ParseMetadata(manifest, &po.Metadata)
@@ -35,7 +35,7 @@ func ParsePo(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(po)
 }
 
-// ParsePoSpec ...
+// ParsePoSpec xxx
 func ParsePoSpec(manifest map[string]interface{}, spec *model.PoSpec) {
 	tmplSpec, _ := mapx.GetItems(manifest, "spec")
 	podSpec, _ := tmplSpec.(map[string]interface{})
@@ -47,7 +47,7 @@ func ParsePoSpec(manifest map[string]interface{}, spec *model.PoSpec) {
 	ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseNodeSelect ...
+// ParseNodeSelect xxx
 // 类型优先级：指定节点 > 调度规则 > 任意节点
 func ParseNodeSelect(podSpec map[string]interface{}, nodeSelect *model.NodeSelect) {
 	nodeSelect.Type = NodeSelectTypeAnyAvailable
@@ -65,13 +65,13 @@ func ParseNodeSelect(podSpec map[string]interface{}, nodeSelect *model.NodeSelec
 	}
 }
 
-// ParseAffinity ...
+// ParseAffinity xxx
 func ParseAffinity(podSpec map[string]interface{}, affinity *model.Affinity) {
 	ParseNodeAffinity(podSpec, &affinity.NodeAffinity)
 	ParsePodAffinity(podSpec, &affinity.PodAffinity)
 }
 
-// ParseNodeAffinity ...
+// ParseNodeAffinity xxx
 func ParseNodeAffinity(manifest map[string]interface{}, nodeAffinity *[]model.NodeAffinity) {
 	if affinity, _ := mapx.GetItems(manifest, "affinity.nodeAffinity"); affinity != nil { // nolint:nestif
 		if terms, _ := mapx.GetItems(
@@ -137,7 +137,7 @@ func parseAffinityFieldSelector(matchFields interface{}) []model.FieldSelector {
 	return selectors
 }
 
-// ParsePodAffinity ...
+// ParsePodAffinity xxx
 func ParsePodAffinity(podSpec map[string]interface{}, podAffinity *[]model.PodAffinity) {
 	typeArgsList := []affinityTypeArgs{
 		{AffinityTypeAffinity, "affinity.podAffinity"},
@@ -182,7 +182,7 @@ type affinityPriorityArgs struct {
 	TopoKeyPaths string
 }
 
-// 解析具体的某类 Pod 亲和性配置，如 反亲和性 + 必须
+// parsePodAffinity 解析具体的某类 Pod 亲和性配置，如 反亲和性 + 必须
 func parsePodAffinity(
 	podSpec map[string]interface{},
 	podAffinity *[]model.PodAffinity,
@@ -226,14 +226,14 @@ func parsePodAffinity(
 	}
 }
 
-// ParseToleration ...
+// ParseToleration xxx
 func ParseToleration(podSpec map[string]interface{}, toleration *model.Toleration) {
 	if tolerations, _ := mapx.GetItems(podSpec, "tolerations"); tolerations != nil {
 		_ = mapstructure.Decode(tolerations, &toleration.Rules)
 	}
 }
 
-// ParseNetworking ...
+// ParseNetworking xxx
 func ParseNetworking(podSpec map[string]interface{}, networking *model.Networking) {
 	networking.DNSPolicy = mapx.Get(podSpec, "dnsPolicy", "ClusterFirst").(string)
 	networking.HostIPC = mapx.GetBool(podSpec, "hostIPC")
@@ -270,14 +270,14 @@ func ParseNetworking(podSpec map[string]interface{}, networking *model.Networkin
 	}
 }
 
-// ParsePodSecurityCtx ...
+// ParsePodSecurityCtx xxx
 func ParsePodSecurityCtx(podSpec map[string]interface{}, security *model.PodSecurityCtx) {
 	if secCtx, _ := mapx.GetItems(podSpec, "securityContext"); secCtx != nil {
 		_ = mapstructure.Decode(secCtx, security)
 	}
 }
 
-// ParseSpecOther ...
+// ParseSpecOther xxx
 func ParseSpecOther(podSpec map[string]interface{}, other *model.SpecOther) {
 	other.RestartPolicy = mapx.Get(podSpec, "restartPolicy", "Always").(string)
 	other.TerminationGracePeriodSecs = mapx.GetInt64(podSpec, "terminationGracePeriodSeconds")

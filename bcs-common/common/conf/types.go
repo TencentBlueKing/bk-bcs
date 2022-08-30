@@ -114,6 +114,7 @@ type LicenseServerConfig struct {
 	LSClientKeyFile  string `json:"ls_client_key_file" value:"" usage:"Client private key file(*.key) for connecting to license server" mapstructure:"ls_client_key_file"`
 }
 
+// CustomCertConfig xxx
 type CustomCertConfig struct {
 	CAFile         string `json:"custom_ca_file" value:"" usage:"Custom CA file. If server_cert_file/server_key_file/ca_file are all set, it will set up an HTTPS server required and verified client cert" mapstructure:"custom_ca_file"`
 	ServerCertFile string `json:"custom_server_cert_file" value:"" usage:"Custom Server public key file(*.crt). If both server_cert_file and server_key_file are set, it will set up an HTTPS server" mapstructure:"custom_server_cert_file"`
@@ -202,6 +203,7 @@ func removeLowPriorityKey(fs *pflag.FlagSet, jsn *simplejson.Json, flagConfigTyp
 	}
 }
 
+// loadRawConfig xxx
 // Make field to flag by adding "json" "value" "usage"
 func loadRawConfig(fs *pflag.FlagSet, config interface{}) {
 	wrap2flag(fs, reflect.TypeOf(config).Elem(), reflect.ValueOf(config).Elem())

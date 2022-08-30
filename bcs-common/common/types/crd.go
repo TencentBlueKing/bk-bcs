@@ -18,16 +18,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/deepcopy"
 )
 
-//custom resource register spec
+// CrrSpec xxx
+// custom resource register spec
 type CrrSpec struct {
 	Names CrrSpecName `json:"names"`
 }
 
+// CrrSpecName xxx
 type CrrSpecName struct {
 	Kind string `json:"kind"`
 }
 
-//custom resource register
+// Crr xxx
+// custom resource register
 type Crr struct {
 	TypeMeta `json:",inline"`
 	Spec     CrrSpec `json:"spec"`
@@ -50,7 +53,8 @@ func (in *Crr) DeepCopy() *Crr {
 	return out
 }
 
-//custom resource definition
+// Crd xxx
+// custom resource definition
 type Crd struct {
 	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata"`

@@ -44,7 +44,7 @@ type ApiRequester interface {
 	PostHijacked(ctx context.Context, uri string, header ...*http.HeaderSet) (types.HijackedResponse, error)
 }
 
-//NewApiRequester api request
+// NewApiRequester api request
 func NewApiRequester(clientSSL *tls.Config, bcsToken string) ApiRequester {
 	return &bcsApiRequester{
 		clientSSL: clientSSL,
@@ -66,7 +66,7 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	if b.bcsToken != "" {
 		httpCli.SetHeader("Authorization", "Bearer "+b.bcsToken)
 	}
-	//httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
+	// httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
 
 	if header != nil {
 		httpCli.SetBatchHeader(header)
@@ -75,7 +75,7 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	if b.clientSSL != nil {
 		httpCli.SetTlsVerityConfig(b.clientSSL)
 	}
-	//changed by DeveloperJim in 2020-04-27 for handling http error code
+	// changed by DeveloperJim in 2020-04-27 for handling http error code
 	response, err := httpCli.RequestEx(uri, method, nil, data)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,8 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 }
 
 // DoForResponse get response after request
-func (b *bcsApiRequester) DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (*httpclient.HttpRespone, error) {
+func (b *bcsApiRequester) DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (
+	*httpclient.HttpRespone, error) {
 	httpCli := httpclient.NewHttpClient()
 	httpCli.SetHeader("Content-Type", "application/json")
 	httpCli.SetHeader("Accept", "application/json")
@@ -138,12 +139,13 @@ func (b *bcsApiRequester) DoWebsocket(uri string, header ...*http.HeaderSet) (ty
 
 	ws := types.NewWsConn(conn)
 
-	//return types.HijackedResponse{Conn: conn.UnderlyingConn(), Reader: bufio.NewReader(conn.UnderlyingConn())}, err
+	// return types.HijackedResponse{Conn: conn.UnderlyingConn(), Reader: bufio.NewReader(conn.UnderlyingConn())}, err
 	return types.HijackedResponse{Ws: ws}, err
 }
 
 // PostHijacked post hijack for websocket
-func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header ...*http.HeaderSet) (types.HijackedResponse, error) {
+func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header ...*http.HeaderSet) (
+	types.HijackedResponse, error) {
 	req, err := htplib.NewRequest(htplib.MethodGet, uri, nil)
 	if err != nil {
 		return types.HijackedResponse{}, err
@@ -166,7 +168,8 @@ func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header .
 	return types.HijackedResponse{Conn: conn, Reader: bufio.NewReader(conn)}, err
 }
 
-func (b *bcsApiRequester) setupHijackConn(ctx context.Context, uri string, req *htplib.Request, proto string) (net.Conn, error) {
+func (b *bcsApiRequester) setupHijackConn(ctx context.Context, uri string, req *htplib.Request, proto string) (net.Conn,
+	error) {
 	challengeKey, err := generateChallengeKey()
 	if err != nil {
 		return nil, err
@@ -226,6 +229,7 @@ func (b *bcsApiRequester) setupHijackConn(ctx context.Context, uri string, req *
 	return c, nil
 }
 
+// Dialer xxx
 func (b *bcsApiRequester) Dialer(addr string) func(context.Context) (net.Conn, error) {
 	return func(ctx context.Context) (net.Conn, error) {
 		dialer := &net.Dialer{
@@ -245,10 +249,12 @@ type hijackedConn struct {
 	r *bufio.Reader
 }
 
+// Read 用于常见IO
 func (c *hijackedConn) Read(b []byte) (int, error) {
 	return c.r.Read(b)
 }
 
+// CloseWrite xxx
 func (c *hijackedConnCloseWriter) CloseWrite() error {
 	conn := c.Conn.(types.CloseWriter)
 	return conn.CloseWrite()

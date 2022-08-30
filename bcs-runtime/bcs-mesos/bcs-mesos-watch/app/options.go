@@ -18,7 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/types"
 )
 
-//DefaultConfig return default command line config
+// DefaultConfig return default command line config
 func DefaultConfig() *types.CmdConfig {
 	return &types.CmdConfig{
 		ClusterID:              "",

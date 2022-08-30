@@ -57,7 +57,8 @@ func (action *GetArgocdInstanceAction) Handle(ctx context.Context,
 		action.setResp(common.ErrActionFailed, "get argocd instance failed", nil)
 		return nil
 	}
-	project, err := action.tkexIf.ArgocdProjects(common.ArgocdManagerNamespace).Get(ctx, i.Spec.Project, metav1.GetOptions{})
+	project, err := action.tkexIf.ArgocdProjects(common.ArgocdManagerNamespace).Get(ctx, i.Spec.Project,
+		metav1.GetOptions{})
 	if err != nil {
 		blog.Errorf("get argocd project %s failed, err: %s", i.Spec.Project, err.Error())
 		action.setResp(common.ErrActionFailed, "get argocd project failed", nil)
@@ -74,7 +75,8 @@ func (action *GetArgocdInstanceAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (action *GetArgocdInstanceAction) setResp(err common.ArgocdServerError, message string, instance *v1alpha1.ArgocdInstance) {
+func (action *GetArgocdInstanceAction) setResp(err common.ArgocdServerError, message string,
+	instance *v1alpha1.ArgocdInstance) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	action.resp.Code = &code

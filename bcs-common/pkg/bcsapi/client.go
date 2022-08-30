@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
-//! v4 version binding~
+// ! v4 version binding~
 
 const (
 	gatewayPrefix   = "/bcsapi/v4/"
@@ -42,6 +42,8 @@ type Config struct {
 	Gateway bool
 	// etcd registry config for bcs modules
 	Etcd registry.CMDOptions
+	// Header for request header
+	Header map[string]string
 }
 
 // BasicResponse basic http response for bkbcs

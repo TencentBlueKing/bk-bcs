@@ -21,6 +21,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// listTransaction xxx
 // list transactions
 func (r *Router) listTransaction(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
@@ -57,6 +58,7 @@ func (r *Router) listTransaction(req *restful.Request, resp *restful.Response) {
 	return
 }
 
+// deleteTransaction xxx
 // delete transactions
 func (r *Router) deleteTransaction(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {

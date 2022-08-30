@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 )
 
-// Context
+// Context xxx
 type Context struct {
 	*gin.Context
 	RequestId   string          `json:"request_id"`
@@ -48,18 +48,18 @@ func (c *Context) WriteAttachment(data []byte, filename string) {
 	c.Writer.Write(data)
 }
 
-// EnvToken
+// EnvToken xxx
 type EnvToken struct {
 	Username string
 }
 
-// APIGWApp
+// APIGWApp xxx
 type APIGWApp struct {
 	AppCode  string `json:"app_code"`
 	Verified bool   `json:"verified"`
 }
 
-// APIGWUser
+// APIGWUser xxx
 type APIGWUser struct {
 	Username string `json:"username"`
 	Verified bool   `json:"verified"`

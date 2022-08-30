@@ -11,6 +11,7 @@
  *
  */
 
+// Package estimator xxx
 package estimator
 
 import (

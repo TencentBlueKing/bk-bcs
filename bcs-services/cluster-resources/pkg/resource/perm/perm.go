@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package perm xxx
 package perm
 
 import (
@@ -40,7 +41,7 @@ func Validate(ctx context.Context, res, action, projectID, clusterID, namespace 
 	return nil
 }
 
-// 生成权限中心鉴权所需的 Perm && Ctx
+// genPermAndCtx 生成权限中心鉴权所需的 Perm && Ctx
 func genPermAndCtx(res, action, username, projectID, clusterID, namespace string) (iamPerm.Perm, iamPerm.Ctx) {
 	// 上游逻辑中已经确保命名空间域的资源，传入的 Namespace 必定不为空，
 	// 因此这里直接根据命名空间是否为空判断权限类型即可（命名空间类型除外）
@@ -58,7 +59,7 @@ func genPermAndCtx(res, action, username, projectID, clusterID, namespace string
 	}
 }
 
-// 根据指定动作进行权限校验
+// canAction 根据指定动作进行权限校验
 func canAction(perm iamPerm.Perm, permCtx iamPerm.Ctx, action string) (allow bool, err error) {
 	switch action {
 	case crAction.List:

@@ -11,6 +11,7 @@
  *
  */
 
+// Package rest xxx
 package rest
 
 import (

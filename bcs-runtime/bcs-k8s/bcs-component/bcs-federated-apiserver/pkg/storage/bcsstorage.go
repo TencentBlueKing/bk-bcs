@@ -28,15 +28,15 @@ type BcsStorage struct {
 	Address   string
 	Token     string
 	URLPrefix string
-	//memberClusters string
+	// memberClusters string
 }
 
 // Response struct store the bcs-storage's response message.
 type Response struct {
 	Result   bool            `json:"result"`
-	Code     int             `json:"code"`           //operation code
-	Message  string          `json:"message"`        //response message
-	Data     json.RawMessage `json:"data,omitempty"` //response data
+	Code     int             `json:"code"`           // operation code
+	Message  string          `json:"message"`        // response message
+	Data     json.RawMessage `json:"data,omitempty"` // response data
 	Total    int32           `json:"total"`
 	PageSize int32           `json:"pageSize"`
 	Offset   int32           `json:"offset"`
@@ -67,11 +67,13 @@ func NewBcsStorage(address, token, urlPrefix string) *BcsStorage {
 }
 
 // ListResources lists resources
-func (bcsStorage *BcsStorage) ListResources(memberClusters, namespace, name, resourceType string, limit, offset int64) ([]ResponseData, error) {
+func (bcsStorage *BcsStorage) ListResources(memberClusters, namespace, name, resourceType string, limit,
+	offset int64) ([]ResponseData, error) {
 	if memberClusters == "" {
 		return nil, fmt.Errorf("memberClusters is empty")
 	}
-	url := fmt.Sprintf("%s/%s/%s?clusterId=%s", strings.TrimSuffix(bcsStorage.Address, "/"), strings.TrimSuffix(bcsStorage.URLPrefix, "/"), resourceType, memberClusters)
+	url := fmt.Sprintf("%s/%s/%s?clusterId=%s", strings.TrimSuffix(bcsStorage.Address, "/"),
+		strings.TrimSuffix(bcsStorage.URLPrefix, "/"), resourceType, memberClusters)
 	if namespace != "" {
 		url += fmt.Sprintf("&namespace=%s", namespace)
 	}
@@ -85,7 +87,7 @@ func (bcsStorage *BcsStorage) ListResources(memberClusters, namespace, name, res
 		url += fmt.Sprintf("&offset=%d", offset)
 	}
 	klog.V(4).InfoS("list resource", "url", url)
-	//TODO 分页以及labelSelector
+	// TODO 分页以及labelSelector
 	client := &http.Client{}
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -105,7 +107,7 @@ func (bcsStorage *BcsStorage) ListResources(memberClusters, namespace, name, res
 		klog.Errorf("get request error: %v", err)
 		return nil, err
 	}
-	//decode
+	// decode
 	return bcsStorage.decodeResponse(response)
 }
 
@@ -121,7 +123,7 @@ func (bcsStorage *BcsStorage) decodeResponse(response *http.Response) ([]Respons
 	}
 	defer response.Body.Close()
 
-	//format http response
+	// format http response
 	standardResponse := &Response{}
 	if err := json.Unmarshal(rawData, standardResponse); err != nil {
 		klog.Errorf("http storage decode GET %s http response failed, %s\n", "standarResponse", err)

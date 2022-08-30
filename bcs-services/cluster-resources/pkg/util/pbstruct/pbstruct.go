@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package pbstruct xxx
 package pbstruct
 
 import (
@@ -48,6 +49,7 @@ func MapSlice2ListValue(l []map[string]interface{}) (*spb.ListValue, error) {
 	return x, nil
 }
 
+// map2StructValue xxx
 // map[string]interface{} => structpb.Value
 func map2StructValue(m map[string]interface{}) (*spb.Value, error) {
 	v2, err := Map2pbStruct(m)
@@ -78,6 +80,7 @@ func Map2pbStruct(m map[string]interface{}) (*spb.Struct, error) {
 	return x, nil
 }
 
+// interface2pbValue xxx
 // interface -> structpb.Value
 // 参考 structpb.NewValue 实现，添加对 []string 类型的支持，若需要支持更多类型可按需添加
 func interface2pbValue(v interface{}) (*spb.Value, error) {
@@ -139,7 +142,7 @@ func interface2pbValue(v interface{}) (*spb.Value, error) {
 	}
 }
 
-// 替换 structpb.NewList 对嵌套的普通类型进行支持
+// newInterfaceList 替换 structpb.NewList 对嵌套的普通类型进行支持
 func newInterfaceList(v []interface{}) (*spb.ListValue, error) {
 	x := &spb.ListValue{Values: make([]*spb.Value, len(v))}
 	for i, v := range v {
@@ -152,7 +155,7 @@ func newInterfaceList(v []interface{}) (*spb.ListValue, error) {
 	return x, nil
 }
 
-// 参考 structpb.NewList，NewValue(case string) 实现，支持 []string 类型
+// newStringList 参考 structpb.NewList，NewValue(case string) 实现，支持 []string 类型
 func newStringList(strList []string) (*spb.ListValue, error) {
 	x := &spb.ListValue{Values: make([]*spb.Value, len(strList))}
 	for idx, val := range strList {

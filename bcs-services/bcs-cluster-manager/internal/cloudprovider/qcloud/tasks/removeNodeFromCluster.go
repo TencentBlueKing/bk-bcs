@@ -29,10 +29,11 @@ import (
 // RemoveNodesFromClusterTask remove node from cluster
 func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("RemoveNodesFromClusterTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf("RemoveNodesFromClusterTask[%s]: task %s get detail task information from storage failed, %s. task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -43,7 +44,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("RemoveNodesFromClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("RemoveNodesFromClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -64,7 +66,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	ipList := strings.Split(step.Params["NodeIPs"], ",")
 	idList := strings.Split(step.Params["NodeIDs"], ",")
 	if len(idList) != len(ipList) {
-		blog.Errorf("RemoveNodesFromClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
+		blog.Errorf(
+			"RemoveNodesFromClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
 			len(idList), len(ipList))
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
@@ -106,7 +109,8 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 
 	allClusterInstance, err := cli.QueryTkeClusterAllInstances(cluster.SystemID, nil)
 	if err != nil {
-		blog.Errorf("RemoveNodesFromClusterTask[%s]: QueryTkeClusterAllInstances for cluster[%s] in task %s step %s failed, %s",
+		blog.Errorf(
+			"RemoveNodesFromClusterTask[%s]: QueryTkeClusterAllInstances for cluster[%s] in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("QueryTkeClusterAllInstances err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -189,7 +193,8 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 	// get task form database
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
+		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -206,7 +211,8 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 	// workflow switch current step to stepName when previous task exec successful
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task

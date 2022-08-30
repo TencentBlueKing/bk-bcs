@@ -27,7 +27,8 @@ func createUser(c *utils.ClientContext) error {
 	}
 
 	userManager := v1.NewBcsUserManager(utils.GetClientOption())
-	user, err := userManager.CreateOrGetUser(c.String(utils.OptionUserType), c.String(utils.OptionUserName), http.MethodPost)
+	user, err := userManager.CreateOrGetUser(c.String(utils.OptionUserType), c.String(utils.OptionUserName),
+		http.MethodPost)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %v", err)
 	}

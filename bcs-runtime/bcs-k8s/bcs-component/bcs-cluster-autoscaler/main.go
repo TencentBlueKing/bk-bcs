@@ -170,10 +170,12 @@ var (
 			"Can be used multiple times.")
 
 	estimatorFlag = flag.String("estimator", estimator.BinpackingEstimatorName,
-		"Type of resource estimator to be used in scale up. Available values: ["+strings.Join(estimator.AvailableEstimators, ",")+"]")
+		"Type of resource estimator to be used in scale up. Available values: ["+strings.Join(estimator.AvailableEstimators,
+			",")+"]")
 
 	expanderFlag = flag.String("expander", expander.RandomExpanderName,
-		"Type of node group expander to be used in scale up. Available values: ["+strings.Join(expander.AvailableExpanders, ",")+"]")
+		"Type of node group expander to be used in scale up. Available values: ["+strings.Join(expander.AvailableExpanders,
+			",")+"]")
 
 	ignoreDaemonSetsUtilization = flag.Bool("ignore-daemonsets-utilization", false,
 		"Should CA ignore DaemonSet pods when calculating resource utilization for scaling down")
@@ -208,7 +210,8 @@ var (
 			"Pods with nominatedNodeName set are always filtered out.")
 	emitPerNodeGroupMetrics = flag.Bool("emit-per-nodegroup-metrics", true, "If true, emit per node group metrics.")
 
-	ignoreTaintsFlag         = multiStringFlag("ignore-taint", "Specifies a taint to ignore in node templates when considering to scale a node group")
+	ignoreTaintsFlag = multiStringFlag("ignore-taint",
+		"Specifies a taint to ignore in node templates when considering to scale a node group")
 	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false,
 		"Should CA fetch instance types in runtime or use a static list. AWS only")
 	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")

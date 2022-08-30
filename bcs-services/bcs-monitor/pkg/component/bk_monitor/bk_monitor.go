@@ -127,7 +127,8 @@ func (r *BKUnifyQueryResult) ToPromSeriesSet() ([]*prompb.TimeSeries, error) {
 
 // QueryByPromQL unifyquery 查询, promql 语法
 // start, end, step 单位秒
-func QueryByPromQL(ctx context.Context, host string, bkBizId string, start, end, step int64, labelMatchers []storepb.LabelMatcher) ([]*prompb.TimeSeries, error) {
+func QueryByPromQL(ctx context.Context, host string, bkBizId string, start, end, step int64,
+	labelMatchers []storepb.LabelMatcher) ([]*prompb.TimeSeries, error) {
 	url := fmt.Sprintf("%s/query/ts/promql", host)
 
 	// 必须的参数 bk_biz_id, 单独拎出来处理

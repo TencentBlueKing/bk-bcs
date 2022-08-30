@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package errcode xxx
 package errcode
 
 const (

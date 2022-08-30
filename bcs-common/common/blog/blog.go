@@ -11,6 +11,7 @@
  *
  */
 
+// Package blog xxx
 package blog
 
 import (
@@ -64,26 +65,37 @@ func InitLogs(logConfig conf.LogConfig) {
 	})
 }
 
+// CloseLogs xxx
 func CloseLogs() {
 	glog.Flush()
 }
 
 var (
-	Info  = glog.Infof
+	// Info xxx
+	Info = glog.Infof
+	// Infof xxx
 	Infof = glog.Infof
 
-	Warn  = glog.Warningf
+	// Warn xxx
+	Warn = glog.Warningf
+	// Warnf xxx
 	Warnf = glog.Warningf
 
-	Error  = glog.Errorf
+	// Error xxx
+	Error = glog.Errorf
+	// Errorf xxx
 	Errorf = glog.Errorf
 
-	Fatal  = glog.Fatal
+	// Fatal xxx
+	Fatal = glog.Fatal
+	// Fatalf xxx
 	Fatalf = glog.Fatalf
 
+	// V xxx
 	V = glog.V
 )
 
+// Debug xxx
 func Debug(args ...interface{}) {
 	if format, ok := (args[0]).(string); ok {
 		glog.V(3).Infof(format, args[1:]...)
@@ -92,6 +104,7 @@ func Debug(args ...interface{}) {
 	}
 }
 
+// SetV xxx
 func SetV(level int32) {
 	glog.SetV(glog.Level(level))
 }

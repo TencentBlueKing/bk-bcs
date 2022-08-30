@@ -536,6 +536,7 @@ func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentID, executo
 	return isUpdated, nil
 }
 
+// updateApplicationStatus xxx
 // update application`s status according to taskgroups` status
 func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error) {
 
@@ -650,6 +651,7 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 	return isUpdated, nil
 }
 
+// taskGroupStatusUpdated xxx
 // after a taskgroup's status changed, do some work in this function
 // only application perform
 func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originStatus string) {
@@ -783,6 +785,7 @@ func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originSta
 	return
 }
 
+// applicationStatusUpdated xxx
 // after a application's status changed, do some work in this function
 func (s *Scheduler) applicationStatusUpdated(app *types.Application, originStatus string) {
 

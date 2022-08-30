@@ -20,11 +20,13 @@ import (
 	"strings"
 )
 
+// ConfigSet xxx
 type ConfigSet struct {
 	Common map[string]interface{}            `json:"common"`
 	Conf   map[string]map[string]interface{} `json:"conf"`
 }
 
+// ParseConfigSet xxx
 func ParseConfigSet(data interface{}) (c *ConfigSet, err error) {
 	c = new(ConfigSet)
 	var tmp []byte
@@ -35,11 +37,13 @@ func ParseConfigSet(data interface{}) (c *ConfigSet, err error) {
 	return c, err
 }
 
+// ClusterSet xxx
 type ClusterSet struct {
 	ClusterId     string    `json:"clusterId"`
 	ClusterConfig ConfigSet `json:"clusterConfig"`
 }
 
+// DeployConfig xxx
 type DeployConfig struct {
 	Service       string       `json:"service"`
 	ServiceConfig ConfigSet    `json:"serviceConfig"`
@@ -47,6 +51,7 @@ type DeployConfig struct {
 	StableVersion string       `json:"stableVersion"`
 }
 
+// RenderConfig xxx
 type RenderConfig struct {
 	MesosZk          string `render:"mesosZkHost"`
 	MesosZkSpace     string `render:"mesosZkHostSpace"`
@@ -64,6 +69,7 @@ type RenderConfig struct {
 
 var tagFormat = "${%s}"
 
+// Render xxx
 func (rc RenderConfig) Render(s string) (r string) {
 	r = s
 

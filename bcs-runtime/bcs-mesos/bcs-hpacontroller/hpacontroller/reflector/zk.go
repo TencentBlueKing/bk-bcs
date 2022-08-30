@@ -34,19 +34,20 @@ const (
 	bcsRootNode string = "blueking"
 	// Deployment zk node
 	deploymentNode string = "deployment"
-	//crd zk node
+	// crd zk node
 	crdNode string = "crd"
 	// crd zk node
 	autoscalerNode = "autoscaler"
 )
 
 type zkReflector struct {
-	//hpa controller config
+	// hpa controller config
 	config *config.Config
 
 	zk *zkclient.ZkClient
 }
 
+// NewZkReflector xxx
 func NewZkReflector(conf *config.Config) Reflector {
 	reflector := &zkReflector{
 		config: conf,
@@ -63,9 +64,10 @@ func NewZkReflector(conf *config.Config) Reflector {
 	return reflector
 }
 
-//list all namespace autoscaler
+// ListAutoscalers xxx
+// list all namespace autoscaler
 func (reflector *zkReflector) ListAutoscalers() ([]*commtypes.BcsAutoscaler, error) {
-	//get /blueking/crd/autoscaler children list
+	// get /blueking/crd/autoscaler children list
 	nsKey := fmt.Sprintf("/%s/%s/%s", bcsRootNode, crdNode, autoscalerNode)
 	nsChildren, err := reflector.zk.GetChildren(nsKey)
 	if err != nil {
@@ -75,7 +77,7 @@ func (reflector *zkReflector) ListAutoscalers() ([]*commtypes.BcsAutoscaler, err
 
 	scalers := make([]*commtypes.BcsAutoscaler, 0)
 	for _, ns := range nsChildren {
-		//get /blueking/crd/autoscaler/ns children list
+		// get /blueking/crd/autoscaler/ns children list
 		path := fmt.Sprintf("%s/%s", nsKey, ns)
 		scalerChildren, err := reflector.zk.GetChildren(path)
 		if err != nil {
@@ -83,7 +85,7 @@ func (reflector *zkReflector) ListAutoscalers() ([]*commtypes.BcsAutoscaler, err
 			continue
 		}
 		for _, child := range scalerChildren {
-			//get /blueking/crd/autoscaler/ns/xxx scaler
+			// get /blueking/crd/autoscaler/ns/xxx scaler
 			key := fmt.Sprintf("%s/%s", path, child)
 			data, err := reflector.zk.Get(key)
 			if err != nil {
@@ -105,6 +107,7 @@ func (reflector *zkReflector) ListAutoscalers() ([]*commtypes.BcsAutoscaler, err
 	return scalers, nil
 }
 
+// UpdateAutoscaler xxx
 // update autoscaler in zk
 func (reflector *zkReflector) UpdateAutoscaler(autoscaler *commtypes.BcsAutoscaler) error {
 	zkScaler, err := reflector.FetchAutoscalerByUuid(autoscaler.GetUuid())
@@ -119,13 +122,16 @@ func (reflector *zkReflector) UpdateAutoscaler(autoscaler *commtypes.BcsAutoscal
 	return err
 }
 
+// StoreAutoscaler xxx
 func (reflector *zkReflector) StoreAutoscaler(autoscaler *commtypes.BcsAutoscaler) error {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", bcsRootNode, crdNode, autoscalerNode, autoscaler.ObjectMeta.NameSpace, autoscaler.ObjectMeta.Name)
+	key := fmt.Sprintf("/%s/%s/%s/%s/%s", bcsRootNode, crdNode, autoscalerNode, autoscaler.ObjectMeta.NameSpace,
+		autoscaler.ObjectMeta.Name)
 	by, _ := json.Marshal(autoscaler)
 	err := reflector.zk.Set(key, string(by), -1)
 	return err
 }
 
+// FetchAutoscalerByUuid xxx
 // fetch autoscaler from zk
 func (reflector *zkReflector) FetchAutoscalerByUuid(uuid string) (*commtypes.BcsAutoscaler, error) {
 	uids := strings.Split(uuid, "_")
@@ -148,7 +154,8 @@ func (reflector *zkReflector) FetchAutoscalerByUuid(uuid string) (*commtypes.Bcs
 	return scaler, nil
 }
 
-//fetch deployment info, if deployment status is not Running, then can't autoscale this deployment
+// FetchDeploymentInfo xxx
+// fetch deployment info, if deployment status is not Running, then can't autoscale this deployment
 func (reflector *zkReflector) FetchDeploymentInfo(namespace, name string) (*schedtypes.Deployment, error) {
 	key := fmt.Sprintf("/%s/%s/%s/%s", bcsRootNode, deploymentNode, namespace, name)
 	data, err := reflector.zk.Get(key)
@@ -161,7 +168,8 @@ func (reflector *zkReflector) FetchDeploymentInfo(namespace, name string) (*sche
 	return deploy, err
 }
 
-//fetch application info, if application status is not Running or Abnormal, then can't autoscale this application
+// FetchApplicationInfo xxx
+// fetch application info, if application status is not Running or Abnormal, then can't autoscale this application
 func (reflector *zkReflector) FetchApplicationInfo(namespace, name string) (*schedtypes.Application, error) {
 	key := fmt.Sprintf("/%s/%s/%s/%s", bcsRootNode, applicationNode, namespace, name)
 	data, err := reflector.zk.Get(key)
@@ -175,7 +183,8 @@ func (reflector *zkReflector) FetchApplicationInfo(namespace, name string) (*sch
 	return app, err
 }
 
-//list selectorRef deployment taskgroup
+// ListTaskgroupRefDeployment xxx
+// list selectorRef deployment taskgroup
 func (reflector *zkReflector) ListTaskgroupRefDeployment(namespace, name string) ([]*schedtypes.TaskGroup, error) {
 	path := fmt.Sprintf("/%s/%s/%s/%s", bcsRootNode, deploymentNode, namespace, name)
 	data, err := reflector.zk.Get(path)
@@ -193,7 +202,8 @@ func (reflector *zkReflector) ListTaskgroupRefDeployment(namespace, name string)
 	return reflector.ListTaskgroupRefApplication(namespace, deploy.Application.ApplicationName)
 }
 
-//list selectorRef application taskgroup
+// ListTaskgroupRefApplication xxx
+// list selectorRef application taskgroup
 func (reflector *zkReflector) ListTaskgroupRefApplication(namespace, name string) ([]*schedtypes.TaskGroup, error) {
 	path := fmt.Sprintf("/%s/%s/%s/%s", bcsRootNode, applicationNode, namespace, name)
 	children, err := reflector.zk.GetChildren(path)

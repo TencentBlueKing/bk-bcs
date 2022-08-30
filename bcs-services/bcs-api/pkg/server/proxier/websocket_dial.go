@@ -28,6 +28,7 @@ import (
 	"k8s.io/client-go/transport"
 )
 
+// WsTunnel xxx
 type WsTunnel struct {
 	httpTransport *http.Transport
 	serverAddress string
@@ -36,7 +37,8 @@ type WsTunnel struct {
 }
 
 // lookupWsHandler will lookup websocket dialer in cache
-func (f *ReverseProxyDispatcher) lookupWsHandler(clusterId string, req *http.Request) (*proxy.UpgradeAwareHandler, bool, error) {
+func (f *ReverseProxyDispatcher) lookupWsHandler(clusterId string, req *http.Request) (*proxy.UpgradeAwareHandler, bool,
+	error) {
 	credentials := sqlstore.GetWsCredentials(clusterId)
 	if credentials == nil {
 		return nil, false, nil
@@ -65,7 +67,8 @@ func (f *ReverseProxyDispatcher) lookupWsHandler(clusterId string, req *http.Req
 
 func (f *ReverseProxyDispatcher) wsTunnelChanged(clusterId string, credentials *m.WsClusterCredentials) bool {
 	wsTunnel := f.wsTunnelStore[clusterId]
-	return wsTunnel.serverAddress != credentials.ServerAddress || wsTunnel.caCertData != credentials.CaCertData || wsTunnel.userToken != credentials.UserToken
+	return wsTunnel.serverAddress != credentials.ServerAddress || wsTunnel.caCertData != credentials.CaCertData ||
+		wsTunnel.userToken != credentials.UserToken
 }
 
 // getTransport generate transport with dialer from tunnel

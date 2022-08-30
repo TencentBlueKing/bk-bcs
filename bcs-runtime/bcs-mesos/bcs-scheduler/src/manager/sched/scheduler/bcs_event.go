@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	//MaxEventQueueLength event queue size
+	// MaxEventQueueLength event queue size
 	MaxEventQueueLength = 10240
 )
 
@@ -38,7 +38,7 @@ type bcsEventManager struct {
 	sync.RWMutex
 
 	bcsZk string
-	//clientCertDir string
+	// clientCertDir string
 	clientCAFile   string
 	clientCertFile string
 	clientKeyFile  string
@@ -52,25 +52,26 @@ type bcsEventManager struct {
 	eventQueue chan *commtypes.BcsStorageEventIf
 }
 
+// newBcsEventManager xxx
 // Create Event Manager
 func newBcsEventManager(config util.Scheduler) *bcsEventManager {
 	bcsEvent := &bcsEventManager{
 		bcsZk: config.BcsZK,
-		//clientCertDir:config.ClientCertDir,
+		// clientCertDir:config.ClientCertDir,
 		clientCAFile:   config.ClientCAFile,
 		clientCertFile: config.ClientCertFile,
 		clientKeyFile:  config.ClientKeyFile,
 		eventQueue:     make(chan *commtypes.BcsStorageEventIf, MaxEventQueueLength),
 	}
 
-	//if bcsEvent.clientCertDir != "" {
+	// if bcsEvent.clientCertDir != "" {
 	bcsEvent.clientCert = &commtypes.CertConfig{
 		CertFile:   bcsEvent.clientCertFile,
 		KeyFile:    bcsEvent.clientKeyFile,
 		CAFile:     bcsEvent.clientCAFile,
 		CertPasswd: static.ClientCertPwd,
 	}
-	//}
+	// }
 
 	return bcsEvent
 }
@@ -93,6 +94,7 @@ func (e *bcsEventManager) initCli() {
 	e.cli.SetHeader("Accept", "application/json")
 }
 
+// syncEvent xxx
 // Send Event
 func (e *bcsEventManager) syncEvent(event *commtypes.BcsStorageEventIf) error {
 	queue := len(e.eventQueue)
@@ -104,7 +106,8 @@ func (e *bcsEventManager) syncEvent(event *commtypes.BcsStorageEventIf) error {
 }
 
 func (e *bcsEventManager) discvstorage() {
-	blog.Infof("bcsEventManager begin to discover storage from (%s), curr goroutine num(%d)", e.bcsZk, runtime.NumGoroutine())
+	blog.Infof("bcsEventManager begin to discover storage from (%s), curr goroutine num(%d)", e.bcsZk,
+		runtime.NumGoroutine())
 
 	regDiscv := rd.NewRegDiscover(e.bcsZk)
 	if regDiscv == nil {
@@ -168,7 +171,8 @@ func (e *bcsEventManager) discvstorage() {
 				}
 
 				if i == 0 {
-					curr = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+					curr = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(
+						serverInfo.ServerInfo.Port))
 
 					if serverInfo.ServerInfo.Scheme == "https" {
 						e.storageIsSsl = true

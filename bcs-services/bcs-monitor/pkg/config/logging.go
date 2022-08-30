@@ -22,7 +22,7 @@ type LogConf struct {
 	logger.Options `yaml:",inline"`
 }
 
-// Init : init default logging config
+// init : init default logging config
 func (c *LogConf) init() error {
 	logger.SetOptions(c.Options)
 	return nil

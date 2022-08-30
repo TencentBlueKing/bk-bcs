@@ -16,7 +16,7 @@ package discovery
 import "github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 const (
-	//DefaultBcsModuleLabelKey label key
+	// DefaultBcsModuleLabelKey label key
 	DefaultBcsModuleLabelKey = "bcs_module"
 	// DiscoveryFileName promethus file name
 	DiscoveryFileName = "_sd_config.json"
@@ -31,16 +31,20 @@ const (
 
 // Discovery interface for prometheus discovery
 type Discovery interface {
-	//start
+	// Start TODO
+	// start
 	Start() error
 
+	// GetPrometheusSdConfig TODO
 	// get prometheus service discovery config
 	GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error)
 
+	// GetPromSdConfigFile TODO
 	// get prometheus sd config file path
 	GetPromSdConfigFile(module string) string
 
-	//register event handle function
+	// RegisterEventFunc TODO
+	// register event handle function
 	RegisterEventFunc(handleFunc EventHandleFunc)
 }
 
@@ -49,11 +53,11 @@ type EventHandleFunc func(dInfo Info)
 
 // Info information
 type Info struct {
-	//mesosModules: commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH ...
-	//serviceModules: commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE ...
-	//nodeModules: discovery.CadvisorModule, discovery.NodeexportModule
-	//serviceMonitor: ServiceMonitor
+	// mesosModules: commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH ...
+	// serviceModules: commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE ...
+	// nodeModules: discovery.CadvisorModule, discovery.NodeexportModule
+	// serviceMonitor: ServiceMonitor
 	Module string
-	//changed key
+	// changed key
 	Key string
 }

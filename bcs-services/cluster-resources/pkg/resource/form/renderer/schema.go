@@ -47,7 +47,7 @@ type SchemaRenderer struct {
 	values    map[string]interface{}
 }
 
-// NewSchemaRenderer ...
+// NewSchemaRenderer xxx
 func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action string) *SchemaRenderer {
 	// 若没有指定命名空间，则使用 default
 	if namespace == "" {
@@ -69,7 +69,7 @@ func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action s
 	}
 }
 
-// Render ...
+// Render xxx
 func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 	// 1. 检查指定资源类型是否支持表单化
 	supportedAPIVersions, ok := validator.FormSupportedResAPIVersion[r.kind]
@@ -118,7 +118,7 @@ func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) 
 	return yaml.Unmarshal(buf.Bytes(), ret)
 }
 
-// 生成 JsonSchema 校验规则
+// genSchemaRules 生成 JsonSchema 校验规则
 func genSchemaRules(ctx context.Context) map[string]interface{} {
 	return map[string]interface{}{
 		"required": map[string]interface{}{

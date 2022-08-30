@@ -37,31 +37,32 @@ import (
 )
 
 const (
-	//default kube custom resource definition url
+	// default kube custom resource definition url
 	defaultCRDURL = "/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions"
-	//default custom resource definition apiVersion we use
+	// default custom resource definition apiVersion we use
 	defaultAPIVersion   = "apiextensions.k8s.io/v1beta1"
 	defaultMesosVersion = "v4"
 	defaultNamespaceURL = "api/v1/namespaces"
 )
 
-//kubeProxy proxy for custom resource
+// kubeProxy proxy for custom resource
 type kubeProxy struct {
-	//kube config details
+	// kube config details
 	config *rest.Config
-	//client for namespace check
+	// client for namespace check
 	client *http.Client
-	//custom resource proxy
+	// custom resource proxy
 	crsProxy *httputil.ReverseProxy
-	//custom resource definition proxy
+	// custom resource definition proxy
 	crdsProxy *httputil.ReverseProxy
 }
 
 func (proxy *kubeProxy) init() error {
-	//create specified tranport from kube config
+	// create specified tranport from kube config
 	httpRoundTripper, err := rest.TransportFor(proxy.config)
 	if err != nil {
-		blog.Errorf("bcs-mesos-driver initialize kube proxy transport failed, message: %s, config object: %v", err.Error(), proxy.config)
+		blog.Errorf("bcs-mesos-driver initialize kube proxy transport failed, message: %s, config object: %v", err.Error(),
+			proxy.config)
 		return fmt.Errorf("bcs-mesos-driver create CustomResource transport failed")
 	}
 	proxy.client = &http.Client{
@@ -96,7 +97,7 @@ func (proxy *kubeProxy) isNamespaceActive(namespace string) bool {
 		blog.Infof("%s, namespace %s is Found!", reqURL, namespace)
 		return true
 	}
-	//others
+	// others
 	return false
 }
 
@@ -119,11 +120,12 @@ func (proxy *kubeProxy) createNamespace(namespace string) error {
 		blog.Errorf("create %s namespace failed. request body: %s", reqURL, string(nsBody))
 		return err
 	}
-	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusAccepted {
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated ||
+		resp.StatusCode == http.StatusAccepted {
 		blog.Infof("create namespace %s [%s] success.", reqURL, namespace)
 		return nil
 	}
-	//others
+	// others
 	return fmt.Errorf("unknow reason for creation ns failed: %d", resp.StatusCode)
 }
 
@@ -131,14 +133,16 @@ func (proxy *kubeProxy) customResourceNamespaceValidate(req *http.Request) {
 	if req.Method != http.MethodPost {
 		return
 	}
-	//validate namespace exist
+	// validate namespace exist
 	allBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		blog.Errorf("Reading custom resource Request for namespace validation failed, %s. URL: %s", err.Error(), req.URL.String())
+		blog.Errorf("Reading custom resource Request for namespace validation failed, %s. URL: %s", err.Error(),
+			req.URL.String())
 		return
 	}
 	if len(allBytes) == 0 {
-		blog.Errorf("bcs-mesos-driver get empty body when in POST or PUT request, URL: %s, Method: %s", req.URL.String(), req.Method)
+		blog.Errorf("bcs-mesos-driver get empty body when in POST or PUT request, URL: %s, Method: %s", req.URL.String(),
+			req.Method)
 		return
 	}
 	buffer := bytes.NewBuffer(allBytes)
@@ -150,10 +154,11 @@ func (proxy *kubeProxy) customResourceNamespaceValidate(req *http.Request) {
 	}
 	jsonObj, err := simplejson.NewJson(allBytes)
 	if err != nil {
-		blog.Errorf("Custom Resource POST data is not expected json, %s. URL: %s. origin data: %s", err.Error(), req.URL.String(), string(allBytes))
+		blog.Errorf("Custom Resource POST data is not expected json, %s. URL: %s. origin data: %s", err.Error(),
+			req.URL.String(), string(allBytes))
 		return
 	}
-	//fix when namespace is empty
+	// fix when namespace is empty
 	meta, ok := jsonObj.CheckGet("metadata")
 	if !ok {
 		blog.Errorf("Custom Resource Post to %s lost meta data", req.URL.String())
@@ -180,8 +185,8 @@ func (proxy *kubeProxy) customResourceNamespaceValidate(req *http.Request) {
 	blog.Infof("create Namespace for %s success.", req.URL.String())
 }
 
-//apiVersionReqConvert convert all request
-//attention: all json key is
+// apiVersionReqConvert convert all request
+// attention: all json key is
 func (proxy *kubeProxy) apiVersionReqConvert(req *http.Request) {
 	if req.Method == http.MethodGet || req.Method == http.MethodDelete {
 		blog.V(3).Infof("bcs-mesos-driver skip %s convertion. Method: %s", req.URL.Path, req.Method)
@@ -193,7 +198,8 @@ func (proxy *kubeProxy) apiVersionReqConvert(req *http.Request) {
 		return
 	}
 	if len(allBytes) == 0 {
-		blog.Errorf("bcs-mesos-driver get empty body when in POST or PUT request, URL: %s, Method: %s", req.URL.String(), req.Method)
+		blog.Errorf("bcs-mesos-driver get empty body when in POST or PUT request, URL: %s, Method: %s", req.URL.String(),
+			req.Method)
 		return
 	}
 	jsonObj, err := simplejson.NewJson(allBytes)
@@ -205,7 +211,8 @@ func (proxy *kubeProxy) apiVersionReqConvert(req *http.Request) {
 	jsonObj.Set("apiVersion", defaultAPIVersion)
 	newBody, err := jsonObj.MarshalJSON()
 	if err != nil {
-		blog.Errorf("bcs-mesos-driver new custom resource definition Request json Marshal failed, %s. URL: %s", err.Error(), req.URL.Path)
+		blog.Errorf("bcs-mesos-driver new custom resource definition Request json Marshal failed, %s. URL: %s", err.Error(),
+			req.URL.Path)
 		return
 	}
 	blog.V(3).Infof("forwarding URL %s new body: %s", req.URL.String(), string(newBody))
@@ -230,7 +237,7 @@ func (proxy *kubeProxy) apiVersionResConvert(resp *http.Response) error {
 	buffer := bytes.NewBuffer([]byte(newStr))
 	resp.Body = ioutil.NopCloser(buffer)
 	resp.ContentLength = int64(buffer.Len())
-	//setting header for contentLength
+	// setting header for contentLength
 	resp.Header.Set("Content-Length", strconv.Itoa(buffer.Len()))
 	blog.Infof("mesos-driver convert custom resource definition [%s] response success", resp.Request.URL.String())
 	return nil
@@ -238,7 +245,7 @@ func (proxy *kubeProxy) apiVersionResConvert(resp *http.Response) error {
 
 func (s *Scheduler) initKube() error {
 	if s.config.KubeConfig == "" {
-		//incluster configuration for mesos-driver container
+		// incluster configuration for mesos-driver container
 		// blog.Infof("bcs-mesos-driver use in-cluster configuration...")
 		// config, err := rest.InClusterConfig()
 		// if err != nil {
@@ -247,24 +254,25 @@ func (s *Scheduler) initKube() error {
 		// }
 		// return config, nil
 		blog.Infof("bcs-mesos-driver no kubeconfig detected, skip all compatible custom resource initialization")
-		//compatible with history version, clean in-cluster code
+		// compatible with history version, clean in-cluster code
 		return nil
 	}
-	//outcluster deployment configuration for mesos-driver process
+	// outcluster deployment configuration for mesos-driver process
 	blog.Infof("bcs-mesos-driver use process deployment with KubeConfig %s", s.config.KubeConfig)
 	config, err := clientcmd.BuildConfigFromFlags("", s.config.KubeConfig)
 	if err != nil {
 		blog.Errorf("bcs-mesos-driver build configuration with kubeConfig %s failed, %s", s.config.KubeConfig, err.Error())
 		return err
 	}
-	//create reversproxy for custom resource
+	// create reversproxy for custom resource
 	s.localProxy = &kubeProxy{
 		config: config,
 	}
 	return s.localProxy.init()
 }
 
-//transparent forwarding for custom resource
+// customResourceForwarding xxx
+// transparent forwarding for custom resource
 // * block all watch request
 // * redirect mesos driver url to api custom resource url
 func (s *Scheduler) customResourceForwarding(req *restful.Request, resp *restful.Response) {
@@ -273,7 +281,7 @@ func (s *Scheduler) customResourceForwarding(req *restful.Request, resp *restful
 		resp.WriteErrorString(http.StatusNotFound, http.StatusText(http.StatusNotFound))
 		return
 	}
-	//change Path & Host
+	// change Path & Host
 	rawRequest := req.Request
 	original := rawRequest.URL.String()
 	mesosURL := req.PathParameter("uri")

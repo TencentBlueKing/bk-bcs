@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package server xxx
 package server
 
 import (
@@ -101,6 +102,7 @@ func (ap *ArgocdProxy) Run() error {
 	return nil
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (ap *ArgocdProxy) initTLSConfig() error {
 	if len(ap.opt.ServerCert) != 0 && len(ap.opt.ServerKey) != 0 && len(ap.opt.ServerCa) != 0 {

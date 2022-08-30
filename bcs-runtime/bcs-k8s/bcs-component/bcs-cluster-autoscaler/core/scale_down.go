@@ -1000,6 +1000,7 @@ func (sd *ScaleDown) getEmptyNodesNoResourceLimits(candidates []*apiv1.Node, pod
 	return sd.getEmptyNodes(candidates, pods, maxEmptyBulkDelete, noScaleDownLimitsOnResources(), tempNodesPerNodeGroup)
 }
 
+// getEmptyNodes xxx
 // This functions finds empty nodes among passed candidates and returns a list of empty nodes
 // that can be deleted at the same time.
 func (sd *ScaleDown) getEmptyNodes(candidates []*apiv1.Node, pods []*apiv1.Pod, maxEmptyBulkDelete int,
@@ -1232,6 +1233,7 @@ func evictPod(podToEvict *apiv1.Pod, client kube_client.Interface, recorder kube
 			podToEvict.Namespace, podToEvict.Name, lastError)}
 }
 
+// drainNode xxx
 // Performs drain logic on the node. Marks the node as unschedulable and later removes all pods, giving
 // them up to MaxGracefulTerminationTime to finish.
 func drainNode(node *apiv1.Node, pods []*apiv1.Pod, client kube_client.Interface, recorder kube_record.EventRecorder,
@@ -1315,6 +1317,7 @@ func drainNode(node *apiv1.Node, pods []*apiv1.Pod, client kube_client.Interface
 		"Failed to drain node %s/%s: pods remaining after timeout", node.Namespace, node.Name)
 }
 
+// deleteNodeFromCloudProvider xxx
 // Removes the given node from cloud provider. No extra pre-deletion actions are executed on
 // the Kubernetes side.
 func deleteNodeFromCloudProvider(node *apiv1.Node, cloudProvider cloudprovider.CloudProvider,

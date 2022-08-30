@@ -58,7 +58,8 @@ func listMeshCluster(c *utils.ClientContext) error {
 	return nil
 }
 
-//return status、message
+// getMeshClusterStatus xxx
+// return status、message
 func getMeshClusterStatus(mCluster *meshmanager.MeshCluster) (string, string) {
 	var deploy, running, failed int
 	var message string
@@ -73,11 +74,11 @@ func getMeshClusterStatus(mCluster *meshmanager.MeshCluster) (string, string) {
 			message = component.Message
 		}
 	}
-	//failed
+	// failed
 	if failed > 0 {
 		return string(meshv1.InstallStatusFAILED), message
 	}
-	//running
+	// running
 	if len(mCluster.Components) == running {
 		return string(meshv1.InstallStatusRUNNING), "istio is running now"
 	}

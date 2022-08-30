@@ -44,6 +44,7 @@ func getPodsToDelete(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) []*v1.Po
 	return podsToDelete
 }
 
+// genAvailableIDs xxx
 // Generate available IDs, keep all ids different from existing ids
 func genAvailableIDs(num int, pods []*v1.Pod) sets.String {
 	existingIDs := sets.NewString()
@@ -119,7 +120,7 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 			// Sort the pods in the order such that not-ready < ready, unscheduled
 			// < scheduled, and pending < running. This ensures that we delete pods
 			// in the earlier stages whenever possible.
-			//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
+			// TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
 			// change, maybe we should use a simple alphabetical sort
 			sort.Sort(kubecontroller.ActivePods(pods))
 			// sort the pods with deletion cost
@@ -267,6 +268,7 @@ func getDeploymentIndexRange(deploy *gdv1alpha1.GameDeployment) (int, int, error
 	return 0, 0, fmt.Errorf("gamedeployment %s inject index on, get index-range failed", deploy.Name)
 }
 
+// genAvailableIndex xxx
 // Generate available index IDs, keep it unique
 func genAvailableIndex(inject bool, start, end int, pods []*v1.Pod) []int {
 	needIDs := make([]int, 0)

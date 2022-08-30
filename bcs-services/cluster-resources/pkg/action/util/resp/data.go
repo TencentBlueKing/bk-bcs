@@ -24,7 +24,7 @@ import (
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 )
 
-// BuildListAPIRespData ...
+// BuildListAPIRespData xxx
 func BuildListAPIRespData(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, format string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
@@ -47,7 +47,7 @@ func BuildListAPIRespData(
 	return respDataBuilder.BuildList()
 }
 
-// BuildRetrieveAPIRespData ...
+// BuildRetrieveAPIRespData xxx
 func BuildRetrieveAPIRespData(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, name, format string, opts metav1.GetOptions,
 ) (map[string]interface{}, error) {

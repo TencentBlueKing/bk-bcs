@@ -33,7 +33,7 @@ var (
 	httpSDURLs []string
 )
 
-// QueryCmd
+// QueryCmd xxx
 func QueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query",
@@ -48,7 +48,8 @@ func QueryCmd() *cobra.Command {
 	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:10902", "API listen http ip")
 	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
 	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "Addresses of statically configured store endpoints")
-	cmd.Flags().StringArrayVar(&httpSDURLs, "store.http-sd-url", []string{}, "HTTP-based service discovery provides store endpoints")
+	cmd.Flags().StringArrayVar(&httpSDURLs, "store.http-sd-url", []string{},
+		"HTTP-based service discovery provides store endpoints")
 
 	return cmd
 }

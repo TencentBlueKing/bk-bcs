@@ -158,6 +158,7 @@ func (s *Server) WaitForConsumerDone() {
 	s.consumer.Done()
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (s *Server) initTLSConfig() error {
 	if len(s.opt.ServerCert) != 0 && len(s.opt.ServerKey) != 0 && len(s.opt.ServerCa) != 0 {
@@ -184,6 +185,7 @@ func (s *Server) initTLSConfig() error {
 	return nil
 }
 
+// initModel xxx
 // init mongo client
 func (s *Server) initModel() error {
 	if len(s.opt.Mongo.MongoEndpoints) == 0 {
@@ -220,7 +222,7 @@ func (s *Server) initModel() error {
 	return nil
 }
 
-//initRegistry init registry
+// initRegistry init registry
 func (s *Server) initRegistry() error {
 	endpoints := strings.Replace(s.opt.Etcd.EtcdEndpoints, ";", ",", -1)
 	etcdEndpoints := strings.Split(endpoints, ",")
@@ -245,6 +247,7 @@ func (s *Server) initRegistry() error {
 	return nil
 }
 
+// initHTTPGateway xxx
 // init http grpc gateway
 func (s *Server) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
@@ -273,6 +276,7 @@ func (s *Server) initHTTPGateway(router *mux.Router) error {
 	return nil
 }
 
+// initHTTPService xxx
 // init http service
 func (s *Server) initHTTPService() error {
 	router := mux.NewRouter()
@@ -307,6 +311,7 @@ func (s *Server) initHTTPService() error {
 	return nil
 }
 
+// initMicro xxx
 // init micro service
 func (s *Server) initMicro() error {
 	// New Service
@@ -337,6 +342,7 @@ func (s *Server) initMicro() error {
 	return nil
 }
 
+// initSignalHandler xxx
 // init signal handler
 func (s *Server) initSignalHandler() {
 	// listen system signal
@@ -363,6 +369,7 @@ func (s *Server) close() {
 	s.ctxCancelFunc()
 }
 
+// initWorker xxx
 // init producer and worker
 func (s *Server) initWorker() error {
 	bcsMonitorCli := s.initBcsMonitorCli()
@@ -405,6 +412,7 @@ func (s *Server) initWorker() error {
 	return nil
 }
 
+// initQueue xxx
 // init message queue
 func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	address := opts.QueueAddress
@@ -486,6 +494,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	return msgQueue, nil
 }
 
+// initClusterManager xxx
 // init cluster manager cli
 func (s *Server) initClusterManager() (cmanager.ClusterManagerClient, error) {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
@@ -514,6 +523,7 @@ func (s *Server) initClusterManager() (cmanager.ClusterManagerClient, error) {
 	return cli, nil
 }
 
+// initBcsMonitorCli xxx
 // init bcs monitor cli
 func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
 	realPassword, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsMonitorConf.Password))
@@ -534,6 +544,7 @@ func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
 	return bcsMonitorCli
 }
 
+// initStorageCli xxx
 // init bcs storage cli
 func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
@@ -581,6 +592,7 @@ func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 	return k8sStorageCli, mesosStorageCli, nil
 }
 
+// initExtraModules xxx
 // init pprof and metric
 func (s *Server) initExtraModules() {
 	extraMux := http.NewServeMux()
@@ -603,6 +615,7 @@ func (s *Server) initExtraModules() {
 	}()
 }
 
+// initPProf xxx
 // init pprof
 func (s *Server) initPProf(mux *http.ServeMux) {
 	if !s.opt.Debug {
@@ -617,6 +630,7 @@ func (s *Server) initPProf(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
+// initMetric xxx
 // init metric
 func (s *Server) initMetric(mux *http.ServeMux) {
 	blog.Infof("init metric handler")

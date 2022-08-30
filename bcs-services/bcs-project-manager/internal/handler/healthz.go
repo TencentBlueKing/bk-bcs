@@ -21,9 +21,10 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// HealthzHandler ...
+// HealthzHandler xxx
 type HealthzHandler struct{}
 
+// NewHealthz xxx
 // New create a healthz hander
 func NewHealthz() *HealthzHandler {
 	return &HealthzHandler{}

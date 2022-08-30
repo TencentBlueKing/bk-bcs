@@ -30,7 +30,7 @@ var cloudInfoMgr sync.Once
 
 func init() {
 	cloudInfoMgr.Do(func() {
-		//init Cluster
+		// init Cluster
 		cloudprovider.InitCloudInfoManager(cloudName, &CloudInfoManager{})
 	})
 }
@@ -40,12 +40,14 @@ type CloudInfoManager struct {
 }
 
 // InitCloudClusterDefaultInfo init cluster defaultConfig
-func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster, opt *cloudprovider.InitClusterConfigOption) error {
+func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
+	opt *cloudprovider.InitClusterConfigOption) error {
 	return nil
 }
 
 // SyncClusterCloudInfo get cluster cloudInfo by clusterID or kubeConfig
-func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster, opt *cloudprovider.SyncClusterCloudInfoOption) error {
+func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) error {
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s SyncClusterCloudInfo request is empty", cloudName)
 	}

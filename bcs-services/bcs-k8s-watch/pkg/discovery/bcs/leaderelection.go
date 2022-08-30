@@ -58,6 +58,7 @@ func (le *LeaderElector) IsLeader() bool {
 	return le.role == RoleLeader
 }
 
+// getActionType xxx
 // IsLeader determine is curent node is leader by telling if it's the first registered node in sequence
 func (le *LeaderElector) getActionType(state register.ServiceState) ActionType {
 	if state.MyPostion == 0 {

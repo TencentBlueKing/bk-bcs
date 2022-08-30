@@ -11,6 +11,7 @@
  *
  */
 
+// Package rdiscover xxx
 package rdiscover
 
 import (

@@ -11,6 +11,7 @@
  *
  */
 
+// Package deepcopy xxx
 package deepcopy
 
 import (
@@ -18,6 +19,7 @@ import (
 	"encoding/gob"
 )
 
+// DeepCopy xxx
 func DeepCopy(dst, src interface{}) error {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {

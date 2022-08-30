@@ -63,7 +63,8 @@ func (c *ServiceController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err := c.Update(ctx, &svcImport); err != nil {
 		return ctrl.Result{}, err
 	}
-	klog.Infof("updated serviceImport ip", "ip", service.Spec.ClusterIP, "serviceImport", serviceImportName, "namespace", req.Namespace)
+	klog.Infof("updated serviceImport ip", "ip", service.Spec.ClusterIP, "serviceImport", serviceImportName, "namespace",
+		req.Namespace)
 	return ctrl.Result{}, nil
 }
 
@@ -72,6 +73,7 @@ func (c *ServiceController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).For(&corev1.Service{}).Complete(c)
 }
 
+// serviceImportOwner xxx
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch
 func serviceImportOwner(refs []metav1.OwnerReference) string {
 	for _, ref := range refs {

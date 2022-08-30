@@ -45,77 +45,92 @@ type BkcmdbSpec struct {
 	WebServer       *WebServerConf       `json:"webserver,omitempty"`
 }
 
+// WebServerConf xxx
 type WebServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// TopoServerConf xxx
 type TopoServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// TmServerConf xxx
 type TmServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// TaskServerConf xxx
 type TaskServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// ProcServerConf xxx
 type ProcServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// OperationServerConf xxx
 type OperationServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// HostServerConf xxx
 type HostServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// EventServerConf xxx
 type EventServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// DataCollectionConf xxx
 type DataCollectionConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// CoreServiceConf xxx
 type CoreServiceConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// ApiServerConf xxx
 type ApiServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// AdminServerConf xxx
 type AdminServerConf struct {
 	Replicas  uint                        `json:"replicas,omitempty"`
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+// ZookeeperConf xxx
 type ZookeeperConf struct {
 	Host string `json:"host,omitempty"`
 	Port int32  `json:"port,omitempty"`
 }
 
+// RedisConf xxx
 type RedisConf struct {
 	Host     string `json:"host,omitempty"`
 	Port     int32  `json:"port,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
+// MongoDbConf xxx
 type MongoDbConf struct {
 	Host     string `json:"host,omitempty"`
 	Port     int32  `json:"port,omitempty"`

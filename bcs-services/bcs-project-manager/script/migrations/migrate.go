@@ -87,6 +87,7 @@ func main() {
 	fmt.Println("migrate success!")
 }
 
+// BCSCCProjectData xxx
 type BCSCCProjectData struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -113,9 +114,11 @@ type BCSCCProjectData struct {
 	IsSecrecy   bool   `json:"is_secrecy" gorm:"default:false"`
 }
 
+// fetchBCSCCData xxx
 // bcs cc 中查询数据
 func fetchBCSCCData() ([]BCSCCProjectData, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", mysqlUser, mysqlPwd, mysqlHost, mysqlPort, mysqlDBName)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", mysqlUser, mysqlPwd, mysqlHost,
+		mysqlPort, mysqlDBName)
 
 	// 连接 db
 	db, err := gorm.Open("mysql", dsn)
@@ -132,7 +135,7 @@ func fetchBCSCCData() ([]BCSCCProjectData, error) {
 	return p, nil
 }
 
-// 插入到 mongo
+// insertProject 插入到 mongo
 func insertProject(p []BCSCCProjectData) error {
 	var (
 		client     *mongo.Client
@@ -143,7 +146,8 @@ func insertProject(p []BCSCCProjectData) error {
 	opts := options.ReplaceOptions{Upsert: &upsert}
 	// 建立连接
 	dsn := fmt.Sprintf("mongodb://%s:%s@%s:%d", mongoUser, mongoPwd, mongoHost, mongoPort)
-	if client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(dsn).SetConnectTimeout(10*time.Second)); err != nil {
+	if client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(dsn).
+		SetConnectTimeout(10*time.Second)); err != nil {
 		return fmt.Errorf("access mongo error, %s", err.Error())
 	}
 	if err := client.Ping(context.TODO(), nil); err != nil {
@@ -187,7 +191,7 @@ func insertProject(p []BCSCCProjectData) error {
 	return nil
 }
 
-// 获取字符串类型 kind，1 => k8s 2 => mesos
+// getStrKind 获取字符串类型 kind，1 => k8s 2 => mesos
 func getStrKind(kind uint) string {
 	if kind == 1 {
 		return "k8s"
@@ -206,7 +210,7 @@ func stringInSlice(str string, list []string) bool {
 	return false
 }
 
-// 组装manager
+// constructManagers 组装manager
 func constructManagers(creator string, updater string) string {
 	managers := []string{creator}
 	if updater != "" {
@@ -217,7 +221,7 @@ func constructManagers(creator string, updater string) string {
 	return strings.Join(managers, ";")
 }
 
-// 获取 int 型 deployType
+// getDeployType 获取 int 型 deployType
 func getDeployType(deployType string) uint32 {
 	if deployType == "null" {
 		return 1

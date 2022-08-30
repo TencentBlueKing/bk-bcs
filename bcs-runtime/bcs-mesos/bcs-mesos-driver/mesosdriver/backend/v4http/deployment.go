@@ -29,7 +29,7 @@ func (s *Scheduler) CreateDeployment(body []byte) (string, error) {
 	blog.Info("create deployment. param(%s)", string(body))
 	var param bcstype.BcsDeployment
 
-	//encoding param by json
+	// encoding param by json
 	if err := json.Unmarshal(body, &param); err != nil {
 		blog.Error("parse parameters failed. param(%s), err(%s)", string(body), err.Error())
 		err = bhttp.InternalError(common.BcsErrCommJsonDecode, common.BcsErrCommJsonDecodeStr)
@@ -41,7 +41,7 @@ func (s *Scheduler) CreateDeployment(body []byte) (string, error) {
 	if err != nil {
 		return err.Error(), err
 	}
-	//store BcsDeployment original definition
+	// store BcsDeployment original definition
 	deploymentDef.RawJson = &param
 
 	// post deploymentdef to bcs-mesos-scheduler,
@@ -79,7 +79,7 @@ func (s *Scheduler) UpdateDeployment(body []byte, args string) (string, error) {
 	blog.Info("udpate deployment. param(%s)", string(body))
 	var param bcstype.BcsDeployment
 
-	//encoding param by json
+	// encoding param by json
 	if err := json.Unmarshal(body, &param); err != nil {
 		blog.Error("parse parameters failed. param(%s), err(%s)", string(body), err.Error())
 		err = bhttp.InternalError(common.BcsErrCommJsonDecode, common.BcsErrCommJsonDecodeStr)
@@ -92,7 +92,7 @@ func (s *Scheduler) UpdateDeployment(body []byte, args string) (string, error) {
 		return err.Error(), err
 	}
 
-	//store BcsDeployment original definition
+	// store BcsDeployment original definition
 	deploymentDef.RawJson = &param
 
 	// post deploymentdef to bcs-mesos-scheduler,
@@ -236,7 +236,7 @@ func (s *Scheduler) scaleDeployment(ns, name string, instances int) (string, err
 }
 
 func (s *Scheduler) newDeploymentDefWithParam(param *bcstype.BcsDeployment) (*types.DeploymentDef, error) {
-	//check ObjectMeta is valid
+	// check ObjectMeta is valid
 	err := param.MetaIsValid()
 	if err != nil {
 		return nil, err
@@ -249,12 +249,12 @@ func (s *Scheduler) newDeploymentDefWithParam(param *bcstype.BcsDeployment) (*ty
 		Strategy:   param.Spec.Strategy,
 	}
 
-	//if template is nil, then this deployment is for binding old application
+	// if template is nil, then this deployment is for binding old application
 	if param.Spec.Template == nil {
 		return deploymentDef, nil
 	}
 
-	//var version types.Version
+	// var version types.Version
 	version := &types.Version{
 		ID:          "",
 		Instances:   0,
@@ -268,7 +268,7 @@ func (s *Scheduler) newDeploymentDefWithParam(param *bcstype.BcsDeployment) (*ty
 		Mode:        "",
 	}
 
-	//blog.V(3).Infof("param: +%v", *param)
+	// blog.V(3).Infof("param: +%v", *param)
 
 	version.ObjectMeta = param.ObjectMeta
 	version.ID = param.Name

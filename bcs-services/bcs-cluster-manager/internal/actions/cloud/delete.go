@@ -60,7 +60,7 @@ func (da *DeleteAction) Handle(
 		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	//try to get original data for return
+	// try to get original data for return
 	deletedCloud, err := da.model.GetCloud(da.ctx, da.req.CloudID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

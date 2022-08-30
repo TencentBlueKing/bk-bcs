@@ -83,7 +83,7 @@ func (m *manager) downloadAndTarProcessPackages(processInfo *types.ProcessInfo) 
 		return nil
 	}
 
-	//whether uriPack.ExtractDir exist
+	// whether uriPack.ExtractDir exist
 	_, err = os.Stat(uriPack.ExtractDir)
 	if err != nil {
 		blog.Errorf("process %s ExtractDir %s not exist, and need mkdir", processInfo.Id, uriPack.ExtractDir)
@@ -158,7 +158,7 @@ func (m *manager) downloadAndTarProcessPackages(processInfo *types.ProcessInfo) 
 			return err
 		}
 
-		//chown file user:group
+		// chown file user:group
 	ChownResp:
 		u, err := user.Lookup(hdr.Uname)
 		if err != nil {
@@ -178,8 +178,8 @@ func (m *manager) downloadAndTarProcessPackages(processInfo *types.ProcessInfo) 
 }
 
 func (m *manager) downloadProcessPackages(processInfo *types.ProcessInfo) (bool, error) {
-	//"http://xxxx.artifactory.xxxx.com/generic-local/xxxx/pack-master.tar.gz" convert to
-	//"http://xxxx.artifactory.xxxx.com/api/storage/generic-local/xxxx/pack-master.tar.gz"
+	// "http://xxxx.artifactory.xxxx.com/generic-local/xxxx/pack-master.tar.gz" convert to
+	// "http://xxxx.artifactory.xxxx.com/api/storage/generic-local/xxxx/pack-master.tar.gz"
 	uriPack := processInfo.Uris[0]
 	u, err := url.Parse(uriPack.Value)
 	if err != nil {
@@ -226,12 +226,14 @@ func (m *manager) downloadProcessPackages(processInfo *types.ProcessInfo) (bool,
 
 	packMd5 = fmt.Sprintf("%x", h.Sum(nil))
 	if packMd5 == packegeInfo.Checksums.Md5 {
-		blog.Infof("process %s PackagesFile %s md5 %s is valid, and not need download", processInfo.Id, uriPack.PackagesFile, packegeInfo.Checksums.Md5)
+		blog.Infof("process %s PackagesFile %s md5 %s is valid, and not need download", processInfo.Id, uriPack.PackagesFile,
+			packegeInfo.Checksums.Md5)
 		return true, nil
 	}
 
 DownloadRESP:
-	blog.Errorf("process %s PackagesFile %s md5 %s is invalid, and need download", processInfo.Id, uriPack.PackagesFile, packMd5)
+	blog.Errorf("process %s PackagesFile %s md5 %s is invalid, and need download", processInfo.Id, uriPack.PackagesFile,
+		packMd5)
 	err = os.MkdirAll(filepath.Dir(uriPack.PackagesFile), 0755)
 	if err != nil {
 		blog.Errorf("process %s mkdir %s error %s", processInfo.Id, filepath.Dir(uriPack.PackagesFile), err.Error())

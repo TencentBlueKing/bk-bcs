@@ -11,6 +11,7 @@
  *
  */
 
+// Package clientutil xxx
 package clientutil
 
 import (
@@ -316,7 +317,8 @@ func GetLabelMatchValue(name string, matchers []storepb.LabelMatcher) (string, e
 }
 
 // SampleStreamToSeries :
-func SampleStreamToSeries(values model.Matrix, ignoreLabels map[string]string, appendLabels map[string]string) []*prompb.TimeSeries {
+func SampleStreamToSeries(values model.Matrix, ignoreLabels map[string]string,
+	appendLabels map[string]string) []*prompb.TimeSeries {
 	series := make([]*prompb.TimeSeries, 0, len(values))
 	for _, value := range values {
 		lb := make([]prompb.Label, 0, len(value.Metric))

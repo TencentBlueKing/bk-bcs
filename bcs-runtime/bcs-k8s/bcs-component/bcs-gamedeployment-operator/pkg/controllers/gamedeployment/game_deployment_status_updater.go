@@ -61,6 +61,7 @@ type realGameDeploymentStatusUpdater struct {
 	metrics   *gdmetrics.Metrics
 }
 
+// UpdateGameDeploymentStatus xxx
 func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
 	deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) error {
 
@@ -159,7 +160,8 @@ func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
 }
 
 // updateStatus update status and updateStrategy pause of a GameDeployment to k8s
-func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDeployment, newStatus *gdv1alpha1.GameDeploymentStatus, newPause *bool) error {
+func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDeployment,
+	newStatus *gdv1alpha1.GameDeploymentStatus, newPause *bool) error {
 	specCopy := deploy.Spec.DeepCopy()
 	paused := specCopy.UpdateStrategy.Paused
 	if newPause != nil {
@@ -243,7 +245,8 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDe
 	return nil
 }
 
-func (r *realGameDeploymentStatusUpdater) inconsistentStatus(deploy *gdv1alpha1.GameDeployment, newStatus *gdv1alpha1.GameDeploymentStatus) bool {
+func (r *realGameDeploymentStatusUpdater) inconsistentStatus(deploy *gdv1alpha1.GameDeployment,
+	newStatus *gdv1alpha1.GameDeploymentStatus) bool {
 	oldStatus := deploy.Status
 	return newStatus.ObservedGeneration > oldStatus.ObservedGeneration ||
 		newStatus.Replicas != oldStatus.Replicas ||
@@ -256,7 +259,8 @@ func (r *realGameDeploymentStatusUpdater) inconsistentStatus(deploy *gdv1alpha1.
 }
 
 // calculateBaseStatus calculate a base status of GameDeployment
-func (r *realGameDeploymentStatusUpdater) calculateBaseStatus(deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) {
+func (r *realGameDeploymentStatusUpdater) calculateBaseStatus(deploy *gdv1alpha1.GameDeployment,
+	canaryCtx *canaryContext, pods []*v1.Pod) {
 	for _, pod := range pods {
 		canaryCtx.newStatus.Replicas++
 		if util.IsRunningAndReady(pod) {
@@ -275,7 +279,8 @@ func (r *realGameDeploymentStatusUpdater) calculateBaseStatus(deploy *gdv1alpha1
 }
 
 // calculateConditionStatus calculate condition of GameDeployment, return true if exist pause condition
-func (r *realGameDeploymentStatusUpdater) calculateConditionStatus(deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext) bool {
+func (r *realGameDeploymentStatusUpdater) calculateConditionStatus(deploy *gdv1alpha1.GameDeployment,
+	canaryCtx *canaryContext) bool {
 	newPauseConditions := []hookv1alpha1.PauseCondition{}
 	pauseAlreadyExists := map[hookv1alpha1.PauseReason]bool{}
 	for _, cond := range deploy.Status.PauseConditions {
@@ -320,7 +325,8 @@ func completeCurrentCanaryStep(deploy *gdv1alpha1.GameDeployment, canaryCtx *can
 		}
 	}
 
-	if currentStep.Pause != nil && currentStep.Pause.Duration == nil && pauseCondition != nil && !deploy.Spec.UpdateStrategy.Paused {
+	if currentStep.Pause != nil && currentStep.Pause.Duration == nil && pauseCondition != nil &&
+		!deploy.Spec.UpdateStrategy.Paused {
 		klog.Info("GameDeployment has been unpaused")
 		return true
 	}

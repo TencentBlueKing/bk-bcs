@@ -31,7 +31,7 @@ const (
 	InnerErrMsg = "inner error"
 	// DBErr DB操作失败
 	DBErr = commErr.AdditionErrorCode + 501
-	// DbErrMsg DB操作失败消息
+	// DBErrMsg DB操作失败消息
 	DBErrMsg = "db error"
 	// UnauthErr 未认证/认证失败
 	UnauthErr = commErr.AdditionErrorCode + 401
@@ -43,30 +43,31 @@ const (
 	PermDeniedErrMsg = "no permission"
 	// IAMClientErr 构建 iam client异常
 	IAMClientErr = commErr.AdditionErrorCode + 506
-	// IAMClientErrMsg ...
+	// IAMClientErrMsg TODO
 	IAMClientErrMsg = "make iam client error"
 	// IAMOPErr 错误的iam operation
 	IAMOPErr = commErr.AdditionErrorCode + 507
-	// IAMOPErrMsg ...
+	// IAMOPErrMsg TODO
 	IAMOPErrMsg = "iam op error"
 	// RequestIAMErr 请求 IAM api 异常
 	RequestIAMErr = commErr.AdditionErrorCode + 508
-	// RequestIAMErrMsg ...
+	// RequestIAMErrMsg TODO
 	RequestIAMErrMsg = "request iam api error"
 	// NotFoundHeaderUserErr header中没有发现username
 	NotFoundHeaderUserErr = commErr.AdditionErrorCode + 406
+	// NotFoundHeaderUserErrMsg TODO
 	// NotFoundUserFromHeaderMsg
 	NotFoundHeaderUserErrMsg = "not found username from header"
 	// RequestCMDBErr 请求 cmdb api 异常
 	RequestCMDBErr = commErr.AdditionErrorCode + 509
-	// RequestCMDBErrMsg ...
+	// RequestCMDBErrMsg TODO
 	RequestCMDBErrMsg = "request iam api error"
 	// NoMaintainerRoleErr 用户不为运维角色
 	NoMaintainerRoleErr = commErr.AdditionErrorCode + 407
-	// NoMaintainerRoleErrMsg ...
+	// NoMaintainerRoleErrMsg TODO
 	NoMaintainerRoleErrMsg = "user is not biz maintainer role"
-	// RequestBCSCCErr ...
+	// RequestBCSCCErr TODO
 	RequestBCSCCErr = commErr.AdditionErrorCode + 510
-	// RequestBCSCCErrMsg ...
+	// RequestBCSCCErrMsg TODO
 	RequestBCSCCErrMsg = "request bcs cc api error"
 )

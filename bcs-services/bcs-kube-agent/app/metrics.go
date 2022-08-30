@@ -32,8 +32,10 @@ const (
 )
 
 const (
+	// BCSKubeAgentStatesNotReady TODO
 	BCSKubeAgentStatesNotReady = 0
-	BCSKubeAgentStatesReady    = 1
+	// BCSKubeAgentStatesReady TODO
+	BCSKubeAgentStatesReady = 1
 )
 
 var (
@@ -86,7 +88,7 @@ func reportBcsKubeAgentCMWsFail(handler string) {
 	requestsClusterManagerWsFailure.WithLabelValues(handler).Inc()
 }
 
-// reportBcsKubeAgentCMWsFail report websocket connection num when failure
+// reportBcsKubeAgentReadiness report websocket connection num when failure
 func reportBcsKubeAgentReadiness(handler string, states int) {
 	agentReadinessStates.WithLabelValues(handler).Set(float64(states))
 }

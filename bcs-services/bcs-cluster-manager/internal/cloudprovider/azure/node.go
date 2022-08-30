@@ -27,7 +27,7 @@ var nodeMgr sync.Once
 
 func init() {
 	nodeMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitNodeManager(cloudName, &NodeManager{})
 	})
 }

@@ -19,7 +19,8 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
-//Application for container
+// BcsDaemonset xxx
+// Application for container
 type BcsDaemonset struct {
 	commtypes.ObjectMeta `json:",inline"`
 	Instances            uint64
@@ -28,23 +29,25 @@ type BcsDaemonset struct {
 	LastStatus           string
 	Created              int64
 	LastUpdateTime       int64
-	//force delete daemonset
+	// force delete daemonset
 	ForceDeleting bool
-	//key = taskgroup.ID
+	// key = taskgroup.ID
 	Pods map[string]struct{}
 	// Populated by the system.
 	// Read-only.
 	// Value must be treated as opaque by clients and .
 	ResourceVersion string `json:"-"`
 	// RC current original definition
-	//RawJson []byte `json:"raw_json,omitempty"`
+	// RawJson []byte `json:"raw_json,omitempty"`
 }
 
-//get daemonset the unique uuid
+// GetUuid xxx
+// get daemonset the unique uuid
 func (d *BcsDaemonset) GetUuid() string {
 	return fmt.Sprintf("%s.%s", d.NameSpace, d.Name)
 }
 
+// BcsDaemonsetDef xxx
 type BcsDaemonsetDef struct {
 	commtypes.ObjectMeta `json:",inline"`
 	Version              *Version `json:"version"`

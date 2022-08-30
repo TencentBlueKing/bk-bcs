@@ -16,7 +16,7 @@ package perm
 
 import bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
-// IAMRes ...
+// IAMRes xxx
 type IAMRes struct {
 	ResType string
 	ResID   string

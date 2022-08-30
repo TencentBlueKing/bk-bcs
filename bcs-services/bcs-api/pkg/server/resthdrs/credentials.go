@@ -31,6 +31,7 @@ import (
 	"time"
 )
 
+// UpdateCredentialsForm xxx
 type UpdateCredentialsForm struct {
 	RegisterToken   string `json:"register_token" validate:"required"`
 	ServerAddresses string `json:"server_addresses" validate:"required,apiserver_addresses"`
@@ -77,7 +78,8 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 
 	err = sqlstore.SaveCredentials(clusterId, form.ServerAddresses, form.CaCertData, form.UserToken, "")
 	if err != nil {
-		message := fmt.Sprintf("errcode: %d, can not update credentials, error: %s", common.BcsErrApiInternalDbError, err.Error())
+		message := fmt.Sprintf("errcode: %d, can not update credentials, error: %s", common.BcsErrApiInternalDbError,
+			err.Error())
 		WriteClientError(response, "CANNOT_UPDATE_CREDENTIALS", message)
 		return
 	}

@@ -25,7 +25,8 @@ func getAuthorizer(tenantID, clientID, clientSecret string) (autorest.Authorizer
 	if err != nil {
 		return nil, err
 	}
-	spToken, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret, azure.PublicCloud.ResourceManagerEndpoint)
+	spToken, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret,
+		azure.PublicCloud.ResourceManagerEndpoint)
 	if err != nil {
 		return nil, err
 	}

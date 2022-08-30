@@ -39,23 +39,23 @@ const (
 	ProjCodeAnnoKey = "io.tencent.bcs.projectcode"
 )
 
-// NSClient ...
+// NSClient xxx
 type NSClient struct {
 	ResClient
 }
 
-// NewNSClient ...
+// NewNSClient xxx
 func NewNSClient(ctx context.Context, conf *res.ClusterConf) *NSClient {
 	NSRes, _ := res.GetGroupVersionResource(ctx, conf, res.NS, "")
 	return &NSClient{ResClient{NewDynamicClient(conf), conf, NSRes}}
 }
 
-// NewNSCliByClusterID ...
+// NewNSCliByClusterID xxx
 func NewNSCliByClusterID(ctx context.Context, clusterID string) *NSClient {
 	return NewNSClient(ctx, res.NewClusterConfig(clusterID))
 }
 
-// List ...
+// List xxx
 func (c *NSClient) List(ctx context.Context, opts metav1.ListOptions) (map[string]interface{}, error) {
 	ret, err := c.ResClient.List(ctx, "", opts)
 	if err != nil {
@@ -104,7 +104,7 @@ func (c *NSClient) ListByClusterViewPerm(
 	return manifest, nil
 }
 
-// Get ...
+// Get xxx
 func (c *NSClient) Get(ctx context.Context, name string, opts metav1.GetOptions) (map[string]interface{}, error) {
 	if err := c.permValidate(ctx, action.View, name); err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (c *NSClient) Get(ctx context.Context, name string, opts metav1.GetOptions)
 	return ret.UnstructuredContent(), nil
 }
 
-// Watch ...
+// Watch xxx
 func (c *NSClient) Watch(
 	ctx context.Context, projectCode string, clusterType string, opts metav1.ListOptions,
 ) (watch.Interface, error) {
@@ -140,7 +140,7 @@ func IsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) b
 	return isProjNSinSharedCluster(manifest, projInfo.Code)
 }
 
-// 从命名空间列表中，过滤出属于指定项目的（注：项目信息通过 context 获取）
+// filterProjNSList 从命名空间列表中，过滤出属于指定项目的（注：项目信息通过 context 获取）
 func filterProjNSList(ctx context.Context, manifest map[string]interface{}) (map[string]interface{}, error) {
 	projInfo, err := project.FromContext(ctx)
 	if err != nil {
@@ -156,7 +156,7 @@ func filterProjNSList(ctx context.Context, manifest map[string]interface{}) (map
 	return manifest, nil
 }
 
-// 判断某命名空间，是否属于指定项目（仅共享集群有效）
+// isProjNSinSharedCluster 判断某命名空间，是否属于指定项目（仅共享集群有效）
 func isProjNSinSharedCluster(manifest map[string]interface{}, projectCode string) bool {
 	// 规则：属于项目的命名空间满足以下两点，但这里只需要检查 annotations 即可
 	//   1. 命名(name) 以 ieg-{project_code}- 开头
@@ -164,7 +164,7 @@ func isProjNSinSharedCluster(manifest map[string]interface{}, projectCode string
 	return mapx.GetStr(manifest, []string{"metadata", "annotations", ProjCodeAnnoKey}) == projectCode
 }
 
-// NSWatcher ...
+// NSWatcher xxx
 type NSWatcher struct {
 	watch.Interface
 
@@ -172,7 +172,7 @@ type NSWatcher struct {
 	clusterType string
 }
 
-// ResultChan ...
+// ResultChan xxx
 func (w *NSWatcher) ResultChan() <-chan watch.Event {
 	if w.clusterType == cluster.ClusterTypeSingle {
 		return w.Interface.ResultChan()

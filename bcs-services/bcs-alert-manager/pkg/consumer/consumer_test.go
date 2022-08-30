@@ -41,7 +41,7 @@ func connectQueue() (msgqueue.MessageQueue, error) {
 
 	exchangeOpts := msgqueue.Exchange(
 		&msgqueue.ExchangeOptions{
-			Name:           "bcs-storage", //"bcs-storage-test",
+			Name:           "bcs-storage", // "bcs-storage-test",
 			Durable:        true,
 			PrefetchCount:  0,
 			PrefetchGlobal: false,

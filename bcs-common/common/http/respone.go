@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
-// APIResponse response for api request
+// APIRespone response for api request
 type APIRespone struct {
 	Result  bool        `json:"result"`
 	Code    int         `json:"code"`
@@ -45,6 +45,7 @@ func InternalErrorEx(code int, message string) ([]byte, error) {
 	return createResponeEx(code, message, make(map[string]interface{}))
 }
 
+// GetRespWithoutData xxx
 func GetRespWithoutData(code int, message string) string {
 
 	ret, _ := createRespone(code, message, make(map[string]interface{}))
@@ -52,6 +53,7 @@ func GetRespWithoutData(code int, message string) string {
 	return ret
 }
 
+// GetRespWithoutDataEx xxx
 func GetRespWithoutDataEx(code int, message string) []byte {
 
 	ret, _ := createResponeEx(code, message, make(map[string]interface{}))

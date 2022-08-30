@@ -11,6 +11,7 @@
  *
  */
 
+// Package task xxx
 package task
 
 import (
@@ -29,8 +30,8 @@ import (
 
 const (
 	tableName = "task"
-	//! we don't setting bson tag in proto file,
-	//! all struct key in mongo is lowcase in default
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
 	tableKey              = "taskid"
 	defaultTaskListLength = 1000
 )
@@ -65,6 +66,7 @@ func New(db drivers.DB) *ModelTask {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelTask) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -107,9 +109,9 @@ func (m *ModelTask) UpdateTask(ctx context.Context, task *types.Task) error {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		tableKey: task.TaskID,
 	})
-	//! object all field update, make sure that task
-	//! all fields are setting, otherwise some fields
-	//! will be override with nil value
+	// ! object all field update, make sure that task
+	// ! all fields are setting, otherwise some fields
+	// ! will be override with nil value
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": task})
 }
 
@@ -121,7 +123,7 @@ func (m *ModelTask) PatchTask(ctx context.Context, taskID string, patchs map[str
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		tableKey: taskID,
 	})
-	//! we patch fields that need to be updated
+	// ! we patch fields that need to be updated
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": patchs})
 }
 

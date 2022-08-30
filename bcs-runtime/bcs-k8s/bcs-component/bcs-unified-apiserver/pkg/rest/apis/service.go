@@ -30,24 +30,26 @@ type ServiceInterface interface {
 	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.ServiceList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Service, error)
-	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
+	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+		opts metav1.GetOptions) (*metav1.Table, error)
 	Create(ctx context.Context, namespace string, Service *v1.Service, opts metav1.CreateOptions) (*v1.Service, error)
 	Update(ctx context.Context, namespace string, Service *v1.Service, opts metav1.UpdateOptions) (*v1.Service, error)
-	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1.Service, error)
+	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
+		subresources ...string) (*v1.Service, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error)
 }
 
-// ServiceHandler
+// ServiceHandler xxx
 type ServiceHandler struct {
 	handler ServiceInterface
 }
 
-// NewServiceHandler
+// NewServiceHandler xxx
 func NewServiceHandler(handler ServiceInterface) *ServiceHandler {
 	return &ServiceHandler{handler: handler}
 }
 
-// Service Resource Verb Handler
+// Serve Resource Verb Handler
 func (h *ServiceHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
@@ -80,7 +82,8 @@ func (h *ServiceHandler) Serve(c *rest.RequestContext) error {
 		if rErr != nil {
 			return rErr
 		}
-		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions, c.Subresource)
+		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions,
+			c.Subresource)
 	case rest.DeleteVerb: // kubectl delete 操作
 		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	default:

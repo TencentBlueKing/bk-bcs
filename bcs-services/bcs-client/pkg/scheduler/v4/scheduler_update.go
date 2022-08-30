@@ -19,31 +19,38 @@ import (
 	"net/url"
 )
 
+// UpdateApplication xxx
 func (bs *bcsScheduler) UpdateApplication(clusterID, namespace string, data []byte, extraValue url.Values) error {
 	return bs.updateResource(clusterID, namespace, BcsSchedulerResourceApplication, data, extraValue)
 }
 
+// UpdateProcess xxx
 func (bs *bcsScheduler) UpdateProcess(clusterID, namespace string, data []byte, extraValue url.Values) error {
 	return bs.updateResource(clusterID, namespace, BcsSchedulerResourceProcess, data, extraValue)
 }
 
+// UpdateConfigMap xxx
 func (bs *bcsScheduler) UpdateConfigMap(clusterID, namespace string, data []byte, extraValue url.Values) error {
 	return bs.updateResource(clusterID, namespace, BcsSchedulerResourceConfigMap, data, extraValue)
 }
 
+// UpdateSecret xxx
 func (bs *bcsScheduler) UpdateSecret(clusterID, namespace string, data []byte, extraValue url.Values) error {
 	return bs.updateResource(clusterID, namespace, BcsSchedulerResourceSecret, data, extraValue)
 }
 
+// UpdateService xxx
 func (bs *bcsScheduler) UpdateService(clusterID, namespace string, data []byte, extraValue url.Values) error {
 	return bs.updateResource(clusterID, namespace, BcsSchedulerResourceService, data, extraValue)
 }
 
+// UpdateDeployment xxx
 func (bs *bcsScheduler) UpdateDeployment(clusterID, namespace string, data []byte, extraValue url.Values) error {
 	return bs.updateResource(clusterID, namespace, BcsSchedulerResourceDeployment, data, extraValue)
 }
 
-func (bs *bcsScheduler) updateResource(clusterID, namespace, resourceType string, data []byte, extraValue url.Values) error {
+func (bs *bcsScheduler) updateResource(clusterID, namespace, resourceType string, data []byte,
+	extraValue url.Values) error {
 	if extraValue == nil {
 		extraValue = make(url.Values)
 	}

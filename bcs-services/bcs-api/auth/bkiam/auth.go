@@ -33,10 +33,13 @@ import (
 )
 
 const (
-	ApiGwJWTKey     = "X-Bkapi-JWT"
+	// ApiGwJWTKey xxx
+	ApiGwJWTKey = "X-Bkapi-JWT"
+	// BcsUserTokenKey xxx
 	BcsUserTokenKey = "X-Bcs-User-Token"
 )
 
+// NewAuth xxx
 func NewAuth(conf *config.ApiServConfig) (auth.BcsAuth, error) {
 	if !conf.BKIamAuth.Auth {
 		return &Auth{disabled: true}, nil
@@ -106,6 +109,7 @@ type Auth struct {
 	whitelist map[string][]options.AuthWLCluster
 }
 
+// GetToken xxx
 func (a *Auth) GetToken(header http.Header) (*auth.Token, error) {
 	if a.disabled {
 		return &auth.Token{}, nil
@@ -162,6 +166,7 @@ func (a *Auth) GetToken(header http.Header) (*auth.Token, error) {
 	}, nil
 }
 
+// Allow xxx
 func (a *Auth) Allow(token *auth.Token, action auth.Action, resource auth.Resource) (bool, error) {
 	if a.disabled {
 		return true, nil

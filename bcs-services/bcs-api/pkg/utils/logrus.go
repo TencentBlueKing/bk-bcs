@@ -22,11 +22,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// TraceContext xxx
 type TraceContext struct {
 	ShowFileno    bool
 	ShowFuncField bool
 }
 
+// NewTraceContext xxx
 func NewTraceContext(showFileno, showFuncField bool) *TraceContext {
 	return &TraceContext{
 		ShowFuncField: showFuncField,
@@ -34,6 +36,7 @@ func NewTraceContext(showFileno, showFuncField bool) *TraceContext {
 	}
 }
 
+// Levels xxx
 func (hook TraceContext) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
@@ -61,12 +64,15 @@ func (hook TraceContext) Fire(entry *logrus.Entry) error {
 	return nil
 }
 
+// SimpleContext xxx
 type SimpleContext struct{}
 
+// Levels xxx
 func (hook SimpleContext) Levels() []logrus.Level {
 	return []logrus.Level{logrus.DebugLevel, logrus.InfoLevel}
 }
 
+// Fire xxx
 func (hook SimpleContext) Fire(entry *logrus.Entry) error {
 	traceTypes := []string{"file", "func", "line"}
 	for _, traceType := range traceTypes {
@@ -89,10 +95,12 @@ func initializeLogger(level logrus.Level) *logrus.Logger {
 	return hookedLogger
 }
 
+// UpdateLoggerLevel xxx
 func UpdateLoggerLevel(level logrus.Level) {
 	logger.Level = level
 }
 
+// GetLogger xxx
 func GetLogger() *logrus.Logger {
 	return logger
 }

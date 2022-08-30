@@ -44,7 +44,7 @@ type IPPoolDetailResponse struct {
 	Datas      []*IPPool `json:"data"`
 }
 
-//IPPool information for cluster underlay ip resource
+// IPPool information for cluster underlay ip resource
 type IPPool struct {
 	ClusterID string   `json:"cluster"`
 	Net       string   `json:"net"`

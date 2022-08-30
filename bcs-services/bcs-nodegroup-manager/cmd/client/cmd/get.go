@@ -57,6 +57,7 @@ func NewGetStrategyCmd() *cobra.Command {
 	return cmd
 }
 
+// NewGetCaReviewCmd xxx
 func NewGetCaReviewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "caReview",
@@ -91,7 +92,8 @@ func GetStrategy(cmd *cobra.Command, args []string) {
 	printer.PrintStrategyInTable(flagOutput == outputTypeWide, response)
 }
 
-func listStrategy(ctx context.Context, cli nodegroupmanager.NodegroupManagerClient) []*nodegroupmanager.NodeGroupStrategy {
+func listStrategy(ctx context.Context,
+	cli nodegroupmanager.NodegroupManagerClient) []*nodegroupmanager.NodeGroupStrategy {
 	if flagLimit == 0 {
 		flagLimit = 10
 	}
@@ -107,7 +109,8 @@ func listStrategy(ctx context.Context, cli nodegroupmanager.NodegroupManagerClie
 	return rsp.Data
 }
 
-func getStrategy(ctx context.Context, cli nodegroupmanager.NodegroupManagerClient, name string) []*nodegroupmanager.NodeGroupStrategy {
+func getStrategy(ctx context.Context, cli nodegroupmanager.NodegroupManagerClient,
+	name string) []*nodegroupmanager.NodeGroupStrategy {
 	req := &nodegroupmanager.GetNodePoolMgrStrategyReq{
 		Name: name,
 	}

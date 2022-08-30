@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package hash xxx
 package hash
 
 import (

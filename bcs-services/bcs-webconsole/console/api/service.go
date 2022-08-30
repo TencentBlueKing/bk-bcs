@@ -39,12 +39,12 @@ type service struct {
 	opts *route.Options
 }
 
-// NewRouteRegistrar
+// NewRouteRegistrar xxx
 func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
-// RegisterRoute
+// RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
 	api := router.Use(route.APIAuthRequired())
 
@@ -146,7 +146,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-// CreatePortalSession
+// CreatePortalSession xxx
 func (s *service) CreatePortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 	if authCtx.BindSession == nil {

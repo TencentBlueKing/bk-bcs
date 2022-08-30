@@ -55,7 +55,8 @@ func NewContainerServiceClient(opt *cloudprovider.CommonOption) (*ContainerServi
 }
 
 // ListCluster list clusters
-func (cs *ContainerServiceClient) ListCluster(ctx context.Context, location string) ([]containerservice.ManagedCluster, error) {
+func (cs *ContainerServiceClient) ListCluster(ctx context.Context, location string) ([]containerservice.ManagedCluster,
+	error) {
 	pager, err := cs.managedClustersClient.ListByResourceGroup(ctx, cs.resourceGroupName)
 	if err != nil {
 		return nil, err
@@ -81,14 +82,16 @@ func getClusterIDFromARM(arm string) string {
 }
 
 // GetCluster get cluster
-func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName string) (containerservice.ManagedCluster, error) {
+func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName string) (containerservice.ManagedCluster,
+	error) {
 	return cs.managedClustersClient.Get(ctx, cs.resourceGroupName, getClusterIDFromARM(clusterName))
 }
 
 // GetClusterCredentials get cluster credentials
 func (cs *ContainerServiceClient) GetClusterCredentials(ctx context.Context, clusterName string) (
 	[]containerservice.CredentialResult, error) {
-	resp, err := cs.managedClustersClient.ListClusterAdminCredentials(ctx, cs.resourceGroupName, getClusterIDFromARM(clusterName), "")
+	resp, err := cs.managedClustersClient.ListClusterAdminCredentials(ctx, cs.resourceGroupName,
+		getClusterIDFromARM(clusterName), "")
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,7 @@ type AppSvcController interface {
 	GetAppSvc(ns, name string) (*v1.AppSvc, error)
 	// ListAppSvcs List all AppSvc datas
 	ListAppSvcs(selector labels.Selector) ([]*v1.AppSvc, error)
-	// RegisterAppSvcHandler register event callback for AppSvc
+	// RegisterAppSvcQueue register event callback for AppSvc
 	RegisterAppSvcQueue(handler queue.Queue)
 }
 
@@ -51,6 +51,6 @@ type AppNodeController interface {
 	ListAppNodes(selector labels.Selector) ([]*v1.AppNode, error)
 	// GetAppNode get specified AppNode by namespace, name
 	GetAppNode(ns, name string) (*v1.AppNode, error)
-	// RegisterAppNodeHandler register event callback for AppNode
+	// RegisterAppNodeQueue register event callback for AppNode
 	RegisterAppNodeQueue(handler queue.Queue)
 }

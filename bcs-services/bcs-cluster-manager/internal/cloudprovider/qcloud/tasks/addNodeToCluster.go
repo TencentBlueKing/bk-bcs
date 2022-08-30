@@ -33,7 +33,8 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 	// get task form database
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("AddNodesShieldAlarmTask[%s] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
+		blog.Errorf("AddNodesShieldAlarmTask[%s] task %s get detail task information from storage failed: %s, task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -50,7 +51,8 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 	// workflow switch current step to stepName when previous task exec successful
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("AddNodesShieldAlarmTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("AddNodesShieldAlarmTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -97,7 +99,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	// get task form database
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("AddNodesToClusterTask[%s] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
+		blog.Errorf("AddNodesToClusterTask[%s] task %s get detail task information from storage failed: %s, task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -114,7 +117,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	// workflow switch current step to stepName when previous task exec successful
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("AddNodesToClusterTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("AddNodesToClusterTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -139,7 +143,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	ipList := strings.Split(step.Params["NodeIPs"], ",")
 	idList := strings.Split(step.Params["NodeIDs"], ",")
 	if len(idList) != len(ipList) {
-		blog.Errorf("AddNodesToClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
+		blog.Errorf("AddNodesToClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal",
+			taskID, taskID, stepName,
 			len(idList), len(ipList))
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
@@ -148,7 +153,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	// get cloudInfo bu cloudID & get projectInfo by ProjectID
 	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
 	if err != nil {
-		blog.Errorf("AddNodesToClusterTask[%s] get cloud/project for NodeGroup %s to clean Node in task %s step %s failed, %s",
+		blog.Errorf(
+			"AddNodesToClusterTask[%s] get cloud/project for NodeGroup %s to clean Node in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -275,7 +281,8 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	// get task form database
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("CheckAddNodesStatusTask[%s] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
+		blog.Errorf("CheckAddNodesStatusTask[%s] task %s get detail task information from storage failed: %s, task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -292,7 +299,8 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	// workflow switch current step to stepName when previous task exec successful
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CheckAddNodesStatusTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CheckAddNodesStatusTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -316,7 +324,8 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	ipList := strings.Split(step.Params["NodeIPs"], ",")
 	idList := strings.Split(step.Params["NodeIDs"], ",")
 	if len(idList) != len(ipList) {
-		blog.Errorf("CheckAddNodesStatusTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
+		blog.Errorf("CheckAddNodesStatusTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal",
+			taskID, taskID, stepName,
 			len(idList), len(ipList))
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
@@ -325,7 +334,8 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	// handler logic
 	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
 	if err != nil {
-		blog.Errorf("CheckAddNodesStatusTask[%s] get cloud/project for NodeGroup %s to clean Node in task %s step %s failed, %s",
+		blog.Errorf(
+			"CheckAddNodesStatusTask[%s] get cloud/project for NodeGroup %s to clean Node in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -465,7 +475,8 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error {
 	// get task form database
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("UpdateNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
+		blog.Errorf("UpdateNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -506,7 +517,8 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error {
 	ipList := strings.Split(step.Params["NodeIPs"], ",")
 	idList := strings.Split(step.Params["NodeIDs"], ",")
 	if len(idList) != len(ipList) {
-		blog.Errorf("UpdateNodeDBInfoTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
+		blog.Errorf("UpdateNodeDBInfoTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal",
+			taskID, taskID, stepName,
 			len(idList), len(ipList))
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)

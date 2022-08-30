@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
+// NameSpaceFilter xxx
 // Filter of namespace
 type NameSpaceFilter struct {
 	ClusterId       string `json:"clusterId" filter:"clusterId"`

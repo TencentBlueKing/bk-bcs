@@ -20,14 +20,17 @@ import (
 	"strings"
 )
 
+// GetCommand xxx
 func (b *backend) GetCommand(ID string) (*commtypes.BcsCommandInfo, error) {
 	return b.store.FetchCommand(ID)
 }
 
+// DeleteCommand xxx
 func (b *backend) DeleteCommand(ID string) error {
 	return b.store.DeleteCommand(ID)
 }
 
+// DoCommand xxx
 func (b *backend) DoCommand(command *commtypes.BcsCommandInfo) error {
 
 	kind := command.Spec.CommandTargetRef.Kind

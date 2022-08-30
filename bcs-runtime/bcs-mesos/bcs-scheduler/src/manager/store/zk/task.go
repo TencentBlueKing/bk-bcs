@@ -48,6 +48,7 @@ func createTaskPath(taskID string) (string, error) {
 	return path, nil
 }
 
+// SaveTask xxx
 func (store *managerStore) SaveTask(task *types.Task) error {
 
 	blog.V(3).Infof("save task(id:%s)", task.ID)
@@ -73,6 +74,7 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 	return nil
 }
 
+// ListTasks xxx
 func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error) {
 
 	path := getTaskRootPath() + runAs + "/" + appID
@@ -106,6 +108,7 @@ func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error)
 	return tasksList, nil
 }
 
+// DeleteTask xxx
 func (store *managerStore) DeleteTask(taskId string) error {
 	path, err := createTaskPath(taskId)
 	if err != nil {
@@ -123,6 +126,7 @@ func (store *managerStore) DeleteTask(taskId string) error {
 	return nil
 }
 
+// FetchTask xxx
 func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 
 	cacheTask, cacheErr := fetchCacheTask(taskId)
@@ -150,6 +154,7 @@ func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 	return &task, nil
 }
 
+// FetchDBTask xxx
 func (store *managerStore) FetchDBTask(taskId string) (*types.Task, error) {
 
 	path, err := createTaskPath(taskId)

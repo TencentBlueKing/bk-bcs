@@ -24,14 +24,14 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-// SecretStor
+// SecretStor xxx
 type SecretStor struct {
 	members      []string
 	masterClient *kubernetes.Clientset
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
-// NewSecretStor
+// NewSecretStor xxx
 func NewSecretStor(masterClientId string, members []string) (*SecretStor, error) {
 	stor := &SecretStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
 	for _, k := range members {
@@ -60,7 +60,8 @@ func (s *SecretStor) List(ctx context.Context, namespace string, opts metav1.Lis
 }
 
 // ListAsTable 查询 Secret 列表, kubectl 格式返回
-func (s *SecretStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
+func (s *SecretStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string,
+	opts metav1.ListOptions) (*metav1.Table, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -83,7 +84,8 @@ func (s *SecretStor) ListAsTable(ctx context.Context, namespace string, acceptHe
 }
 
 // Get 获取单个 Secret, Json格式返回
-func (s *SecretStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Secret, error) {
+func (s *SecretStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Secret,
+	error) {
 	result, err := s.masterClient.CoreV1().Secrets(namespace).Get(ctx, name, opts)
 	if err != nil {
 		return nil, err
@@ -92,7 +94,8 @@ func (s *SecretStor) Get(ctx context.Context, namespace string, name string, opt
 }
 
 // GetAsTable 获取单个 Secret, Table 格式返回
-func (s *SecretStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+func (s *SecretStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+	opts metav1.GetOptions) (*metav1.Table, error) {
 	result := &metav1.Table{}
 	err := s.masterClient.CoreV1().RESTClient().Get().
 		Namespace(namespace).
@@ -110,7 +113,8 @@ func (s *SecretStor) GetAsTable(ctx context.Context, namespace string, name stri
 }
 
 // Create 创建 Secret
-func (s *SecretStor) Create(ctx context.Context, namespace string, Secret *v1.Secret, opts metav1.CreateOptions) (*v1.Secret, error) {
+func (s *SecretStor) Create(ctx context.Context, namespace string, Secret *v1.Secret,
+	opts metav1.CreateOptions) (*v1.Secret, error) {
 	result, err := s.masterClient.CoreV1().Secrets(namespace).Create(ctx, Secret, opts)
 	if err != nil {
 		return nil, err
@@ -119,7 +123,8 @@ func (s *SecretStor) Create(ctx context.Context, namespace string, Secret *v1.Se
 }
 
 // Update 更新 Secret
-func (s *SecretStor) Update(ctx context.Context, namespace string, Secret *v1.Secret, opts metav1.UpdateOptions) (*v1.Secret, error) {
+func (s *SecretStor) Update(ctx context.Context, namespace string, Secret *v1.Secret,
+	opts metav1.UpdateOptions) (*v1.Secret, error) {
 	result, err := s.masterClient.CoreV1().Secrets(namespace).Update(ctx, Secret, opts)
 	if err != nil {
 		return nil, err
@@ -128,7 +133,8 @@ func (s *SecretStor) Update(ctx context.Context, namespace string, Secret *v1.Se
 }
 
 // Patch Edit/Apply Secret
-func (s *SecretStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1.Secret, error) {
+func (s *SecretStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte,
+	opts metav1.PatchOptions, subresources ...string) (*v1.Secret, error) {
 	result, err := s.masterClient.CoreV1().Secrets(namespace).Patch(ctx, name, pt, data, opts, subresources...)
 	if err != nil {
 		return nil, err
@@ -137,7 +143,8 @@ func (s *SecretStor) Patch(ctx context.Context, namespace string, name string, p
 }
 
 // Delete 删除单个 Secret
-func (s *SecretStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error) {
+func (s *SecretStor) Delete(ctx context.Context, namespace string, name string,
+	opts metav1.DeleteOptions) (*metav1.Status, error) {
 	result, err := s.masterClient.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err

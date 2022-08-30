@@ -11,6 +11,7 @@
  *
  */
 
+// Package exec xxx
 package exec
 
 import (
@@ -68,7 +69,7 @@ type Cmd interface {
 	Start() error
 	Wait() error
 
-	// Stops the command by sending SIGTERM. It is not guaranteed the
+	// Stop s the command by sending SIGTERM. It is not guaranteed the
 	// process will stop before this function returns. If the process is not
 	// responding, an internal timer function will send a SIGKILL to force
 	// terminate after 10 seconds.

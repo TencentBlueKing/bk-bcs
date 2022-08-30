@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseWorkloadVolume ...
+// ParseWorkloadVolume xxx
 func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.WorkloadVolume) {
 	if volumes, _ := mapx.GetItems(manifest, "spec.template.spec.volumes"); volumes != nil { // nolint:nestif
 		for _, vol := range volumes.([]interface{}) {

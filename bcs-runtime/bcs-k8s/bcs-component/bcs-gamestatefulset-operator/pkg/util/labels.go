@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 )
 
-//ToLabelString convert label to one string, splited by comma
+// ToLabelString convert label to one string, splited by comma
 func ToLabelString(labelSelector *metav1.LabelSelector) string {
 	var reqs []string
 	for ix := range labelSelector.MatchLabels {

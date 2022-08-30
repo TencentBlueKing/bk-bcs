@@ -45,7 +45,9 @@ func NewRevisionControl() Interface {
 type realControl struct {
 }
 
-func (c *realControl) NewRevision(deploy *gdv1alpha1.GameDeployment, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
+// NewRevision xxx
+func (c *realControl) NewRevision(deploy *gdv1alpha1.GameDeployment, revision int64,
+	collisionCount *int32) (*apps.ControllerRevision, error) {
 	coreControl := gdcore.New(deploy)
 	patch, err := c.getPatch(deploy, coreControl)
 	if err != nil {
@@ -92,9 +94,12 @@ func (c *realControl) getPatch(deploy *gdv1alpha1.GameDeployment, coreControl gd
 	return patch, err
 }
 
-func (c *realControl) ApplyRevision(deploy *gdv1alpha1.GameDeployment, revision *apps.ControllerRevision) (*gdv1alpha1.GameDeployment, error) {
+// ApplyRevision xxx
+func (c *realControl) ApplyRevision(deploy *gdv1alpha1.GameDeployment, revision *apps.ControllerRevision) (
+	*gdv1alpha1.GameDeployment, error) {
 	clone := deploy.DeepCopy()
-	patched, err := strategicpatch.StrategicMergePatch([]byte(runtime.EncodeOrDie(patchCodec, clone)), revision.Data.Raw, clone)
+	patched, err := strategicpatch.StrategicMergePatch([]byte(runtime.EncodeOrDie(patchCodec, clone)), revision.Data.Raw,
+		clone)
 	if err != nil {
 		return nil, err
 	}

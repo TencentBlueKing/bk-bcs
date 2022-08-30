@@ -20,12 +20,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// FormatNetworkRes ...
+// FormatNetworkRes xxx
 func FormatNetworkRes(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
-// FormatIng ...
+// FormatIng xxx
 func FormatIng(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatNetworkRes(manifest)
 
@@ -42,7 +42,7 @@ func FormatIng(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatSVC ...
+// FormatSVC xxx
 func FormatSVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatNetworkRes(manifest)
 	ret["externalIP"] = parseSVCExternalIPs(manifest)
@@ -50,7 +50,7 @@ func FormatSVC(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatEP ...
+// FormatEP xxx
 func FormatEP(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatNetworkRes(manifest)
 	ret["endpoints"] = parseEndpoints(manifest)
@@ -59,7 +59,7 @@ func FormatEP(manifest map[string]interface{}) map[string]interface{} {
 
 // 工具方法
 
-// 解析 Ingress Hosts
+// parseIngHosts 解析 Ingress Hosts
 func parseIngHosts(manifest map[string]interface{}) (hosts []string) {
 	rules := mapx.GetList(manifest, "spec.rules")
 	for _, r := range rules {
@@ -70,7 +70,7 @@ func parseIngHosts(manifest map[string]interface{}) (hosts []string) {
 	return hosts
 }
 
-// 解析 Ingress Address
+// parseIngAddrs 解析 Ingress Address
 func parseIngAddrs(manifest map[string]interface{}) (addrs []string) {
 	ingresses := mapx.GetList(manifest, "status.loadBalancer.ingress")
 	for _, ing := range ingresses {
@@ -84,7 +84,7 @@ func parseIngAddrs(manifest map[string]interface{}) (addrs []string) {
 	return addrs
 }
 
-// 获取 Ingress 默认端口
+// getIngDefaultPort 获取 Ingress 默认端口
 func getIngDefaultPort(manifest map[string]interface{}) string {
 	if tls, _ := mapx.GetItems(manifest, "spec.tls"); tls != nil {
 		return "80, 443"
@@ -92,7 +92,7 @@ func getIngDefaultPort(manifest map[string]interface{}) string {
 	return "80"
 }
 
-// 解析 networking.k8s.io/v1 版本 Ingress Rules
+// parseV1IngRules 解析 networking.k8s.io/v1 版本 Ingress Rules
 func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
 	rawRules := mapx.GetList(manifest, "spec.rules")
 	for _, r := range rawRules {
@@ -113,7 +113,7 @@ func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interf
 	return rules
 }
 
-// 解析 extensions/v1beta1 版本 Ingress Rules
+// parseV1beta1IngRules 解析 extensions/v1beta1 版本 Ingress Rules
 func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
 	rawRules := mapx.GetList(manifest, "spec.rules")
 	for _, r := range rawRules {
@@ -134,12 +134,12 @@ func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]i
 	return rules
 }
 
-// 解析 SVC ExternalIP
+// parseSVCExternalIPs 解析 SVC ExternalIP
 func parseSVCExternalIPs(manifest map[string]interface{}) []string {
 	return parseIngAddrs(manifest)
 }
 
-// 解析 SVC Ports
+// parseSVCPorts 解析 SVC Ports
 func parseSVCPorts(manifest map[string]interface{}) (ports []string) {
 	rawPorts := mapx.GetList(manifest, "spec.ports")
 	for _, p := range rawPorts {
@@ -153,7 +153,7 @@ func parseSVCPorts(manifest map[string]interface{}) (ports []string) {
 	return ports
 }
 
-// 解析所有 Endpoints
+// parseEndpoints 解析所有 Endpoints
 func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
 	if _, ok := manifest["subsets"]; !ok {
 		return endpoints

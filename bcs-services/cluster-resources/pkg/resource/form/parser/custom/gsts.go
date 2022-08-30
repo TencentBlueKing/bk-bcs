@@ -34,7 +34,7 @@ func ParseGSTS(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(deploy)
 }
 
-// ParseGSTSSpec ...
+// ParseGSTSSpec xxx
 func ParseGSTSSpec(manifest map[string]interface{}, spec *model.GSTSSpec) {
 	ParseGSTSReplicas(manifest, &spec.Replicas)
 	ParseGWorkloadGracefulManage(manifest, &spec.GracefulManage)
@@ -49,7 +49,7 @@ func ParseGSTSSpec(manifest map[string]interface{}, spec *model.GSTSSpec) {
 	workload.ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseGSTSReplicas ...
+// ParseGSTSReplicas xxx
 func ParseGSTSReplicas(manifest map[string]interface{}, replicas *model.GSTSReplicas) {
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")

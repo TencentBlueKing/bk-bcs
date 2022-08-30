@@ -1,3 +1,4 @@
+// Package iam xxx
 package iam
 
 import (
@@ -47,7 +48,8 @@ func newIAMClient() (iam.PermClient, error) {
 
 // IsAllowedWithResource 校验项目, 集群是否有权限
 func IsAllowedWithResource(ctx context.Context, projectId, clusterId, namespaceName, username string) (bool, error) {
-	logger.Infof("auth with iam, projectId=%s, clusterId=%s, namespace=%s, username=%s", projectId, clusterId, namespaceName, username)
+	logger.Infof("auth with iam, projectId=%s, clusterId=%s, namespace=%s, username=%s", projectId, clusterId,
+		namespaceName, username)
 
 	iamClient, err := newIAMClient()
 	if err != nil {
@@ -94,7 +96,8 @@ func IsAllowedWithResource(ctx context.Context, projectId, clusterId, namespaceN
 			return false, err
 		}
 		relatedActionIDs = append(relatedActionIDs, namespace.NameSpaceScopedCreate.String())
-		resources = append(resources, utils.ResourceAction{Resource: nameSpaceID, Action: namespace.NameSpaceScopedCreate.String()})
+		resources = append(resources, utils.ResourceAction{Resource: nameSpaceID,
+			Action: namespace.NameSpaceScopedCreate.String()})
 		namespaceNode := iam.ResourceNode{
 			System:    iam.SystemIDBKBCS,
 			RType:     string(namespace.SysNamespace),
@@ -209,7 +212,7 @@ func md5Digest(key string) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-// 计算(压缩)出注册到权限中心的命名空间 ID，具备唯一性. 当前的算法并不能完全避免冲突，但概率较低。
+// calcNamespaceID 计算(压缩)出注册到权限中心的命名空间 ID，具备唯一性. 当前的算法并不能完全避免冲突，但概率较低。
 // note: 权限中心对资源 ID 有长度限制，不超过32位。长度越长，处理性能越低
 // NamespaceID 是命名空间注册到权限中心的资源 ID，它是对结构`集群ID:命名空间name`的一个压缩，
 // 如 `BCS-K8S-10000:default` 会被处理成 `10000:5f03d33dde`。

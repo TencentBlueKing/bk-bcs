@@ -13,7 +13,7 @@
 package scale
 
 import (
-	//"context"
+	// "context"
 	"fmt"
 	"math"
 	"reflect"
@@ -85,7 +85,7 @@ func newFakeNodes() corelisters.NodeLister {
 
 	// mock nodes objects
 	for i := range fakeNodes {
-		//_, _ = kubeClient.CoreV1().Nodes().Create(context.TODO(), &fakeNodes[i], metav1.CreateOptions{})
+		// _, _ = kubeClient.CoreV1().Nodes().Create(context.TODO(), &fakeNodes[i], metav1.CreateOptions{})
 		err := kubeInformers.Core().V1().Nodes().Informer().GetIndexer().Add(fakeNodes[i])
 		if err != nil {
 			fmt.Printf("informer error: %+v", err)

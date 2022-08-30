@@ -51,8 +51,9 @@ type DiscoveryClient struct {
 	mtx                  sync.RWMutex
 }
 
-// NewDiscoveryClient
-func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer opentracing.Tracer, kitLogger gokit.Logger, storeList []string, httpSDURLs []string, g *run.Group) (*DiscoveryClient, error) {
+// NewDiscoveryClient xxx
+func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer opentracing.Tracer,
+	kitLogger gokit.Logger, storeList []string, httpSDURLs []string, g *run.Group) (*DiscoveryClient, error) {
 	dnsStoreProvider := dns.NewProvider(
 		kitLogger,
 		extprom.WrapRegistererWithPrefix("bcs_monitor_query_store_apis_", reg),
@@ -153,7 +154,8 @@ func (c *DiscoveryClient) addStaticDiscovery(name string, tgs []*targetgroup.Gro
 	return nil
 }
 
-func (c *DiscoveryClient) addHTTPDiscovery(ctx context.Context, kitLogger gokit.Logger, conf *httpdiscovery.SDConfig, g *run.Group) error {
+func (c *DiscoveryClient) addHTTPDiscovery(ctx context.Context, kitLogger gokit.Logger, conf *httpdiscovery.SDConfig,
+	g *run.Group) error {
 	client, err := NewHttpSDClientGroup(ctx, kitLogger, c.reg, conf, g, c.ForceRefreshEndpoints)
 	if err != nil {
 		return err
@@ -166,7 +168,7 @@ func (c *DiscoveryClient) addHTTPDiscovery(ctx context.Context, kitLogger gokit.
 	return nil
 }
 
-// ForceRefreshEndpoints
+// ForceRefreshEndpoints xxx
 func (c *DiscoveryClient) ForceRefreshEndpoints(ctx context.Context) {
 	c.endpoints.Update(ctx)
 
@@ -206,8 +208,9 @@ type httpSDClientGroup struct {
 	httpSDClientMap map[string]*httpSDClient
 }
 
-// NewHttpSDClientGroup
-func NewHttpSDClientGroup(ctx context.Context, kitLogger gokit.Logger, reg *prometheus.Registry, conf *httpdiscovery.SDConfig, g *run.Group, forceRefreshFunc func(ctx context.Context)) (*httpSDClientGroup, error) {
+// NewHttpSDClientGroup xxx
+func NewHttpSDClientGroup(ctx context.Context, kitLogger gokit.Logger, reg *prometheus.Registry,
+	conf *httpdiscovery.SDConfig, g *run.Group, forceRefreshFunc func(ctx context.Context)) (*httpSDClientGroup, error) {
 	id := fmt.Sprintf("%s:%s", conf.Name(), conf.URL)
 
 	httpSDClientMap := map[string]*httpSDClient{}
@@ -304,6 +307,7 @@ func (c *httpSDClientGroup) parseURLHost(rawURL string) (map[string]*url.URL, er
 	return addrMap, nil
 }
 
+// Addresses xxx
 func (c *httpSDClientGroup) Addresses() []string {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
@@ -326,8 +330,9 @@ type httpSDClient struct {
 	forceRefreshFunc func(ctx context.Context)
 }
 
-// NewHttpSDClient
-func NewHttpSDClient(ctx context.Context, kitLogger gokit.Logger, conf httpdiscovery.SDConfig, addr string, u url.URL, forceRefreshFunc func(ctx context.Context)) (*httpSDClient, error) {
+// NewHttpSDClient xxx
+func NewHttpSDClient(ctx context.Context, kitLogger gokit.Logger, conf httpdiscovery.SDConfig, addr string, u url.URL,
+	forceRefreshFunc func(ctx context.Context)) (*httpSDClient, error) {
 	// Run File Service Discovery and update the store set when the files are modified.
 	u.Host = addr
 	conf.URL = u.String()
@@ -351,10 +356,12 @@ func NewHttpSDClient(ctx context.Context, kitLogger gokit.Logger, conf httpdisco
 	return &c, nil
 }
 
+// Close xxx
 func (c *httpSDClient) Close() {
 	c.cancel()
 }
 
+// Run xxx
 func (c *httpSDClient) Run() error {
 	httpSDUpdates := make(chan []*targetgroup.Group)
 

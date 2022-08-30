@@ -11,6 +11,7 @@
  *
  */
 
+// Package server xxx
 package server
 
 import (
@@ -57,6 +58,7 @@ func Setup(conf *config.ApiServConfig) {
 	}
 }
 
+// StartRbacSync xxx
 // sync rbac data to k8s clusters
 func StartRbacSync(conf *config.ApiServConfig) {
 	template.InitRbacTemplates()

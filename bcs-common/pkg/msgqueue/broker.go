@@ -22,6 +22,7 @@ import (
 	"time"
 )
 
+// rabbitmqBroker xxx
 // rabbitmq broker init: brokerOptions/init/connect
 func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
@@ -54,7 +55,7 @@ func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	return brokerRabbit, nil
 }
 
-// natstreaming broker init: natsreaming options/init/connect
+// natstreamingBroker broker init: natsreaming options/init/connect
 func natstreamingBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
 	brokerOpts = append(brokerOpts, stan.ClusterID(q.NatsOptions.ClusterID), broker.Addrs(q.CommonOptions.Address))

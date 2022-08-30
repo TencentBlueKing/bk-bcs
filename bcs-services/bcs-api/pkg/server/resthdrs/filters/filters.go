@@ -11,6 +11,7 @@
  *
  */
 
+// Package filters xxx
 package filters
 
 import (
@@ -27,8 +28,11 @@ import (
 )
 
 const (
-	CurrentUserAttr      = "bke_current_user"
-	CurrentCluster       = "bke_current_cluster"
+	// CurrentUserAttr xxx
+	CurrentUserAttr = "bke_current_user"
+	// CurrentCluster xxx
+	CurrentCluster = "bke_current_cluster"
+	// CurrentUserTokenType xxx
 	CurrentUserTokenType = "bke_current_usertoken_type"
 )
 
@@ -41,7 +45,8 @@ const (
 func AuthenticatedRequired(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	// If there is already "currentUser" attribute in request object, skip this authenticater
 	if request.Attribute(CurrentUserAttr) == nil {
-		message := fmt.Sprintf("errcode：%d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+		message := fmt.Sprintf("errcode：%d,  anonymous requests is forbidden, please provide a valid token",
+			common.BcsErrApiUnauthorized)
 		utils.WriteUnauthorizedError(response, "UNAUTHORIZED", message)
 		return
 	}
@@ -49,7 +54,7 @@ func AuthenticatedRequired(request *restful.Request, response *restful.Response,
 	chain.ProcessFilter(request, response)
 }
 
-// tokenAuthenticate authenticates current user by bearer token
+// TokenAuthenticate authenticates current user by bearer token
 func TokenAuthenticate(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	// If there is already "currentUser" attribute in request object, skip this authenticater
 	if request.Attribute(CurrentUserAttr) != nil {
@@ -81,13 +86,14 @@ func SuperTokenAuthenticate(request *restful.Request, response *restful.Response
 		return
 	}
 
-	message := fmt.Sprintf("errcode：%d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+	message := fmt.Sprintf("errcode：%d,  anonymous requests is forbidden, please provide a valid token",
+		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, "UNAUTHORIZED", message)
 	return
 
 }
 
-// accessTokenAuthenticate authenticates the user using access_token parameter in query string.
+// AccessTokenAuthenticate authenticates the user using access_token parameter in query string.
 func AccessTokenAuthenticate(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	// If there is already "currentUser" attribute in request object, skip this authenticater
 	if request.Attribute(CurrentUserAttr) != nil {
@@ -120,7 +126,7 @@ func AccessTokenAuthenticate(request *restful.Request, response *restful.Respons
 // Cluster Filters //
 // =============== //
 
-// ClusterVerify verifies if given cluster_id is valid.
+// ClusterIdVerify verifies if given cluster_id is valid.
 func ClusterIdVerify(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	clusterId := request.PathParameter("cluster_id")
 	cluster := sqlstore.GetCluster(clusterId)
@@ -135,6 +141,7 @@ func ClusterIdVerify(request *restful.Request, response *restful.Response, chain
 
 }
 
+// GetUser xxx
 // Get CurrentUser from request object
 func GetUser(req *restful.Request) *m.User {
 	user := req.Attribute(CurrentUserAttr)
@@ -146,6 +153,7 @@ func GetUser(req *restful.Request) *m.User {
 	return nil
 }
 
+// GetCluster xxx
 func GetCluster(req *restful.Request) *m.Cluster {
 	cluster := req.Attribute(CurrentCluster)
 	ret, ok := cluster.(*m.Cluster)
@@ -157,6 +165,7 @@ func GetCluster(req *restful.Request) *m.Cluster {
 
 }
 
+// GetUserTokenType xxx
 func GetUserTokenType(req *restful.Request) int {
 	userTokenType := req.Attribute(CurrentUserTokenType)
 	return userTokenType.(int)

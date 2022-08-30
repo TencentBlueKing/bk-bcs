@@ -28,8 +28,10 @@ import (
 
 // Console interface for business logic
 type Console interface {
-	CreateRawAlertInfo(ctx context.Context, req *alertmanager.CreateRawAlertInfoReq, resp *alertmanager.CreateRawAlertInfoResp)
-	CreateBusinessAlertInfo(ctx context.Context, req *alertmanager.CreateBusinessAlertInfoReq, resp *alertmanager.CreateBusinessAlertInfoResp)
+	CreateRawAlertInfo(ctx context.Context, req *alertmanager.CreateRawAlertInfoReq,
+		resp *alertmanager.CreateRawAlertInfoResp)
+	CreateBusinessAlertInfo(ctx context.Context, req *alertmanager.CreateBusinessAlertInfoReq,
+		resp *alertmanager.CreateBusinessAlertInfoResp)
 }
 
 // AlertAction object implement Console
@@ -45,7 +47,8 @@ func NewAlertAction(alertClient alert.BcsAlarmInterface) Console {
 }
 
 // CreateRawAlertInfo create raw alert info
-func (ac *AlertAction) CreateRawAlertInfo(ctx context.Context, req *alertmanager.CreateRawAlertInfoReq, resp *alertmanager.CreateRawAlertInfoResp) {
+func (ac *AlertAction) CreateRawAlertInfo(ctx context.Context, req *alertmanager.CreateRawAlertInfoReq,
+	resp *alertmanager.CreateRawAlertInfoResp) {
 	tracer := utils.GetTraceFromContext(ctx)
 
 	if req == nil || resp == nil {
@@ -91,7 +94,8 @@ func (ac *AlertAction) CreateRawAlertInfo(ctx context.Context, req *alertmanager
 }
 
 // CreateBusinessAlertInfo create business alert info
-func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertmanager.CreateBusinessAlertInfoReq, resp *alertmanager.CreateBusinessAlertInfoResp) {
+func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertmanager.CreateBusinessAlertInfoReq,
+	resp *alertmanager.CreateBusinessAlertInfoResp) {
 	tracer := utils.GetTraceFromContext(ctx)
 
 	if req == nil || resp == nil {

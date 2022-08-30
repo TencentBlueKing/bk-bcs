@@ -16,12 +16,12 @@ package formatter
 
 import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 
-// FormatRBACRes ...
+// FormatRBACRes xxx
 func FormatRBACRes(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
-// FormatSA ...
+// FormatSA xxx
 func FormatSA(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatRBACRes(manifest)
 	ret["secrets"] = len(mapx.GetList(manifest, "secrets"))

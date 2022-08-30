@@ -23,6 +23,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+// NewTracerProvider xxx
 func NewTracerProvider(exporterURL, serviceName string) (*sdktrace.TracerProvider, error) {
 	// Create Zipkin Exporter and install it as a global tracer.
 	//

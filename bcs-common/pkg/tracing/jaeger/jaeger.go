@@ -11,6 +11,7 @@
  *
  */
 
+// Package jaeger xxx
 package jaeger
 
 import (
@@ -73,7 +74,8 @@ var (
 	// defaultReportLog set default log report conf false
 	defaultReportLog = false
 	// defaultAgentHostPort set default agent host port
-	defaultAgentHostPort = fmt.Sprintf("%s:%d", jaegerclient.DefaultUDPSpanServerHost, jaegerclient.DefaultUDPSpanServerPort)
+	defaultAgentHostPort = fmt.Sprintf("%s:%d", jaegerclient.DefaultUDPSpanServerHost,
+		jaegerclient.DefaultUDPSpanServerPort)
 	// defaultSampleType show sampler always to sample all
 	defaultSampleType = SamplerTypeConst
 	// defaultSampleParameter set default sample parameter for SamplerTypeConst
@@ -235,7 +237,8 @@ func (j *Jaeger) Init() (io.Closer, error) {
 
 	if j.Opts.RPCMetrics {
 		blog.Info("report tracer and span RPCMetrics")
-		jaeOpts = append(jaeOpts, jaegercfg.Observer(rpcmetrics.NewObserver(metricsFactory, rpcmetrics.DefaultNameNormalizer)))
+		jaeOpts = append(jaeOpts, jaegercfg.Observer(rpcmetrics.NewObserver(metricsFactory,
+			rpcmetrics.DefaultNameNormalizer)))
 	}
 
 	closer, err := cfg.InitGlobalTracer(cfg.ServiceName, jaeOpts...)

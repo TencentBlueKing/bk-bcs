@@ -44,6 +44,7 @@ func (eb *EventBus) SetCondition(cond *operator.Condition) {
 	eb.cond = cond
 }
 
+// createListener xxx
 // create listener of topic
 func (eb *EventBus) createListener(topic string) (chan *drivers.WatchEvent, error) {
 	var conditionList []*operator.Condition

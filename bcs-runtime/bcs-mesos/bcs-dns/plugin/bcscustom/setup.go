@@ -69,6 +69,7 @@ func setup(c *caddy.Controller) error {
 	return nil
 }
 
+// parseConfig xxx
 // #lizard forgives
 // nolint
 func parseConfig(c *caddy.Controller) (*BcsCustom, error) {
@@ -180,7 +181,7 @@ func parseConfig(c *caddy.Controller) (*BcsCustom, error) {
 			Upstream:   bc.Upstream,
 			Client:     bc.EtcdCli,
 			Stubmap:    &stub,
-			//Endpoints:  bc.endpoints,
+			// Endpoints:  bc.endpoints,
 			Ctx: context.Background(),
 		}
 

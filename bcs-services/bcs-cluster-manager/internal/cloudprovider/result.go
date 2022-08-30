@@ -169,7 +169,8 @@ func (sjr *SyncJobResult) updateNodeGroupDesiredNum() error {
 
 	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
-		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID, err.Error())
+		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID,
+			err.Error())
 	}
 
 	blog.Infof("task[%s] update nodeGroup current[%d] clean[%d]", sjr.TaskID,
@@ -359,7 +360,7 @@ func (sjr *SyncJobResult) updateNodesResultStatus(isSuccess bool) error {
 	return sjr.updateNodeStatusByNodeID(sjr.NodeIDs, getStatus())
 }
 
-// updateNodeStatus set node status
+// updateNodeStatusByIP set node status
 func (sjr *SyncJobResult) updateNodeStatusByIP(ipList []string, status string) error {
 	if len(ipList) == 0 {
 		return nil
@@ -371,7 +372,8 @@ func (sjr *SyncJobResult) updateNodeStatusByIP(ipList []string, status string) e
 			continue
 		}
 		blog.Infof("task[%s] nodeIP[%s] status[%s]", sjr.TaskID, ip, node.Status)
-		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed, common.StatusRunning}) {
+		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed,
+			common.StatusRunning}) {
 			continue
 		}
 
@@ -397,7 +399,8 @@ func (sjr *SyncJobResult) updateNodeStatusByNodeID(idList []string, status strin
 			continue
 		}
 		blog.Infof("task[%s] nodeIP[%s] status[%s]", sjr.TaskID, id, node.Status)
-		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed, common.StatusRunning}) {
+		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed,
+			common.StatusRunning}) {
 			continue
 		}
 

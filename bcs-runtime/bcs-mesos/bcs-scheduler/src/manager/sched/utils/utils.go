@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -21,6 +22,7 @@ import (
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// isLabelsChanged xxx
 // will ignore label key begin with "io.tencent"
 func isLabelsChanged(newLabels, oldLabels map[string]string) error {
 	if len(newLabels) != len(oldLabels) {

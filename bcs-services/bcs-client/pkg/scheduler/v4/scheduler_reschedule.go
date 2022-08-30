@@ -18,6 +18,7 @@ import (
 	"net/http"
 )
 
+// RescheduleTaskGroup xxx
 func (bs *bcsScheduler) RescheduleTaskGroup(clusterID, namespace, applicationName, taskGroupName string) error {
 	return bs.rescheduleTaskGroup(clusterID, namespace, applicationName, taskGroupName)
 }

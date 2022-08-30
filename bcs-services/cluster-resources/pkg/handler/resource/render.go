@@ -22,7 +22,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// FormDataRenderPreview ...
+// FormDataRenderPreview xxx
 func (h *Handler) FormDataRenderPreview(
 	ctx context.Context, req *clusterRes.FormRenderPreviewReq, resp *clusterRes.CommonResp,
 ) error {

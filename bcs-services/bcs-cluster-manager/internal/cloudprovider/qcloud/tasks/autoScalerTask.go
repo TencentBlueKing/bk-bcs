@@ -59,7 +59,7 @@ func getInstaller(projectID string) install.Installer {
 // EnsureAutoScalerTask ensure auto scaler task, if not exist, create it, if exist, update it
 func EnsureAutoScalerTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -83,7 +83,8 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 		Op:    operator.Eq,
 		Value: operator.M{"clusterid": clusterID, "enableautoscale": true},
 	}
-	nodegroupList, err := cloudprovider.GetStorageModel().ListNodeGroup(context.Background(), cond, &options.ListOption{All: true})
+	nodegroupList, err := cloudprovider.GetStorageModel().ListNodeGroup(context.Background(), cond, &options.ListOption{
+		All: true})
 	if err != nil {
 		blog.Errorf("EnsureAutoScalerTask[%s]: ListNodeGroup for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("ListNodeGroup failed, %s", err.Error())
@@ -92,7 +93,8 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 	}
 
 	// ensure
-	if err := ensureAutoScalerWithInstaller(getInstaller(asOption.ProjectID), clusterID, nodegroupList, asOption); err != nil {
+	if err := ensureAutoScalerWithInstaller(getInstaller(asOption.ProjectID), clusterID, nodegroupList,
+		asOption); err != nil {
 		blog.Errorf("EnsureAutoScalerTask[%s] for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("EnsureAutoScalerTask failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)

@@ -21,21 +21,25 @@ import (
 	"net/http"
 )
 
+// CreateExecReq xxx
 type CreateExecReq struct {
 	ContainerId string   `json:"container_id"`
 	Cmd         []string `json:"cmd"`
 }
 
+// ResizeExecReq xxx
 type ResizeExecReq struct {
 	ExecId string `json:"exec_id"`
 	Height int    `json:"height"`
 	Width  int    `json:"width"`
 }
 
+// CreatExecResp xxx
 type CreatExecResp struct {
 	Id string `json:"Id"`
 }
 
+// CreateContainerExec xxx
 // call create_exec api of consoleproxy
 func (bs *bcsScheduler) CreateContainerExec(clusterId, containerId, hostIp string, command []string) (string, error) {
 	execReq := &CreateExecReq{
@@ -60,14 +64,17 @@ func (bs *bcsScheduler) CreateContainerExec(clusterId, containerId, hostIp strin
 	return execResp.Id, err
 }
 
+// StartContainerExec xxx
 // call start_exec api of consoleproxy
-func (bs *bcsScheduler) StartContainerExec(ctx context.Context, clusterId, execId, containerId, hostIp string) (types.HijackedResponse, error) {
+func (bs *bcsScheduler) StartContainerExec(ctx context.Context, clusterId, execId, containerId,
+	hostIp string) (types.HijackedResponse, error) {
 	uri := fmt.Sprintf(bcsSchedulerStartExecUri, bs.bcsAPIAddress, hostIp, containerId, execId)
 
-	//return bs.requester.PostHijacked(ctx, uri, getClusterIDHeader(clusterId))
+	// return bs.requester.PostHijacked(ctx, uri, getClusterIDHeader(clusterId))
 	return bs.requester.DoWebsocket(uri, getClusterIDHeader(clusterId))
 }
 
+// ResizeContainerExec xxx
 // call resize_exec api of consoleproxy
 func (bs *bcsScheduler) ResizeContainerExec(clusterId, execId, hostIp string, height, width int) error {
 	resizeReq := &ResizeExecReq{

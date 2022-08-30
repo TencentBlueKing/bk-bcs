@@ -11,6 +11,7 @@
  *
  */
 
+// Package auth xxx
 package auth
 
 import (

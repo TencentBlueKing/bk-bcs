@@ -32,6 +32,7 @@ import (
 )
 
 const (
+	// DEFAULT_CHECK_INTERVAL TODO
 	DEFAULT_CHECK_INTERVAL = 60
 )
 
@@ -72,25 +73,29 @@ func NewManager(paasEnv, clusterEnv string,
 	// ensure /bcs/bcs-services/bkcmdb-sychroniezer/cluster
 	isExisted, err := zk.Exist(common.BCS_BKCMDB_SYNC_DIR_CLUSTER)
 	if err != nil {
-		return nil, fmt.Errorf("[task manager] zk judge path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_CLUSTER, err.Error())
+		return nil, fmt.Errorf("[task manager] zk judge path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_CLUSTER,
+			err.Error())
 	}
 	if !isExisted {
 		blog.Infof("[task manager] path %s is not existed, try to ensure", common.BCS_BKCMDB_SYNC_DIR_CLUSTER)
 		err = zk.CreateDeepNode(common.BCS_BKCMDB_SYNC_DIR_CLUSTER, []byte("bkcmdb-synchronizer-clusters"))
 		if err != nil {
-			return nil, fmt.Errorf("[task manager] zk create path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_CLUSTER, err.Error())
+			return nil, fmt.Errorf("[task manager] zk create path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_CLUSTER,
+				err.Error())
 		}
 	}
 	// ensure /bcs/bcs-services/bkcmdb-sychroniezer/worker
 	isExisted, err = zk.Exist(common.BCS_BKCMDB_SYNC_DIR_WORKER)
 	if err != nil {
-		return nil, fmt.Errorf("[task manager] zk judge path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_WORKER, err.Error())
+		return nil, fmt.Errorf("[task manager] zk judge path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_WORKER,
+			err.Error())
 	}
 	if !isExisted {
 		blog.Infof("[task manager] path %s is not existed, try to ensure", common.BCS_BKCMDB_SYNC_DIR_WORKER)
 		err = zk.CreateDeepNode(common.BCS_BKCMDB_SYNC_DIR_WORKER, []byte("bkcmdb-synchronizer-workers"))
 		if err != nil {
-			return nil, fmt.Errorf("[task manager] zk create path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_WORKER, err.Error())
+			return nil, fmt.Errorf("[task manager] zk create path %s failed, err %s", common.BCS_BKCMDB_SYNC_DIR_WORKER,
+				err.Error())
 		}
 	}
 

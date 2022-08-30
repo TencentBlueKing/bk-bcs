@@ -36,9 +36,12 @@ const (
 type ScopeType string
 
 const (
-	ScopeProjectId   ScopeType = "project_id"   // 项目Id
+	// ScopeProjectId xxx
+	ScopeProjectId ScopeType = "project_id" // 项目Id
+	// ScopeProjectCode xxx
 	ScopeProjectCode ScopeType = "project_code" // 项目Code
-	ScopeClusterId   ScopeType = "cluster_id"   // 集群Id
+	// ScopeClusterId xxx
+	ScopeClusterId ScopeType = "cluster_id" // 集群Id
 )
 
 // Scope 权限控制，格式如cluster_id: "RE_BCS-K8S-40000", 多个取且关系
@@ -47,7 +50,7 @@ type Scope map[ScopeType]string
 // LabelMatchers :
 type LabelMatchers []*labels.Matcher
 
-// Matchs : 多个是且的关系, 注意, 只匹配单个
+// Matches : 多个是且的关系, 注意, 只匹配单个
 func (m *LabelMatchers) Matches(name ScopeType, value string) bool {
 	for _, matcher := range *m {
 		if matcher.Name != string(name) {
@@ -76,7 +79,7 @@ type Credential struct {
 	scopeMatcher   []*LabelMatchers    `yaml:"-"`
 }
 
-// InitCred
+// InitCred xxx
 func (c *Credential) InitCred() error {
 	if len(c.Scopes) == 0 {
 		return errors.New("scopes is required")

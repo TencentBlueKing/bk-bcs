@@ -22,12 +22,12 @@ type ProjectError struct {
 	msg  string
 }
 
-// Error ...
+// Error xxx
 func (e *ProjectError) Error() string {
 	return e.msg
 }
 
-// Code ...
+// Code xxx
 func (e *ProjectError) Code() uint32 {
 	return e.code
 }
@@ -37,57 +37,57 @@ func NewProjectError(code uint32, msg string, extra ...interface{}) *ProjectErro
 	return &ProjectError{code: code, msg: fmt.Sprintf(msg, extra...)}
 }
 
-// NewParamErr ...
+// NewParamErr xxx
 func NewParamErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(ParamErr, ParamErrMsg, msg...)
 }
 
-// NewInnerErr ...
+// NewInnerErr xxx
 func NewInnerErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(InnerErr, InnerErrMsg, msg...)
 }
 
-// NewDBErr ...
+// NewDBErr xxx
 func NewDBErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(DBErr, DBErrMsg, msg...)
 }
 
-// NewAuthErr ...
+// NewAuthErr xxx
 func NewAuthErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(UnauthErr, UnauthErrMsg, msg...)
 }
 
-// NewIAMClientErr ...
+// NewIAMClientErr xxx
 func NewIAMClientErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(IAMClientErr, IAMClientErrMsg, msg...)
 }
 
-// NewIAMOPErr ...
+// NewIAMOPErr xxx
 func NewIAMOPErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(IAMOPErr, IAMOPErrMsg, msg...)
 }
 
-// NewRequestIAMErr ...
+// NewRequestIAMErr xxx
 func NewRequestIAMErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(RequestIAMErr, RequestIAMErrMsg, msg...)
 }
 
-// NotFoundHeaderUserErr ...
+// NewNotFoundHeaderUserErr xxx
 func NewNotFoundHeaderUserErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(NotFoundHeaderUserErr, NotFoundHeaderUserErrMsg, msg...)
 }
 
-// NewRequestCMDBErr ...
+// NewRequestCMDBErr xxx
 func NewRequestCMDBErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(RequestCMDBErr, RequestCMDBErrMsg, msg...)
 }
 
-// NewNoMaintainerRoleErr ...
+// NewNoMaintainerRoleErr xxx
 func NewNoMaintainerRoleErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(NoMaintainerRoleErr, NoMaintainerRoleErrMsg, msg...)
 }
 
-// NewRequestBCSCCErr ...
+// NewRequestBCSCCErr xxx
 func NewRequestBCSCCErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(RequestCMDBErr, RequestBCSCCErrMsg, msg...)
 }

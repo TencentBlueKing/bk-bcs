@@ -121,7 +121,8 @@ func (info *LogFileInfoType) Update(newinfo *LogFileInfoType) error {
 	//	0			n		delete (new label changed and new does not exist, should delete old)
 	if newValue != 0 {
 		if !same {
-			blog.Warnf("New config with metric label (%+v) already exists, it may be covered by the update operation", newLabelValue)
+			blog.Warnf("New config with metric label (%+v) already exists, it may be covered by the update operation",
+				newLabelValue)
 			info.delete(oldLabelValue)
 		}
 	} else {

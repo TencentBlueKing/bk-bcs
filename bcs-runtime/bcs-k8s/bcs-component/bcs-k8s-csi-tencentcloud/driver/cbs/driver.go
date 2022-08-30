@@ -26,10 +26,13 @@ import (
 )
 
 var (
-	DriverName     = "com.tencent.cloud.csi.cbs"
+	// DriverName xxx
+	DriverName = "com.tencent.cloud.csi.cbs"
+	// DriverVerision xxx
 	DriverVerision = "0.1.0"
 )
 
+// Driver xxx
 type Driver struct {
 	region    string
 	zone      string
@@ -37,6 +40,7 @@ type Driver struct {
 	secretKey string
 }
 
+// NewDriver xxx
 func NewDriver(region string, zone string, secretId string, secretKey string) (*Driver, error) {
 	driver := Driver{
 		zone:      zone,
@@ -48,6 +52,7 @@ func NewDriver(region string, zone string, secretId string, secretKey string) (*
 	return &driver, nil
 }
 
+// Run xxx
 func (drv *Driver) Run(endpoint *url.URL, cbsUrl string) error {
 	controller, err := newCbsController(drv.secretId, drv.secretKey, drv.region, drv.zone, cbsUrl)
 	if err != nil {
@@ -64,7 +69,8 @@ func (drv *Driver) Run(endpoint *url.URL, cbsUrl string) error {
 		return err
 	}
 
-	logGRPC := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	logGRPC := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler) (interface{}, error) {
 		glog.Infof("GRPC call: %s, request: %+v", info.FullMethod, req)
 		resp, err := handler(ctx, req)
 		if err != nil {

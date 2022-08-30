@@ -28,7 +28,7 @@ var (
 	ErrK8sConfigNotInited = errors.New("k8sConfig not inited")
 )
 
-// K8sConfig ...
+// K8sConfig xxx
 type K8sConfig struct {
 	Mater      string `json:"master"`
 	KubeConfig string `json:"kubeConfig"`

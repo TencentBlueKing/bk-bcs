@@ -145,7 +145,8 @@ func OpenTracingStreamClientInterceptor(tracer opentracing.Tracer, optFuncs ...O
 	}
 }
 
-func newOpenTracingClientStream(cs grpc.ClientStream, method string, desc *grpc.StreamDesc, clientSpan opentracing.Span, otgrpcOpts *options) grpc.ClientStream {
+func newOpenTracingClientStream(cs grpc.ClientStream, method string, desc *grpc.StreamDesc, clientSpan opentracing.Span,
+	otgrpcOpts *options) grpc.ClientStream {
 	// Grab the client stream context because when the finish function or the goroutine below will be
 	// executed it's not guaranteed cs.Context() will be valid.
 	csCtx := cs.Context()

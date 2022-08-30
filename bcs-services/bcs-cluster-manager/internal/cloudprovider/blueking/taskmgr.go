@@ -56,7 +56,7 @@ func newtask() *Task {
 	return task
 }
 
-//Task background task manager
+// Task background task manager
 type Task struct {
 	works map[string]interface{}
 }
@@ -66,7 +66,7 @@ func (t *Task) Name() string {
 	return cloudName
 }
 
-//GetAllTask register all backgroup task for worker running
+// GetAllTask register all backgroup task for worker running
 func (t *Task) GetAllTask() map[string]interface{} {
 	return t.works
 }
@@ -315,7 +315,8 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 }
 
 // BuildAddNodesToClusterTask build addNodes task
-func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	// addNodesToCluster has only two steps:
 	// 1. call bkops interface to add nodes to cluster
 	// 2. update DB operation
@@ -425,7 +426,8 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 }
 
 // BuildRemoveNodesFromClusterTask build removeNodes task
-func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
 	// 1. call blueking bkops to delete node
 	// 2. update node DB info when delete node successful
@@ -447,7 +449,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		nodeIPs = append(nodeIPs, node.InnerIP)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -472,13 +474,15 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 
 	// step1: build bkops task
 	// validate bkops config
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.DeleteNodesFromCluster !=
+		nil {
 		action := opt.Cloud.ClusterManagement.DeleteNodesFromCluster
 
 		for i := range action.PreActions {
 			plugin, ok := action.Plugins[action.PreActions[i]]
 			if !ok {
-				errMsg := fmt.Sprintf("cloud clusterManagerment removeNodesFromCluster preActions %s not exist", action.PreActions[i])
+				errMsg := fmt.Sprintf("cloud clusterManagerment removeNodesFromCluster preActions %s not exist",
+					action.PreActions[i])
 				return nil, fmt.Errorf("%s BuildRemoveNodesFromClusterTask failed: %v", cloudName, errMsg)
 			}
 			stepName := cloudprovider.BKSOPTask + "-" + action.PreActions[i]
@@ -524,27 +528,28 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	return task, nil
 }
 
-//BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
+// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 // including remove nodes from NodeGroup, clean data in nodes
 func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
-	//build task step1: move nodes out of nodegroup
-	//step2: delete nodes in cluster
-	//step3: delete nodes record in local storage
+	// build task step1: move nodes out of nodegroup
+	// step2: delete nodes in cluster
+	// step3: delete nodes record in local storage
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-//BuildScalingNodesTask when scaling nodes, we need to create background
+// BuildScalingNodesTask when scaling nodes, we need to create background
 // task to verify scaling status and update new nodes to local storage
-func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup, opt *cloudprovider.TaskOptions) (*proto.Task, error) {
-	//validate request params
+func (t *Task) BuildScalingNodesTask(scaling uint32, group *proto.NodeGroup,
+	opt *cloudprovider.TaskOptions) (*proto.Task, error) {
+	// validate request params
 	return nil, nil
 }
 
-//BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
-//task to clean all nodes in nodegroup, release all resource in cloudprovider,
-//finnally delete nodes information in local storage.
-//@param group: need to delete
+// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
+// task to clean all nodes in nodegroup, release all resource in cloudprovider,
+// finnally delete nodes information in local storage.
+// @param group: need to delete
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	return nil, nil
@@ -553,7 +558,8 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 // BuildCreateNodeGroupTask when create nodegroup, we need to create background task,
 // task will create nodegroup in cloud, and install clusterautoscaler on cluster,
 // then wait for nodepool ready.
-func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task, error) {
+func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task,
+	error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -563,26 +569,31 @@ func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 }
 
 // BuildMoveNodesToGroupTask when create cluster, we need to create background task,
-func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // BuildUpdateDesiredNodesTask when update cluster, we need to create background task,
-func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
+	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // BuildSwitchNodeGroupAutoScalingTask switch nodegroup auto scaling
-func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool,
+	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // BuildUpdateAutoScalingOptionTask update auto scaling option
-func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption,
+	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // BuildSwitchAutoScalingOptionStatusTask switch auto scaling option status
-func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

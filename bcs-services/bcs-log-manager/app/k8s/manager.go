@@ -74,7 +74,8 @@ var (
 
 func init() {
 	BKDataAPIConfigKind = reflect.TypeOf(bkdatav1.BKDataApiConfig{}).Name()
-	BKDataAPIConfigGroupVersion = fmt.Sprintf("%s/%s", bkdatav1.SchemeGroupVersion.Group, bkdatav1.SchemeGroupVersion.Version)
+	BKDataAPIConfigGroupVersion = fmt.Sprintf("%s/%s", bkdatav1.SchemeGroupVersion.Group,
+		bkdatav1.SchemeGroupVersion.Version)
 	LogConfigKind = reflect.TypeOf(bcsv1.BcsLogConfig{}).Name()
 	LogConfigAPIVersion = fmt.Sprintf("%s/%s", bcsv1.SchemeGroupVersion.Group, bcsv1.SchemeGroupVersion.Version)
 }
@@ -107,7 +108,7 @@ func NewManager(conf *config.ManagerConfig) LogManagerInterface {
 		return nil
 	}
 
-	//internal clientset for informer BKDataApiConfig Crd
+	// internal clientset for informer BKDataApiConfig Crd
 	manager.bkDataAPIConfigClientset, err = internalclientset.NewForConfig(restConf)
 	if err != nil {
 		blog.Errorf("build BKDataApiConfig clientset by kubeconfig %s error %s", conf.KubeConfig, err.Error())
@@ -118,7 +119,7 @@ func NewManager(conf *config.ManagerConfig) LogManagerInterface {
 	internalFactory.Start(conf.StopCh)
 	// Wait for all caches to sync.
 	internalFactory.WaitForCacheSync(conf.StopCh)
-	//add k8s resources event handler functions
+	// add k8s resources event handler functions
 	manager.bkDataAPIConfigInformer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			UpdateFunc: manager.handleUpdatedBKDataAPIConfig,
@@ -214,6 +215,7 @@ func (m *LogManager) Start() {
 	go m.run()
 }
 
+// run xxx
 // start log manager
 func (m *LogManager) run() {
 	m.addSystemCollectionConfig()
@@ -296,6 +298,7 @@ func (m *LogManager) run() {
 	}
 }
 
+// handleUpdatedBKDataAPIConfig xxx
 // get dataid from crd
 func (m *LogManager) handleUpdatedBKDataAPIConfig(oldobj, newobj interface{}) {
 	config, ok := newobj.(*bkdatav1.BKDataApiConfig)

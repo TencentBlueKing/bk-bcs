@@ -23,22 +23,22 @@ import (
 // Config item for BlueKing Auth Center
 // AuthCenter requires AccessToken for authorization
 type Config struct {
-	//Hosts AuthCenter hosts, default https
+	// Hosts AuthCenter hosts, default https
 	Hosts []string
-	//config for https, when setting tls, use https instead
+	// config for https, when setting tls, use https instead
 	TLSConfig   *tls.Config
 	AccessToken string
 }
 
 // Client BlueKing Auth Center interface difinition
 type Client interface {
-	//QueryProjectUsers list all project users
+	// QueryProjectUsers list all project users
 	QueryProjectUsers(projectID string) ([]string, error)
 }
 
 // NewAuthClient create authClient instance
 func NewAuthClient(cfg *Config) (Client, error) {
-	//validate config
+	// validate config
 	if len(cfg.Hosts) == 0 {
 		return nil, fmt.Errorf("Lost hosts config item(required)")
 	}
@@ -66,7 +66,7 @@ type authClient struct {
 	client *paasclient.RESTClient
 }
 
-//QueryProjectUsers list all project users
+// QueryProjectUsers list all project users
 func (c *authClient) QueryProjectUsers(projectID string) ([]string, error) {
 	response := &UsersQueryResponse{}
 	err := c.client.Get().

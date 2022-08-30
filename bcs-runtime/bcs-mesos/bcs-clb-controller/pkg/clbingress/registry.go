@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-clb-controller/pkg/model"
 )
 
+// Registry xxx
 // IngressRegistry interface for clb ingress rule discovery
 type Registry interface {
 	AddIngressHandler(handler model.EventHandler)

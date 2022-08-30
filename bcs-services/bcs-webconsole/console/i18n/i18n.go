@@ -11,6 +11,7 @@
  *
  */
 
+// Package i18n xxx
 package i18n
 
 import (
@@ -21,7 +22,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-// makeAceptLanguage : 合法的语言列表
+// makeAcceptLanguage : 合法的语言列表
 func makeAcceptLanguage() (acceptLanguage []language.Tag) {
 	langMap := map[string]language.Tag{}
 	for _, v := range availableLanguage {
@@ -33,7 +34,7 @@ func makeAcceptLanguage() (acceptLanguage []language.Tag) {
 	return
 }
 
-// getLangHandler ...
+// getLangHandler xxx
 func getLangHandler(c *gin.Context, defaultLng string) string {
 	if c == nil || c.Request == nil {
 		return defaultLng

@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// FormatCRD ...
+// FormatCRD xxx
 func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["name"] = mapx.GetStr(manifest, "metadata.name")
@@ -32,19 +32,19 @@ func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatCObj ...
+// FormatCObj xxx
 func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
-// FormatGDeploy ...
+// FormatGDeploy xxx
 func FormatGDeploy(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
 	return ret
 }
 
-// 根据 CRD 配置解析 cobj ApiVersion
+// parseCObjAPIVersion 根据 CRD 配置解析 cobj ApiVersion
 // ref: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions
 func parseCObjAPIVersion(manifest map[string]interface{}) string {
 	group := mapx.GetStr(manifest, "spec.group")
@@ -67,7 +67,7 @@ func parseCObjAPIVersion(manifest map[string]interface{}) string {
 	return fmt.Sprintf("%s/v1alpha1", group)
 }
 
-// parseCRDAdditionalColumns ...
+// parseCRDAdditionalColumns xxx
 func parseCRDAdditionalColumns(manifest map[string]interface{}) (addColumns []interface{}) {
 	// CRD v1beta1 spec.additionalPrinterColumns
 	rawAddColumns := mapx.GetList(manifest, "spec.additionalPrinterColumns")

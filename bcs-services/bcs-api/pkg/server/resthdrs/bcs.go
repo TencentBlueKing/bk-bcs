@@ -24,11 +24,13 @@ import (
 	"time"
 )
 
+// QueryBCSCredentialsForm xxx
 type QueryBCSCredentialsForm struct {
 	ProjectID string `json:"project_id" validate:"required"`
 	ClusterID string `json:"cluster_id" validate:"required"`
 }
 
+// QueryBCSCredentialsByClusterIdForm xxx
 type QueryBCSCredentialsByClusterIdForm struct {
 	ClusterID string `json:"cluster_id" validate:"required"`
 }
@@ -57,7 +59,8 @@ func QueryBCSClusterByID(request *restful.Request, response *restful.Response) {
 	if cluster == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		message := fmt.Sprintf("errcode: %d, cluster with project_id=%s cluster_id=%s not found", common.BcsErrApiBadRequest, form.ProjectID, form.ClusterID)
+		message := fmt.Sprintf("errcode: %d, cluster with project_id=%s cluster_id=%s not found", common.BcsErrApiBadRequest,
+			form.ProjectID, form.ClusterID)
 		blog.Warnf(message)
 		WriteNotFoundError(response, "CLUSTER_NOT_FOUND", message)
 		return

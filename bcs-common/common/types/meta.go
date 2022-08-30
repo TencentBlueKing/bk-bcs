@@ -19,35 +19,51 @@ import (
 	"time"
 )
 
-//BcsDataType data type for bcs-api & client
+// BcsDataType data type for bcs-api & client
 type BcsDataType string
 
 const (
-	BcsDataType_APP              BcsDataType = "application"
-	BcsDataType_PROCESS          BcsDataType = "process"
-	BcsDataType_POD              BcsDataType = "taskgroup"
-	BcsDataType_SECRET           BcsDataType = "secret"
-	BcsDataType_CONFIGMAP        BcsDataType = "configmap"
-	BcsDataType_SERVICE          BcsDataType = "service"
-	BcsDataType_LOADBALANCE      BcsDataType = "loadbalance"
-	BcsDataType_HAPROXY          BcsDataType = "haproxy"
-	BcsDataType_EXPORTSERVICE    BcsDataType = "exportservice"
-	BcsDataType_DEPLOYMENT       BcsDataType = "deployment"
-	BcsDataType_CRR              BcsDataType = "crr"
-	BcsDataType_WebConsole       BcsDataType = "webconsole"
+	// BcsDataType_APP xxx
+	BcsDataType_APP BcsDataType = "application"
+	// BcsDataType_PROCESS xxx
+	BcsDataType_PROCESS BcsDataType = "process"
+	// BcsDataType_POD xxx
+	BcsDataType_POD BcsDataType = "taskgroup"
+	// BcsDataType_SECRET xxx
+	BcsDataType_SECRET BcsDataType = "secret"
+	// BcsDataType_CONFIGMAP xxx
+	BcsDataType_CONFIGMAP BcsDataType = "configmap"
+	// BcsDataType_SERVICE xxx
+	BcsDataType_SERVICE BcsDataType = "service"
+	// BcsDataType_LOADBALANCE xxx
+	BcsDataType_LOADBALANCE BcsDataType = "loadbalance"
+	// BcsDataType_HAPROXY xxx
+	BcsDataType_HAPROXY BcsDataType = "haproxy"
+	// BcsDataType_EXPORTSERVICE xxx
+	BcsDataType_EXPORTSERVICE BcsDataType = "exportservice"
+	// BcsDataType_DEPLOYMENT xxx
+	BcsDataType_DEPLOYMENT BcsDataType = "deployment"
+	// BcsDataType_CRR xxx
+	BcsDataType_CRR BcsDataType = "crr"
+	// BcsDataType_WebConsole xxx
+	BcsDataType_WebConsole BcsDataType = "webconsole"
+	// BcsDataType_Admissionwebhook xxx
 	BcsDataType_Admissionwebhook BcsDataType = "admissionwebhook"
-	BcsDataType_CRD              BcsDataType = "customresourcedefinition"
-	BcsDataType_PERMISSION       BcsDataType = "permission"
-	BcsDataType_Daemonset        BcsDataType = "daemonset"
+	// BcsDataType_CRD xxx
+	BcsDataType_CRD BcsDataType = "customresourcedefinition"
+	// BcsDataType_PERMISSION xxx
+	BcsDataType_PERMISSION BcsDataType = "permission"
+	// BcsDataType_Daemonset xxx
+	BcsDataType_Daemonset BcsDataType = "daemonset"
 )
 
-//TypeMeta for bcs data type
+// TypeMeta for bcs data type
 type TypeMeta struct {
 	APIVersion string      `json:"apiVersion"`
 	Kind       BcsDataType `json:"kind"`
 }
 
-//ObjectMeta for meta for datatype
+// ObjectMeta for meta for datatype
 type ObjectMeta struct {
 	Name              string            `json:"name"`
 	NameSpace         string            `json:"namespace"`
@@ -61,8 +77,9 @@ type ObjectMeta struct {
 	ResourceVersion string `json:"-"`
 }
 
+// MetaIsValid xxx
 func (r *ObjectMeta) MetaIsValid() error {
-	//name can't contains char '.'
+	// name can't contains char '.'
 	if strings.Contains(r.Name, ".") {
 		return fmt.Errorf("Name can't contains contains '.'")
 	}
@@ -101,67 +118,67 @@ func (in *ObjectMeta) DeepCopy() *ObjectMeta {
 	return out
 }
 
-//GetName for ObjectMeta
+// GetName for ObjectMeta
 func (om *ObjectMeta) GetName() string {
 	return om.Name
 }
 
-//SetName set object name
+// SetName set object name
 func (om *ObjectMeta) SetName(name string) {
 	om.Name = name
 }
 
-//GetNamespace for ObjectMeta
+// GetNamespace for ObjectMeta
 func (om *ObjectMeta) GetNamespace() string {
 	return om.NameSpace
 }
 
-//SetNamespace set object namespace
+// SetNamespace set object namespace
 func (om *ObjectMeta) SetNamespace(ns string) {
 	om.NameSpace = ns
 }
 
-//GetCreationTimestamp get create timestamp
+// GetCreationTimestamp get create timestamp
 func (om *ObjectMeta) GetCreationTimestamp() time.Time {
 	return om.CreationTimestamp
 }
 
-//SetCreationTimestamp set creat timestamp
+// SetCreationTimestamp set creat timestamp
 func (om *ObjectMeta) SetCreationTimestamp(timestamp time.Time) {
 	om.CreationTimestamp = timestamp
 }
 
-//GetLabels for ObjectMeta
+// GetLabels for ObjectMeta
 func (om *ObjectMeta) GetLabels() map[string]string {
 	return om.Labels
 }
 
-//SetLabels set objec labels
+// SetLabels set objec labels
 func (om *ObjectMeta) SetLabels(labels map[string]string) {
 	om.Labels = labels
 }
 
-//GetAnnotations for ObjectMeta
+// GetAnnotations for ObjectMeta
 func (om *ObjectMeta) GetAnnotations() map[string]string {
 	return om.Annotations
 }
 
-//SetAnnotations get annotation name
+// SetAnnotations get annotation name
 func (om *ObjectMeta) SetAnnotations(annotation map[string]string) {
 	om.Annotations = annotation
 }
 
-//GetClusterName get cluster name
+// GetClusterName get cluster name
 func (om *ObjectMeta) GetClusterName() string {
 	return om.ClusterName
 }
 
-//SetClusterName set cluster name
+// SetClusterName set cluster name
 func (om *ObjectMeta) SetClusterName(clusterName string) {
 	om.ClusterName = clusterName
 }
 
-//KeyToValue key/value structs
+// KeyToValue key/value structs
 type KeyToValue struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`

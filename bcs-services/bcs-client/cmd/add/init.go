@@ -19,7 +19,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewAddCommand sub command add registration
+// NewAddCommand sub command add registration
 func NewAddCommand() cli.Command {
 	return cli.Command{
 		Name:  "add",

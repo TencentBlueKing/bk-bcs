@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package options xxx
 package options
 
 // EtcdOption describe options for etcd

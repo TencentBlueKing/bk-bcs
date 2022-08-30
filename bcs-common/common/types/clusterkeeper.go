@@ -13,43 +13,51 @@
 
 package types
 
+// ClusterInfoItem xxx
 type ClusterInfoItem struct {
 	ClusterID   string           `json:"clusterid,omitempty"`
 	Type        string           `json:"type"`
 	ModuleInfos []ModuleInfoItem `json:"modules"`
 }
 
+// ModuleInfoItem xxx
 type ModuleInfoItem struct {
 	MasterModule []string `json:"mastermoudle"`
 	IPS          []string `json:"ips"`
 }
 
+// NewKeeperClusterInfoOutput xxx
 func NewKeeperClusterInfoOutput() *KeeperClusterInfoOutput {
 	return &KeeperClusterInfoOutput{
 		ClusterInfos: make(map[string]ClusterInfoItem),
 	}
 }
 
+// KeeperClusterInfoOutput xxx
 type KeeperClusterInfoOutput struct {
 	ClusterInfos map[string]ClusterInfoItem
 }
 
+// KeeperDBData xxx
 type KeeperDBData struct {
 	DBData []*DBDataItem `json:"clusterinfo"`
 }
 
+// NewDBDataItem xxx
 func NewDBDataItem() *DBDataItem {
 	return &DBDataItem{
 		Detail: make(map[string][]string),
 	}
 }
 
+// DBDataItem xxx
 type DBDataItem struct {
 	Type      string              `json:"type"`
 	ClusterID string              `json:"clusterid"`
 	Detail    map[string][]string `json:"detail"`
 }
 
+// ReqTran2DBFmt xxx
 func ReqTran2DBFmt(clusterInfo *ClusterInfoItem) (dbData *DBDataItem) {
 	dbDataItem := NewDBDataItem()
 	dbDataItem.Type = clusterInfo.Type
@@ -80,6 +88,7 @@ func ReqTran2DBFmt(clusterInfo *ClusterInfoItem) (dbData *DBDataItem) {
 	return dbDataItem
 }
 
+// AppendItem2DbData xxx
 func AppendItem2DbData(newData, srcData *DBDataItem) (dbData *DBDataItem) {
 	for newModule, newIps := range newData.Detail {
 		srcIps, ok := srcData.Detail[newModule]

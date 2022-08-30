@@ -125,8 +125,10 @@ func NewGameDeploymentController(
 
 	gdscheme.AddToScheme(scheme.Scheme)
 
-	preDeleteControl := predelete.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
-	preInplaceControl := preinplace.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
+	preDeleteControl := predelete.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(),
+		hookTemplateInformer.Lister())
+	preInplaceControl := preinplace.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(),
+		hookTemplateInformer.Lister())
 	postInpalceControl := postinplace.New(kubeClient, hookClient, recorder,
 		hookRunInformer.Lister(), hookTemplateInformer.Lister())
 	metrics := gdmetrics.NewMetrics()
@@ -153,7 +155,8 @@ func NewGameDeploymentController(
 			preDeleteControl,
 			metrics,
 		),
-		queue:                    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.GameDeploymentController),
+		queue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
+			constants.GameDeploymentController),
 		metrics:                  metrics,
 		revListerSynced:          revInformer.Informer().HasSynced,
 		podControl:               controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
@@ -181,7 +184,8 @@ func NewGameDeploymentController(
 				oldPS := old.(*gdv1alpha1.GameDeployment)
 				curPS := cur.(*gdv1alpha1.GameDeployment)
 				if oldPS.Status.Replicas != curPS.Status.Replicas {
-					klog.Infof("Observed updated replica count for GameDeployment: %v, %d->%d", curPS.Name, oldPS.Status.Replicas, curPS.Status.Replicas)
+					klog.Infof("Observed updated replica count for GameDeployment: %v, %d->%d", curPS.Name, oldPS.Status.Replicas,
+						curPS.Status.Replicas)
 				}
 				gdc.enqueueGameDeployment(cur)
 			},
@@ -318,7 +322,8 @@ func (gdc *GameDeploymentController) updatePod(old, cur interface{}) {
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
 		// Periodic resync will send update events for all known pods.
 		// Two different versions of the same pod will always have different RVs.
-		klog.V(4).Infof("Pod %s/%s update event trigger, but nothing changed, ResourceVersion: %s", curPod.Namespace, curPod.Name, curPod.ResourceVersion)
+		klog.V(4).Infof("Pod %s/%s update event trigger, but nothing changed, ResourceVersion: %s", curPod.Namespace,
+			curPod.Name, curPod.ResourceVersion)
 		return
 	}
 
@@ -354,7 +359,8 @@ func (gdc *GameDeploymentController) updatePod(old, cur interface{}) {
 			return
 		}
 		key := fmt.Sprintf("%s/%s", deploy.Namespace, deploy.Name)
-		klog.V(4).Infof("Pod %s updated, objectMeta %+v -> %+v, owner: %s.", curPod.Name, oldPod.ObjectMeta, curPod.ObjectMeta, key)
+		klog.V(4).Infof("Pod %s updated, objectMeta %+v -> %+v, owner: %s.", curPod.Name, oldPod.ObjectMeta,
+			curPod.ObjectMeta, key)
 		gdc.enqueueGameDeployment(deploy)
 		return
 	}
@@ -364,10 +370,12 @@ func (gdc *GameDeploymentController) updatePod(old, cur interface{}) {
 	if labelChanged || controllerRefChanged {
 		deploys := gdc.getDeploymentsForPod(curPod)
 		if len(deploys) == 0 {
-			klog.V(4).Infof("Pod %s/%s is orphan in updated, but not controlled by GameDeployment-Operator", curPod.Namespace, curPod.Name)
+			klog.V(4).Infof("Pod %s/%s is orphan in updated, but not controlled by GameDeployment-Operator", curPod.Namespace,
+				curPod.Name)
 			return
 		}
-		klog.Infof("Orphan Pod %s/%s updated, objectMeta %+v -> %+v.", curPod.Namespace, curPod.Name, oldPod.ObjectMeta, curPod.ObjectMeta)
+		klog.Infof("Orphan Pod %s/%s updated, objectMeta %+v -> %+v.", curPod.Namespace, curPod.Name, oldPod.ObjectMeta,
+			curPod.ObjectMeta)
 		for _, deploy := range deploys {
 			gdc.enqueueGameDeployment(deploy)
 		}
@@ -410,7 +418,7 @@ func (gdc *GameDeploymentController) deletePod(obj interface{}) {
 	gdc.enqueueGameDeployment(deploy)
 }
 
-// getGameDeploymentForPod returns a list of GameDeployments that potentially match
+// getDeploymentsForPod returns a list of GameDeployments that potentially match
 // a given pod.
 func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*gdv1alpha1.GameDeployment {
 	deploys, err := util.GetPodGameDeployments(pod, gdc.gdLister)
@@ -432,7 +440,8 @@ func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*gdv1al
 // resolveControllerRef returns the controller referenced by a ControllerRef,
 // or nil if the ControllerRef could not be resolved to a matching controller
 // of the correct Kind.
-func (gdc *GameDeploymentController) resolveControllerRef(namespace string, controllerRef *metav1.OwnerReference) *gdv1alpha1.GameDeployment {
+func (gdc *GameDeploymentController) resolveControllerRef(namespace string,
+	controllerRef *metav1.OwnerReference) *gdv1alpha1.GameDeployment {
 	// Parse the Group out of the OwnerReference to compare it to what was parsed out of the requested OwnerType
 	refGV, err := schema.ParseGroupVersion(controllerRef.APIVersion)
 	if err != nil {
@@ -469,6 +478,7 @@ func (gdc *GameDeploymentController) enqueueGameDeployment(obj interface{}) {
 	gdc.queue.Add(key)
 }
 
+// enqueueGameDeploymentAfter xxx
 // obj could be an GameDeployment, or a DeletionFinalStateUnknown marker item.
 func (gdc *GameDeploymentController) enqueueGameDeploymentAfter(obj interface{}, after time.Duration) {
 	key, err := controller.KeyFunc(obj)
@@ -604,7 +614,8 @@ func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *gdv1alpha1
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, freshErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(context.TODO(), deploy.Name, metav1.GetOptions{})
+		fresh, freshErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(context.TODO(), deploy.Name,
+			metav1.GetOptions{})
 		if freshErr != nil {
 			return nil, freshErr
 		}

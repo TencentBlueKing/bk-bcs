@@ -14,7 +14,7 @@
 
 package model
 
-// Container ...
+// Container xxx
 type Container struct {
 	Basic    ContainerBasic   `structs:"basic"`
 	Command  ContainerCommand `structs:"command"`
@@ -26,14 +26,14 @@ type Container struct {
 	Mount    ContainerMount   `structs:"mount"`
 }
 
-// ContainerBasic ...
+// ContainerBasic xxx
 type ContainerBasic struct {
 	Name       string `structs:"name"`
 	Image      string `structs:"image"`
 	PullPolicy string `structs:"pullPolicy"`
 }
 
-// ContainerCommand ...
+// ContainerCommand xxx
 type ContainerCommand struct {
 	WorkingDir string   `structs:"workingDir"`
 	Stdin      bool     `structs:"stdin"`
@@ -43,12 +43,12 @@ type ContainerCommand struct {
 	Args       []string `structs:"args"`
 }
 
-// ContainerService ...
+// ContainerService xxx
 type ContainerService struct {
 	Ports []ContainerPort `structs:"ports"`
 }
 
-// ContainerPort ...
+// ContainerPort xxx
 type ContainerPort struct {
 	Name          string `structs:"name"`
 	ContainerPort int64  `structs:"containerPort"`
@@ -56,12 +56,12 @@ type ContainerPort struct {
 	HostPort      int64  `structs:"hostPort"`
 }
 
-// ContainerEnvs ...
+// ContainerEnvs xxx
 type ContainerEnvs struct {
 	Vars []EnvVar `structs:"vars"`
 }
 
-// EnvVar ...
+// EnvVar xxx
 type EnvVar struct {
 	Type   string `structs:"type"`
 	Name   string `structs:"name"`
@@ -69,13 +69,13 @@ type EnvVar struct {
 	Value  string `structs:"value"`
 }
 
-// ContainerHealthz ...
+// ContainerHealthz xxx
 type ContainerHealthz struct {
 	ReadinessProbe Probe `structs:"readinessProbe"`
 	LivenessProbe  Probe `structs:"livenessProbe"`
 }
 
-// Probe ...
+// Probe xxx
 type Probe struct {
 	Enabled          bool     `structs:"enabled"`          // 是否启用
 	PeriodSecs       int64    `structs:"periodSecs"`       // 检查间隔
@@ -89,19 +89,19 @@ type Probe struct {
 	Command          []string `structs:"command"`
 }
 
-// ContainerRes ...
+// ContainerRes xxx
 type ContainerRes struct {
 	Requests ResRequirement `structs:"requests"`
 	Limits   ResRequirement `structs:"limits"`
 }
 
-// ResRequirement ...
+// ResRequirement xxx
 type ResRequirement struct {
 	CPU    int `structs:"cpu"`
 	Memory int `structs:"memory"`
 }
 
-// SecurityCtx ...
+// SecurityCtx xxx
 type SecurityCtx struct {
 	Privileged               bool         `structs:"privileged"`               // 特权模式
 	AllowPrivilegeEscalation bool         `structs:"allowPrivilegeEscalation"` // 允许提权
@@ -114,18 +114,18 @@ type SecurityCtx struct {
 	SELinuxOpt               SELinuxOpt   `structs:"seLinuxOpt" mapstructure:"seLinuxOptions"`
 }
 
-// Capabilities ...
+// Capabilities xxx
 type Capabilities struct {
 	Add  []string `structs:"add"`
 	Drop []string `structs:"drop"`
 }
 
-// ContainerMount ...
+// ContainerMount xxx
 type ContainerMount struct {
 	Volumes []MountVolume `structs:"volumes"`
 }
 
-// MountVolume ...
+// MountVolume xxx
 type MountVolume struct {
 	Name      string `structs:"name"`
 	MountPath string `structs:"mountPath"`

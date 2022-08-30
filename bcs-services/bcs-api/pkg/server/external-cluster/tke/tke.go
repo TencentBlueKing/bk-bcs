@@ -11,6 +11,7 @@
  *
  */
 
+// Package tke xxx
 package tke
 
 import (
@@ -23,11 +24,16 @@ import (
 )
 
 const (
+	// TkeSdkToGetCredentials xxx
 	TkeSdkToGetCredentials = "DescribeClusterSecurityInfo"
-	TkeSdkToBindLb         = "BindMasterVipLoadBalancer"
-	TkeSdkToGetMasterVip   = "GetMasterVip"
-	HttpScheme             = "https://"
-	TkeClusterPort         = ":443"
+	// TkeSdkToBindLb xxx
+	TkeSdkToBindLb = "BindMasterVipLoadBalancer"
+	// TkeSdkToGetMasterVip xxx
+	TkeSdkToGetMasterVip = "GetMasterVip"
+	// HttpScheme xxx
+	HttpScheme = "https://"
+	// TkeClusterPort xxx
+	TkeClusterPort = ":443"
 )
 
 type tkeCluster struct {
@@ -36,43 +42,52 @@ type tkeCluster struct {
 	TkeClusterRegion string
 }
 
+// Client xxx
 type Client struct {
 	*common.Client
 }
 
+// Response xxx
 type Response struct {
 	Code     int    `json:"code"`
 	Message  string `json:"message"`
 	CodeDesc string `json:"codeDesc"`
 }
 
+// DescribeClusterSecurityInfoArgs xxx
 type DescribeClusterSecurityInfoArgs struct {
 	ClusterId string `qcloud_arg:"clusterId"`
 }
 
+// BindMasterVipLoadBalancerArgs xxx
 type BindMasterVipLoadBalancerArgs struct {
 	ClusterId string `qcloud_arg:"clusterId"`
 	SubnetId  string `qcloud_arg:"subnetId"`
 }
 
+// BindMasterVipLoadBalanceResponse xxx
 type BindMasterVipLoadBalanceResponse struct {
 	Response
 	Data interface{}
 }
 
+// GetMasterVipArgs xxx
 type GetMasterVipArgs struct {
 	ClusterId string `qcloud_arg:"clusterId"`
 }
 
+// GetMasterVipResponse xxx
 type GetMasterVipResponse struct {
 	Response
 	Data GetMasterVipRespData
 }
 
+// GetMasterVipRespData xxx
 type GetMasterVipRespData struct {
 	Status string `json:"status"`
 }
 
+// DescribeClusterSecurityInfoRespData xxx
 type DescribeClusterSecurityInfoRespData struct {
 	UserName                string `json:"userName"`
 	Domain                  string `json:"domain"`
@@ -82,11 +97,13 @@ type DescribeClusterSecurityInfoRespData struct {
 	Password                string `json:"password"`
 }
 
+// DescribeClusterSecurityInfoResponse xxx
 type DescribeClusterSecurityInfoResponse struct {
 	Response
 	Data DescribeClusterSecurityInfoRespData `json:"data"`
 }
 
+// NewTkeCluster xxx
 func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cluster.ExternalCluster {
 	return &tkeCluster{
 		ClusterId:        clusterId,
@@ -95,6 +112,7 @@ func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cl
 	}
 }
 
+// SyncClusterCredentials xxx
 func (t *tkeCluster) SyncClusterCredentials() error {
 	tkeClient, err := NewClient(t.TkeClusterRegion, "GET")
 	if err != nil {
@@ -110,7 +128,8 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 		return fmt.Errorf("error when invoking tke api %s: %s", TkeSdkToGetCredentials, err.Error())
 	}
 	if response.Code != 0 {
-		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetCredentials, t.TkeClusterId, response.CodeDesc, response.Message)
+		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetCredentials, t.TkeClusterId,
+			response.CodeDesc, response.Message)
 	}
 
 	if response.Data.PgwEndpoint == "" || response.Data.Domain == "" {
@@ -119,13 +138,15 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 
 	serverAddress := HttpScheme + response.Data.PgwEndpoint + TkeClusterPort
 	clusterDomainUrl := HttpScheme + response.Data.Domain + "/"
-	err = sqlstore.SaveCredentials(t.ClusterId, serverAddress, response.Data.CertificationAuthority, response.Data.Password, clusterDomainUrl)
+	err = sqlstore.SaveCredentials(t.ClusterId, serverAddress, response.Data.CertificationAuthority,
+		response.Data.Password, clusterDomainUrl)
 	if err != nil {
 		return fmt.Errorf("error when updating external cluster credentials to db: %s", err.Error())
 	}
 	return nil
 }
 
+// BindClusterLb xxx
 func (t *tkeCluster) BindClusterLb() error {
 	tkeClient, err := NewClient(t.TkeClusterRegion, "GET")
 	if err != nil {
@@ -147,11 +168,13 @@ func (t *tkeCluster) BindClusterLb() error {
 		return fmt.Errorf("error when invoking tke api %s: %s", TkeSdkToBindLb, err.Error())
 	}
 	if response.Code != 0 {
-		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToBindLb, t.TkeClusterId, response.CodeDesc, response.Message)
+		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToBindLb, t.TkeClusterId,
+			response.CodeDesc, response.Message)
 	}
 	return nil
 }
 
+// GetMasterVip xxx
 func (t *tkeCluster) GetMasterVip() (string, error) {
 	tkeClient, err := NewClient(t.TkeClusterRegion, "GET")
 	if err != nil {
@@ -167,12 +190,14 @@ func (t *tkeCluster) GetMasterVip() (string, error) {
 		return "", fmt.Errorf("error when invoking tke api %s: %s", TkeSdkToGetMasterVip, err.Error())
 	}
 	if response.Code != 0 {
-		return "", fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetMasterVip, t.TkeClusterId, response.CodeDesc, response.Message)
+		return "", fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetMasterVip, t.TkeClusterId,
+			response.CodeDesc, response.Message)
 	}
 
 	return response.Data.Status, nil
 }
 
+// NewClient xxx
 func NewClient(tkeClusterRegion, method string) (*Client, error) {
 	tkeSecretId := config.TkeConf.SecretId
 	tkeSecretKey := config.TkeConf.SecretKey

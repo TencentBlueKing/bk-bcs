@@ -48,7 +48,7 @@ func main() {
 	conf := app.ParseConfig(op)
 	app.RunPrometheusMetricsServer(conf)
 	app.Run(conf)
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}

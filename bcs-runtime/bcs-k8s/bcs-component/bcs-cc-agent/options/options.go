@@ -11,13 +11,14 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//ServerOption is option in flags
+// ServerOption is option in flags
 type ServerOption struct {
 	conf.FileConfig
 	conf.MetricConfig
@@ -33,12 +34,13 @@ type ServerOption struct {
 	BkUsername string `json:"bk_username" value:"" usage:"bk username to call esb cc api"`
 }
 
-//NewServerOption create a ServerOption object
+// NewServerOption create a ServerOption object
 func NewServerOption() *ServerOption {
 	s := ServerOption{}
 	return &s
 }
 
+// Parse xxx
 func Parse(ops *ServerOption) error {
 	conf.Parse(ops)
 	return nil

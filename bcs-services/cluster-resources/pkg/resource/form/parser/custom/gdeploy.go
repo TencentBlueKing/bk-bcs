@@ -35,7 +35,7 @@ func ParseGDeploy(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(deploy)
 }
 
-// ParseGDeploySpec ...
+// ParseGDeploySpec xxx
 func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) {
 	ParseGDeployReplicas(manifest, &spec.Replicas)
 	ParseGWorkloadGracefulManage(manifest, &spec.GracefulManage)
@@ -50,7 +50,7 @@ func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) 
 	workload.ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseGDeployReplicas ...
+// ParseGDeployReplicas xxx
 func ParseGDeployReplicas(manifest map[string]interface{}, replicas *model.GDeployReplicas) {
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", workload.DefaultUpdateStrategy).(string)
@@ -69,7 +69,7 @@ func ParseGDeployReplicas(manifest map[string]interface{}, replicas *model.GDepl
 	).(int64)
 }
 
-// ParseGWorkloadGracefulManage ...
+// ParseGWorkloadGracefulManage xxx
 func ParseGWorkloadGracefulManage(manifest map[string]interface{}, man *model.GWorkloadGracefulManage) {
 	if hook, err := mapx.GetItems(manifest, "spec.preDeleteUpdateStrategy.hook"); err == nil {
 		man.PreDeleteHook = genGWorkloadHookSpec(hook.(map[string]interface{}))

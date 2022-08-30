@@ -119,7 +119,8 @@ func (action *CreateArgocdPluginAction) hasValidProject(p *v1alpha1.ArgocdPlugin
 	return nil
 }
 
-func (action *CreateArgocdPluginAction) setResp(err common.ArgocdServerError, message string, p *v1alpha1.ArgocdPlugin) {
+func (action *CreateArgocdPluginAction) setResp(err common.ArgocdServerError, message string,
+	p *v1alpha1.ArgocdPlugin) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	action.resp.Code = &code

@@ -71,7 +71,7 @@ func GetPodEntryValue(ctx context.Context, clusterID, namespace, podname, key st
 	return "", errors.Errorf("key %s not in annotations or labels", key)
 }
 
-// 单个Pod, 查询缓存
+// GetPod 单个Pod, 查询缓存
 func GetPod(ctx context.Context, clusterID, namespace, podname string) (*Workload, error) {
 	cacheKey := fmt.Sprintf("components.k8sclient.GetPodLabel:%s.%s.%s", clusterID, namespace, podname)
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {

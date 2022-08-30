@@ -20,10 +20,12 @@ import (
 
 // Manager is an interface
 type Manager interface {
-	//start
+	// Start TODO
+	// start
 	Start() error
 
-	//handler container web console
+	// StartExec TODO
+	// handler container web console
 	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
 	CreateExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
 	ResizeExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)

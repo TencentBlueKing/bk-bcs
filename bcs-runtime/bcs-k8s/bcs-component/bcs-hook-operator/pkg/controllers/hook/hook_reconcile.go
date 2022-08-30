@@ -310,7 +310,7 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 	wg.Wait()
 }
 
-// asssessRunStatus assesses the overall status of this HookRun
+// assessRunStatus assesses the overall status of this HookRun
 // If any metric is not yet completed, the HookRun is still considered Running
 // Once all metrics are complete, the worst status is used as the overall HookRun status
 func (hc *HookController) assessRunStatus(run *v1alpha1.HookRun) v1alpha1.HookPhase {

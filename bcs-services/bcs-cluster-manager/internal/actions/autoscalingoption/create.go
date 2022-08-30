@@ -33,9 +33,9 @@ type CreateAction struct {
 	req   *cmproto.CreateAutoScalingOptionRequest
 	resp  *cmproto.CreateAutoScalingOptionResponse
 
-	//inner data for creation
+	// inner data for creation
 	cluster *cmproto.Cluster
-	//cloud for implementation
+	// cloud for implementation
 	cloud *cmproto.Cloud
 }
 
@@ -73,7 +73,7 @@ func (ca *CreateAction) generateClusterAutoScalingOption() *cmproto.ClusterAutoS
 
 func (ca *CreateAction) createAutoScalingOption() error {
 	option := ca.generateClusterAutoScalingOption()
-	//check default value
+	// check default value
 	if len(option.Expander) == 0 {
 		option.Expander = "random"
 	}

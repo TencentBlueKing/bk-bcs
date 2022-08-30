@@ -32,11 +32,11 @@ import (
 )
 
 var (
-	// UnauthorizedError
+	// UnauthorizedError xxx
 	UnauthorizedError = errors.New("用户未登入")
 )
 
-// RequestIdGenerator
+// RequestIdGenerator xxx
 func RequestIdGenerator() string {
 	uid := uuid.New().String()
 	requestId := strings.Replace(uid, "-", "", -1)
@@ -126,7 +126,7 @@ func APIAuthRequired() gin.HandlerFunc {
 	}
 }
 
-// EnvToken
+// EnvToken xxx
 type EnvToken struct {
 	Username string
 }
@@ -184,13 +184,13 @@ func BCSJWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 	return claims, nil
 }
 
-// APIGWApp
+// APIGWApp xxx
 type APIGWApp struct {
 	AppCode  string `json:"app_code"`
 	Verified bool   `json:"verified"`
 }
 
-// APIGWUser
+// APIGWUser xxx
 type APIGWUser struct {
 	Username string `json:"username"`
 	Verified bool   `json:"verified"`
@@ -203,7 +203,7 @@ type APIGWToken struct {
 	*jwt.StandardClaims
 }
 
-// String
+// String xxx
 func (a *APIGWToken) String() string {
 	return fmt.Sprintf("<%s, %v>", a.App.AppCode, a.App.Verified)
 }
@@ -297,7 +297,7 @@ func initContextWithPortalSession(c *gin.Context, authCtx *AuthContext) bool {
 	return true
 }
 
-// GetAuthContext 查询鉴权信息
+// MustGetAuthContext 查询鉴权信息
 func MustGetAuthContext(c *gin.Context) *AuthContext {
 	authCtxObj := c.MustGet("auth_context")
 
@@ -309,7 +309,7 @@ func MustGetAuthContext(c *gin.Context) *AuthContext {
 	return authCtx
 }
 
-// GetProjectIdOrCode
+// GetProjectIdOrCode xxx
 func GetProjectIdOrCode(c *gin.Context) string {
 	if c.Param("projectId") != "" {
 		return c.Param("projectId")
@@ -317,7 +317,7 @@ func GetProjectIdOrCode(c *gin.Context) string {
 	return ""
 }
 
-// GetClusterId
+// GetClusterId xxx
 func GetClusterId(c *gin.Context) string {
 	if c.Param("clusterId") != "" {
 		return c.Param("clusterId")
@@ -325,7 +325,7 @@ func GetClusterId(c *gin.Context) string {
 	return ""
 }
 
-// GetNamespace
+// GetNamespace xxx
 func GetNamespace(c *gin.Context) string {
 	if c.Param("namespace") != "" {
 		return c.Param("namespace")
@@ -336,7 +336,7 @@ func GetNamespace(c *gin.Context) string {
 	return ""
 }
 
-// GetSessionId
+// GetSessionId xxx
 func GetSessionId(c *gin.Context) string {
 	if c.Param("sessionId") != "" {
 		return c.Param("sessionId")

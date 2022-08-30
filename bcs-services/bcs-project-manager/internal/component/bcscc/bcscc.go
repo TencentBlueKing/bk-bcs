@@ -14,6 +14,7 @@
 
 // NOTE: 在项目完全切换的空窗期，需要向 BCS CC 写入项目数据，防止出现数据不一致情况；待稳定后，删除下面功能
 
+// Package bcscc xxx
 package bcscc
 
 import (
@@ -74,7 +75,7 @@ func UpdateProject(p *pm.Project) error {
 	return requestAndParse(req)
 }
 
-// 组装数据
+// constructProjectData 组装数据
 func constructProjectData(p *pm.Project) map[string]interface{} {
 	// biz id to int
 	bizIDInt, _ := strconv.Atoi(p.BusinessID)

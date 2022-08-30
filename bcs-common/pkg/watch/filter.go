@@ -19,10 +19,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-//SelectFunc custom function to verify how filter acts
+// SelectFunc custom function to verify how filter acts
 type SelectFunc func(meta.Object) (bool, error)
 
-//NewSelectWatch wrap watcher with filter func
+// NewSelectWatch wrap watcher with filter func
 func NewSelectWatch(w Interface, fn SelectFunc) Interface {
 	cxt, canceler := context.WithCancel(context.Background())
 	f := &SelectorWatch{
@@ -36,26 +36,26 @@ func NewSelectWatch(w Interface, fn SelectFunc) Interface {
 	return f
 }
 
-//SelectorWatch watcher wraper offer filter function to filter data object if needed
+// SelectorWatch watcher wraper offer filter function to filter data object if needed
 type SelectorWatch struct {
-	watch        Interface          //inner watch for original data to filte
-	selectFn     SelectFunc         //filter for watch
-	cxt          context.Context    //context for stop
-	stopFn       context.CancelFunc //stopFn for context
-	eventChannel chan Event         //event channel for data already filtered
+	watch        Interface          // inner watch for original data to filte
+	selectFn     SelectFunc         // filter for watch
+	cxt          context.Context    // context for stop
+	stopFn       context.CancelFunc // stopFn for context
+	eventChannel chan Event         // event channel for data already filtered
 }
 
-//Stop stop watch channel
+// Stop stop watch channel
 func (fw *SelectorWatch) Stop() {
 	fw.stopFn()
 }
 
-//WatchEvent get watch events
+// WatchEvent get watch events
 func (fw *SelectorWatch) WatchEvent() <-chan Event {
 	return fw.eventChannel
 }
 
-//filterWatchEvent handler for filter
+// selectWatchEvent handler for filter
 func (fw *SelectorWatch) selectWatchEvent() {
 	tunnel := fw.watch.WatchEvent()
 	if tunnel == nil {

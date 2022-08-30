@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package server xxx
 package server
 
 import (
@@ -58,14 +59,14 @@ type ArgocdServer struct {
 	microRtr  microRgt.Registry
 	discovery *discovery.ModuleDiscovery
 
-	//http service
+	// http service
 	httpServer *http.Server
 
 	// tkex clientset
 	tkexIf tkexv1alpha1.TkexV1alpha1Interface
 
 	// metric service
-	//metricServer *http.Server
+	// metricServer *http.Server
 
 	// tls config for bcs argocd server service and client side
 	tlsConfig       *tls.Config
@@ -100,7 +101,7 @@ func (as *ArgocdServer) Init() error {
 		as.initMicro,
 		as.initHTTPService,
 		as.initProxyAgent,
-		//as.initMetric,
+		// as.initMetric,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -120,6 +121,7 @@ func (as *ArgocdServer) Run() error {
 	return nil
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (as *ArgocdServer) initTLSConfig() error {
 	if len(as.opt.ServerCert) != 0 && len(as.opt.ServerKey) != 0 && len(as.opt.ServerCa) != 0 {

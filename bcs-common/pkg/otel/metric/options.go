@@ -29,6 +29,7 @@ func TypeMetric(mt string) Option {
 	}
 }
 
+// ProcessorWithMemory xxx
 func ProcessorWithMemory(p prometheus.MemoryOption) Option {
 	return func(o *Options) {
 		o.ProcessorWithMemory = p

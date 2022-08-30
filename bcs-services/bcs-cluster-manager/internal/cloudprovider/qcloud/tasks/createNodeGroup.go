@@ -34,7 +34,7 @@ import (
 // CreateCloudNodeGroupTask create cloud node group task
 func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -113,11 +113,13 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s", nodeGroupID, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s", nodeGroupID,
+			err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool updateNodeGroupCloudNodeGroupID successful", taskID)
+	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool updateNodeGroupCloudNodeGroupID successful",
+		taskID)
 
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
@@ -144,7 +146,8 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 		Name:            &group.Name,
 		Tags:            api.MapToTags(group.Tags),
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID !=
+		"" {
 		nodePool.NodePoolOs = &group.LaunchTemplate.ImageInfo.ImageID
 	}
 	if group.NodeTemplate != nil {
@@ -164,7 +167,7 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 // CheckCloudNodeGroupStatusTask check cloud node group status task
 func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -275,11 +278,13 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return err
 	}
 
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group, cloudNodeGroup, asgArr, ascArr[0]))
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group,
+		cloudNodeGroup, asgArr, ascArr[0]))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID,
+			err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -303,7 +308,8 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 	return generateNodeGroupFromAsc(group, cloudNodeGroup, asc)
 }
 
-func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup) *proto.NodeGroup {
+func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool,
+	asg *as.AutoScalingGroup) *proto.NodeGroup {
 	if asg.AutoScalingGroupId != nil {
 		group.AutoScaling.AutoScalingID = *asg.AutoScalingGroupId
 	}
@@ -347,7 +353,8 @@ func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePo
 	return group
 }
 
-func generateNodeGroupFromAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asc *as.LaunchConfiguration) *proto.NodeGroup {
+func generateNodeGroupFromAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool,
+	asc *as.LaunchConfiguration) *proto.NodeGroup {
 	if asc.LaunchConfigurationId != nil {
 		group.LaunchTemplate.LaunchConfigurationID = *asc.LaunchConfigurationId
 	}
@@ -419,7 +426,7 @@ func generateImageInfo(cloudNodeGroup *tke.NodePool, group *proto.NodeGroup, ima
 // UpdateCreateNodeGroupDBInfoTask update create node group db info task
 func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -485,7 +492,8 @@ func generateAutoScalingGroupPara(as *proto.AutoScalingGroup) *api.AutoScalingGr
 	return asg
 }
 
-func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration {
+func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
+	nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration {
 	if template == nil {
 		return nil
 	}

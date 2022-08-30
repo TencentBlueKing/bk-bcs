@@ -11,12 +11,17 @@
  *
  */
 
+// Package types xxx
 package types
 
+// AffiliationType xxx
 type AffiliationType string
 
 const (
-	User     AffiliationType = "user"
+	// User xxx
+	User AffiliationType = "user"
+	// Platform xxx
 	Platform AffiliationType = "platform"
-	Both     AffiliationType = "both"
+	// Both xxx
+	Both AffiliationType = "both"
 )

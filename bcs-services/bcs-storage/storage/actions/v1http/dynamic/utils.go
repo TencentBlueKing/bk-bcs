@@ -199,7 +199,8 @@ func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M
 	return mList, err
 }
 
-func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (data []operator.M, extra operator.M, err error) {
+func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (data []operator.M, extra operator.M,
+	err error) {
 	getOption, err := getStoreOption(req, resourceFeatList)
 	if err != nil {
 		return nil, nil, err

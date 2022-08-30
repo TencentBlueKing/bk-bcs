@@ -11,6 +11,7 @@
  *
  */
 
+// Package template xxx
 package template
 
 import (
@@ -22,6 +23,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewTemplateCommand xxx
 func NewTemplateCommand() cli.Command {
 	return cli.Command{
 		Name:  "template",

@@ -18,23 +18,30 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
+// Executor xxx
 type Executor interface {
-	//launch taskgroup
+	// LaunchTaskgroup xxx
+	// launch taskgroup
 	LaunchTaskgroup(*mesos.TaskGroupInfo)
 
-	//shut down
+	// Shutdown xxx
+	// shut down
 	Shutdown()
 
-	//register callback function
+	// RegisterCallbackFunc xxx
+	// register callback function
 	RegisterCallbackFunc(types.CallbackFuncType, interface{})
 
-	//Get Executor status
+	// GetExecutorStatus xxx
+	// Get Executor status
 	GetExecutorStatus() types.ExecutorStatus
 
-	//reload tasks, exec reloadCmd
+	// ReloadTasks xxx
+	// reload tasks, exec reloadCmd
 	ReloadTasks() error
 
-	//restart tasks, exec restartCmd
+	// RestartTasks xxx
+	// restart tasks, exec restartCmd
 	RestartTasks() error
 
 	AckTaskStatusMessage(taskId string, uuid []byte)

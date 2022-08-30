@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//TaskGroupHandler handle for taskgroup
+// TaskGroupHandler handle for taskgroup
 type TaskGroupHandler struct {
 	oper      DataOperator
 	dataType  string
@@ -34,12 +34,12 @@ type TaskGroupHandler struct {
 	DoCheckDirty bool
 }
 
-//GetType implementation
+// GetType implementation
 func (handler *TaskGroupHandler) GetType() string {
 	return handler.dataType
 }
 
-//CheckDirty implementation
+// CheckDirty implementation
 func (handler *TaskGroupHandler) CheckDirty() error {
 	if handler.DoCheckDirty {
 		blog.Info("check dirty data for type: %s", handler.dataType)
@@ -61,15 +61,17 @@ func (handler *TaskGroupHandler) CheckDirty() error {
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerAllClusterType, util.StatusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerAllClusterType,
+			util.StatusFailure, started)
 		return err
 	}
 
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerAllClusterType, util.StatusSuccess, started)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerAllClusterType,
+		util.StatusSuccess, started)
 	return nil
 }
 
-//Add handler to add
+// Add handler to add
 func (handler *TaskGroupHandler) Add(data interface{}) error {
 	var (
 		started  = time.Now()
@@ -79,20 +81,23 @@ func (handler *TaskGroupHandler) Add(data interface{}) error {
 	blog.Info("TaskGroup add event, ID: %s", dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
 
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" +
+		dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("TaskGroup add node(%s) failed: %+v", dataNode, err)
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName,
+			util.StatusFailure, started)
 		return err
 	}
 
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName,
+		util.StatusSuccess, started)
 	return nil
 }
 
-//Delete delete info
+// Delete delete info
 func (handler *TaskGroupHandler) Delete(data interface{}) error {
 	var (
 		dataType = data.(*schedtypes.TaskGroup)
@@ -100,20 +105,23 @@ func (handler *TaskGroupHandler) Delete(data interface{}) error {
 	)
 
 	blog.Info("TaskGroup delete event, ID: %s", dataType.ID)
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" +
+		dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Error("TaskGroup delete node(%s) failed: %+v", dataNode, err)
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerClusterNamespaceTypeName, util.StatusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerClusterNamespaceTypeName,
+			util.StatusFailure, started)
 		return err
 	}
 
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionDelete, handlerClusterNamespaceTypeName,
+		util.StatusSuccess, started)
 	return nil
 }
 
-//Update update in zookeeper
+// Update update in zookeeper
 func (handler *TaskGroupHandler) Update(data interface{}) error {
 	var (
 		dataType = data.(*schedtypes.TaskGroup)
@@ -123,20 +131,23 @@ func (handler *TaskGroupHandler) Update(data interface{}) error {
 	blog.V(3).Infof("TaskGroup update event, ID: %s", dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
 
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" +
+		dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("TaskGroup update node(%s) failed: %+v", dataNode, err)
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName,
+			util.StatusFailure, started)
 		return err
 	}
 
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeTaskGroup, actionPut, handlerClusterNamespaceTypeName,
+		util.StatusSuccess, started)
 	return nil
 }
 
-//FormatConv convert taskgroup to pod status for storage
+// FormatConv convert taskgroup to pod status for storage
 func (handler *TaskGroupHandler) FormatConv(taskgroup *schedtypes.TaskGroup) (*commtypes.BcsPodStatus, error) {
 	status := new(commtypes.BcsPodStatus)
 	status.ObjectMeta = taskgroup.ObjectMeta

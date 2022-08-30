@@ -12,7 +12,7 @@
 
 package contextx
 
-// ContextKey ...
+// ContextKey xxx
 type ContextKey string
 
 const (

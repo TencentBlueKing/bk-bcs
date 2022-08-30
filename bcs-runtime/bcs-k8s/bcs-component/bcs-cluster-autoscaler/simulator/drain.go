@@ -52,6 +52,7 @@ type BlockingPod struct {
 type BlockingPodReason string
 
 const (
+	// BlockingNoReason xxx
 	// NoReason - sanity check, this should never be set explicitly. If this is found in the wild, it means that it was
 	// implicitly initialized and might indicate a bug.
 	BlockingNoReason BlockingPodReason = "BlockingNoReason"
@@ -69,7 +70,7 @@ const (
 	UnmovableKubeSystemPod BlockingPodReason = "UnmovableKubeSystemPod"
 	// NotEnoughPdb - pod is blocking scale down because it doesn't have enough PDB left.
 	NotEnoughPdb BlockingPodReason = "NotEnoughPdb"
-	// UnexpectedError - pod is blocking scale down because of an unexpected error.
+	// BlockingUnexpectedError - pod is blocking scale down because of an unexpected error.
 	BlockingUnexpectedError BlockingPodReason = "BlockingUnexpectedError"
 )
 
@@ -292,6 +293,7 @@ func isLocalVolume(volume *apiv1.Volume) bool {
 	return volume.HostPath != nil || volume.EmptyDir != nil
 }
 
+// checkKubeSystemPDBs xxx
 // This only checks if a matching PDB exist and therefore if it makes sense to attempt drain simulation,
 // as we check for allowed-disruptions later anyway (for all pods with PDB, not just in kube-system)
 func checkKubeSystemPDBs(pod *apiv1.Pod, pdbs []*policyv1.PodDisruptionBudget) (bool, error) {
@@ -308,11 +310,13 @@ func checkKubeSystemPDBs(pod *apiv1.Pod, pdbs []*policyv1.PodDisruptionBudget) (
 	return false, nil
 }
 
+// hasSafeToEvictAnnotation xxx
 // This checks if pod has PodSafeToEvictKey annotation
 func hasSafeToEvictAnnotation(pod *apiv1.Pod) bool {
 	return pod.GetAnnotations()[PodSafeToEvictKey] == "true"
 }
 
+// hasNotSafeToEvictAnnotation xxx
 // This checks if pod has PodSafeToEvictKey annotation set to false
 func hasNotSafeToEvictAnnotation(pod *apiv1.Pod) bool {
 	return pod.GetAnnotations()[PodSafeToEvictKey] == "false"
@@ -409,6 +413,7 @@ func HasLocalPV(pod *apiv1.Pod, listers kube_util.ListerRegistry) bool {
 	return false
 }
 
+// checkLocalPV xxx
 // HasLocalPV returns true if pod has any local pv.
 func checkLocalPV(ns string, vs apiv1.VolumeSource, listers kube_util.ListerRegistry) bool {
 	if vs.PersistentVolumeClaim == nil {

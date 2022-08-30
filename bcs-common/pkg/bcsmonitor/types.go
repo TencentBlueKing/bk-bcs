@@ -12,7 +12,7 @@
 
 package bcsmonitor
 
-//Path of bcs monitor api
+// Path of bcs monitor api
 const (
 	QueryPath       = "/api/v1/query"
 	QueryRangePath  = "/api/v1/query_range"
@@ -29,49 +29,49 @@ type CommonResponse struct {
 	Warnings  []string `json:"warnings"`
 }
 
-//LabelResponse response of label api
+// LabelResponse response of label api
 type LabelResponse struct {
 	CommonResponse
 	Data []string `json:"data"`
 }
 
-//SeriesResponse response of series api
+// SeriesResponse response of series api
 type SeriesResponse struct {
 	CommonResponse
 	Data []interface{} `json:"data"`
 }
 
-//QueryResponse response of query api
+// QueryResponse response of query api
 type QueryResponse struct {
 	CommonResponse
 	Data QueryData `json:"data"`
 }
 
-//QueryRangeResponse response of query_range api
+// QueryRangeResponse response of query_range api
 type QueryRangeResponse struct {
 	CommonResponse
 	Data QueryRangeData `json:"data"`
 }
 
-//QueryData data struct of QueryResponse
+// QueryData data struct of QueryResponse
 type QueryData struct {
 	ResultType string         `json:"resultType"`
 	Result     []VectorResult `json:"result"`
 }
 
-//QueryRangeData data struct of QueryRangeResponse
+// QueryRangeData data struct of QueryRangeResponse
 type QueryRangeData struct {
 	ResultType string         `json:"resultType"`
 	Result     []MatrixResult `json:"result"`
 }
 
-//MatrixResult matrix result type
+// MatrixResult matrix result type
 type MatrixResult struct {
 	Metrics map[string]string `json:"metrics"`
 	Values  [][]interface{}   `json:"values"`
 }
 
-//VectorResult vector result type
+// VectorResult vector result type
 type VectorResult struct {
 	Metric map[string]string `json:"metric"`
 	Value  []interface{}     `json:"value"`

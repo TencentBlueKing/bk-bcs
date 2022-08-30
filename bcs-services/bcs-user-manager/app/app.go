@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -41,7 +42,8 @@ func Run(op *options.UserManagerOptions) {
 	config.SetGlobalConfig(conf)
 
 	if conf.ClientCert.IsSSL {
-		cliTLS, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile, conf.ClientCert.CertPasswd)
+		cliTLS, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile,
+			conf.ClientCert.CertPasswd)
 		if err != nil {
 			blog.Errorf("set client tls config error %s", err.Error())
 		} else {
@@ -64,14 +66,14 @@ func Run(op *options.UserManagerOptions) {
 		os.Exit(1)
 	}
 
-	//start userManager, and http service
+	// start userManager, and http service
 	err = userManager.Start()
 	if err != nil {
 		blog.Errorf("start processor error %s, and exit", err.Error())
 		os.Exit(1)
 	}
 
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
@@ -122,7 +124,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 
 	userMgrConfig.VerifyClientTLS = op.VerifyClientTLS
 
-	//server cert directory
+	// server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {
 		userMgrConfig.ServCert.CertFile = op.CertConfig.ServerCertFile
 		userMgrConfig.ServCert.KeyFile = op.CertConfig.ServerKeyFile
@@ -137,7 +139,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 		}
 	}
 
-	//client cert directory
+	// client cert directory
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.ClientKeyFile != "" {
 		userMgrConfig.ClientCert.CertFile = op.CertConfig.ClientCertFile
 		userMgrConfig.ClientCert.KeyFile = op.CertConfig.ClientKeyFile

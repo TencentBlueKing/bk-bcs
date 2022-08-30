@@ -32,7 +32,7 @@ type EventStor struct {
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
-// NewEventStor
+// NewEventStor xxx
 func NewEventStor(masterClientId string, members []string) (*EventStor, error) {
 	stor := &EventStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
 	for _, k := range members {
@@ -81,7 +81,8 @@ func (p *EventStor) List(ctx context.Context, namespace string, opts metav1.List
 }
 
 // ListAsTable 查询 Event 列表, kubectl格式返回
-func (p *EventStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
+func (p *EventStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string,
+	opts metav1.ListOptions) (*metav1.Table, error) {
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.selfLink(namespace, ""),
 		ResourceVersion: "0",
@@ -174,7 +175,8 @@ func (p *EventStor) Get(ctx context.Context, namespace string, name string, opts
 }
 
 // GetAsTable 获取单个Event, Table格式返回
-func (p *EventStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+func (p *EventStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+	opts metav1.GetOptions) (*metav1.Table, error) {
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.selfLink(namespace, name),
 		ResourceVersion: "0",

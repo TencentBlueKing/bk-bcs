@@ -14,44 +14,78 @@
 package types
 
 const (
-	BCS_SERV_BASEPATH          = "/bcs/services/endpoints"
-	BCS_MODULE_APISERVER       = "apiserver"
-	BCS_MODULE_USERMGR         = "usermanager"
-	BCS_MODULE_CCAPI           = "ccapi"
-	BCS_MODULE_MESOSDATAWATCH  = "mesosdatawatch"
-	BCS_MODULE_KUBEDATAWATCH   = "kubedatawatch"
-	BCS_MODULE_MESOSDRIVER     = "mesosdriver"
+	// BCS_SERV_BASEPATH xxx
+	BCS_SERV_BASEPATH = "/bcs/services/endpoints"
+	// BCS_MODULE_APISERVER xxx
+	BCS_MODULE_APISERVER = "apiserver"
+	// BCS_MODULE_USERMGR xxx
+	BCS_MODULE_USERMGR = "usermanager"
+	// BCS_MODULE_CCAPI xxx
+	BCS_MODULE_CCAPI = "ccapi"
+	// BCS_MODULE_MESOSDATAWATCH xxx
+	BCS_MODULE_MESOSDATAWATCH = "mesosdatawatch"
+	// BCS_MODULE_KUBEDATAWATCH xxx
+	BCS_MODULE_KUBEDATAWATCH = "kubedatawatch"
+	// BCS_MODULE_MESOSDRIVER xxx
+	BCS_MODULE_MESOSDRIVER = "mesosdriver"
+	// BCS_MODULE_KUBERNETEDRIVER xxx
 	BCS_MODULE_KUBERNETEDRIVER = "kubernetedriver"
-	BCS_MODULE_SCHEDULER       = "scheduler"
-	BCS_MODULE_CLUSTERKEEPER   = "clusterkeeper"
-	BCS_MODULE_HEALTH          = "health"
-	BCS_MODULE_LOADBALANCE     = "loadbalance"
-	BCS_MODULE_Check           = "check"
-	BCS_MODULE_NETSERVICE      = "netservice"
-	BCS_MODULE_DNS             = "dns"
-	BCS_MODULE_STORAGE         = "storage"
-	BCS_MODULE_DISCOVERY       = "discovery"
-	BCS_MODULE_METRICSERVICE   = "metricservice"
+	// BCS_MODULE_SCHEDULER xxx
+	BCS_MODULE_SCHEDULER = "scheduler"
+	// BCS_MODULE_CLUSTERKEEPER xxx
+	BCS_MODULE_CLUSTERKEEPER = "clusterkeeper"
+	// BCS_MODULE_HEALTH xxx
+	BCS_MODULE_HEALTH = "health"
+	// BCS_MODULE_LOADBALANCE xxx
+	BCS_MODULE_LOADBALANCE = "loadbalance"
+	// BCS_MODULE_Check xxx
+	BCS_MODULE_Check = "check"
+	// BCS_MODULE_NETSERVICE xxx
+	BCS_MODULE_NETSERVICE = "netservice"
+	// BCS_MODULE_DNS xxx
+	BCS_MODULE_DNS = "dns"
+	// BCS_MODULE_STORAGE xxx
+	BCS_MODULE_STORAGE = "storage"
+	// BCS_MODULE_DISCOVERY xxx
+	BCS_MODULE_DISCOVERY = "discovery"
+	// BCS_MODULE_METRICSERVICE xxx
+	BCS_MODULE_METRICSERVICE = "metricservice"
+	// BCS_MODULE_METRICCOLLECTOR xxx
 	BCS_MODULE_METRICCOLLECTOR = "metriccollector"
-	BCS_MODULE_EXPORTER        = "exporter"
-	BCS_MODULE_DCSERVER        = "dcserver"
-	BCS_MODULE_DCCLINET        = "dcclient"
-	BCS_MODULE_QCLOUDCLB       = "qcloudclb"
-	BCS_MODULE_MESOSSLAVE      = "mesosslave"
-	BCS_MODULE_IPSERVICE       = "ipservice"
-	BCS_MODULE_MESOSADAPTER    = "mesosadapter"
+	// BCS_MODULE_EXPORTER xxx
+	BCS_MODULE_EXPORTER = "exporter"
+	// BCS_MODULE_DCSERVER xxx
+	BCS_MODULE_DCSERVER = "dcserver"
+	// BCS_MODULE_DCCLINET xxx
+	BCS_MODULE_DCCLINET = "dcclient"
+	// BCS_MODULE_QCLOUDCLB xxx
+	BCS_MODULE_QCLOUDCLB = "qcloudclb"
+	// BCS_MODULE_MESOSSLAVE xxx
+	BCS_MODULE_MESOSSLAVE = "mesosslave"
+	// BCS_MODULE_IPSERVICE xxx
+	BCS_MODULE_IPSERVICE = "ipservice"
+	// BCS_MODULE_MESOSADAPTER xxx
+	BCS_MODULE_MESOSADAPTER = "mesosadapter"
 
-	//bcstest 2018.11.07
-	BCS_MODULE_K8SAPISERVER     = "kubernetedriver"
-	BCS_MODULE_MESOSAPISERVER   = "mesosdriver"
+	// BCS_MODULE_K8SAPISERVER xxx
+	// bcstest 2018.11.07
+	BCS_MODULE_K8SAPISERVER = "kubernetedriver"
+	// BCS_MODULE_MESOSAPISERVER xxx
+	BCS_MODULE_MESOSAPISERVER = "mesosdriver"
+	// BCS_MODULE_NETWORKDETECTION xxx
 	BCS_MODULE_NETWORKDETECTION = "networkdetection"
 
-	//bcs-api-gateway refactor 2020-04-10
-	BCS_MODULE_KUBEAGENT        = "kubeagent"
-	BCS_MODULE_USERMANAGER      = "usermanager"
+	// BCS_MODULE_KUBEAGENT xxx
+	// bcs-api-gateway refactor 2020-04-10
+	BCS_MODULE_KUBEAGENT = "kubeagent"
+	// BCS_MODULE_USERMANAGER xxx
+	BCS_MODULE_USERMANAGER = "usermanager"
+	// BCS_MODULE_GATEWAYDISCOVERY xxx
 	BCS_MODULE_GATEWAYDISCOVERY = "gatewaydiscovery"
-	BCS_MODULE_MESOSWEBCONSOLE  = "mesoswebconsole"
+	// BCS_MODULE_MESOSWEBCONSOLE xxx
+	BCS_MODULE_MESOSWEBCONSOLE = "mesoswebconsole"
 
+	// BCS_MODULE_BKCMDB_SYNCHRONIZER xxx
 	// for bcs-bkcmdb-synchronizer
 	BCS_MODULE_BKCMDB_SYNCHRONIZER = "bkcmdb-synchronizer"
 )
@@ -96,7 +130,7 @@ const (
 	BCSS_MODULE_MESHAPI       = "bcss-mesh-api"
 )
 
-//ServerInfo base server information
+// ServerInfo base server information
 type ServerInfo struct {
 	IP           string `json:"ip"`
 	IPv6         string `json:"ipv6"`
@@ -104,7 +138,7 @@ type ServerInfo struct {
 	GrpcPort     uint   `json:"grpc_port"`
 	MetricPort   uint   `json:"metric_port"`
 	HostName     string `json:"hostname"`
-	Scheme       string `json:"scheme"` //http, https
+	Scheme       string `json:"scheme"` // http, https
 	Version      string `json:"version"`
 	Cluster      string `json:"cluster"`
 	Pid          int    `json:"pid"`
@@ -113,70 +147,71 @@ type ServerInfo struct {
 	ExternalPort uint   `json:"external_port"`
 }
 
-//APIServInfo apiserver information
+// APIServInfo apiserver information
 type APIServInfo struct {
 	ServerInfo
 }
 
-//AuthServInfo auth server information
+// AuthServInfo auth server information
 type AuthServInfo struct {
 	ServerInfo
 }
 
-//CCAPIServInfo ccapi server information
+// CCAPIServInfo ccapi server information
 type CCAPIServInfo struct {
 	ServerInfo
 }
 
-//RouteServInfo route server information
+// RouteServInfo route server information
 type RouteServInfo struct {
 	ServerInfo
 }
 
-//MesosDataWatchServInfo mesos-data-watch server information
+// MesosDataWatchServInfo mesos-data-watch server information
 type MesosDataWatchServInfo struct {
 	ServerInfo
-	//Cluster string `json:"cluster"`
+	// Cluster string `json:"cluster"`
 }
 
-//MesosDriverServInfo mesosdriver server information
+// MesosDriverServInfo mesosdriver server information
 type MesosDriverServInfo struct {
 	ServerInfo
-	//Cluster string `json:"cluster"`
+	// Cluster string `json:"cluster"`
 }
 
-//BcsUserMgrServInfo bcs-user-manager server information
+// BcsUserMgrServInfo bcs-user-manager server information
 type BcsUserMgrServInfo struct {
 	ServerInfo
 }
 
-//NetworkDetectionServInfo netwrok-detection server information
+// NetworkDetectionServInfo netwrok-detection server information
 type NetworkDetectionServInfo struct {
 	ServerInfo
 }
 
+// DCServInfo xxx
 type DCServInfo struct {
 	ServerInfo
 }
 
-//KuberneteDataWatchServInfo kubernete-data-watch server information
+// KuberneteDataWatchServInfo kubernete-data-watch server information
 type KuberneteDataWatchServInfo struct {
 	ServerInfo
-	//Cluster string `json:"cluster"`
+	// Cluster string `json:"cluster"`
 }
 
-//KuberneteDriverServInfo kubernetedriver server information
+// KuberneteDriverServInfo kubernetedriver server information
 type KuberneteDriverServInfo struct {
 	ServerInfo
 }
 
-//SaDriverServInfo sa driver server information
+// SaDriverServInfo sa driver server information
 type SaDriverServInfo struct {
 	ServerInfo
-	//Cluster string `json:"cluster"`
+	// Cluster string `json:"cluster"`
 }
 
-//SchedulerServInfo scheduler server information
+// SchedulerServInfo scheduler server information
 type SchedulerServInfo struct {
 	ServerInfo
 }
@@ -209,8 +244,8 @@ type BcsStorageInfo struct {
 // BcsK8sApiserverInfo apiserver
 type BcsK8sApiserverInfo struct {
 	ServerInfo
-	CaCertData string //certificates
-	UserToken  string //user token
+	CaCertData string // certificates
+	UserToken  string // user token
 }
 
 // BcsMesosApiserverInfo mesos driver
@@ -225,27 +260,27 @@ type ClusterEndpoints struct {
 	KubeNodes       []KubeNodeInfo      `json:"kubenodes,omitempty"`
 }
 
-//ClusterKeeperServInfo cluster keeper server information
+// ClusterKeeperServInfo cluster keeper server information
 type ClusterKeeperServInfo struct {
 	ServerInfo
 }
 
-//NetServiceInfo for bcs-netservice
+// NetServiceInfo for bcs-netservice
 type NetServiceInfo struct {
 	ServerInfo
 }
 
-//LoadBalanceInfo for bcs-loadBalance
+// LoadBalanceInfo for bcs-loadBalance
 type LoadBalanceInfo struct {
 	ServerInfo
 }
 
-//DNSInfo for bcs-loadBalance
+// DNSInfo for bcs-loadBalance
 type DNSInfo struct {
 	ServerInfo
 }
 
-//DiscoveryInfo for bcs-loadBalance
+// DiscoveryInfo for bcs-loadBalance
 type DiscoveryInfo struct {
 	ServerInfo
 }
@@ -270,12 +305,12 @@ type ContainerWareInfo struct {
 	ServerInfo
 }
 
-//AWSELBInfo for aws elb
+// AWSELBInfo for aws elb
 type AWSELBInfo struct {
 	ServerInfo
 }
 
-//QcloudCLBInfo for qcloud clb
+// QcloudCLBInfo for qcloud clb
 type QcloudCLBInfo struct {
 	ServerInfo
 }
@@ -290,7 +325,7 @@ type ProxyInfo struct {
 	ServerInfo
 }
 
-//ConsoleManagerInfo for console manager
+// ConsoleManagerInfo for console manager
 type ConsoleManagerInfo struct {
 	ServerInfo
 }

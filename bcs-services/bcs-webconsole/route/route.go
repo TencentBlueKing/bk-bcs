@@ -11,6 +11,7 @@
  *
  */
 
+// Package route xxx
 package route
 
 import (
@@ -18,12 +19,12 @@ import (
 	"go-micro.dev/v4/client"
 )
 
-// Registrar
+// Registrar xxx
 type Registrar interface {
 	RegisterRoute(gin.IRoutes)
 }
 
-// Options
+// Options xxx
 type Options struct {
 	RoutePrefix string
 	Client      client.Client

@@ -25,6 +25,7 @@ func getAdmissionWebhookRootPath() string {
 	return "/" + bcsRootNode + "/" + AdmissionWebhookNode
 }
 
+// SaveAdmissionWebhook xxx
 func (store *managerStore) SaveAdmissionWebhook(admission *commtypes.AdmissionWebhookConfiguration) error {
 
 	data, err := json.Marshal(admission)
@@ -36,6 +37,7 @@ func (store *managerStore) SaveAdmissionWebhook(admission *commtypes.AdmissionWe
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchAdmissionWebhook xxx
 func (store *managerStore) FetchAdmissionWebhook(ns, name string) (*commtypes.AdmissionWebhookConfiguration, error) {
 
 	path := getAdmissionWebhookRootPath() + "/" + ns + "/" + name
@@ -54,6 +56,7 @@ func (store *managerStore) FetchAdmissionWebhook(ns, name string) (*commtypes.Ad
 	return admission, nil
 }
 
+// DeleteAdmissionWebhook xxx
 func (store *managerStore) DeleteAdmissionWebhook(ns, name string) error {
 
 	path := getAdmissionWebhookRootPath() + "/" + ns + "/" + name
@@ -65,6 +68,7 @@ func (store *managerStore) DeleteAdmissionWebhook(ns, name string) error {
 	return nil
 }
 
+// FetchAllAdmissionWebhooks xxx
 func (store *managerStore) FetchAllAdmissionWebhooks() ([]*commtypes.AdmissionWebhookConfiguration, error) {
 	namespaces, err := store.Db.List(getAdmissionWebhookRootPath())
 	if err != nil {

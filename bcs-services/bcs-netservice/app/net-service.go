@@ -28,32 +28,32 @@ import (
 	"syscall"
 )
 
-//Run entry point for bcs-netservice
+// Run entry point for bcs-netservice
 func Run(cfg *Config) error {
-	//check storage data
+	// check storage data
 	if cfg.BCSZk == "" {
 		return fmt.Errorf("parameter backend host lost")
 	}
-	//start storage
+	// start storage
 	st := zookeeper.NewStorage(cfg.BCSZk)
 	if st == nil {
 		return fmt.Errorf("Create Storage Err")
 	}
-	//create netservice
+	// create netservice
 	netSvr := netservice.NewNetService(cfg.Address, int(cfg.Port), int(cfg.MetricPort), st)
 	if netSvr == nil {
 		return fmt.Errorf("Create NetService Err")
 	}
 
-	//pid
+	// pid
 	if err := common.SavePid(cfg.ProcessConfig); err != nil {
 		blog.Errorf("fail to save pid: err: %s", err.Error())
 	}
 
-	//start signal handler
+	// start signal handler
 	interupt := make(chan os.Signal, 10)
 	signal.Notify(interupt, syscall.SIGINT, syscall.SIGTERM)
-	//start http(s) service
+	// start http(s) service
 	httpSrv := api.NewHTTPService(cfg.Address, int(cfg.Port))
 	go handleSysSignal(interupt, httpSrv, st)
 
@@ -63,11 +63,11 @@ func Run(cfg *Config) error {
 	api.RegisterResourceHandler(httpSrv, netSvr)
 	api.RegisterIPInstanceHandler(httpSrv, netSvr)
 
-	//prometheus metrics
+	// prometheus metrics
 	metricsAddr := cfg.Address + ":" + strconv.Itoa(int(cfg.MetricPort))
 	api.RegisterMetrics(metricsAddr)
 
-	//netservice http server
+	// netservice http server
 	if cfg.ServerKeyFile == "" {
 		return httpSrv.ListenAndServe()
 	}

@@ -90,7 +90,8 @@ func BuildClusterApplicationInstance(clsAppAction ClusterApplicationAction) iam.
 }
 
 // BuildClusterSameInstanceApplication for same instanceSelection
-func BuildClusterSameInstanceApplication(isCreate bool, actionIDs []string, data []ProjectClusterData) []iam.ApplicationAction {
+func BuildClusterSameInstanceApplication(isCreate bool, actionIDs []string,
+	data []ProjectClusterData) []iam.ApplicationAction {
 	applications := make([]iam.ApplicationAction, 0)
 
 	for i := range actionIDs {

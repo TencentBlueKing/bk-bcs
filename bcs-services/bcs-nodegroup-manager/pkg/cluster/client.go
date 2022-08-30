@@ -28,7 +28,7 @@ const (
 	UpdateK8SNodePath = "/clusters/%s/api/v1/nodes/%s"
 )
 
-//Client for cluster operation
+// Client for cluster operation
 type Client interface {
 	ListClusterNodes(clusterID string) ([]*Node, error)
 	UpdateNodeLabels(clusterID, nodeName string, labels map[string]string) error

@@ -16,15 +16,17 @@ package types
 import "fmt"
 
 const (
+	// DefaultAdmissionNamespace xxx
 	DefaultAdmissionNamespace = "bkbcs"
 )
 
+// AdmissionWebhookConfiguration xxx
 type AdmissionWebhookConfiguration struct {
 	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata"`
-	//resources ref
+	// resources ref
 	ResourcesRef *ResourcesRef `json:"resourcesRef"`
-	//adminssion webhook info
+	// adminssion webhook info
 	AdmissionWebhooks []*AdmissionWebhook `json:"admissionWebhooks"`
 }
 
@@ -62,10 +64,11 @@ func (in *AdmissionWebhookConfiguration) DeepCopy() *AdmissionWebhookConfigurati
 	return out
 }
 
+// ResourcesRef xxx
 type ResourcesRef struct {
-	//admission operation, Http method: POST=Create; PUT=Update
+	// admission operation, Http method: POST=Create; PUT=Update
 	Operation AdmissionOperation `json:"operation"`
-	//resources kind, mesos resources json: Deployment,Application...
+	// resources kind, mesos resources json: Deployment,Application...
 	Kind AdmissionResourcesKind `json:"kind"`
 }
 
@@ -85,33 +88,39 @@ func (in *ResourcesRef) DeepCopy() *ResourcesRef {
 	return out
 }
 
+// AdmissionWebhook xxx
 type AdmissionWebhook struct {
-	//admission webhook name
+	// admission webhook name
 	Name string `json:"name"`
-	//failurePolicy, if communication with webhook service failed,
-	//according to FailurePolicy to decide continue or return fail
+	// failurePolicy, if communication with webhook service failed,
+	// according to FailurePolicy to decide continue or return fail
 	FailurePolicy WebhookFailurePolicyKind `json:"failurePolicy"`
-	//webhook http client config
+	// webhook http client config
 	ClientConfig *WebhookClientConfig `json:"clientConfig"`
 
 	NamespaceSelector *NamespaceSelector `json:"namespaceSelector"`
-	//webhook server list, examples: ["https://127.0.0.1:31000","https://127.0.0.1:31001",...]
+	// webhook server list, examples: ["https://127.0.0.1:31000","https://127.0.0.1:31001",...]
 	WebhookServers []string `json:"-"`
 }
 
+// NamespaceSelector xxx
 type NamespaceSelector struct {
 	Operator NamespaceSelectorOperator `json:"operator"`
 	Values   []string                  `json:"values,omitempty"`
 }
 
+// NamespaceSelectorOperator xxx
 // A namespace selector operator is the set of operators that can be used in a selector requirement.
 type NamespaceSelectorOperator string
 
 const (
-	NamespaceSelectorOpIn    NamespaceSelectorOperator = "In"
+	// NamespaceSelectorOpIn xxx
+	NamespaceSelectorOpIn NamespaceSelectorOperator = "In"
+	// NamespaceSelectorOpNotIn xxx
 	NamespaceSelectorOpNotIn NamespaceSelectorOperator = "NotIn"
 )
 
+// DeepCopyInto xxx
 func (in *NamespaceSelector) DeepCopyInto(out *NamespaceSelector) {
 	*out = *in
 	if in.Values != nil {
@@ -121,6 +130,7 @@ func (in *NamespaceSelector) DeepCopyInto(out *NamespaceSelector) {
 	}
 }
 
+// DeepCopy xxx
 func (in *NamespaceSelector) DeepCopy() *NamespaceSelector {
 	if in == nil {
 		return nil
@@ -130,10 +140,11 @@ func (in *NamespaceSelector) DeepCopy() *NamespaceSelector {
 	return out
 }
 
-//NamespaceSelector selector namespace
+// CheckSelector xxx
+// NamespaceSelector selector namespace
 func (in *NamespaceSelector) CheckSelector(ns string) bool {
 	switch in.Operator {
-	//if namespace in values,then return true
+	// if namespace in values,then return true
 	case NamespaceSelectorOpIn:
 		for _, val := range in.Values {
 			if ns == val {
@@ -187,39 +198,50 @@ func (in *AdmissionWebhook) DeepCopy() *AdmissionWebhook {
 	return out
 }
 
+// AdmissionOperation xxx
 type AdmissionOperation string
 
 const (
-	AdmissionOperationCreate  = "Create"
-	AdmissionOperationUpdate  = "Update"
+	// AdmissionOperationCreate xxx
+	AdmissionOperationCreate = "Create"
+	// AdmissionOperationUpdate xxx
+	AdmissionOperationUpdate = "Update"
+	// AdmissionOperationUnknown xxx
 	AdmissionOperationUnknown = "unknown"
 )
 
+// AdmissionResourcesKind xxx
 type AdmissionResourcesKind string
 
 const (
+	// AdmissionResourcesApplication xxx
 	AdmissionResourcesApplication = "application"
-	AdmissionResourcesDeployment  = "deployment"
+	// AdmissionResourcesDeployment xxx
+	AdmissionResourcesDeployment = "deployment"
 )
 
+// WebhookFailurePolicyKind xxx
 type WebhookFailurePolicyKind string
 
 const (
+	// WebhookFailurePolicyIgnore xxx
 	WebhookFailurePolicyIgnore = "Ignore"
-	WebhookFailurePolicyFail   = "Fail"
+	// WebhookFailurePolicyFail xxx
+	WebhookFailurePolicyFail = "Fail"
 )
 
+// WebhookClientConfig xxx
 type WebhookClientConfig struct {
-	//url
+	// url
 	Url string `json:"url"`
-	//pem encoded ca cert that signs the server cert used by the webhook
+	// pem encoded ca cert that signs the server cert used by the webhook
 	CaBundle string `json:"caBundle"`
-	//webhook service namespace
+	// webhook service namespace
 	Namespace string `json:"namespace"`
-	//webhook service name
+	// webhook service name
 	Name string `json:"name"`
-	//url path
+	// url path
 	Path string `json:"path"`
-	//port
+	// port
 	Port int `json:"port"`
 }

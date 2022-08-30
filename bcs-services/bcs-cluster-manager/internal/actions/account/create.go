@@ -141,6 +141,7 @@ func (ca *CreateAction) checkCloudAccountName() error {
 	return nil
 }
 
+// generateAccountID xxx
 // generate random accountID
 func generateAccountID(cloud *cmproto.Cloud) string {
 	randomStr := utils.RandomString(8)

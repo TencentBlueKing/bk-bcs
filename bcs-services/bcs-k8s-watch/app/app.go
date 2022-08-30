@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -133,7 +134,8 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	bcsTLSConfig := config.BCS.TLS
 
 	glog.Info("getting storage service now...")
-	storageService, _, err := bcs.GetStorageService(config.BCS.ZkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints, config.BCS.IsExternal)
+	storageService, _, err := bcs.GetStorageService(config.BCS.ZkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints,
+		config.BCS.IsExternal)
 	if err != nil {
 		panic(err)
 	}
@@ -145,7 +147,8 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	)
 	if !config.WatchResource.DisableNetservice {
 		glog.Info("getting netservice now...")
-		netservice, netserviceZKRD, err = bcs.GetNetService(config.BCS.NetServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints, false)
+		netservice, netserviceZKRD, err = bcs.GetNetService(config.BCS.NetServiceZKHosts, bcsTLSConfig,
+			config.BCS.CustomNetServiceEndpoints, false)
 		if err != nil {
 			panic(err)
 		}
@@ -200,7 +203,8 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create watcher manager.
 	glog.Info("creating watcher manager now...")
-	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, writer, &config.K8s, storageService, netservice, stopChan)
+	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, writer, &config.K8s, storageService,
+		netservice, stopChan)
 	if err != nil {
 		panic(err)
 	}

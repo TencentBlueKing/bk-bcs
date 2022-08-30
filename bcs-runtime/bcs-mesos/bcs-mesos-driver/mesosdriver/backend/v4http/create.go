@@ -23,16 +23,16 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 
-	//"github.com/golang/protobuf/proto"
+	// "github.com/golang/protobuf/proto"
 	"strconv"
 	"strings"
 )
 
-//CreateApplication create application implementation
+// CreateApplication create application implementation
 func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 	blog.Info("create application. param(%s)", string(body))
 	var param bcstype.ReplicaController
-	//encoding param by json
+	// encoding param by json
 	if err := json.Unmarshal(body, &param); err != nil {
 		blog.Error("parse parameters failed. param(%s), err(%s)", string(body), err.Error())
 		err = bhttp.InternalError(common.BcsErrCommJsonDecode, common.BcsErrCommJsonDecodeStr)
@@ -45,7 +45,7 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 		return err.Error(), err
 	}
 
-	//version.RawJson = &param
+	// version.RawJson = &param
 	// post version to bcs-mesos-scheduler, /v1/apps
 	data, err := json.Marshal(version)
 	if err != nil {
@@ -63,7 +63,7 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 	url := s.GetHost() + "/v1/apps"
 	blog.Info("post a request to url(%s), request:%s", url, string(data))
 
-	//reply, err := bhttp.Request(url, "POST", nil, strings.NewReader(string(data)))
+	// reply, err := bhttp.Request(url, "POST", nil, strings.NewReader(string(data)))
 	reply, err := s.client.POST(url, nil, data)
 	if err != nil {
 		blog.Error("post request to url(%s) failed! err(%s)", url, err.Error())
@@ -75,13 +75,13 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 }
 
 func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*types.Version, error) {
-	//check ObjectMeta is valid
+	// check ObjectMeta is valid
 	err := param.MetaIsValid()
 	if err != nil {
 		return nil, err
 	}
 
-	//var version types.Version
+	// var version types.Version
 	version := &types.Version{
 		Kind:        param.Kind,
 		ID:          "",
@@ -96,7 +96,7 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 		Mode:        "",
 	}
 
-	//store ReplicaController original definition
+	// store ReplicaController original definition
 	version.RawJson = param
 	version.ObjectMeta = param.ObjectMeta
 	version.KillPolicy = &param.KillPolicy
@@ -106,9 +106,11 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 		version.RestartPolicy.Policy = bcstype.RestartPolicy_ONFAILURE
 	}
 
-	if version.RestartPolicy.Policy != bcstype.RestartPolicy_ONFAILURE && version.RestartPolicy.Policy != bcstype.RestartPolicy_ALWAYS && version.RestartPolicy.Policy != bcstype.RestartPolicy_NEVER {
+	if version.RestartPolicy.Policy != bcstype.RestartPolicy_ONFAILURE && version.RestartPolicy.Policy !=
+		bcstype.RestartPolicy_ALWAYS && version.RestartPolicy.Policy != bcstype.RestartPolicy_NEVER {
 		blog.Error("error restart policy: %s", version.RestartPolicy.Policy)
-		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+"restart policy error")
+		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+
+			"restart policy error")
 		return nil, replyErr
 	}
 
@@ -147,10 +149,12 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 	return version, nil
 }
 
-func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.PodTemplateSpec) (*types.Version, error) {
+func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.PodTemplateSpec) (*types.Version,
+	error) {
 	if spec == nil {
 		blog.Errorf("spec.template can't be empty")
-		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+" no template")
+		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+
+			" no template")
 		return nil, replyErr
 	}
 
@@ -158,19 +162,21 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 	NumProcess := len(spec.PodSpec.Processes)
 	if NumContainer <= 0 && NumProcess <= 0 {
 		blog.Warn("there is no container or Process parameters.")
-		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+"no containers and processes")
+		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+
+			"no containers and processes")
 		return nil, replyErr
 	}
 	if NumContainer > 0 && NumProcess > 0 {
 		blog.Warn("containers and Processes can not coexist.")
-		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+"containers and processes cannot coexist")
+		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+
+			"containers and processes cannot coexist")
 		return nil, replyErr
 	}
-	//version belong to application
+	// version belong to application
 	if version.Kind == "" && NumContainer > 0 {
 		version.Kind = commtypes.BcsDataType_APP
 	}
-	//version belong to process
+	// version belong to process
 	if version.Kind == "" && NumProcess > 0 {
 		version.Kind = commtypes.BcsDataType_PROCESS
 	}
@@ -212,13 +218,13 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		}
 
 		container.Type = c.Type
-		//Resources
-		//request
+		// Resources
+		// request
 		container.Resources = new(types.Resource)
 		container.Resources.Cpus, _ = strconv.ParseFloat(c.Resources.Requests.Cpu, 64)
 		container.Resources.Mem, _ = strconv.ParseFloat(c.Resources.Requests.Mem, 64)
 		container.Resources.Disk, _ = strconv.ParseFloat(c.Resources.Requests.Storage, 64)
-		//limit
+		// limit
 		container.LimitResoures = new(types.Resource)
 		container.LimitResoures.Cpus, _ = strconv.ParseFloat(c.Resources.Limits.Cpu, 64)
 		container.LimitResoures.Mem, _ = strconv.ParseFloat(c.Resources.Limits.Mem, 64)
@@ -227,18 +233,18 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 			Resources: new(types.Resource),
 			Msgs:      []*types.BcsMessage{},
 		}
-		//extended resources
+		// extended resources
 		container.DataClass.ExtendedResources = c.Resources.ExtendedResources
-		//request resources
+		// request resources
 		container.DataClass.Resources = container.Resources
-		//limit resources
+		// limit resources
 		container.DataClass.LimitResources = container.LimitResoures
 
-		//set network flow limit parameters
+		// set network flow limit parameters
 		container.NetLimit = spec.PodSpec.NetLimit
 		container.DataClass.NetLimit = container.NetLimit
 
-		//docker
+		// docker
 		container.Docker = new(types.Docker)
 		container.Docker.Image = c.Image
 
@@ -257,13 +263,13 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		container.Docker.Command = c.Command
 		container.Docker.Arguments = c.Args
 
-		//parameter
+		// parameter
 		container.Docker.Parameters = []*types.Parameter{}
 		for _, ps := range c.Parameters {
 			container.Docker.Parameters = append(container.Docker.Parameters, &types.Parameter{Key: ps.Key, Value: ps.Value})
 		}
 
-		//portmaping
+		// portmaping
 		container.Docker.PortMappings = []*types.PortMapping{}
 		for _, port := range c.Ports {
 			portMap := new(types.PortMapping)
@@ -276,7 +282,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 			container.Docker.PortMappings = append(container.Docker.PortMappings, portMap)
 		}
 
-		//env
+		// env
 		container.Docker.Env = make(map[string]string)
 		for _, env := range c.Env {
 			if env.ValueFrom != nil && env.ValueFrom.ResourceFieldRef != nil && env.ValueFrom.ResourceFieldRef.Resource != "" {
@@ -298,7 +304,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 			}
 		}
 
-		//volume
+		// volume
 		container.Volumes = []*types.Volume{}
 		for _, volUnit := range c.Volumes {
 			vol := new(types.Volume)
@@ -312,10 +318,10 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 			container.Volumes = append(container.Volumes, vol)
 		}
 
-		//configmap
+		// configmap
 		container.ConfigMaps = c.ConfigMaps
 
-		//secret
+		// secret
 		container.Secrets = c.Secrets
 
 		container.HealthChecks = c.HealthChecks
@@ -338,7 +344,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		}
 
 		version.Container = append(version.Container, container)
-	} //end for i
+	} // end for i
 
 	return version, nil
 }

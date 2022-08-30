@@ -25,6 +25,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// getTable xxx
 // metric data table is clusterId
 func getTable(req *restful.Request) string {
 	return req.PathParameter(clusterIDTag)

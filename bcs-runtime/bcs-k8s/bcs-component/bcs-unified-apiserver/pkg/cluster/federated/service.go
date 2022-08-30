@@ -24,14 +24,14 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-// ServiceStor
+// ServiceStor xxx
 type ServiceStor struct {
 	members      []string
 	masterClient *kubernetes.Clientset
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
-// NewServiceStor
+// NewServiceStor xxx
 func NewServiceStor(masterClientId string, members []string) (*ServiceStor, error) {
 	stor := &ServiceStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
 	for _, k := range members {
@@ -60,7 +60,8 @@ func (s *ServiceStor) List(ctx context.Context, namespace string, opts metav1.Li
 }
 
 // ListAsTable 查询 Service 列表, kubectl 格式返回
-func (s *ServiceStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
+func (s *ServiceStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string,
+	opts metav1.ListOptions) (*metav1.Table, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -83,7 +84,8 @@ func (s *ServiceStor) ListAsTable(ctx context.Context, namespace string, acceptH
 }
 
 // Get 获取单个 Service, Json格式返回
-func (s *ServiceStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Service, error) {
+func (s *ServiceStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Service,
+	error) {
 	result, err := s.masterClient.CoreV1().Services(namespace).Get(ctx, name, opts)
 	if err != nil {
 		return nil, err
@@ -92,7 +94,8 @@ func (s *ServiceStor) Get(ctx context.Context, namespace string, name string, op
 }
 
 // GetAsTable 获取单个 Service, Table 格式返回
-func (s *ServiceStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+func (s *ServiceStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+	opts metav1.GetOptions) (*metav1.Table, error) {
 	result := &metav1.Table{}
 	err := s.masterClient.CoreV1().RESTClient().Get().
 		Namespace(namespace).
@@ -110,7 +113,8 @@ func (s *ServiceStor) GetAsTable(ctx context.Context, namespace string, name str
 }
 
 // Create 创建 Service
-func (s *ServiceStor) Create(ctx context.Context, namespace string, Service *v1.Service, opts metav1.CreateOptions) (*v1.Service, error) {
+func (s *ServiceStor) Create(ctx context.Context, namespace string, Service *v1.Service,
+	opts metav1.CreateOptions) (*v1.Service, error) {
 	result, err := s.masterClient.CoreV1().Services(namespace).Create(ctx, Service, opts)
 	if err != nil {
 		return nil, err
@@ -119,7 +123,8 @@ func (s *ServiceStor) Create(ctx context.Context, namespace string, Service *v1.
 }
 
 // Update 更新 Service
-func (s *ServiceStor) Update(ctx context.Context, namespace string, Service *v1.Service, opts metav1.UpdateOptions) (*v1.Service, error) {
+func (s *ServiceStor) Update(ctx context.Context, namespace string, Service *v1.Service,
+	opts metav1.UpdateOptions) (*v1.Service, error) {
 	result, err := s.masterClient.CoreV1().Services(namespace).Update(ctx, Service, opts)
 	if err != nil {
 		return nil, err
@@ -128,7 +133,8 @@ func (s *ServiceStor) Update(ctx context.Context, namespace string, Service *v1.
 }
 
 // Patch Edit/Apply Service
-func (s *ServiceStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1.Service, error) {
+func (s *ServiceStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte,
+	opts metav1.PatchOptions, subresources ...string) (*v1.Service, error) {
 	result, err := s.masterClient.CoreV1().Services(namespace).Patch(ctx, name, pt, data, opts, subresources...)
 	if err != nil {
 		return nil, err
@@ -137,7 +143,8 @@ func (s *ServiceStor) Patch(ctx context.Context, namespace string, name string, 
 }
 
 // Delete 删除单个 Service
-func (s *ServiceStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error) {
+func (s *ServiceStor) Delete(ctx context.Context, namespace string, name string,
+	opts metav1.DeleteOptions) (*metav1.Status, error) {
 	result, err := s.masterClient.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err

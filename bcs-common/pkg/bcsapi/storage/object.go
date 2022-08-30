@@ -76,7 +76,7 @@ type Hpa struct {
 	Data *autoscalingv1.HorizontalPodAutoscaler
 }
 
-// Gps is bcs generalpodautoscaler
+// Gpa is bcs generalpodautoscaler
 type Gpa struct {
 	CommonDataHeader
 	Data *gpav1alpha1.GeneralPodAutoscaler
@@ -101,7 +101,7 @@ type Application struct {
 	LastUpdateTime  time.Time
 	ReportTime      time.Time
 
-	//we should replace the next three BcsXXX, using ObjectMeta.Labels directly
+	// we should replace the next three BcsXXX, using ObjectMeta.Labels directly
 	BcsAppID    string
 	BcsSetID    string
 	BcsModuleID string

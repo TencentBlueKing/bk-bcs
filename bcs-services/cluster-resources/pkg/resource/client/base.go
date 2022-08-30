@@ -35,7 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// NewDynamicClient ...
+// NewDynamicClient xxx
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {
 	dynamicCli, _ := dynamic.NewForConfig(conf.Rest)
 	return dynamicCli
@@ -48,7 +48,7 @@ type ResClient struct {
 	res  schema.GroupVersionResource
 }
 
-// NewResClient ...
+// NewResClient xxx
 func NewResClient(conf *res.ClusterConf, resource schema.GroupVersionResource) *ResClient {
 	return &ResClient{NewDynamicClient(conf), conf, resource}
 }
@@ -138,6 +138,7 @@ func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.Lis
 	return c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
 }
 
+// permValidate xxx
 // IAM 权限校验
 func (c *ResClient) permValidate(ctx context.Context, action, namespace string) error {
 	projInfo, err := project.FromContext(ctx)

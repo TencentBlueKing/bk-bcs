@@ -10,6 +10,8 @@
  * limitations under the License.
  */
 
+// Package common xxx
 package common
 
+// BcsSystemNamespace xxx
 const BcsSystemNamespace = "bcs-system"

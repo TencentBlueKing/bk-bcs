@@ -11,8 +11,10 @@
  *
  */
 
+// Package types xxx
 package types
 
+// PrometheusSdConfig xxx
 // prometheus file_sd_config content
 // target servers and labels
 type PrometheusSdConfig struct {

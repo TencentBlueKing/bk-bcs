@@ -32,7 +32,7 @@ var vpcMgr sync.Once
 
 func init() {
 	vpcMgr.Do(func() {
-		//init VPC manager
+		// init VPC manager
 		cloudprovider.InitVPCManager("qcloud", &VPCClient{})
 	})
 }

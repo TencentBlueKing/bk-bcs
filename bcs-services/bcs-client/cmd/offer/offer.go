@@ -11,6 +11,7 @@
  *
  */
 
+// Package offer xxx
 package offer
 
 import (
@@ -23,6 +24,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewOfferCommand xxx
 func NewOfferCommand() cli.Command {
 	return cli.Command{
 		Name:  "offer",

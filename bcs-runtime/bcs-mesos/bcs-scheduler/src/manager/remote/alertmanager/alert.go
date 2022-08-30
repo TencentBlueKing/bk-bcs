@@ -63,6 +63,7 @@ func NewAlertManager(opt Options) (AlertManageInterface, error) {
 	}, nil
 }
 
+// getAPIGatewayToken xxx
 // am.opt.clientAuth = true
 func (am *alertManager) getAPIGatewayToken() (string, error) {
 	if am == nil {

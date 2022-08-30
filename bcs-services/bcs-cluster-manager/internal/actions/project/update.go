@@ -120,7 +120,7 @@ func (ua *UpdateAction) Handle(
 		return
 	}
 
-	//get old project information, update fields if required
+	// get old project information, update fields if required
 	destPro, err := ua.model.GetProject(ua.ctx, req.ProjectID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

@@ -100,6 +100,7 @@ func (s *CpusetDevicePlugin) updateCpusetNodes() error {
 	return nil
 }
 
+// listenerDockerEvent xxx
 // start listen docker api event
 func (s *CpusetDevicePlugin) listenerDockerEvent() {
 	listener := make(chan *docker.APIEvents)
@@ -128,20 +129,21 @@ func (s *CpusetDevicePlugin) listenerDockerEvent() {
 			}
 
 			switch msg.Action {
-			//start container
+			// start container
 			case "start":
-				//set container group cpuset
+				// set container group cpuset
 				s.setContainerCpuset(c)
 
 			// stop container
 			case "stop", "die":
-				//release container cpuset resources
+				// release container cpuset resources
 				s.releaseCpuset(c)
 			}
 		}
 	}
 }
 
+// getContainerCpusetInfo xxx
 // get container cpuset info
 func (s *CpusetDevicePlugin) getContainerCpusetInfo(c *docker.Container) (string, string) {
 	// cpuset env, example: node:0;cpuset:0,1,2,3

@@ -22,24 +22,24 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 )
 
-//Config alert saas configuration
+// Config alert saas configuration
 type Config struct {
-	//Hosts AuthCenter hosts, without http/https, default is http
+	// Hosts AuthCenter hosts, without http/https, default is http
 	Hosts []string
-	//reserved config for https, not used yet
+	// reserved config for https, not used yet
 	TLSConfig *tls.Config
-	//AppCode comes from bk saas
+	// AppCode comes from bk saas
 	AppCode string
-	//AppSecret comes from bk saas
+	// AppSecret comes from bk saas
 	AppSecret string
-	//LocalIP for alert source
+	// LocalIP for alert source
 	LocalIP string
-	//default ClusterID, default BCS-K8S-00000
+	// default ClusterID, default BCS-K8S-00000
 	ClusterID string
 }
 
-//Client bk-saas alert client definition, alert message sending details:
-//{
+// Client bk-saas alert client definition, alert message sending details:
+// {
 //	"startsAt": "2020-04-14T12:31:00.124Z",(required)
 //	"endsAt": "2020-04-14T12:31:00.124Z",(required)
 //	"annotations": {
@@ -53,16 +53,18 @@ type Config struct {
 //		"ip": "127.0.0.11",
 //		"module_name": "scheduler"
 //	}
-//}
+// }
 type Client interface {
-	//for bcs-servie modules
+	// SendServiceAlert TODO
+	// for bcs-servie modules
 	SendServiceAlert(module string, message string) error
-	//for cluster bcs modules
+	// SendClusterAlert TODO
+	// for cluster bcs modules
 	SendClusterAlert(cluster string, module string, message string) error
 	SendCustomAlert(annotation, label map[string]string) error
 }
 
-//NewAlertClient create client instance
+// NewAlertClient create client instance
 // according to app information
 func NewAlertClient(config *Config) (Client, error) {
 	if len(config.Hosts) == 0 {

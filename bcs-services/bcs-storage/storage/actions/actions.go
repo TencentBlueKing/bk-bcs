@@ -11,6 +11,7 @@
  *
  */
 
+// Package actions xxx
 package actions
 
 import (
@@ -18,22 +19,27 @@ import (
 )
 
 const (
-	prefix       = "/bcsstorage/"
+	prefix = "/bcsstorage/"
+	// APIVersionV1 xxx
 	APIVersionV1 = "v1"
 
+	// PathV1 xxx
 	PathV1 = prefix + APIVersionV1
 )
 
+// Action xxx
 type Action httpserver.Action
 
 var apiV1actions = make([]*httpserver.Action, 0, 100)
 
+// RegisterV1Action xxx
 // Register a handler into v1 actions
 // means all the URL of these handlers are start with PathV1
 func RegisterV1Action(action Action) {
 	apiV1actions = append(apiV1actions, httpserver.NewAction(action.Verb, action.Path, action.Params, action.Handler))
 }
 
+// GetApiV1Action xxx
 // Get V1 actions
 func GetApiV1Action() []*httpserver.Action {
 	return apiV1actions
@@ -41,12 +47,14 @@ func GetApiV1Action() []*httpserver.Action {
 
 var daemonFunc = make([]func(), 0, 10)
 
+// RegisterDaemonFunc xxx
 // called by actions for registering some daemon functions
 // and these functions will be called after flag-init and server-start
 func RegisterDaemonFunc(f func()) {
 	daemonFunc = append(daemonFunc, f)
 }
 
+// StartActionDaemon xxx
 // one by one start daemon goroutine
 func StartActionDaemon() {
 	for _, f := range daemonFunc {

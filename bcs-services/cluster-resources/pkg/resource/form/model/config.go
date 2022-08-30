@@ -20,7 +20,7 @@ type CM struct {
 	Data     CMData   `structs:"data"`
 }
 
-// CMData ...
+// CMData xxx
 type CMData struct {
 	Items []OpaqueData `structs:"items"`
 }
@@ -31,7 +31,7 @@ type Secret struct {
 	Data     SecretData `structs:"data"`
 }
 
-// SecretData ...
+// SecretData xxx
 type SecretData struct {
 	Type      string             `structs:"type"`
 	Opaque    []OpaqueData       `structs:"opaque"`
@@ -54,19 +54,19 @@ type DockerRegistryData struct {
 	Password string `structs:"password"`
 }
 
-// BasicAuthData ...
+// BasicAuthData xxx
 type BasicAuthData struct {
 	Username string `structs:"username"`
 	Password string `structs:"password"`
 }
 
-// SSHAuthData ...
+// SSHAuthData xxx
 type SSHAuthData struct {
 	PublicKey  string `structs:"publicKey"`
 	PrivateKey string `structs:"privateKey"`
 }
 
-// TLSData ...
+// TLSData xxx
 type TLSData struct {
 	PublicKey string `structs:"publicKey"`
 	Cert      string `structs:"cert"`

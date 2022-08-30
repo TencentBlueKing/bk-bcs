@@ -16,7 +16,7 @@ package project
 
 import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 
-// 获取单测用项目信息
+// fetchMockProjectInfo 获取单测用项目信息
 func fetchMockProjectInfo(projectID string) (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"id":   projectID,

@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -19,10 +20,10 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 )
 
-//CNIArgs args from Env CNI_ARGS
+// CNIArgs args from Env CNI_ARGS
 type CNIArgs struct {
-	//for unknown config item
+	// for unknown config item
 	types.CommonArgs
-	IP      net.IP `json:"ip,omitempty"`      //IP address if designated
-	Gateway net.IP `json:"gateway,omitempty"` //gateway if designated
+	IP      net.IP `json:"ip,omitempty"`      // IP address if designated
+	Gateway net.IP `json:"gateway,omitempty"` // gateway if designated
 }

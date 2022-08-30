@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package project xxx
 package project
 
 import (
@@ -24,13 +25,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 )
 
-// ProjectClient ...
+// ProjectClient xxx
 type ProjectClient struct {
 	Host  string
 	Token string
 }
 
-// Client ...
+// Client xxx
 var Client *ProjectClient
 
 // NewClient create project service client

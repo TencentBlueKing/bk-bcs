@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package config xxx
 package config
 
 import (
@@ -84,7 +85,7 @@ func (c *ClusterResourcesConf) initServerAddress() error {
 	return nil
 }
 
-// 初始化 BCS AuthToken
+// initAuthToken 初始化 BCS AuthToken
 func (c *ClusterResourcesConf) initAuthToken() error {
 	// 若指定从环境变量读取 BCS AuthToken，则丢弃配置文件中的值
 	if c.Global.BCSAPIGW.ReadAuthTokenFromEnv {
@@ -93,7 +94,7 @@ func (c *ClusterResourcesConf) initAuthToken() error {
 	return nil
 }
 
-// 初始化 jwt 公钥
+// initJWTPubKey 初始化 jwt 公钥
 func (c *ClusterResourcesConf) initJWTPubKey() error {
 	if c.Global.Auth.JWTPubKey == "" {
 		return nil
@@ -106,7 +107,7 @@ func (c *ClusterResourcesConf) initJWTPubKey() error {
 	return err
 }
 
-// 初始化 iam
+// initIAM 初始化 iam
 func (c *ClusterResourcesConf) initIAM() error {
 	systemID, appCode, appSecret := c.Global.IAM.SystemID, c.Global.Basic.AppCode, c.Global.Basic.AppSecret
 	if systemID == "" || appCode == "" || appSecret == "" {

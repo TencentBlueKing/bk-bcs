@@ -36,17 +36,18 @@ import (
 type NodeController interface {
 	// List list all node datas
 	List(selector labels.Selector) (ret []*schedypes.Agent, err error)
+	// GetByHostname xxx
 	// Get node by the specified hostname
 	GetByHostname(hostname string) (*schedypes.Agent, error)
 }
 
-//nodeController for dataType resource
+// nodeController for dataType resource
 type nodeController struct {
 	cxt          context.Context
 	stopFn       context.CancelFunc
-	eventStorage storage.Storage      //remote event storage
-	indexer      k8scache.Indexer     //indexer
-	reflector    *reflector.Reflector //reflector list/watch all datas to local memory cache
+	eventStorage storage.Storage      // remote event storage
+	indexer      k8scache.Indexer     // indexer
+	reflector    *reflector.Reflector // reflector list/watch all datas to local memory cache
 }
 
 // List list all node datas
@@ -57,6 +58,7 @@ func (s *nodeController) List(selector labels.Selector) (ret []*schedypes.Agent,
 	return ret, err
 }
 
+// GetByHostname xxx
 func (s *nodeController) GetByHostname(hostname string) (*schedypes.Agent, error) {
 	obj, exists, err := s.indexer.GetByKey(hostname)
 	if err != nil {
@@ -68,11 +70,12 @@ func (s *nodeController) GetByHostname(hostname string) (*schedypes.Agent, error
 	return obj.(*schedypes.Agent), nil
 }
 
+// NewNodeController xxx
 func NewNodeController(hosts []string, eventHandler reflector.EventInterface) (NodeController, error) {
 	indexers := k8scache.Indexers{}
 
 	ts := k8scache.NewIndexer(NodeObjectKeyFn, indexers)
-	//create namespace client for zookeeper
+	// create namespace client for zookeeper
 	zkConfig := &zookeeper.ZkConfig{
 		Hosts:         hosts,
 		PrefixPath:    "/blueking",
@@ -85,7 +88,7 @@ func NewNodeController(hosts []string, eventHandler reflector.EventInterface) (N
 		blog.Errorf("bk-bcs mesos discovery create node pod client failed, %s", err)
 		return nil, err
 	}
-	//create listwatcher
+	// create listwatcher
 	listwatcher := &reflector.ListWatch{
 		ListFn: func() ([]meta.Object, error) {
 			return nodeclient.List(context.Background(), "agent", nil)
@@ -102,20 +105,21 @@ func NewNodeController(hosts []string, eventHandler reflector.EventInterface) (N
 		indexer:      ts,
 	}
 
-	//create reflector
-	ctl.reflector = reflector.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ts, listwatcher, time.Second*600, eventHandler)
-	//sync all data object from remote event storage
+	// create reflector
+	ctl.reflector = reflector.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ts, listwatcher, time.Second*600,
+		eventHandler)
+	// sync all data object from remote event storage
 	err = ctl.reflector.ListAllData()
 	if err != nil {
 		return nil, err
 	}
-	//run reflector controller
+	// run reflector controller
 	go ctl.reflector.Run()
 
 	return ctl, nil
 }
 
-//NodeObjectKeyFn create key for node
+// NodeObjectKeyFn create key for node
 func NodeObjectKeyFn(obj interface{}) (string, error) {
 	node, ok := obj.(*schedypes.Agent)
 	if !ok {
@@ -124,7 +128,7 @@ func NodeObjectKeyFn(obj interface{}) (string, error) {
 	return node.Key, nil
 }
 
-//NodeObjectNewFn create new Node Object
+// NodeObjectNewFn create new Node Object
 func NodeObjectNewFn() meta.Object {
 	return new(schedypes.Agent)
 }

@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -130,7 +131,7 @@ func makePodStatus(err error) string {
 	return SucStatus
 }
 
-// CollectPodCount
+// CollectPodCount xxx
 func CollectPodCount(clusterId, namespace string, count float64) {
 	podCount.WithLabelValues(clusterId, namespace).Set(count)
 }

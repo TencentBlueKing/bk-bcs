@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package randhostport xxx
 package randhostport
 
 import (
@@ -189,6 +190,7 @@ func (hpi *HostPortInjector) Handle(ar v1beta1.AdmissionReview) *v1beta1.Admissi
 	}
 }
 
+// injectRequired xxx
 // check if pod injection needed
 func (hpi *HostPortInjector) injectRequired(pod *corev1.Pod) bool {
 	if value, ok := pod.Annotations[pluginAnnotationKey]; !ok || value != pluginAnnotationValue {
@@ -328,6 +330,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	return retPatches, nil
 }
 
+// generateAffinityPath xxx
 // generate pod affinity patch
 func (hpi *HostPortInjector) generateAffinityPath(pod *corev1.Pod, hostPorts []*PortEntry) types.PatchOperation {
 	var affinity *corev1.Affinity
@@ -361,6 +364,7 @@ func (hpi *HostPortInjector) generateAffinityPath(pod *corev1.Pod, hostPorts []*
 	}
 }
 
+// generateLabelPatch xxx
 // generate pod label patch
 func (hpi *HostPortInjector) generateLabelPatch(pod *corev1.Pod, hostPorts []*PortEntry) types.PatchOperation {
 	labels := pod.Labels

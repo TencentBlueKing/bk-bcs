@@ -70,7 +70,7 @@ func reportMetrics(logic, status string, started time.Time) {
 	logicLatency.WithLabelValues(logic, status).Observe(time.Since(started).Seconds())
 }
 
-//NewNetService create netservice logic
+// NewNetService create netservice logic
 func NewNetService(addr string, port, metricPort int, st storage.Storage) *NetService {
 	srv := &NetService{
 		addr:       addr,
@@ -78,25 +78,25 @@ func NewNetService(addr string, port, metricPort int, st storage.Storage) *NetSe
 		metricPort: metricPort,
 		store:      st,
 	}
-	//service init
+	// service init
 	if _, err := st.Get(defaultNetSvcPath); err != nil {
-		//create node
+		// create node
 		st.Add(defaultNetSvcPath, []byte("netservice"))
 	}
 	if _, err := st.Get(defaultHostInfoPath); err != nil {
-		//create node
+		// create node
 		st.Add(defaultHostInfoPath, []byte("hosts"))
 	}
 	if _, err := st.Get(defaultPoolInfoPath); err != nil {
-		//create node
+		// create node
 		st.Add(defaultPoolInfoPath, []byte("pools"))
 	}
 	if _, err := st.Get(defaultLockerPath); err != nil {
-		//create node
+		// create node
 		st.Add(defaultLockerPath, []byte("lock"))
 	}
 	if _, err := st.Get(defaultDiscoveryPath); err != nil {
-		//create node
+		// create node
 		st.Add(defaultDiscoveryPath, []byte("server"))
 	}
 	if err := srv.createSelfNode(); err != nil {
@@ -106,23 +106,23 @@ func NewNetService(addr string, port, metricPort int, st storage.Storage) *NetSe
 	return srv
 }
 
-//NetNode node data for
+// NetNode node data for
 type NetNode struct {
 	Addr string `json:"addr"`
 	Port int    `json:"port"`
 }
 
-//NetService service for all logic, this NetService
-//add/delete/update/list all data base on key/value
-//todo(DeveloperJim): if we need to store data in SQL system, NetService needs refactor.
+// NetService service for all logic, this NetService
+// add/delete/update/list all data base on key/value
+// todo(DeveloperJim): if we need to store data in SQL system, NetService needs refactor.
 type NetService struct {
-	addr       string          //local listen addr
-	port       int             //local listen port
-	metricPort int             //metric port
-	store      storage.Storage //storage for host, pool info
+	addr       string          // local listen addr
+	port       int             // local listen port
+	metricPort int             // metric port
+	store      storage.Storage // storage for host, pool info
 }
 
-//createSelfNode create self node in storage for service discovery
+// createSelfNode create self node in storage for service discovery
 func (srv *NetService) createSelfNode() error {
 	hostname, _ := os.Hostname()
 	node := &bcstypes.NetServiceInfo{
@@ -139,7 +139,7 @@ func (srv *NetService) createSelfNode() error {
 	data, _ := json.Marshal(node)
 	self := srv.addr + ":" + strconv.Itoa(srv.port)
 	key := filepath.Join(defaultDiscoveryPath, self)
-	//clean self node first and then create new one
+	// clean self node first and then create new one
 	if exist, _ := srv.store.Exist(key); exist {
 		blog.Warn("server node %s exist, clean first", key)
 		srv.store.Delete(key)

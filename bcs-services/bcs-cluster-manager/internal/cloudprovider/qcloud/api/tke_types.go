@@ -148,7 +148,7 @@ const (
 
 // QueryFilter xxx
 type QueryFilter interface {
-	// BuildFilters() build filters
+	// BuildFilters () build filters
 	BuildFilters() []*tke.Filter
 }
 
@@ -397,15 +397,15 @@ type NodePoolOption struct {
 
 // CreateCVMRequest create cluster cvm request
 type CreateCVMRequest struct {
-	//tke clusterId, required
+	// tke clusterId, required
 	ClusterID string `json:"clusterId"`
-	//VPCID, required
+	// VPCID, required
 	VPCID string `json:"vpcId"`
-	//subnet, required
+	// subnet, required
 	SubNetID string `json:"subnetId"`
-	//available zone, required
+	// available zone, required
 	Zone string `json:"zone"`
-	//cvm number, required
+	// cvm number, required
 	ApplyNum uint32 `json:"applyNum"`
 	// cvm instance type, required
 	InstanceType string `json:"instanceType"`
@@ -415,15 +415,15 @@ type CreateCVMRequest struct {
 	SystemDiskSize uint32 `json:"systemDiskSize"`
 	// dataDisk, optional
 	DataDisks []*DataDisk `json:"dataDisk"`
-	//image information for system, required
+	// image information for system, required
 	Image *ImageInfo `json:"image"`
-	//security group, optional
+	// security group, optional
 	Security *SecurityGroup `json:"security"`
-	//setup security service, optional, default 0
+	// setup security service, optional, default 0
 	IsSecurityService uint32 `json:"isSecurityService,omitempty"`
-	//cloud monitor, optional, default 1
+	// cloud monitor, optional, default 1
 	IsMonitorService uint32 `json:"isMonitorService"`
-	//cvm instance name, optional
+	// cvm instance name, optional
 	InstanceName string `json:"instanceName,omitempty"`
 	// instance login setting
 	Login LoginSettings `json:"login"`
@@ -433,17 +433,17 @@ type CreateCVMRequest struct {
 
 // ImageInfo for system
 type ImageInfo struct {
-	ID   string `json:"imageId"`           //required
-	Name string `json:"imageName"`         //required
-	OS   string `json:"imageOs,omitempty"` //optional
-	Type string `json:"imageType"`         //optional
+	ID   string `json:"imageId"`           // required
+	Name string `json:"imageName"`         // required
+	OS   string `json:"imageOs,omitempty"` // optional
+	Type string `json:"imageType"`         // optional
 }
 
-//SecurityGroup sg information
+// SecurityGroup sg information
 type SecurityGroup struct {
-	ID   string `json:"securityGroupId"`             //required
-	Name string `json:"securityGroupName,omitempty"` //optional
-	Desc string `json:"securityGroupDesc,omitempty"` //optional
+	ID   string `json:"securityGroupId"`             // required
+	Name string `json:"securityGroupName,omitempty"` // optional
+	Desc string `json:"securityGroupDesc,omitempty"` // optional
 }
 
 // DataDisk for CVMOrder

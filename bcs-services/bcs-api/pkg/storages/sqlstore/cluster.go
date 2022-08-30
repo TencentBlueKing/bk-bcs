@@ -38,6 +38,7 @@ func GetAllCluster() []m.Cluster {
 	return clusters
 }
 
+// GetClusterByFuzzyClusterId xxx
 // GetCluster query for the cluster by given fuzzy clusterId
 func GetClusterByFuzzyClusterId(clusterId string) *m.Cluster {
 	query := "%" + strings.ToLower(clusterId) + "%"
@@ -60,6 +61,7 @@ func GetClusterByIdentifier(clusterIdentifier string) *m.Cluster {
 	return nil
 }
 
+// CreateCluster xxx
 func CreateCluster(cluster *m.Cluster) error {
 	// Generate a random identifier by default, prepend the clusterID to avoid name conflict
 	if cluster.Identifier == "" {

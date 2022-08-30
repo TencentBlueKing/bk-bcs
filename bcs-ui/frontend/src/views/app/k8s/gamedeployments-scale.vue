@@ -13,13 +13,14 @@
             {{$t('实例数量')}}
           </label>
           <div class="bk-form-content" style="display: inline-block; margin-left: 10px;">
-            <bk-number-input
-              :value.sync="scaleNum"
+            <bk-input
+              type="number"
+              v-model="scaleNum"
               :min="0"
               :max="1000"
-              :ex-style="{ 'width': '260px' }"
+              :style="{ 'width': '260px' }"
               :placeholder="$t('请输入')">
-            </bk-number-input>
+            </bk-input>
           </div>
         </div>
       </div>

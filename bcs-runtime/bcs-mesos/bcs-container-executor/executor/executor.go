@@ -11,6 +11,7 @@
  *
  */
 
+// Package executor xxx
 package executor
 
 import (
@@ -33,52 +34,53 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
 	"golang.org/x/net/context"
-	//"github.com/gogo/protobuf/test/fuzztests"
+	// "github.com/gogo/protobuf/test/fuzztests"
 )
 
 const (
+	// DefaultMetricsTextFile xxx
 	DefaultMetricsTextFile = "/data/bcs/export_data"
 )
 
-//DriverEnv The following environment variables are set by the agent that can be
+// DriverEnv The following environment variables are set by the agent that can be
 //    used by the executor upon startup:
-//MESOS_FRAMEWORK_ID: FrameworkID of the scheduler needed as part of the SUBSCRIBE call.
-//MESOS_EXECUTOR_ID: ExecutorID of the executor needed as part of the SUBSCRIBE call.
-//MESOS_DIRECTORY: Path to the working directory for the executor on the host filesystem(deprecated).
-//MESOS_SANDBOX: Path to the mapped sandbox inside of the container (determined by the
+// MESOS_FRAMEWORK_ID: FrameworkID of the scheduler needed as part of the SUBSCRIBE call.
+// MESOS_EXECUTOR_ID: ExecutorID of the executor needed as part of the SUBSCRIBE call.
+// MESOS_DIRECTORY: Path to the working directory for the executor on the host filesystem(deprecated).
+// MESOS_SANDBOX: Path to the mapped sandbox inside of the container (determined by the
 //    agent flag sandbox_directory) for either mesos container with image or docker container.
 //    For the case of command task without image specified, it is the path to the sandbox
 //    on the host filesystem, which is identical to MESOS_DIRECTORY. MESOS_DIRECTORY
 //    is always the sandbox on the host filesystem.
-//MESOS_AGENT_ENDPOINT: agent endpoint i.e. ip:port to be used by the executor to connect
+// MESOS_AGENT_ENDPOINT: agent endpoint i.e. ip:port to be used by the executor to connect
 //    to the agent.
-//MESOS_CHECKPOINT: If set to true, denotes that framework has checkpointing enabled.
-//MESOS_EXECUTOR_SHUTDOWN_GRACE_PERIOD: Amount of time the agent would wait for an
+// MESOS_CHECKPOINT: If set to true, denotes that framework has checkpointing enabled.
+// MESOS_EXECUTOR_SHUTDOWN_GRACE_PERIOD: Amount of time the agent would wait for an
 //    executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event.
-//If MESOS_CHECKPOINT is set i.e. when framework checkpointing is enabled, the following
+// If MESOS_CHECKPOINT is set i.e. when framework checkpointing is enabled, the following
 //    additional variables are also set that can be used by the executor for retrying
 //    upon a disconnection with the agent:
-//MESOS_RECOVERY_TIMEOUT: The total duration that the executor should spend retrying
+// MESOS_RECOVERY_TIMEOUT: The total duration that the executor should spend retrying
 //    before shutting itself down when it is disconnected from the agent (e.g., 15mins,
 //    5secs etc.). This is configurable at agent startup via the flag --recovery_timeout.
-//MESOS_SUBSCRIPTION_BACKOFF_MAX: The maximum backoff duration to be used by the executor
+// MESOS_SUBSCRIPTION_BACKOFF_MAX: The maximum backoff duration to be used by the executor
 //    between two retries when disconnected (e.g., 250ms, 1mins etc.). This is configurable
 //    at agent startup via the flag --executor_reregistration_timeout.
 type DriverEnv struct {
-	MesosSlavePID            string //agent slave pid
-	MesosSlaveID             string //agent slave uniq id
-	MesosAgentEndpoint       string //agent ip:port endpoint to connect to the agent
-	MesosFrameworkID         string //frameworkid from agent
-	MesosExecutorID          string //exector id from agent
-	SSLEnabled               bool   //true is agent enable https
-	MesosSandBox             string //Path to the mapped sandbox inside of the container
-	MesosCheckpoint          bool   //If set to true, denotes that framework has checkpointing enabled
-	MesosRecoveryTimeout     int    //The total duration that the executor should spend retrying before shutting it self down when it is disconnected from the agent
-	MesosSubscriptionBackoff int    //The maximum backoff duration between two retries when disconnected
-	MesosShutdownGracePeriod int    //Amount of time the agent would wait for an executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event
+	MesosSlavePID            string // agent slave pid
+	MesosSlaveID             string // agent slave uniq id
+	MesosAgentEndpoint       string // agent ip:port endpoint to connect to the agent
+	MesosFrameworkID         string // frameworkid from agent
+	MesosExecutorID          string // exector id from agent
+	SSLEnabled               bool   // true is agent enable https
+	MesosSandBox             string // Path to the mapped sandbox inside of the container
+	MesosCheckpoint          bool   // If set to true, denotes that framework has checkpointing enabled
+	MesosRecoveryTimeout     int    // The total duration that the executor should spend retrying before shutting it self down when it is disconnected from the agent
+	MesosSubscriptionBackoff int    // The maximum backoff duration between two retries when disconnected
+	MesosShutdownGracePeriod int    // Amount of time the agent would wait for an executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event
 }
 
-//GetAllEnvs get all info from environment
+// GetAllEnvs get all info from environment
 func (ee *DriverEnv) GetAllEnvs() error {
 	ee.MesosSlavePID = os.Getenv("MESOS_SLAVE_PID")
 	if ee.MesosSlavePID == "" {
@@ -109,7 +111,7 @@ func (ee *DriverEnv) GetAllEnvs() error {
 	checkPoint := os.Getenv("MESOS_CHECKPOINT")
 	if checkPoint == "1" || checkPoint == "true" {
 		ee.MesosCheckpoint = true
-		//get MESOS_RECOVERY_TIMEOUT & MESOS_SUBSCRIPTION_BACKOFF_MAX
+		// get MESOS_RECOVERY_TIMEOUT & MESOS_SUBSCRIPTION_BACKOFF_MAX
 		ee.MesosRecoveryTimeout, _ = strconv.Atoi(os.Getenv("MESOS_RECOVERY_TIMEOUT"))
 		ee.MesosSubscriptionBackoff, _ = strconv.Atoi(os.Getenv("MESOS_SUBSCRIPTION_BACKOFF_MAX"))
 	}
@@ -117,35 +119,35 @@ func (ee *DriverEnv) GetAllEnvs() error {
 	return nil
 }
 
-//DriverConfig hold all custom info for ExecutorDriver
+// DriverConfig hold all custom info for ExecutorDriver
 type DriverConfig struct {
-	Executor Executor //Executor interface
+	Executor Executor // Executor interface
 }
 
-//BcsExecutorDriver BCS implementation for ExecutorDriver
+// BcsExecutorDriver BCS implementation for ExecutorDriver
 type BcsExecutorDriver struct {
-	lock              sync.RWMutex               //lock for status/data
-	executor          Executor                   //custom executor
-	exeEnv            *DriverEnv                 //executor environment required
-	status            mesos.Status               //driver status
-	connected         bool                       //flag for connection
-	stateReConnected  bool                       //flag for re-connecting
-	reConCxt          context.Context            //context for reconnection
-	frameworkID       *mesos.FrameworkID         //scheduler frameworkid from environment
-	agentID           *mesos.AgentID             //mesos slave ID form environment
-	agentPID          *upid.UPID                 //mesos slave upid for identify
-	executorID        *mesos.ExecutorID          //self executor id from environment
-	connection        conn.Connection            //network connection to mesos slave
-	tasks             map[string]*mesos.TaskInfo //key is uuid, task info map, send to slave when reregistered
-	updates           *exec.Call_Update          //key is uuid, call_Update send to mesos slave when reregistered
+	lock              sync.RWMutex               // lock for status/data
+	executor          Executor                   // custom executor
+	exeEnv            *DriverEnv                 // executor environment required
+	status            mesos.Status               // driver status
+	connected         bool                       // flag for connection
+	stateReConnected  bool                       // flag for re-connecting
+	reConCxt          context.Context            // context for reconnection
+	frameworkID       *mesos.FrameworkID         // scheduler frameworkid from environment
+	agentID           *mesos.AgentID             // mesos slave ID form environment
+	agentPID          *upid.UPID                 // mesos slave upid for identify
+	executorID        *mesos.ExecutorID          // self executor id from environment
+	connection        conn.Connection            // network connection to mesos slave
+	tasks             map[string]*mesos.TaskInfo // key is uuid, task info map, send to slave when reregistered
+	updates           *exec.Call_Update          // key is uuid, call_Update send to mesos slave when reregistered
 	currentTaskStatus map[string]*mesos.TaskState
-	stopCxt           context.Context    //context for cancel
-	canceler          context.CancelFunc //function for cancel
+	stopCxt           context.Context    // context for cancel
+	canceler          context.CancelFunc // function for cancel
 }
 
-//NewExecutorDriver create BcsExecutorDriver with ExecutorConfig
+// NewExecutorDriver create BcsExecutorDriver with ExecutorConfig
 func NewExecutorDriver(bcsExe Executor) ExecutorDriver {
-	//parse all config item from environment
+	// parse all config item from environment
 	envs := new(DriverEnv)
 	envErr := envs.GetAllEnvs()
 	if envErr != nil {
@@ -172,104 +174,105 @@ func NewExecutorDriver(bcsExe Executor) ExecutorDriver {
 		agentPID:         slaveUpid,
 		executorID:       &mesos.ExecutorID{Value: proto.String(envs.MesosExecutorID)},
 		tasks:            make(map[string]*mesos.TaskInfo),
-		//updates:          make([]*exec.Call_Update,0),
+		// updates:          make([]*exec.Call_Update,0),
 		currentTaskStatus: make(map[string]*mesos.TaskState),
 		stopCxt:           stopCxt,
 		canceler:          rootCancel,
 	}
 }
 
-//ExecutorID get ExecutorID from mesos slave
+// ExecutorID get ExecutorID from mesos slave
 func (driver *BcsExecutorDriver) ExecutorID() string {
 	return driver.exeEnv.MesosExecutorID
 }
 
-//Start the executor driver. This needs to be called before any
-//other driver calls are made.
+// Start the executor driver. This needs to be called before any
+// other driver calls are made.
 func (driver *BcsExecutorDriver) Start() (mesos.Status, error) {
 	fmt.Fprintln(os.Stdout, "Starting BcsExecutorDriver...")
 	if driver.status != mesos.Status_DRIVER_NOT_STARTED {
-		return driver.status, fmt.Errorf("Unable start driver, expecting %s, but got %s", mesos.Status_DRIVER_NOT_STARTED, driver.status)
+		return driver.status, fmt.Errorf("Unable start driver, expecting %s, but got %s", mesos.Status_DRIVER_NOT_STARTED,
+			driver.status)
 	}
-	//create connection for driver
-	//driver.connection = conn.NewFakeConnection()
+	// create connection for driver
+	// driver.connection = conn.NewFakeConnection()
 	driver.connection = conn.NewConnection()
-	//install all message handler, only one handler can execute each time
+	// install all message handler, only one handler can execute each time
 	var handlerLock sync.Mutex
-	//subscribe
+	// subscribe
 	driver.connection.Install(exec.Event_SUBSCRIBED, func(from *upid.UPID, event *exec.Event) {
 		subs := event.GetSubscribed()
-		//handlerLock.Lock()
-		//defer handlerLock.Unlock()
+		// handlerLock.Lock()
+		// defer handlerLock.Unlock()
 		driver.subscribed(from, subs)
 		executorSlaveConnection.Set(1)
 	})
-	//launch
+	// launch
 	driver.connection.Install(exec.Event_LAUNCH, func(from *upid.UPID, event *exec.Event) {
 		launch := event.GetLaunch()
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.runTask(from, launch)
 	})
-	//launchgroup
+	// launchgroup
 	driver.connection.Install(exec.Event_LAUNCH_GROUP, func(from *upid.UPID, event *exec.Event) {
 		launchGroup := event.GetLaunchGroup()
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.runTaskGroup(from, launchGroup)
 	})
-	//kill
+	// kill
 	driver.connection.Install(exec.Event_KILL, func(from *upid.UPID, event *exec.Event) {
 		kill := event.GetKill()
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.killTask(from, kill)
 	})
-	//framework message
+	// framework message
 	driver.connection.Install(exec.Event_MESSAGE, func(from *upid.UPID, event *exec.Event) {
 		ack := event.GetMessage()
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.frameworkMessage(from, ack)
 	})
-	//acknowledged
+	// acknowledged
 	driver.connection.Install(exec.Event_ACKNOWLEDGED, func(from *upid.UPID, event *exec.Event) {
 		ack := event.GetAcknowledged()
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.acknowledgementMessage(from, ack)
 	})
-	//shutdown
+	// shutdown
 	driver.connection.Install(exec.Event_SHUTDOWN, func(from *upid.UPID, event *exec.Event) {
-		//no message body for shutdown
+		// no message body for shutdown
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.shutdown(from, event)
 	})
-	//error message
+	// error message
 	driver.connection.Install(exec.Event_ERROR, func(from *upid.UPID, event *exec.Event) {
 		err := event.GetError()
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.frameworkError(from, err)
 	})
-	//http connection close callback
+	// http connection close callback
 	driver.connection.Install(conn.Event_CONNECTION_CLOSE, func(from *upid.UPID, event *exec.Event) {
-		//from & event all nil, do not use them
+		// from & event all nil, do not use them
 		handlerLock.Lock()
 		defer handlerLock.Unlock()
 		driver.connected = false
 		driver.stateReConnected = true
-		//create goroutine reconnect
+		// create goroutine reconnect
 		go driver.reconnectLoop()
 		executorSlaveConnection.Set(0)
-		//subscribe success, setting state in reConnected
+		// subscribe success, setting state in reConnected
 
 	})
-	//fix by developerJim, 2016-12-31
-	//check http or https
+	// fix by developerJim, 2016-12-31
+	// check http or https
 	if driver.exeEnv.SSLEnabled {
-		//todo(developerJim): add SSL INFO for connection
+		// todo(developerJim): add SSL INFO for connection
 		return driver.status, fmt.Errorf("HTTPS Unimplementation")
 	}
 	if err := driver.connection.Start("http://"+driver.exeEnv.MesosAgentEndpoint, "/api/v1/executor"); err != nil {
@@ -277,24 +280,25 @@ func (driver *BcsExecutorDriver) Start() (mesos.Status, error) {
 		return driver.status, err
 	}
 
-	//todo(developerJim): get upid from connection
+	// todo(developerJim): get upid from connection
 
-	//ready to send subcribe message to mesos slave
+	// ready to send subcribe message to mesos slave
 	if err := driver.subscribe(); err != nil {
 		fmt.Fprintf(os.Stderr, "BcsExecutorDriver send Call_Subscribe message failed: %s\n", err.Error())
 		return driver.status, err
 	}
-	//sending subscribe message success, wait launch or launchGroup
+	// sending subscribe message success, wait launch or launchGroup
 	driver.status = mesos.Status_DRIVER_RUNNING
 	fmt.Fprintf(os.Stdout, "BcsExecutorDriver starting with ExecutorID: %s\n", driver.executorID.GetValue())
-	//handle prometheus metrics to text file
+	// handle prometheus metrics to text file
 	go driver.metricsToText()
 
 	return driver.status, nil
 }
 
-//handle executor metrics to textfile
-//module nodeexport report the textfile to prometheus
+// metricsToText xxx
+// handle executor metrics to textfile
+// module nodeexport report the textfile to prometheus
 func (driver *BcsExecutorDriver) metricsToText() {
 	err := os.MkdirAll(DefaultMetricsTextFile, 0755)
 	if err != nil {
@@ -325,29 +329,29 @@ func (driver *BcsExecutorDriver) metricsToText() {
 			}
 		}
 
-		//close file
+		// close file
 		f.Close()
 	}
 
 }
 
-//Stop the executor driver.
-//executor will exited
+// Stop the executor driver.
+// executor will exited
 func (driver *BcsExecutorDriver) Stop() (mesos.Status, error) {
 	fmt.Fprintln(os.Stdout, "Stop ExecutorDriver")
 	if driver.status != mesos.Status_DRIVER_RUNNING {
 		return driver.status, fmt.Errorf("Unable Stop, status is Not RUNNING")
 	}
-	//ready to stop connection
+	// ready to stop connection
 	if driver.connected {
 		logs.Infoln("ExecutorDriver is under connection, wait slave reply acknowledged")
-		//check all update info acknowledged
+		// check all update info acknowledged
 		checkTick := time.NewTicker(500 * time.Microsecond)
 		defer checkTick.Stop()
 		timeoutTick := time.NewTicker(5 * time.Second)
 		defer timeoutTick.Stop()
 		for driver.updates != nil && driver.connected {
-			//if connection lost, no need to wait acknowledgement
+			// if connection lost, no need to wait acknowledgement
 			select {
 			case <-timeoutTick.C:
 				fmt.Fprintln(os.Stdout, "ExecutorDriver wait acknowledgement from slave timeout(5 seconds)")
@@ -370,19 +374,19 @@ func (driver *BcsExecutorDriver) Stop() (mesos.Status, error) {
 	return driver.status, nil
 }
 
-//Abort the driver so that no more callbacks can be made to the
-//executor. The semantics of abort and stop have deliberately been
-//separated so that code can detect an aborted driver (i.e., via
-//the return status of ExecutorDriver.Join, see below), and
-//instantiate and start another driver if desired (from within the
-//same process ... although this functionality is currently not
-//supported for executors).
+// Abort the driver so that no more callbacks can be made to the
+// executor. The semantics of abort and stop have deliberately been
+// separated so that code can detect an aborted driver (i.e., via
+// the return status of ExecutorDriver.Join, see below), and
+// instantiate and start another driver if desired (from within the
+// same process ... although this functionality is currently not
+// supported for executors).
 func (driver *BcsExecutorDriver) Abort() (mesos.Status, error) {
 	fmt.Fprintln(os.Stdout, "Abort ExecutorDriver")
 	if driver.status != mesos.Status_DRIVER_RUNNING {
 		return driver.status, fmt.Errorf("Unable Abort, status is Not RUNNING")
 	}
-	//ready to stop connection
+	// ready to stop connection
 	if driver.connected {
 		fmt.Fprintln(os.Stdout, "ExecutorDriver is stopping Connection...")
 		driver.connection.Stop(true)
@@ -393,16 +397,16 @@ func (driver *BcsExecutorDriver) Abort() (mesos.Status, error) {
 	return driver.status, nil
 }
 
-//Join Waits for the driver to be stopped or aborted, possibly
-//blocking the calling goroutine indefinitely. The return status of
-//this function can be used to determine if the driver was aborted
-//(see package mesos for a description of Status).
+// Join Waits for the driver to be stopped or aborted, possibly
+// blocking the calling goroutine indefinitely. The return status of
+// this function can be used to determine if the driver was aborted
+// (see package mesos for a description of Status).
 func (driver *BcsExecutorDriver) Join() (mesos.Status, error) {
 	fmt.Println("join ExecutorDriver, wait for ExecutorDriver stop")
 	if driver.status != mesos.Status_DRIVER_RUNNING {
 		return driver.status, fmt.Errorf("Unable Abort, status is Not RUNNING")
 	}
-	//wait for stop signal
+	// wait for stop signal
 	select {
 	case <-driver.stopCxt.Done():
 		fmt.Fprintf(os.Stderr, "ExecutorDriver exit in join...\n")
@@ -410,7 +414,7 @@ func (driver *BcsExecutorDriver) Join() (mesos.Status, error) {
 	}
 }
 
-//Run Starts and immediately joins (i.e., blocks on) the driver.
+// Run Starts and immediately joins (i.e., blocks on) the driver.
 func (driver *BcsExecutorDriver) Run() (mesos.Status, error) {
 	status, err := driver.Start()
 	if err != nil {
@@ -422,14 +426,15 @@ func (driver *BcsExecutorDriver) Run() (mesos.Status, error) {
 	return driver.Join()
 }
 
-//SendStatusUpdate a status update to the framework scheduler, retrying as
-//necessary until an acknowledgement has been received or the
-//executor is terminated (in which case, a TASK_LOST status update
-//will be sent). See Scheduler.StatusUpdate for more information
-//about status update acknowledgements.
+// SendStatusUpdate a status update to the framework scheduler, retrying as
+// necessary until an acknowledgement has been received or the
+// executor is terminated (in which case, a TASK_LOST status update
+// will be sent). See Scheduler.StatusUpdate for more information
+// about status update acknowledgements.
 func (driver *BcsExecutorDriver) SendStatusUpdate(taskStatus *mesos.TaskStatus) (mesos.Status, error) {
 	if driver.status != mesos.Status_DRIVER_RUNNING {
-		fmt.Fprintf(os.Stderr, "Unable to SendStatusUpdate, expecting Status %s, but got %s", mesos.Status_DRIVER_RUNNING, driver.status)
+		fmt.Fprintf(os.Stderr, "Unable to SendStatusUpdate, expecting Status %s, but got %s", mesos.Status_DRIVER_RUNNING,
+			driver.status)
 		return driver.status, fmt.Errorf("ExecutorDriver status Not RUNNING")
 	}
 	if taskStatus.GetState() == mesos.TaskState_TASK_STAGING {
@@ -440,7 +445,7 @@ func (driver *BcsExecutorDriver) SendStatusUpdate(taskStatus *mesos.TaskStatus) 
 		}
 		return driver.status, err
 	}
-	//setting TaskStatus attributes
+	// setting TaskStatus attributes
 	ID := uuid.NewUUID()
 	now := float64(time.Now().Unix())
 	taskStatus.Timestamp = proto.Float64(now)
@@ -450,8 +455,8 @@ func (driver *BcsExecutorDriver) SendStatusUpdate(taskStatus *mesos.TaskStatus) 
 	callUpdate := &exec.Call_Update{
 		Status: taskStatus,
 	}
-	//fmt.Fprintf(os.Stdout, "ExecutorDriver send TaskStatus update %s\n", callUpdate.String())
-	//create Call
+	// fmt.Fprintf(os.Stdout, "ExecutorDriver send TaskStatus update %s\n", callUpdate.String())
+	// create Call
 	call := &exec.Call{
 		FrameworkId: driver.frameworkID,
 		ExecutorId:  driver.executorID,
@@ -463,27 +468,28 @@ func (driver *BcsExecutorDriver) SendStatusUpdate(taskStatus *mesos.TaskStatus) 
 	/*driver.lock.Lock()
 	driver.updates = callUpdate
 	driver.lock.Unlock()*/
-	//send message to slave
+	// send message to slave
 	if err := driver.connection.Send(call, false); err != nil {
 		logs.Errorf("ExecutorDriver send Call_Update failed: %s\n", err.Error())
 		return driver.status, err
 	}
-	//executorID = taskgroupid
+	// executorID = taskgroupid
 	taskgroupReportTotal.WithLabelValues(driver.executorID.GetValue()).Inc()
 
 	return driver.status, nil
 }
 
-//SendFrameworkMessage send a message to the framework scheduler. These messages are
-//best effort; do not expect a framework message to be
-//retransmitted in any reliable fashion.
+// SendFrameworkMessage send a message to the framework scheduler. These messages are
+// best effort; do not expect a framework message to be
+// retransmitted in any reliable fashion.
 func (driver *BcsExecutorDriver) SendFrameworkMessage(data string) (mesos.Status, error) {
 	logs.Infof("Sending Framework message: %s", data)
 	if driver.status != mesos.Status_DRIVER_RUNNING {
-		fmt.Fprintf(os.Stderr, "Unable to SendFramworkMessage, expecting status %s, but Got %s\n", mesos.Status_DRIVER_RUNNING, driver.status)
+		fmt.Fprintf(os.Stderr, "Unable to SendFramworkMessage, expecting status %s, but Got %s\n",
+			mesos.Status_DRIVER_RUNNING, driver.status)
 		return driver.status, fmt.Errorf("ExecutorDriver is Not Running")
 	}
-	//create Message
+	// create Message
 	call := &exec.Call{
 		FrameworkId: driver.frameworkID,
 		ExecutorId:  driver.executorID,
@@ -499,11 +505,11 @@ func (driver *BcsExecutorDriver) SendFrameworkMessage(data string) (mesos.Status
 	return driver.status, nil
 }
 
-//subscribe send subscribe message to mesos slave
-//check tasks & updates info, if these two map are not
-//empty, ExecutorDriver must be disconnected with mesos slave,
-//TaskInfo & TaskStatus will consider Unacknowledged, combine
-//all info to Call_Subscribe
+// subscribe send subscribe message to mesos slave
+// check tasks & updates info, if these two map are not
+// empty, ExecutorDriver must be disconnected with mesos slave,
+// TaskInfo & TaskStatus will consider Unacknowledged, combine
+// all info to Call_Subscribe
 func (driver *BcsExecutorDriver) subscribe() error {
 	subscribe := new(exec.Call_Subscribe)
 	driver.lock.Lock()
@@ -546,9 +552,10 @@ func (driver *BcsExecutorDriver) subscribed(from *upid.UPID, pbMsg *exec.Event_S
 		fmt.Fprintf(os.Stdout, "ignoring subcribed message from slave %s because stopped\n", agentInfo.GetHostname())
 		return
 	}
-	//todo(developerJim): check frameworkID & ExecutorID are equal locals
+	// todo(developerJim): check frameworkID & ExecutorID are equal locals
 	driver.connected = true
-	fmt.Fprintf(os.Stdout, "ExecutorDriver registered with slave %s/%s success\n", agentInfo.GetHostname(), agentInfo.GetId().GetValue())
+	fmt.Fprintf(os.Stdout, "ExecutorDriver registered with slave %s/%s success\n", agentInfo.GetHostname(),
+		agentInfo.GetId().GetValue())
 	executorInfo := pbMsg.GetExecutorInfo()
 	frameworkInfo := pbMsg.GetFrameworkInfo()
 	if driver.stateReConnected {
@@ -559,13 +566,13 @@ func (driver *BcsExecutorDriver) subscribed(from *upid.UPID, pbMsg *exec.Event_S
 	}
 }
 
-//reconnect backoff strategy implementation for MESOS_RECOVERY_TIMEOUT, If it is
-//not able to establish a subscription with the agent within this duration, it should gracefully exit.
+// reconnect backoff strategy implementation for MESOS_RECOVERY_TIMEOUT, If it is
+// not able to establish a subscription with the agent within this duration, it should gracefully exit.
 func (driver *BcsExecutorDriver) reconnect(from *upid.UPID, pbMsg proto.Message) {
 	fmt.Fprintln(os.Stderr, "Reconnect backoff strategy is Not Implemented!")
 }
 
-//runTask running one task
+// runTask running one task
 func (driver *BcsExecutorDriver) runTask(from *upid.UPID, pbMsg *exec.Event_Launch) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Launch message from slave because ExecutorDriver Abort")
@@ -579,17 +586,17 @@ func (driver *BcsExecutorDriver) runTask(from *upid.UPID, pbMsg *exec.Event_Laun
 	taskID := task.GetTaskId()
 	agentID := task.GetAgentId()
 	fmt.Fprintf(os.Stdout, "BcsExecutorDriver get task %s from slave %s.\n", taskID.GetValue(), agentID.GetValue())
-	//check taskInfo is duplicated
+	// check taskInfo is duplicated
 	if _, exist := driver.tasks[taskID.GetValue()]; exist {
 		fmt.Fprintf(os.Stderr, "BcsExecutorDriver get duplicated task from slave %s, Executor Exit\n", agentID.GetValue())
 		os.Exit(255)
 	}
-	//recored and launch task
+	// recored and launch task
 	driver.tasks[taskID.GetValue()] = task
 	driver.executor.LaunchTask(driver, task)
 }
 
-//runTaskGroup running TaskGroup from slave
+// runTaskGroup running TaskGroup from slave
 func (driver *BcsExecutorDriver) runTaskGroup(from *upid.UPID, pbMsg *exec.Event_LaunchGroup) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore LaunchTasks message from slave because ExecutorDriver Abort")
@@ -602,26 +609,27 @@ func (driver *BcsExecutorDriver) runTaskGroup(from *upid.UPID, pbMsg *exec.Event
 	taskGroup := pbMsg.GetTaskGroup()
 	tasks := taskGroup.GetTasks()
 	if len(tasks) == 0 {
-		//Error, No tasks in LaunchGroup, ExecutorDriver exit
+		// Error, No tasks in LaunchGroup, ExecutorDriver exit
 		fmt.Fprintln(os.Stderr, "ExecutorDriver Get 0 task in LaunchGroup message.")
 		os.Exit(255)
 	}
 	agentID := tasks[0].GetAgentId()
 	fmt.Fprintf(os.Stdout, "BcsExecutorDriver get %d tasks from salve %s\n", len(tasks), agentID.GetValue())
-	//check existence in local taskInfo
+	// check existence in local taskInfo
 	for _, task := range tasks {
 		if _, exist := driver.tasks[task.GetTaskId().GetValue()]; exist {
 			fmt.Fprintf(os.Stderr, "BcsExecutorDriver get duplicated TaskId %s from slave\n", task.GetTaskId())
 			os.Exit(255)
 		}
-		//update TaskInfo in local
+		// update TaskInfo in local
 		driver.tasks[task.GetTaskId().GetValue()] = task
 	}
-	//ready to post Executor
+	// ready to post Executor
 	driver.executor.LaunchTaskGroup(driver, taskGroup)
 }
 
-//kill task
+// killTask xxx
+// kill task
 func (driver *BcsExecutorDriver) killTask(from *upid.UPID, pbMsg *exec.Event_Kill) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Kill message from slave because ExecutorDriver Abort")
@@ -636,7 +644,7 @@ func (driver *BcsExecutorDriver) killTask(from *upid.UPID, pbMsg *exec.Event_Kil
 	driver.executor.KillTask(driver, taskID)
 }
 
-//acknowledgementMessage acknowledge task status for scheduler
+// acknowledgementMessage acknowledge task status for scheduler
 func (driver *BcsExecutorDriver) acknowledgementMessage(from *upid.UPID, pbMsg *exec.Event_Acknowledged) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Acknowledged message from slave because ExecutorDriver Abort")
@@ -657,11 +665,12 @@ func (driver *BcsExecutorDriver) acknowledgementMessage(from *upid.UPID, pbMsg *
 	delete(driver.tasks, taskID.GetValue())
 	driver.lock.Unlock()
 
-	fmt.Fprintf(os.Stdout, "ExecutorDriver get acknowledgement from slave, taskId %s, uuid %s\n", taskID.GetValue(), updateUuID.String())
+	fmt.Fprintf(os.Stdout, "ExecutorDriver get acknowledgement from slave, taskId %s, uuid %s\n", taskID.GetValue(),
+		updateUuID.String())
 	taskgroupAckTotal.WithLabelValues(driver.executorID.GetValue()).Inc()
 
-	//clean local Unacknowledged info with taskId & uuid
-	//todo(developerJim): how to handle if missing TaskInfo & uuid in local map
+	// clean local Unacknowledged info with taskId & uuid
+	// todo(developerJim): how to handle if missing TaskInfo & uuid in local map
 	/*driver.lock.Lock()
 	defer driver.lock.Unlock()
 	delete(driver.tasks, taskID.GetValue())
@@ -676,8 +685,9 @@ func (driver *BcsExecutorDriver) acknowledgementMessage(from *upid.UPID, pbMsg *
 	return
 }
 
-//receive framework message from scheduler
-//the task complete is sync
+// frameworkMessage xxx
+// receive framework message from scheduler
+// the task complete is sync
 func (driver *BcsExecutorDriver) frameworkMessage(from *upid.UPID, pbMsg *exec.Event_Message) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Message info because ExecutorDriver Abort")
@@ -695,7 +705,7 @@ func (driver *BcsExecutorDriver) frameworkMessage(from *upid.UPID, pbMsg *exec.E
 	driver.executor.FrameworkMessage(driver, string(data))
 }
 
-//shutdown the executor, and killall containers
+// shutdown the executor, and killall containers
 func (driver *BcsExecutorDriver) shutdown(from *upid.UPID, pbMsg *exec.Event) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Shutdown info because ExecutorDriver Abort")
@@ -723,43 +733,45 @@ func (driver *BcsExecutorDriver) networkError(from *upid.UPID, pbMsg proto.Messa
 	fmt.Fprintln(os.Stderr, "ExecutorDriver Not Implemented")
 }
 
-//driver status access
+// driver status access
 
-//Status return driver status
+// Status return driver status
 func (driver *BcsExecutorDriver) Status() mesos.Status {
 	driver.lock.RLock()
 	defer driver.lock.RUnlock()
 	return driver.status
 }
 
-//IsRunning check driver is running
+// IsRunning check driver is running
 func (driver *BcsExecutorDriver) IsRunning() bool {
 	driver.lock.RLock()
 	defer driver.lock.RUnlock()
 	return driver.status == mesos.Status_DRIVER_RUNNING
 }
 
-//isStopped check driver is stopped
+// isStopped check driver is stopped
 func (driver *BcsExecutorDriver) isStopped() bool {
 	driver.lock.RLock()
 	defer driver.lock.RUnlock()
 	return driver.status == mesos.Status_DRIVER_STOPPED
 }
 
-//isStopped check driver is stopped
+// isConnected xxx
+// isStopped check driver is stopped
 func (driver *BcsExecutorDriver) isConnected() bool {
 	driver.lock.RLock()
 	defer driver.lock.RUnlock()
 	return driver.connected
 }
 
-//reconnectLoop create loop for reconnect to slave when long connection is down
+// reconnectLoop create loop for reconnect to slave when long connection is down
 func (driver *BcsExecutorDriver) reconnectLoop() {
-	fmt.Fprintln(os.Stdout, "##################ExecutorDriver enter reconnecting loop, retry every 1 seconds#####################")
+	fmt.Fprintln(os.Stdout,
+		"##################ExecutorDriver enter reconnecting loop, retry every 1 seconds#####################")
 	tick := time.NewTicker(time.Second * 1)
-	//todo(developerJim): add retry handler according MESOS_RECOVERY_TIMEOUT,
-	//a suitable backoff strategy must be implemented later
-	//now is only subscribe simply, actually, we need method reconnect
+	// todo(developerJim): add retry handler according MESOS_RECOVERY_TIMEOUT,
+	// a suitable backoff strategy must be implemented later
+	// now is only subscribe simply, actually, we need method reconnect
 	for {
 		select {
 		case <-driver.reConCxt.Done():
@@ -772,7 +784,8 @@ func (driver *BcsExecutorDriver) reconnectLoop() {
 				return
 			}
 			if err := driver.subscribe(); err != nil {
-				fmt.Fprintf(os.Stderr, "ExecutorDriver send Call_Subscribe message in reconnection loop failed: %s, wait for next tick\n", err.Error())
+				fmt.Fprintf(os.Stderr,
+					"ExecutorDriver send Call_Subscribe message in reconnection loop failed: %s, wait for next tick\n", err.Error())
 			} else {
 				fmt.Fprintln(os.Stdout, "ExecutorDriver Send Subscribe success, wait for reply in 5 seconds")
 			}

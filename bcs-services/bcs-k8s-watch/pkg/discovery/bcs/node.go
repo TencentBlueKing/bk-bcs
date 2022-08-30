@@ -25,20 +25,24 @@ type ServiceNode struct {
 	Info types.ServerInfo
 }
 
+// NewServiceNode xxx
 func NewServiceNode(info types.ServerInfo) ServiceNode {
 	id := fmt.Sprintf("%s", uuid.NewV4())
 	return ServiceNode{Id: id, Info: info}
 }
 
+// PrimaryKey xxx
 func (n *ServiceNode) PrimaryKey() string {
 	return n.Id
 }
 
+// Payload xxx
 func (n *ServiceNode) Payload() []byte {
 	result, _ := json.Marshal(n)
 	return result
 }
 
+// OwnsPayload xxx
 func (n *ServiceNode) OwnsPayload(payload []byte) bool {
 	var resultNode ServiceNode
 	err := json.Unmarshal(payload, &resultNode)

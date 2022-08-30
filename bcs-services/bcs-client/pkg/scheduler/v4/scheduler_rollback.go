@@ -18,10 +18,12 @@ import (
 	"net/http"
 )
 
+// RollBackApplication xxx
 func (bs *bcsScheduler) RollBackApplication(clusterID, namespace string, data []byte) error {
 	return bs.rollBack(clusterID, namespace, BcsSchedulerResourceApplication, data)
 }
 
+// RollBackProcess xxx
 func (bs *bcsScheduler) RollBackProcess(clusterID, namespace string, data []byte) error {
 	return bs.rollBack(clusterID, namespace, BcsSchedulerResourceProcess, data)
 }

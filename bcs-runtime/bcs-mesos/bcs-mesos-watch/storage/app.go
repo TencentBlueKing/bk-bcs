@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//AppHandler handle for Application
+// AppHandler handle for Application
 type AppHandler struct {
 	oper         DataOperator
 	dataType     string
@@ -31,12 +31,12 @@ type AppHandler struct {
 	DoCheckDirty bool
 }
 
-//GetType get handler type
+// GetType get handler type
 func (handler *AppHandler) GetType() string {
 	return handler.dataType
 }
 
-//CheckDirty clean remote dirty data
+// CheckDirty clean remote dirty data
 func (handler *AppHandler) CheckDirty() error {
 	if handler.DoCheckDirty {
 		blog.Info("check dirty data for type: %s", handler.dataType)
@@ -54,16 +54,18 @@ func (handler *AppHandler) CheckDirty() error {
 		handler.ClusterID, handler.dataType)
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerAllClusterType, util.StatusFailure, start)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerAllClusterType, util.StatusFailure,
+			start)
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
 		return err
 	}
 
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerAllClusterType, util.StatusSuccess, start)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerAllClusterType, util.StatusSuccess,
+		start)
 	return nil
 }
 
-//Add add event
+// Add add event
 func (handler *AppHandler) Add(data interface{}) error {
 	var (
 		started  = time.Now()
@@ -72,19 +74,22 @@ func (handler *AppHandler) Add(data interface{}) error {
 
 	blog.Info("App add event, AppID: %s.%s", dataType.RunAs, dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" +
+		dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("App add node(%s) failed: %+v", dataNode, err)
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName,
+			util.StatusFailure, started)
 		return err
 	}
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName,
+		util.StatusSuccess, started)
 	return nil
 }
 
-//Delete delete info
+// Delete delete info
 func (handler *AppHandler) Delete(data interface{}) error {
 	var (
 		dataType = data.(*schedtypes.Application)
@@ -92,19 +97,22 @@ func (handler *AppHandler) Delete(data interface{}) error {
 	)
 
 	blog.Info("App delete event, AppID: %s.%s", dataType.RunAs, dataType.ID)
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" +
+		dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Error("App delete node(%s) failed: %+v", dataNode, err)
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerClusterNamespaceTypeName, util.StatusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerClusterNamespaceTypeName,
+			util.StatusFailure, started)
 		return err
 	}
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionDelete, handlerClusterNamespaceTypeName,
+		util.StatusSuccess, started)
 	return err
 }
 
-//Update update in zookeeper
+// Update update in zookeeper
 func (handler *AppHandler) Update(data interface{}) error {
 	var (
 		started  = time.Now()
@@ -113,19 +121,22 @@ func (handler *AppHandler) Update(data interface{}) error {
 
 	blog.V(3).Infof("App update event, AppID: %s.%s", dataType.RunAs, dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" +
+		dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("App update node(%s) failed: %+v", dataNode, err)
-		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName,
+			util.StatusFailure, started)
 		return err
 	}
-	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeApp, actionPut, handlerClusterNamespaceTypeName,
+		util.StatusSuccess, started)
 	return nil
 }
 
-//FormatConv convert format for status info
+// FormatConv convert format for status info
 func (handler *AppHandler) FormatConv(app *schedtypes.Application) (*commtypes.BcsReplicaControllerStatus, error) {
 	status := new(commtypes.BcsReplicaControllerStatus)
 	status.ObjectMeta = app.ObjectMeta

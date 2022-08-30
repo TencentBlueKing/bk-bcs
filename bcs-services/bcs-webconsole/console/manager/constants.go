@@ -1,3 +1,4 @@
+// Package manager xxx
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -12,7 +13,7 @@
  */
 package manager
 
-//DefaultCommand 默认命令, 可以优先使用bash, 如果没有, 回退到sh
+// DefaultCommand 默认命令, 可以优先使用bash, 如果没有, 回退到sh
 var DefaultCommand = []string{
 	"/bin/sh",
 	"-c",
@@ -20,10 +21,12 @@ var DefaultCommand = []string{
 }
 
 const (
+	// LongDateTimeLayout xxx
 	LongDateTimeLayout = "20060102150405"
 
 	// DefaultCols DefaultRows 1080p页面测试得来
 	DefaultCols = 211
+	// DefaultRows xxx
 	DefaultRows = 25
 
 	// WebsocketPingInterval ping/pong时间间隔
@@ -45,10 +48,15 @@ const (
 	queueName = "bcs_web_console_record"
 	tags      = "bcs-web-console"
 
-	StdinChannel  = "0"
+	// StdinChannel xxx
+	StdinChannel = "0"
+	// StdoutChannel xxx
 	StdoutChannel = "1"
+	// StderrChannel xxx
 	StderrChannel = "2"
-	ErrorChannel  = "3"
+	// ErrorChannel xxx
+	ErrorChannel = "3"
+	// ResizeChannel xxx
 	ResizeChannel = "4"
 
 	// 审计上报、ws连接监测时间间隔

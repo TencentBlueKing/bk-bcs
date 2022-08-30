@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package server xxx
 package server
 
 import (
@@ -207,7 +208,7 @@ func (s *Server) startLeaderElection() {
 	}
 }
 
-// StartController start essential controller when campaign leader successfully
+// startController start essential controller when campaign leader successfully
 func (s *Server) startController() error {
 	option := &controller.Options{
 		Interval:        s.opt.ControllerLoop,
@@ -305,7 +306,7 @@ func (s *Server) initMicroService() error {
 	return nil
 }
 
-// initGatewyServer init http gateway for grpc service proxy
+// initGatewayServer init http gateway for grpc service proxy
 func (s *Server) initGatewayServer() error {
 	ctx, _ := context.WithCancel(s.svrContext) // nolint
 	// register grpc server information

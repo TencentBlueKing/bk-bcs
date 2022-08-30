@@ -32,7 +32,8 @@ type canaryContext struct {
 	pause        bool
 }
 
-func newCanaryCtx(deploy *gdv1alpha1.GameDeployment, hrList []*hookv1alpha1.HookRun, updateRevision *apps.ControllerRevision,
+func newCanaryCtx(deploy *gdv1alpha1.GameDeployment, hrList []*hookv1alpha1.HookRun,
+	updateRevision *apps.ControllerRevision,
 	collisionCount int32, selector labels.Selector) *canaryContext {
 
 	currentHrs, otherHrs := hooksutil.FilterCurrentHookRuns(hrList, deploy)
@@ -63,14 +64,17 @@ func newCanaryCtx(deploy *gdv1alpha1.GameDeployment, hrList []*hookv1alpha1.Hook
 	}
 }
 
+// CurrentHookRuns xxx
 func (cCtx *canaryContext) CurrentHookRuns() []*hookv1alpha1.HookRun {
 	return cCtx.currentHrs
 }
 
+// OtherHookRuns xxx
 func (cCtx *canaryContext) OtherHookRuns() []*hookv1alpha1.HookRun {
 	return cCtx.otherHrs
 }
 
+// SetCurrentHookRuns xxx
 func (cCtx *canaryContext) SetCurrentHookRuns(ars []*hookv1alpha1.HookRun) {
 	cCtx.currentHrs = ars
 	currStepAr := commonhookutil.GetCurrentStepHookRun(ars)
@@ -80,6 +84,7 @@ func (cCtx *canaryContext) SetCurrentHookRuns(ars []*hookv1alpha1.HookRun) {
 
 }
 
+// GetPauseCondition xxx
 func (cCtx *canaryContext) GetPauseCondition(reason hookv1alpha1.PauseReason) *hookv1alpha1.PauseCondition {
 	for _, cond := range cCtx.deploy.Status.PauseConditions {
 		if cond.Reason == reason {
@@ -89,10 +94,12 @@ func (cCtx *canaryContext) GetPauseCondition(reason hookv1alpha1.PauseReason) *h
 	return nil
 }
 
+// AddPauseCondition xxx
 func (cCtx *canaryContext) AddPauseCondition(reason hookv1alpha1.PauseReason) {
 	cCtx.pauseReasons = append(cCtx.pauseReasons, reason)
 }
 
+// HasAddPause xxx
 func (cCtx *canaryContext) HasAddPause() bool {
 	return len(cCtx.pauseReasons) > 0
 }

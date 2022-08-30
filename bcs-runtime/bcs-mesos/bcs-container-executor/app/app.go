@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -23,11 +24,11 @@ import (
 	"syscall"
 )
 
-//Run is entry point for container executor
+// Run is entry point for container executor
 func Run(cmd *CommandFlags) error {
 	cmd.NetworkMode = strings.ToLower(cmd.NetworkMode)
 
-	//create ExecutorDriver
+	// create ExecutorDriver
 	e := NewBcsExecutor(cmd)
 	if e == nil {
 		return fmt.Errorf("Create Executor failed")

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bcslog xxx
 package bcslog
 
 import (
@@ -106,6 +107,7 @@ func (h *Hooker) initKubeClient() error {
 	return nil
 }
 
+// createBcsLogConfig xxx
 // create crd of BcsLogConf
 func (h *Hooker) createBcsLogConfig(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsLogConfigPlural := "bcslogconfigs"
@@ -128,7 +130,8 @@ func (h *Hooker) createBcsLogConfig(clientset apiextensionsclient.Interface) (bo
 		},
 	}
 
-	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{})
+	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd,
+		metav1.CreateOptions{})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("crd is already exists: %s", err)
@@ -201,7 +204,7 @@ func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
 		return nil, err
 	}
 
-	//handle bcs-system modules' log inject
+	// handle bcs-system modules' log inject
 	namespaceSet := mapset.NewSet()
 	for _, namespace := range IgnoredNamespaces {
 		namespaceSet.Add(namespace)
@@ -217,7 +220,7 @@ func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
 		return patch, nil
 	}
 
-	//handle business modules' log inject
+	// handle business modules' log inject
 	defaultLogConf := FindDefaultConfigType(bcsLogConfs)
 	matchedLogConf := FindK8sMatchedConfigType(pod, bcsLogConfs)
 	if matchedLogConf != nil {

@@ -39,7 +39,8 @@ type tenantAuthMiddleware struct {
 }
 
 // NewTenantAuthMiddleware 租户鉴权中间件
-func NewTenantAuthMiddleware(ctx context.Context, ins extpromhttp.InstrumentationMiddleware) (*tenantAuthMiddleware, error) {
+func NewTenantAuthMiddleware(ctx context.Context, ins extpromhttp.InstrumentationMiddleware) (*tenantAuthMiddleware,
+	error) {
 	return &tenantAuthMiddleware{ctx: ctx, ins: ins}, nil
 }
 
@@ -71,7 +72,8 @@ func (t *tenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 			return
 		}
 
-		logger.Infow("handle request", "handler_name", handlerName, "label_matchers", fmt.Sprintf("%s", labelMatchers), "url", r.URL)
+		logger.Infow("handle request", "handler_name", handlerName, "label_matchers", fmt.Sprintf("%s", labelMatchers), "url",
+			r.URL)
 
 		ctx := store.WithLabelMatchValue(r.Context(), labelMatchers)
 		r = r.WithContext(ctx)

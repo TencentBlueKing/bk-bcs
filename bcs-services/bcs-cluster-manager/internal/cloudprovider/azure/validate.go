@@ -29,7 +29,7 @@ var validateMgr sync.Once
 
 func init() {
 	validateMgr.Do(func() {
-		//init Cluster
+		// init Cluster
 		cloudprovider.InitCloudValidateManager(cloudName, &CloudValidate{})
 	})
 }
@@ -100,7 +100,8 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 }
 
 // GetCloudRegionZonesValidate xxx
-func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
+func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
+	account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
@@ -119,7 +120,8 @@ func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZon
 }
 
 // ListCloudRegionClusterValidate xxx
-func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
+func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest,
+	account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListCloudRegionClusterValidate request is empty", cloudName)
@@ -160,7 +162,8 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 }
 
 // ListSecurityGroupsValidate xxx
-func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
+func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
+	account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
@@ -179,7 +182,8 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 }
 
 // ListInstanceTypeValidate xxx
-func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
+	account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
@@ -217,7 +221,8 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 }
 
 // CreateNodeGroupValidate xxx
-func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
+func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
+	opt *cloudprovider.CommonOption) error {
 	// call cloud interface to check account
 	if c == nil || opt.Account == nil {
 		return fmt.Errorf("%s CreateNodeGroupValidate request is empty", cloudName)

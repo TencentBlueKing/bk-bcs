@@ -11,6 +11,7 @@
  *
  */
 
+// Package resource xxx
 package resource
 
 import (

@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -45,12 +46,12 @@ type MesosDriverOptionsOut struct {
 	Etcd registry.CMDOptions `json:"etcdRegistry"`
 }
 
-//MesosDriverOption is option in flags
+// MesosDriverOption is option in flags
 type MesosDriverOption struct {
 	DriverConf *config.MesosDriverConfig
 }
 
-//NewMesosDriverOption create MesosDriverOption object
+// NewMesosDriverOption create MesosDriverOption object
 func NewMesosDriverOption(opOut *MesosDriverOptionsOut) *MesosDriverOption {
 
 	return &MesosDriverOption{

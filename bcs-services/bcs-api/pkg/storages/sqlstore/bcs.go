@@ -17,11 +17,13 @@ import (
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 )
 
+// CreateBCSClusterInfo xxx
 func CreateBCSClusterInfo(external *m.BCSClusterInfo) error {
 	err := GCoreDB.Create(external).Error
 	return err
 }
 
+// QueryBCSClusterInfo xxx
 // Query BCSClusterInfo search a BCSClusterInfo object using given conditions
 func QueryBCSClusterInfo(info *m.BCSClusterInfo) *m.BCSClusterInfo {
 	result := m.BCSClusterInfo{}

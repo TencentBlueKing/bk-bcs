@@ -14,7 +14,7 @@
 package controllers
 
 const (
-	//apiserver config
+	// apiserver config
 	apiserverConfContent = `[auth]
 address = http://iam.blueking.com/
 appCode = bk_cmdb
@@ -242,7 +242,7 @@ enable=true
 [level]
 businessTopoMax=7`
 
-	//txc config
+	// txc config
 	txcConfContentTemplate = `[mongodb]
 host = {{.MongoHost}}
 usr = {{.MongoUsername}}

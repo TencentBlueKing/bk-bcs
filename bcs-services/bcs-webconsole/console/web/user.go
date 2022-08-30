@@ -23,7 +23,7 @@ func (s *service) UserLoginRedirect(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
 }
 
-// PermRequestRedirect 用户权限申请URL
+// UserPermRequestRedirect 用户权限申请URL
 func (s *service) UserPermRequestRedirect(c *gin.Context) {
 	projectId := c.Query("project_id")
 	clusterId := c.Query("cluster_id")

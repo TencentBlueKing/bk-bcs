@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ValidateMetrics xxx
 func ValidateMetrics(metrics []v1alpha1.Metric) error {
 	if len(metrics) == 0 {
 		return fmt.Errorf("no metrics specified")
@@ -105,7 +106,9 @@ func ValidateMetric(metric v1alpha1.Metric) error {
 	return nil
 }
 
-func NewHookRunFromTemplate(template *v1alpha1.HookTemplate, args []v1alpha1.Argument, name, generateName, namespace string) (*v1alpha1.HookRun, error) {
+// NewHookRunFromTemplate xxx
+func NewHookRunFromTemplate(template *v1alpha1.HookTemplate, args []v1alpha1.Argument, name, generateName,
+	namespace string) (*v1alpha1.HookRun, error) {
 	newArgs, err := MergeArgs(args, template.Spec.Args)
 	if err != nil {
 		return nil, err
@@ -124,6 +127,7 @@ func NewHookRunFromTemplate(template *v1alpha1.HookTemplate, args []v1alpha1.Arg
 	return &ar, nil
 }
 
+// MergeArgs xxx
 func MergeArgs(incomingArgs, templateArgs []v1alpha1.Argument) ([]v1alpha1.Argument, error) {
 	newArgs := append(templateArgs[:0:0], templateArgs...)
 	for _, arg := range incomingArgs {
@@ -149,7 +153,9 @@ func findArg(name string, args []v1alpha1.Argument) int {
 	return -1
 }
 
-func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run v1alpha1.HookRun) (*v1alpha1.HookRun, error) {
+// CreateWithCollisionCounter xxx
+func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run v1alpha1.HookRun) (*v1alpha1.HookRun,
+	error) {
 	newControllerRef := metav1.GetControllerOf(&run)
 	if newControllerRef == nil {
 		return nil, errors.New("Supplied run does not have an owner reference")
@@ -182,6 +188,7 @@ func CreateWithCollisionCounter(hookRunIf tkexclientset.HookRunInterface, run v1
 	}
 }
 
+// IsSemanticallyEqual xxx
 func IsSemanticallyEqual(left, right v1alpha1.HookRunSpec) bool {
 	leftBytes, err := json.Marshal(left)
 	if err != nil {

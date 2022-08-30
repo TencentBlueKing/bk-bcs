@@ -31,9 +31,13 @@ import (
 )
 
 const (
-	DefaultHeapsterNamespace    = "bcs-system"
-	DefaultHeapsterScheme       = "http"
-	DefaultHeapsterService      = "heapster"
+	// DefaultHeapsterNamespace TODO
+	DefaultHeapsterNamespace = "bcs-system"
+	// DefaultHeapsterScheme TODO
+	DefaultHeapsterScheme = "http"
+	// DefaultHeapsterService TODO
+	DefaultHeapsterService = "heapster"
+	// DefaultHeapsterPort TODO
 	DefaultHeapsterPort         = "" // use the first exposed port on the service
 	heapsterDefaultMetricWindow = time.Minute
 )
@@ -61,7 +65,8 @@ func NewHeapsterMetricsClient(client clientset.Interface, namespace, scheme, ser
 }
 
 // GetResourceMetric Get Resource Metric
-func (h *HeapsterMetricsClient) GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector, container string) (PodMetricsInfo, time.Time, error) {
+func (h *HeapsterMetricsClient) GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector,
+	container string) (PodMetricsInfo, time.Time, error) {
 	metricPath := fmt.Sprintf("/apis/metrics/v1alpha1/namespaces/%s/pods", namespace)
 	params := map[string]string{"labelSelector": selector.String()}
 
@@ -114,7 +119,8 @@ func (h *HeapsterMetricsClient) GetResourceMetric(resource v1.ResourceName, name
 }
 
 // GetRawMetric Get Raw Metric
-func (h *HeapsterMetricsClient) GetRawMetric(metricName string, namespace string, selector labels.Selector, metricSelector labels.Selector) (PodMetricsInfo, time.Time, error) {
+func (h *HeapsterMetricsClient) GetRawMetric(metricName string, namespace string, selector labels.Selector,
+	metricSelector labels.Selector) (PodMetricsInfo, time.Time, error) {
 	podList, err := h.podsGetter.Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		return nil, time.Time{}, fmt.Errorf("failed to get pod list while fetching metrics: %v", err)
@@ -138,7 +144,8 @@ func (h *HeapsterMetricsClient) GetRawMetric(metricName string, namespace string
 		metricName)
 
 	resultRaw, err := h.services.
-		ProxyGet(h.heapsterScheme, h.heapsterService, h.heapsterPort, metricPath, map[string]string{"start": startTime.Format(time.RFC3339)}).
+		ProxyGet(h.heapsterScheme, h.heapsterService, h.heapsterPort, metricPath, map[string]string{
+			"start": startTime.Format(time.RFC3339)}).
 		DoRaw()
 	if err != nil {
 		return nil, time.Time{}, fmt.Errorf("failed to get pod metrics: %v", err)
@@ -156,7 +163,8 @@ func (h *HeapsterMetricsClient) GetRawMetric(metricName string, namespace string
 		// if we get too many metrics or two few metrics, we have no way of knowing which metric goes to which pod
 		// (note that Heapster returns *empty* metric items when a pod does not exist or have that metric, so this
 		// does not cover the "missing metric entry" case)
-		return nil, time.Time{}, fmt.Errorf("requested metrics for %v pods, got metrics for %v", len(podNames), len(metrics.Items))
+		return nil, time.Time{}, fmt.Errorf("requested metrics for %v pods, got metrics for %v", len(podNames),
+			len(metrics.Items))
 	}
 
 	var timestamp *time.Time
@@ -193,7 +201,8 @@ func (h *HeapsterMetricsClient) GetObjectMetric(
 }
 
 // GetExternalMetric Get External Metric
-func (h *HeapsterMetricsClient) GetExternalMetric(metricName, namespace string, selector labels.Selector) ([]int64, time.Time, error) {
+func (h *HeapsterMetricsClient) GetExternalMetric(metricName, namespace string, selector labels.Selector) ([]int64,
+	time.Time, error) {
 	return nil, time.Time{}, fmt.Errorf("external metrics aren't supported")
 }
 

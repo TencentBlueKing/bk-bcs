@@ -26,7 +26,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-//ZkRegDiscv do register and discover by zookeeper
+// ZkRegDiscv do register and discover by zookeeper
 type ZkRegDiscv struct {
 	zkcli          *zkclient.ZkClient
 	cancel         context.CancelFunc
@@ -34,7 +34,7 @@ type ZkRegDiscv struct {
 	sessionTimeOut time.Duration
 }
 
-//NewZkRegDiscv create a object of ZkRegDiscv
+// NewZkRegDiscv create a object of ZkRegDiscv
 func NewZkRegDiscv(serv string, timeOut time.Duration) *ZkRegDiscv {
 	zkservs := strings.Split(serv, ",")
 	return &ZkRegDiscv{
@@ -43,9 +43,9 @@ func NewZkRegDiscv(serv string, timeOut time.Duration) *ZkRegDiscv {
 	}
 }
 
-//Start used to run register and discover server
+// Start used to run register and discover server
 func (zkRD *ZkRegDiscv) Start() error {
-	//connect zookeeper
+	// connect zookeeper
 	if err := zkRD.zkcli.ConnectEx(zkRD.sessionTimeOut); err != nil {
 
 		return fmt.Errorf("fail to connect zookeeper. err:%s", err.Error())
@@ -57,26 +57,26 @@ func (zkRD *ZkRegDiscv) Start() error {
 	return nil
 }
 
-//Stop used to stop register and discover server
+// Stop used to stop register and discover server
 func (zkRD *ZkRegDiscv) Stop() error {
-	//close the connection of zookeeper
+	// close the connection of zookeeper
 	zkRD.zkcli.Close()
 
-	//cancel
+	// cancel
 	zkRD.cancel()
 
 	return nil
 }
 
-//Register create ephemeral node for the service
+// Register create ephemeral node for the service
 func (zkRD *ZkRegDiscv) Register(path string, data []byte) error {
-	//blog.Info("register server. path(%s), data(%s)", path, string(data))
+	// blog.Info("register server. path(%s), data(%s)", path, string(data))
 	return zkRD.zkcli.CreateEphAndSeq(path, data)
 }
 
-//RegisterAndWatch create ephemeral node for the service and watch it. if it exit, register again
+// RegisterAndWatch create ephemeral node for the service and watch it. if it exit, register again
 func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
-	//blog.Info("register server and watch it. path(%s), data(%s)", path, string(data))
+	// blog.Info("register server and watch it. path(%s), data(%s)", path, string(data))
 	go func() {
 		newPath, err := zkRD.zkcli.CreateEphAndSeqEx(path, data)
 		if err != nil {
@@ -111,7 +111,7 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 	return nil
 }
 
-//Discover watch the children
+// Discover watch the children
 func (zkRD *ZkRegDiscv) Discover(path string) (<-chan *DiscoverEvent, error) {
 	blog.V(3).Infof("begin to discover by watch children of path(%s)", path)
 	discvCtx, _ := context.WithCancel(zkRD.rootCxt)
@@ -145,10 +145,10 @@ func (zkRD *ZkRegDiscv) loopDiscover(path string, discvCtx context.Context, env 
 		}
 
 		discvEnv.Nodes = append(discvEnv.Nodes, servNodes...)
-		//sort server node
+		// sort server node
 		servNodes = zkRD.sortNode(servNodes)
 
-		//get server info
+		// get server info
 		for _, node := range servNodes {
 			servPath := path + "/" + node
 			servInfo, err := zkRD.zkcli.Get(servPath)
@@ -160,7 +160,7 @@ func (zkRD *ZkRegDiscv) loopDiscover(path string, discvCtx context.Context, env 
 			discvEnv.Server = append(discvEnv.Server, servInfo)
 		}
 
-		//write into discoverEvent channel
+		// write into discoverEvent channel
 		env <- discvEnv
 
 		select {
@@ -215,7 +215,7 @@ func (zkRD *ZkRegDiscv) sortNode(nodes []string) []string {
 	return children
 }
 
-// DiscoverNodes discover by specified path
+// DiscoverNodesV2 discover by specified path
 func (zkRD *ZkRegDiscv) DiscoverNodesV2(path string) (*DiscoverEvent, error) {
 	servNodes, _, err := zkRD.zkcli.GetChildrenEx(path)
 	if err != nil {
@@ -234,9 +234,9 @@ func (zkRD *ZkRegDiscv) discoverNodes(path string, servNodes []string) (*Discove
 		Key: path,
 	}
 	discvEnv.Nodes = append(discvEnv.Nodes, servNodes...)
-	//sort server node
+	// sort server node
 	servNodes = zkRD.sortNode(servNodes)
-	//get server info
+	// get server info
 	for _, node := range servNodes {
 		servPath := path + "/" + node
 		servInfo, err := zkRD.zkcli.Get(servPath)

@@ -178,6 +178,7 @@ func (r *responder) Error(w http.ResponseWriter, _ *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
+// stripLeaveSlash xxx
 // like http.StripPrefix, but always leaves an initial slash. (so that our
 // regexps will work.)
 func stripLeaveSlash(prefix string, h http.Handler) http.Handler {

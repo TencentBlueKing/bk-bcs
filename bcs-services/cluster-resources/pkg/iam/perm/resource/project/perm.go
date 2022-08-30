@@ -25,7 +25,7 @@ type Perm struct {
 	perm.IAMPerm
 }
 
-// NewPerm ...
+// NewPerm xxx
 func NewPerm() *Perm {
 	return &Perm{
 		IAMPerm: perm.IAMPerm{
@@ -37,37 +37,37 @@ func NewPerm() *Perm {
 	}
 }
 
-// CanList ...
+// CanList xxx
 func (p *Perm) CanList(_ perm.Ctx) (bool, error) {
 	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
-// CanView ...
+// CanView xxx
 func (p *Perm) CanView(ctx perm.Ctx) (bool, error) {
 	return p.IAMPerm.CanAction(ctx, ProjectView, true)
 }
 
-// CanCreate ...
+// CanCreate xxx
 func (p *Perm) CanCreate(_ perm.Ctx) (bool, error) {
 	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
-// CanUpdate ...
+// CanUpdate xxx
 func (p *Perm) CanUpdate(_ perm.Ctx) (bool, error) {
 	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
-// CanDelete ...
+// CanDelete xxx
 func (p *Perm) CanDelete(_ perm.Ctx) (bool, error) {
 	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
-// CanUse ...
+// CanUse xxx
 func (p *Perm) CanUse(_ perm.Ctx) (bool, error) {
 	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }
 
-// CanManage ...
+// CanManage xxx
 func (p *Perm) CanManage(_ perm.Ctx) (bool, error) {
 	return false, errorx.New(errcode.Unsupported, "perm validate unsupported")
 }

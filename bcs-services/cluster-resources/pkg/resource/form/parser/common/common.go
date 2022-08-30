@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package common xxx
 package common
 
 import (
@@ -19,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseMetadata ...
+// ParseMetadata xxx
 func ParseMetadata(manifest map[string]interface{}, metadata *model.Metadata) {
 	metadata.APIVersion = mapx.GetStr(manifest, "apiVersion")
 	metadata.Kind = mapx.GetStr(manifest, "kind")
@@ -29,7 +30,7 @@ func ParseMetadata(manifest map[string]interface{}, metadata *model.Metadata) {
 	ParseAnnotations(manifest, &metadata.Annotations)
 }
 
-// ParseLabels ...
+// ParseLabels xxx
 func ParseLabels(manifest map[string]interface{}, labels *[]model.Label) {
 	if ls, _ := mapx.GetItems(manifest, "metadata.labels"); ls != nil {
 		for k, v := range ls.(map[string]interface{}) {
@@ -38,7 +39,7 @@ func ParseLabels(manifest map[string]interface{}, labels *[]model.Label) {
 	}
 }
 
-// ParseAnnotations ...
+// ParseAnnotations xxx
 func ParseAnnotations(manifest map[string]interface{}, annotations *[]model.Annotation) {
 	if as, _ := mapx.GetItems(manifest, "metadata.annotations"); as != nil {
 		for k, v := range as.(map[string]interface{}) {

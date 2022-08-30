@@ -11,6 +11,7 @@
  *
  */
 
+// Package auth xxx
 package auth
 
 import (
@@ -188,7 +189,8 @@ func AdminTokenAuthenticate(request *restful.Request, response *restful.Response
 		return
 	}
 
-	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
+		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 	return
 }
@@ -204,7 +206,8 @@ func TokenAuthenticate(request *restful.Request, response *restful.Response, cha
 		return
 	}
 
-	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
+		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 	return
 }
@@ -217,7 +220,8 @@ func TokenAuthAuthenticate(request *restful.Request, response *restful.Response,
 	})
 	user := authenticater.GetUser()
 	if user == nil || user.HasExpired() {
-		message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+		message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
+			common.BcsErrApiUnauthorized)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}

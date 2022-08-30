@@ -89,6 +89,7 @@ func encodeStructWithPrefix(prefix string, val reflect.Value, v *url.Values) err
 
 type tagOptions []string
 
+// Contains xxx
 func (tOpts tagOptions) Contains(opt string) bool {
 	for _, o := range tOpts {
 		if o == opt {

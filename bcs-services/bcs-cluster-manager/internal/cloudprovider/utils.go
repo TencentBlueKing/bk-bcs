@@ -301,7 +301,7 @@ func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, er
 		return nil, err
 	}
 
-	//sum running & creating nodes, these status are ready to serve workload
+	// sum running & creating nodes, these status are ready to serve workload
 	var (
 		goodNodes []*proto.Node
 	)

@@ -11,6 +11,7 @@
  *
  */
 
+// Package get xxx
 package get
 
 import (
@@ -24,6 +25,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewGetCommand xxx
 func NewGetCommand() cli.Command {
 	return cli.Command{
 		Name:  "get",
@@ -179,7 +181,8 @@ func getUser(c *utils.ClientContext) error {
 	}
 
 	userManager := userV1.NewBcsUserManager(utils.GetClientOption())
-	user, err := userManager.CreateOrGetUser(c.String(utils.OptionUserType), c.String(utils.OptionUserName), http.MethodGet)
+	user, err := userManager.CreateOrGetUser(c.String(utils.OptionUserType), c.String(utils.OptionUserName),
+		http.MethodGet)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %v", err)
 	}

@@ -51,16 +51,22 @@ var (
 )
 
 var (
-	VariableDefinitonCategorySys     = "sys"
+	// VariableDefinitonCategorySys xxx
+	VariableDefinitonCategorySys = "sys"
+	// VariableDefinitionCategoryCustom xxx
 	VariableDefinitionCategoryCustom = "custom"
-	VariableDefinitionScopeGlobal    = "global"
-	VariableDefinitionScopeCluster   = "cluster"
+	// VariableDefinitionScopeGlobal xxx
+	VariableDefinitionScopeGlobal = "global"
+	// VariableDefinitionScopeCluster xxx
+	VariableDefinitionScopeCluster = "cluster"
+	// VariableDefinitionScopeNamespace xxx
 	VariableDefinitionScopeNamespace = "namespace"
 
+	// VariableIdPrefix xxx
 	VariableIdPrefix = "variable-"
 )
 
-// VariableDefinition ...
+// VariableDefinition xxx
 type VariableDefinition struct {
 	ID          string `json:"id" bson:"_id"`
 	VariableID  string `json:"variableID" bson:"variableID"`
@@ -96,6 +102,7 @@ func New(db drivers.DB) *ModelVariableDefinition {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelVariableDefinition) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

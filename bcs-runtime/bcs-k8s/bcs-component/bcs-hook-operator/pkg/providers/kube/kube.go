@@ -11,6 +11,7 @@
  *
  */
 
+// Package kube xxx
 package kube
 
 import (

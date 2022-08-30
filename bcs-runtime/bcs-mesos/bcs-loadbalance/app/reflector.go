@@ -33,14 +33,14 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
-//DataReflector interface for unit test injection
+// DataReflector interface for unit test injection
 type DataReflector interface {
 	Lister() (http, https types.HTTPServiceInfoList, tcp, udp types.FourLayerServiceInfoList)
 	Start() error
 	Stop()
 }
 
-//ExportServiceKeyFunc key function format Service uniq key
+// ExportServiceKeyFunc key function format Service uniq key
 func ExportServiceKeyFunc(obj interface{}) (string, error) {
 	svr, ok := obj.(*loadbalance.ExportService)
 	if !ok {
@@ -49,9 +49,9 @@ func ExportServiceKeyFunc(obj interface{}) (string, error) {
 	return svr.Namespace + "." + svr.ServiceName, nil
 }
 
-//CheckBCSGroup check if local is in groups
+// CheckBCSGroup check if local is in groups
 func CheckBCSGroup(local string, svr *loadbalance.ExportService) bool {
-	//done(developer): protect group info lost
+	// done(developer): protect group info lost
 	if svr.BCSGroup == nil || len(svr.BCSGroup) == 0 {
 		errData, err := json.Marshal(svr)
 		if err != nil {
@@ -69,7 +69,7 @@ func CheckBCSGroup(local string, svr *loadbalance.ExportService) bool {
 	return false
 }
 
-//GetName get real service name from zookeeper node name
+// GetName get real service name from zookeeper node name
 func GetName(node string) string {
 	index := strings.Index(node, ".")
 	if index == -1 {
@@ -78,7 +78,7 @@ func GetName(node string) string {
 	return node[index+1:]
 }
 
-//NewReflector create new ServiceReflector
+// NewReflector create new ServiceReflector
 func NewReflector(config *option.LBConfig, handler EventHandler) *ServiceReflector {
 	hosts := strings.Split(config.Zookeeper, ",")
 	return &ServiceReflector{
@@ -93,29 +93,30 @@ func NewReflector(config *option.LBConfig, handler EventHandler) *ServiceReflect
 	}
 }
 
-//ServiceReflector handling/holding service data coming from zookeeper
-//reflector will do:
-//1. sync all zookeeper data in period, default 30 seconds
-//2. watch children of data path
-//3. watch all children data of path
-//4. cache all zookeeper data, notify EventHandler when data changed
-//reflector will running in other goroutine,
+// ServiceReflector handling/holding service data coming from zookeeper
+// reflector will do:
+// 1. sync all zookeeper data in period, default 30 seconds
+// 2. watch children of data path
+// 3. watch all children data of path
+// 4. cache all zookeeper data, notify EventHandler when data changed
+// reflector will running in other goroutine,
 type ServiceReflector struct {
-	dataCache    cache.Store      //data cache for all service
-	eventHanlder EventHandler     //callback handlers when data changed
-	watchPath    string           //zk watch path
-	syncPeriod   int              //period for sync all data
-	zkHosts      []string         //zk host info
-	zkConn       ZkClient         //zk client connection
-	zkConnFlag   bool             //flag for zk reconnection
-	cfg          *option.LBConfig //config item
-	exit         chan struct{}    //exit flags
+	dataCache    cache.Store      // data cache for all service
+	eventHanlder EventHandler     // callback handlers when data changed
+	watchPath    string           // zk watch path
+	syncPeriod   int              // period for sync all data
+	zkHosts      []string         // zk host info
+	zkConn       ZkClient         // zk client connection
+	zkConnFlag   bool             // flag for zk reconnection
+	cfg          *option.LBConfig // config item
+	exit         chan struct{}    // exit flags
 }
 
-//Lister classify all service to 3 types:
-//http service, https service and tcp service
-func (reflector *ServiceReflector) Lister() (http, https types.HTTPServiceInfoList, tcp, udp types.FourLayerServiceInfoList) {
-	//Get all data from cache
+// Lister classify all service to 3 types:
+// http service, https service and tcp service
+func (reflector *ServiceReflector) Lister() (http, https types.HTTPServiceInfoList, tcp,
+	udp types.FourLayerServiceInfoList) {
+	// Get all data from cache
 	exportList := reflector.dataCache.List()
 	if len(exportList) == 0 {
 		return
@@ -148,7 +149,7 @@ func (reflector *ServiceReflector) Lister() (http, https types.HTTPServiceInfoLi
 
 func caculateBackendWeight(portInfo loadbalance.ExportPort, svr *loadbalance.ExportService) map[string]int {
 	weightCopy := make(map[string]int)
-	//weight only affects when backend coming from different POD
+	// weight only affects when backend coming from different POD
 	backendCounts := make(map[string]int)
 	for key := range svr.ServiceWeight {
 		backendCounts[key] = 0
@@ -172,7 +173,7 @@ func caculateBackendWeight(portInfo loadbalance.ExportPort, svr *loadbalance.Exp
 			)
 		}
 	}
-	//all backend weights
+	// all backend weights
 	for key := range svr.ServiceWeight {
 		if backendCounts[key] == 0 {
 			backendCounts[key] = 1
@@ -183,17 +184,18 @@ func caculateBackendWeight(portInfo loadbalance.ExportPort, svr *loadbalance.Exp
 }
 
 func convertPortBackends(portInfo loadbalance.ExportPort, svr *loadbalance.ExportService) types.BackendList {
-	//weighCopy only affective when svr.ServiceWeight exists
+	// weighCopy only affective when svr.ServiceWeight exists
 	var weightCopy map[string]int
-	//calculate backend weight for all nodes if needed
+	// calculate backend weight for all nodes if needed
 	if svr.ServiceWeight != nil && len(svr.ServiceWeight) > 1 {
 		weightCopy = caculateBackendWeight(portInfo, svr)
 	}
 	var backends types.BackendList
-	//backend
+	// backend
 	for _, bk := range portInfo.Backends {
 		if bk.TargetIP == "" || bk.TargetPort == 0 {
-			blog.Errorf("Reflector got empty backend ip/port for %s/%s in service port %d", svr.Namespace, svr.ServiceName, portInfo.ServicePort)
+			blog.Errorf("Reflector got empty backend ip/port for %s/%s in service port %d", svr.Namespace, svr.ServiceName,
+				portInfo.ServicePort)
 			continue
 		}
 		var backend types.Backend
@@ -221,24 +223,27 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 	http, https types.HTTPServiceInfoList, tcp, udp types.FourLayerServiceInfoList) {
 	for _, svr := range exportServiceList {
 		if !CheckBCSGroup(reflector.cfg.Group, svr) {
-			blog.Debug(fmt.Sprintf("Local Group %s, ExportService Group %s, skip service %s/%s", reflector.cfg.Group, svr.BCSGroup[0], svr.Namespace, svr.ServiceName))
+			blog.Debug(fmt.Sprintf("Local Group %s, ExportService Group %s, skip service %s/%s", reflector.cfg.Group,
+				svr.BCSGroup[0], svr.Namespace, svr.ServiceName))
 			continue
 		}
-		//default balance
+		// default balance
 		if len(svr.Balance) == 0 {
 			svr.Balance = "roundrobin"
 		}
 		for _, portInfo := range svr.ServicePort {
-			//skip when no backends
+			// skip when no backends
 			if portInfo.Backends == nil || len(portInfo.Backends) == 0 || portInfo.ServicePort == 0 {
-				blog.Warnf("Get no backends in Service %s/%s in %s/%d", svr.Namespace, svr.ServiceName, portInfo.Protocol, portInfo.ServicePort)
+				blog.Warnf("Get no backends in Service %s/%s in %s/%d", svr.Namespace, svr.ServiceName, portInfo.Protocol,
+					portInfo.ServicePort)
 				continue
 			}
 
 			backends := convertPortBackends(portInfo, svr)
-			//protect empty backend list
+			// protect empty backend list
 			if len(backends) == 0 {
-				blog.Warnf("Reflector got no backend for %s/%s in service port %d, discard data", svr.Namespace, svr.ServiceName, portInfo.ServicePort)
+				blog.Warnf("Reflector got no backend for %s/%s in service port %d, discard data", svr.Namespace, svr.ServiceName,
+					portInfo.ServicePort)
 				continue
 			}
 
@@ -254,9 +259,10 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 			srvInfo.MaxConn = 50000
 
 			protocol := strings.ToLower(portInfo.Protocol)
-			//done(developer): protect empty vhost for http(s)
+			// done(developer): protect empty vhost for http(s)
 			if (protocol == "http" || protocol == "https") && portInfo.BCSVHost == "" {
-				blog.Errorf("http/s Service %s/%s/%s in port %d lost VHost info in export, discard.", svr.Namespace, svr.ServiceName, portInfo.Name, portInfo.ServicePort)
+				blog.Errorf("http/s Service %s/%s/%s in port %d lost VHost info in export, discard.", svr.Namespace,
+					svr.ServiceName, portInfo.Name, portInfo.ServicePort)
 				continue
 			}
 			if protocol == "http" || protocol == "https" {
@@ -267,7 +273,7 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 					httpSvrInfo.Name = svr.ServiceName + "_" + strconv.Itoa(portInfo.ServicePort) + "_" + validPath
 				}
 				var httpBackend types.HTTPBackend
-				//预防HTTPS重定向HTTP或者HTTP重定向HTTPS，或者CLB把http改成https对外
+				// 预防HTTPS重定向HTTP或者HTTP重定向HTTPS，或者CLB把http改成https对外
 				if portInfo.ServicePort != 80 && portInfo.ServicePort != 443 {
 					// portInfo.Path 只是域名，不包含端口，当端口不为80或者443时，haproxy转发会有问题
 					// nginx，clb转发不需要该端口信息，需要清理
@@ -287,45 +293,45 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 				}
 
 			} else if protocol == "udp" {
-				//udp
+				// udp
 				udpSrvInfo := types.NewFourLayerServiceInfo(srvInfo, backends)
 				udp = append(udp, udpSrvInfo)
 			} else if protocol == "tcp" {
-				//tcp
+				// tcp
 				srvInfo.SessionAffinity = true
 				tcpSrvInfo := types.NewFourLayerServiceInfo(srvInfo, backends)
 				tcp = append(tcp, tcpSrvInfo)
 			} else {
 				blog.Warnf("Get unknown protocol %s", portInfo.Protocol)
 			}
-		} //end of ServicePort
+		} // end of ServicePort
 	}
 	return
 }
 
-//Start reflector to syncing data from data source to local cache
-//1. starting connection for zookeeper, watch cluster path, cluster children node data
-//2. starting goroutine list all cluster service period
-//3. starting channel receiving control events from upper app
+// Start reflector to syncing data from data source to local cache
+// 1. starting connection for zookeeper, watch cluster path, cluster children node data
+// 2. starting goroutine list all cluster service period
+// 3. starting channel receiving control events from upper app
 func (reflector *ServiceReflector) Start() error {
-	//step1: zkInit, all zookeeper event setting
+	// step1: zkInit, all zookeeper event setting
 	if err := reflector.zkInit(); err != nil {
 		LoadbalanceZookeeperStateMetric.WithLabelValues(reflector.cfg.Name).Set(0)
 		blog.Errorf("zookeeper init failed: %s", err.Error())
 		return err
 	}
-	//step2
+	// step2
 	go reflector.run()
 
-	//TODO: step3
+	// TODO: step3
 	return nil
 }
 
-//zkInit init zookeeper connection
+// zkInit init zookeeper connection
 func (reflector *ServiceReflector) zkInit() error {
 	blog.Infof("Reflector init zookeeper connection with %s", reflector.cfg.Zookeeper)
 	var conErr error
-	//reflector.zkConn, _, conErr = zk.Connect(reflector.zkHosts, time.Second*5)
+	// reflector.zkConn, _, conErr = zk.Connect(reflector.zkHosts, time.Second*5)
 	reflector.zkConn, conErr = NewAdapterZkClient(reflector.zkHosts, time.Second*5)
 	if conErr != nil {
 		return conErr
@@ -338,20 +344,20 @@ func (reflector *ServiceReflector) zkInit() error {
 	return nil
 }
 
-//watchServicePath Get all data first time, create zookeeper watch
+// watchClusterPath Get all data first time, create zookeeper watch
 func (reflector *ServiceReflector) watchClusterPath() error {
 	if len(reflector.watchPath) == 0 {
 		blog.Errorf("Cluster path is empty")
 		return fmt.Errorf("Cluster path is empty")
 	}
-	//check path existence in zookeeper
+	// check path existence in zookeeper
 	ok, _, err := reflector.zkConn.Exists(reflector.watchPath)
 	if err != nil {
 		blog.Errorf("Error happen when check cluster path existence: %s", err.Error())
 		return err
 	}
 	if !ok {
-		//node do not exist, create exist watch waiting node creation
+		// node do not exist, create exist watch waiting node creation
 		go func() {
 			blog.Warnf("Cluster node %s do not exist, create existence watch", reflector.watchPath)
 			_, _, existEvent, existErr := reflector.zkConn.ExistsW(reflector.watchPath)
@@ -364,20 +370,20 @@ func (reflector *ServiceReflector) watchClusterPath() error {
 				blog.Info("reflector exit in Cluster node ExistWatch")
 				return
 			case <-existEvent:
-				//TODO: check if Event is error
-				//cluster node created, ready to watch
+				// TODO: check if Event is error
+				// cluster node created, ready to watch
 				go reflector.childrenNodeWatch(reflector.watchPath)
 				return
 			}
 		}()
 	} else {
-		//go watch children, wait for new children
+		// go watch children, wait for new children
 		go reflector.childrenNodeWatch(reflector.watchPath)
 	}
 	return nil
 }
 
-//listChildrenNode list all children node designated
+// listChildrenNode list all children node designated
 func (reflector *ServiceReflector) listChildrenNode(node string) []string {
 	children, _, err := reflector.zkConn.Children(reflector.watchPath)
 	if err != nil {
@@ -392,7 +398,7 @@ func (reflector *ServiceReflector) listChildrenNode(node string) []string {
 	return children
 }
 
-//addNewNodeFromList check nodeList node, Get node data and then watch changed
+// addServiceNodeFromList check nodeList node, Get node data and then watch changed
 func (reflector *ServiceReflector) addServiceNodeFromList(nodeList []string) {
 	if len(nodeList) == 0 {
 		blog.Warn("Node list is empty, no need to watch")
@@ -406,13 +412,13 @@ func (reflector *ServiceReflector) addServiceNodeFromList(nodeList []string) {
 		if exist {
 			continue
 		}
-		//handle new node, create watch
+		// handle new node, create watch
 		blog.Infof("New service %s found, ready to watch", node)
 		go reflector.dataNodeWatch(node)
 	}
 }
 
-//deleteServiceNode check nodeList node, Get node data and then watch changed
+// deleteServiceNode check nodeList node, Get node data and then watch changed
 func (reflector *ServiceReflector) deleteServiceNode(node string) {
 	data, exist, err := reflector.dataCache.GetByKey(node)
 	if err != nil {
@@ -425,7 +431,7 @@ func (reflector *ServiceReflector) deleteServiceNode(node string) {
 	}
 }
 
-//updateServiceNode check nodeList node, Get node data and then watch changed
+// updateServiceNode check nodeList node, Get node data and then watch changed
 func (reflector *ServiceReflector) updateServiceNode(node string) {
 	serviceNode := filepath.Join(reflector.watchPath, node)
 	data, _, err := reflector.zkConn.Get(serviceNode)
@@ -439,7 +445,7 @@ func (reflector *ServiceReflector) updateServiceNode(node string) {
 			node, jsonErr.Error(), string(data))
 		return
 	}
-	//push to cache
+	// push to cache
 	old, exsit, err := reflector.dataCache.Get(exportSvr)
 	if err != nil {
 		blog.Warnf("get data %v from data cache failed, err %s", exportSvr, err.Error())
@@ -461,7 +467,7 @@ func (reflector *ServiceReflector) updateServiceNode(node string) {
 	}
 }
 
-//listServiceNode check nodeList node, Get node data and then watch changed
+// listServiceNode check nodeList node, Get node data and then watch changed
 func (reflector *ServiceReflector) listServiceNode(node string) {
 	serviceNode := filepath.Join(reflector.watchPath, node)
 	data, _, err := reflector.zkConn.Get(serviceNode)
@@ -475,7 +481,7 @@ func (reflector *ServiceReflector) listServiceNode(node string) {
 			node, jsonErr.Error(), string(data))
 		return
 	}
-	//push to cache
+	// push to cache
 	old, exsit, err := reflector.dataCache.Get(exportSvr)
 	if err != nil {
 		blog.Warnf("get data cache by %v failed, err %s", exportSvr, err.Error())
@@ -497,9 +503,10 @@ func (reflector *ServiceReflector) listServiceNode(node string) {
 	}
 }
 
-//dataNodeWatch watch detail service data changed
+// childrenNodeWatch xxx
+// dataNodeWatch watch detail service data changed
 func (reflector *ServiceReflector) childrenNodeWatch(node string) {
-	//ready to watch cluster service node,
+	// ready to watch cluster service node,
 	children, stat, eventChan, err := reflector.zkConn.ChildrenW(node)
 	if err != nil {
 		blog.Errorf("Watch Node %s children failed: %s", node, err.Error())
@@ -511,26 +518,26 @@ func (reflector *ServiceReflector) childrenNodeWatch(node string) {
 		return
 	}
 	reflector.addServiceNodeFromList(children)
-	//wait watch event
+	// wait watch event
 	for {
 		select {
 		case <-reflector.exit:
 			blog.Info("Watch %s children Event exit.", node)
 			return
 		case event := <-eventChan:
-			//TODO: check if event is error
+			// TODO: check if event is error
 			if event.Type == zk.EventNodeChildrenChanged {
-				//Node num changed, maybe add or delete, only handle
-				//add event. delete event will be handle by node watch
+				// Node num changed, maybe add or delete, only handle
+				// add event. delete event will be handle by node watch
 				childrenList := reflector.listChildrenNode(node)
 				if len(childrenList) == 0 {
 					blog.Info("Node children event trigger, all children clear")
 				} else {
-					//iterator all children node, finding new nodes, add watch
+					// iterator all children node, finding new nodes, add watch
 					reflector.addServiceNodeFromList(childrenList)
 				}
 			}
-			//create next watch for event
+			// create next watch for event
 			blog.Info("Children watch trigger done, create next watch")
 			go reflector.childrenNodeWatch(node)
 			return
@@ -538,9 +545,9 @@ func (reflector *ServiceReflector) childrenNodeWatch(node string) {
 	}
 }
 
-//dataNodeWatch watch detail service data changed
+// dataNodeWatch watch detail service data changed
 func (reflector *ServiceReflector) dataNodeWatch(node string) {
-	//ready to watch cluster service node
+	// ready to watch cluster service node
 	serviceNode := filepath.Join(reflector.watchPath, node)
 	data, stat, eventChan, err := reflector.zkConn.GetW(serviceNode)
 	if err != nil {
@@ -552,15 +559,15 @@ func (reflector *ServiceReflector) dataNodeWatch(node string) {
 		blog.Errorf("Wath service node %s state return nil", serviceNode)
 		return
 	}
-	//data watch success, reading data
+	// data watch success, reading data
 	exSvr := loadbalance.NewPtrExportService()
 	if jsonErr := json.Unmarshal(data, exSvr); jsonErr != nil {
-		//event json format error, we still watch node data changed event
-		//maybe json data will repaire next time
+		// event json format error, we still watch node data changed event
+		// maybe json data will repaire next time
 		blog.Errorf("Decode Node %s json failed: %s, original str: %s",
 			serviceNode, jsonErr.Error(), string(data))
 	} else {
-		//push to cache
+		// push to cache
 		old, exsit, err := reflector.dataCache.Get(exSvr)
 		if err != nil {
 			blog.Warnf("get data %v from data cache failed, err %s", exSvr, err.Error())
@@ -581,24 +588,24 @@ func (reflector *ServiceReflector) dataNodeWatch(node string) {
 			blog.Infof("dataNodeWatch %s Add service info", node)
 		}
 	}
-	//wait data node event
+	// wait data node event
 	for {
 		select {
 		case <-reflector.exit:
 			blog.Info("Watch service node %s exit.", serviceNode)
 			return
 		case event := <-eventChan:
-			//TODO: check if event is error
+			// TODO: check if event is error
 			if event.Type == zk.EventNodeDeleted {
-				//clean delete node event
+				// clean delete node event
 				blog.Infof("Service Node %s trigger delete event. No watch registered", serviceNode)
 				reflector.deleteServiceNode(node)
 			} else if event.Type == zk.EventNodeDataChanged {
-				//create next watch for event, data will update in before watch event
+				// create next watch for event, data will update in before watch event
 				blog.Infof("service node %s data changed trigger done, create next watch", serviceNode)
 				go reflector.dataNodeWatch(node)
 			} else {
-				//unknown event, add another watch
+				// unknown event, add another watch
 				blog.Errorf("unknown event %d happened in service node %s, create next watch", event.Type, serviceNode)
 				go reflector.dataNodeWatch(node)
 			}
@@ -607,7 +614,7 @@ func (reflector *ServiceReflector) dataNodeWatch(node string) {
 	}
 }
 
-//run run ticker for sync all data in zookeeper to local cache
+// run run ticker for sync all data in zookeeper to local cache
 func (reflector *ServiceReflector) run() {
 	tick := time.NewTicker(time.Second * time.Duration(reflector.syncPeriod))
 	defer tick.Stop()
@@ -624,29 +631,29 @@ func (reflector *ServiceReflector) run() {
 			if len(nodeList) == 0 {
 				blog.Info("No service node in zookeeper. wait for next ticker")
 			} else {
-				//when get all service data from zookeeper, we need to do:
-				//1. find out extra data in local cache, delete this dirty data
-				//2. update dirty data in local cache
+				// when get all service data from zookeeper, we need to do:
+				// 1. find out extra data in local cache, delete this dirty data
+				// 2. update dirty data in local cache
 
-				//step 1
+				// step 1
 				oldkeys := reflector.dataCache.ListKeys()
-				//extraKey := util.GetSubsection(nodeList, oldkeys)
+				// extraKey := util.GetSubsection(nodeList, oldkeys)
 				extraKey := util.GetSubsection(oldkeys, nodeList)
 				for _, key := range extraKey {
 					blog.Warnf("Fix extra dirty service data [%s]", key)
 					reflector.deleteServiceNode(key)
 				}
-				//step 2
+				// step 2
 				for _, node := range nodeList {
 					reflector.updateServiceNode(node)
 				}
 			}
-			//end case now
+			// end case now
 		}
 	}
 }
 
-//Stop reflector, send stop event to all goroutines
+// Stop reflector, send stop event to all goroutines
 func (reflector *ServiceReflector) Stop() {
 	close(reflector.exit)
 }

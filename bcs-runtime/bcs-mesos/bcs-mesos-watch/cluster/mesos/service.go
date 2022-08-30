@@ -30,14 +30,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//ServiceInfo wrapper for BCSService
+// ServiceInfo wrapper for BCSService
 type ServiceInfo struct {
 	data       *commtypes.BcsService
 	syncTime   int64
 	reportTime int64
 }
 
-//NewServiceWatch create watch for Service
+// NewServiceWatch create watch for Service
 func NewServiceWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *ServiceWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
@@ -56,17 +56,17 @@ func NewServiceWatch(cxt context.Context, client ZkClient, reporter cluster.Repo
 	}
 }
 
-//ServiceWatch watch all event for Service and store in local cache
+// ServiceWatch watch all event for Service and store in local cache
 type ServiceWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
-	client    ZkClient         //client for zookeeper
-	dataCache cache.Store      //cache for all app data
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
+	client    ZkClient         // client for zookeeper
+	dataCache cache.Store      // cache for all app data
 	watchPath string
 }
 
-//Work list all Service data periodically
+// Work list all Service data periodically
 func (watch *ServiceWatch) Work() {
 	watch.ProcessAllServices()
 	tick := time.NewTicker(8 * time.Second)
@@ -83,7 +83,7 @@ func (watch *ServiceWatch) Work() {
 	}
 }
 
-//ProcessAllServices handle all namespace service
+// ProcessAllServices handle all namespace service
 func (watch *ServiceWatch) ProcessAllServices() error {
 
 	currTime := time.Now().Unix()
@@ -139,7 +139,7 @@ func (watch *ServiceWatch) ProcessAllServices() error {
 					continue
 				}
 				blog.V(3).Infof("service %s is in cache, update sync time(%d)", key, currTime)
-				//watch.UpdateEvent(cacheDataInfo.data, data)
+				// watch.UpdateEvent(cacheDataInfo.data, data)
 				if reflect.DeepEqual(cacheDataInfo.data, data) {
 					if cacheDataInfo.reportTime > currTime {
 						cacheDataInfo.reportTime = currTime
@@ -201,7 +201,7 @@ func (watch *ServiceWatch) ProcessAllServices() error {
 	return nil
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (watch *ServiceWatch) AddEvent(obj interface{}) {
 	serviceData, ok := obj.(*commtypes.BcsService)
 	if !ok {
@@ -222,7 +222,7 @@ func (watch *ServiceWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (watch *ServiceWatch) DeleteEvent(obj interface{}) {
 	serviceData, ok := obj.(*commtypes.BcsService)
 	if !ok {
@@ -230,7 +230,7 @@ func (watch *ServiceWatch) DeleteEvent(obj interface{}) {
 		return
 	}
 	blog.Info("EVENT:: Delete Event for BcsService %s.%s", serviceData.ObjectMeta.NameSpace, serviceData.ObjectMeta.Name)
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "Service",
 		Action:   "Delete",
@@ -243,19 +243,20 @@ func (watch *ServiceWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (watch *ServiceWatch) UpdateEvent(old, cur interface{}) {
 	serviceData, ok := cur.(*commtypes.BcsService)
 	if !ok {
 		blog.Error("can not convert object to BcsService in UpdateEvent, object %v", cur)
 		return
 	}
-	//if reflect.DeepEqual(old, cur) {
+	// if reflect.DeepEqual(old, cur) {
 	//	blog.V(3).Infof("BcsService %s.%s data do not changed", serviceData.ObjectMeta.NameSpace, serviceData.ObjectMeta.Name)
 	//	return
-	//}
-	blog.V(3).Infof("EVENT:: Update Event for BcsService %s.%s", serviceData.ObjectMeta.NameSpace, serviceData.ObjectMeta.Name)
-	//report to cluster
+	// }
+	blog.V(3).Infof("EVENT:: Update Event for BcsService %s.%s", serviceData.ObjectMeta.NameSpace,
+		serviceData.ObjectMeta.Name)
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "Service",
 		Action:   "Update",

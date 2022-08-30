@@ -24,9 +24,10 @@ import (
 	"time"
 )
 
+// GCoreDB xxx
 var GCoreDB *gorm.DB
 
-// InitCoreDabase initialize the GLOBAL database object
+// InitCoreDatabase initialize the GLOBAL database object
 func InitCoreDatabase(conf *config.ApiServConfig) error {
 	if conf == nil {
 		return fmt.Errorf("core_database config not init")

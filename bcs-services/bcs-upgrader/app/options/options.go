@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -21,7 +22,7 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile   string
 	CertFile string
@@ -30,7 +31,7 @@ type CertConfig struct {
 	IsSSL    bool
 }
 
-//UpgraderOptions is options in flags
+// UpgraderOptions is options in flags
 type UpgraderOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -80,7 +81,7 @@ func AddFlags() {
 	flag.Uint("mongo_minpoolsize", 0, "mongo client connection pool min size, 0 means not set")
 }
 
-//NewUpgraderOptions create UpgraderOptions object
+// NewUpgraderOptions create UpgraderOptions object
 func NewUpgraderOptions() *UpgraderOptions {
 	return &UpgraderOptions{
 		ServerCert: &CertConfig{

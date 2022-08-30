@@ -90,6 +90,7 @@ type realControl struct {
 	metrics            *gdmetrics.Metrics
 }
 
+// Manage xxx
 func (r *realControl) Manage(
 	deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
@@ -211,8 +212,10 @@ func (r *realControl) createPods(
 
 func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Pod) error {
 	startTime := time.Now()
-	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
-		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreate", "failed to create pod: %v, pod: %v", err, util.DumpJSON(pod))
+	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(context.TODO(), pod,
+		metav1.CreateOptions{}); err != nil {
+		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreate", "failed to create pod: %v, pod: %v", err,
+			util.DumpJSON(pod))
 		r.metrics.CollectPodCreateDurations(util.GetControllerKey(deploy), gdmetrics.FailureStatus, time.Since(startTime))
 		return err
 	}
@@ -222,7 +225,8 @@ func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Po
 	return nil
 }
 
-func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) (bool, error) {
+func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete []*v1.Pod,
+	newStatus *gdv1alpha1.GameDeploymentStatus) (bool, error) {
 	var deleted bool
 	for _, pod := range podsToDelete {
 		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)

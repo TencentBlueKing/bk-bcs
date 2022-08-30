@@ -11,6 +11,7 @@
  *
  */
 
+// Package backend xxx
 package backend
 
 import (
@@ -23,6 +24,7 @@ type backend struct {
 	store store.Store
 }
 
+// NewBackend xxx
 func NewBackend(sched *scheduler.Scheduler, zkStore store.Store) Backend {
 	return &backend{
 		sched: sched,
@@ -30,10 +32,12 @@ func NewBackend(sched *scheduler.Scheduler, zkStore store.Store) Backend {
 	}
 }
 
+// ClusterId xxx
 func (b *backend) ClusterId() string {
 	return b.sched.ClusterId
 }
 
+// GetRole xxx
 func (b *backend) GetRole() string {
 	return b.sched.Role
 }

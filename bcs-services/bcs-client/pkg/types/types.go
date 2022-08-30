@@ -11,6 +11,7 @@
  *
  */
 
+// Package types xxx
 package types
 
 import (
@@ -20,22 +21,26 @@ import (
 	"net"
 )
 
+// ClientOptions xxx
 type ClientOptions struct {
 	BcsApiAddress string
 	BcsToken      string
 	ClientSSL     *tls.Config
 }
 
+// WsConn xxx
 type WsConn struct {
 	Conn *websocket.Conn
 }
 
+// NewWsConn xxx
 func NewWsConn(conn *websocket.Conn) *WsConn {
 	return &WsConn{
 		Conn: conn,
 	}
 }
 
+// Read 用于常见IO
 func (c *WsConn) Read(p []byte) (n int, err error) {
 	_, rc, err := c.Conn.NextReader()
 	if err != nil {
@@ -44,6 +49,7 @@ func (c *WsConn) Read(p []byte) (n int, err error) {
 	return rc.Read(p)
 }
 
+// Write 用于常见IO
 func (c *WsConn) Write(p []byte) (n int, err error) {
 	wc, err := c.Conn.NextWriter(websocket.BinaryMessage)
 	if err != nil {
@@ -62,7 +68,7 @@ type HijackedResponse struct {
 
 // Close closes the hijacked connection and reader.
 func (h *HijackedResponse) Close() {
-	//h.Conn.Close()
+	// h.Conn.Close()
 	h.Ws.Conn.Close()
 }
 
@@ -74,9 +80,9 @@ type CloseWriter interface {
 
 // CloseWrite closes a readWriter for writing.
 func (h *HijackedResponse) CloseWrite() error {
-	//if conn, ok := h.Conn.(CloseWriter); ok {
+	// if conn, ok := h.Conn.(CloseWriter); ok {
 	//	return conn.CloseWrite()
-	//}
+	// }
 	if conn, ok := h.Ws.Conn.UnderlyingConn().(CloseWriter); ok {
 		return conn.CloseWrite()
 	}

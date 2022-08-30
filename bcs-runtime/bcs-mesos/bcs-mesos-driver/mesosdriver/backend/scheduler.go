@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 )
 
+// Scheduler xxx
 type Scheduler interface {
 	InitConfig(*config.MesosDriverConfig)
 	Actions() []*httpserver.Action

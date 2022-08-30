@@ -79,8 +79,10 @@ type Watcher struct {
 }
 
 // NewWatcher creates a new watcher of target type resource.
-func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string, objType runtime.Object,
-	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool, labelSelector string) (*Watcher, error) {
+func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string,
+	objType runtime.Object,
+	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool,
+	labelSelector string) (*Watcher, error) {
 
 	labelSet, err := labels.ConvertSelectorToLabelsMap(labelSelector)
 	if err != nil {
@@ -97,7 +99,8 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 		labelMap:           labelSet,
 	}
 
-	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", resourceType, resourceName, namespace, labelSelector)
+	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", resourceType,
+		resourceName, namespace, labelSelector)
 
 	// build list watch.
 	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
@@ -174,11 +177,13 @@ func (w *Watcher) handleQueueData(stopCh <-chan struct{}) {
 			continue
 		}
 
-		glog.V(4).Infof("queue length[%s:%d] resource[%s:%s:%s]", w.resourceType, w.queue.Length(), sData.Action, sData.Namespace, sData.Name)
+		glog.V(4).Infof("queue length[%s:%d] resource[%s:%s:%s]", w.resourceType, w.queue.Length(), sData.Action,
+			sData.Namespace, sData.Name)
 		w.writer.Sync(sData)
 	}
 }
 
+// distributeDataToHandler xxx
 // distribute data to handler at watcher handlers.
 func (w *Watcher) distributeDataToHandler(data *action.SyncData) {
 	handlerKey := w.writer.GetHandlerKeyBySyncData(data)

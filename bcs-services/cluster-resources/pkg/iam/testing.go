@@ -21,13 +21,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
-// NoPermErr ...
+// NoPermErr xxx
 var NoPermErr = errorx.New(errcode.NoPerm, "no permission")
 
-// MockPerm ...
+// MockPerm xxx
 type MockPerm struct{}
 
-// CanList ...
+// CanList xxx
 func (p *MockPerm) CanList(ctx perm.Ctx) (bool, error) {
 	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
@@ -35,7 +35,7 @@ func (p *MockPerm) CanList(ctx perm.Ctx) (bool, error) {
 	return true, nil
 }
 
-// CanView ...
+// CanView xxx
 func (p *MockPerm) CanView(ctx perm.Ctx) (bool, error) {
 	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
@@ -43,7 +43,7 @@ func (p *MockPerm) CanView(ctx perm.Ctx) (bool, error) {
 	return true, nil
 }
 
-// CanCreate ...
+// CanCreate xxx
 func (p *MockPerm) CanCreate(ctx perm.Ctx) (bool, error) {
 	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
@@ -51,7 +51,7 @@ func (p *MockPerm) CanCreate(ctx perm.Ctx) (bool, error) {
 	return true, nil
 }
 
-// CanUpdate ...
+// CanUpdate xxx
 func (p *MockPerm) CanUpdate(ctx perm.Ctx) (bool, error) {
 	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
@@ -59,7 +59,7 @@ func (p *MockPerm) CanUpdate(ctx perm.Ctx) (bool, error) {
 	return true, nil
 }
 
-// CanDelete ...
+// CanDelete xxx
 func (p *MockPerm) CanDelete(ctx perm.Ctx) (bool, error) {
 	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
@@ -67,7 +67,7 @@ func (p *MockPerm) CanDelete(ctx perm.Ctx) (bool, error) {
 	return true, nil
 }
 
-// CanUse ...
+// CanUse xxx
 func (p *MockPerm) CanUse(ctx perm.Ctx) (bool, error) {
 	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
@@ -75,7 +75,7 @@ func (p *MockPerm) CanUse(ctx perm.Ctx) (bool, error) {
 	return true, nil
 }
 
-// CanManage ...
+// CanManage xxx
 func (p *MockPerm) CanManage(ctx perm.Ctx) (bool, error) {
 	if p.forceNoPerm(ctx) {
 		return false, NoPermErr
@@ -83,7 +83,7 @@ func (p *MockPerm) CanManage(ctx perm.Ctx) (bool, error) {
 	return true, nil
 }
 
-// 单测用，若指定参数符合条件，则强制无权限
+// forceNoPerm 单测用，若指定参数符合条件，则强制无权限
 func (p *MockPerm) forceNoPerm(ctx perm.Ctx) bool {
 	return ctx.GetClusterID() == envs.TestNoPermClusterID || ctx.ForceRaise()
 }

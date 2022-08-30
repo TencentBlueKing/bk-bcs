@@ -24,22 +24,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
 )
 
+// WsTunnelDispatcher xxx
 type WsTunnelDispatcher struct {
 	wsTunnelStore      map[string]map[string]*WsTunnel
 	wsTunnelMutateLock sync.RWMutex
 }
 
+// WsTunnel xxx
 type WsTunnel struct {
 	httpTransport *http.Transport
 	serverAddress string
 }
 
+// NewWsTunnelDispatcher xxx
 func NewWsTunnelDispatcher() *WsTunnelDispatcher {
 	return &WsTunnelDispatcher{
 		wsTunnelStore: make(map[string]map[string]*WsTunnel),
 	}
 }
 
+// DefaultWsTunnelDispatcher xxx
 var DefaultWsTunnelDispatcher = NewWsTunnelDispatcher()
 
 // LookupWsHandler will lookup websocket dialer in cache

@@ -11,6 +11,7 @@
  *
  */
 
+// Package client xxx
 package client
 
 import (
@@ -67,7 +68,7 @@ func (dhead *dataHead) packageData(data []byte) ([]byte, error) {
 	return head, nil
 }
 
-// Connect connect to gse data pipe
+// connect connect to gse data pipe
 func (gsec *client) connect() error {
 
 	conn, err := net.Dial("unix", gsec.endpoint)
@@ -81,7 +82,7 @@ func (gsec *client) connect() error {
 	return nil
 }
 
-// Send write data to data pipe
+// send write data to data pipe
 func (gsec *client) send(dataid uint32, data []byte) error {
 
 	if gsec.conn == nil {
@@ -89,7 +90,7 @@ func (gsec *client) send(dataid uint32, data []byte) error {
 			return err
 		}
 	}
-	//glog.Info(string(data), len(data))
+	// glog.Info(string(data), len(data))
 	dhead := dataHead{0xc01, dataid, 0, uint32(len(data)), [2]uint32{0, 0}}
 
 	packageData, err := dhead.packageData(data)
@@ -114,7 +115,7 @@ func (gsec *client) send(dataid uint32, data []byte) error {
 	return nil
 }
 
-// Close close gse data pipe
+// close close gse data pipe
 func (gsec *client) close() error {
 
 	gsec.sigstop <- true
@@ -122,6 +123,7 @@ func (gsec *client) close() error {
 	return nil
 }
 
+// Close xxx
 func (gsec *client) Close() {
 
 	gsec.close()
@@ -133,7 +135,7 @@ func (gsec *client) Input(msg *ProducerMessage) {
 	select {
 	case gsec.input <- msg:
 	default:
-		//blog.Warn("pipe is full ")
+		// blog.Warn("pipe is full ")
 	}
 }
 

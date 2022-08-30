@@ -20,27 +20,32 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
-//save agent
+// SaveDaemonset xxx
+// save agent
 func (store *managerStore) SaveDaemonset(daemon *types.BcsDaemonset) error {
 	return fmt.Errorf("zookeeper store don't support Daemonset, Please switch to the etcd store")
 }
 
-//fetch agent for agent InnerIP
+// FetchDaemonset xxx
+// fetch agent for agent InnerIP
 func (store *managerStore) FetchDaemonset(ns, name string) (*types.BcsDaemonset, error) {
 	return nil, fmt.Errorf("zookeeper store don't support Daemonset, Please switch to the etcd store")
 }
 
-//list all agent list
+// ListAllDaemonset xxx
+// list all agent list
 func (store *managerStore) ListAllDaemonset() ([]*types.BcsDaemonset, error) {
 	return nil, fmt.Errorf("zookeeper store don't support Daemonset, Please switch to the etcd store")
 }
 
-//delete daemonset for innerip
+// DeleteDaemonset xxx
+// delete daemonset for innerip
 func (store *managerStore) DeleteDaemonset(ns, name string) error {
 	return fmt.Errorf("zookeeper store don't support Daemonset, Please switch to the etcd store")
 }
 
-//ListTaskGroups show us all the task group on line
+// ListDaemonsetTaskGroups xxx
+// ListTaskGroups show us all the task group on line
 func (store *managerStore) ListDaemonsetTaskGroups(namespace, name string) ([]*types.TaskGroup, error) {
 	return nil, fmt.Errorf("zookeeper store don't support Daemonset, Please switch to the etcd store")
 }

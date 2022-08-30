@@ -11,6 +11,7 @@
  *
  */
 
+// Package bcs xxx
 package bcs
 
 import (

@@ -60,19 +60,19 @@ type SidecarController struct {
 	conf *config.Config
 	// client *dockerclient.Client
 	client *docker.Client
-	//key = containerid, value = ContainerLogConf
+	// key = containerid, value = ContainerLogConf
 	logConfs map[string]*ContainerLogConf
-	//key = containerid, value = *dockertypes.ContainerJSON
+	// key = containerid, value = *dockertypes.ContainerJSON
 	containerCache      map[string]*dockertypes.ContainerJSON
 	containerCacheMutex sync.RWMutex
-	//log config prefix file name
+	// log config prefix file name
 	prefixFile string
 
-	//pod Lister
+	// pod Lister
 	podLister corev1.PodLister
-	//apiextensions clientset
+	// apiextensions clientset
 	extensionClientset *apiextensionsclient.Clientset
-	//BcsLogConfig Lister
+	// BcsLogConfig Lister
 	bcsLogConfigLister   bkbcsv1.BcsLogConfigLister
 	bcsLogConfigInformer cache.SharedIndexInformer
 }
@@ -91,11 +91,11 @@ type LogConfParameter struct {
 	ContainerID string
 	ClusterID   string
 	Namespace   string
-	//application or deployment't name
+	// application or deployment't name
 	ServerName string
-	//application or deployment
+	// application or deployment
 	ServerType string
-	//custom label
+	// custom label
 	CustemLabel string
 
 	stdout         bool
@@ -112,13 +112,13 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 		prefixFile:     conf.PrefixFile,
 	}
 
-	//init docker client
+	// init docker client
 	s.client, err = makeProperDockerClient(conf.DockerSock)
 	if err != nil {
 		blog.Fatalf("makeProperDockerClient %s failed: %s", conf.DockerSock, err.Error())
 	}
 
-	//mkdir logconfig dir
+	// mkdir logconfig dir
 	err = os.MkdirAll(conf.LogbeatDir, os.ModePerm)
 	if err != nil {
 		blog.Errorf("mkdir %s failed: %s", conf.LogbeatDir, err.Error())
@@ -126,7 +126,7 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	}
 	s.initLogConfigs()
 	s.syncContainerCache()
-	//init kubeconfig
+	// init kubeconfig
 	err = s.initKubeconfig()
 	if err != nil {
 		return nil, err
@@ -144,7 +144,8 @@ func makeProperDockerClient(dockerhost string) (*docker.Client, error) {
 	if err != nil {
 		if strings.Contains(err.Error(), dockerapi.DefaultVersion) {
 			blog.Warnf("Use default docker api version failed: %s. Will use server side api version", err)
-			client, err = docker.NewClientWithOpts(docker.WithHost(dockerhost), docker.WithVersion(getDockerClientVersion(err.Error())))
+			client, err = docker.NewClientWithOpts(docker.WithHost(dockerhost), docker.WithVersion(getDockerClientVersion(
+				err.Error())))
 			if err != nil {
 				blog.Errorf("new dockerclient %s failed: %s", dockerhost, err.Error())
 				return nil, err
@@ -175,16 +176,18 @@ func getDockerClientVersion(errString string) string {
 // Start starts the controller
 func (s *SidecarController) Start() {
 	go s.listenerDockerEvent()
-	//go s.tickerSyncContainerLogConfs()
+	// go s.tickerSyncContainerLogConfs()
 }
 
-//start listen docker api event
-//when create container, and produce container log config
-//when stop container, and delete container log config
+// listenerDockerEvent xxx
+// start listen docker api event
+// when create container, and produce container log config
+// when stop container, and delete container log config
 func (s *SidecarController) listenerDockerEvent() {
 	var err error
 	ctx, cancel := context.WithCancel(context.Background())
-	eventChan, errChan := s.client.Events(ctx, dockertypes.EventsOptions{Filters: dockerfilters.NewArgs(dockerfilters.Arg("type", "container"))})
+	eventChan, errChan := s.client.Events(ctx, dockertypes.EventsOptions{Filters: dockerfilters.NewArgs(dockerfilters.Arg(
+		"type", "container"))})
 	defer cancel()
 
 	freeFunc := func(containerID string) {
@@ -211,7 +214,7 @@ func (s *SidecarController) listenerDockerEvent() {
 		}
 
 		switch message.Action {
-		//start container
+		// start container
 		case "create", "start":
 			blog.Infof("docker action : %+v", message)
 			c := s.inspectContainer(message.ID)
@@ -259,7 +262,7 @@ func (s *SidecarController) listenerDockerEvent() {
 
 func (s *SidecarController) syncLogConfs() {
 	var hostIP string
-	//list all running containers
+	// list all running containers
 	apiContainers, err := s.client.ContainerList(context.Background(), dockertypes.ContainerListOptions{All: true})
 	if err != nil {
 		blog.Errorf("docker ListContainers failed: %s", err.Error())
@@ -284,7 +287,7 @@ func (s *SidecarController) syncLogConfs() {
 			}
 		}
 		s.produceContainerLogConf(c)
-		//Get host IP
+		// Get host IP
 		if hostIP != "" {
 			continue
 		}
@@ -314,7 +317,7 @@ func (s *SidecarController) syncLogConfs() {
 		}
 	}
 
-	//remove invalid logconfig file
+	// remove invalid logconfig file
 	s.removeInvalidLogConfigFile()
 	err = s.reloadLogbeat()
 	if err != nil {
@@ -375,7 +378,8 @@ func (s *SidecarController) getContainerLogConfKey(containerID string) string {
 }
 
 func (s *SidecarController) getHostLogConfKey(logConf *bcsv1.BcsLogConfig) string {
-	return fmt.Sprintf("%s/%s-%s-%s.%s", s.conf.LogbeatDir, s.prefixFile, logConf.GetNamespace(), logConf.GetName(), s.conf.FileExtension)
+	return fmt.Sprintf("%s/%s-%s-%s.%s", s.conf.LogbeatDir, s.prefixFile, logConf.GetNamespace(), logConf.GetName(),
+		s.conf.FileExtension)
 }
 
 func (s *SidecarController) getBCSLogConfigKey(logConf *bcsv1.BcsLogConfig) string {
@@ -386,12 +390,12 @@ func (s *SidecarController) produceContainerLogConf(c *dockertypes.ContainerJSON
 	key := s.getContainerLogConfKey(c.ID)
 	y, ok := s.produceLogConfParameterV2(c)
 
-	//the container don't match any BcsLogConfig
+	// the container don't match any BcsLogConfig
 	if !ok {
 		s.Lock()
 		defer s.Unlock()
 		_, ok := s.logConfs[key]
-		//if the container have logconfig, then delete it
+		// if the container have logconfig, then delete it
 		if ok {
 			s.deleteContainerLogConf(c.ID)
 			delete(s.logConfs, key)
@@ -417,7 +421,7 @@ func (s *SidecarController) produceHostLogConf(logConf *bcsv1.BcsLogConfig, host
 	}
 	para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 	para.ExtMeta["io_tencent_bcs_appid"] = logConf.Spec.AppId
-	//custom log tags
+	// custom log tags
 	for k, v := range logConf.Spec.LogTags {
 		para.ExtMeta[k] = v
 	}
@@ -452,13 +456,15 @@ func (s *SidecarController) writeLogConfFile(key string, y *types.Yaml) {
 	if y.Metric != nil {
 		cid = y.Metric.ContainerID
 	}
-	//if log config exist, and not changed
+	// if log config exist, and not changed
 	s.RLock()
 	logConf, _ := s.logConfs[key]
 	s.RUnlock()
 	if logConf != nil {
-		if logConf.yamlData != nil && logConf.yamlData.BCSLogConfigKey != "" && logConf.yamlData.BCSLogConfigKey != y.BCSLogConfigKey {
-			blog.Errorf("Unexpected conflict config detected: BcsLogConfig %s and %s define log config for the same container(%s)",
+		if logConf.yamlData != nil && logConf.yamlData.BCSLogConfigKey != "" && logConf.yamlData.BCSLogConfigKey !=
+			y.BCSLogConfigKey {
+			blog.Errorf(
+				"Unexpected conflict config detected: BcsLogConfig %s and %s define log config for the same container(%s)",
 				logConf.yamlData.BCSLogConfigKey, y.BCSLogConfigKey, cid)
 		}
 		if string(by) == string(logConf.data) {
@@ -471,7 +477,8 @@ func (s *SidecarController) writeLogConfFile(key string, y *types.Yaml) {
 			}
 			return
 		}
-		blog.Infof("container %s or host log config %s changed, from(%s)->to(%s)", cid, logConf.confPath, string(logConf.data), string(by))
+		blog.Infof("container %s or host log config %s changed, from(%s)->to(%s)", cid, logConf.confPath,
+			string(logConf.data), string(by))
 	} else {
 		blog.Infof("container %s or host log config %s will created, and LogConfig(%s)", cid, key, string(by))
 	}
@@ -503,7 +510,8 @@ func (s *SidecarController) writeLogConfFile(key string, y *types.Yaml) {
 	} else {
 		err := logConf.yamlData.Metric.Update(y.Metric)
 		if err != nil {
-			blog.Errorf("Update metric from label (%+v) to label (%+v) failed: %s", *logConf.yamlData.Metric, *y.Metric, err.Error())
+			blog.Errorf("Update metric from label (%+v) to label (%+v) failed: %s", *logConf.yamlData.Metric, *y.Metric,
+				err.Error())
 		}
 	}
 	s.Lock()
@@ -530,10 +538,11 @@ func (s *SidecarController) deleteContainerLogConf(containerID string) {
 	blog.Infof("delete container %s log config success", containerID)
 }
 
+// produceLogConfParameterV2 xxx
 // if need to collect the container logs, return true
 // else return false
 func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.ContainerJSON) (*types.Yaml, bool) {
-	//if container is network, ignore
+	// if container is network, ignore
 	name := container.Config.Labels[ContainerLabelK8sContainerName]
 	if name == "POD" || name == "" {
 		blog.Infof("container %s is network container, ignore", container.ID)
@@ -548,7 +557,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 	}
 
 	logConf := s.getPodLogConfigCrd(container, pod)
-	//if logConf==nil, container not match BcsLogConfig
+	// if logConf==nil, container not match BcsLogConfig
 	if logConf == nil {
 		return nil, false
 	}
@@ -617,13 +626,13 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 		para.ExtMeta["container_id"] = container.ID
 		para.ExtMeta["container_hostname"] = container.Config.Hostname
 		para.ExtMeta["io_tencent_bcs_container_name"] = container.Config.Labels[ContainerLabelK8sContainerName]
-		//whether report pod labels to log tags
+		// whether report pod labels to log tags
 		if logConf.Spec.PodLabels {
 			for k, v := range pod.Labels {
 				para.ExtMeta[strings.ReplaceAll(k, ".", "_")] = v
 			}
 		}
-		//custom log tags
+		// custom log tags
 		for k, v := range conf.LogTags {
 			para.ExtMeta[fmt.Sprintf("%s", strings.ReplaceAll(k, ".", "_"))] = v
 		}
@@ -632,7 +641,8 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 			stdPara := para
 			id, err := strconv.Atoi(conf.StdDataId)
 			if err != nil {
-				blog.Errorf("Convert dataid from string(%s) to int failed: %s, BcsLogConfig(%+v)", conf.StdDataId, err.Error(), logConf)
+				blog.Errorf("Convert dataid from string(%s) to int failed: %s, BcsLogConfig(%+v)", conf.StdDataId, err.Error(),
+					logConf)
 				continue
 			} else {
 				stdPara.DataID = id
@@ -647,7 +657,8 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 		// generate non std output log collection config
 		id, err := strconv.Atoi(conf.NonStdDataId)
 		if err != nil {
-			blog.Errorf("Convert dataid from string(%s) to int failed: %s, BcsLogConfig(%+v)", conf.NonStdDataId, err.Error(), logConf)
+			blog.Errorf("Convert dataid from string(%s) to int failed: %s, BcsLogConfig(%+v)", conf.NonStdDataId, err.Error(),
+				logConf)
 			continue
 		}
 		para.DataID = id

@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package cmdb xxx
 package cmdb
 
 import (
@@ -108,7 +109,7 @@ func getTimeout() int {
 	return timeout
 }
 
-// 获取开发商账号
+// getSupplierAccount 获取开发商账号
 func getSupplierAccount() string {
 	supplierAccount := config.GlobalConf.CMDB.BKSupplierAccount
 	if supplierAccount == "" {

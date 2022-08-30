@@ -21,7 +21,9 @@ import (
 )
 
 const (
-	BcsArgocdManagedClusterID     = "BCS-ARGOCD-ClusterId"
+	// BcsArgocdManagedClusterID TODO
+	BcsArgocdManagedClusterID = "BCS-ARGOCD-ClusterId"
+	// BcsArgocdManagedServerAddress TODO
 	BcsArgocdManagedServerAddress = "BCS-ARGOCD-ServerAddress"
 )
 

@@ -24,7 +24,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// VariableHandler ...
+// VariableHandler xxx
 type VariableHandler struct {
 	model store.ProjectModel
 }
