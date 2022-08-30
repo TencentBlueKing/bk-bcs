@@ -136,12 +136,12 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 >>> .config-cmdb {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 .dialog-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 </style>
