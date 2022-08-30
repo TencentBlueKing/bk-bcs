@@ -4,9 +4,6 @@ go 1.17
 
 replace (
 	github.com/Azure/go-autorest/autorest => github.com/Azure/go-autorest/autorest v0.0.0-20210210161804-c7f947c0610d
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
-	//github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210525083026-bc8c14258b6e // v0.20.16
-	github.com/Tencent/bk-bcs/bcs-services/pkg => ../pkg
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/coreos/etcd v3.3.25+incompatible => github.com/evanlixin/etcd v3.3.26-0.20210917065228-e1c46c24ee8f+incompatible
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0
