@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package app xxx
@@ -19,17 +18,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
+	"time"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -48,6 +38,14 @@ import (
 	"go-micro.dev/v4/config/source/file"
 	"go-micro.dev/v4/registry"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
 var (
@@ -68,9 +66,9 @@ type WebConsoleManager struct {
 }
 
 // NewWebConsoleManager xxx
-func NewWebConsoleManager(opt *options.WebConsoleManagerOption) *WebConsoleManager {
+func NewWebConsoleManager(ctx context.Context, opt *options.WebConsoleManagerOption) *WebConsoleManager {
 	return &WebConsoleManager{
-		ctx: context.Background(),
+		ctx: ctx,
 		opt: opt,
 	}
 }
@@ -90,7 +88,18 @@ func (c *WebConsoleManager) Init() error {
 	}
 
 	if etcdRegistry != nil {
-		microService.Init(micro.Registry(etcdRegistry))
+		microService.Init(
+			micro.RegisterTTL(time.Second*30),
+			micro.RegisterInterval(time.Second*15),
+			micro.Registry(etcdRegistry),
+
+			micro.AfterStop(func() error {
+				// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
+				logger.Info("receive interput, gracefully shutdown")
+				<-c.ctx.Done()
+				return nil
+			}),
+		)
 	}
 
 	// http 路由注册
@@ -267,20 +276,9 @@ func (c *WebConsoleManager) Run() error {
 		return nil
 	}
 
-	// Create context that listens for the interrupt signal from the OS.
-	ctx, stop := signal.NotifyContext(c.ctx, syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
 	logger.Info("starting bcs-webconsole.")
 
-	c.microService.Init(micro.AfterStop(func() error {
-		// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
-		logger.Info("receive interput, gracefully shutdown")
-		<-ctx.Done()
-		return nil
-	}))
-
-	eg, ctx := errgroup.WithContext(ctx)
+	eg, ctx := errgroup.WithContext(c.ctx)
 
 	podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
 	eg.Go(func() error {
