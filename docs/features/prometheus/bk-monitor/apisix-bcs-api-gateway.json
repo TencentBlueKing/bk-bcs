@@ -1,0 +1,2293 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "The Cloud-Native API Gateway",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "gnetId": 11719,
+  "graphTooltip": 0,
+  "id": 68,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Nginx",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(31, 120, 193)",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 1
+      },
+      "id": 8,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.1.0",
+      "targets": [
+        {
+          "alias": "Total",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "intervalFactor": 2,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(apisix_nginx_http_current_connections{bcs_cluster_id=~\"$cluster_id\", state=\"total\", bk_instance=~\"$instance\"})"
+        }
+      ],
+      "title": "Total Connections",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(31, 120, 193)",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
+      "id": 16,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.1.0",
+      "targets": [
+        {
+          "alias": "Accepted",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "intervalFactor": 2,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(apisix_nginx_http_current_connections{bcs_cluster_id=~\"$cluster_id\", state=\"accepted\", bk_instance=~\"$instance\"})"
+        }
+      ],
+      "title": "Accepted Connections",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(31, 120, 193)",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "id": 11,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.1.0",
+      "targets": [
+        {
+          "alias": "Total",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "intervalFactor": 2,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(apisix_nginx_http_current_connections{bcs_cluster_id=~\"$cluster_id\", state=\"handled\", bk_instance=~\"$instance\"})"
+        }
+      ],
+      "title": "Handled Connections",
+      "type": "stat"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 17,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_state",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(apisix_nginx_http_current_connections{bcs_cluster_id=~\"$cluster_id\", state=~\"active|reading|writing|waiting\", bk_instance=~\"$instance\"}) by (state)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Nginx connection state",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "format": "Misc",
+          "label": "",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 13,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Bandwidth",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "hiddenSeries": false,
+      "id": 6,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sort": "total",
+        "sortDesc": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_type",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(rate(apisix_bandwidth{bcs_cluster_id=~\"$cluster_id\", bk_instance=~\"$instance\"}[1m])) by (type)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Total Bandwidth",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "decbytes",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "hiddenSeries": false,
+      "id": 21,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sort": "total",
+        "sortDesc": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "service:$tag_service",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(irate(apisix_bandwidth{bcs_cluster_id=~\"$cluster_id\", type=\"ingress\", service =~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m])) by (bk_service)"
+        },
+        {
+          "alias": "route:$tag_route",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "only_promql": true,
+          "refId": "B",
+          "source": "sum(irate(apisix_bandwidth{bcs_cluster_id=~\"$cluster_id\", type=\"ingress\", service =~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m])) by (route)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Ingress per service/route",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "decbytes",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "hiddenSeries": false,
+      "id": 19,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sort": "total",
+        "sortDesc": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "service:$tag_service",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(rate(apisix_bandwidth{bcs_cluster_id=~\"$cluster_id\", type=\"egress\", service =~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m])) by (bk_service)"
+        },
+        {
+          "alias": "route:$tag_route",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "only_promql": true,
+          "refId": "B",
+          "source": "sum(rate(apisix_bandwidth{bcs_cluster_id=~\"$cluster_id\", type=\"egress\", service =~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m])) by (route)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Egress per service/route",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "decbytes",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 15,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "HTTP",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "hiddenSeries": false,
+      "id": 35,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "hide": false,
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\", code=\"200\"}[2m]))by(route, bk_instance) / sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[2m]))by(route, bk_instance)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "成功率",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1688",
+          "format": "percentunit",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1689",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "hiddenSeries": false,
+      "id": 42,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [],
+          "refId": "B",
+          "source": "sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\", code=\"200\"}[2m]))by(bcs_cluster_id, bk_instance, bk_service) / sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[2m]))by(bcs_cluster_id, bk_instance, bk_service)"
+        }
+      ],
+      "thresholds": [
+        {
+          "$$hashKey": "object:2055",
+          "colorMode": "ok",
+          "fill": false,
+          "fillColor": "rgba(50, 116, 217, 0.2)",
+          "line": true,
+          "lineColor": "rgba(31, 96, 196, 0.6)",
+          "op": "lt",
+          "value": 0.99,
+          "yaxis": "left"
+        },
+        {
+          "$$hashKey": "object:2063",
+          "colorMode": "warning",
+          "fill": false,
+          "line": true,
+          "op": "lt",
+          "value": 0.95,
+          "yaxis": "left"
+        },
+        {
+          "$$hashKey": "object:2069",
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "lt",
+          "value": 0.9,
+          "yaxis": "left"
+        }
+      ],
+      "timeRegions": [],
+      "title": "成功率(总)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1688",
+          "format": "percentunit",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1689",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 3,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "hiddenSeries": false,
+      "id": 32,
+      "interval": "",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "state",
+          "lines": true
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "service:$tag_service",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m])) by (bk_service)"
+        },
+        {
+          "alias": "route:$tag_route",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "D",
+          "source": "sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m])) by (route)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Requests per second (RPS) per service/route",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "short",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 3,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 53
+      },
+      "hiddenSeries": false,
+      "id": 41,
+      "interval": "",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": false,
+        "sort": "total",
+        "sortDesc": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:183",
+          "alias": "state",
+          "lines": true
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "total",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m]))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Total QPS",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:196",
+          "decimals": 0,
+          "format": "short",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:197",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {
+        "HTTP Status:200": "green",
+        "HTTP Status:500": "red"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 3,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 8,
+        "y": 53
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "interval": "",
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:1760",
+          "alias": "state",
+          "lines": true
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "HTTP Status:$tag_code",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(rate(apisix_http_status{bcs_cluster_id=~\"$cluster_id\", bk_service=~\"$service\",route=~\"$route\",bk_instance=~\"$instance\"}[1m])) by (code)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Requests per second (RPS) by status code",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1773",
+          "decimals": 0,
+          "format": "short",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1774",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 60
+      },
+      "hiddenSeries": false,
+      "id": 27,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "P90",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "format": "time_series",
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "histogram_quantile(0.90, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"request\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P95",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "B",
+          "source": "histogram_quantile(0.95, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"request\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P99",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "C",
+          "source": "histogram_quantile(0.99, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"request\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Request Latency",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "ms",
+          "label": "",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 60
+      },
+      "hiddenSeries": false,
+      "id": 33,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "P90",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "format": "time_series",
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "histogram_quantile(0.90, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"upstream\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P95",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "B",
+          "source": "histogram_quantile(0.95, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"upstream\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P99",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "C",
+          "source": "histogram_quantile(0.99, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"upstream\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Upstream Latency",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "ms",
+          "label": "",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 60
+      },
+      "hiddenSeries": false,
+      "id": 28,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "P90",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "only_promql": true,
+          "refId": "A",
+          "source": "histogram_quantile(0.90, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"apisix\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P95",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "B",
+          "source": "histogram_quantile(0.95, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"apisix\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P99",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "C",
+          "source": "histogram_quantile(0.99, sum(rate(apisix_http_latency_bucket{bcs_cluster_id=~\"$cluster_id\", type=~\"apisix\",bk_service=~\"$service\",consumer=~\"$consumer\",node=~\"$node\"}[1m])) by (le))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "APISIX Latency",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "ms",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 23,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Misc",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 18,
+        "x": 0,
+        "y": 67
+      },
+      "hiddenSeries": false,
+      "id": 30,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_key",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "intervalFactor": 1,
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(apisix_etcd_modify_indexes{bcs_cluster_id=~\"$cluster_id\", key=~\"consumers|global_rules|max_modify_index|prev_index|protos|routes|services|ssls|stream_routes|upstreams|x_etcd_index\"}) by (key)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Etcd modify indexes",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 18,
+        "y": 67
+      },
+      "id": 25,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.1.0",
+      "targets": [
+        {
+          "alias": "",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(apisix_etcd_reachable{bcs_cluster_id=~\"$cluster_id\", bk_instance=~\"$instance\"})"
+        }
+      ],
+      "title": "Etcd reachable",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 21,
+        "y": 67
+      },
+      "id": 29,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.1.0",
+      "targets": [
+        {
+          "alias": "",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(apisix_nginx_metric_errors_total{bcs_cluster_id=~\"$cluster_id\", bk_instance=~\"$instance\"})"
+        }
+      ],
+      "title": "Nginx metric errors",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 73
+      },
+      "id": 37,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Container Resource",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 74
+      },
+      "hiddenSeries": false,
+      "id": 39,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_cluster_id-$tag_pod_name-$tag_container_name",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(irate(container_cpu_usage_seconds_total{image!=\"\",container_name!=\"POD\",container_name=~\"apisix\", bcs_cluster_id=~\"$cluster_id\"}[2m])) by (bcs_cluster_id, pod_name, container_name)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "APISIX CPU",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:2816",
+          "format": "percentunit",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:2817",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 74
+      },
+      "hiddenSeries": false,
+      "id": 40,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "percentage": false,
+      "pluginVersion": "9.1.0",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_cluster_id-$tag_pod_name-$tag_container_name",
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "interval": "",
+          "only_promql": true,
+          "refId": "A",
+          "source": "sum(container_memory_usage_bytes{image!=\"\",container_name!=\"POD\",container_name=~\"apisix\", bcs_cluster_id=~\"$cluster_id\"}) by (bcs_cluster_id, pod_name, container_name)"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "APISIX Memory",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:2816",
+          "format": "bytes",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:2817",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": [
+    "bcs"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "bkmonitor-timeseries-datasource"
+        },
+        "definition": "label_values(apisix_http_status,service)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": {
+          "promql": "label_values(apisix_http_status,service)",
+          "queryType": "prometheus"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "bkmonitor-timeseries-datasource"
+        },
+        "definition": "label_values(apisix_http_status,route)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "route",
+        "options": [],
+        "query": {
+          "promql": "label_values(apisix_http_status,route)",
+          "queryType": "prometheus"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "bkmonitor-timeseries-datasource"
+        },
+        "definition": "label_values(apisix_nginx_http_current_connections,bk_instance)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": {
+          "promql": "label_values(apisix_http_status,bk_instance)",
+          "queryType": "prometheus"
+        },
+        "refresh": 2,
+        "regex": ".*",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "bkmonitor-timeseries-datasource"
+        },
+        "definition": "label_values(apisix_http_status,consumer)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "consumer",
+        "options": [],
+        "query": {
+          "promql": "label_values(apisix_http_status,consumer)",
+          "queryType": "prometheus"
+        },
+        "refresh": 2,
+        "regex": ".*",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "bkmonitor-timeseries-datasource"
+        },
+        "definition": "label_values(apisix_http_status,node)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": {
+          "promql": "label_values(apisix_http_status,node)",
+          "queryType": "prometheus"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "bkmonitor-timeseries-datasource"
+        },
+        "definition": "label_values(bkbcs_clustermanager_api_request_total_num{job=\"bcs-cluster-manager\"},bcs_cluster_id)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "cluster_id",
+        "options": [],
+        "query": {
+          "promql": "label_values(bkbcs_clustermanager_api_request_total_num{bk_job=\"bcs-cluster-manager\"},bcs_cluster_id)",
+          "queryType": "prometheus"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "[BlueKing] apisix-bcs-api-gateway",
+  "uid": "bLlNuRLWz",
+  "version": 3,
+  "weekStart": ""
+}
