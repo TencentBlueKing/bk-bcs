@@ -23,6 +23,7 @@ import (
 
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -35,6 +36,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/capabilities"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
@@ -102,31 +104,64 @@ func (h *Hooker) InjectDeployContent(deploy *commtypes.BcsDeployment) (*commtype
 	return nil, nil
 }
 
-// createBcsDbPrivCrd xxx
 // create crd of BcsDbPrivConfig
 func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsDbPrivConfigPlural := "bcsdbprivconfigs"
 
 	bcsDbPrivConfigFullName := "bcsdbprivconfigs" + "." + bcsv1.SchemeGroupVersion.Group
 
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsDbPrivConfigFullName,
-		},
-		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   bcsv1.SchemeGroupVersion.Group,   // BcsDbPrivConfigsGroup,
-			Version: bcsv1.SchemeGroupVersion.Version, // BcsDbPrivConfigsVersion,
-			Scope:   apiextensionsv1beta1.NamespaceScoped,
-			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-				Plural:   bcsDbPrivConfigPlural,
-				Kind:     reflect.TypeOf(bcsv1.BcsDbPrivConfig{}).Name(),
-				ListKind: reflect.TypeOf(bcsv1.BcsDbPrivConfigList{}).Name(),
+	var err error
+	capabilities, err := capabilities.GetCapabilities(clientset.Discovery())
+	if err != nil {
+		return false, fmt.Errorf("get kubernetes capabilities failed, err %s", err.Error())
+	}
+	blog.Infof("kubernetes capabilities %+v", capabilities.APIVersions)
+	if !capabilities.APIVersions.Has("apiextensions.k8s.io/v1beta1") {
+		blog.Infof("kubernetes doesn't support apiextensions.k8s.io/v1beta1, use v1 instead")
+		crd := &apiextensionsv1.CustomResourceDefinition{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: bcsDbPrivConfigFullName,
 			},
-		},
+			Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+				Group: bcsv1.SchemeGroupVersion.Group, // BcsDbPrivConfigsGroup,
+				Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
+					{
+						Name: bcsv1.SchemeGroupVersion.Version, // BcsDbPrivConfigsVersion,
+					},
+				},
+				Scope: apiextensionsv1.NamespaceScoped,
+				Names: apiextensionsv1.CustomResourceDefinitionNames{
+					Plural:   bcsDbPrivConfigPlural,
+					Kind:     reflect.TypeOf(bcsv1.BcsDbPrivConfig{}).Name(),
+					ListKind: reflect.TypeOf(bcsv1.BcsDbPrivConfigList{}).Name(),
+				},
+			},
+		}
+
+		_, err = clientset.ApiextensionsV1().CustomResourceDefinitions().Create(context.Background(), crd,
+			metav1.CreateOptions{})
+	} else {
+		blog.Infof("kubernetes supports apiextensions.k8s.io/v1beta1")
+		crd := &apiextensionsv1beta1.CustomResourceDefinition{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: bcsDbPrivConfigFullName,
+			},
+			Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
+				Group:   bcsv1.SchemeGroupVersion.Group,   // BcsDbPrivConfigsGroup,
+				Version: bcsv1.SchemeGroupVersion.Version, // BcsDbPrivConfigsVersion,
+				Scope:   apiextensionsv1beta1.NamespaceScoped,
+				Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+					Plural:   bcsDbPrivConfigPlural,
+					Kind:     reflect.TypeOf(bcsv1.BcsDbPrivConfig{}).Name(),
+					ListKind: reflect.TypeOf(bcsv1.BcsDbPrivConfigList{}).Name(),
+				},
+			},
+		}
+
+		_, err = clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd,
+			metav1.CreateOptions{})
 	}
 
-	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd,
-		metav1.CreateOptions{})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("crd is already exists: %s", err)

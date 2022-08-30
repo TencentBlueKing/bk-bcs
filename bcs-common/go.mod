@@ -13,6 +13,7 @@ replace (
 )
 
 require (
+	k8s.io/apiextensions-apiserver v0.20.0
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/bitly/go-simplejson v0.5.0
