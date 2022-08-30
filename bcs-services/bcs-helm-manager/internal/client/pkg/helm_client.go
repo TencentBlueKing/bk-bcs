@@ -31,7 +31,7 @@ type RepositoryClient interface {
 	Create(ctx context.Context, req *helmmanager.CreateRepositoryReq) error
 	Update(ctx context.Context, req *helmmanager.UpdateRepositoryReq) error
 	Delete(ctx context.Context, req *helmmanager.DeleteRepositoryReq) error
-	List(ctx context.Context, req *helmmanager.ListRepositoryReq) (*helmmanager.RepositoryListData, error)
+	List(ctx context.Context, req *helmmanager.ListRepositoryReq) ([]*helmmanager.Repository, error)
 }
 
 // ChartClient define the chart operation handler

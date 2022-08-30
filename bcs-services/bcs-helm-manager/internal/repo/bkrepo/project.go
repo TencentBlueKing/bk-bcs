@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	projectGetUri    = "/repository/api/project/list?names="
-	projectCreateUri = "/repository/api/project/create"
+	projectGetURI    = "/repository/api/project/list?names="
+	projectCreateURI = "/repository/api/project/create"
 )
 
 func (ph *projectHandler) ensureProject(ctx context.Context, prj *repo.Project) error {
@@ -54,7 +54,7 @@ func (ph *projectHandler) ensureProject(ctx context.Context, prj *repo.Project) 
 func (ph *projectHandler) getProject(ctx context.Context, name string) (*repo.Project, error) {
 	blog.Infof("get project from bk-repo: %s", name)
 
-	resp, err := ph.get(ctx, projectGetUri+name, nil, nil)
+	resp, err := ph.get(ctx, projectGetURI+name, nil, nil)
 	if err != nil {
 		blog.Errorf("get project from bk-repo failed, %s, name: %s", err.Error(), name)
 		return nil, err
@@ -96,7 +96,7 @@ func (ph *projectHandler) createProject(ctx context.Context, prj *repo.Project) 
 		return err
 	}
 
-	resp, err := ph.post(ctx, projectCreateUri, nil, data)
+	resp, err := ph.post(ctx, projectCreateURI, nil, data)
 	if err != nil {
 		blog.Errorf("create project to bk-repo post failed, %s, with data %v", err.Error(), prj)
 		return err

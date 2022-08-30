@@ -56,19 +56,19 @@ func (g *GetRepositoryAction) Handle(ctx context.Context,
 		return nil
 	}
 
-	return g.get(g.req.GetProjectID(), g.req.GetName())
+	return g.get(g.req.GetProjectCode(), g.req.GetName())
 }
 
-func (g *GetRepositoryAction) get(projectID, name string) error {
-	r, err := g.model.GetRepository(g.ctx, projectID, name)
+func (g *GetRepositoryAction) get(projectCode, name string) error {
+	r, err := g.model.GetRepository(g.ctx, projectCode, name)
 	if err != nil {
-		blog.Errorf("get repository failed, %s, projectID: %s, name: %s", err.Error(), projectID, name)
+		blog.Errorf("get repository failed, %s, project: %s, name: %s", err.Error(), projectCode, name)
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
 		return nil
 	}
 
 	g.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto())
-	blog.Infof("get repository successfully, projectID: %s, name: %s", r.ProjectID, r.Name)
+	blog.Infof("get repository successfully, project: %s, name: %s", r.ProjectID, r.Name)
 	return nil
 }
 

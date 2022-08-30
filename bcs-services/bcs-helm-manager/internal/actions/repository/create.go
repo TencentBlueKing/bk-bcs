@@ -64,13 +64,14 @@ func (c *CreateRepositoryAction) Handle(ctx context.Context,
 	// 获取username
 	username := auth.GetUserFromCtx(ctx)
 	return c.create(c.req.GetTakeover(), &helmmanager.Repository{
-		ProjectID:      c.req.ProjectID,
+		ProjectCode:    c.req.ProjectCode,
 		Name:           c.req.Name,
 		Type:           c.req.Type,
 		Remote:         c.req.Remote,
 		RemoteURL:      c.req.RemoteURL,
 		RemoteUsername: c.req.RemoteUsername,
 		RemotePassword: c.req.RemotePassword,
+		RepoURL:        c.req.RepoURL,
 		Username:       c.req.Username,
 		Password:       c.req.Password,
 		CreateBy:       &username,
@@ -78,8 +79,8 @@ func (c *CreateRepositoryAction) Handle(ctx context.Context,
 }
 
 func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Repository) error {
-	blog.Infof("try to create repository, takeover: %t, projectID: %s, type: %s, name: %s",
-		takeover, data.GetProjectID(), data.GetType(), data.GetName())
+	blog.Infof("try to create repository, takeover: %t, project: %s, type: %s, name: %s",
+		takeover, data.GetProjectCode(), data.GetType(), data.GetName())
 
 	r := &entity.Repository{}
 	r.LoadFromProto(data)
@@ -87,7 +88,7 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	projectHandler := c.platform.User(repo.User{
 		Name:     data.GetCreateBy(),
 		Password: data.GetPassword(),
-	}).Project(data.GetProjectID())
+	}).Project(data.GetProjectCode())
 	if err := projectHandler.Ensure(c.ctx); err != nil {
 		blog.Errorf("create repository failed, ensure project failed, %s, param: %v", err.Error(), r)
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
@@ -97,7 +98,7 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	if err := c.createRepository2Repo(takeover, projectHandler, r); err != nil {
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
 		blog.Errorf("create repository failed, create to repo failed, %s, project: %s, type: %s, name: %s",
-			err.Error(), data.GetProjectID(), data.GetType(), data.GetName())
+			err.Error(), data.GetProjectCode(), data.GetType(), data.GetName())
 		return nil
 	}
 
@@ -108,7 +109,7 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	}
 
 	c.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto())
-	blog.Infof("create repository successfully, takeover: %t, projectID: %s, type: %s, name: %s",
+	blog.Infof("create repository successfully, takeover: %t, project: %s, type: %s, name: %s",
 		takeover, r.ProjectID, r.Type, r.Name)
 	return nil
 }

@@ -19,3 +19,9 @@ func GetRequestIDFromCtx(ctx context.Context) string {
 	id, _ := ctx.Value(RequestIDContextKey).(string)
 	return id
 }
+
+// GetProjectIDFromCtx 通过 ctx 获取 projectID
+func GetProjectIDFromCtx(ctx context.Context) string {
+	id, _ := ctx.Value(ProjectIDContextKey).(string)
+	return id
+}

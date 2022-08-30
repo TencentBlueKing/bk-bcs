@@ -16,13 +16,12 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/metrics"
-
-	grpcmeta "google.golang.org/grpc/metadata"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
 
 // Response interface for protoc response
@@ -35,36 +34,16 @@ type Response interface {
 func recorder(ctx context.Context, name string, req interface{}, resp Response) func() {
 	enterTime := time.Now()
 
-	reqID := requestID(ctx)
+	reqID := contextx.GetRequestIDFromCtx(ctx)
 	if reqID == "" {
 		blog.Warnf("recorder get grpc metadata from context %s has empty requestID", name)
 	}
 
-	blog.Infof("record: receive %s, reqID: %s", name, reqID)
+	blog.Infof("record: receive %s, requestID: %s, username: %s", name, reqID, auth.GetUserFromCtx(ctx))
 
 	return func() {
 		metrics.ReportAPIRequestMetric(name, strconv.Itoa(int(resp.GetCode())), enterTime)
-		blog.Infof("record: leave %s, reqID: %s, req: %v, resp: %v", name, reqID, req, func() string {
-
-			// ignore resp data when list actions
-			if strings.HasPrefix(name, "List") {
-				return "[ignore resp logs for List action]"
-			}
-
-			return fmt.Sprintf("%v", resp)
-		}())
+		blog.Infof("record: leave %s, requestID: %s, latency: %s, req: %v, resp: %v", name, reqID,
+			time.Since(enterTime), req, fmt.Sprintf("code: %d message: %s", resp.GetCode(), resp.GetMessage()))
 	}
-}
-
-func requestID(ctx context.Context) string {
-	meta, ok := grpcmeta.FromIncomingContext(ctx)
-	if !ok {
-		return ""
-	}
-
-	if sl := meta.Get("X-Request-Id"); len(sl) > 0 {
-		return sl[0]
-	}
-
-	return ""
 }

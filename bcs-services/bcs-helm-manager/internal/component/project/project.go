@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
@@ -63,13 +64,23 @@ var (
 	defaultTimeout = 20
 )
 
+var projectCache *sync.Map = &sync.Map{}
+
 // GetProjectIDByCode get project id from project code
-// TODO: projectID不会变动，可以添加下缓存
 func GetProjectIDByCode(username string, projectCode string) (string, error) {
+	// load project data from cache
+	v, ok := projectCache.Load(projectCode)
+	if ok {
+		if project, ok := v.(*ProjectData); ok {
+			return project.ProjectID, nil
+		}
+	}
 	p, err := Client.GetProjectDetail(username, projectCode)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("GetProjectDetail error: %s", err)
 	}
+	// save project data to cache
+	projectCache.Store(projectCode, p)
 	return p.ProjectID, nil
 }
 

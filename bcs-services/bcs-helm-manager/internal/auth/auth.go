@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
@@ -27,7 +26,7 @@ import (
 	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/pkg/middleware/auth"
 )
@@ -104,7 +103,7 @@ var NoAuthMethod = []string{
 }
 
 // SkipHandler skip handler
-func SkipHandler(req server.Request) bool {
+func SkipHandler(ctx context.Context, req server.Request) bool {
 	// disable auth
 	if !jwtConfig.Enable {
 		return true
@@ -113,20 +112,20 @@ func SkipHandler(req server.Request) bool {
 }
 
 // SkipClient skip client
-func SkipClient(req server.Request, client string) bool {
+func SkipClient(ctx context.Context, req server.Request, client string) bool {
 	clientIDs := stringx.SplitString(jwtConfig.ExemptClients)
 	return stringx.StringInSlice(client, clientIDs)
 }
 
 // resourceID resource id
 type resourceID struct {
-	ProjectCode string `json:"ProjectCode,omitempty"`
-	ProjectID   string `json:"ProjectID,omitempty"`
+	ProjectCode string `json:"projectCode,omitempty"`
+	ProjectID   string `json:"projectID,omitempty"`
 	ClusterID   string `json:"clusterID,omitempty"`
 }
 
 // CheckUserPerm check user perm
-func CheckUserPerm(req server.Request, username string) (bool, error) {
+func CheckUserPerm(ctx context.Context, req server.Request, username string) (bool, error) {
 	blog.Infof("CheckUserPerm: method/%s, username: %s", req.Method(), username)
 
 	body := req.Body()
@@ -146,16 +145,7 @@ func CheckUserPerm(req server.Request, username string) (bool, error) {
 		return false, errors.New("operation has not authorized")
 	}
 
-	if len(resourceID.ProjectCode) > 0 && len(resourceID.ProjectID) == 0 {
-		projectCode := resourceID.ProjectCode
-		projectID, err := projectClient.GetProjectIDByCode(username, projectCode)
-		if err != nil {
-			err := fmt.Errorf("CheckUserPerm get project id error, projectCode: %s, err: %s", projectCode, err.Error())
-			blog.Errorf("%s", err)
-			return false, err
-		}
-		resourceID.ProjectID = projectID
-	}
+	resourceID.ProjectID = contextx.GetProjectIDFromCtx(ctx)
 
 	allow, _, err := callIAM(username, action, *resourceID)
 	if err != nil {

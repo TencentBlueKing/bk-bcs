@@ -258,7 +258,7 @@
         "parameters": [
           {
             "name": "projectCode",
-            "description": "项目代号",
+            "description": "项目代码",
             "in": "path",
             "required": true,
             "type": "string"
@@ -283,6 +283,210 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/repos": {
+      "get": {
+        "summary": "查询仓库列表",
+        "description": "查询仓库列表",
+        "operationId": "HelmManager_ListRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "post": {
+        "summary": "创建仓库",
+        "description": "创建仓库",
+        "operationId": "HelmManager_CreateRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerCreateRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerCreateRepositoryReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/repos/{name}": {
+      "get": {
+        "summary": "查询仓库",
+        "description": "查询仓库",
+        "operationId": "HelmManager_GetRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除仓库",
+        "description": "删除仓库",
+        "operationId": "HelmManager_DeleteRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteRepositoryReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "put": {
+        "summary": "更新仓库",
+        "description": "更新仓库",
+        "operationId": "HelmManager_UpdateRepository",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpdateRepositoryResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpdateRepositoryReq"
+            }
           }
         ],
         "tags": [
@@ -625,307 +829,6 @@
         ],
         "deprecated": true
       }
-    },
-    "/helmmanager/v1/repository/{projectID}": {
-      "get": {
-        "summary": "查询仓库列表",
-        "description": "查询仓库列表",
-        "operationId": "HelmManager_ListRepository",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/helmmanagerListRepositoryResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "description": "项目id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sort",
-            "description": "sort. 排序顺序",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "desc",
-            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "page",
-            "description": "page. 页数",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "size",
-            "description": "size. 每页数量",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "name",
-            "description": "name. 仓库名称",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "type",
-            "description": "type. 仓库类型",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "HelmManager"
-        ],
-        "deprecated": true
-      },
-      "delete": {
-        "summary": "批量删除仓库",
-        "description": "批量删除仓库",
-        "operationId": "HelmManager_DeleteRepositories",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/helmmanagerDeleteRepositoriesResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "description": "项目id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/helmmanagerDeleteRepositoriesReq"
-            }
-          }
-        ],
-        "tags": [
-          "HelmManager"
-        ],
-        "deprecated": true
-      }
-    },
-    "/helmmanager/v1/repository/{projectID}/{name}": {
-      "get": {
-        "summary": "查询仓库",
-        "description": "查询仓库",
-        "operationId": "HelmManager_GetRepository",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/helmmanagerGetRepositoryResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "description": "项目id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "description": "仓库名称",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "HelmManager"
-        ],
-        "deprecated": true
-      },
-      "delete": {
-        "summary": "删除仓库",
-        "description": "删除仓库",
-        "operationId": "HelmManager_DeleteRepository",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/helmmanagerDeleteRepositoryResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "description": "项目id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "description": "仓库名称",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/helmmanagerDeleteRepositoryReq"
-            }
-          }
-        ],
-        "tags": [
-          "HelmManager"
-        ],
-        "deprecated": true
-      },
-      "post": {
-        "summary": "创建仓库",
-        "description": "创建仓库",
-        "operationId": "HelmManager_CreateRepository",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/helmmanagerCreateRepositoryResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "description": "项目id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "description": "仓库名称",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/helmmanagerCreateRepositoryReq"
-            }
-          }
-        ],
-        "tags": [
-          "HelmManager"
-        ],
-        "deprecated": true
-      },
-      "put": {
-        "summary": "更新仓库",
-        "description": "更新仓库",
-        "operationId": "HelmManager_UpdateRepository",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/helmmanagerUpdateRepositoryResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "description": "项目id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "description": "仓库名称",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/helmmanagerUpdateRepositoryReq"
-            }
-          }
-        ],
-        "tags": [
-          "HelmManager"
-        ],
-        "deprecated": true
-      }
     }
   },
   "definitions": {
@@ -1162,10 +1065,10 @@
     "helmmanagerCreateRepositoryReq": {
       "type": "object",
       "properties": {
-        "projectID": {
+        "projectCode": {
           "type": "string",
-          "description": "项目id",
-          "title": "projectID"
+          "description": "项目代码",
+          "title": "projectCode"
         },
         "name": {
           "type": "string",
@@ -1174,8 +1077,29 @@
         },
         "type": {
           "type": "string",
-          "description": "仓库类型",
+          "description": "仓库类型，HELM(Helm仓库), GENERIC(通用二进制文件仓库)",
           "title": "type"
+        },
+        "takeover": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为接管已存在的仓库",
+          "title": "takeover"
+        },
+        "repoURL": {
+          "type": "string",
+          "description": "接管仓库的仓库地址",
+          "title": "repoURL"
+        },
+        "username": {
+          "type": "string",
+          "description": "接管仓库的用户名",
+          "title": "username"
+        },
+        "password": {
+          "type": "string",
+          "description": "接管仓库的密码",
+          "title": "password"
         },
         "remote": {
           "type": "boolean",
@@ -1188,35 +1112,14 @@
           "description": "远程仓库地址",
           "title": "remoteURL"
         },
-        "username": {
-          "type": "string",
-          "description": "用户名",
-          "title": "username"
-        },
-        "password": {
-          "type": "string",
-          "description": "密码",
-          "title": "password"
-        },
-        "operator": {
-          "type": "string",
-          "description": "操作者",
-          "title": "operator"
-        },
-        "takeover": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "是否为接管已存在的repo",
-          "title": "takeover"
-        },
         "remoteUsername": {
           "type": "string",
-          "description": "远程仓库username",
+          "description": "远程仓库用户名",
           "title": "remoteUsername"
         },
         "remotePassword": {
           "type": "string",
-          "description": "远程仓库password",
+          "description": "远程仓库密码",
           "title": "remotePassword"
         }
       },
@@ -1252,67 +1155,18 @@
       "description": "创建仓库的返回",
       "title": "CreateRepositoryResp"
     },
-    "helmmanagerDeleteRepositoriesReq": {
-      "type": "object",
-      "properties": {
-        "projectID": {
-          "type": "string",
-          "description": "项目id",
-          "title": "projectID"
-        },
-        "names": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "仓库名称列表",
-          "title": "name"
-        }
-      },
-      "description": "批量删除仓库的参数",
-      "title": "DeleteRepositoriesReq"
-    },
-    "helmmanagerDeleteRepositoriesResp": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "result": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "返回结果",
-          "title": "result"
-        }
-      },
-      "description": "批量删除仓库的返回",
-      "title": "DeleteRepositoriesResp"
-    },
     "helmmanagerDeleteRepositoryReq": {
       "type": "object",
       "properties": {
-        "projectID": {
+        "projectCode": {
           "type": "string",
-          "description": "项目id",
-          "title": "projectID"
+          "description": "项目代码",
+          "title": "projectCode"
         },
         "name": {
           "type": "string",
           "description": "仓库名称",
           "title": "name"
-        },
-        "operator": {
-          "type": "string",
-          "description": "操作者",
-          "title": "operator"
         }
       },
       "description": "删除仓库的参数",
@@ -1687,12 +1541,15 @@
           "title": "result"
         },
         "data": {
-          "$ref": "#/definitions/helmmanagerRepositoryListData",
-          "description": "查询的仓库信息",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/helmmanagerRepository"
+          },
+          "description": "仓库列表",
           "title": "data"
         }
       },
-      "description": "批量查询仓库的返回",
+      "description": "获取仓库列表的返回",
       "title": "ListRepositoryResp"
     },
     "helmmanagerRelease": {
@@ -1887,10 +1744,10 @@
     "helmmanagerRepository": {
       "type": "object",
       "properties": {
-        "projectID": {
+        "projectCode": {
           "type": "string",
-          "description": "项目id",
-          "title": "projectID"
+          "description": "项目代码",
+          "title": "projectCode"
         },
         "name": {
           "type": "string",
@@ -1901,6 +1758,21 @@
           "type": "string",
           "description": "仓库类型",
           "title": "type"
+        },
+        "repoURL": {
+          "type": "string",
+          "description": "当前仓库的url",
+          "title": "repoURL"
+        },
+        "username": {
+          "type": "string",
+          "description": "用户名",
+          "title": "username"
+        },
+        "password": {
+          "type": "string",
+          "description": "密码",
+          "title": "password"
         },
         "remote": {
           "type": "boolean",
@@ -1913,15 +1785,15 @@
           "description": "远程仓库地址",
           "title": "remoteURL"
         },
-        "username": {
+        "remoteUsername": {
           "type": "string",
-          "description": "用户名",
-          "title": "username"
+          "description": "远程仓库username",
+          "title": "remoteUsername"
         },
-        "password": {
+        "remotePassword": {
           "type": "string",
-          "description": "密码",
-          "title": "password"
+          "description": "远程仓库password",
+          "title": "remotePassword"
         },
         "createBy": {
           "type": "string",
@@ -1942,52 +1814,6 @@
           "type": "string",
           "description": "更新时间",
           "title": "updateTime"
-        },
-        "remoteUsername": {
-          "type": "string",
-          "description": "远程仓库username",
-          "title": "remoteUsername"
-        },
-        "remotePassword": {
-          "type": "string",
-          "description": "远程仓库password",
-          "title": "remotePassword"
-        },
-        "repoURL": {
-          "type": "string",
-          "description": "当前仓库的url",
-          "title": "repoURL"
-        }
-      }
-    },
-    "helmmanagerRepositoryListData": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "type": "integer",
-          "format": "int64",
-          "description": "页数",
-          "title": "page"
-        },
-        "size": {
-          "type": "integer",
-          "format": "int64",
-          "description": "每页数量",
-          "title": "size"
-        },
-        "total": {
-          "type": "integer",
-          "format": "int64",
-          "description": "总数",
-          "title": "total"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/helmmanagerRepository"
-          },
-          "description": "查询的仓库信息",
-          "title": "data"
         }
       }
     },
@@ -2102,10 +1928,10 @@
     "helmmanagerUpdateRepositoryReq": {
       "type": "object",
       "properties": {
-        "projectID": {
+        "projectCode": {
           "type": "string",
-          "description": "项目id",
-          "title": "projectID"
+          "description": "项目代码",
+          "title": "projectCode"
         },
         "name": {
           "type": "string",
@@ -2137,11 +1963,6 @@
           "type": "string",
           "description": "密码",
           "title": "password"
-        },
-        "operator": {
-          "type": "string",
-          "description": "操作者",
-          "title": "operator"
         }
       },
       "description": "更新仓库的参数",

@@ -262,10 +262,10 @@ func (m *CreateRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := CreateRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -273,10 +273,10 @@ func (m *CreateRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
 		err := CreateRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -286,17 +286,17 @@ func (m *CreateRepositoryReq) validate(all bool) error {
 
 	// no validation rules for Type
 
-	// no validation rules for Remote
+	// no validation rules for Takeover
 
-	// no validation rules for RemoteURL
+	// no validation rules for RepoURL
 
 	// no validation rules for Username
 
 	// no validation rules for Password
 
-	// no validation rules for Operator
+	// no validation rules for Remote
 
-	// no validation rules for Takeover
+	// no validation rules for RemoteURL
 
 	// no validation rules for RemoteUsername
 
@@ -541,10 +541,10 @@ func (m *UpdateRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := UpdateRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -552,10 +552,10 @@ func (m *UpdateRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
 		err := UpdateRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -572,8 +572,6 @@ func (m *UpdateRepositoryReq) validate(all bool) error {
 	// no validation rules for Username
 
 	// no validation rules for Password
-
-	// no validation rules for Operator
 
 	if len(errors) > 0 {
 		return UpdateRepositoryReqMultiError(errors)
@@ -814,10 +812,10 @@ func (m *GetRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := GetRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -825,10 +823,10 @@ func (m *GetRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
 		err := GetRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1073,28 +1071,16 @@ func (m *ListRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Sort
-
-	// no validation rules for Desc
-
-	// no validation rules for Page
-
-	// no validation rules for Size
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := ListRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
 		}
 		errors = append(errors, err)
 	}
-
-	// no validation rules for Name
-
-	// no validation rules for Type
 
 	if len(errors) > 0 {
 		return ListRepositoryReqMultiError(errors)
@@ -1204,33 +1190,38 @@ func (m *ListRepositoryResp) validate(all bool) error {
 
 	// no validation rules for Result
 
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListRepositoryRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListRepositoryRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListRepositoryRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
 			}
-		case interface{ Validate() error }:
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				errors = append(errors, ListRepositoryRespValidationError{
-					field:  "Data",
+				return ListRepositoryRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
-				})
+				}
 			}
 		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ListRepositoryRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
+
 	}
 
 	if len(errors) > 0 {
@@ -1335,10 +1326,10 @@ func (m *DeleteRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := DeleteRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1346,18 +1337,16 @@ func (m *DeleteRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
 		err := DeleteRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
 		}
 		errors = append(errors, err)
 	}
-
-	// no validation rules for Operator
 
 	if len(errors) > 0 {
 		return DeleteRepositoryReqMultiError(errors)
@@ -1547,369 +1536,6 @@ var _ interface {
 	ErrorName() string
 } = DeleteRepositoryRespValidationError{}
 
-// Validate checks the field values on DeleteRepositoriesReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DeleteRepositoriesReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on DeleteRepositoriesReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// DeleteRepositoriesReqMultiError, or nil if none found.
-func (m *DeleteRepositoriesReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *DeleteRepositoriesReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		err := DeleteRepositoriesReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if len(errors) > 0 {
-		return DeleteRepositoriesReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// DeleteRepositoriesReqMultiError is an error wrapping multiple validation
-// errors returned by DeleteRepositoriesReq.ValidateAll() if the designated
-// constraints aren't met.
-type DeleteRepositoriesReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m DeleteRepositoriesReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m DeleteRepositoriesReqMultiError) AllErrors() []error { return m }
-
-// DeleteRepositoriesReqValidationError is the validation error returned by
-// DeleteRepositoriesReq.Validate if the designated constraints aren't met.
-type DeleteRepositoriesReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteRepositoriesReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteRepositoriesReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteRepositoriesReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteRepositoriesReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteRepositoriesReqValidationError) ErrorName() string {
-	return "DeleteRepositoriesReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteRepositoriesReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteRepositoriesReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteRepositoriesReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteRepositoriesReqValidationError{}
-
-// Validate checks the field values on DeleteRepositoriesResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DeleteRepositoriesResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on DeleteRepositoriesResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// DeleteRepositoriesRespMultiError, or nil if none found.
-func (m *DeleteRepositoriesResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *DeleteRepositoriesResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if len(errors) > 0 {
-		return DeleteRepositoriesRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// DeleteRepositoriesRespMultiError is an error wrapping multiple validation
-// errors returned by DeleteRepositoriesResp.ValidateAll() if the designated
-// constraints aren't met.
-type DeleteRepositoriesRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m DeleteRepositoriesRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m DeleteRepositoriesRespMultiError) AllErrors() []error { return m }
-
-// DeleteRepositoriesRespValidationError is the validation error returned by
-// DeleteRepositoriesResp.Validate if the designated constraints aren't met.
-type DeleteRepositoriesRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteRepositoriesRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteRepositoriesRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteRepositoriesRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteRepositoriesRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteRepositoriesRespValidationError) ErrorName() string {
-	return "DeleteRepositoriesRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteRepositoriesRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteRepositoriesResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteRepositoriesRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteRepositoriesRespValidationError{}
-
-// Validate checks the field values on RepositoryListData with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *RepositoryListData) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on RepositoryListData with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// RepositoryListDataMultiError, or nil if none found.
-func (m *RepositoryListData) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *RepositoryListData) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Page
-
-	// no validation rules for Size
-
-	// no validation rules for Total
-
-	for idx, item := range m.GetData() {
-		_, _ = idx, item
-
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, RepositoryListDataValidationError{
-						field:  fmt.Sprintf("Data[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, RepositoryListDataValidationError{
-						field:  fmt.Sprintf("Data[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return RepositoryListDataValidationError{
-					field:  fmt.Sprintf("Data[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	if len(errors) > 0 {
-		return RepositoryListDataMultiError(errors)
-	}
-
-	return nil
-}
-
-// RepositoryListDataMultiError is an error wrapping multiple validation errors
-// returned by RepositoryListData.ValidateAll() if the designated constraints
-// aren't met.
-type RepositoryListDataMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m RepositoryListDataMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m RepositoryListDataMultiError) AllErrors() []error { return m }
-
-// RepositoryListDataValidationError is the validation error returned by
-// RepositoryListData.Validate if the designated constraints aren't met.
-type RepositoryListDataValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e RepositoryListDataValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e RepositoryListDataValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e RepositoryListDataValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e RepositoryListDataValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e RepositoryListDataValidationError) ErrorName() string {
-	return "RepositoryListDataValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e RepositoryListDataValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sRepositoryListData.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = RepositoryListDataValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = RepositoryListDataValidationError{}
-
 // Validate checks the field values on Repository with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1932,19 +1558,25 @@ func (m *Repository) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ProjectID
+	// no validation rules for ProjectCode
 
 	// no validation rules for Name
 
 	// no validation rules for Type
 
-	// no validation rules for Remote
-
-	// no validation rules for RemoteURL
+	// no validation rules for RepoURL
 
 	// no validation rules for Username
 
 	// no validation rules for Password
+
+	// no validation rules for Remote
+
+	// no validation rules for RemoteURL
+
+	// no validation rules for RemoteUsername
+
+	// no validation rules for RemotePassword
 
 	// no validation rules for CreateBy
 
@@ -1953,12 +1585,6 @@ func (m *Repository) validate(all bool) error {
 	// no validation rules for CreateTime
 
 	// no validation rules for UpdateTime
-
-	// no validation rules for RemoteUsername
-
-	// no validation rules for RemotePassword
-
-	// no validation rules for RepoURL
 
 	if len(errors) > 0 {
 		return RepositoryMultiError(errors)

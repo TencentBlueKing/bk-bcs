@@ -35,29 +35,29 @@ var (
 
 func (h *handler) get(ctx context.Context, uri string, header http.Header, data []byte) (
 	*httpclient.HttpRespone, error) {
-	return h.bkRepo.client.request(ctx, "GET", h.getUri(uri), h.auth, header, data)
+	return h.bkRepo.client.request(ctx, "GET", h.getURI(uri), h.auth, header, data)
 }
 
 func (h *handler) post(ctx context.Context, uri string, header http.Header, data []byte) (
 	*httpclient.HttpRespone, error) {
-	return h.bkRepo.client.request(ctx, "POST", h.getUri(uri), h.auth, header, data)
+	return h.bkRepo.client.request(ctx, "POST", h.getURI(uri), h.auth, header, data)
 }
 
 func (h *handler) put(ctx context.Context, uri string, header http.Header, data []byte) (
 	*httpclient.HttpRespone, error) {
-	return h.bkRepo.client.request(ctx, "PUT", h.getUri(uri), h.auth, header, data)
+	return h.bkRepo.client.request(ctx, "PUT", h.getURI(uri), h.auth, header, data)
 }
 
 func (h *handler) delete(ctx context.Context, uri string, header http.Header, data []byte) (
 	*httpclient.HttpRespone, error) {
-	return h.bkRepo.client.request(ctx, "DELETE", h.getUri(uri), h.auth, header, data)
+	return h.bkRepo.client.request(ctx, "DELETE", h.getURI(uri), h.auth, header, data)
 }
 
-func (h *handler) getUri(uri string) string {
+func (h *handler) getURI(uri string) string {
 	return h.config.URL + uri
 }
 
-func (h *handler) getOciUrl(uri string) string {
+func (h *handler) getOciURL(uri string) string {
 	return h.config.OciURL + uri
 }
 
